@@ -1,39 +1,21 @@
 {
-  "name": "parcels-example",
+  "name": "single-spa-portal-example",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "concurrently --kill-others --kill-others-on-file -p name --names \"config,common-deps\" \"npm run start:config\" \"npm run start:common-deps\" ",
-    "start:config": "webpack-dev-server --config ./webpack.config.config.dev.js --port 8233",
-    "start:common-deps": "webpack-dev-server --config ./webpack.common-deps.config.dev.js --port 8234",
-    "build": "npm run build:config && npm run build:common-deps",
-    "build:config": "webpack --config ./webpack.config.config.js -p",
-    "build:common-deps": "webpack --config ./webpack.common-deps.config.js -p"
+    "install-all": "node install_all.js",
+    "start": "node start_all.js",
+    "build": "npm run build:ilc && npm run build:registry",
+    "build:ilc": "cd ./ilc/ && npm run build",
+    "build:registry": "cd ./registry/ && npm run compile",
+    "postinstall": "node postinstall.js"
   },
-  "author": "Justin McMurdie",
-  "license": "ISC",
-  "dependencies": {
-    "lodash": "4.17.10",
-    "rxjs": "6.2.2",
-    "single-spa": "4.0.1",
-    "system-amd-script": "2.2.0",
-    "systemjs": "0.20.19"
-  },
+  "author": "Vladlen Fedosov",
+  "license": "Apache-2.0",
+  "dependencies": {},
   "devDependencies": {
-    "@babel/core": "7.0.0",
-    "@babel/plugin-syntax-dynamic-import": "7.0.0",
-    "@babel/preset-env": "7.0.0",
-    "babel-core": "6.26.3",
-    "babel-loader": "8.0.0",
-    "clean-webpack-plugin": "0.1.19",
-    "concurrently": "4.0.1",
-    "copy-webpack-plugin": "4.5.2",
-    "css-loader": "1.0.0",
-    "style-loader": "0.23.0",
-    "webpack": "4.17.1",
-    "webpack-cli": "3.1.0",
-    "webpack-dev-server": "3.1.7"
+    "concurrently": "4.0.1"
   }
 }

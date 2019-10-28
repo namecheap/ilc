@@ -1,0 +1,40 @@
+{
+  "name": "navigation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "echo \"Production start not implemented yet\" && exit 1",
+    "dev": "webpack-dev-server --config ./webpack.dev.js --port 8235",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@reach/router": "1.2.1",
+    "kremling": "1.0.4",
+    "react-router": "4.3.1",
+    "single-spa-react": "^2.10.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/plugin-proposal-object-rest-spread": "7.0.0",
+    "@babel/plugin-syntax-dynamic-import": "7.0.0",
+    "@babel/preset-env": "^7.4.4",
+    "@babel/preset-react": "7.0.0",
+    "autoprefixer": "9.1.5",
+    "babel-core": "6.26.3",
+    "babel-loader": "8.0.0",
+    "clean-webpack-plugin": "0.1.19",
+    "copy-webpack-plugin": "^5.0.4",
+    "css-loader": "1.0.0",
+    "kremling-loader": "0.1.1",
+    "postcss-loader": "3.0.0",
+    "style-loader": "0.23.0",
+    "webpack": "^4.30.0",
+    "webpack-cli": "3.1.0",
+    "webpack-dev-server": "^3.3.1",
+    "wrapper-webpack-plugin": "^2.1.0"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "planets",
+  "version": "1.0.0",
+  "description": "A microservice about star wars planets",
+  "main": "index.js",
+  "scripts": {
+    "start": "echo \"Production start not implemented yet\" && exit 1",
+    "dev": "webpack-dev-server --config ./webpack.dev.js --port 8237",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Justin McMurdie",
+  "license": "ISC",
+  "dependencies": {
+    "rxjs": "6.3.3",
+    "single-spa-vue": "^1.4.0",
+    "vue": "2.5.17",
+    "vue-router": "3.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "7.1.2",
+    "@babel/preset-env": "7.1.0",
+    "babel-core": "6.26.3",
+    "babel-loader": "8.0.4",
+    "clean-webpack-plugin": "0.1.19",
+    "css-loader": "1.0.0",
+    "style-loader": "0.23.0",
+    "vue-loader": "15.4.2",
+    "vue-style-loader": "4.1.2",
+    "vue-template-compiler": "2.5.17",
+    "webpack": "^4.30.0",
+    "webpack-cli": "3.1.2",
+    "webpack-dev-server": "^3.1.14",
+    "wrapper-webpack-plugin": "^2.1.0"
+  }
+}

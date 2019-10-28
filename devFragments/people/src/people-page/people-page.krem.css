@@ -1,0 +1,19 @@
+.peoplePageContents {
+  display: flex;
+}
+
+.listWrapper {
+  padding: 24px;
+  width: 30%;
+}
+
+.selectedWrapper {
+  width: 70%;
+  border-left: 2px solid var(--white);
+  padding: 24px;
+}
+
+.peoplePage {
+  height: calc(100% - var(--navbar-height));
+}
+

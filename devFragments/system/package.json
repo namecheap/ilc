@@ -1,0 +1,32 @@
+{
+  "name": "system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config ./webpack.config.js -p",
+    "start": "echo \"Production start not implemented yet\" && exit 1",
+    "dev": "nodemon server.js"
+  },
+  "author": "Vladlen Fedosov",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "lodash.template": "^4.5.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "babel-loader": "^8.0.6",
+    "clean-webpack-plugin": "^3.0.0",
+    "copy-webpack-plugin": "^5.0.4",
+    "nodemon": "^1.19.1",
+    "raw-loader": "^3.1.0",
+    "webpack": "^4.30.0",
+    "webpack-dev-middleware": "^3.7.0",
+    "webpack-dev-server": "^3.7.2",
+    "wrapper-webpack-plugin": "^2.1.0"
+  }
+}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title></title>
+
+    <!-- Shared stylesheets -->
+    <style>
+        body {
+            margin: 0px;
+            --primary: #011627;
+            --background: #182B3A;
+            --white: #FDFFFC;
+            --black: #171817;
+            --gray: #8B8C8A;
+            --blue: #2EC4B6;
+            --red: #E71D36;
+            --orange: #FF9F1C;
+            --white-overlay: rgba(253, 255, 252, 0.8);
+            background-color: var(--background);
+            font-family: 'Roboto', sans-serif;
+            color: var(--white);
+            --navbar-height: 60px;
+        }
+
+
+        .brand-button {
+            background-color: var(--orange);
+            color: var(--white);
+            border-style: none;
+            text-align: center;
+            cursor: pointer;
+            padding: 8px;
+            text-size: 100%;
+        }
+
+        .brand-button:disabled {
+            background-color: var(--primary);
+            cursor: not-allowed;
+            color: var(--gray);
+        }
+
+        .brand-link {
+            text-decoration: none;
+            color: var(--blue);
+        }
+
+        .brand-link:visited {
+            color: var(--orange);
+        }
+
+        .margin-bottom-16 {
+            margin-bottom: 16px;
+        }
+
+    </style>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+</head>
+<body>
+
+<!-- Region "navbar" START -->
+<div id="navbar"></div>
+<!-- Region "navbar" END -->
+
+<!-- Region "body" START -->
+<div id="body">
+    <slot name="body"></slot>
+</div>
+<!-- Region "body" END -->
+
+<!-- %systemjs-importmap% -->
+<!-- Load the common deps-->
+
+</body>
+</html>

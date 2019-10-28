@@ -1,0 +1,8 @@
+{
+  productionMode: true,
+  port: 8233,
+  cdnUrl: null,
+  registry: {
+    address: 'http://127.0.0.1:4001',
+  }
+}

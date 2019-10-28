@@ -1,0 +1,20 @@
+.root {
+  background-color: var(--primary);
+  display: flex;
+  align-items: center;
+}
+
+.primary-navigation-link {
+  color: var(--white);
+  text-decoration: none;
+  margin-left: 16px;
+  margin-right: 16px;
+}
+
+.primary-navigation-link:first-child {
+  margin-left: 32px;
+}
+
+.navBarHeight {
+  height: var(--navbar-height);
+}

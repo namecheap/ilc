@@ -1,0 +1,46 @@
+{
+  "name": "single-spa-vue",
+  "version": "1.5.4",
+  "description": "a single-spa plugin for vue.js applications",
+  "main": "lib/single-spa-vue.js",
+  "scripts": {
+    "prepublishOnly": "yarn build",
+    "build": "rimraf lib && babel src --out-dir lib --source-maps --ignore '**/*.test.js'",
+    "test": "jest",
+    "postinstall": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blittle/single-spa-vuejs.git"
+  },
+  "files": [
+    "lib",
+    "src",
+    "types"
+  ],
+  "types": "types/single-spa-vue.d.ts",
+  "keywords": [
+    "single-spa",
+    "vuejs",
+    "single",
+    "page",
+    "app",
+    "spa"
+  ],
+  "author": "Vladlen Fedosov",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/blittle/single-spa-vuejs/issues"
+  },
+  "homepage": "https://github.com/blittle/single-spa-vuejs#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-transform-modules-umd": "^7.2.0",
+    "@babel/preset-env": "^7.5.5",
+    "@types/jest": "^24.0.15",
+    "babel-jest": "^24.8.0",
+    "jest": "^24.8.0",
+    "rimraf": "^2.6.3"
+  }
+}

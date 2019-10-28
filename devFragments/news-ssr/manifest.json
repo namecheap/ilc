@@ -1,0 +1,25 @@
+{
+  "name": "Headline News",
+  "short_name": "Headlines",
+  "icons": [
+    {
+      "src": "/public/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/public/logo.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/public/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#515E7E",
+  "display": "standalone",
+  "theme_color": "#E8587C"
+}
