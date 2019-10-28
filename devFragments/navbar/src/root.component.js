@@ -4,6 +4,21 @@ import styles from './root.krem.css'
 import { links } from './root.helper.js'
 import { Link } from '@reach/router'
 
+const NavLink = props => (
+    <Link
+        {...props}
+        getProps={({ isPartiallyCurrent }) => {
+          // the object returned here is passed to the
+          // anchor element's props
+          return {
+            style: {
+              color: isPartiallyCurrent ? "red" : ''
+            }
+          };
+        }}
+    />
+);
+
 export default class Root extends React.Component {
 
   state = {
@@ -27,11 +42,11 @@ export default class Root extends React.Component {
               {
                 links.map((link) => {
                   return (
-                      <a key={link.href}
-                        href={link.href}
+                      <NavLink key={link.href}
+                        to={link.href}
                         className='primary-navigation-link'>
                       {link.name}
-                    </a>
+                    </NavLink>
                   )
                 })
               }
