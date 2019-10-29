@@ -43,6 +43,7 @@ for (let appName in registryConf.apps) {
         },
         isActiveFactory(appName),
         {
+            fragmentName: appName,
             domElementGetter: getMountPointFactory(appName),
             getCurrentPathProps: getCurrentPathPropsFactory(appName),
             getCurrentBasePath,
@@ -114,6 +115,16 @@ window.addEventListener('error', function(event) {
             lineNo: event.lineno,
             colNo: event.colno,
         }
+    }));
+});
+
+window.addEventListener('ilcFragmentError', function(event) {
+    console.error(JSON.stringify({
+        type: 'FRAGMENT_ERROR',
+        name: event.detail.error.toString(),
+        moduleName: event.detail.moduleInfo.name,
+        extraInfo: event.detail.extraInfo,
+        stack: event.detail.error.stack.split("\n"),
     }));
 });
 
