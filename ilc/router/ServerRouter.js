@@ -66,6 +66,9 @@ module.exports = class ServerRouter {
             if (typeof ssrOpts.src !== "string") {
                 throw new errors.RouterError({ message: 'No url specified for fragment', data: { appInfo } });
             }
+            if (ssrOpts.primary !== undefined && ssrOpts.primary !== true) {
+                delete ssrOpts.primary;
+            }
 
             const url = new URL(ssrOpts.src);
 
