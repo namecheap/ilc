@@ -23,6 +23,7 @@ Bringing microservices to the frontend requires a layout service that composes a
 ## Maturity level
 
 Currently project is in the PoC stage and is not intended to be used in production.
+Stay tuned with us. We work hardly to prepare it for production.
 
 ## Installation and setup
 1. Clone the repo
