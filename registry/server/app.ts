@@ -17,6 +17,7 @@ app.get('/ping', () => pong);
 
 app.get('/', (req, res) => res.send('Hello! This is Micro Fragments registry service.'));
 app.use('/api/v1/config', routes.config);
+app.use('/api/v1/app', routes.app);
 
 
 app.disable('x-powered-by');
