@@ -27,7 +27,7 @@ Stay tuned with us. We work hardly to prepare it for production.
 
 ## Installation and setup
 1. Clone the repo
-2. Run `npm run install-all`
+2. Run `npm install`
 3. run `npm start`
 4. Open running code at `http://localhost:8233/`
 
