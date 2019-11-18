@@ -10,7 +10,7 @@
     "build": "npm run build:ilc && npm run build:registry",
     "build:ilc": "cd ./ilc/ && npm run build",
     "build:registry": "cd ./registry/ && npm run compile",
-    "postinstall": "node postinstall.js"
+    "postinstall": "npm run install-all"
   },
   "author": "Vladlen Fedosov",
   "license": "Apache-2.0",

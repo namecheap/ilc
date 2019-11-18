@@ -13,7 +13,8 @@
     "migrate:make": "knex --knexfile config/knexfile.ts migrate:make",
     "seed": "knex --knexfile config/knexfile.ts seed:run",
     "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "npm run migrate && npm run seed"
   },
   "author": "Vladlen Fedosov",
   "license": "Apache-2.0",
