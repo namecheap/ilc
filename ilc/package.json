@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=production node server.js",
-    "dev": "NODE_ENV=development nodemon --ignore './public/' server.js",
+    "start": "cross-env NODE_ENV=production node server.js",
+    "dev": "cross-env NODE_ENV=development nodemon --ignore './public/' server.js",
     "build": "rimraf public && npm run build:client && npm run build:systemjs",
     "build:client": "webpack --config build/webpack.js --progress --hide-modules",
     "build:systemjs": "node ./systemjs/build.js"
@@ -16,6 +16,7 @@
   "dependencies": {
     "axios": "^0.19.0",
     "config": "^3.2.3",
+    "cross-env": "^6.0.3",
     "error-extender": "^1.0.2",
     "express": "^4.17.1",
     "lodash": "^4.17.15",
