@@ -3,7 +3,7 @@ import {
   Response,
 } from 'express';
 
-import selectApps from '../../../core/app/repositories/selectApps';
+import selectApps from '../../../core/apps/repositories/selectApps';
 
 const getApps = async (req: Request, res: Response) => {
   const apps = await selectApps();
