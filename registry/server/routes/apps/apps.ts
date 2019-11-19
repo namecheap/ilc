@@ -5,8 +5,8 @@ import {
   getApps,
 } from './routes';
 
-const appRouter = express.Router();
+const appsRouter = express.Router();
 
-appRouter.get('/', getApps);
+appsRouter.get('/', getApps);
 
-export default appRouter;
+export default appsRouter;
