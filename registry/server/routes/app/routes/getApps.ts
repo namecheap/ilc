@@ -3,17 +3,12 @@ import {
   Response,
 } from 'express';
 
-import db from '../../../db';
-import {
-  App,
-} from '../../../core/app/interfaces/App';
-import getReducedAppsData from '../../../core/app/services/getReducedAppsData';
+import selectApps from '../../../core/app/repositories/selectApps';
 
 const getApps = async (req: Request, res: Response) => {
-  const apps = await db.select().from<App>('apps');
-  const reducedAppsData = getReducedAppsData(apps);
+  const apps = await selectApps();
 
-  return res.status(200).send(reducedAppsData);
+  return res.status(200).send(apps);
 };
 
 export default getApps;

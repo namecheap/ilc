@@ -1,15 +1,3 @@
-export interface App {
-  name: string,
-  spaBundle: string,
-  cssBundle: string,
-  dependencies: string,
-  ssr: string,
-  initProps: string,
-  props: string,
-  assetsDiscoveryUrl?: string,
-  assetsDiscoveryUpdatedAt: number,
-}
-
 export interface AppDependencies {
   [packageName: string]: string
 }
@@ -26,4 +14,16 @@ export interface AppInitProps {
 
 export interface AppProps {
   [propName: string]: any,
+}
+
+export default interface App {
+  name: string,
+  spaBundle: string,
+  cssBundle: string,
+  dependencies: string,
+  ssr: string,
+  initProps: string,
+  props: string,
+  assetsDiscoveryUrl?: string,
+  assetsDiscoveryUpdatedAt: number,
 }
