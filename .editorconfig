@@ -9,12 +9,12 @@ end_of_line = lf
 insert_final_newline = true
 
 # Indentation override for all JS
-[*.js]
+[*.{js,ts,tsx}]
 charset = utf-8
 indent_style = space
 indent_size = 4
 
 # Matches the exact files either package.json
-[*.json]
+[*.{json,json5}]
 indent_style = space
 indent_size = 4
