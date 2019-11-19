@@ -1,2 +1,2 @@
 export { default as config } from "./config";
-export * from './apps';
+export { default as apps } from './apps';
