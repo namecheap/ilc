@@ -3,10 +3,11 @@ import {
   Response,
 } from 'express';
 
-import selectApps from '../../../core/apps/repositories/selectApps';
+import db from '../../db';
+import App from '../../apps/interfaces/App';
 
 const getApps = async (req: Request, res: Response) => {
-  const apps = await selectApps();
+  const apps = await db.select().from<App>('apps');
 
   return res.status(200).send(apps);
 };
