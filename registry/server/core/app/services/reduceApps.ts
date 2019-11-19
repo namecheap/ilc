@@ -1,8 +1,15 @@
 import _ from 'lodash/fp';
 
-import {
-  App,
-} from '../interfaces/App';
+import App from '../interfaces/App';
+
+const omitAppProps = _.compose(
+  _.omitBy(_.cond([
+    [_.isNull, _.stubTrue],
+    [_.isEmpty, _.stubTrue],
+    [_.stubTrue, _.stubFalse]
+  ])),
+  _.omit(['name']),
+);
 
 const parseValues = _.mapValues((value: string) => JSON.parse(value));
 
@@ -23,23 +30,14 @@ const parseAppProps = (app: App) => ({
   ...parseNecessaryAppProps(app)
 });
 
-const omitAppProps = _.compose(
-  _.omitBy(_.cond([
-    [_.isNull, _.stubTrue],
-    [_.isEmpty, _.stubTrue],
-    [_.stubTrue, _.stubFalse]
-  ])),
-  _.omit(['name']),
-);
-
-const getReducedAppData = _.compose(
+const reduceApp = _.compose(
   omitAppProps,
   parseAppProps,
 );
 
-const getReducedAppsData = _.reduce((apps, app: App) => ({
+const reduceApps = _.reduce((apps, app: App) => ({
   ...apps,
-  [app.name]: getReducedAppData(app),
+  [app.name]: reduceApp(app),
 }), {});
 
-export default getReducedAppsData;
+export default reduceApps;
