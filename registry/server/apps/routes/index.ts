@@ -1,9 +1,9 @@
 import express from 'express';
 
 import getApps from './getApps';
+import updateApp from './updateApp';
 import createApps from './createApps';
 import deleteApps from './deleteApps';
-import updateApp from './updateApp';
 
 const appsRouter = express.Router();
 
