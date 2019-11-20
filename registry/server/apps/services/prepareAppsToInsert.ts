@@ -2,7 +2,7 @@ import _ from 'lodash/fp';
 
 import App, { AppBody } from '../interfaces/App';
 
-export const preInsertApp = (app: AppBody): App => {
+export const prepareAppToInsert = (app: AppBody): App => {
     const {
         dependencies: dependencies = {},
         props: props = {},
@@ -19,6 +19,6 @@ export const preInsertApp = (app: AppBody): App => {
     };
 };
 
-const preInsertApps = _.map<AppBody, App>(preInsertApp);
+const prepareAppsToInsert = _.map<AppBody, App>(prepareAppToInsert);
 
-export default preInsertApps;
+export default prepareAppsToInsert;
