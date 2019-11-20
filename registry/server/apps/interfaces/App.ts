@@ -16,8 +16,10 @@ export interface AppProps {
     [propName: string]: any,
 }
 
+export type AppName = string;
+
 export interface CommonApp {
-    name: string,
+    name: AppName,
     spaBundle: string,
     cssBundle: string,
     assetsDiscoveryUrl?: string,
