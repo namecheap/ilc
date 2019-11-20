@@ -5,9 +5,11 @@ import {
 import _ from 'lodash/fp';
 
 import db from '../../db';
+import validationMiddleware, { ValidationPairs, selectBodyToValidate } from '../../common/middlewares/validationMiddleware';
 import preProcessResponse from '../../services/preProcessResponse';
 import prepareAppsToInsert from '../services/prepareAppsToInsert';
 import App, { AppBody } from '../interfaces/App';
+import appsBodySchema from '../schemas/apps';
 
 type CreateAppsRequestBody = Array<AppBody>;
 
@@ -23,5 +25,12 @@ const createApps = async (req: Request, res: Response) => {
 
     return res.status(200).send(preProcessResponse(savedApps));
 };
+
+const createAppsRequestBodySchema = appsBodySchema.min(1);
+const createAppsValidationPairs: ValidationPairs = new Map([
+    [createAppsRequestBodySchema, selectBodyToValidate],
+]);
+
+export const validateAppsBeforeCreate = validationMiddleware(createAppsValidationPairs);
 
 export default createApps;

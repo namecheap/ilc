@@ -2,10 +2,15 @@ import {
     Request,
     Response,
 } from 'express';
+import Joi from '@hapi/joi';
+import _ from 'lodash/fp';
 
 import db from '../../db';
+import validationMiddleware, { ValidationPairs, selectBodyToValidate } from '../../common/middlewares/validationMiddleware';
+import { AppName } from '../interfaces/App';
+import { appNameSchema } from '../schemas/apps';
 
-type DeleteAppsRequestBody = Array<string>;
+type DeleteAppsRequestBody = Array<AppName>;
 
 const deleteApps = async (req: Request, res: Response) => {
     const appsNames: DeleteAppsRequestBody = req.body;
@@ -14,5 +19,12 @@ const deleteApps = async (req: Request, res: Response) => {
 
     return res.status(200).send();
 };
+
+const deleteAppsRequestBodySchema = Joi.array().items(appNameSchema).min(1).required();
+const deleteAppsValidationPairs: ValidationPairs = new Map([
+    [deleteAppsRequestBodySchema, selectBodyToValidate],
+]);
+
+export const validateAppsBeforeDelete = validationMiddleware(deleteAppsValidationPairs);
 
 export default deleteApps;
