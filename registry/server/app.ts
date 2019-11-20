@@ -3,6 +3,7 @@ require('./util/express-promise');
 // import path from 'path';
 // import config from 'config';
 import express from 'express';
+import bodyParser from 'body-parser';
 
 import pong from './util/ping';
 import * as routes from "./routes";
@@ -12,6 +13,8 @@ import AppAssetsDiscovery from './services/AppAssetsDiscovery';
 new AppAssetsDiscovery().start();
 
 const app = express();
+
+app.use(bodyParser.json())
 
 app.get('/ping', () => pong);
 
