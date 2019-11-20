@@ -6,17 +6,17 @@ import _ from 'lodash/fp';
 
 import db from '../../db';
 import preProcessResponse from '../../services/preProcessResponse';
-import preInsertApps from '../services/preInsertApps';
+import prepareAppsToInsert from '../services/prepareAppsToInsert';
 import App, { AppBody } from '../interfaces/App';
 
-const selectAppsNames = _.map<AppBody, string>((app: AppBody): string => app.name);
-
 type CreateAppsRequestBody = Array<AppBody>;
+
+const selectAppsNames = _.map<AppBody, string>(_.get('name'));
 
 const createApps = async (req: Request, res: Response) => {
     const apps: CreateAppsRequestBody = req.body;
 
-    await db.batchInsert('apps', preInsertApps(apps));
+    await db.batchInsert('apps', prepareAppsToInsert(apps));
 
     const appsNames: Array<string> = selectAppsNames(apps);
     const savedApps: Array<App> = await db.select().from<App>('apps').whereIn('name', appsNames);

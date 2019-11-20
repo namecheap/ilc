@@ -31,13 +31,9 @@ export interface AppBody extends CommonApp {
 }
 
 export default interface App extends CommonApp {
-    name: string,
-    spaBundle: string,
-    cssBundle: string,
     dependencies: string,
     ssr: string,
     initProps: string,
     props: string,
-    assetsDiscoveryUrl?: string,
     assetsDiscoveryUpdatedAt?: number,
 }
