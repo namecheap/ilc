@@ -16,14 +16,24 @@ export interface AppProps {
     [propName: string]: any,
 }
 
-export default interface App {
+export interface CommonApp {
     name: string,
     spaBundle: string,
     cssBundle: string,
+    assetsDiscoveryUrl?: string,
+}
+
+export interface AppBody extends CommonApp {
+    dependencies?: AppDependencies,
+    props?: AppProps,
+    ssr: AppSSR,
+    initProps?: AppInitProps,
+}
+
+export default interface App extends CommonApp {
     dependencies: string,
     ssr: string,
     initProps: string,
     props: string,
-    assetsDiscoveryUrl?: string,
-    assetsDiscoveryUpdatedAt: number,
+    assetsDiscoveryUpdatedAt?: number,
 }

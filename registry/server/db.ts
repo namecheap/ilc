@@ -8,6 +8,7 @@ const client: string = config.get('database.client');
 const knexConf: knex.Config = { // after: const knex = require('knex')({client: 'mysql'});
     client: client,
     connection: config.get('database.connection'),
+    useNullAsDefault: true,
 };
 
 if (client === 'mysql') {
