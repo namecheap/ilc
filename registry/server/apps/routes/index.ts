@@ -1,15 +1,15 @@
 import express from 'express';
 
 import getApps from './getApps';
-import updateApp, { validateAppBeforeUpdate } from './updateApp';
-import createApps, { validateAppsBeforeCreate } from './createApps';
-import deleteApps, { validateAppsBeforeDelete } from './deleteApps';
+import updateApp from './updateApp';
+import createApps from './createApps';
+import deleteApps from './deleteApps';
 
 const appsRouter = express.Router();
 
 appsRouter.get('/', getApps);
-appsRouter.put('/', validateAppBeforeUpdate, updateApp);
-appsRouter.post('/', validateAppsBeforeCreate, createApps);
-appsRouter.delete('/', validateAppsBeforeDelete, deleteApps);
+appsRouter.put('/', updateApp);
+appsRouter.post('/', createApps);
+appsRouter.delete('/', deleteApps);
 
 export default appsRouter;
