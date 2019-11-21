@@ -13,8 +13,7 @@ import validationMiddleware, {
 } from '../../common/middlewares/validationMiddleware';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { prepareAppToInsert } from '../services/prepareAppsToInsert';
-import App, { AppBody, AppName } from '../interfaces/App';
-import { appNameSchema, partialAppBodySchema } from '../schemas/apps';
+import App, { AppBody, AppName, appNameSchema, partialAppBodySchema } from '../interfaces/App';
 
 type UpdateAppRequestBody = AppBody;
 type UpdateAppRequestQuery = {
