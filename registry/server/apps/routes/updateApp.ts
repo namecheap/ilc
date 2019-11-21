@@ -7,54 +7,43 @@ import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequest, {
-    ValidationPairs,
     selectBodyToValidate,
     selectParamsToValidate,
 } from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import {
-    prepareAppToInsert,
-} from '../services/prepareAppsToInsert';
+import prepareAppToInsert from '../services/prepareAppToInsert';
 import App, {
-    AppBody,
     AppName,
     appNameSchema,
     partialAppBodySchema,
-} from '../interfaces/App';
+} from '../interfaces';
 
-export type UpdateAppRequestBody = AppBody;
-export type UpdateAppRequestParams = {
+type UpdateAppRequestParams = {
     name: AppName
 };
 
-const updateAppRequestQuery = Joi.object({
-    name: appNameSchema.required(),
-});
-const updateAppValidationPairs: ValidationPairs = new Map([
-    [updateAppRequestQuery, selectParamsToValidate],
+const validateRequestBeforeUpdateApp = validateRequest(new Map([
+    [Joi.object({
+        name: appNameSchema.required(),
+    }), selectParamsToValidate],
     [partialAppBodySchema, selectBodyToValidate],
-]);
-
-const validateAppBeforeUpdate = validateRequest(updateAppValidationPairs);
-
-const selectAppDataToUpdate = (app: AppBody): Partial<App> => _.compose<any, App, Partial<App>>(
-    _.pick(_.keys(app)),
-    prepareAppToInsert,
-)(app);
+]));
 
 const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): Promise<void> => {
-    await validateAppBeforeUpdate(req, res);
+    await validateRequestBeforeUpdateApp(req, res);
 
-    const app: UpdateAppRequestBody = req.body;
+    const app = req.body;
     const {
         name: appName
     } = req.params;
-    const appDataToUpdate = selectAppDataToUpdate(app);
+    const appDataToUpdate = _.compose(
+        _.pick(_.keys(app)),
+        prepareAppToInsert,
+    )(app);
 
     await db('apps').where({ name: appName }).update(appDataToUpdate);
 
-    const updatedAppName = appDataToUpdate.name || appName;
-    const [updatedApp]: Array<App> = await db.select().from<App>('apps').where('name', updatedAppName);
+    const [updatedApp] = await db.select().from<App>('apps').where('name', appName);
 
     res.status(200).send(preProcessResponse(updatedApp));
 };

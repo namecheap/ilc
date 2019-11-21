@@ -1,25 +1,17 @@
 import express from 'express';
 
+import getApp from './getApp';
 import getApps from './getApps';
-import updateApp, {
-    UpdateAppRequestParams,
-    UpdateAppRequestBody,
-} from './updateApp';
-import createApps, {
-    CreateAppsRequestBody,
-} from './createApps';
-import deleteApps, {
-    DeleteAppsRequestBody,
-} from './deleteApps';
-import {
-    AppBody,
-} from '../interfaces/App';
+import updateApp from './updateApp';
+import createApp from './createApp';
+import deleteApp from './deleteApp';
 
 const appsRouter = express.Router();
 
-appsRouter.get<any, Array<AppBody>, void>('/', getApps);
-appsRouter.put<UpdateAppRequestParams, AppBody, UpdateAppRequestBody>('/:name', updateApp);
-appsRouter.post<any, Array<AppBody>, CreateAppsRequestBody>('/', createApps);
-appsRouter.delete<any, void, DeleteAppsRequestBody>('/', deleteApps);
+appsRouter.get('/', getApps);
+appsRouter.post('/', createApp);
+appsRouter.get('/:name', getApp);
+appsRouter.put('/:name', updateApp);
+appsRouter.delete('/:name', deleteApp);
 
 export default appsRouter;
