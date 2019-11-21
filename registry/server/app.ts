@@ -16,7 +16,7 @@ const app = express();
 
 app.use(bodyParser.json())
 
-app.get('/ping', () => pong);
+app.get('/ping', pong);
 
 app.get('/', (req, res) => res.send('Hello! This is Micro Fragments registry service.'));
 app.use('/api/v1/config', routes.config);
