@@ -5,7 +5,7 @@ import {
 
 import db from '../../db';
 import App from '../../apps/interfaces/App';
-import preProcessResponse from '../../services/preProcessResponse';
+import preProcessResponse from '../../common/services/preProcessResponse';
 
 const getApps = async (req: Request, res: Response) => {
     const apps: Array<App> = await db.select().from<App>('apps');
