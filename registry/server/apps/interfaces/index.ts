@@ -70,5 +70,3 @@ export const appBodySchema = Joi.object({
     cssBundle: commonApp.cssBundle.required(),
     ssr: commonApp.ssr.required(),
 });
-
-export const appsBodySchema = Joi.array().items(appBodySchema);
