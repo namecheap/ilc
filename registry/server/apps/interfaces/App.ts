@@ -63,7 +63,7 @@ export const appBodySchema = Joi.object({
 });
 
 export const partialAppBodySchema = Joi.object({
-    name: appNameSchema.optional(),
+    name: appNameSchema.forbidden(),
     spaBundle: appSpaBundleSchema.optional(),
     cssBundle: appCssBundleSchema.optional(),
     assetsDiscoveryUrl: appAssetsDiscoveryUrlSchema.optional(),
