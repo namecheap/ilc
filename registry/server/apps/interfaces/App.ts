@@ -4,31 +4,19 @@ export interface AppDependencies {
     [packageName: string]: string
 }
 
-const appDependenciesSchema = Joi.object().default({});
-
 export interface AppSSR {
     src: string,
     timeout: number,
     primary: boolean,
 }
 
-const appSSRSchema = Joi.object({
-    src: Joi.string().trim().uri().required(),
-    timeout: Joi.number().required(),
-    primary: Joi.boolean().required(),
-});
-
 export interface AppInitProps {
     [propName: string]: any
 }
 
-const appInitPropsSchema = Joi.object().default({});
-
 export interface AppProps {
     [propName: string]: any,
 }
-
-const appPropsSchema = Joi.object().default({});
 
 export type AppName = string;
 
@@ -39,42 +27,12 @@ export interface CommonApp {
     assetsDiscoveryUrl?: string,
 }
 
-export const appNameSchema = Joi.string().trim().min(1);
-const appSpaBundleSchema = Joi.string().trim().uri();
-const appCssBundleSchema = Joi.string().trim().uri();
-const appAssetsDiscoveryUrlSchema = Joi.string().trim().uri();
-
 export interface AppBody extends CommonApp {
     dependencies?: AppDependencies,
     props?: AppProps,
     ssr: AppSSR,
     initProps?: AppInitProps,
 }
-
-export const appBodySchema = Joi.object({
-    name: appNameSchema.required(),
-    spaBundle: appSpaBundleSchema.required(),
-    cssBundle: appCssBundleSchema.required(),
-    assetsDiscoveryUrl: appAssetsDiscoveryUrlSchema,
-    dependencies: appDependenciesSchema,
-    props: appPropsSchema,
-    ssr: appSSRSchema.required(),
-    initProps: appInitPropsSchema,
-});
-
-/**
- * @todo It needs to avoid duplicate code with `appBodySchema`
- */
-export const partialAppBodySchema = Joi.object({
-    name: appNameSchema.forbidden(),
-    spaBundle: appSpaBundleSchema.optional(),
-    cssBundle: appCssBundleSchema.optional(),
-    assetsDiscoveryUrl: appAssetsDiscoveryUrlSchema.optional(),
-    dependencies: appDependenciesSchema.optional(),
-    props: appPropsSchema.optional(),
-    ssr: appSSRSchema.optional(),
-    initProps: appInitPropsSchema.optional(),
-});
 
 export default interface App extends CommonApp {
     dependencies: string,
@@ -83,5 +41,34 @@ export default interface App extends CommonApp {
     props: string,
     assetsDiscoveryUpdatedAt?: number,
 }
+
+export const appNameSchema = Joi.string().trim().min(1);
+
+const commonApp = {
+    spaBundle: Joi.string().trim().uri(),
+    cssBundle: Joi.string().trim().uri(),
+    assetsDiscoveryUrl: Joi.string().trim().uri(),
+    dependencies: Joi.object().default({}),
+    props: Joi.object().default({}),
+    ssr: Joi.object({
+        src: Joi.string().trim().uri().required(),
+        timeout: Joi.number().required(),
+        primary: Joi.boolean().required(),
+    }),
+    initProps: Joi.object().default({}),
+};
+
+export const partialAppBodySchema = Joi.object({
+    ...commonApp,
+    name: appNameSchema.forbidden(),
+});
+
+export const appBodySchema = Joi.object({
+    ...commonApp,
+    name: appNameSchema.required(),
+    spaBundle: commonApp.spaBundle.required(),
+    cssBundle: commonApp.cssBundle.required(),
+    ssr: commonApp.ssr.required(),
+});
 
 export const appsBodySchema = Joi.array().items(appBodySchema);
