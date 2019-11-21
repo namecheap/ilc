@@ -18,20 +18,18 @@ export type ValidationPairs = Map<Joi.Schema, SelectDataToValidate>;
 export const selectQueryToValidate: SelectDataToValidate = _.get('query');
 export const selectBodyToValidate: SelectDataToValidate = _.get('body');
 
-const validationMiddleware = (validationPairs: ValidationPairs) => async (
+const validateRequest = (validationPairs: ValidationPairs) => async (
     req: Request,
     res: Response,
-    next: NextFunction
-) => {
+): Promise<Array<Joi.ValidationError> | void> => {
     try {
-        await Promise.all(_.map(
+        return await Promise.all(_.map(
             async ([schema, selectDataToValidate]) => schema.validateAsync(selectDataToValidate(req)),
             Array.from(validationPairs)
         ));
-        next();
     } catch (error) {
         res.status(422).send(preProcessErrorResponse(error));
     }
 };
 
-export default validationMiddleware;
+export default validateRequest;
