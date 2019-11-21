@@ -14,7 +14,7 @@ import validationMiddleware, {
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { prepareAppToInsert } from '../services/prepareAppsToInsert';
 import App, { AppBody, AppName } from '../interfaces/App';
-import { appNameSchema } from '../schemas/apps';
+import { appNameSchema, partialAppBodySchema } from '../schemas/apps';
 
 type UpdateAppRequestBody = AppBody;
 type UpdateAppRequestQuery = {
@@ -42,11 +42,11 @@ const updateApp = async (req: Request, res: Response) => {
 };
 
 const updateAppRequestQuery = Joi.object({
-    name: appNameSchema.required()
+    name: appNameSchema.required(),
 });
 const updateAppValidationPairs: ValidationPairs = new Map([
     [updateAppRequestQuery, selectQueryToValidate],
-    // [, _.get('body')],
+    [partialAppBodySchema, selectBodyToValidate],
 ]);
 
 export const validateAppBeforeUpdate = validationMiddleware(updateAppValidationPairs);
