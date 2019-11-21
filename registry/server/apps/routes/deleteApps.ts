@@ -7,8 +7,7 @@ import _ from 'lodash/fp';
 
 import db from '../../db';
 import validationMiddleware, { ValidationPairs, selectBodyToValidate } from '../../common/middlewares/validationMiddleware';
-import { AppName } from '../interfaces/App';
-import { appNameSchema } from '../schemas/apps';
+import { AppName, appNameSchema } from '../interfaces/App';
 
 type DeleteAppsRequestBody = Array<AppName>;
 
