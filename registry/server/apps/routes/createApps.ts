@@ -8,8 +8,7 @@ import db from '../../db';
 import validationMiddleware, { ValidationPairs, selectBodyToValidate } from '../../common/middlewares/validationMiddleware';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import prepareAppsToInsert from '../services/prepareAppsToInsert';
-import App, { AppBody } from '../interfaces/App';
-import appsBodySchema from '../schemas/apps';
+import App, { AppBody, appsBodySchema } from '../interfaces/App';
 
 type CreateAppsRequestBody = Array<AppBody>;
 
