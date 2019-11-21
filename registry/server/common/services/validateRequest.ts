@@ -16,6 +16,7 @@ type SelectDataToValidate = (req: Request) => any;
 export type ValidationPairs = Map<Joi.Schema, SelectDataToValidate>;
 
 export const selectQueryToValidate: SelectDataToValidate = _.get('query');
+export const selectParamsToValidate: SelectDataToValidate = _.get('params');
 export const selectBodyToValidate: SelectDataToValidate = _.get('body');
 
 const validateRequest = (validationPairs: ValidationPairs) => async (

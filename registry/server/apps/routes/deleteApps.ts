@@ -15,7 +15,7 @@ import {
     appNameSchema,
 } from '../interfaces/App';
 
-type DeleteAppsRequestBody = Array<AppName>;
+export type DeleteAppsRequestBody = Array<AppName>;
 
 const deleteAppsRequestBodySchema = Joi.array().items(appNameSchema).min(1).required();
 const deleteAppsValidationPairs: ValidationPairs = new Map([

@@ -9,7 +9,7 @@ import db from '../../db';
 import validateRequest, {
     ValidationPairs,
     selectBodyToValidate,
-    selectQueryToValidate
+    selectParamsToValidate,
 } from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import {
@@ -22,8 +22,8 @@ import App, {
     partialAppBodySchema,
 } from '../interfaces/App';
 
-type UpdateAppRequestBody = AppBody;
-type UpdateAppRequestQuery = {
+export type UpdateAppRequestBody = AppBody;
+export type UpdateAppRequestParams = {
     name: AppName
 };
 
@@ -31,7 +31,7 @@ const updateAppRequestQuery = Joi.object({
     name: appNameSchema.required(),
 });
 const updateAppValidationPairs: ValidationPairs = new Map([
-    [updateAppRequestQuery, selectQueryToValidate],
+    [updateAppRequestQuery, selectParamsToValidate],
     [partialAppBodySchema, selectBodyToValidate],
 ]);
 
@@ -42,13 +42,13 @@ const selectAppDataToUpdate = (app: AppBody): Partial<App> => _.compose<any, App
     prepareAppToInsert,
 )(app);
 
-const updateApp = async (req: Request, res: Response): Promise<void> => {
+const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): Promise<void> => {
     await validateAppBeforeUpdate(req, res);
 
     const app: UpdateAppRequestBody = req.body;
     const {
         name: appName
-    }: UpdateAppRequestQuery = req.query;
+    } = req.params;
     const appDataToUpdate = selectAppDataToUpdate(app);
 
     await db('apps').where({ name: appName }).update(appDataToUpdate);
