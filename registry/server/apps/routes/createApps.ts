@@ -16,7 +16,7 @@ import App, {
     appsBodySchema,
 } from '../interfaces/App';
 
-type CreateAppsRequestBody = Array<AppBody>;
+export type CreateAppsRequestBody = Array<AppBody>;
 
 const createAppsRequestBodySchema = appsBodySchema.min(1);
 const createAppsValidationPairs: ValidationPairs = new Map([
