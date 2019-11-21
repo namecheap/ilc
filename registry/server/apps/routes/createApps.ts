@@ -6,7 +6,7 @@ import _ from 'lodash/fp';
 
 import db from '../../db';
 import validationMiddleware, { ValidationPairs, selectBodyToValidate } from '../../common/middlewares/validationMiddleware';
-import preProcessResponse from '../../services/preProcessResponse';
+import preProcessResponse from '../../common/services/preProcessResponse';
 import prepareAppsToInsert from '../services/prepareAppsToInsert';
 import App, { AppBody } from '../interfaces/App';
 import appsBodySchema from '../schemas/apps';
