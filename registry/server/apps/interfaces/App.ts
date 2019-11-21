@@ -62,6 +62,9 @@ export const appBodySchema = Joi.object({
     initProps: appInitPropsSchema,
 });
 
+/**
+ * @todo It needs to avoid duplicate code with `appBodySchema`
+ */
 export const partialAppBodySchema = Joi.object({
     name: appNameSchema.forbidden(),
     spaBundle: appSpaBundleSchema.optional(),
