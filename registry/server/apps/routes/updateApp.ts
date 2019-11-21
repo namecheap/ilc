@@ -11,7 +11,7 @@ import validationMiddleware, {
     selectBodyToValidate,
     selectQueryToValidate
 } from '../../common/middlewares/validationMiddleware';
-import preProcessResponse from '../../services/preProcessResponse';
+import preProcessResponse from '../../common/services/preProcessResponse';
 import { prepareAppToInsert } from '../services/prepareAppsToInsert';
 import App, { AppBody, AppName } from '../interfaces/App';
 import { appNameSchema } from '../schemas/apps';

@@ -9,7 +9,7 @@ import pong from './util/ping';
 import * as routes from "./routes";
 
 //TODO: should be moved to separate CLI command in order to work with 2+ instances of the registry
-import AppAssetsDiscovery from './services/AppAssetsDiscovery';
+import AppAssetsDiscovery from './common/services/AppAssetsDiscovery';
 new AppAssetsDiscovery().start();
 
 const app = express();
