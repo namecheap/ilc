@@ -23,6 +23,8 @@ const parseJSON = (value: any): any => {
 
 const omitEmptyValues = _.omitBy(_.cond([
     [_.isNull, _.stubTrue],
+    [_.isNumber, _.stubFalse],
+    [_.isBoolean, _.stubFalse],
     [_.isEmpty, _.stubTrue],
     [_.stubTrue, _.stubFalse]
 ]));
