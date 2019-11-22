@@ -24,7 +24,7 @@ const validateRequestBeforeDeleteApp = validateRequest(new Map([
     }), selectParamsToValidate],
 ]));
 
-const deleteApps = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
+const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
     await validateRequestBeforeDeleteApp(req, res);
 
     const {
@@ -36,4 +36,4 @@ const deleteApps = async (req: Request<DeleteAppRequestParams>, res: Response): 
     res.status(200).send();
 };
 
-export default deleteApps;
+export default deleteApp;
