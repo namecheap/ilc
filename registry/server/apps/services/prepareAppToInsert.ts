@@ -4,10 +4,10 @@ import App, { AppBody } from '../interfaces';
 
 const prepareAppToInsert = (app: AppBody): App => {
     const {
-        dependencies: dependencies = {},
-        props: props = {},
+        dependencies = {},
+        props = {},
         ssr,
-        initProps: initProps = {},
+        initProps = {},
     } = app;
 
     return {
