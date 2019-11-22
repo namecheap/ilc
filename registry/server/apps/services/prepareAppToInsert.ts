@@ -1,8 +1,8 @@
 import _ from 'lodash/fp';
 
-import App, { AppBody } from '../interfaces/App';
+import App, { AppBody } from '../interfaces';
 
-export const prepareAppToInsert = (app: AppBody): App => {
+const prepareAppToInsert = (app: AppBody): App => {
     const {
         dependencies: dependencies = {},
         props: props = {},
@@ -19,6 +19,4 @@ export const prepareAppToInsert = (app: AppBody): App => {
     };
 };
 
-const prepareAppsToInsert = _.map<AppBody, App>(prepareAppToInsert);
-
-export default prepareAppsToInsert;
+export default prepareAppToInsert;

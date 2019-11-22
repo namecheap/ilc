@@ -4,13 +4,13 @@ import {
 } from 'express';
 
 import db from '../../db';
-import App from '../../apps/interfaces/App';
-import preProcessResponse from '../../services/preProcessResponse';
+import App from '../interfaces';
+import preProcessResponse from '../../common/services/preProcessResponse';
 
-const getApps = async (req: Request, res: Response) => {
-    const apps: Array<App> = await db.select().from<App>('apps');
+const getApps = async (req: Request, res: Response): Promise<void> => {
+    const apps = await db.select().from<App>('apps');
 
-    return res.status(200).send(preProcessResponse(apps));
+    res.status(200).send(preProcessResponse(apps));
 };
 
 export default getApps;
