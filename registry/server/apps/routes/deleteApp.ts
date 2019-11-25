@@ -6,9 +6,7 @@ import Joi from '@hapi/joi';
 import _ from 'lodash/fp';
 
 import db from '../../db';
-import validateRequest, {
-    selectParamsToValidate,
-} from '../../common/services/validateRequest';
+import validateRequestFactory from '../../common/services/validateRequest';
 import {
     AppName,
     appNameSchema,
@@ -18,11 +16,12 @@ type DeleteAppRequestParams = {
     name: AppName
 };
 
-const validateRequestBeforeDeleteApp = validateRequest(new Map([
-    [Joi.object({
+const validateRequestBeforeDeleteApp = validateRequestFactory([{
+    schema: Joi.object({
         name: appNameSchema.required(),
-    }), selectParamsToValidate],
-]));
+    }),
+    selector: _.get('params'),
+}]);
 
 const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
     await validateRequestBeforeDeleteApp(req, res);
