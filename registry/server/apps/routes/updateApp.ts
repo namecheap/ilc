@@ -6,10 +6,7 @@ import Joi from '@hapi/joi';
 import _ from 'lodash/fp';
 
 import db from '../../db';
-import validateRequest, {
-    selectBodyToValidate,
-    selectParamsToValidate,
-} from '../../common/services/validateRequest';
+import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import prepareAppToInsert from '../services/prepareAppToInsert';
 import App, {
@@ -22,11 +19,17 @@ type UpdateAppRequestParams = {
     name: AppName
 };
 
-const validateRequestBeforeUpdateApp = validateRequest(new Map([
-    [Joi.object({
-        name: appNameSchema.required(),
-    }), selectParamsToValidate],
-    [partialAppBodySchema, selectBodyToValidate],
+const validateRequestBeforeUpdateApp = validateRequestFactory([
+    {
+        schema: Joi.object({
+            name: appNameSchema.required(),
+        }),
+        selector: _.get('params'),
+    },
+    {
+        schema: partialAppBodySchema,
+        selector: _.get('body')
+    },
 ]));
 
 const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): Promise<void> => {

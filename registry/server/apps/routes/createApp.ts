@@ -5,18 +5,17 @@ import {
 import _ from 'lodash/fp';
 
 import db from '../../db';
-import validateRequest, {
-    selectBodyToValidate,
-} from '../../common/services/validateRequest';
+import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import prepareAppToInsert from '../services/prepareAppToInsert';
 import App, {
     appBodySchema,
 } from '../interfaces';
 
-const validateRequestBeforeCreateApp = validateRequest(new Map([
-    [appBodySchema, selectBodyToValidate],
-]));
+const validateRequestBeforeCreateApp = validateRequestFactory([{
+    schema: appBodySchema,
+    selector: _.get('body'),
+}]);
 
 const createApp = async (req: Request, res: Response): Promise<void> => {
     await validateRequestBeforeCreateApp(req, res);
