@@ -1,20 +1,20 @@
 import Joi from '@hapi/joi';
 
-export interface AppDependencies {
+interface AppDependencies {
     [packageName: string]: string
 }
 
-export interface AppSSR {
+interface AppSSR {
     src: string,
     timeout: number,
     primary: boolean,
 }
 
-export interface AppInitProps {
+interface AppInitProps {
     [propName: string]: any
 }
 
-export interface AppProps {
+interface AppProps {
     [propName: string]: any,
 }
 
