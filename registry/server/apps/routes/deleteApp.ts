@@ -8,12 +8,11 @@ import _ from 'lodash/fp';
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import {
-    AppName,
     appNameSchema,
 } from '../interfaces';
 
 type DeleteAppRequestParams = {
-    name: AppName
+    name: string,
 };
 
 const validateRequestBeforeDeleteApp = validateRequestFactory([{
@@ -26,9 +25,7 @@ const validateRequestBeforeDeleteApp = validateRequestFactory([{
 const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
     await validateRequestBeforeDeleteApp(req, res);
 
-    const {
-        name: appName,
-    } = req.params;
+    const appName = req.params.name;
 
     await db('apps').where('name', appName).delete();
 
