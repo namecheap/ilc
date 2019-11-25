@@ -9,14 +9,13 @@ import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import prepareAppToInsert from '../services/prepareAppToInsert';
-import App, {
-    AppName,
+import {
     appNameSchema,
-    partialAppBodySchema,
+    partialAppSchema,
 } from '../interfaces';
 
 type UpdateAppRequestParams = {
-    name: AppName
+    name: string
 };
 
 const validateRequestBeforeUpdateApp = validateRequestFactory([
@@ -27,18 +26,16 @@ const validateRequestBeforeUpdateApp = validateRequestFactory([
         selector: _.get('params'),
     },
     {
-        schema: partialAppBodySchema,
+        schema: partialAppSchema,
         selector: _.get('body')
     },
-]));
+]);
 
 const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): Promise<void> => {
     await validateRequestBeforeUpdateApp(req, res);
 
     const app = req.body;
-    const {
-        name: appName
-    } = req.params;
+    const appName = req.params.name;
     const appDataToUpdate = _.compose(
         _.pick(_.keys(app)),
         prepareAppToInsert,
@@ -46,7 +43,7 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
 
     await db('apps').where({ name: appName }).update(appDataToUpdate);
 
-    const [updatedApp] = await db.select().from<App>('apps').where('name', appName);
+    const [updatedApp] = await db.select().from('apps').where('name', appName);
 
     res.status(200).send(preProcessResponse(updatedApp));
 };

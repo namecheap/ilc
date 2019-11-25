@@ -18,28 +18,15 @@ export interface AppProps {
     [propName: string]: any,
 }
 
-export type AppName = string;
-
-export interface CommonApp {
-    name: AppName,
+export default interface App {
+    name: string,
     spaBundle: string,
     cssBundle: string,
     assetsDiscoveryUrl?: string,
-}
-
-export interface AppBody extends CommonApp {
     dependencies?: AppDependencies,
     props?: AppProps,
     ssr: AppSSR,
     initProps?: AppInitProps,
-}
-
-export default interface App extends CommonApp {
-    dependencies: string,
-    ssr: string,
-    initProps: string,
-    props: string,
-    assetsDiscoveryUpdatedAt?: number,
 }
 
 export const appNameSchema = Joi.string().trim().min(1);
@@ -58,12 +45,12 @@ const commonApp = {
     initProps: Joi.object().default({}),
 };
 
-export const partialAppBodySchema = Joi.object({
+export const partialAppSchema = Joi.object({
     ...commonApp,
     name: appNameSchema.forbidden(),
 });
 
-export const appBodySchema = Joi.object({
+export const appSchema = Joi.object({
     ...commonApp,
     name: appNameSchema.required(),
     spaBundle: commonApp.spaBundle.required(),

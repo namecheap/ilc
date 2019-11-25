@@ -1,8 +1,8 @@
 import _ from 'lodash/fp';
 
-import App, { AppBody } from '../interfaces';
+import App from '../interfaces';
 
-const prepareAppToInsert = (app: AppBody): App => {
+const prepareAppToInsert = (app: App) => {
     const {
         dependencies = {},
         props = {},
