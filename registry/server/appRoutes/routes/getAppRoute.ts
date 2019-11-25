@@ -3,32 +3,33 @@ import {
     Response,
 } from 'express';
 import Joi from '@hapi/joi';
+import _ from 'lodash/fp';
 
 import db from '../../db';
 import AppRoute from '../interfaces';
-import validateRequest, {
-    selectParamsToValidate,
-} from '../../common/services/validateRequest';
+import validateRequestFactory from '../../common/services/validateRequest';
 import {
     prepareAppRoutesToRespond,
 } from '../services/prepareAppRoute';
+import {
+    appRouteIdSchema,
+} from '../interfaces';
 
 type GetAppRouteRequestParams = {
     id: string
 };
 
-const validateRequestBeforeGetAppRoute = validateRequest(new Map([
-    [Joi.object({
-        id: Joi.string().trim().required(),
-    }), selectParamsToValidate],
-]));
+const validateRequestBeforeGetAppRoute = validateRequestFactory([{
+    schema: Joi.object({
+        id: appRouteIdSchema,
+    }),
+    selector: _.get('params'),
+}]);
 
 const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response): Promise<void> => {
     await validateRequestBeforeGetAppRoute(req, res);
 
-    const {
-        id: appRouteId,
-    } = req.params;
+    const appRouteId = req.params.id;
 
     const appRoutes = await db
         .select('routes.id as routeId', '*')

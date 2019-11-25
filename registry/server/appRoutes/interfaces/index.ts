@@ -13,6 +13,8 @@ export default interface AppRoute {
     templateName: string,
 }
 
+export const appRouteIdSchema = Joi.string().trim().required();
+
 const commonAppRoute = {
     specialRole: Joi.string().trim(),
     orderPos: Joi.number(),
@@ -21,11 +23,11 @@ const commonAppRoute = {
     templateName: templateNameSchema,
 };
 
-export const partialAppBodySchema = Joi.object({
+export const partialAppRouteSchema = Joi.object({
     ...commonAppRoute,
 });
 
-export const appBodySchema = Joi.object({
+export const appRouteSchema = Joi.object({
     ...commonAppRoute,
     orderPos: commonAppRoute.orderPos.required(),
     route: commonAppRoute.route.required(),

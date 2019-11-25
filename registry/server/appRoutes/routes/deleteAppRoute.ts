@@ -6,26 +6,26 @@ import Joi from '@hapi/joi';
 import _ from 'lodash/fp';
 
 import db from '../../db';
-import validateRequest, {
-    selectParamsToValidate,
-} from '../../common/services/validateRequest';
+import validateRequestFactory from '../../common/services/validateRequest';
+import {
+    appRouteIdSchema,
+} from '../interfaces';
 
 type DeleteAppRouteRequestParams = {
     id: string
 };
 
-const validateRequestBeforeDeleteAppRoute = validateRequest(new Map([
-    [Joi.object({
-        id: Joi.string().trim().required(),
-    }), selectParamsToValidate],
-]));
+const validateRequestBeforeDeleteAppRoute = validateRequestFactory([{
+    schema: Joi.object({
+        id: appRouteIdSchema,
+    }),
+    selector: _.get('params'),
+}]);
 
 const deleteAppRoute = async (req: Request<DeleteAppRouteRequestParams>, res: Response): Promise<void> => {
     await validateRequestBeforeDeleteAppRoute(req, res);
 
-    const {
-        id: appRouteId,
-    } = req.params;
+    const appRouteId = req.params.id;
 
     await db('routes').where('id', appRouteId).delete();
     await db('route_slots').where('routeId', appRouteId).delete();
