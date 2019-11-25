@@ -6,38 +6,38 @@ import Joi from '@hapi/joi';
 import _ from 'lodash/fp';
 
 import db from '../../db';
-import validateRequest, {
-    selectBodyToValidate,
-    selectParamsToValidate,
-} from '../../common/services/validateRequest';
+import validateRequestFactory from '../../common/services/validateRequest';
 import {
     prepareTemplateToInsert,
     prepareTemplateToRespond,
 } from '../services/prepareTemplate';
 import Template, {
-    TemplateName,
     templateNameSchema,
-    partialTemplateBodySchema,
+    partialTemplateSchema,
 } from '../interfaces';
 
 type UpdateTemplateRequestParams = {
-    name: TemplateName
+    name: string
 };
 
-const validateRequestBeforeUpdateTemplate = validateRequest(new Map([
-    [Joi.object({
-        name: templateNameSchema.required(),
-    }), selectParamsToValidate],
-    [partialTemplateBodySchema, selectBodyToValidate],
-]));
+const validateRequestBeforeUpdateTemplate = validateRequestFactory([
+    {
+        schema: Joi.object({
+            name: templateNameSchema.required(),
+        }),
+        selector: _.get('params'),
+    },
+    {
+        schema: partialTemplateSchema,
+        selector: _.get('body'),
+    },
+]);
 
 const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Response): Promise<void> => {
     await validateRequestBeforeUpdateTemplate(req, res);
 
     const template = req.body;
-    const {
-        name: templateName
-    } = req.params;
+    const templateName = req.params.name;
 
     await db('templates').where({ name: templateName }).update(prepareTemplateToInsert(template));
 

@@ -1,7 +1,5 @@
 import Joi from '@hapi/joi';
 
-export type TemplateName = string;
-
 export default interface Template {
     name: string,
     content: string,
@@ -13,12 +11,12 @@ const commonTemplate = {
     content: Joi.string().min(1),
 };
 
-export const partialTemplateBodySchema = Joi.object({
+export const partialTemplateSchema = Joi.object({
     ...commonTemplate,
     name: templateNameSchema.forbidden(),
 });
 
-export const templateBodySchema = Joi.object({
+export const templateSchema = Joi.object({
     ...commonTemplate,
     name: templateNameSchema.required(),
     content: commonTemplate.content.required(),

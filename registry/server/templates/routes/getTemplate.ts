@@ -7,25 +7,23 @@ import _ from 'lodash/fp';
 
 import db from '../../db';
 import Template, {
-    TemplateName,
     templateNameSchema,
 } from '../interfaces';
-import validateRequest, {
-    selectParamsToValidate,
-} from '../../common/services/validateRequest';
+import validateRequestFactory from '../../common/services/validateRequest';
 import {
     prepareTemplateToRespond,
 } from '../services/prepareTemplate';
 
 type GetTemplateRequestParams = {
-    name: TemplateName
+    name: string
 };
 
-const validateRequestBeforeGetTemplate = validateRequest(new Map([
-    [Joi.object({
+const validateRequestBeforeGetTemplate = validateRequestFactory([{
+    schema: Joi.object({
         name: templateNameSchema.required(),
-    }), selectParamsToValidate],
-]));
+    }),
+    selector: _.get('params'),
+}]);
 
 const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response): Promise<void> => {
     await validateRequestBeforeGetTemplate(req, res);

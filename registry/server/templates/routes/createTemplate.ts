@@ -5,20 +5,19 @@ import {
 import _ from 'lodash/fp';
 
 import db from '../../db';
-import validateRequest, {
-    selectBodyToValidate,
-} from '../../common/services/validateRequest';
+import validateRequestFactory from '../../common/services/validateRequest';
 import {
     prepareTemplateToInsert,
     prepareTemplateToRespond,
 } from '../services/prepareTemplate';
 import Template, {
-    templateBodySchema,
+    templateSchema,
 } from '../interfaces';
 
-const validateRequestBeforeCreateTemplate = validateRequest(new Map([
-    [templateBodySchema, selectBodyToValidate],
-]));
+const validateRequestBeforeCreateTemplate = validateRequestFactory([{
+    schema: templateSchema,
+    selector: _.get('body'),
+}]);
 
 const createTemplate = async (req: Request, res: Response): Promise<void> => {
     await validateRequestBeforeCreateTemplate(req, res);

@@ -6,23 +6,21 @@ import Joi from '@hapi/joi';
 import _ from 'lodash/fp';
 
 import db from '../../db';
-import validateRequest, {
-    selectParamsToValidate,
-} from '../../common/services/validateRequest';
+import validateRequestFactory from '../../common/services/validateRequest';
 import {
-    TemplateName,
     templateNameSchema,
 } from '../interfaces';
 
 type DeleteTemplateRequestParams = {
-    name: TemplateName
+    name: string
 };
 
-const validateRequestBeforeDeleteTemplate = validateRequest(new Map([
-    [Joi.object({
+const validateRequestBeforeDeleteTemplate = validateRequestFactory([{
+    schema: Joi.object({
         name: templateNameSchema.required(),
-    }), selectParamsToValidate],
-]));
+    }),
+    selector: _.get('params'),
+}]);
 
 const deleteTemplate = async (req: Request<DeleteTemplateRequestParams>, res: Response): Promise<void> => {
     await validateRequestBeforeDeleteTemplate(req, res);
