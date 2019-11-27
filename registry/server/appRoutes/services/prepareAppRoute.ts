@@ -14,6 +14,7 @@ const prepareRoutesWithSlotsToRespond = _.compose(
             name,
             appName,
             props,
+            orderPos,
         } = appRoute;
 
         const prevSavedAppRouteSlots = _.has(routeId, appRoutes) && appRoutes[routeId].slots || {};
@@ -27,6 +28,7 @@ const prepareRoutesWithSlotsToRespond = _.compose(
             next: Boolean(next),
             specialRole,
             templateName,
+            orderPos,
             slots: {
                 ...prevSavedAppRouteSlots,
                 [name]: preProcessResponse(nextAppRouteSlot),
