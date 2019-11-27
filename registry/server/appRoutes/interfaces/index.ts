@@ -61,6 +61,5 @@ export const appRouteSchema = Joi.object({
     ...commonAppRoute,
     orderPos: commonAppRoute.orderPos.required(),
     route: commonAppRoute.route.required(),
-    templateName: commonAppRoute.templateName.required(),
     slots: commonAppRoute.slots.required(),
 });

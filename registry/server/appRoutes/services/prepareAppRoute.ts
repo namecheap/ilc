@@ -29,13 +29,13 @@ const prepareRoutesWithSlotsToRespond = _.compose(
             templateName,
             slots: {
                 ...prevSavedAppRouteSlots,
-                [name]: nextAppRouteSlot,
+                [name]: preProcessResponse(nextAppRouteSlot),
             },
         };
 
         return {
             ...appRoutes,
-            [routeId]: nextAppRoute
+            [routeId]: preProcessResponse(nextAppRoute)
         };
     }, {}),
 );
@@ -61,13 +61,11 @@ const prepareRoutesAndSpecialRoutes = _.reduce((appRoutes: any, appRoute: any) =
 }, {routes: [], specialRoutes: []});
 
 export const prepareAppRouteToRespond = _.compose(
-    preProcessResponse,
     _.first,
     prepareRoutesWithSlotsToRespond,
 );
 
 export const prepareAppRoutesToRespond = _.compose(
-    preProcessResponse,
     prepareRoutesAndSpecialRoutes,
     prepareRoutesWithSlotsToRespond,
 );
