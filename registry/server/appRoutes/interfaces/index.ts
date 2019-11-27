@@ -45,7 +45,7 @@ export const appRouteSlotSchema = Joi.object({
 export const appRouteIdSchema = Joi.string().trim().required();
 
 const commonAppRoute = {
-    specialRole: Joi.string().trim(),
+    specialRole: Joi.string().valid('404'),
     orderPos: Joi.number(),
     route: Joi.string().trim().max(255),
     next: Joi.bool().default(false),
