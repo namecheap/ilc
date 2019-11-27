@@ -14,7 +14,8 @@
     "seed": "knex --knexfile config/knexfile.ts seed:run",
     "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "npm run migrate && npm run seed"
+    "postinstall": "npm run migrate && npm run seed",
+    "assetsdiscovery": "NODE_ENV=production interval=2000 node ./build/server/runnerAppAssetsDiscovery.js"
   },
   "author": "Vladlen Fedosov",
   "license": "Apache-2.0",

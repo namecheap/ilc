@@ -7,9 +7,8 @@ import express from 'express';
 import pong from './util/ping';
 import * as routes from "./routes";
 
-//TODO: should be moved to separate CLI command in order to work with 2+ instances of the registry
-import AppAssetsDiscovery from './services/AppAssetsDiscovery';
-new AppAssetsDiscovery().start();
+//production use 2+ instances of the registry with help of "npm run assetsdiscovery" and run manualy
+process.env.NODE_ENV !== 'production' && require('./runnerAppAssetsDiscovery');
 
 const app = express();
 
