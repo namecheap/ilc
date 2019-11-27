@@ -7,7 +7,9 @@ import _ from 'lodash/fp';
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import prepareAppToInsert from '../services/prepareAppToInsert';
+import {
+    stringifyJSON,
+} from '../../common/services/json';
 import {
     appSchema,
 } from '../interfaces';
@@ -22,7 +24,7 @@ const createApp = async (req: Request, res: Response): Promise<void> => {
 
     const app = req.body;
 
-    await db('apps').insert(prepareAppToInsert(app));
+    await db('apps').insert(stringifyJSON(['dependencies', 'props', 'ssr', 'initProps'], app));
 
     const [savedApp] = await db.select().from('apps').where('name', app.name);
 

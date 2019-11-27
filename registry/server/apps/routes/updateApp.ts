@@ -8,7 +8,9 @@ import _ from 'lodash/fp';
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import prepareAppToInsert from '../services/prepareAppToInsert';
+import {
+    stringifyJSON,
+} from '../../common/services/json';
 import {
     appNameSchema,
     partialAppSchema,
@@ -36,12 +38,8 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
 
     const app = req.body;
     const appName = req.params.name;
-    const appDataToUpdate = _.compose(
-        _.pick(_.keys(app)),
-        prepareAppToInsert,
-    )(app);
 
-    await db('apps').where({ name: appName }).update(appDataToUpdate);
+    await db('apps').where({ name: appName }).update(stringifyJSON(['dependencies', 'props', 'ssr', 'initProps'], app));
 
     const [updatedApp] = await db.select().from('apps').where('name', appName);
 

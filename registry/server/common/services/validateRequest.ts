@@ -20,9 +20,9 @@ interface ValidationConfig {
 const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
     req: Request,
     res: Response,
-): Promise<Array<Joi.ValidationError> | void> => {
+) => {
     try {
-        return await Promise.all(_.map(
+        await Promise.all(_.map(
             async ({schema, selector}) => schema.validateAsync(selector(req)),
             validationConfig
         ));
