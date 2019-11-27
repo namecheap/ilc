@@ -27,8 +27,16 @@ const deleteAppRoute = async (req: Request<DeleteAppRouteRequestParams>, res: Re
 
     const appRouteId = req.params.id;
 
-    await db('routes').where('id', appRouteId).delete();
-    await db('route_slots').where('routeId', appRouteId).delete();
+    await db.transaction(async (transaction) => {
+        try {
+            await db('routes').where('id', appRouteId).delete().transacting(transaction);
+            await db('route_slots').where('routeId', appRouteId).delete().transacting(transaction);
+
+            return transaction.commit();
+        } catch (error) {
+            await transaction.rollback();
+        }
+    });
 
     res.status(200).send();
 };
