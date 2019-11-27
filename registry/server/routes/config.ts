@@ -38,35 +38,27 @@ router.get('/', async (req, res) => {
         return acc;
     }, {});
 
-    const routesTmp: any = {};
+    const routesTmp: Array<any> = [];
     routes.forEach(v => {
-        if (routesTmp[v.routeId] === undefined) {
+        let tmpRoute = routesTmp.find(({ routeId }) => routeId === v.routeId);
+        if (tmpRoute === undefined) {
             v.next = !!v.next;
             v.template = v.templateName;
-            delete v.templateName;
 
-
-            routesTmp[v.routeId] = Object.assign(
+            tmpRoute = Object.assign(
                 {slots: {}},
                 _.omitBy(_.pick(v, ['route', 'next', 'template', 'specialRole']), _.isNull)
             );
+            routesTmp.push(tmpRoute);
         }
 
-        routesTmp[v.routeId].slots[v.name] = {
+        tmpRoute.slots[v.name] = {
             appName: v.appName,
             props: v.props !== null ? JSON.parse(v.props) : {},
         };
     });
 
-    data.routes = _.compact(_.map(routesTmp, v => {
-        if (v.specialRole !== undefined) {
-            return null;
-        }
-
-        delete v.specialRole;
-
-        return v;
-    }));
+    data.routes = routesTmp.filter((route: any) => !route.specialRole);
 
     data.specialRoutes = _.reduce(_.filter(routesTmp, v => !!v.specialRole), (acc: any, v) => {
         acc[v.specialRole] = _.omit(v, ['specialRole']);
