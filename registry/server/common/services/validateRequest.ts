@@ -17,7 +17,7 @@ interface ValidationConfig {
     selector: SelectDataToValidate,
 };
 
-const validateRequestFactory= (validationConfig: ValidationConfig[]) => async (
+const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
     req: Request,
     res: Response,
 ): Promise<Array<Joi.ValidationError> | void> => {
