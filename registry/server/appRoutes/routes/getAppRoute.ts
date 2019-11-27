@@ -6,10 +6,9 @@ import Joi from '@hapi/joi';
 import _ from 'lodash/fp';
 
 import db from '../../db';
-import AppRoute from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
 import {
-    prepareAppRoutesToRespond,
+    prepareAppRouteToRespond,
 } from '../services/prepareAppRoute';
 import {
     appRouteIdSchema,
@@ -26,21 +25,20 @@ const validateRequestBeforeGetAppRoute = validateRequestFactory([{
     selector: _.get('params'),
 }]);
 
-const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response): Promise<void> => {
+const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response) => {
     await validateRequestBeforeGetAppRoute(req, res);
 
     const appRouteId = req.params.id;
 
     const appRoutes = await db
-        .select('routes.id as routeId', '*')
-        .from<AppRoute>('routes')
+        .select('routes.id as routeId', 'route_slots.id as routeSlotId', '*')
+        .from('routes')
         .where('routeId', appRouteId)
         .join('route_slots', {
             'route_slots.routeId': 'routes.id'
         });
-    const [appRoute] = prepareAppRoutesToRespond(appRoutes);
 
-    res.status(200).send(appRoute);
+    res.status(200).send(prepareAppRouteToRespond(appRoutes));
 };
 
 export default getAppRoute;
