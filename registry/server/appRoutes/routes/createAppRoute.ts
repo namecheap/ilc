@@ -30,31 +30,27 @@ const createAppRoute = async (req: Request, res: Response) => {
     } = req.body;
 
     const appRoutes = await db.transaction(async (transaction) => {
-        try {
-            const [appRouteId] = await db('routes').insert(appRoute).transacting(transaction);
+        const [appRouteId] = await db('routes').insert(appRoute).transacting(transaction);
 
-            await db.batchInsert('route_slots', _.compose(
-                _.map((appRouteSlotName) => _.compose(
-                    stringifyJSON(['props']),
-                    _.assign({ name: appRouteSlotName, routeId: appRouteId }),
-                    _.get(appRouteSlotName)
-                )(appRouteSlots)),
-                _.keys,
-            )(appRouteSlots)).transacting(transaction);
+        await db.batchInsert('route_slots', _.compose(
+            _.map((appRouteSlotName) => _.compose(
+                stringifyJSON(['props']),
+                _.assign({ name: appRouteSlotName, routeId: appRouteId }),
+                _.get(appRouteSlotName)
+            )(appRouteSlots)),
+            _.keys,
+        )(appRouteSlots)).transacting(transaction);
 
-            const appRoutes = await db
-                .select('routes.id as routeId', 'route_slots.id as routeSlotId', '*')
-                .from('routes')
-                .where('routeId', appRouteId)
-                .join('route_slots', {
-                    'route_slots.routeId': 'routes.id'
-                })
-                .transacting(transaction);
+        const appRoutes = await db
+            .select('routes.id as routeId', 'route_slots.id as routeSlotId', '*')
+            .from('routes')
+            .where('routeId', appRouteId)
+            .join('route_slots', {
+                'route_slots.routeId': 'routes.id'
+            })
+            .transacting(transaction);
 
-            return transaction.commit(appRoutes);
-        } catch (error) {
-            return transaction.rollback();
-        }
+        return appRoutes;
     });
 
     res.status(200).send(prepareAppRouteToRespond(appRoutes));

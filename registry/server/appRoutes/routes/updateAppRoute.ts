@@ -47,34 +47,30 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
     const appRouteId = req.params.id;
 
     const appRoutes = await db.transaction(async (transaction) => {
-        try {
-            await db('routes').where('id', appRouteId).update(appRoute).transacting(transaction);
+        await db('routes').where('id', appRouteId).update(appRoute).transacting(transaction);
 
-            if (!_.isEmpty(appRouteSlots)) {
-                await db('route_slots').where('routeId', appRouteId).delete().transacting(transaction);
-                await db.batchInsert('route_slots', _.compose(
-                    _.map((appRouteSlotName) => _.compose(
-                        stringifyJSON(['props']),
-                        _.assign({ name: appRouteSlotName, routeId: appRouteId }),
-                        _.get(appRouteSlotName)
-                    )(appRouteSlots)),
-                    _.keys,
-                )(appRouteSlots)).transacting(transaction);
-            }
-
-            const appRoutes = await db
-                .select('routes.id as routeId', 'route_slots.id as routeSlotId', '*')
-                .from('routes')
-                .where('routeId', appRouteId)
-                .join('route_slots', {
-                    'route_slots.routeId': 'routes.id'
-                })
-                .transacting(transaction);
-
-            return transaction.commit(appRoutes);
-        } catch (error) {
-            await transaction.rollback();
+        if (!_.isEmpty(appRouteSlots)) {
+            await db('route_slots').where('routeId', appRouteId).delete().transacting(transaction);
+            await db.batchInsert('route_slots', _.compose(
+                _.map((appRouteSlotName) => _.compose(
+                    stringifyJSON(['props']),
+                    _.assign({ name: appRouteSlotName, routeId: appRouteId }),
+                    _.get(appRouteSlotName)
+                )(appRouteSlots)),
+                _.keys,
+            )(appRouteSlots)).transacting(transaction);
         }
+
+        const appRoutes = await db
+            .select('routes.id as routeId', 'route_slots.id as routeSlotId', '*')
+            .from('routes')
+            .where('routeId', appRouteId)
+            .join('route_slots', {
+                'route_slots.routeId': 'routes.id'
+            })
+            .transacting(transaction);
+
+        return appRoutes;
     });
 
     res.status(200).send(prepareAppRouteToRespond(appRoutes));
