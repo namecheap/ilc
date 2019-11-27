@@ -6,10 +6,6 @@ import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import {
-    prepareTemplateToInsert,
-    prepareTemplateToRespond,
-} from '../services/prepareTemplate';
 import Template, {
     templateSchema,
 } from '../interfaces';
@@ -24,11 +20,11 @@ const createTemplate = async (req: Request, res: Response): Promise<void> => {
 
     const template = req.body;
 
-    await db('templates').insert(prepareTemplateToInsert(template));
+    await db('templates').insert(template);
 
     const [savedTemplate] = await db.select().from<Template>('templates').where('name', template.name);
 
-    res.status(200).send(prepareTemplateToRespond(savedTemplate));
+    res.status(200).send(savedTemplate);
 };
 
 export default createTemplate;

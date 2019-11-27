@@ -10,9 +10,6 @@ import Template, {
     templateNameSchema,
 } from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
-import {
-    prepareTemplateToRespond,
-} from '../services/prepareTemplate';
 
 type GetTemplateRequestParams = {
     name: string
@@ -34,7 +31,7 @@ const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response
 
     const [template] = await db.select().from<Template>('templates').where('name', templateName);
 
-    res.status(200).send(prepareTemplateToRespond(template));
+    res.status(200).send(template);
 };
 
 export default getTemplate;

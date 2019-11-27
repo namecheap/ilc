@@ -7,10 +7,6 @@ import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import {
-    prepareTemplateToInsert,
-    prepareTemplateToRespond,
-} from '../services/prepareTemplate';
 import Template, {
     templateNameSchema,
     partialTemplateSchema,
@@ -39,11 +35,11 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
     const template = req.body;
     const templateName = req.params.name;
 
-    await db('templates').where({ name: templateName }).update(prepareTemplateToInsert(template));
+    await db('templates').where({ name: templateName }).update(template);
 
     const [updatedTemplate] = await db.select().from<Template>('templates').where('name', templateName);
 
-    res.status(200).send(prepareTemplateToRespond(updatedTemplate));
+    res.status(200).send(updatedTemplate);
 };
 
 export default updateTemplate;
