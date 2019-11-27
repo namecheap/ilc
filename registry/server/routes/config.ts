@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
     }, {});
 
     data.templates = templates.reduce((acc, v) => {
-        acc[v.name] = Buffer.from(v.content).toString('utf-8');
+        acc[v.name] = v.content;
         return acc;
     }, {});
 
