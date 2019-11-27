@@ -46,7 +46,7 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
     } = req.body;
     const appRouteId = req.params.id;
 
-    const appRoutes = await db.transaction(async (transaction) => {
+    await db.transaction(async (transaction) => {
         await db('routes').where('id', appRouteId).update(appRoute).transacting(transaction);
 
         if (!_.isEmpty(appRouteSlots)) {
@@ -60,20 +60,17 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
                 _.keys,
             )(appRouteSlots)).transacting(transaction);
         }
-
-        const appRoutes = await db
-            .select('routes.id as routeId', 'route_slots.id as routeSlotId', '*')
-            .from('routes')
-            .where('routeId', appRouteId)
-            .join('route_slots', {
-                'route_slots.routeId': 'routes.id'
-            })
-            .transacting(transaction);
-
-        return appRoutes;
     });
 
-    res.status(200).send(prepareAppRouteToRespond(appRoutes));
+    const updatedAppRoute = await db
+        .select('routes.id as routeId', 'route_slots.id as routeSlotId', '*')
+        .from('routes')
+        .where('routeId', appRouteId)
+        .join('route_slots', {
+            'route_slots.routeId': 'routes.id'
+        });
+
+    res.status(200).send(prepareAppRouteToRespond(updatedAppRoute));
 };
 
 export default updateAppRoute;
