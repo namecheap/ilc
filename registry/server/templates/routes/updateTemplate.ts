@@ -35,6 +35,12 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
     const template = req.body;
     const templateName = req.params.name;
 
+    const countToUpdate = await db('templates').where({ name: templateName });
+    if (!countToUpdate.length) {
+        res.status(404).send('Not found');
+        return;
+    }
+
     await db('templates').where({ name: templateName }).update(template);
 
     const [updatedTemplate] = await db.select().from<Template>('templates').where('name', templateName);
