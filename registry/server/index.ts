@@ -4,6 +4,8 @@ process.env.NODE_CONFIG_DIR = path.resolve(__dirname, '../config');
 // require('newrelic'); //Should be lower then NODE_CONFIG_DIR env var definition
 
 import app from './app';
-import server from './server';
+import runServer from './server';
 
-server(app);
+const server = runServer(app);
+
+module.exports = server;
