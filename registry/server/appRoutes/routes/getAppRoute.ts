@@ -38,7 +38,12 @@ const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response
             'route_slots.routeId': 'routes.id'
         });
 
-    res.status(200).send(prepareAppRouteToRespond(appRoutes));
+    if (appRoutes.length) {
+        res.status(200).send(prepareAppRouteToRespond(appRoutes));
+    } else {
+        res.status(404).send('Not found');
+    }
+
 };
 
 export default getAppRoute;

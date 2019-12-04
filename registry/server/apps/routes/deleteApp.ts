@@ -27,9 +27,13 @@ const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): P
 
     const appName = req.params.name;
 
-    await db('apps').where('name', appName).delete();
+    const count = await db('apps').where('name', appName).delete();
 
-    res.status(200).send();
+    if (count) {
+        res.status(204).send();
+    } else {
+        res.status(404).send('Not found');
+    }
 };
 
 export default deleteApp;
