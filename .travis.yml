@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - 12.13.0
 before_install:
-  - "npm config set spin false"
+  - "npm config set spin true"
 before_script:
   - npm run build
   - cd registry
