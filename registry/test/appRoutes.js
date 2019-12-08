@@ -43,16 +43,27 @@ const examples = {
     }),
     generateExpectedResponseRoute: id => ({ id, ..._.omitBy(examples.correct, _.isNil) }),
     create: async () => {
+        if (examples.correctId) throw new Error('Record has already been created');
         const response = await request.post('/api/v1/route').send(examples.correct);
-        return response.body.id;
+        examples.correctId = response.body.id;
+        return response;
     },
-    delete: async id => {
-        if (!id) throw new Error('id is required');
-        await request.delete(`/api/v1/route/${id}`);
+    delete: async () => {
+        await request.delete(`/api/v1/route/${examples.correctId}`);
+        examples.correctId = null;
     },
+    correctId: null,
 };
 
 describe('Tests /api/v1/route', () => {
+    before('should work simple "create" and "delete"', async () => {
+        await examples.create();
+        await request.get(`/api/v1/route/${examples.correctId}`).expect(200);
+        await request.delete(`/api/v1/route/${examples.correctId}`).expect(204);
+        await request.get(`/api/v1/route/${examples.correctId}`).expect(404);
+        examples.correctId = null;
+    });
+    afterEach(examples.delete);
     describe('Create', () => {
         it('should not create record without a required field: orderPos', async () => {
             const response = await request.post('/api/v1/route')
@@ -150,7 +161,7 @@ describe('Tests /api/v1/route', () => {
             .expect(200);
 
             expect(response.body).to.have.property('id');
-            const routeId = response.body.id;
+            const routeId = examples.correctId = response.body.id;
 
             const expectedRoute = examples.generateExpectedResponseRoute(routeId);
             expect(response.body).deep.equal(expectedRoute);
@@ -159,8 +170,6 @@ describe('Tests /api/v1/route', () => {
             .expect(200);
 
             expect(response.body).deep.equal(expectedRoute);
-
-            await examples.delete(routeId);
         });
     });
 
@@ -173,28 +182,24 @@ describe('Tests /api/v1/route', () => {
         });
 
         it('should successfully return record', async () => {
-            const recordId = await examples.create();
+            await examples.create();
 
-            const response = await request.get(`/api/v1/route/${recordId}`)
+            const response = await request.get(`/api/v1/route/${examples.correctId}`)
             .expect(200);
 
-            const expectedRoute = examples.generateExpectedResponseRoute(recordId);
+            const expectedRoute = examples.generateExpectedResponseRoute(examples.correctId);
             expect(response.body).deep.equal(expectedRoute);
-
-            await examples.delete(recordId);
         });
 
         it('should successfully return all existed records', async () => {
-            const recordId = await examples.create();
+            await examples.create();
 
             const response = await request.get('/api/v1/route/')
             .expect(200);
 
             expect(response.body.routes).to.be.an('array').that.is.not.empty;
-            const expectedRoute = examples.generateExpectedResponseRoute(recordId);
+            const expectedRoute = examples.generateExpectedResponseRoute(examples.correctId);
             expect(response.body.routes).to.deep.include(expectedRoute);
-
-            await examples.delete(recordId);
         });
     });
 
@@ -208,9 +213,9 @@ describe('Tests /api/v1/route', () => {
         });
 
         it('should not update record with incorrect type of field: specialRole', async () => {
-            const recordId = await examples.create();
+            await examples.create();
 
-            const response = await request.put(`/api/v1/route/${recordId}`)
+            const response = await request.put(`/api/v1/route/${examples.correctId}`)
             .send({
                 ...examples.correct,
                 specialRole: examples.incorrect.specialRole
@@ -218,14 +223,12 @@ describe('Tests /api/v1/route', () => {
             .expect(422, '"specialRole" must be [404]');
 
             expect(response.body).deep.equal({});
-
-            await examples.delete(recordId);
         });
 
         it('should not update record with incorrect type of field: orderPos', async () => {
-            const recordId = await examples.create();
+            await examples.create();
 
-            const response = await request.put(`/api/v1/route/${recordId}`)
+            const response = await request.put(`/api/v1/route/${examples.correctId}`)
             .send({
                 ...examples.correct,
                 orderPos: examples.incorrect.orderPos
@@ -233,14 +236,12 @@ describe('Tests /api/v1/route', () => {
             .expect(422, '"orderPos" must be a number');
 
             expect(response.body).deep.equal({});
-
-            await examples.delete(recordId);
         });
 
         it('should not update record with incorrect type of field: route', async () => {
-            const recordId = await examples.create();
+            await examples.create();
 
-            const response = await request.put(`/api/v1/route/${recordId}`)
+            const response = await request.put(`/api/v1/route/${examples.correctId}`)
             .send({
                 ...examples.correct,
                 route: examples.incorrect.route
@@ -248,14 +249,12 @@ describe('Tests /api/v1/route', () => {
             .expect(422, '"route" must be a string');
 
             expect(response.body).deep.equal({});
-
-            await examples.delete(recordId);
         });
 
         it('should not update record with incorrect type of field: next', async () => {
-            const recordId = await examples.create();
+            await examples.create();
 
-            const response = await request.put(`/api/v1/route/${recordId}`)
+            const response = await request.put(`/api/v1/route/${examples.correctId}`)
             .send({
                 ...examples.correct,
                 next: examples.incorrect.next
@@ -263,14 +262,12 @@ describe('Tests /api/v1/route', () => {
             .expect(422, '"next" must be a boolean');
 
             expect(response.body).deep.equal({});
-
-            await examples.delete(recordId);
         });
 
         it('should not update record with incorrect type of field: templateName', async () => {
-            const recordId = await examples.create();
+            await examples.create();
 
-            const response = await request.put(`/api/v1/route/${recordId}`)
+            const response = await request.put(`/api/v1/route/${examples.correctId}`)
             .send({
                 ...examples.correct,
                 templateName: examples.incorrect.templateName
@@ -278,14 +275,12 @@ describe('Tests /api/v1/route', () => {
             .expect(422, '"templateName" must be a string');
 
             expect(response.body).deep.equal({});
-
-            await examples.delete(recordId);
         });
 
         it('should not update record with incorrect type of field: slots', async () => {
-            const recordId = await examples.create();
+            await examples.create();
 
-            const response = await request.put(`/api/v1/route/${recordId}`)
+            const response = await request.put(`/api/v1/route/${examples.correctId}`)
             .send({
                 ...examples.correct,
                 slots: examples.incorrect.slots
@@ -293,20 +288,16 @@ describe('Tests /api/v1/route', () => {
             .expect(422, '"slots" must be of type object');
 
             expect(response.body).deep.equal({});
-
-            await examples.delete(recordId);
         });
 
         it('should successfully update record', async () => {
-            const recordId = await examples.create();
+            await examples.create();
 
-            const response = await request.put(`/api/v1/route/${recordId}`)
+            const response = await request.put(`/api/v1/route/${examples.correctId}`)
             .send(examples.updated)
             .expect(200);
 
-            expect(response.body).deep.equal({ ...examples.updated, id: recordId });
-
-            await examples.delete(recordId);
+            expect(response.body).deep.equal({ ...examples.updated, id: examples.correctId });
         });
     });
 
@@ -319,9 +310,9 @@ describe('Tests /api/v1/route', () => {
         });
 
         it('should successfully delete record', async () => {
-            const recordId = await examples.create();
+            await examples.create();
 
-            const response = await request.delete(`/api/v1/route/${recordId}`)
+            const response = await request.delete(`/api/v1/route/${examples.correctId}`)
             .expect(204, '');
 
             expect(response.body).deep.equal({});

@@ -23,6 +23,13 @@ const examples = {
 };
 
 describe('Tests /api/v1/template', () => {
+    before('should work simple "create" and "delete"', async () => {
+        await request.post('/api/v1/template').send(examples.correct).expect(200);
+        await request.get(`/api/v1/template/${examples.correct.name}`).expect(200);
+        await request.delete(`/api/v1/template/${examples.correct.name}`).expect(204);
+        await request.get(`/api/v1/template/${examples.correct.name}`).expect(404);
+    });
+    afterEach(examples.delete);
     describe('Create', () => {
         it('should not create record without a required field: name', async () => {
             const response = await request.post('/api/v1/template')
@@ -77,8 +84,6 @@ describe('Tests /api/v1/template', () => {
             .expect(200);
 
             expect(response.body).deep.equal(examples.correct);
-
-            await examples.delete();
         });
     });
 
@@ -97,8 +102,6 @@ describe('Tests /api/v1/template', () => {
             .expect(200);
 
             expect(response.body).deep.equal(examples.correct);
-
-            await examples.delete();
         });
 
         it('should successfully return all existed records', async () => {
@@ -109,8 +112,6 @@ describe('Tests /api/v1/template', () => {
 
             expect(response.body).to.be.an('array').that.is.not.empty;
             expect(response.body).to.deep.include(examples.correct);
-
-            await examples.delete();
         });
     });
 
@@ -130,8 +131,6 @@ describe('Tests /api/v1/template', () => {
             .expect(422, '"name" is not allowed');
 
             expect(response.body).deep.equal({});
-
-            await examples.delete();
         });
 
         it('should not update record with incorrect type of field: content', async () => {
@@ -141,8 +140,6 @@ describe('Tests /api/v1/template', () => {
             .send(_.omit(examples.incorrect, 'name'))
             .expect(422, '"content" must be a string');
             expect(response.body).deep.equal({});
-
-            await examples.delete();
         });
 
         it('should successfully update record', async () => {
@@ -153,8 +150,6 @@ describe('Tests /api/v1/template', () => {
             .expect(200);
 
             expect(response.body).deep.equal(examples.updated);
-
-            await examples.delete();
         });
     });
 

@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - 12.13.0
 before_install:
-  - npm i -g npm@6.13.1
+  - npm i -g npm@6.12.0
   - npm config set spin false
 before_script:
   - npm run build
