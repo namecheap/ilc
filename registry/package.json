@@ -13,7 +13,7 @@
     "migrate:make": "knex --knexfile config/knexfile.ts migrate:make",
     "seed": "knex --knexfile config/knexfile.ts seed:run",
     "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "NODE_ENV=test mocha --exit",
     "postinstall": "npm run migrate && npm run seed"
   },
   "author": "Vladlen Fedosov",
@@ -23,7 +23,10 @@
     "@types/express": "^4.17.1",
     "@types/hapi__joi": "^16.0.3",
     "@types/lodash": "^4.14.144",
+    "chai": "4.2.0",
+    "mocha": "6.2.2",
     "nodemon": "^1.19.4",
+    "supertest": "4.0.2",
     "ts-node": "^8.4.1",
     "typescript": "^3.6.4"
   },
