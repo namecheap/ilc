@@ -8,7 +8,11 @@ const client: string = config.get('database.client');
 const knexConf: knex.Config = { // after: const knex = require('knex')({client: 'mysql'});
     client: client,
     connection: config.get('database.connection'),
-
+    /**
+     * Sqlite does not support inserting default values
+     * That is why we added it
+     */
+    useNullAsDefault: true,
 };
 
 if (client === 'mysql') {

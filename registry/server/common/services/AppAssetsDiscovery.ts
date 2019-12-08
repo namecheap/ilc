@@ -1,7 +1,7 @@
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
 
-import knex from '../db';
+import knex from '../../db';
 
 export default class AppAssetsDiscovery {
     private timerId?: NodeJS.Timeout;
