@@ -12,10 +12,10 @@ export default class AppAssetsDiscovery {
         this.intervalSeconds = intervalSeconds;
     }
 
-    start() {
+    start(delay: number = 1000) {
         this.timerId = setInterval(() => this.iteration().catch(err => {
             console.error('Error during refresh of the assets info:', err);
-        }), 1000);
+        }), delay);
     }
 
     stop() {
