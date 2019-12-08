@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/StyleT/icl.svg?branch=master)](https://travis-ci.com/StyleT/icl)
+
 # Isomorphic Layout Composer
 
 Isomorphic Layout Composer (ILC) - layout service that compose a web page from fragment services.
