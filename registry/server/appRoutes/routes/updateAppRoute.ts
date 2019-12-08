@@ -46,6 +46,12 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
     } = req.body;
     const appRouteId = req.params.id;
 
+    const countToUpdate = await db('routes').where('id', appRouteId);
+    if (!countToUpdate.length) {
+        res.status(404).send('Not found');
+        return;
+    }
+
     await db.transaction(async (transaction) => {
         await db('routes').where('id', appRouteId).update(appRoute).transacting(transaction);
 

@@ -31,7 +31,11 @@ const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response
 
     const [template] = await db.select().from<Template>('templates').where('name', templateName);
 
-    res.status(200).send(template);
+    if (!template) {
+        res.status(404).send('Not found');
+    } else {
+        res.status(200).send(template);
+    }
 };
 
 export default getTemplate;

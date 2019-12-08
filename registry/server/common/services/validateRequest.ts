@@ -26,8 +26,9 @@ const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
             async ({schema, selector}) => schema.validateAsync(selector(req)),
             validationConfig
         ));
-    } catch (error) {
-        res.status(422).send(preProcessErrorResponse(error));
+    } catch (e) {
+        res.status(422).send(preProcessErrorResponse(e));
+        throw e;
     }
 };
 

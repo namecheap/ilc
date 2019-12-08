@@ -54,6 +54,4 @@ export const appSchema = Joi.object({
     ...commonApp,
     name: appNameSchema.required(),
     spaBundle: commonApp.spaBundle.required(),
-    cssBundle: commonApp.cssBundle.required(),
-    ssr: commonApp.ssr.required(),
 });

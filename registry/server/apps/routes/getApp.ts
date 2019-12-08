@@ -30,7 +30,11 @@ const getApp = async (req: Request<GetAppRequestParams>, res: Response): Promise
 
     const [app] = await db.select().from('apps').where('name', appName);
 
-    res.status(200).send(preProcessResponse(app));
+    if (!app) {
+        res.status(404).send('Not found');
+    } else {
+        res.status(200).send(preProcessResponse(app));
+    }
 };
 
 export default getApp;
