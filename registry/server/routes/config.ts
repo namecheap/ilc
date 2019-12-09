@@ -41,13 +41,14 @@ router.get('/', async (req, res) => {
     const routesTmp: Array<any> = [];
     routes.forEach(v => {
         let tmpRoute = routesTmp.find(({ routeId }) => routeId === v.routeId);
+
         if (tmpRoute === undefined) {
             v.next = !!v.next;
             v.template = v.templateName;
 
             tmpRoute = Object.assign(
                 {slots: {}},
-                _.omitBy(_.pick(v, ['route', 'next', 'template', 'specialRole']), _.isNull)
+                _.omitBy(_.pick(v, ['routeId', 'route', 'next', 'template', 'specialRole']), _.isNull)
             );
             routesTmp.push(tmpRoute);
         }
