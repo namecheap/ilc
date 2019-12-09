@@ -121,9 +121,14 @@ document.addEventListener('click', function (e) {
         return;
     }
 
-    const href = e.target.getAttribute('href');
-    singleSpa.navigateToUrl(href);
-    e.preventDefault();
+    const pathname = e.target.getAttribute('href');
+    const {routeId} = router.match(pathname);
+    const isSpecialRoute = Object.values(registryConf.specialRoutes).some((route) => route.routeId === routeId);
+
+    if (!isSpecialRoute) {
+        singleSpa.navigateToUrl(pathname);
+        e.preventDefault();
+    }
 });
 
 window.addEventListener('error', function(event) {
