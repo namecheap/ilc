@@ -27,15 +27,11 @@ Vue.mixin({
 });
 
 const store = createStore();
-if(window.__INITIAL_STATE__){
-	store.replaceState(window.__INITIAL_STATE__);
-}
-
-
 const router = createRouter();
-router.beforeResolve((to, from, next) => {
-	if (window.__INITIAL_STATE__) { // We don't need to fetch data from server if we were loaded with SSR
-		delete window.__INITIAL_STATE__;
+
+const createBeforeResolveRouterHandler = (props) => (to, from, next) => {
+	if (window[`__${props.name}__`]) { // We don't need to fetch data from server if we were loaded with SSR
+		delete window[`__${props.name}__`];
 		return next();
 	}
 
@@ -59,20 +55,36 @@ router.beforeResolve((to, from, next) => {
 			next();
 		})
 		.catch(next)
-});
+};
+
+const replaceState = (props) => {
+    if(window[`__${props.name}__`]) {
+        store.replaceState(window[`__${props.name}__`]);
+    }
+};
 
 const vueLifecycles = singleSpaVue({
 	Vue,
 	appOptions: {
 		render: h => h(App),
-		router: router,
+		router,
 		store,
 	}
 });
 
-export const bootstrap = vueLifecycles.bootstrap;
+export const bootstrap = (props) => {
+    console.log('News bootstrap!!');
+
+    router.beforeResolve(createBeforeResolveRouterHandler(props));
+
+    return vueLifecycles.bootstrap(props);
+};
+
 export const mount = props => {
-	console.log('News mount!!');
+    console.log('News mount!!');
+
+    replaceState(props);
+
 	return vueLifecycles.mount(props);
 };
 export const unmount = () => {
