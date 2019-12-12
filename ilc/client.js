@@ -122,8 +122,7 @@ document.addEventListener('click', function (e) {
     }
 
     const pathname = e.target.getAttribute('href');
-    const {routeId} = router.match(pathname);
-    const isSpecialRoute = Object.values(registryConf.specialRoutes).some((route) => route.routeId === routeId);
+    const {isSpecialRoute} = router.match(pathname);
 
     if (!isSpecialRoute) {
         singleSpa.navigateToUrl(pathname);

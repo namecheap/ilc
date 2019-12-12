@@ -25,7 +25,9 @@ module.exports = class Router {
                 continue;
             }
 
-            res = _defaultsDeep({}, _omit(route, ['route', 'next', 'routeExp']), res);
+            res = _defaultsDeep({
+                isSpecialRoute: false,
+            }, _omit(route, ['route', 'next', 'routeExp']), res);
 
             if (route.next !== true) {
                 if (res.template === undefined) {
@@ -43,7 +45,9 @@ module.exports = class Router {
             throw new errors.NoRouteMatchError();
         }
 
-        return _defaultsDeep({}, this.#specialRoutes[404]);
+        return _defaultsDeep({
+            isSpecialRoute: true,
+        }, this.#specialRoutes[404]);
     }
 
     __compiler(routes) {
