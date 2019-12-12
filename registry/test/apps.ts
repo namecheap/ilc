@@ -1,7 +1,8 @@
 const _ = require('lodash');
 const { expect } = require('chai');
+import { request } from './common';
 
-const example = {
+const example = <any>{
     url: '/api/v1/app/',
     correct: Object.freeze({
         name: '@portal/ncTestAppReactssr',

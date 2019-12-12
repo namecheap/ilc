@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const { expect } = require('chai');
+import { request } from './common';
 
 const example = {
     url: '/api/v1/template/',

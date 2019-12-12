@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+import { request } from './common';
 
 describe('Tests /', () => {
     it('Hello world', async () => {

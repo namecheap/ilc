@@ -1,5 +1,6 @@
-const _ = require('lodash');
-const { expect } = require('chai');
+import _ from 'lodash';
+import { expect } from 'chai';
+import { request } from './common';
 
 const example = {
     url: '/api/v1/route/',
@@ -42,7 +43,7 @@ const example = {
             }
         }
     }),
-    generateExpectedResponseRoute: id => ({ id, ..._.omitBy(example.correct, _.isNil) }),
+    generateExpectedResponseRoute: (id: Number | null) => ({ id, ..._.omitBy(example.correct, _.isNil) }),
     create: async () => {
         if (example.correctId) throw new Error('Record has already been created');
         const response = await request.post(example.url).send(example.correct);
