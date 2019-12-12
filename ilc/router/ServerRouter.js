@@ -71,7 +71,7 @@ module.exports = class ServerRouter {
             }
 
             const url = new URL(ssrOpts.src);
-            const fragmentName = `${slotData.appName.replace('@portal/', '')}${slotName}`;
+            const fragmentName = `${slotData.appName.replace('@portal/', '')}__at__${slotName}`;
 
             const reqProps = {
                 basePath: route.basePath,

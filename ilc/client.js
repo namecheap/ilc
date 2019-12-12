@@ -36,7 +36,7 @@ registryConf.routes.map((route) => route.slots).forEach((slots) => {
             return;
         }
 
-        const fragmentName = `${appName.replace('@portal/', '')}${slotName}`;
+        const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
 
         singleSpa.registerApplication(
             fragmentName,
