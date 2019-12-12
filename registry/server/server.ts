@@ -69,5 +69,5 @@ function exitHandler() {
 
 export default (requestHandler: any) => {
     server.on('request', requestHandler);
-    return server.listen(config.get('port'));
+    server.listen(config.get('port'));
 };
