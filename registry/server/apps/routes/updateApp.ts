@@ -34,10 +34,14 @@ const validateRequestBeforeUpdateApp = validateRequestFactory([
 ]);
 
 const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): Promise<void> => {
-    await validateRequestBeforeUpdateApp(req, res);
-
     const app = req.body;
     const appName = req.params.name;
+
+    const countToUpdate = await db('apps').where({ name: appName })
+    if (!countToUpdate.length) {
+        res.status(404).send('Not found');
+        return;
+    }
 
     await db('apps').where({ name: appName }).update(stringifyJSON(['dependencies', 'props', 'ssr', 'initProps'], app));
 
@@ -46,4 +50,4 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
     res.status(200).send(preProcessResponse(updatedApp));
 };
 
-export default updateApp;
+export default [validateRequestBeforeUpdateApp, updateApp];

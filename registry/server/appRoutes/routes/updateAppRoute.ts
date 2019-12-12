@@ -38,13 +38,17 @@ const validateRequestBeforeUpdateAppRoute = validateRequestFactory([
 ]);
 
 const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Response) => {
-    await validateRequestBeforeUpdateAppRoute(req, res);
-
     const {
         slots: appRouteSlots,
         ...appRoute
     } = req.body;
     const appRouteId = req.params.id;
+
+    const countToUpdate = await db('routes').where('id', appRouteId);
+    if (!countToUpdate.length) {
+        res.status(404).send('Not found');
+        return;
+    }
 
     await db.transaction(async (transaction) => {
         await db('routes').where('id', appRouteId).update(appRoute).transacting(transaction);
@@ -73,4 +77,4 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
     res.status(200).send(prepareAppRouteToRespond(updatedAppRoute));
 };
 
-export default updateAppRoute;
+export default [validateRequestBeforeUpdateAppRoute, updateAppRoute];
