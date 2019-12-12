@@ -12,7 +12,13 @@ export async function seed(knex: Knex): Promise<any> {
                     dependencies: JSON.stringify({
                         react: 'https://cdnjs.cloudflare.com/ajax/libs/react/16.8.6/umd/react.development.js',
                         'react-dom': 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.6/umd/react-dom.development.js',
-                    }), initProps: '{}', props: '{}'
+                    }),
+                    ssr: JSON.stringify({
+                        src: 'http://localhost:9235/',
+                        timeout: 1000,
+                        primary: false
+                    }),
+                    initProps: '{}', props: '{}'
                 }, {
                     name: '@portal/people',
                     spaBundle: 'http://localhost:8236/people.js',
