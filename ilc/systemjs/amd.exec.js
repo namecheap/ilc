@@ -6,7 +6,7 @@ const origSource = fs.readFileSync(require.resolve('systemjs/dist/extras/amd.min
 
 const wrappedCode = '' +
     '(function (glob) {' +
-        'const self = undefined; glob.ILC = glob; const global = glob;' +
+        'const self = undefined; glob.ILC = {}; const global = glob.ILC;' +
         origSource +
     '})(typeof self !== "undefined" ? self : global);';
 
