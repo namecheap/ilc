@@ -23,7 +23,12 @@ const validateRequestBeforeDeleteApp = validateRequestFactory([{
 }]);
 
 const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
-    await validateRequestBeforeDeleteApp(req, res);
+    try {
+        await validateRequestBeforeDeleteApp(req, res);
+    } catch(err) {
+        res.status(422).send(err);
+        return;
+    }
 
     const appName = req.params.name;
 

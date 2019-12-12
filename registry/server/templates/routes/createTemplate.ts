@@ -16,7 +16,12 @@ const validateRequestBeforeCreateTemplate = validateRequestFactory([{
 }]);
 
 const createTemplate = async (req: Request, res: Response): Promise<void> => {
-    await validateRequestBeforeCreateTemplate(req, res);
+    try {
+        await validateRequestBeforeCreateTemplate(req, res);
+    } catch(err) {
+        res.status(422).send(err);
+        return;
+    }
 
     const template = req.body;
 

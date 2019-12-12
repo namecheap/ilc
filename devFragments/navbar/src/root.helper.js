@@ -12,6 +12,10 @@ export const links = [
     href: '/news/'
   },
   {
+    name: 'React SSR',
+    href: '/reactssr/'
+  },
+  {
     name: '404',
     href: '/nosuchpath'
   }
