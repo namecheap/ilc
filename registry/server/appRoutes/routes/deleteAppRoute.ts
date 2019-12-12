@@ -23,7 +23,12 @@ const validateRequestBeforeDeleteAppRoute = validateRequestFactory([{
 }]);
 
 const deleteAppRoute = async (req: Request<DeleteAppRouteRequestParams>, res: Response) => {
-    await validateRequestBeforeDeleteAppRoute(req, res);
+    try {
+        await validateRequestBeforeDeleteAppRoute(req, res);
+    } catch(err) {
+        res.status(422).send(err);
+        return;
+    }
 
     const appRouteId = req.params.id;
 

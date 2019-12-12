@@ -22,7 +22,12 @@ const validateRequestBeforeCreateAppRoute = validateRequestFactory([{
 }]);
 
 const createAppRoute = async (req: Request, res: Response) => {
-    await validateRequestBeforeCreateAppRoute(req, res);
+    try {
+        await validateRequestBeforeCreateAppRoute(req, res);
+    } catch(err) {
+        res.status(422).send(err);
+        return;
+    }
 
     const {
         slots: appRouteSlots,

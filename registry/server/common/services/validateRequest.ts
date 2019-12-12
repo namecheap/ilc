@@ -27,8 +27,7 @@ const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
             validationConfig
         ));
     } catch (e) {
-        res.status(422).send(preProcessErrorResponse(e));
-        throw e;
+        throw preProcessErrorResponse(e);
     }
 };
 

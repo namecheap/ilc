@@ -26,7 +26,12 @@ const validateRequestBeforeGetAppRoute = validateRequestFactory([{
 }]);
 
 const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response) => {
-    await validateRequestBeforeGetAppRoute(req, res);
+    try {
+        await validateRequestBeforeGetAppRoute(req, res);
+    } catch(err) {
+        res.status(422).send(err);
+        return;
+    }
 
     const appRouteId = req.params.id;
 

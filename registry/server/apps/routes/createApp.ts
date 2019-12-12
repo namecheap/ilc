@@ -20,7 +20,12 @@ const validateRequestBeforeCreateApp = validateRequestFactory([{
 }]);
 
 const createApp = async (req: Request, res: Response): Promise<void> => {
-    await validateRequestBeforeCreateApp(req, res);
+    try {
+        await validateRequestBeforeCreateApp(req, res);
+    } catch(err) {
+        res.status(422).send(err);
+        return;
+    }
 
     const app = req.body;
 

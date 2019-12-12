@@ -30,7 +30,12 @@ const validateRequestBeforeUpdateTemplate = validateRequestFactory([
 ]);
 
 const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Response): Promise<void> => {
-    await validateRequestBeforeUpdateTemplate(req, res);
+    try {
+        await validateRequestBeforeUpdateTemplate(req, res);
+    } catch(err) {
+        res.status(422).send(err);
+        return;
+    }
 
     const template = req.body;
     const templateName = req.params.name;
