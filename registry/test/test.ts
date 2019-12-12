@@ -1,5 +1,4 @@
-const { expect } = require('chai');
-import { request } from './common';
+import { request, expect } from './common';
 
 describe('Tests /', () => {
     it('Hello world', async () => {

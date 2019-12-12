@@ -28,13 +28,10 @@
     "@types/mocha": "5.2.7",
     "@types/supertest": "2.0.8",
     "chai": "4.2.0",
-    "i": "0.3.6",
-    "install": "0.13.0",
     "mocha": "6.2.2",
     "nodemon": "^1.19.4",
-    "npm": "6.13.4",
     "supertest": "4.0.2",
-    "ts-node": "8.5.4",
+    "ts-node": "^8.4.1",
     "typescript": "^3.6.4"
   },
   "dependencies": {

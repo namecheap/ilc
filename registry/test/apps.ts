@@ -1,6 +1,5 @@
-const _ = require('lodash');
-const { expect } = require('chai');
-import { request } from './common';
+import _ from 'lodash';
+import { request, expect } from './common';
 
 const example = <any>{
     url: '/api/v1/app/',

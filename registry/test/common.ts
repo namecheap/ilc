@@ -1,12 +1,6 @@
-declare global {
-    namespace NodeJS {
-        interface Global {
-           request: any
-        } 
-    }
-}
-
 import supertest from 'supertest';
-import server = require('../server/index');
+import server from '../server/index';
 
 export const request = supertest(server);
+
+export { expect } from 'chai';

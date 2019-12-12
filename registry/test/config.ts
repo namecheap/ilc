@@ -1,5 +1,4 @@
-const { expect } = require('chai');
-import { request } from './common';
+import { request, expect } from './common';
 
 describe('Tests /api/v1/config', () => {
     describe('Read', () => {

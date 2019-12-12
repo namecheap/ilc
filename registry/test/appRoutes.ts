@@ -1,6 +1,5 @@
 import _ from 'lodash';
-import { expect } from 'chai';
-import { request } from './common';
+import { request, expect } from './common';
 
 const example = {
     url: '/api/v1/route/',

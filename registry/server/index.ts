@@ -8,4 +8,4 @@ import runServer from './server';
 
 const server = runServer(app);
 
-module.exports = server;
+export default server;
