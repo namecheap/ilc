@@ -23,13 +23,15 @@ const validateRequestBeforeDeleteApp = validateRequestFactory([{
 }]);
 
 const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
-    await validateRequestBeforeDeleteApp(req, res);
-
     const appName = req.params.name;
 
-    await db('apps').where('name', appName).delete();
+    const count = await db('apps').where('name', appName).delete();
 
-    res.status(200).send();
+    if (count) {
+        res.status(204).send();
+    } else {
+        res.status(404).send('Not found');
+    }
 };
 
-export default deleteApp;
+export default [validateRequestBeforeDeleteApp, deleteApp];

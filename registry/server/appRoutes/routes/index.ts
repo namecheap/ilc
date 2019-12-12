@@ -8,10 +8,10 @@ import deleteAppRoute from './deleteAppRoute';
 
 const appRoutesRouter = express.Router();
 
-appRoutesRouter.get('/', getAppRoutes);
-appRoutesRouter.get('/:id', getAppRoute);
-appRoutesRouter.post('/', createAppRoute);
-appRoutesRouter.put('/:id', updateAppRoute);
-appRoutesRouter.delete('/:id', deleteAppRoute);
+appRoutesRouter.get('/', ...getAppRoutes);
+appRoutesRouter.get('/:id', ...getAppRoute);
+appRoutesRouter.post('/', ...createAppRoute);
+appRoutesRouter.put('/:id', ...updateAppRoute);
+appRoutesRouter.delete('/:id', ...deleteAppRoute);
 
 export default appRoutesRouter;

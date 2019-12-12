@@ -12,4 +12,4 @@ const getApps = async (req: Request, res: Response): Promise<void> => {
     res.status(200).send(preProcessResponse(apps));
 };
 
-export default getApps;
+export default [getApps];

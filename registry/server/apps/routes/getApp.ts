@@ -24,13 +24,15 @@ const validateRequestBeforeGetApp = validateRequestFactory([{
 }]);
 
 const getApp = async (req: Request<GetAppRequestParams>, res: Response): Promise<void> => {
-    await validateRequestBeforeGetApp(req, res);
-
     const appName = req.params.name;
 
     const [app] = await db.select().from('apps').where('name', appName);
 
-    res.status(200).send(preProcessResponse(app));
+    if (!app) {
+        res.status(404).send('Not found');
+    } else {
+        res.status(200).send(preProcessResponse(app));
+    }
 };
 
-export default getApp;
+export default [validateRequestBeforeGetApp, getApp];

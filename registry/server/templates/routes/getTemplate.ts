@@ -23,15 +23,17 @@ const validateRequestBeforeGetTemplate = validateRequestFactory([{
 }]);
 
 const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response): Promise<void> => {
-    await validateRequestBeforeGetTemplate(req, res);
-
     const {
         name: templateName,
     } = req.params;
 
     const [template] = await db.select().from<Template>('templates').where('name', templateName);
 
-    res.status(200).send(template);
+    if (!template) {
+        res.status(404).send('Not found');
+    } else {
+        res.status(200).send(template);
+    }
 };
 
-export default getTemplate;
+export default [validateRequestBeforeGetTemplate, getTemplate];

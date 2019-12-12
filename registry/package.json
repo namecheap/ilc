@@ -14,7 +14,8 @@
     "seed": "knex --knexfile config/knexfile.ts seed:run",
     "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
     "test": "NODE_ENV=test mocha --exit",
-    "postinstall": "npm run migrate && npm run seed"
+    "postinstall": "npm run migrate && npm run seed",
+    "assetsdiscovery": "cross-env NODE_ENV=production INTERVAL=2000 node ./build/server/runnerAppAssetsDiscovery.js"
   },
   "author": "Vladlen Fedosov",
   "license": "Apache-2.0",
@@ -35,6 +36,7 @@
     "axios": "^0.19.0",
     "body-parser": "^1.19.0",
     "config": "^3.2.3",
+    "cross-env": "6.0.3",
     "express": "^4.17.1",
     "http-shutdown": "^1.2.1",
     "knex": "^0.19.5",

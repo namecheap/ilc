@@ -23,15 +23,17 @@ const validateRequestBeforeDeleteTemplate = validateRequestFactory([{
 }]);
 
 const deleteTemplate = async (req: Request<DeleteTemplateRequestParams>, res: Response): Promise<void> => {
-    await validateRequestBeforeDeleteTemplate(req, res);
-
     const {
         name: templateName,
     } = req.params;
 
-    await db('templates').where('name', templateName).delete();
+    const count = await db('templates').where('name', templateName).delete();
 
-    res.status(200).send();
+    if (count) {
+        res.status(204).send();
+    } else {
+        res.status(404).send('Not found');
+    }
 };
 
-export default deleteTemplate;
+export default [validateRequestBeforeDeleteTemplate, deleteTemplate];

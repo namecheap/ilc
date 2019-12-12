@@ -13,4 +13,4 @@ const getTemplates = async (req: Request, res: Response): Promise<void> => {
     res.status(200).send(templates);
 };
 
-export default getTemplates;
+export default [getTemplates];
