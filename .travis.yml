@@ -4,5 +4,4 @@ node_js:
 before_install:
   - npm i -g npm@6.12.0
 before_script:
-  - npm run build
   - cd registry
