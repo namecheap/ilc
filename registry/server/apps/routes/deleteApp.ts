@@ -23,13 +23,6 @@ const validateRequestBeforeDeleteApp = validateRequestFactory([{
 }]);
 
 const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
-    try {
-        await validateRequestBeforeDeleteApp(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const appName = req.params.name;
 
     const count = await db('apps').where('name', appName).delete();
@@ -41,4 +34,4 @@ const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): P
     }
 };
 
-export default deleteApp;
+export default [validateRequestBeforeDeleteApp, deleteApp];

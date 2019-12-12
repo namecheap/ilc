@@ -34,13 +34,6 @@ const validateRequestBeforeUpdateApp = validateRequestFactory([
 ]);
 
 const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): Promise<void> => {
-    try {
-        await validateRequestBeforeUpdateApp(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const app = req.body;
     const appName = req.params.name;
 
@@ -57,4 +50,4 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
     res.status(200).send(preProcessResponse(updatedApp));
 };
 
-export default updateApp;
+export default [validateRequestBeforeUpdateApp, updateApp];

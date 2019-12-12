@@ -20,14 +20,16 @@ interface ValidationConfig {
 const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
     req: Request,
     res: Response,
+    next: any,
 ) => {
     try {
         await Promise.all(_.map(
             async ({schema, selector}) => schema.validateAsync(selector(req)),
             validationConfig
         ));
+        next();
     } catch (e) {
-        throw preProcessErrorResponse(e);
+        res.status(422).send(preProcessErrorResponse(e));
     }
 };
 

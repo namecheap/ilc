@@ -23,13 +23,6 @@ const validateRequestBeforeDeleteTemplate = validateRequestFactory([{
 }]);
 
 const deleteTemplate = async (req: Request<DeleteTemplateRequestParams>, res: Response): Promise<void> => {
-    try {
-        await validateRequestBeforeDeleteTemplate(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const {
         name: templateName,
     } = req.params;
@@ -43,4 +36,4 @@ const deleteTemplate = async (req: Request<DeleteTemplateRequestParams>, res: Re
     }
 };
 
-export default deleteTemplate;
+export default [validateRequestBeforeDeleteTemplate, deleteTemplate];

@@ -26,13 +26,6 @@ const validateRequestBeforeGetAppRoute = validateRequestFactory([{
 }]);
 
 const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response) => {
-    try {
-        await validateRequestBeforeGetAppRoute(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const appRouteId = req.params.id;
 
     const appRoutes = await db
@@ -51,4 +44,4 @@ const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response
 
 };
 
-export default getAppRoute;
+export default [validateRequestBeforeGetAppRoute, getAppRoute];

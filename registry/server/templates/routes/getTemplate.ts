@@ -23,13 +23,6 @@ const validateRequestBeforeGetTemplate = validateRequestFactory([{
 }]);
 
 const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response): Promise<void> => {
-    try {
-        await validateRequestBeforeGetTemplate(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const {
         name: templateName,
     } = req.params;
@@ -43,4 +36,4 @@ const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response
     }
 };
 
-export default getTemplate;
+export default [validateRequestBeforeGetTemplate, getTemplate];

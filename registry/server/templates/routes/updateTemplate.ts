@@ -30,13 +30,6 @@ const validateRequestBeforeUpdateTemplate = validateRequestFactory([
 ]);
 
 const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Response): Promise<void> => {
-    try {
-        await validateRequestBeforeUpdateTemplate(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const template = req.body;
     const templateName = req.params.name;
 
@@ -53,4 +46,4 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
     res.status(200).send(updatedTemplate);
 };
 
-export default updateTemplate;
+export default [validateRequestBeforeUpdateTemplate, updateTemplate];

@@ -20,13 +20,6 @@ const validateRequestBeforeCreateApp = validateRequestFactory([{
 }]);
 
 const createApp = async (req: Request, res: Response): Promise<void> => {
-    try {
-        await validateRequestBeforeCreateApp(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const app = req.body;
 
     await db('apps').insert(stringifyJSON(['dependencies', 'props', 'ssr', 'initProps'], app));
@@ -36,4 +29,4 @@ const createApp = async (req: Request, res: Response): Promise<void> => {
     res.status(200).send(preProcessResponse(savedApp));
 };
 
-export default createApp;
+export default [validateRequestBeforeCreateApp, createApp];

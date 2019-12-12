@@ -24,13 +24,6 @@ const validateRequestBeforeGetApp = validateRequestFactory([{
 }]);
 
 const getApp = async (req: Request<GetAppRequestParams>, res: Response): Promise<void> => {
-    try {
-        await validateRequestBeforeGetApp(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const appName = req.params.name;
 
     const [app] = await db.select().from('apps').where('name', appName);
@@ -42,4 +35,4 @@ const getApp = async (req: Request<GetAppRequestParams>, res: Response): Promise
     }
 };
 
-export default getApp;
+export default [validateRequestBeforeGetApp, getApp];

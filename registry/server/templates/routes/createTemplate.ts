@@ -16,13 +16,6 @@ const validateRequestBeforeCreateTemplate = validateRequestFactory([{
 }]);
 
 const createTemplate = async (req: Request, res: Response): Promise<void> => {
-    try {
-        await validateRequestBeforeCreateTemplate(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const template = req.body;
 
     await db('templates').insert(template);
@@ -32,4 +25,4 @@ const createTemplate = async (req: Request, res: Response): Promise<void> => {
     res.status(200).send(savedTemplate);
 };
 
-export default createTemplate;
+export default [validateRequestBeforeCreateTemplate, createTemplate];

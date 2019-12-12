@@ -38,13 +38,6 @@ const validateRequestBeforeUpdateAppRoute = validateRequestFactory([
 ]);
 
 const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Response) => {
-    try {
-        await validateRequestBeforeUpdateAppRoute(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const {
         slots: appRouteSlots,
         ...appRoute
@@ -84,4 +77,4 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
     res.status(200).send(prepareAppRouteToRespond(updatedAppRoute));
 };
 
-export default updateAppRoute;
+export default [validateRequestBeforeUpdateAppRoute, updateAppRoute];

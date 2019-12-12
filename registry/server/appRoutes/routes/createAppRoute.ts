@@ -22,13 +22,6 @@ const validateRequestBeforeCreateAppRoute = validateRequestFactory([{
 }]);
 
 const createAppRoute = async (req: Request, res: Response) => {
-    try {
-        await validateRequestBeforeCreateAppRoute(req, res);
-    } catch(err) {
-        res.status(422).send(err);
-        return;
-    }
-
     const {
         slots: appRouteSlots,
         ...appRoute
@@ -60,4 +53,4 @@ const createAppRoute = async (req: Request, res: Response) => {
     res.status(200).send(prepareAppRouteToRespond(savedAppRoute));
 };
 
-export default createAppRoute;
+export default [validateRequestBeforeCreateAppRoute, createAppRoute];
