@@ -22,7 +22,7 @@
     "lodash": "^4.17.15",
     "node-tailor": "3.9.2",
     "single-spa": "^4.4.1",
-    "systemjs": "^4.1.1",
+    "systemjs": "^6.1.5",
     "systemjs-css-extra": "^1.0.2"
   },
   "devDependencies": {
