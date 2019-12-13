@@ -11,6 +11,12 @@ const reactLifecycles = singleSpaReact({
 });
 
 export const bootstrap = reactLifecycles.bootstrap;
-export const mount = reactLifecycles.mount;
-export const unmount = reactLifecycles.unmount;
+export const mount = props => {
+    console.log('Navbar mount');
+    return reactLifecycles.mount(props);
+};
+export const unmount = props => {
+    console.log('Navbar unmount');
+    return reactLifecycles.unmount(props);
+};
 export const unload = reactLifecycles.unload;
