@@ -135,9 +135,13 @@ document.addEventListener('click', function (e) {
         return;
     }
 
-    const href = e.target.getAttribute('href');
-    singleSpa.navigateToUrl(href);
-    e.preventDefault();
+    const pathname = e.target.getAttribute('href');
+    const {specialRole} = router.match(pathname);
+
+    if (specialRole === null) {
+        singleSpa.navigateToUrl(pathname);
+        e.preventDefault();
+    }
 });
 
 window.addEventListener('error', function(event) {
