@@ -73,6 +73,7 @@ function isActiveFactory(appName) {
 
             if (JSON.stringify(oldProps) !== JSON.stringify(currProps)) {
                 window.addEventListener('single-spa:app-change', () => {
+                    //TODO: need to consider addition of the new update() hook to the adapter. So it will be called instead of re-mount, if available.
                     console.log(`Triggering app re-mount for ${appName} due to changed props.`);
                     
                     reload = true;
