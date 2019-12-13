@@ -19,16 +19,7 @@ const example = {
             }
         }
     }),
-    incorrectRouteId: 123123123123123123,
-    incorrect: Object.freeze({
-        specialRole: 'ncTestRouteIncorrectSpecialRole',
-        orderPos: 'ncTestRouteIncorrectOrderPos',
-        route: 123,
-        next: 456,
-        templateName: 789,
-        slots: 'ncTestRouteIncorrectSlots'
-    }),
-    updated: Object.freeze({
+    updated: {
         orderPos: 133,
         route: '/ncTestRouteUpdated/*',
         next: false,
@@ -41,117 +32,50 @@ const example = {
                 props: { ncTestProp: 2 }
             }
         }
-    }),
-    generateExpectedResponseRoute: (id: Number | null) => ({ id, ..._.omitBy(example.correct, _.isNil) }),
-    create: async () => {
-        if (example.correctId) throw new Error('Record has already been created');
-        const response = await request.post(example.url).send(example.correct);
-        example.correctId = response.body.id;
-        return response;
     },
-    delete: async () => {
-        await request.delete(example.url + example.correctId);
-        example.correctId = null;
-    },
-    correctId: null,
 };
 
 describe(`Tests ${example.url}`, () => {
     before('should work simple "create" and "delete"', async () => {
-        await example.create();
-        await request.get(example.url + example.correctId).expect(200);
-        await request.delete(example.url + example.correctId).expect(204);
-        await request.get(example.url + example.correctId).expect(404);
-        example.correctId = null;
+        const response = await request.post(example.url).send(example.correct);
+        await request.get(example.url + response.body.id).expect(200);
+        await request.delete(example.url + response.body.id).expect(204);
+        await request.get(example.url + response.body.id).expect(404);
     });
-    afterEach(example.delete);
     describe('Create', () => {
-        it('should not create record without a required field: orderPos', async () => {
+        it('should not create record without required fields', async () => {
             const response = await request.post(example.url)
-            .send(_.omit(example.correct, 'orderPos'))
-            .expect(422, '"orderPos" is required');
+            .send(_.omit(example.correct, ['orderPos', 'route', 'slots']))
+            .expect(
+                422,
+                '"orderPos" is required\n' +
+                '"route" is required\n' +
+                '"slots" is required'
+            );
 
             expect(response.body).deep.equal({});
         });
 
-        it('should not create record without a required field: route', async () => {
-            const response = await request.post(example.url)
-            .send(_.omit(example.correct, 'route'))
-            .expect(422, '"route" is required');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not create record without a required field: slots', async () => {
-            const response = await request.post(example.url)
-            .send(_.omit(example.correct, 'slots'))
-            .expect(422, '"slots" is required');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not create record with incorrect type of field: specialRole', async () => {
+        it('should not create record with incorrect type of fields', async () => {
             const response = await request.post(example.url)
             .send({
                 ...example.correct,
-                specialRole: example.incorrect.specialRole
+                specialRole: 'ncTestRouteIncorrectSpecialRole',
+                orderPos: 'ncTestRouteIncorrectOrderPos',
+                route: 123,
+                next: 456,
+                templateName: 789,
+                slots: 'ncTestRouteIncorrectSlots'
             })
-            .expect(422, '"specialRole" must be [404]');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not create record with incorrect type of field: orderPos', async () => {
-            const response = await request.post(example.url)
-            .send({
-                ...example.correct,
-                orderPos: example.incorrect.orderPos
-            })
-            .expect(422, '"orderPos" must be a number');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not create record with incorrect type of field: route', async () => {
-            const response = await request.post(example.url)
-            .send({
-                ...example.correct,
-                route: example.incorrect.route
-            })
-            .expect(422, '"route" must be a string');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not create record with incorrect type of field: next', async () => {
-            const response = await request.post(example.url)
-            .send({
-                ...example.correct,
-                next: example.incorrect.next
-            })
-            .expect(422, '"next" must be a boolean');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not create record with incorrect type of field: templateName', async () => {
-            const response = await request.post(example.url)
-            .send({
-                ...example.correct,
-                templateName: example.incorrect.templateName
-            })
-            .expect(422, '"templateName" must be a string');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not create record with incorrect type of field: slots', async () => {
-            const response = await request.post(example.url)
-            .send({
-                ...example.correct,
-                slots: example.incorrect.slots
-            })
-            .expect(422, '"slots" must be of type object');
+            .expect(
+                422,
+                '"specialRole" must be [404]\n' +
+                '"orderPos" must be a number\n' +
+                '"route" must be a string\n' +
+                '"next" must be a boolean\n' +
+                '"templateName" must be a string\n' +
+                '"slots" must be of type object'
+            );
 
             expect(response.body).deep.equal({});
         });
@@ -162,51 +86,59 @@ describe(`Tests ${example.url}`, () => {
             .expect(200);
 
             expect(response.body).to.have.property('id');
-            const routeId = example.correctId = response.body.id;
+            const id = response.body.id;
 
-            const expectedRoute = example.generateExpectedResponseRoute(routeId);
+            const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
             expect(response.body).deep.equal(expectedRoute);
 
-            response = await request.get(example.url + routeId)
+            response = await request.get(example.url + id)
             .expect(200);
 
             expect(response.body).deep.equal(expectedRoute);
+
+            await request.delete(example.url + id);
         });
     });
 
     describe('Read', () => {
         it('should not return record with id which not exists', async () => {
-            const response = await request.get(example.url + example.incorrectRouteId)
+            const response = await request.get(example.url + 123123123123123123)
             .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
 
         it('should successfully return record', async () => {
-            await example.create();
-
-            const response = await request.get(example.url + example.correctId)
+            let response = await request.post(example.url).send(example.correct);
+            const id = response.body.id;
+            
+            response = await request.get(example.url + id)
             .expect(200);
 
-            const expectedRoute = example.generateExpectedResponseRoute(example.correctId);
+            const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
             expect(response.body).deep.equal(expectedRoute);
+
+            await request.delete(example.url + id);
         });
 
         it('should successfully return all existed records', async () => {
-            await example.create();
+            let response = await request.post(example.url).send(example.correct);
+            const id = response.body.id;
 
-            const response = await request.get(example.url)
+            response = await request.get(example.url)
             .expect(200);
 
             expect(response.body.routes).to.be.an('array').that.is.not.empty;
-            const expectedRoute = example.generateExpectedResponseRoute(example.correctId);
+            const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
             expect(response.body.routes).to.deep.include(expectedRoute);
+
+            await request.delete(example.url + id);
         });
     });
 
     describe('Update', () => {
         it('should not update any record if record doesnt exist', async () => {
-            const response = await request.put(example.url + example.incorrectRouteId)
+            const response = await request.put(example.url + 123123123123123123)
             .send(example.correct)
             .expect(404, 'Not found');
 
@@ -214,109 +146,66 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not update record with incorrect type of field: specialRole', async () => {
-            await example.create();
+            let response = await request.post(example.url).send(example.correct);
+            const id = response.body.id;
 
-            const response = await request.put(example.url + example.correctId)
+            response = await request.put(example.url + id)
             .send({
                 ...example.correct,
-                specialRole: example.incorrect.specialRole
+                specialRole: 'ncTestRouteIncorrectSpecialRole',
+                orderPos: 'ncTestRouteIncorrectOrderPos',
+                route: 123,
+                next: 456,
+                templateName: 789,
+                slots: 'ncTestRouteIncorrectSlots'
             })
-            .expect(422, '"specialRole" must be [404]');
+            .expect(
+                422,
+                '"specialRole" must be [404]\n' +
+                '"orderPos" must be a number\n' +
+                '"route" must be a string\n' +
+                '"next" must be a boolean\n' +
+                '"templateName" must be a string\n' +
+                '"slots" must be of type object'
+            );
 
             expect(response.body).deep.equal({});
-        });
 
-        it('should not update record with incorrect type of field: orderPos', async () => {
-            await example.create();
-
-            const response = await request.put(example.url + example.correctId)
-            .send({
-                ...example.correct,
-                orderPos: example.incorrect.orderPos
-            })
-            .expect(422, '"orderPos" must be a number');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not update record with incorrect type of field: route', async () => {
-            await example.create();
-
-            const response = await request.put(example.url + example.correctId)
-            .send({
-                ...example.correct,
-                route: example.incorrect.route
-            })
-            .expect(422, '"route" must be a string');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not update record with incorrect type of field: next', async () => {
-            await example.create();
-
-            const response = await request.put(example.url + example.correctId)
-            .send({
-                ...example.correct,
-                next: example.incorrect.next
-            })
-            .expect(422, '"next" must be a boolean');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not update record with incorrect type of field: templateName', async () => {
-            await example.create();
-
-            const response = await request.put(example.url + example.correctId)
-            .send({
-                ...example.correct,
-                templateName: example.incorrect.templateName
-            })
-            .expect(422, '"templateName" must be a string');
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not update record with incorrect type of field: slots', async () => {
-            await example.create();
-
-            const response = await request.put(example.url + example.correctId)
-            .send({
-                ...example.correct,
-                slots: example.incorrect.slots
-            })
-            .expect(422, '"slots" must be of type object');
-
-            expect(response.body).deep.equal({});
+            await request.delete(example.url + id);
         });
 
         it('should successfully update record', async () => {
-            await example.create();
+            let response = await request.post(example.url).send(example.correct);
+            const id = response.body.id;
 
-            const response = await request.put(example.url + example.correctId)
+            response = await request.put(example.url + id)
             .send(example.updated)
             .expect(200);
 
-            expect(response.body).deep.equal({ ...example.updated, id: example.correctId });
+            expect(response.body).deep.equal({ ...example.updated, id });
+
+            await request.delete(example.url + id);
         });
     });
 
     describe('Delete', () => {
         it('should not delete any record if record doesnt exist', async () => {
-            const response = await request.delete(example.url + example.incorrectRouteId)
+            const response = await request.delete(example.url + 123123123123123123)
             .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
 
         it('should successfully delete record', async () => {
-            await example.create();
+            let response = await request.post(example.url).send(example.correct);
+            const id = response.body.id;
 
-            const response = await request.delete(example.url + example.correctId)
+            response = await request.delete(example.url + id)
             .expect(204, '');
 
             expect(response.body).deep.equal({});
+
+            await request.delete(example.url + id);
         });
     });
 });
