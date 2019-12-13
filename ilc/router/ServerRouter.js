@@ -71,11 +71,14 @@ module.exports = class ServerRouter {
             }
 
             const url = new URL(ssrOpts.src);
+            const fragmentName = `${slotData.appName.replace('@portal/', '')}__at__${slotName}`;
 
             const reqProps = {
                 basePath: route.basePath,
-                reqUrl: route.reqUrl
+                reqUrl: route.reqUrl,
+                fragmentName,
             };
+
             url.searchParams.append('routerProps', Buffer.from(JSON.stringify(reqProps)).toString('base64'));
 
             if (slotData.props !== undefined || appInfo.props !== undefined) {

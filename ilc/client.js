@@ -6,8 +6,16 @@ const System = window.System;
 // Tailor injects <link> tags near SSRed body of the app inside "slot" tag
 // this causes removal of the loaded CSS from the DOM after app unmount.
 // So we're "saving" such elements by moving them to the <head>
-const cssIncludesToSave = document.body.querySelectorAll('link[data-fragment-id]');
-cssIncludesToSave.forEach(v => document.head.append(v));
+Array.from(document.body.querySelectorAll('link[data-fragment-id]')).reduce((hrefs, link) => {
+    if (hrefs.has(link.href)) {
+        link.parentNode.removeChild(link)
+    } else {
+        hrefs.add(link.href);
+        document.head.append(link);
+    }
+
+    return hrefs;
+}, new Set());
 
 const confScript = document.querySelector('script[type="spa-config"]');
 if (confScript === null) {
@@ -20,62 +28,69 @@ const router = new Router(registryConf);
 let currentPath = router.match(window.location.pathname + window.location.search);
 let prevPath = currentPath;
 
-for (let appName in registryConf.apps) {
-    if (!registryConf.apps.hasOwnProperty(appName)) {
-        continue;
-    }
+registryConf.routes.map((route) => route.slots).forEach((slots) => {
+    Object.keys(slots).forEach((slotName) => {
+        const appName = slots[slotName].appName;
 
-    singleSpa.registerApplication(
-        appName.replace('@portal/', ''),
-        () => {
-            const waitTill = [System.import(appName)];
-            const appConf = registryConf.apps[appName];
-
-            if (appConf.cssBundle !== undefined) {
-                waitTill.push(System.import(appConf.cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
-                    //TODO: error handling should be improved, need to submit PR with typed errors
-                    if (err.message.indexOf('has already been loaded using another way') === -1) {
-                        throw err;
-                    }
-                }));
-            }
-
-            return Promise.all(waitTill).then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
-        },
-        isActiveFactory(appName),
-        {
-            fragmentName: appName,
-            domElementGetter: getMountPointFactory(appName),
-            getCurrentPathProps: getCurrentPathPropsFactory(appName),
-            getCurrentBasePath,
+        if (!registryConf.apps.hasOwnProperty(appName)) {
+            return;
         }
-    );
-}
 
-function getMountPointFactory(appName) {
+        const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
+
+        singleSpa.registerApplication(
+            fragmentName,
+            () => {
+                const waitTill = [System.import(appName)];
+                const appConf = registryConf.apps[appName];
+
+                if (appConf.cssBundle !== undefined) {
+                    waitTill.push(System.import(appConf.cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
+                        //TODO: error handling should be improved, need to submit PR with typed errors
+                        if (err.message.indexOf('has already been loaded using another way') === -1) {
+                            throw err;
+                        }
+                    }));
+                }
+
+                return Promise.all(waitTill).then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
+            },
+            isActiveFactory(appName, slotName),
+            {
+                domElementGetter: getMountPointFactory(slotName),
+                getCurrentPathProps: getCurrentPathPropsFactory(appName, slotName),
+                getCurrentBasePath,
+            }
+        );
+    });
+});
+
+function getMountPointFactory(slotName) {
     return () => {
-        const elId = Object.entries(currentPath.slots).find(([k, v]) => v.appName === appName)[0];
-        return document.getElementById(elId)
+        return document.getElementById(slotName)
     };
 }
 
-function isActiveFactory(appName) {
+function isActiveFactory(appName, slotName) {
     let reload = false;
 
     return () => {
-        const checkActivity = (path) => Object.values(path.slots).map(v => v.appName).includes(appName);
+        const checkActivity = (path) => Object.entries(path.slots).some(([
+            currentSlotName,
+            slot
+        ]) => slot.appName === appName && currentSlotName === slotName);
         const isActive = checkActivity(currentPath);
         const wasActive = checkActivity(prevPath);
 
         if (isActive && wasActive && reload === false) {
-            const oldProps = getPathProps(appName, prevPath);
-            const currProps = getPathProps(appName, currentPath);
+            const oldProps = getPathProps(appName, slotName, prevPath);
+            const currProps = getPathProps(appName, slotName, currentPath);
 
             if (JSON.stringify(oldProps) !== JSON.stringify(currProps)) {
                 window.addEventListener('single-spa:app-change', () => {
                     //TODO: need to consider addition of the new update() hook to the adapter. So it will be called instead of re-mount, if available.
                     console.log(`Triggering app re-mount for ${appName} due to changed props.`);
-                    
+
                     reload = true;
                     singleSpa.triggerAppChange();
                 }, {once: true});
@@ -90,13 +105,13 @@ function isActiveFactory(appName) {
     }
 }
 
-function getCurrentPathPropsFactory(appName) {
-    return () => getPathProps(appName, currentPath);
+function getCurrentPathPropsFactory(appName, slotName) {
+    return () => getPathProps(appName, slotName, currentPath);
 }
 
-function getPathProps(appName, path) {
+function getPathProps(appName, slotName, path) {
     const appProps = registryConf.apps[appName].props || {};
-    const routeProps = Object.values(path.slots).find(v => v.appName === appName).props || {};
+    const routeProps = path.slots[slotName] && currentPath.slots[slotName].props || {};
 
     return Object.assign({}, appProps, routeProps);
 }
@@ -112,7 +127,6 @@ window.addEventListener('single-spa:before-routing-event', () => {
     if (currentPath !== null && path.template !== currentPath.template) {
         throw new Error('Base template was changed and I still don\'t know how to handle it :(');
     }
-
     currentPath = path;
 });
 
