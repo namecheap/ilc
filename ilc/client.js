@@ -28,42 +28,70 @@ const router = new Router(registryConf);
 let currentPath = router.match(window.location.pathname + window.location.search);
 let prevPath = currentPath;
 
-registryConf.routes.map((route) => route.slots).forEach((slots) => {
-    Object.keys(slots).forEach((slotName) => {
-        const appName = slots[slotName].appName;
+registryConf.routes
+    .map((route) => route.slots)
+    .reduce((slotsList, currentSlots) => {
+        const currentSlotsEntries = Object.entries(currentSlots).reduce((currentSlotsEntries, [currentSlotName, currentSlot]) => {
+            const isSlotAlreadyExisted = slotsList.some((slots) => Object.entries(slots).some(([
+                slotName,
+                slot,
+            ]) => slotName === currentSlotName && currentSlot.appName === slot.appName));
 
-        if (!registryConf.apps.hasOwnProperty(appName)) {
-            return;
+            if (isSlotAlreadyExisted) {
+                return currentSlotsEntries;
+            }
+
+            return [
+                ...currentSlotsEntries,
+                [currentSlotName, currentSlot],
+            ];
+        }, []);
+
+        if (!currentSlotsEntries.length) {
+            return slotsList;
         }
 
-        const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
+        return [
+            ...slotsList,
+            Object.fromEntries(currentSlotsEntries),
+        ];
+    }, [])
+    .forEach((slots) => {
+        Object.keys(slots).forEach((slotName) => {
+            const appName = slots[slotName].appName;
 
-        singleSpa.registerApplication(
-            fragmentName,
-            () => {
-                const waitTill = [System.import(appName)];
-                const appConf = registryConf.apps[appName];
-
-                if (appConf.cssBundle !== undefined) {
-                    waitTill.push(System.import(appConf.cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
-                        //TODO: error handling should be improved, need to submit PR with typed errors
-                        if (err.message.indexOf('has already been loaded using another way') === -1) {
-                            throw err;
-                        }
-                    }));
-                }
-
-                return Promise.all(waitTill).then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
-            },
-            isActiveFactory(appName, slotName),
-            {
-                domElementGetter: getMountPointFactory(slotName),
-                getCurrentPathProps: getCurrentPathPropsFactory(appName, slotName),
-                getCurrentBasePath,
+            if (!registryConf.apps.hasOwnProperty(appName)) {
+                return;
             }
-        );
+
+            const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
+
+            singleSpa.registerApplication(
+                fragmentName,
+                () => {
+                    const waitTill = [System.import(appName)];
+                    const appConf = registryConf.apps[appName];
+
+                    if (appConf.cssBundle !== undefined) {
+                        waitTill.push(System.import(appConf.cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
+                            //TODO: error handling should be improved, need to submit PR with typed errors
+                            if (err.message.indexOf('has already been loaded using another way') === -1) {
+                                throw err;
+                            }
+                        }));
+                    }
+
+                    return Promise.all(waitTill).then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
+                },
+                isActiveFactory(appName, slotName),
+                {
+                    domElementGetter: getMountPointFactory(slotName),
+                    getCurrentPathProps: getCurrentPathPropsFactory(appName, slotName),
+                    getCurrentBasePath,
+                }
+            );
+        });
     });
-});
 
 function getMountPointFactory(slotName) {
     return () => {
@@ -93,7 +121,7 @@ function isActiveFactory(appName, slotName) {
 
                     reload = true;
                     singleSpa.triggerAppChange();
-                }, {once: true});
+                }, { once: true });
 
                 return false;
             }
@@ -136,7 +164,7 @@ document.addEventListener('click', function (e) {
     }
 
     const pathname = e.target.getAttribute('href');
-    const {specialRole} = router.match(pathname);
+    const { specialRole } = router.match(pathname);
 
     if (specialRole === null) {
         singleSpa.navigateToUrl(pathname);
@@ -144,7 +172,7 @@ document.addEventListener('click', function (e) {
     }
 });
 
-window.addEventListener('error', function(event) {
+window.addEventListener('error', function (event) {
     const moduleInfo = System.getModuleInfo(event.filename);
     if (moduleInfo === null) {
         return;
@@ -166,7 +194,7 @@ window.addEventListener('error', function(event) {
     }));
 });
 
-window.addEventListener('ilcFragmentError', function(event) {
+window.addEventListener('ilcFragmentError', function (event) {
     console.error(JSON.stringify({
         type: 'FRAGMENT_ERROR',
         name: event.detail.error.toString(),
