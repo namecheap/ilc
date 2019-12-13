@@ -18,6 +18,7 @@ const registryConf = JSON.parse(confScript.innerHTML);
 
 const router = new Router(registryConf);
 let currentPath = router.match(window.location.pathname + window.location.search);
+let prevPath = currentPath;
 
 for (let appName in registryConf.apps) {
     if (!registryConf.apps.hasOwnProperty(appName)) {
@@ -59,16 +60,45 @@ function getMountPointFactory(appName) {
 }
 
 function isActiveFactory(appName) {
-    return () => Object.values(currentPath.slots).map(v => v.appName).includes(appName)
+    let reload = false;
+
+    return () => {
+        const checkActivity = (path) => Object.values(path.slots).map(v => v.appName).includes(appName);
+        const isActive = checkActivity(currentPath);
+        const wasActive = checkActivity(prevPath);
+
+        if (isActive && wasActive && reload === false) {
+            const oldProps = getPathProps(appName, prevPath);
+            const currProps = getPathProps(appName, currentPath);
+
+            if (JSON.stringify(oldProps) !== JSON.stringify(currProps)) {
+                window.addEventListener('single-spa:app-change', () => {
+                    //TODO: need to consider addition of the new update() hook to the adapter. So it will be called instead of re-mount, if available.
+                    console.log(`Triggering app re-mount for ${appName} due to changed props.`);
+                    
+                    reload = true;
+                    singleSpa.triggerAppChange();
+                }, {once: true});
+
+                return false;
+            }
+        }
+
+        reload = false;
+
+        return isActive;
+    }
 }
 
 function getCurrentPathPropsFactory(appName) {
-    return () => {
-        const appProps = registryConf.apps[appName].props || {};
-        const routeProps = Object.values(currentPath.slots).find(v => v.appName === appName).props || {};
+    return () => getPathProps(appName, currentPath);
+}
 
-        return Object.assign({}, appProps, routeProps);
-    }
+function getPathProps(appName, path) {
+    const appProps = registryConf.apps[appName].props || {};
+    const routeProps = Object.values(path.slots).find(v => v.appName === appName).props || {};
+
+    return Object.assign({}, appProps, routeProps);
 }
 
 function getCurrentBasePath() {
@@ -76,7 +106,7 @@ function getCurrentBasePath() {
 }
 
 window.addEventListener('single-spa:before-routing-event', () => {
-    //console.log('Called: "single-spa:before-routing-event"');
+    prevPath = currentPath;
 
     const path = router.match(window.location.pathname + window.location.search);
     if (currentPath !== null && path.template !== currentPath.template) {
@@ -87,7 +117,7 @@ window.addEventListener('single-spa:before-routing-event', () => {
 });
 
 document.addEventListener('click', function (e) {
-    if (e.target.tagName !== 'A' || !e.target.hasAttribute('href')) {
+    if (e.defaultPrevented === true || e.target.tagName !== 'A' || !e.target.hasAttribute('href')) {
         return;
     }
 
