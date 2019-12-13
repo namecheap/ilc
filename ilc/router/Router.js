@@ -26,7 +26,7 @@ module.exports = class Router {
             }
 
             res = _defaultsDeep({
-                isSpecialRoute: false,
+                specialRole: null,
             }, _omit(route, ['route', 'next', 'routeExp']), res);
 
             if (route.next !== true) {
@@ -46,7 +46,7 @@ module.exports = class Router {
         }
 
         return _defaultsDeep({
-            isSpecialRoute: true,
+            specialRole: 404,
         }, this.#specialRoutes[404]);
     }
 

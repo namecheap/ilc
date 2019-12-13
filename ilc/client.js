@@ -122,9 +122,9 @@ document.addEventListener('click', function (e) {
     }
 
     const pathname = e.target.getAttribute('href');
-    const {isSpecialRoute} = router.match(pathname);
+    const {specialRole} = router.match(pathname);
 
-    if (!isSpecialRoute) {
+    if (specialRole === null) {
         singleSpa.navigateToUrl(pathname);
         e.preventDefault();
     }
