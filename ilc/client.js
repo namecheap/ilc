@@ -31,15 +31,11 @@ for (let appName in registryConf.apps) {
             const appConf = registryConf.apps[appName];
 
             if (appConf.cssBundle !== undefined) {
-                waitTill.push(System.import(appConf.cssBundle).then((module) => {
-                    /**
-                     * CSS modules export a Constructable Stylesheet instance as their default export when imported
-                     * @see {@link https://github.com/systemjs/systemjs/blob/master/docs/module-types.md#css-modules}
-                     * @see {@link https://github.com/w3c/webcomponents/blob/gh-pages/proposals/css-modules-v1-explainer.md}
-                     * @see {@link https://github.com/calebdwilliams/construct-style-sheets}
-                     */
-                    const styleSheet = module.default;
-                    document.adoptedStyleSheets = [...document.adoptedStyleSheets, styleSheet];
+                waitTill.push(System.import(appConf.cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
+                    //TODO: error handling should be improved, need to submit PR with typed errors
+                    if (err.message.indexOf('has already been loaded using another way') === -1) {
+                        throw err;
+                    }
                 }));
             }
 
