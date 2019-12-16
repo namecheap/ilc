@@ -112,7 +112,7 @@ function getCurrentPathPropsFactory(appName, slotName) {
 
 function getPathProps(appName, slotName, path) {
     const appProps = registryConf.apps[appName].props || {};
-    const routeProps = path.slots[slotName] && currentPath.slots[slotName].props || {};
+    const routeProps = path.slots[slotName] && path.slots[slotName].props || {};
 
     return Object.assign({}, appProps, routeProps);
 }
