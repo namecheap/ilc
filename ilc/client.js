@@ -1,5 +1,6 @@
 import * as singleSpa from 'single-spa';
 import * as Router from './router/Router';
+import selectSlotsToRegister from './client/selectSlotsToRegister';
 
 const System = window.System;
 
@@ -28,7 +29,7 @@ const router = new Router(registryConf);
 let currentPath = router.match(window.location.pathname + window.location.search);
 let prevPath = currentPath;
 
-registryConf.routes.map((route) => route.slots).forEach((slots) => {
+selectSlotsToRegister(registryConf.routes).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
         const appName = slots[slotName].appName;
 
@@ -93,7 +94,7 @@ function isActiveFactory(appName, slotName) {
 
                     reload = true;
                     singleSpa.triggerAppChange();
-                }, {once: true});
+                }, { once: true });
 
                 return false;
             }
@@ -111,7 +112,7 @@ function getCurrentPathPropsFactory(appName, slotName) {
 
 function getPathProps(appName, slotName, path) {
     const appProps = registryConf.apps[appName].props || {};
-    const routeProps = path.slots[slotName] && currentPath.slots[slotName].props || {};
+    const routeProps = path.slots[slotName] && path.slots[slotName].props || {};
 
     return Object.assign({}, appProps, routeProps);
 }
@@ -136,7 +137,7 @@ document.addEventListener('click', function (e) {
     }
 
     const pathname = e.target.getAttribute('href');
-    const {specialRole} = router.match(pathname);
+    const { specialRole } = router.match(pathname);
 
     if (specialRole === null) {
         singleSpa.navigateToUrl(pathname);
@@ -144,7 +145,7 @@ document.addEventListener('click', function (e) {
     }
 });
 
-window.addEventListener('error', function(event) {
+window.addEventListener('error', function (event) {
     const moduleInfo = System.getModuleInfo(event.filename);
     if (moduleInfo === null) {
         return;
@@ -166,7 +167,7 @@ window.addEventListener('error', function(event) {
     }));
 });
 
-window.addEventListener('ilcFragmentError', function(event) {
+window.addEventListener('ilcFragmentError', function (event) {
     console.error(JSON.stringify({
         type: 'FRAGMENT_ERROR',
         name: event.detail.error.toString(),
