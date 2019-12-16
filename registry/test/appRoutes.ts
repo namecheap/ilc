@@ -1,47 +1,88 @@
 import _ from 'lodash';
 import { request, expect } from './common';
 
-const example = {
+let example = <any>{
+    template: {
+        url: '/api/v1/template/',
+        correct: {
+            name: 'ncTestTemplateName',
+            content: 'ncTestTemplateContent'
+        },
+    },
+    app: {
+        url: '/api/v1/app/',
+        correct: {
+            name: '@portal/ncTestAppName',
+            spaBundle: 'http://localhost:1234/ncTestAppName.js',
+        },
+    },
+};
+
+example = {
+    ...example,
     url: '/api/v1/route/',
     correct: Object.freeze({
         specialRole: undefined,
         orderPos: 122,
         route: '/ncTestRoute/*',
         next: false,
-        templateName: undefined,
+        templateName: example.template.correct.name,
         slots: {
-            ncTestRouteSlotNavbar: {
-                appName: '@portal/ncTestRouteSlotNavbar',
+            ncTestRouteSlotName: {
+                appName: example.app.correct.name,
                 props: { ncTestProp: 1 }
             },
-            ncTestRouteSlotBody: {
-                appName: '@portal/ncTestRouteSlotSystem',
-            }
-        }
+        },
     }),
     updated: {
         orderPos: 133,
         route: '/ncTestRouteUpdated/*',
+        templateName: example.template.correct.name,
         next: false,
         slots: {
             ncTestRouteSlotNavbar: {
-                appName: '@portal/ncTestRouteSlotNavbarUpdated',
+                appName: example.app.correct.name,
             },
-            ncTestRouteSlotBody: {
-                appName: '@portal/ncTestRouteSlotSystemUpdated',
-                props: { ncTestProp: 2 }
-            }
-        }
+        },
     },
 };
 
+const createTemplate = async () => {
+    let response = await request.post(example.template.url)
+    .send(example.template.correct)
+    .expect(200);
+
+    expect(response.body).deep.equal(example.template.correct);
+
+    response = await request.get(example.template.url + example.template.correct.name)
+    .expect(200);
+    expect(response.body).deep.equal(example.template.correct);
+};
+
+const createApp = async () => {
+    let response = await request.post(example.app.url)
+    .send(example.app.correct)
+    .expect(200);
+
+    expect(response.body).deep.equal(example.app.correct);
+
+    response = await request.get(example.app.url + encodeURIComponent(example.app.correct.name))
+    .expect(200);
+
+    expect(response.body).deep.equal(example.app.correct);
+};
+
 describe(`Tests ${example.url}`, () => {
-    before('should work simple "create" and "delete"', async () => {
-        const response = await request.post(example.url).send(example.correct);
-        await request.get(example.url + response.body.id).expect(200);
-        await request.delete(example.url + response.body.id).expect(204);
-        await request.get(example.url + response.body.id).expect(404);
+    before(async () => {
+        await createTemplate();
+        await createApp();
     });
+
+    after(async () => {
+        await request.delete(example.template.url + example.template.correct.name).expect(204);
+        await request.delete(example.app.url + encodeURIComponent(example.app.correct.name)).expect(204);
+    });
+
     describe('Create', () => {
         it('should not create record without required fields', async () => {
             const response = await request.post(example.url)
@@ -80,6 +121,58 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).deep.equal({});
         });
 
+        it('should not create record with the same orderPos', async () => {
+            let response = await request.post(example.url).send(example.correct).expect(200);
+            const id = response.body.id;
+
+            response = await request.post(example.url)
+            .send(example.correct)
+            .expect(500);
+
+            expect(response.text).to.include('UNIQUE constraint failed: routes.orderPos');
+
+            await request.delete(example.url + id);
+        });
+
+        it('should not create record with non-existing templateName', async () => {
+            const response = await request.post(example.url)
+            .send({
+                ...example.correct,
+                templateName: 'ncTestNonExistingTemplateName',
+            })
+            .expect(500);
+
+            expect(response.text).to.include('SQLITE_CONSTRAINT: FOREIGN KEY constraint failed');
+        });
+
+        it('should not create record with non-existing slots/appName', async () => {
+            const response = await request.post(example.url)
+            .send({
+                ...example.correct,
+                slots: {
+                    ncTestRouteSlotNavbar: {
+                        appName: '@portal/ncTestNonExistingAppName',
+                    },
+                }
+            })
+            .expect(500);
+
+            expect(response.text).to.include('SQLITE_CONSTRAINT: FOREIGN KEY constraint failed');
+        });
+
+        it('should not create record without required slots/appName', async () => {
+            await request.post(example.url)
+            .send({
+                ...example.correct,
+                slots: {
+                    ncTestRouteSlotNavbar: {
+                        appName: undefined,
+                    },
+                }
+            })
+            .expect(422, '"slots.ncTestRouteSlotNavbar.appName" is required');
+        });
+
         it('should successfully create record', async () => {
             let response = await request.post(example.url)
             .send(example.correct)
@@ -101,7 +194,7 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Read', () => {
-        it('should not return record with id which not exists', async () => {
+        it('should return 404 for non-existing id', async () => {
             const response = await request.get(example.url + 123123123123123123)
             .expect(404, 'Not found');
 
@@ -109,20 +202,20 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully return record', async () => {
-            let response = await request.post(example.url).send(example.correct);
+            let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
-            
+
             response = await request.get(example.url + id)
             .expect(200);
 
             const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
             expect(response.body).deep.equal(expectedRoute);
 
-            await request.delete(example.url + id);
+            await request.delete(example.url + id).expect(204);
         });
 
         it('should successfully return all existed records', async () => {
-            let response = await request.post(example.url).send(example.correct);
+            let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
             response = await request.get(example.url)
@@ -132,7 +225,7 @@ describe(`Tests ${example.url}`, () => {
             const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
             expect(response.body.routes).to.deep.include(expectedRoute);
 
-            await request.delete(example.url + id);
+            await request.delete(example.url + id).expect(204);
         });
     });
 
@@ -146,7 +239,7 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not update record with incorrect type of field: specialRole', async () => {
-            let response = await request.post(example.url).send(example.correct);
+            let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
             response = await request.put(example.url + id)
@@ -171,11 +264,86 @@ describe(`Tests ${example.url}`, () => {
 
             expect(response.body).deep.equal({});
 
-            await request.delete(example.url + id);
+            await request.delete(example.url + id).expect(204);
+        });
+
+        it('should not update record with the same orderPos', async () => {
+            let response = await request.post(example.url)
+            .send({ ...example.correct, orderPos: 100000, })
+            .expect(200);
+            const id1 = response.body.id;
+
+            response = await request.post(example.url)
+            .send({ ...example.correct, orderPos: 200000, })
+            .expect(200);
+            const id2 = response.body.id;
+
+            response = await request.put(example.url + id1)
+            .send({ ...example.correct, orderPos: 200000, })
+            .expect(500);
+
+            expect(response.text).to.include('UNIQUE constraint failed: routes.orderPos');
+
+            await request.delete(example.url + id1).expect(204);
+            await request.delete(example.url + id2).expect(204);
+        });
+
+        it('should not update record with non-existing templateName', async () => {
+            let response = await request.post(example.url).send(example.correct).expect(200);
+            const id = response.body.id;
+
+            response = await request.put(example.url + id)
+            .send({
+                ...example.correct,
+                templateName: 'ncTestNonExistingTemplateName',
+            })
+            .expect(500);
+
+            expect(response.text).to.include('SQLITE_CONSTRAINT: FOREIGN KEY constraint failed');
+
+            await request.delete(example.url + id).expect(204);
+        });
+
+        it('should not update record with non-existing slots/appName', async () => {
+            let response = await request.post(example.url).send(example.correct).expect(200);
+            const id = response.body.id;
+
+            response = await request.put(example.url + id)
+            .send({
+                ...example.correct,
+                slots: {
+                    ncTestRouteSlotNavbar: {
+                        appName: '@portal/ncTestNonExistingAppName',
+                    },
+                }
+            })
+            .expect(500);
+
+            expect(response.text).to.include('SQLITE_CONSTRAINT: FOREIGN KEY constraint failed');
+
+            await request.delete(example.url + id).expect(204);
+        });
+
+        it('should not update record without required slots/appName', async () => {
+            let response = await request.post(example.url).send(example.correct).expect(200);
+            const id = response.body.id;
+
+            response = await request.put(example.url + id)
+            .send({
+                ...example.correct,
+                slots: {
+                    ncTestRouteSlotNavbar: {
+                        appName: undefined,
+                    },
+                }
+            })
+            .expect(422, '"slots.ncTestRouteSlotNavbar.appName" is required');
+
+            await request.delete(example.url + id).expect(204);
         });
 
         it('should successfully update record', async () => {
-            let response = await request.post(example.url).send(example.correct);
+            let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
             response = await request.put(example.url + id)
@@ -184,7 +352,7 @@ describe(`Tests ${example.url}`, () => {
 
             expect(response.body).deep.equal({ ...example.updated, id });
 
-            await request.delete(example.url + id);
+            await request.delete(example.url + id).expect(204);
         });
     });
 
@@ -197,15 +365,13 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully delete record', async () => {
-            let response = await request.post(example.url).send(example.correct);
+            let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
             response = await request.delete(example.url + id)
             .expect(204, '');
 
             expect(response.body).deep.equal({});
-
-            await request.delete(example.url + id);
         });
     });
 });

@@ -1,5 +1,5 @@
 import supertest from 'supertest';
-import server from '../server/index';
+import server from '../server/app';
 
 export const request = supertest(server);
 

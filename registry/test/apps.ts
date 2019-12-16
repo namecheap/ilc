@@ -44,12 +44,6 @@ const example = <any>{
 example.encodedName = encodeURIComponent(example.correct.name);
 
 describe(`Tests ${example.url}`, () => {
-    before('should work simple "create" and "delete"', async () => {
-        await request.post(example.url).send(example.correct).expect(200)
-        await request.get(example.url + example.encodedName).expect(200);
-        await request.delete(example.url + example.encodedName).expect(204);
-        await request.get(example.url + example.encodedName).expect(404);
-    });
     describe('Create', () => {
         it('should not create record without a required field: name', async () => {
             const response = await request.post(example.url)
@@ -107,11 +101,13 @@ describe(`Tests ${example.url}`, () => {
             .expect(200);
 
             expect(response.body).deep.equal(example.correct);
+
+            await request.delete(example.url + example.encodedName).expect(204);
         });
     });
 
     describe('Read', () => {
-        it('should not return record with id which not exists', async () => {
+        it('should return 404 for non-existing id', async () => {
             const incorrect = { name: 123 };
             const response = await request.get(example.url + incorrect.name)
             .expect(404, 'Not found');
@@ -127,11 +123,11 @@ describe(`Tests ${example.url}`, () => {
 
             expect(response.body).deep.equal(example.correct);
 
-            await request.delete(example.url + example.encodedName);
+            await request.delete(example.url + example.encodedName).expect(204);
         });
 
         it('should successfully return all existed records', async () => {
-            await request.post(example.url).send(example.correct);
+            await request.post(example.url).send(example.correct).expect(200);
 
             const response = await request.get(example.url)
             .expect(200);
@@ -139,7 +135,7 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).to.be.an('array').that.is.not.empty;
             expect(response.body).to.deep.include(example.correct);
 
-            await request.delete(example.url + example.encodedName);
+            await request.delete(example.url + example.encodedName).expect(204);
         });
     });
 
@@ -153,7 +149,7 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not update record if forbidden "name" is passed', async () => {
-            await request.post(example.url).send(example.correct);
+            await request.post(example.url).send(example.correct).expect(200);
 
             const response = await request.put(example.url + example.encodedName)
             .send(example.updated)
@@ -161,11 +157,11 @@ describe(`Tests ${example.url}`, () => {
 
             expect(response.body).deep.equal({});
 
-            await request.delete(example.url + example.encodedName);
+            await request.delete(example.url + example.encodedName).expect(204);
         });
 
         it('should not update record with incorrect type of fields', async () => {
-            await request.post(example.url).send(example.correct);
+            await request.post(example.url).send(example.correct).expect(200);
 
             const incorrect = {
                 spaBundle: 456,
@@ -194,11 +190,11 @@ describe(`Tests ${example.url}`, () => {
             );
             expect(response.body).deep.equal({});
 
-            await request.delete(example.url + example.encodedName);
+            await request.delete(example.url + example.encodedName).expect(204);
         });
 
         it('should successfully update record', async () => {
-            await request.post(example.url).send(example.correct);
+            await request.post(example.url).send(example.correct).expect(200);
 
             const response = await request.put(example.url + example.encodedName)
             .send(_.omit(example.updated, 'name'))
@@ -206,7 +202,7 @@ describe(`Tests ${example.url}`, () => {
 
             expect(response.body).deep.equal(example.updated);
 
-            await request.delete(example.url + example.encodedName);
+            await request.delete(example.url + example.encodedName).expect(204);
         });
     });
 
@@ -220,14 +216,12 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully delete record', async () => {
-            await request.post(example.url).send(example.correct);
+            await request.post(example.url).send(example.correct).expect(200);
 
             const response = await request.delete(example.url + example.encodedName)
             .expect(204, '');
 
             expect(response.body).deep.equal({});
-
-            await request.delete(example.url + example.encodedName);
         });
     });
 });
