@@ -1,5 +1,6 @@
 import * as singleSpa from 'single-spa';
 import * as Router from './router/Router';
+import selectSlotsToRegister from './client/selectSlotsToRegister';
 
 const System = window.System;
 
@@ -28,70 +29,42 @@ const router = new Router(registryConf);
 let currentPath = router.match(window.location.pathname + window.location.search);
 let prevPath = currentPath;
 
-registryConf.routes
-    .map((route) => route.slots)
-    .reduce((slotsList, currentSlots) => {
-        const currentSlotsEntries = Object.entries(currentSlots).reduce((currentSlotsEntries, [currentSlotName, currentSlot]) => {
-            const isSlotAlreadyExisted = slotsList.some((slots) => Object.entries(slots).some(([
-                slotName,
-                slot,
-            ]) => slotName === currentSlotName && currentSlot.appName === slot.appName));
+selectSlotsToRegister(registryConf.routes).forEach((slots) => {
+    Object.keys(slots).forEach((slotName) => {
+        const appName = slots[slotName].appName;
 
-            if (isSlotAlreadyExisted) {
-                return currentSlotsEntries;
-            }
-
-            return [
-                ...currentSlotsEntries,
-                [currentSlotName, currentSlot],
-            ];
-        }, []);
-
-        if (!currentSlotsEntries.length) {
-            return slotsList;
+        if (!registryConf.apps.hasOwnProperty(appName)) {
+            return;
         }
 
-        return [
-            ...slotsList,
-            Object.fromEntries(currentSlotsEntries),
-        ];
-    }, [])
-    .forEach((slots) => {
-        Object.keys(slots).forEach((slotName) => {
-            const appName = slots[slotName].appName;
+        const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
 
-            if (!registryConf.apps.hasOwnProperty(appName)) {
-                return;
-            }
+        singleSpa.registerApplication(
+            fragmentName,
+            () => {
+                const waitTill = [System.import(appName)];
+                const appConf = registryConf.apps[appName];
 
-            const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
-
-            singleSpa.registerApplication(
-                fragmentName,
-                () => {
-                    const waitTill = [System.import(appName)];
-                    const appConf = registryConf.apps[appName];
-
-                    if (appConf.cssBundle !== undefined) {
-                        waitTill.push(System.import(appConf.cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
-                            //TODO: error handling should be improved, need to submit PR with typed errors
-                            if (err.message.indexOf('has already been loaded using another way') === -1) {
-                                throw err;
-                            }
-                        }));
-                    }
-
-                    return Promise.all(waitTill).then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
-                },
-                isActiveFactory(appName, slotName),
-                {
-                    domElementGetter: getMountPointFactory(slotName),
-                    getCurrentPathProps: getCurrentPathPropsFactory(appName, slotName),
-                    getCurrentBasePath,
+                if (appConf.cssBundle !== undefined) {
+                    waitTill.push(System.import(appConf.cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
+                        //TODO: error handling should be improved, need to submit PR with typed errors
+                        if (err.message.indexOf('has already been loaded using another way') === -1) {
+                            throw err;
+                        }
+                    }));
                 }
-            );
-        });
+
+                return Promise.all(waitTill).then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
+            },
+            isActiveFactory(appName, slotName),
+            {
+                domElementGetter: getMountPointFactory(slotName),
+                getCurrentPathProps: getCurrentPathPropsFactory(appName, slotName),
+                getCurrentBasePath,
+            }
+        );
     });
+});
 
 function getMountPointFactory(slotName) {
     return () => {
