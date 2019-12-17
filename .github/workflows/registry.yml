@@ -1,4 +1,4 @@
-name: Registry build & test
+name: Registry
 
 on: [push]
 
@@ -37,4 +37,5 @@ jobs:
         for i in ${TAGS//,/ }
         do
             docker tag registry:tmp docker.pkg.github.com/stylet/icl/registry:$i
+            docker push docker.pkg.github.com/stylet/icl/registry:$i
         done
