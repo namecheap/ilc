@@ -2,7 +2,6 @@
 const path = require('path');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const WrapperPlugin = require('wrapper-webpack-plugin');
 
 module.exports = {
   entry: path.resolve(__dirname, 'index.js'),
@@ -38,11 +37,6 @@ module.exports = {
     new CopyWebpackPlugin([
       {from: path.resolve(__dirname, 'index.js')}
     ]),
-    new WrapperPlugin({
-      test: /\.js$/, // only wrap output of bundle files with '.js' extension
-      header: '(function(define){\n',
-      footer: '\n})((window.ILC && window.ILC.define) || window.define);'
-    }),
   ],
   devtool: 'source-map',
   externals: [],

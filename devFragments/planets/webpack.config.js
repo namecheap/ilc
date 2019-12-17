@@ -1,7 +1,6 @@
 const path = require('path');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-const WrapperPlugin = require('wrapper-webpack-plugin');
 
 module.exports = {
   entry: path.resolve(__dirname, 'src/planets.js'),
@@ -35,11 +34,6 @@ module.exports = {
   plugins: [
     new VueLoaderPlugin(),
     new CleanWebpackPlugin(['build/planets']),
-    new WrapperPlugin({
-      test: /\.js$/, // only wrap output of bundle files with '.js' extension
-      header: '(function(define){\n',
-      footer: '\n})((window.ILC && window.ILC.define) || window.define);'
-    }),
   ],
   devtool: 'source-map',
   externals: [

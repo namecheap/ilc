@@ -26,7 +26,6 @@
     "raw-loader": "^3.1.0",
     "webpack": "^4.30.0",
     "webpack-dev-middleware": "^3.7.0",
-    "webpack-dev-server": "^3.7.2",
-    "wrapper-webpack-plugin": "^2.1.0"
+    "webpack-dev-server": "^3.7.2"
   }
 }

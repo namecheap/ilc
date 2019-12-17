@@ -49,7 +49,6 @@
     "vue-template-compiler": "^2.5.3",
     "webpack": "^3.8.1",
     "webpack-merge": "latest",
-    "webpack-node-externals": "^1.6.0",
-    "wrapper-webpack-plugin": "^1.0.0"
+    "webpack-node-externals": "^1.6.0"
   }
 }
