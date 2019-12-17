@@ -21,6 +21,10 @@ module.exports = class Registry {
 
         if (this.#data === null || this.#cachedAt < now - this.#cacheForSeconds) {
             if (this.#cacheResolutionPromise !== null) {
+                if (this.#data !== null) { // It's better to return stale data rather then cause delay
+                    return this.#data;
+                }
+
                 return this.#cacheResolutionPromise;
             }
 
@@ -34,6 +38,8 @@ module.exports = class Registry {
 
                 return this.#data;
             }).catch(err => {
+                this.#cacheResolutionPromise = null;
+
                 if (this.#data !== null) {
                     console.error('Error refreshing configuration from registry...');
                     console.error(err);
@@ -41,6 +47,10 @@ module.exports = class Registry {
                     throw err;
                 }
             });
+
+            if (this.#data !== null) { // It's better to return stale data rather then cause delay
+                return this.#data;
+            }
 
             return this.#cacheResolutionPromise;
         }
