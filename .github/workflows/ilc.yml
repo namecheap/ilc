@@ -9,6 +9,13 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
+    - name: Calc tags
+      id: tags
+      run: |
+        BRANCH=$(echo ${GITHUB_REF} | cut -d'/' -f3)
+        TAGS=$([ "$BRANCH" == "master" ] && echo "latest," || echo "")
+        echo ::set-output name=docker_tags::$TAGS${GITHUB_SHA:0:7}
+
     - uses: jerray/publish-docker-action@d035a9e
       with:
         username: StyleT
@@ -17,11 +24,12 @@ jobs:
         repository: stylet/icl/ilc
         path: ./ilc/
         file: ./ilc/Dockerfile
-        auto_tag: true
+#        auto_tag: true
+        tags: ${{ steps.tags.outputs.docker_tags }}
         allow_pull_request: true
 #    - name: Build the Docker image
 #      run: |
 #        cd ./ilc/
-#        docker build . --file Dockerfile --tag stylet/ilc:latest
-#        echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username stylet --password-stdin
-#        docker push stylet/ilc:latest
+#        echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username stylet --password-stdin
+#        docker build . --file Dockerfile --tag docker.pkg.github.com/stylet/icl/ilc:latest
+#        docker push docker.pkg.github.com/stylet/icl/ilc:latest
