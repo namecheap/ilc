@@ -12,8 +12,8 @@ jobs:
     - name: Calc tags
       id: tags
       run: |
-        BRANCH=$(echo ${GITHUB_REF} | cut -d'/' -f3)
-        TAGS=$([ "$BRANCH" == "master" ] && echo "latest," || echo "")
+        BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
+        TAGS=$([ "$BRANCH" == "feature/docker_build" ] && echo "latest," || echo "")
         echo ::set-output name=docker_tags::$TAGS${GITHUB_SHA:0:7}
 
     - uses: jerray/publish-docker-action@d035a9e
