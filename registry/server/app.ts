@@ -9,7 +9,7 @@ import pong from './util/ping';
 import * as routes from "./routes";
 
 //production use 2+ instances of the registry with help of "npm run assetsdiscovery" and run manualy
-process.env.NODE_ENV !== 'production' && require('./runnerAppAssetsDiscovery');
+!['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAppAssetsDiscovery');
 
 const app = express();
 
