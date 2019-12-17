@@ -12,7 +12,7 @@ jobs:
     - uses: jerray/publish-docker-action@d035a9e
       with:
         username: StyleT
-        password: ${{ secrets.GITHUB_SECRET_TOKEN }}
+        password: ${{ secrets.GITHUB_TOKEN }}
         registry: docker.pkg.github.com
         repository: stylet/icl/ilc
         path: ./ilc/
