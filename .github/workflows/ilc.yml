@@ -14,7 +14,7 @@ jobs:
       run: |
         BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
         LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
-        DOCKER_TAGS="$LATEST$BRANCH"
+        DOCKER_TAGS="$LATEST${BRANCH//\//_}"
         echo "Tags that will be used: $DOCKER_TAGS"
         echo ::set-output name=docker_tags::$DOCKER_TAGS
 
