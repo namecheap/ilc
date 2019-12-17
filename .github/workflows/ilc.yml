@@ -16,6 +16,7 @@ jobs:
         registry: docker.pkg.github.com
         repository: stylet/icl/ilc
         path: ./ilc/
+        file: ./ilc/Dockerfile
         auto_tag: true
         allow_pull_request: true
 #    - name: Build the Docker image
