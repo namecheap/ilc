@@ -13,8 +13,10 @@ jobs:
       id: tags
       run: |
         BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
-        TAGS=$([ "$BRANCH" == "master" ] && echo "latest," || echo "")
-        echo ::set-output name=docker_tags::$TAGS${GITHUB_SHA:0:7}
+        LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
+        DOCKER_TAGS="$LATEST$BRANCH"
+        echo "Tags that will be used: $DOCKER_TAGS"
+        echo ::set-output name=docker_tags::$DOCKER_TAGS
 
     - uses: jerray/publish-docker-action@d035a9e
       with:
