@@ -13,7 +13,7 @@ jobs:
       id: tags
       run: |
         BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
-        TAGS=$([ "$BRANCH" == "feature/docker_build" ] && echo "latest," || echo "")
+        TAGS=$([ "$BRANCH" == "master" ] && echo "latest," || echo "")
         echo ::set-output name=docker_tags::$TAGS${GITHUB_SHA:0:7}
 
     - uses: jerray/publish-docker-action@d035a9e
@@ -24,9 +24,9 @@ jobs:
         repository: stylet/icl/ilc
         path: ./ilc/
         file: ./ilc/Dockerfile
-#        auto_tag: true
+        auto_tag: false
         tags: ${{ steps.tags.outputs.docker_tags }}
-        allow_pull_request: true
+        allow_pull_request: false
 #    - name: Build the Docker image
 #      run: |
 #        cd ./ilc/
