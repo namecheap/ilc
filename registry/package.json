@@ -13,17 +13,25 @@
     "migrate:make": "knex --knexfile config/knexfile.ts migrate:make",
     "seed": "knex --knexfile config/knexfile.ts seed:run",
     "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "npm run migrate && npm run seed"
+    "test": "cross-env NODE_ENV=test mocha -r ts-node/register ./tests/**/*.ts --exit",
+    "postinstall": "npm run migrate && npm run seed",
+    "assetsdiscovery": "cross-env NODE_ENV=production INTERVAL=2000 node ./build/server/runnerAppAssetsDiscovery.js"
   },
   "author": "Vladlen Fedosov",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/chai": "4.2.7",
     "@types/config": "0.0.34",
     "@types/express": "^4.17.1",
     "@types/hapi__joi": "^16.0.3",
     "@types/lodash": "^4.14.144",
+    "@types/mocha": "5.2.7",
+    "@types/supertest": "2.0.8",
+    "chai": "4.2.0",
+    "cross-env": "6.0.3",
+    "mocha": "6.2.2",
     "nodemon": "^1.19.4",
+    "supertest": "4.0.2",
     "ts-node": "^8.4.1",
     "typescript": "^3.6.4"
   },

@@ -53,8 +53,8 @@ export default function singleSpaVue(userOpts) {
 }
 
 function bootstrap(opts, mountedInstances, props) {
-    if (props.fragmentName) {
-        fragmentName = props.fragmentName;
+    if (props.name) {
+        fragmentName = props.name;
     }
 
     if (opts.loadRootComponent) {
@@ -138,9 +138,11 @@ function unmount(opts, mountedInstances) {
     return Promise
         .resolve()
         .then(() => {
-            mountedInstances.instance.$destroy();
-            mountedInstances.instance.$el.innerHTML = '';
-            delete mountedInstances.instance;
+            if (mountedInstances.instance) {
+                mountedInstances.instance.$destroy();
+                mountedInstances.instance.$el.innerHTML = '';
+                delete mountedInstances.instance;
+            }
 
             if (mountedInstances.domEl) {
                 mountedInstances.domEl.innerHTML = ''

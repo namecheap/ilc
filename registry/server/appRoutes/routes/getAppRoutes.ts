@@ -19,4 +19,4 @@ const getAppRoutes = async (req: Request, res: Response) => {
     res.status(200).send(prepareAppRoutesToRespond(appRoutes));
 };
 
-export default getAppRoutes;
+export default [getAppRoutes];

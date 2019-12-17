@@ -30,10 +30,14 @@ const validateRequestBeforeUpdateTemplate = validateRequestFactory([
 ]);
 
 const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Response): Promise<void> => {
-    await validateRequestBeforeUpdateTemplate(req, res);
-
     const template = req.body;
     const templateName = req.params.name;
+
+    const templatesToUpdate = await db('templates').where({ name: templateName });
+    if (!templatesToUpdate.length) {
+        res.status(404).send('Not found');
+        return;
+    }
 
     await db('templates').where({ name: templateName }).update(template);
 
@@ -42,4 +46,4 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
     res.status(200).send(updatedTemplate);
 };
 
-export default updateTemplate;
+export default [validateRequestBeforeUpdateTemplate, updateTemplate];

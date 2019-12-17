@@ -1,2 +1,7 @@
 <!--vue-ssr-outlet-->
-{{{ renderState() }}}<script type="text/javascript">document.currentScript.previousSibling.remove();document.currentScript.remove()</script>
+{{{
+    renderState({
+        windowKey: `__${fragmentName}__`
+    })
+}}}
+<script type="text/javascript">document.currentScript.previousElementSibling.remove();document.currentScript.remove()</script>

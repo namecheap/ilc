@@ -8,10 +8,10 @@ import deleteApp from './deleteApp';
 
 const appsRouter = express.Router();
 
-appsRouter.get('/', getApps);
-appsRouter.post('/', createApp);
-appsRouter.get('/:name', getApp);
-appsRouter.put('/:name', updateApp);
-appsRouter.delete('/:name', deleteApp);
+appsRouter.get('/', ...getApps);
+appsRouter.post('/', ...createApp);
+appsRouter.get('/:name', ...getApp);
+appsRouter.put('/:name', ...updateApp);
+appsRouter.delete('/:name', ...deleteApp);
 
 export default appsRouter;

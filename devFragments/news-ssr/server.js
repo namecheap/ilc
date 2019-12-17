@@ -51,8 +51,11 @@ server.get('/_spa/dev/assets-discovery', (req, res) => {
 server.get('*', (req, res) => {
     res.setHeader("Content-Type", "text/html");
 
+    const routerProps = JSON.parse(Buffer.from(req.query.routerProps, 'base64').toString('utf8'));
+
     const context = {
         url: req.url,
+        fragmentName: routerProps.fragmentName,
     };
 
     const currRenderer = !!req.query.fragment ? rendererFragment : renderer;
