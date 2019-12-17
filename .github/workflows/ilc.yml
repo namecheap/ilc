@@ -21,18 +21,11 @@ jobs:
 
     - uses: jerray/publish-docker-action@d035a9e
       with:
-        username: StyleT
-        password: ${{ secrets.GITHUB_TOKEN }}
-        registry: docker.pkg.github.com
-        repository: stylet/icl/ilc
+        username: stylet
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+        repository: stylet/ilc
         path: ./ilc/
         file: ./ilc/Dockerfile
         auto_tag: false
         tags: ${{ steps.tags.outputs.docker_tags }}
         allow_pull_request: false
-#    - name: Build the Docker image
-#      run: |
-#        cd ./ilc/
-#        echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username stylet --password-stdin
-#        docker build . --file Dockerfile --tag docker.pkg.github.com/stylet/icl/ilc:latest
-#        docker push docker.pkg.github.com/stylet/icl/ilc:latest
