@@ -12,5 +12,5 @@ jobs:
       run: |
         cd ./ilc/
         docker build . --file Dockerfile --tag stylet/ilc:latest
-        echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username foo --password-stdin
+        echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username stylet --password-stdin
         docker push stylet/ilc:latest
