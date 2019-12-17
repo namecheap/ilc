@@ -25,4 +25,5 @@ jobs:
         CI: true
     - name: npm test
       run: |
+        cd ./registry/
         npm test
