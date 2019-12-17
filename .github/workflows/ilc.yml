@@ -8,9 +8,19 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Build the Docker image
-      run: |
-        cd ./ilc/
-        docker build . --file Dockerfile --tag stylet/ilc:latest
-        echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username stylet --password-stdin
-        docker push stylet/ilc:latest
+
+    - uses: jerray/publish-docker-action@d035a9e
+      with:
+        username: StyleT
+        password: ${{ secrets.GITHUB_SECRET_TOKEN }}
+        registry: docker.pkg.github.com
+        repository: StyleT/icl/ilc
+        path: ./ilc/
+        auto_tag: true
+        allow_pull_request: true
+#    - name: Build the Docker image
+#      run: |
+#        cd ./ilc/
+#        docker build . --file Dockerfile --tag stylet/ilc:latest
+#        echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username stylet --password-stdin
+#        docker push stylet/ilc:latest
