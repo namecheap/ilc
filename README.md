@@ -1,5 +1,7 @@
 # Isomorphic Layout Composer
 
+[![Actions Status](https://github.com/StyleT/icl/workflows/Registry%20build%20&%20test/badge.svg)](https://github.com/StyleT/icl/actions)
+
 Isomorphic Layout Composer (ILC) - layout service that compose a web page from fragment services.
 
 This repository also contains an example of how using ILC you can create a micro service front-end and enable multiple 
