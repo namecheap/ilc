@@ -21,6 +21,12 @@ if (client === 'mysql') {
             conn.query('SET time_zone="+00:00";', (err: Error) => done(err, conn))
         }
     };
+} else if (client === 'sqlite3'){
+    knexConf.pool = {
+        afterCreate: (conn: any, done: Function) => {
+            conn.run('PRAGMA foreign_keys = ON;', (err: Error) => done(err, conn))
+        }
+    };
 }
 
 export default knex(knexConf);

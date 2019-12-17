@@ -24,7 +24,7 @@ const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
 ) => {
     try {
         await Promise.all(_.map(
-            async ({schema, selector}) => schema.validateAsync(selector(req)),
+            async ({schema, selector}) => schema.validateAsync(selector(req), {abortEarly: false}),
             validationConfig
         ));
         next();
