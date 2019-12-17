@@ -19,7 +19,7 @@ jobs:
         docker build . --tag registry:tmp
 
     - name: Run tests
-      run: docker run registry:tmp npm run migrate && npm run test
+      run: docker run registry:tmp npm run test:ci
 
     - name: Calc tags
       id: tags
