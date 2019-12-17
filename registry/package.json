@@ -7,7 +7,7 @@
     "tsc": "tsc",
     "compile": "tsc --incremental",
     "dev": "nodemon -e ts,json5 --exec \"tsc --incremental && npm run start\"",
-    "start": "node -r source-map-support/register ./build/server/index.js || true",
+    "start": "node -r source-map-support/register ./build/server/index.js",
     "knex": "knex",
     "migrate": "knex --knexfile config/knexfile.ts migrate:latest",
     "migrate:make": "knex --knexfile config/knexfile.ts migrate:make",

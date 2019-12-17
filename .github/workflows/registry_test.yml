@@ -7,23 +7,34 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [12.x]
-
     steps:
     - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: npm install
+
+    - name: Docker registry auth
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login --username stylet --password-stdin
+
+    - name: Build the Docker image
       run: |
         cd ./registry/
-        npm install
-      env:
-        CI: true
-    - name: npm test
+        docker build . --tag registry:tmp
+
+    - name: Run tests
+      run: docker run registry:tmp npm run migrate && npm run test
+
+    - name: Calc tags
+      id: tags
       run: |
-        cd ./registry/
-        npm test
+        BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
+        LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
+        DOCKER_TAGS="$LATEST${BRANCH//\//_}"
+        echo "Tags that will be used: $DOCKER_TAGS"
+        echo ::set-output name=docker_tags::$DOCKER_TAGS
+
+    - name: Push image
+      run: |
+        TAGS="${{ steps.tags.outputs.docker_tags }}"
+
+        for i in ${TAGS//,/ }
+        do
+            docker tag registry:tmp docker.pkg.github.com/stylet/icl/registry:$i
+        done
