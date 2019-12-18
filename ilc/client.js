@@ -29,7 +29,7 @@ const router = new Router(registryConf);
 let currentPath = router.match(window.location.pathname + window.location.search);
 let prevPath = currentPath;
 
-selectSlotsToRegister(registryConf.routes).forEach((slots) => {
+selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
         const appName = slots[slotName].appName;
 
@@ -113,7 +113,6 @@ function getCurrentPathPropsFactory(appName, slotName) {
 function getPathProps(appName, slotName, path) {
     const appProps = registryConf.apps[appName].props || {};
     const routeProps = path.slots[slotName] && path.slots[slotName].props || {};
-
     return Object.assign({}, appProps, routeProps);
 }
 
