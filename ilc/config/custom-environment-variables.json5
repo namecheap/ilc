@@ -1,0 +1,5 @@
+{
+    registry: {
+        address: 'REGISTRY_ADDR',
+    }
+}
