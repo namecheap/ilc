@@ -32,7 +32,6 @@
     "nodemon": "^1.19.4",
     "webpack": "^4.30.0",
     "webpack-cli": "3.1.0",
-    "webpack-dev-server": "^3.3.1",
-    "wrapper-webpack-plugin": "^2.1.0"
+    "webpack-dev-server": "^3.3.1"
   }
 }
