@@ -9,7 +9,7 @@
         "dev": "nodemon -e ts,json5 --exec \"tsc --incremental && npm run start\"",
         "start": "node -r source-map-support/register ./build/server/index.js",
         "knex": "knex",
-        "migrate": "knex --knexfile config/knexfile.ts migrate:latest",
+        "migrate": "mkdir -p ./server/dbfiles && knex --knexfile config/knexfile.ts migrate:latest",
         "migrate:make": "knex --knexfile config/knexfile.ts migrate:make",
         "seed": "knex --knexfile config/knexfile.ts seed:run",
         "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
