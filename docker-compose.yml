@@ -1,0 +1,19 @@
+version: "3.7"
+services:
+  registry:
+    image: stylet/ilc_registry:feature_docker_build
+    command: bash -c "npm run migrate && exec npm start"
+    deploy:
+      replicas: 1
+    volumes:
+      - "./dbfiles:/codebase/server/dbfiles"
+    ports:
+      - "4001:4001"
+  ilc:
+    image: stylet/ilc:feature_docker_build
+    deploy:
+      replicas: 1
+    ports:
+      - "4002:8233"
+    environment:
+      REGISTRY_ADDR: "http://registry:4001"
