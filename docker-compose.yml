@@ -3,17 +3,31 @@ services:
   registry:
     image: stylet/ilc_registry:feature_docker_build
     command: bash -c "npm run migrate && exec npm start"
-    deploy:
-      replicas: 1
     volumes:
       - "./dbfiles:/codebase/server/dbfiles"
     ports:
       - "4001:4001"
   ilc:
     image: stylet/ilc:feature_docker_build
-    deploy:
-      replicas: 1
     ports:
       - "4002:8233"
     environment:
       REGISTRY_ADDR: "http://registry:4001"
+  reactsample:
+    image: nc-mss-app-docker.artifactory.corp.namecheap.net/nc/uisamplereact.ilc.app:1.1.5-test1
+    ports:
+      - "4051:3001"
+    environment:
+      NGINX_REGISTRATION_ENABLED: 'true'
+      NGINX_API_ADDR: http://status.phx01bsbx147.sb.corp.namecheap.net/
+      NGINX_UPSTREAM_NAME: ilcuisamplereact
+      NGINX_MY_ADDR: 127.0.0.1:4051
+  uilayout:
+    image: nc-mss-app-docker.artifactory.corp.namecheap.net/nc/uilayout2.ilc.app:2.42.01
+    ports:
+      - "4050:3001"
+    environment:
+      NGINX_REGISTRATION_ENABLED: 'true'
+      NGINX_API_ADDR: http://status.phx01bsbx147.sb.corp.namecheap.net/
+      NGINX_UPSTREAM_NAME: ilcuilayout2
+      NGINX_MY_ADDR: 127.0.0.1:4050
