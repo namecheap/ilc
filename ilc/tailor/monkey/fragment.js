@@ -37,3 +37,43 @@ fragment.prototype.insertStart = function () {
         this.index++;
     });
 }
+
+/**
+ * Layout composer uses incorect format of Headers.Link
+ * so we should transform Layout composer format to correct which is used by Tailor
+ */
+const transformLink = headerLink => {
+    return headerLink
+    .split(',')
+    .map(link => {
+        return link
+        .split(';')
+        .map((attribute, index) => {
+            if (index) {
+                const [key, value] = attribute.split('=');
+                return `${key}="${value}"`;
+            } else {
+                return `<${attribute}>`;
+            }
+        })
+        .join('; ');
+    })
+    .join(',');
+};
+
+const { onResponse } = fragment.prototype;
+
+fragment.prototype.onResponse = function (response) {
+    const link = response.headers.link;
+    const xAmzMetaLink = response.headers['x-amz-meta-link'];
+
+    if (link && !link.startsWith('<')) {
+        response.headers.link = transformLink(link);
+    }
+
+    if (xAmzMetaLink && !xAmzMetaLink.startsWith('<')) {
+        response.headers['x-amz-meta-link'] = transformLink(xAmzMetaLink);
+    }
+
+    onResponse.apply(this, arguments);
+}
