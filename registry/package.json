@@ -46,6 +46,7 @@
         "knex": "^0.19.5",
         "lodash": "^4.17.15",
         "source-map-support": "^0.5.13",
-        "sqlite3": "^4.1.0"
+        "sqlite3": "^4.1.0",
+        "url-join": "^4.0.1"
     }
 }
