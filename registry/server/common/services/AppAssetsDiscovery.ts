@@ -1,5 +1,6 @@
 import axios, {AxiosResponse} from 'axios';
 import _ from 'lodash';
+import urljoin from 'url-join';
 
 import knex from '../../db';
 
@@ -34,9 +35,18 @@ export default class AppAssetsDiscovery {
             });
 
         for (const app of apps) {
+            let reqUrl = app.assetsDiscoveryUrl;
+
+            // This implementation of communication between ILC & apps duplicates code in ILC ServerRouter
+            // and so should be refactored in the future.
+            if (app.props && app.props !== '{}') {
+                const appProps = Buffer.from(app.props).toString('base64');
+                reqUrl = urljoin(reqUrl, `?appProps=${appProps}`);
+            }
+
             let res: AxiosResponse;
             try {
-                res = await axios.get(app.assetsDiscoveryUrl, {responseType: 'json'});
+                res = await axios.get(reqUrl, {responseType: 'json'});
             } catch (err) {
                 //TODO: add exponential back-off
                 console.warn(`Can't refresh assets for app "${app.name}". Error: ${err.toString()}`);
