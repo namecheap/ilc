@@ -13,6 +13,10 @@ services:
       - "4002:8233"
     environment:
       REGISTRY_ADDR: "http://registry:4001"
+      NGINX_REGISTRATION_ENABLED: 'true'
+      NGINX_API_ADDR: http://status.phx01bsbx147.sb.corp.namecheap.net/
+      NGINX_UPSTREAM_NAME: ilc
+      NGINX_MY_ADDR: 127.0.0.1:4002
   reactsample:
     image: nc-mss-app-docker.artifactory.corp.namecheap.net/nc/uisamplereact.ilc.app:1.1.5-test1
     ports:
