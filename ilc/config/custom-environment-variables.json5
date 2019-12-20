@@ -1,4 +1,5 @@
 {
+    cdnUrl: 'CDN_URL',
     registry: {
         address: 'REGISTRY_ADDR',
     },

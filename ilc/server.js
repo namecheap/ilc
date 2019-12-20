@@ -12,7 +12,7 @@ tailor.on('error', (req, err) => {
 });
 
 
-app.use(serveStatic(config.get('productionMode')));
+app.use('/_ilc/', serveStatic(config.get('productionMode')));
 
 
 app.get('*', (req, res) => {

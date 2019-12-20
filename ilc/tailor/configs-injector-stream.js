@@ -3,6 +3,7 @@ const zlib = require('zlib');
 const util = require('util');
 const gunzip = util.promisify(zlib.gunzip);
 const _ = require('lodash');
+const urljoin = require('url-join');
 
 const helpers = require('../helpers');
 
@@ -36,10 +37,12 @@ module.exports = class StringifierStream extends stream.Transform {
 
         const regConf = _.defaultsDeep({}, {apps: await this.#decode(this.__bundleVersionOverrides)}, registryConf.data);
 
+        const clientjsUrl = this.__cdnUrl === null ? '/_ilc/client.js' : urljoin(this.__cdnUrl, '/client.js');
+
         const tpl =
             helpers.getSystemjsImportmap(regConf.apps) +
             helpers.getSPAConfig(regConf) +
-            `<script src="${this.__cdnUrl === null ? '' : this.__cdnUrl}/client.js" type="text/javascript"></script>`;
+            `<script src="${clientjsUrl}" type="text/javascript"></script>`;
 
         chunk = chunk.replace(this.#placeholder, tpl);
 

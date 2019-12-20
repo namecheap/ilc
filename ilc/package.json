@@ -25,7 +25,8 @@
     "node-tailor": "3.9.2",
     "single-spa": "^4.4.1",
     "systemjs": "^6.1.5",
-    "systemjs-css-extra": "^1.0.2"
+    "systemjs-css-extra": "^1.0.2",
+    "url-join": "^4.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.6.4",
