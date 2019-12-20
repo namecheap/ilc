@@ -17,17 +17,17 @@ services:
       NGINX_API_ADDR: http://status.phx01bsbx147.sb.corp.namecheap.net/
       NGINX_UPSTREAM_NAME: ilc
       NGINX_MY_ADDR: 127.0.0.1:4002
-  reactsample:
-    image: nc-mss-app-docker.artifactory.corp.namecheap.net/nc/uisamplereact.ilc.app:1.1.5-test1
+  uieasywp:
+    image: nc-mss-app-docker.artifactory.corp.namecheap.net/nc/uieasywp.ilc.app:1.4.5-develop-203-test2
     ports:
       - "4051:3001"
     environment:
       NGINX_REGISTRATION_ENABLED: 'true'
       NGINX_API_ADDR: http://status.phx01bsbx147.sb.corp.namecheap.net/
-      NGINX_UPSTREAM_NAME: ilcuisamplereact
+      NGINX_UPSTREAM_NAME: ilcuieasywp
       NGINX_MY_ADDR: 127.0.0.1:4051
   uilayout:
-    image: nc-mss-app-docker.artifactory.corp.namecheap.net/nc/uilayout2.ilc.app:2.42.01
+    image: nc-mss-app-docker.artifactory.corp.namecheap.net/nc/uilayout2.ilc.app:2.42.0-test2
     ports:
       - "4050:3001"
     environment:
