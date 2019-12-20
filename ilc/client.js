@@ -131,16 +131,24 @@ window.addEventListener('single-spa:before-routing-event', () => {
 });
 
 document.addEventListener('click', function (e) {
-    if (e.defaultPrevented === true || e.target.tagName !== 'A' || !e.target.hasAttribute('href')) {
+    const anchor = e.target.tagName === 'A'
+        ? e.target
+        : e.target.closest('a');
+
+    if (
+        e.defaultPrevented === true ||
+        anchor && !anchor.hasAttribute('href')
+    ) {
         return;
     }
 
-    const pathname = e.target.getAttribute('href');
+    const pathname = anchor.getAttribute('href');
     const { specialRole } = router.match(pathname);
 
     if (specialRole === null) {
         singleSpa.navigateToUrl(pathname);
         e.preventDefault();
+        window.scrollTo(0, 0);
     }
 });
 
