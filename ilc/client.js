@@ -134,15 +134,12 @@ document.addEventListener('click', function (e) {
     const anchor = e.target.tagName === 'A'
         ? e.target
         : e.target.closest('a');
+    const href = anchor && anchor.getAttribute('href');
 
-    if (
-        e.defaultPrevented === true ||
-        !(anchor && anchor.hasAttribute('href'))
-    ) {
+    if (e.defaultPrevented === true || !href) {
         return;
     }
 
-    const href = anchor.getAttribute('href');
     const pathname = href.replace(window.location.origin, '');
     const { specialRole } = router.match(pathname);
 
