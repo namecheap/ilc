@@ -137,7 +137,7 @@ document.addEventListener('click', function (e) {
 
     if (
         e.defaultPrevented === true ||
-        anchor && !anchor.hasAttribute('href')
+        !(anchor && anchor.hasAttribute('href'))
     ) {
         return;
     }
