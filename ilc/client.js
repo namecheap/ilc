@@ -142,7 +142,8 @@ document.addEventListener('click', function (e) {
         return;
     }
 
-    const pathname = anchor.getAttribute('href');
+    const href = anchor.getAttribute('href');
+    const pathname = href.replace(anchor.origin, '');
     const { specialRole } = router.match(pathname);
 
     if (specialRole === null) {
