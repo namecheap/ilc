@@ -1,4 +1,5 @@
 const config = require('config');
+const server = require('./http');
 const app = require('express')();
 const tailorFactory = require('./tailorFactory');
 const serveStatic = require('./serveStatic');
@@ -11,7 +12,7 @@ tailor.on('error', (req, err) => {
 });
 
 
-app.use(serveStatic(config.get('productionMode')));
+app.use('/_ilc/', serveStatic(config.get('productionMode')));
 
 
 app.get('*', (req, res) => {
@@ -22,6 +23,4 @@ app.get('*', (req, res) => {
 
 app.disable('x-powered-by');
 
-app.listen(config.get('port'), function() {
-    console.log(`Isomorphic Layout Composer server listening on port ${config.get('port')}`);
-});
+server(app);

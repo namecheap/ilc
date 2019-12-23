@@ -1,0 +1,15 @@
+{
+    cdnUrl: 'CDN_URL',
+    registry: {
+        address: 'REGISTRY_ADDR',
+    },
+    nginxRegistration: {
+        enabled: {
+            __name: 'NGINX_REGISTRATION_ENABLED',
+            __format: 'json'
+        },
+        apiAddr: 'NGINX_API_ADDR',
+        upstreamName: 'NGINX_UPSTREAM_NAME',
+        myAddr: 'NGINX_MY_ADDR',
+    }
+}

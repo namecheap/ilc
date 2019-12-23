@@ -1,5 +1,7 @@
 'use strict';
 
+const urljoin = require('url-join');
+
 const Tailor = require('./tailor/Tailor');
 const fetchTemplate = require('./tailor/fetch-template');
 const Router = require('./router/ServerRouter');
@@ -9,7 +11,7 @@ module.exports = function (registryAddr, cdnUrl) {
     const registry = new Registry(registryAddr);
 
     return new Tailor({
-        amdLoaderUrl: cdnUrl === null ? '/system.js' : cdnUrl + '/system.js',
+        amdLoaderUrl: cdnUrl === null ? '/_ilc/system.js' : urljoin(cdnUrl, '/system.js'),
         fetchTemplate: fetchTemplate(
             __dirname + '/templates',
             new Router(registry)

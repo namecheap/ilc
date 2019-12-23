@@ -1,0 +1,41 @@
+name: Registry
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Docker registry auth
+      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username stylet --password-stdin
+
+    - name: Build the Docker image
+      run: |
+        cd ./registry/
+        docker build . --tag registry:tmp
+
+    - name: Run tests
+      run: docker run registry:tmp npm run test:ci
+
+    - name: Calc tags
+      id: tags
+      run: |
+        BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
+        LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
+        DOCKER_TAGS="$LATEST${BRANCH//\//_}"
+        echo "Tags that will be used: $DOCKER_TAGS"
+        echo ::set-output name=docker_tags::$DOCKER_TAGS
+
+    - name: Push image
+      run: |
+        TAGS="${{ steps.tags.outputs.docker_tags }}"
+
+        for i in ${TAGS//,/ }
+        do
+            docker tag registry:tmp stylet/ilc_registry:$i
+            docker push stylet/ilc_registry:$i
+        done
