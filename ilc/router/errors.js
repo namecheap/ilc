@@ -1,4 +1,4 @@
-const extendError = require('error-extender');
+const extendError = require('@namecheap/error-extender');
 
 const errors = {};
 errors.RouterError = extendError('RouterError');
