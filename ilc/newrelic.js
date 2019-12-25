@@ -4,7 +4,7 @@
 
 const config = require('config');
 
-exports.config = {
+exports.config = { 
     agent_enabled: config.get('newrelic.licenseKey') !== null,
     app_name: [`ILC${process.NODE_ENV ? '@' + process.NODE_ENV : ''}`],
     license_key: config.get('newrelic.licenseKey'),
