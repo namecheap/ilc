@@ -1,6 +1,7 @@
 import * as singleSpa from 'single-spa';
 import * as Router from './router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
+import setupErrorHandlers from './client/setupErrorHandlers';
 
 const System = window.System;
 
@@ -150,36 +151,6 @@ document.addEventListener('click', function (e) {
     }
 });
 
-window.addEventListener('error', function (event) {
-    const moduleInfo = System.getModuleInfo(event.filename);
-    if (moduleInfo === null) {
-        return;
-    }
-
-    event.preventDefault();
-
-    console.error(JSON.stringify({
-        type: 'MODULE_ERROR',
-        name: event.error.toString(),
-        moduleName: moduleInfo.name,
-        dependants: moduleInfo.dependants,
-        stack: event.error.stack.split("\n"),
-        location: {
-            fileName: event.filename,
-            lineNo: event.lineno,
-            colNo: event.colno,
-        }
-    }));
-});
-
-window.addEventListener('ilcFragmentError', function (event) {
-    console.error(JSON.stringify({
-        type: 'FRAGMENT_ERROR',
-        name: event.detail.error.toString(),
-        moduleName: event.detail.moduleInfo.name,
-        extraInfo: event.detail.extraInfo,
-        stack: event.detail.error.stack.split("\n"),
-    }));
-});
+setupErrorHandlers();
 
 singleSpa.start();

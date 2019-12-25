@@ -11,5 +11,8 @@
         apiAddr: 'NGINX_API_ADDR',
         upstreamName: 'NGINX_UPSTREAM_NAME',
         myAddr: 'NGINX_MY_ADDR',
+    },
+    newrelic: {
+        licenseKey: 'NR_LICENSE_KEY',
     }
 }
