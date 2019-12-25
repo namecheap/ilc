@@ -8,6 +8,8 @@
 require('./monkey/fragment');
 //MONKEY PATCHING END
 
+const newrelic = require('newrelic');
+
 const path = require('path');
 const fs = require('fs');
 const EventEmitter = require('events').EventEmitter;
@@ -78,7 +80,7 @@ module.exports = class Tailor extends EventEmitter {
                 }
             }
 
-            let result = `${memoizedDefinition}var ${pipeInstanceName}=${PIPE_DEFINITION}</script>\n`;
+            let result = `${newrelic.getBrowserTimingHeader()}${memoizedDefinition}var ${pipeInstanceName}=${PIPE_DEFINITION}</script>\n`;
 
             if (options.systemScripts !== undefined) {
                 result += options.systemScripts + "\n";

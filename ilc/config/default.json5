@@ -10,5 +10,8 @@
         apiAddr: null,
         upstreamName: null,
         myAddr: null
+    },
+    newrelic: {
+        licenseKey: null,
     }
 }

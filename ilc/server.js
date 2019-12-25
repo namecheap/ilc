@@ -1,8 +1,11 @@
+require('newrelic');
 const config = require('config');
 const server = require('./http');
 const app = require('express')();
 const tailorFactory = require('./tailorFactory');
 const serveStatic = require('./serveStatic');
+
+app.get('/ping', (req, res) => res.send('pong'));
 
 
 const tailor = tailorFactory(config.get('registry.address'), config.get('cdnUrl'));
