@@ -6,7 +6,7 @@ const config = require('config');
 
 exports.config = { 
     agent_enabled: config.get('newrelic.licenseKey') !== null,
-    app_name: [`ILC${process.NODE_ENV ? '@' + process.NODE_ENV : ''}`],
+    app_name: [`ILC${process.env.NODE_ENV ? '@' + process.env.NODE_ENV : ''}`],
     license_key: config.get('newrelic.licenseKey'),
     logging: {
         level: 'info',
