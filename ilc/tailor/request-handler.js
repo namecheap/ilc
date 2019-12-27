@@ -19,6 +19,9 @@ const ConfigsInjectorStream = require('./configs-injector-stream');
 const { globalTracer, Tags, FORMAT_HTTP_HEADERS } = require('opentracing');
 const tracer = globalTracer();
 
+const BotDetector = require('device-detector-js/dist/parsers/bot');
+const botDetector = new BotDetector();
+
 // Events emitted by fragments on the template
 const FRAGMENT_EVENTS = [
     'start',
@@ -29,8 +32,6 @@ const FRAGMENT_EVENTS = [
     'fallback',
     'warn'
 ];
-// Occurs when Template parsing fails/Primary Fragment Errors out
-const INTERNAL_SERVER_ERROR = 'Internal Server Error';
 
 /**
  * Process the HTTP Request to the Tailor Middleware
@@ -75,7 +76,7 @@ module.exports = function processRequest(options, request, response) {
     const responseHeaders = {
         // Disable cache in browsers and proxies
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        Pragma: 'no-cache',
+        'Pragma': 'no-cache',
         'Content-Type': 'text/html'
     };
 
@@ -87,31 +88,44 @@ module.exports = function processRequest(options, request, response) {
     });
 
     const handleError = err => {
-        this.emit('error', request, err);
+        this.emit('error', err, request, response);
+
         const { message, stack } = err;
+
         span.setTag(Tags.ERROR, true);
         span.log({ message, stack });
+
         if (shouldWriteHead) {
             shouldWriteHead = false;
-            let statusCode = 500;
-            if (err.code === TEMPLATE_NOT_FOUND || (err.data && err.data.code === TEMPLATE_NOT_FOUND)) {
-                statusCode = 404;
-            }
-            span.setTag(Tags.HTTP_STATUS_CODE, statusCode);
+            const isNoTemplate = err.code === TEMPLATE_NOT_FOUND || (err.data && err.data.code === TEMPLATE_NOT_FOUND);
+            const statusCode = isNoTemplate ? 404 : 500;
 
-            response.writeHead(statusCode, responseHeaders);
-            // To render with custom error template
-            if (typeof err.presentable === 'string') {
-                response.end(`${err.presentable}`);
-            } else if (err.data && typeof err.data.presentable === 'string') {
-                response.end(`${err.data.presentable}`);
-            } else {
-                response.end(INTERNAL_SERVER_ERROR);
-            }
+            span.setTag(Tags.HTTP_STATUS_CODE, statusCode);
             span.finish();
         } else {
             contentLengthStream.end();
         }
+    };
+
+    const handleFragment = (fragment, resultStream) => {
+        fragment.once('fallback', err => {
+            this.emit('error', err, request, response);
+            span.setTag(Tags.HTTP_STATUS_CODE, 500);
+            resultStream.pipe(contentLengthStream).pipe(response);
+        });
+
+        fragment.once('error', err => {
+            this.emit('error', err, request, response);
+            span.addTags({
+                [Tags.ERROR]: true,
+                [Tags.HTTP_STATUS_CODE]: 500
+            });
+            span.log({
+                message: err.message,
+                stack: err.stack
+            });
+            span.finish();
+        });
     };
 
     const handlePrimaryFragment = (fragment, resultStream) => {
@@ -154,27 +168,7 @@ module.exports = function processRequest(options, request, response) {
             resultStream.pipe(injector).pipe(contentLengthStream).pipe(response);
         });
 
-        fragment.once('fallback', err => {
-            this.emit('error', request, err);
-            span.setTag(Tags.HTTP_STATUS_CODE, 500);
-            response.writeHead(500, responseHeaders);
-            resultStream.pipe(contentLengthStream).pipe(response);
-        });
-
-        fragment.once('error', err => {
-            this.emit('error', request, err);
-            span.addTags({
-                [Tags.ERROR]: true,
-                [Tags.HTTP_STATUS_CODE]: 500
-            });
-            span.log({
-                message: err.message,
-                stack: err.stack
-            });
-            response.writeHead(500, responseHeaders);
-            response.end(INTERNAL_SERVER_ERROR);
-            span.finish();
-        });
+        handleFragment(fragment, resultStream);
     };
 
     Promise.all([templatePromise, contextPromise])
@@ -196,10 +190,10 @@ module.exports = function processRequest(options, request, response) {
             const injector = new ConfigsInjectorStream(bundleVersionOverride, options.registrySvc, options.cdnUrl);
             resultStream.pipe(injector);
 
-
             resultStream.on('fragment:found', fragment => {
                 isFragmentFound = true;
                 const { attributes } = fragment;
+
                 FRAGMENT_EVENTS.forEach(eventName => {
                     fragment.once(eventName, (...args) => {
                         const prefixedName = 'fragment:' + eventName;
@@ -212,12 +206,16 @@ module.exports = function processRequest(options, request, response) {
                     });
                 });
 
-                attributes.primary &&
-                handlePrimaryFragment(fragment, injector);
+                if (attributes.primary) {
+                    handlePrimaryFragment(fragment, injector);
+                } else if (botDetector.parse(request.headers['user-agent']) !== null) {
+                    handleFragment(fragment, injector);
+                }
             });
 
             resultStream.once('finish', () => {
                 const statusCode = response.statusCode || 200;
+
                 if (shouldWriteHead) {
                     shouldWriteHead = false;
                     // Preload the loader script when at least
@@ -228,7 +226,7 @@ module.exports = function processRequest(options, request, response) {
                             request.headers
                         );
                         loaderScript !== '' &&
-                        (responseHeaders.link = loaderScript);
+                            (responseHeaders.link = loaderScript);
                     }
                     this.emit('response', request, statusCode, responseHeaders);
 
@@ -242,7 +240,5 @@ module.exports = function processRequest(options, request, response) {
             parsedTemplate.forEach(item => resultStream.write(item));
             resultStream.end();
         })
-        .catch(err => {
-            handleError(err);
-        });
+        .catch(handleError);
 };

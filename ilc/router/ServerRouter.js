@@ -66,12 +66,10 @@ module.exports = class ServerRouter {
             if (typeof ssrOpts.src !== "string") {
                 throw new errors.RouterError({ message: 'No url specified for fragment', data: { appInfo } });
             }
-            if (ssrOpts.primary !== undefined && ssrOpts.primary !== true) {
-                delete ssrOpts.primary;
-            }
 
             const url = new URL(ssrOpts.src);
             const fragmentName = `${slotData.appName.replace('@portal/', '')}__at__${slotName}`;
+            const fragmentKind = slotData.kind || appInfo.kind;
 
             const reqProps = {
                 basePath: route.basePath,
@@ -85,9 +83,21 @@ module.exports = class ServerRouter {
                 const appProps = Object.assign(appInfo.props || {}, slotData.props || {});
                 url.searchParams.append('appProps', Buffer.from(JSON.stringify(appProps)).toString('base64'));
             }
+
+            if (fragmentKind === 'primary') {
+                ssrOpts.primary = true;
+            }
+
             ssrOpts.src = url.toString();
 
-            return res + `<fragment id="${slotData.appName}" slot="${slotName}" ${_.map(ssrOpts, (v, k) => `${k}="${v}"`).join(' ')}></fragment>`;
+            return res + `
+                <fragment
+                    id="${slotData.appName}"
+                    slot="${slotName}"
+                    ${_.map(ssrOpts, (v, k) => `${k}="${v}"`).join(' ')}
+                >
+                </fragment>
+            `;
         }, '');
     };
 

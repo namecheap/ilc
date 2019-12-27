@@ -24,7 +24,7 @@ function getSystemjsImportmap(apps) {
 }
 
 function getSPAConfig(registryConf) {
-    registryConf.apps = _.mapValues(registryConf.apps, v => _.pick(v, ['cssBundle', 'props', 'initProps']));
+    registryConf.apps = _.mapValues(registryConf.apps, v => _.pick(v, ['cssBundle', 'props', 'initProps', 'kind']));
 
     return `<script type="spa-config">${JSON.stringify(_.omit(registryConf, ['templates']))}</script>`;
 }

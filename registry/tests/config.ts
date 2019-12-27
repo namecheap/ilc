@@ -9,9 +9,9 @@ const example = {
         ssr: {
             src: "http://127.0.0.1:1234/fragment",
             timeout: 1000,
-            primary: true
         },
         assetsDiscoveryUrl: 'http://127.0.0.1:1234/_spa/dev/assets-discovery',
+        kind: 'primary',
     }),
     appRoutes: Object.freeze({
         orderPos: 122,
@@ -20,7 +20,8 @@ const example = {
         slots: {
             ncTestRouteSlotName: {
                 appName: '@portal/ncTestAppName',
-                props: { ncTestProp: 1 }
+                props: { ncTestProp: 1 },
+                kind: 'regular',
             },
         }
     }),

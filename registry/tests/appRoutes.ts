@@ -14,6 +14,7 @@ let example = <any>{
         correct: {
             name: '@portal/ncTestAppName',
             spaBundle: 'http://localhost:1234/ncTestAppName.js',
+            kind: 'primary',
         },
     },
 };
@@ -30,7 +31,8 @@ example = {
         slots: {
             ncTestRouteSlotName: {
                 appName: example.app.correct.name,
-                props: { ncTestProp: 1 }
+                props: { ncTestProp: 1 },
+                kind: 'regular',
             },
         },
     }),
@@ -42,6 +44,7 @@ example = {
         slots: {
             ncTestRouteSlotNavbar: {
                 appName: example.app.correct.name,
+                kind: 'primary',
             },
         },
     },

@@ -1,8 +1,9 @@
 import * as singleSpa from 'single-spa';
+
 import * as Router from './router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
-import setupErrorHandlers from './client/setupErrorHandlers';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
+import setupErrorHandlers from './client/errors/setupErrorHandlers';
 
 const System = window.System;
 
@@ -142,6 +143,7 @@ window.addEventListener('single-spa:before-routing-event', () => {
     if (currentPath !== null && path.template !== currentPath.template) {
         throw new Error('Base template was changed and I still don\'t know how to handle it :(');
     }
+
     currentPath = path;
 });
 
@@ -164,6 +166,9 @@ document.addEventListener('click', function (e) {
     }
 });
 
-setupErrorHandlers();
+setupErrorHandlers({
+    registryConf,
+    getCurrentPath: () => currentPath,
+});
 
 singleSpa.start();
