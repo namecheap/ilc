@@ -1,6 +1,5 @@
 import * as Knex from "knex";
 
-
 export async function up(knex: Knex): Promise<any> {
     return knex.schema.createTable('apps', table => {
         table.string('name', 50).notNullable().primary();
@@ -12,10 +11,9 @@ export async function up(knex: Knex): Promise<any> {
         table.json('props').defaultTo('{}');
         table.string('assetsDiscoveryUrl', 255).nullable();
         table.integer('assetsDiscoveryUpdatedAt').nullable();
+        table.enu('kind', ['primary', 'essential', 'regular']).defaultTo('regular');
     });
 }
 
-
 export async function down(knex: Knex): Promise<any> {
 }
-

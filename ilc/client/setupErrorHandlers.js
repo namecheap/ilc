@@ -1,8 +1,46 @@
+import * as singleSpa from 'single-spa';
+import * as uuidv4 from 'uuid/v4';
+
 const System = window.System;
 const newrelic = window.newrelic;
 
-export default function () {
+const KIND_OF_PRIMARY_FRAGMENT = 'primary';
+const KIND_OF_ESSENTIAL_FRAGMENT = 'essential';
+
+const selectFragmentKind = (registryConf, path, appName, slotName) => {
+    const appKind = registryConf.apps[appName].kind;
+    const slotKind = path.slots[slotName] && path.slots[slotName].kind;
+
+    return slotKind || appKind;
+}
+
+const isEssentialOrPrimaryFragment = (fragmentKind) => [KIND_OF_PRIMARY_FRAGMENT, KIND_OF_ESSENTIAL_FRAGMENT].includes(fragmentKind);
+
+export default function ({
+    registryConf,
+    getCurrentPath,
+}) {
+    singleSpa.addErrorHandler((err) => {
+        const errorId = uuidv4();
+        const [appName, slotName] = err.appOrParcelName.split('__at__');
+
+        const currentPath = getCurrentPath();
+        const fragmentKind = selectFragmentKind(registryConf, currentPath, `@portal/${appName}`, slotName);
+
+        if (isEssentialOrPrimaryFragment(fragmentKind)) {
+            fetch(`/_ilc/page/500/${errorId}`)
+                .then((res) => res.text())
+                .then((text) => {
+                    document.querySelector('html').innerHTML = text;
+                });
+        }
+
+        console.error(JSON.stringify(err));
+    });
+
     window.addEventListener('error', function (event) {
+        console.log('asdasdasd')
+
         const moduleInfo = System.getModuleInfo(event.filename);
         if (moduleInfo === null) {
             return;

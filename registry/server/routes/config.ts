@@ -56,6 +56,7 @@ router.get('/', async (req, res) => {
         tmpRoute.slots[v.name] = {
             appName: v.appName,
             props: v.props !== null ? JSON.parse(v.props) : {},
+            kind: v.kind,
         };
     });
 
