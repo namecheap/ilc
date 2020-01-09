@@ -19,6 +19,9 @@ const ConfigsInjectorStream = require('./configs-injector-stream');
 const { globalTracer, Tags, FORMAT_HTTP_HEADERS } = require('opentracing');
 const tracer = globalTracer();
 
+const BotDetector = require('device-detector-js/dist/parsers/bot');
+const botDetector = new BotDetector();
+
 // Events emitted by fragments on the template
 const FRAGMENT_EVENTS = [
     'start',
@@ -109,6 +112,29 @@ module.exports = function processRequest(options, request, response) {
             }
         };
 
+        const handleFragment = (fragment, resultStream) => {
+            fragment.once('fallback', err => {
+                reject(err);
+                this.emit('error', request, err);
+                span.setTag(Tags.HTTP_STATUS_CODE, 500);
+                resultStream.pipe(contentLengthStream).pipe(response);
+            });
+
+            fragment.once('error', err => {
+                reject(err);
+                this.emit('error', request, err);
+                span.addTags({
+                    [Tags.ERROR]: true,
+                    [Tags.HTTP_STATUS_CODE]: 500
+                });
+                span.log({
+                    message: err.message,
+                    stack: err.stack
+                });
+                span.finish();
+            });
+        };
+
         const handlePrimaryFragment = (fragment, resultStream) => {
             if (!shouldWriteHead) {
                 return;
@@ -149,26 +175,7 @@ module.exports = function processRequest(options, request, response) {
                 resultStream.pipe(injector).pipe(contentLengthStream).pipe(response);
             });
 
-            fragment.once('fallback', err => {
-                reject(err);
-                this.emit('error', request, err);
-                span.setTag(Tags.HTTP_STATUS_CODE, 500);
-                resultStream.pipe(contentLengthStream).pipe(response);
-            });
-
-            fragment.once('error', err => {
-                reject(err);
-                this.emit('error', request, err);
-                span.addTags({
-                    [Tags.ERROR]: true,
-                    [Tags.HTTP_STATUS_CODE]: 500
-                });
-                span.log({
-                    message: err.message,
-                    stack: err.stack
-                });
-                span.finish();
-            });
+            handleFragment(fragment, resultStream);
         };
 
         Promise.all([templatePromise, contextPromise])
@@ -208,6 +215,8 @@ module.exports = function processRequest(options, request, response) {
 
                     if (attributes.kind === KIND_OF_PRIMARY_FRAGMENT) {
                         handlePrimaryFragment(fragment, injector);
+                    } else if (botDetector.parse(request.headers['user-agent']) !== null) {
+                        handleFragment(fragment, injector);
                     }
                 });
 
