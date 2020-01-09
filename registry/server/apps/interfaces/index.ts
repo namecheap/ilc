@@ -7,7 +7,6 @@ interface AppDependencies {
 interface AppSSR {
     src: string,
     timeout: number,
-    primary: boolean,
 }
 
 interface AppInitProps {
@@ -40,9 +39,9 @@ const commonApp = {
     ssr: Joi.object({
         src: Joi.string().trim().uri().required(),
         timeout: Joi.number().required(),
-        primary: Joi.boolean().required(),
     }),
     initProps: Joi.object().default({}),
+    kind: Joi.string().valid('primary', 'essential', 'regular'),
 };
 
 export const partialAppSchema = Joi.object({

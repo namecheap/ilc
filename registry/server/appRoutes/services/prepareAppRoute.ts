@@ -15,12 +15,14 @@ const prepareRoutesWithSlotsToRespond = _.compose(
             appName,
             props,
             orderPos,
+            kind,
         } = appRoute;
 
         const prevSavedAppRouteSlots = _.has(routeId, appRoutes) && appRoutes[routeId].slots || {};
         const nextAppRouteSlot = {
             appName,
             props,
+            kind,
         };
         const nextAppRoute = {
             id: routeId,

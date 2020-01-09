@@ -10,9 +10,9 @@ const example = <any>{
         ssr: {
             src: "http://127.0.0.1:1234/fragment",
             timeout: 1000,
-            primary: true
         },
         assetsDiscoveryUrl: 'http://127.0.0.1:1234/_spa/dev/assets-discovery',
+        kind: 'primary',
         // dependencies: {},
         // props: {},
         // initProps: {},
@@ -24,9 +24,9 @@ const example = <any>{
         ssr: {
             src: "http://127.0.0.1:1234/fragmentUpdated",
             timeout: 2000,
-            primary: false,
         },
         assetsDiscoveryUrl: 'http://127.0.0.1:1234/_spa/dev/assets-discoveryUpdated',
+        kind: 'regular',
         dependencies: {
             react: 'https://cdnjs.cloudflare.com/ajax/libs/react/16.8.6/umd/react.development.js',
             'react-dom': 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.6/umd/react-dom.development.js',
@@ -171,6 +171,7 @@ describe(`Tests ${example.url}`, () => {
                 dependencies: 456,
                 props: 789,
                 initProps: 456,
+                kind: 'origin',
             };
 
             const response = await request.put(example.url + example.encodedName)
@@ -186,7 +187,8 @@ describe(`Tests ${example.url}`, () => {
                 '"dependencies" must be of type object\n' +
                 '"props" must be of type object\n' +
                 '"ssr" must be of type object\n' +
-                '"initProps" must be of type object'
+                '"initProps" must be of type object\n' +
+                '"kind" must be one of [primary, essential, regular]'
             );
             expect(response.body).deep.equal({});
 
