@@ -29,9 +29,18 @@ export default function ({
 
         if (isEssentialOrPrimaryFragment(fragmentKind)) {
             fetch(`/_ilc/page/500/${errorId}`)
-                .then((res) => res.text())
+                .then((res) => {
+                    if (!res.ok) {
+                        return Promise.reject(new Error('Something went wrong!'));
+                    }
+
+                    return res.text()
+                })
                 .then((text) => {
                     document.querySelector('html').innerHTML = text;
+                })
+                .catch((err) => {
+                    alert(err.message);
                 });
         }
 
