@@ -39,8 +39,6 @@ export default function ({
     });
 
     window.addEventListener('error', function (event) {
-        console.log('asdasdasd')
-
         const moduleInfo = System.getModuleInfo(event.filename);
         if (moduleInfo === null) {
             return;
