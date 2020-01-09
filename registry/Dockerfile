@@ -6,7 +6,7 @@ ADD ./ /codebase
 WORKDIR /codebase
 
 RUN npm install --no-package-lock --no-progress --ignore-scripts
-RUN npm install sqlite3
+RUN npm install sqlite3 mysql
 RUN npm run compile
 
 CMD ["npm", "start"]
