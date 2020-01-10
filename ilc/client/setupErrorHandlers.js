@@ -44,7 +44,19 @@ export default function ({
                 });
         }
 
-        console.error(JSON.stringify(err));
+        const errInfo = {
+            type: 'FRAGMENT_ERROR',
+            name: err.toString(),
+            moduleName: err.appName,
+            extraInfo: {
+                errorId,
+            },
+        };
+
+        if (newrelic && newrelic.noticeError) {
+            newrelic.noticeError(err, errInfo);
+        }
+        console.error(JSON.stringify(errInfo));
     });
 
     window.addEventListener('error', function (event) {
