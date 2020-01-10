@@ -83,13 +83,17 @@ module.exports = class ServerRouter {
                 const appProps = Object.assign(appInfo.props || {}, slotData.props || {});
                 url.searchParams.append('appProps', Buffer.from(JSON.stringify(appProps)).toString('base64'));
             }
+
+            if (fragmentKind === 'primary') {
+                ssrOpts.primary = true;
+            }
+
             ssrOpts.src = url.toString();
 
             return res + `
                 <fragment
                     id="${slotData.appName}"
                     slot="${slotName}"
-                    kind="${fragmentKind}"
                     ${_.map(ssrOpts, (v, k) => `${k}="${v}"`).join(' ')}
                 >
                 </fragment>

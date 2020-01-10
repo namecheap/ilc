@@ -33,8 +33,6 @@ const FRAGMENT_EVENTS = [
     'warn'
 ];
 
-const KIND_OF_PRIMARY_FRAGMENT = 'primary';
-
 /**
  * Process the HTTP Request to the Tailor Middleware
  *
@@ -213,7 +211,7 @@ module.exports = function processRequest(options, request, response) {
                         });
                     });
 
-                    if (attributes.kind === KIND_OF_PRIMARY_FRAGMENT) {
+                    if (attributes.primary) {
                         handlePrimaryFragment(fragment, injector);
                     } else if (botDetector.parse(request.headers['user-agent']) !== null) {
                         handleFragment(fragment, injector);

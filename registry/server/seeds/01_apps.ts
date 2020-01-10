@@ -16,7 +16,6 @@ export async function seed(knex: Knex): Promise<any> {
                     ssr: JSON.stringify({
                         src: 'http://localhost:9235/',
                         timeout: 1000,
-                        primary: false
                     }),
                     initProps: '{}',
                     props: '{}',
@@ -46,7 +45,6 @@ export async function seed(knex: Knex): Promise<any> {
                     ssr: JSON.stringify({
                         src: "http://localhost:3000/news/?fragment=1",
                         timeout: 1000,
-                        primary: true,
                     }),
                     assetsDiscoveryUrl: 'http://127.0.0.1:3000/_spa/dev/assets-discovery',
                     dependencies: '{}',
@@ -59,7 +57,6 @@ export async function seed(knex: Knex): Promise<any> {
                     ssr: JSON.stringify({
                         src: "http://127.0.0.1:8240/fragment",
                         timeout: 1000,
-                        primary: true,
                     }),
                     dependencies: '{}',
                     initProps: '{}',
