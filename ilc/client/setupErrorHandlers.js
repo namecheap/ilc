@@ -4,8 +4,11 @@ import * as uuidv4 from 'uuid/v4';
 const System = window.System;
 const newrelic = window.newrelic;
 
-const KIND_OF_PRIMARY_FRAGMENT = 'primary';
-const KIND_OF_ESSENTIAL_FRAGMENT = 'essential';
+const FRAGMENT_KIND = Object.freeze({
+    primary: 'primary',
+    essential: 'essential',
+    regular: 'regular',
+});
 
 const selectFragmentKind = (registryConf, path, appName, slotName) => {
     const appKind = registryConf.apps[appName].kind;
@@ -14,7 +17,10 @@ const selectFragmentKind = (registryConf, path, appName, slotName) => {
     return slotKind || appKind;
 }
 
-const isEssentialOrPrimaryFragment = (fragmentKind) => [KIND_OF_PRIMARY_FRAGMENT, KIND_OF_ESSENTIAL_FRAGMENT].includes(fragmentKind);
+const isEssentialOrPrimaryFragment = (fragmentKind) => [
+    FRAGMENT_KIND.primary,
+    FRAGMENT_KIND.essential,
+].includes(fragmentKind);
 
 export default function ({
     registryConf,
