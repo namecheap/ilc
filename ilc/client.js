@@ -2,6 +2,8 @@ import * as singleSpa from 'single-spa';
 import * as Router from './router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import setupErrorHandlers from './client/setupErrorHandlers';
+import { renderFakeSlot, addContentListener } from './client/pageTransitions';
+
 
 const System = window.System;
 
@@ -33,10 +35,6 @@ let prevPath = currentPath;
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
         const appName = slots[slotName].appName;
-
-        if (!registryConf.apps.hasOwnProperty(appName)) {
-            return;
-        }
 
         const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
 
@@ -74,6 +72,7 @@ function getMountPointFactory(slotName) {
 }
 
 function isActiveFactory(appName, slotName) {
+
     let reload = false;
 
     return () => {
@@ -81,8 +80,13 @@ function isActiveFactory(appName, slotName) {
             currentSlotName,
             slot
         ]) => slot.appName === appName && currentSlotName === slotName);
-        const isActive = checkActivity(currentPath);
+
+        let isActive = checkActivity(currentPath);
         const wasActive = checkActivity(prevPath);
+
+        const willBeRendered = !wasActive && isActive;
+        const willBeRemoved = wasActive && !isActive;
+        let willBeRerendered = false;
 
         if (isActive && wasActive && reload === false) {
             const oldProps = getPathProps(appName, slotName, prevPath);
@@ -94,11 +98,22 @@ function isActiveFactory(appName, slotName) {
                     console.log(`Triggering app re-mount for ${appName} due to changed props.`);
 
                     reload = true;
+
                     singleSpa.triggerAppChange();
                 }, { once: true });
 
-                return false;
+                isActive = false;
+                willBeRerendered = true;
             }
+        }
+
+        if (willBeRendered) {
+            addContentListener(slotName);
+        } else if (willBeRemoved) {
+            renderFakeSlot(slotName);
+        } else if (willBeRerendered) {
+            renderFakeSlot(slotName);
+            addContentListener(slotName);
         }
 
         reload = false;
@@ -147,7 +162,6 @@ document.addEventListener('click', function (e) {
     if (specialRole === null) {
         singleSpa.navigateToUrl(pathname);
         e.preventDefault();
-        window.scrollTo(0, 0);
     }
 });
 
