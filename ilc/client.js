@@ -122,10 +122,6 @@ function getCurrentBasePath() {
     return currentPath.basePath;
 }
 
-function getCurrentPath() {
-    return currentPath;
-}
-
 window.addEventListener('single-spa:before-routing-event', () => {
     prevPath = currentPath;
 
@@ -163,7 +159,7 @@ document.addEventListener('click', function (e) {
 
 setupErrorHandlers({
     registryConf,
-    getCurrentPath,
+    getCurrentPath: () => currentPath,
 });
 
 singleSpa.start();

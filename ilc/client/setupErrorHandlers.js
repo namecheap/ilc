@@ -28,7 +28,7 @@ export default function ({
         const fragmentKind = selectFragmentKind(registryConf, currentPath, `@portal/${appName}`, slotName);
 
         if (isEssentialOrPrimaryFragment(fragmentKind)) {
-            fetch(`/_ilc/page/500/${errorId}`)
+            fetch(`/_ilc/page/500/?errorId=${encodeURIComponent(errorId)}`)
                 .then((res) => {
                     if (!res.ok) {
                         return Promise.reject(new Error('Something went wrong!'));
@@ -40,23 +40,27 @@ export default function ({
                     document.querySelector('html').innerHTML = text;
                 })
                 .catch((err) => {
-                    alert(err.message);
+                    alert('Something went wrong!');
+
+                    noticeError(err, {
+                        type: 'FETCH_PAGE_ERROR',
+                        name: err.toString(),
+                        extraInfo: {
+                            errorId: uuidv4(),
+                            fragmentErrorId: errorId,
+                        },
+                    });
                 });
         }
 
-        const errInfo = {
+        noticeError(err, {
             type: 'FRAGMENT_ERROR',
             name: err.toString(),
             moduleName: err.appName,
             extraInfo: {
                 errorId,
             },
-        };
-
-        if (newrelic && newrelic.noticeError) {
-            newrelic.noticeError(err, errInfo);
-        }
-        console.error(JSON.stringify(errInfo));
+        })
     });
 
     window.addEventListener('error', function (event) {
@@ -67,7 +71,7 @@ export default function ({
 
         event.preventDefault();
 
-        const errInfo = {
+        noticeError(event.error, {
             type: 'MODULE_ERROR',
             name: event.error.toString(),
             moduleName: moduleInfo.name,
@@ -78,26 +82,23 @@ export default function ({
                 lineNo: event.lineno,
                 colNo: event.colno,
             }
-        };
-
-        if (newrelic && newrelic.noticeError) {
-            newrelic.noticeError(event.error, errInfo);
-        }
-        console.error(JSON.stringify(errInfo));
+        });
     });
 
     window.addEventListener('ilcFragmentError', function (event) {
-        const errInfo = {
+        noticeError(event.detail.error, {
             type: 'FRAGMENT_ERROR',
             name: event.detail.error.toString(),
             moduleName: event.detail.moduleInfo.name,
             extraInfo: event.detail.extraInfo,
             stack: event.detail.error.stack.split("\n"),
-        };
-
-        if (newrelic && newrelic.noticeError) {
-            newrelic.noticeError(event.detail.error, errInfo);
-        }
-        console.error(JSON.stringify(errInfo));
+        });
     });
+}
+
+function noticeError(err, errInfo = {}) {
+    if (newrelic && newrelic.noticeError) {
+        newrelic.noticeError(err, JSON.stringify(errInfo));
+    }
+    console.error(errInfo);
 }

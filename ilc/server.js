@@ -1,5 +1,6 @@
 const newrelic = require('newrelic');
 
+const ejs = require('ejs');
 const uuidv4 = require('uuid/v4');
 const config = require('config');
 const { TEMPLATE_NOT_FOUND } = require('node-tailor/lib/fetch-template');
@@ -21,33 +22,24 @@ tailor.on('error', (err, req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Content-Type', 'text/html');
-    res.render(`${statusCode}`, { errorId });
 
-    const errInfo = {
+    renderFile(res, `./templates/${statusCode}.ejs`, { errorId });
+    noticeError(err, {
         type: 'TAILOR_ERROR',
         name: err.toString(),
         extraInfo: {
             errorId,
         },
-    };
-
-    if (newrelic && newrelic.noticeError) {
-        newrelic.noticeError(err, JSON.stringify(errInfo));
-    }
-    console.error(errInfo);
+    });
 });
-
-app.set('view engine', 'ejs');
-app.set('views', './templates');
 
 app.use('/_ilc/', serveStatic(config.get('productionMode')));
 
-app.get('/_ilc/page/500/:errorId', (req, res) => {
-    const statusCode = 200;
-    const errorId = req.params.errorId;
+app.get('/_ilc/page/500', (req, res) => {
+    const errorId = req.query.errorId;
 
-    res.status(statusCode);
-    res.render('500', { statusCode: 500, errorId });
+    res.setHeader('Content-Type', 'text/html');
+    renderFile(res, './templates/500.ejs', { errorId });
 });
 
 app.get('*', (req, res) => {
@@ -63,21 +55,43 @@ app.use((err, req, res, next) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Content-Type', 'text/html');
-    res.render('500', { errorId });
 
-    const errInfo = {
+    renderFile(res, './templates/500.ejs', { errorId });
+    noticeError(err, {
         type: 'SERVER_ERROR',
         name: err.toString(),
         extraInfo: {
             errorId,
         },
-    };
+    });
+});
 
+function noticeError(err, errInfo = {}) {
     if (newrelic && newrelic.noticeError) {
         newrelic.noticeError(err, JSON.stringify(errInfo));
     }
     console.error(errInfo);
-});
+}
+
+function renderFile(res, filename, data, options) {
+    ejs.renderFile(filename, data, options, (err, str) => {
+        if (err === null) {
+            res.send(str);
+        } else {
+            const errInfo = {
+                type: 'EJS_ERROR',
+                name: err.toString(),
+                extraInfo: {
+                    errorId: uuidv4(),
+                },
+            };
+
+            res.status(500).json(errInfo);
+
+            noticeError(err, errInfo);
+        }
+    });
+}
 
 app.disable('x-powered-by');
 
