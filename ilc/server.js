@@ -7,7 +7,7 @@ const serveStatic = require('./serveStatic');
 
 app.get('/ping', (req, res) => res.send('pong'));
 // Support of legacy infrastructures
-app.get('/api/v1/monitor/ping/9999/:optional?', (req, res) => res.send('pong'));
+app.get('/api/v1/monitor/ping/:code/:optional?', (req, res) => res.send('PONG' + req.params.code));
 
 
 const tailor = tailorFactory(config.get('registry.address'), config.get('cdnUrl'));
