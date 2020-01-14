@@ -7,9 +7,10 @@
     },
     nginxRegistration: {
         enabled: false,
-        apiAddr: null,
+        apiAddrs: null,
         upstreamName: null,
-        myAddr: null
+        myIp: null,
+        myPort: null
     },
     newrelic: {
         licenseKey: null,
