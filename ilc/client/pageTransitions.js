@@ -1,7 +1,7 @@
 let globalSpinner, spinnerTimeout;
 const runGlobalSpinner = () => {
     const tmplSpinner = window.ilcConfig && window.ilcConfig.tmplSpinner;
-    if (!tmplSpinner) return;
+    if (!tmplSpinner || spinnerTimeout) return;
 
     spinnerTimeout = setTimeout(() => {
         globalSpinner = document.createElement('div');
@@ -10,11 +10,11 @@ const runGlobalSpinner = () => {
     }, 200);
 };
 const removeGlobalSpinner = () => {
-    globalSpinner.remove();
-    globalSpinner = null;
-};
+    if (globalSpinner) {
+        globalSpinner.remove();
+        globalSpinner = null;
+    }
 
-const clearGlobalSpinnerTimeout = () => {
     clearTimeout(spinnerTimeout);
     spinnerTimeout = null;
 };
@@ -29,12 +29,11 @@ const onAllSlotsLoaded = () => {
     fakeSlots.length = 0;
     hiddenSlots.forEach(node => node.style.display = '');
     hiddenSlots.length = 0;
-    globalSpinner && removeGlobalSpinner();
-    spinnerTimeout && clearGlobalSpinnerTimeout();
+    removeGlobalSpinner();
 };
 
 export const addContentListener = slotName => {
-    !spinnerTimeout && runGlobalSpinner();
+    runGlobalSpinner();
 
     const observer = new MutationObserver((mutationsList, observer) => {
         for(let mutation of mutationsList) {
