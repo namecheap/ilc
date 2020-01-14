@@ -10,7 +10,8 @@
         },
         apiAddr: 'NGINX_API_ADDR',
         upstreamName: 'NGINX_UPSTREAM_NAME',
-        myAddr: 'NGINX_MY_ADDR',
+        myIp: 'NGINX_MY_IP',
+        myPort: 'NGINX_MY_PORT',
     },
     newrelic: {
         licenseKey: 'NR_LICENSE_KEY',

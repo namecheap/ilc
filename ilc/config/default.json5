@@ -9,7 +9,8 @@
         enabled: false,
         apiAddr: null,
         upstreamName: null,
-        myAddr: null
+        myIp: null,
+        myPort: null
     },
     newrelic: {
         licenseKey: null,
