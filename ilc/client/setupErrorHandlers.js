@@ -1,8 +1,25 @@
 import * as singleSpa from 'single-spa';
 import * as uuidv4 from 'uuid/v4';
+import * as ejs from 'ejs/ejs.min.js';
+import ApiPage500 from './ApiPage500';
 
 const System = window.System;
 const newrelic = window.newrelic;
+
+// Initializing 500 error page to cache template of this page
+// to avoid a situation when localhost can't return this template in future
+const apiPage500 = new ApiPage500();
+apiPage500.getTemplate()
+    .then(() => console.log('500 error page template cached'))
+    .catch((err) => {
+        noticeError(err, {
+            type: 'FETCH_PAGE_ERROR',
+            name: err.toString(),
+            extraInfo: {
+                errorId: uuidv4(),
+            },
+        });
+    });
 
 const FRAGMENT_KIND = Object.freeze({
     primary: 'primary',
@@ -27,6 +44,10 @@ export default function ({
     getCurrentPath,
 }) {
     singleSpa.addErrorHandler((err) => {
+        if (!navigator.onLine) {
+            return window.location.reload();
+        }
+
         const errorId = uuidv4();
         const [appName, slotName] = err.appOrParcelName.split('__at__');
 
@@ -34,16 +55,11 @@ export default function ({
         const fragmentKind = selectFragmentKind(registryConf, currentPath, `@portal/${appName}`, slotName);
 
         if (isEssentialOrPrimaryFragment(fragmentKind)) {
-            fetch(`/_ilc/page/500/?errorId=${encodeURIComponent(errorId)}`)
-                .then((res) => {
-                    if (!res.ok) {
-                        return Promise.reject(new Error('Something went wrong!'));
-                    }
-
-                    return res.text()
-                })
-                .then((text) => {
-                    document.querySelector('html').innerHTML = text;
+            apiPage500.getTemplate()
+                .then((data) => {
+                    document.querySelector('html').innerHTML = ejs.render(data.template, {
+                        errorId,
+                    });
                 })
                 .catch((err) => {
                     alert('Something went wrong!');

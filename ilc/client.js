@@ -131,10 +131,6 @@ window.addEventListener('single-spa:before-routing-event', () => {
     }
 
     currentPath = path;
-
-    if (!navigator.onLine) {
-        window.location.reload();
-    }
 });
 
 document.addEventListener('click', function (e) {

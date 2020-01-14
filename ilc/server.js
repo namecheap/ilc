@@ -1,5 +1,7 @@
 const newrelic = require('newrelic');
 
+const fs = require('fs');
+const path = require('path');
 const ejs = require('ejs');
 const uuidv4 = require('uuid/v4');
 const config = require('config');
@@ -21,7 +23,6 @@ tailor.on('error', (err, req, res) => {
     res.status(statusCode);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Content-Type', 'text/html');
 
     renderFile(res, `./templates/${statusCode}.ejs`, { errorId });
     noticeError(err, {
@@ -36,10 +37,11 @@ tailor.on('error', (err, req, res) => {
 app.use('/_ilc/', serveStatic(config.get('productionMode')));
 
 app.get('/_ilc/page/500', (req, res) => {
-    const errorId = req.query.errorId;
+    const template = fs.readFileSync(path.join(__dirname, './templates/500.ejs'), {
+        encoding: 'utf8',
+    });
 
-    res.setHeader('Content-Type', 'text/html');
-    renderFile(res, './templates/500.ejs', { errorId });
+    res.status(200).send(template);
 });
 
 app.get('*', (req, res) => {
@@ -54,7 +56,6 @@ app.use((err, req, res, next) => {
     res.status(500);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Content-Type', 'text/html');
 
     renderFile(res, './templates/500.ejs', { errorId });
     noticeError(err, {
