@@ -6,6 +6,7 @@ const config = require('config');
 
 const nginxConf = Object.assign({}, config.get('nginxRegistration'));
 nginxConf.myAddr = nginxConf.myIp + (nginxConf.myPort ? `:${nginxConf.myPort}` : '');
+nginxConf.apiAddrs = nginxConf.apiAddrs.split(',');
 const nginxReg = new (require('nginx-plus-dynamic-upstream'))(nginxConf, console);
 
 // .extend adds a .withShutdown prototype method to the Server object
