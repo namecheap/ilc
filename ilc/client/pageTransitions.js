@@ -1,21 +1,22 @@
-let globalSpinner;
+let globalSpinner, spinnerTimeout;
 const runGlobalSpinner = () => {
     const tmplSpinner = window.ilcConfig && window.ilcConfig.tmplSpinner;
     if (!tmplSpinner) return;
 
-    setTimeout(() => {
-        if (globalSpinner || !contentListeners.length) return;
-
+    spinnerTimeout = setTimeout(() => {
         globalSpinner = document.createElement('div');
         globalSpinner.innerHTML = tmplSpinner;
         document.body.appendChild(globalSpinner);
     }, 200);
 };
 const removeGlobalSpinner = () => {
-    if (!globalSpinner) return;
-
     globalSpinner.remove();
     globalSpinner = null;
+};
+
+const clearGlobalSpinnerTimeout = () => {
+    clearTimeout(spinnerTimeout);
+    spinnerTimeout = null;
 };
 
 const fakeSlots = [];
@@ -23,16 +24,17 @@ const hiddenSlots = [];
 const contentListeners = [];
 
 const onAllSlotsLoaded = () => {
-    removeGlobalSpinner();
     window.scrollTo(0, 0);
     fakeSlots.forEach(node => node.remove());
     fakeSlots.length = 0;
     hiddenSlots.forEach(node => node.style.display = '');
     hiddenSlots.length = 0;
+    globalSpinner && removeGlobalSpinner();
+    spinnerTimeout && clearGlobalSpinnerTimeout();
 };
 
 export const addContentListener = slotName => {
-    runGlobalSpinner();
+    !spinnerTimeout && runGlobalSpinner();
 
     const observer = new MutationObserver((mutationsList, observer) => {
         for(let mutation of mutationsList) {
@@ -45,7 +47,7 @@ export const addContentListener = slotName => {
     });
     contentListeners.push(observer);
     const targetNode = document.getElementById(slotName);
-    targetNode.style.display = 'none';
+    targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
     hiddenSlots.push(targetNode);
     observer.observe(targetNode, { childList: true });
 };
@@ -56,4 +58,6 @@ export const renderFakeSlot = nodeId => {
     clonedNode.removeAttribute('id');
     fakeSlots.push(clonedNode);
     targetNode.parentNode.insertBefore(clonedNode, targetNode.nextSibling);
+    targetNode.style.display = 'none'; // we hide old slot because fake already in the DOM.
+    hiddenSlots.push(targetNode);
 };
