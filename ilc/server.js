@@ -19,11 +19,11 @@ tailor.on('error', (err, req, res) => {
     const errorId = uuidv4();
     const isNoTemplate = err.code === TEMPLATE_NOT_FOUND || (err.data && err.data.code === TEMPLATE_NOT_FOUND);
 
-    res.status(statusCode);
+    res.status(500);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
 
-    renderFile(res, `./templates/500.ejs`, { errorId });
+    renderFile(res, `./data/templates/500.ejs`, { errorId });
     noticeError(err, {
         type: 'TAILOR_ERROR',
         name: err.toString(),
@@ -37,7 +37,7 @@ tailor.on('error', (err, req, res) => {
 app.use('/_ilc/', serveStatic(config.get('productionMode')));
 
 app.get('/_ilc/page/500', (req, res) => {
-    const template = fs.readFileSync(path.join(__dirname, './templates/500.ejs'), {
+    const template = fs.readFileSync(path.join(__dirname, './data/templates/500.ejs'), {
         encoding: 'utf8',
     });
 
@@ -57,7 +57,7 @@ app.use((err, req, res, next) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
 
-    renderFile(res, './templates/500.ejs', { errorId });
+    renderFile(res, './data/templates/500.ejs', { errorId });
     noticeError(err, {
         type: 'SERVER_ERROR',
         name: err.toString(),
