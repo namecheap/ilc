@@ -4,7 +4,7 @@
 
 const config = require('config');
 
-const nginxConf = config.get('nginxRegistration');
+const nginxConf = Object.assign({}, config.get('nginxRegistration'));
 nginxConf.myAddr = nginxConf.myIp + (nginxConf.myPort ? `:${nginxConf.myPort}` : '');
 const nginxReg = new (require('nginx-plus-dynamic-upstream'))(nginxConf, console);
 
