@@ -18,18 +18,18 @@ const tailor = tailorFactory(config.get('registry.address'), config.get('cdnUrl'
 tailor.on('error', (err, req, res) => {
     const errorId = uuidv4();
     const isNoTemplate = err.code === TEMPLATE_NOT_FOUND || (err.data && err.data.code === TEMPLATE_NOT_FOUND);
-    const statusCode = isNoTemplate ? 404 : 500;
 
     res.status(statusCode);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
 
-    renderFile(res, `./templates/${statusCode}.ejs`, { errorId });
+    renderFile(res, `./templates/500.ejs`, { errorId });
     noticeError(err, {
         type: 'TAILOR_ERROR',
         name: err.toString(),
         extraInfo: {
             errorId,
+            isNoTemplate,
         },
     });
 });
