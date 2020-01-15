@@ -15,6 +15,12 @@ export async function seed(knex: Knex): Promise<any> {
                         encoding: 'utf8',
                     })
                 },
+                {
+                    name: '500',
+                    content: fs.readFileSync(path.join(__dirname, './data/templates/500.ejs'), {
+                        encoding: 'utf8',
+                    })
+                },
             ]);
         });
 }

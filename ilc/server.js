@@ -1,7 +1,5 @@
 const newrelic = require('newrelic');
 
-const fs = require('fs');
-const path = require('path');
 const ejs = require('ejs');
 const uuidv4 = require('uuid/v4');
 const config = require('config');
@@ -10,62 +8,88 @@ const server = require('./http');
 const app = require('express')();
 const tailorFactory = require('./tailorFactory');
 const serveStatic = require('./serveStatic');
+const apiRegistry = require('./api/apiRegistry');
 
-app.get('/ping', (req, res) => res.send('pong'));
+setupAppHealthCheck().then(() => setupApp());
 
-const tailor = tailorFactory(config.get('registry.address'), config.get('cdnUrl'));
+function setupApp() {
+    const tailor = tailorFactory(config.get('cdnUrl'));
 
-tailor.on('error', (err, req, res) => {
-    const errorId = uuidv4();
-    const isNoTemplate = err.code === TEMPLATE_NOT_FOUND || (err.data && err.data.code === TEMPLATE_NOT_FOUND);
+    tailor.on('error', (err, req, res) => {
+        const errorId = uuidv4();
+        const isNoTemplate = err.code === TEMPLATE_NOT_FOUND || (Boolean(err.data) && err.data.code === TEMPLATE_NOT_FOUND);
 
-    res.status(500);
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
+        apiRegistry.getTemplateByTemplateName('500').then((data) => {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.status(500).send(ejs.render(data.data.content, { errorId }));
+        });
 
-    renderFile(res, `./data/templates/500.ejs`, { errorId });
-    noticeError(err, {
-        type: 'TAILOR_ERROR',
-        name: err.toString(),
-        extraInfo: {
-            errorId,
-            isNoTemplate,
-        },
-    });
-});
-
-app.use('/_ilc/', serveStatic(config.get('productionMode')));
-
-app.get('/_ilc/page/500', (req, res) => {
-    const template = fs.readFileSync(path.join(__dirname, './data/templates/500.ejs'), {
-        encoding: 'utf8',
+        noticeError(err, {
+            type: 'TAILOR_ERROR',
+            name: err.toString(),
+            extraInfo: {
+                errorId,
+                isNoTemplate,
+            },
+        });
     });
 
-    res.status(200).send(template);
-});
+    app.use('/_ilc/', serveStatic(config.get('productionMode')));
 
-app.get('*', (req, res) => {
-    req.headers['x-request-uri'] = req.url; //TODO: to be removed & replaced with routerProps
-
-    tailor.requestHandler(req, res);
-});
-
-app.use((err, req, res, next) => {
-    const errorId = uuidv4();
-
-    res.status(500);
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-
-    renderFile(res, './data/templates/500.ejs', { errorId });
-    noticeError(err, {
-        type: 'SERVER_ERROR',
-        name: err.toString(),
-        extraInfo: {
-            errorId,
-        },
+    app.get('/_ilc/page/500', (req, res) => {
+        apiRegistry.getTemplateByTemplateName('500').then((data) => {
+            res.status(200).send(data.data.content);
+        });
     });
-});
+
+    app.get('*', (req, res) => {
+        req.headers['x-request-uri'] = req.url; //TODO: to be removed & replaced with routerProps
+
+        tailor.requestHandler(req, res);
+    });
+
+    app.use((err, req, res, next) => {
+        const errorId = uuidv4();
+
+        apiRegistry.getTemplateByTemplateName('500').then((data) => {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.status(500).send(ejs.render(data.data.content, { errorId }));
+        });
+
+        noticeError(err, {
+            type: 'SERVER_ERROR',
+            name: err.toString(),
+            extraInfo: {
+                errorId,
+            },
+        });
+    });
+
+    app.disable('x-powered-by');
+
+    server(app);
+}
+
+function setupAppHealthCheck() {
+    return new Promise((resolve) => {
+        let intervalId;
+
+        intervalId = setInterval(() => {
+            // Initializing 500 error page to cache template of this page
+            // to avoid a situation when registry can't return this template in future
+            apiRegistry.getTemplateByTemplateName('500').then(() => {
+                console.log('500 error page template cached');
+
+                app.get('/ping', (req, res) => res.send('pong'));
+
+                clearInterval(intervalId);
+                resolve();
+            }).catch(() => { });
+        }, 1000);
+    });
+}
 
 function noticeError(err, errInfo = {}) {
     if (newrelic && newrelic.noticeError) {
@@ -73,27 +97,3 @@ function noticeError(err, errInfo = {}) {
     }
     console.error(errInfo);
 }
-
-function renderFile(res, filename, data, options) {
-    ejs.renderFile(filename, data, options, (err, str) => {
-        if (err === null) {
-            res.send(str);
-        } else {
-            const errInfo = {
-                type: 'EJS_ERROR',
-                name: err.toString(),
-                extraInfo: {
-                    errorId: uuidv4(),
-                },
-            };
-
-            res.status(500).json(errInfo);
-
-            noticeError(err, errInfo);
-        }
-    });
-}
-
-app.disable('x-powered-by');
-
-server(app);
