@@ -6,6 +6,8 @@ const tailorFactory = require('./tailorFactory');
 const serveStatic = require('./serveStatic');
 
 app.get('/ping', (req, res) => res.send('pong'));
+// Support of legacy infrastructures
+app.get('/api/v1/monitor/ping/:code/:optional?', (req, res) => res.send('PONG' + req.params.code));
 
 
 const tailor = tailorFactory(config.get('registry.address'), config.get('cdnUrl'));
@@ -14,9 +16,9 @@ tailor.on('error', (req, err) => {
     console.error(err);
 });
 
-
-app.use('/_ilc/', serveStatic(config.get('productionMode')));
-
+if (config.get('cdnUrl') === null) {
+    app.use('/_ilc/', serveStatic(config.get('productionMode')));
+}
 
 app.get('*', (req, res) => {
     req.headers['x-request-uri'] = req.url; //TODO: to be removed & replaced with routerProps

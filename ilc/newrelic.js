@@ -38,7 +38,8 @@ exports.config = {
     },
     rules: {
         ignore: [
-            '^\/ping$'
+            '^\/ping$',
+            '^\/api\/v1\/monitor\/ping\/.*$',
         ]
     },
 };

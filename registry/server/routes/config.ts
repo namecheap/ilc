@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
     const [apps, templates, routes] = await Promise.all([
         knex.select().from('apps'),
         knex.select().from('templates'),
-        knex.select('routes.id as routeId', '*')
+        knex.select()
             .orderBy('orderPos', 'ASC')
             .from('routes')
             .join('route_slots', 'route_slots.routeId', 'routes.id')
