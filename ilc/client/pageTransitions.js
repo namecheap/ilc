@@ -1,3 +1,5 @@
+import scrollHistory from './scrollHistory.js'
+
 let globalSpinner, spinnerTimeout;
 const runGlobalSpinner = () => {
     const tmplSpinner = window.ilcConfig && window.ilcConfig.tmplSpinner;
@@ -24,16 +26,21 @@ const hiddenSlots = [];
 const contentListeners = [];
 
 const onAllSlotsLoaded = () => {
-    window.scrollTo(0, 0);
     fakeSlots.forEach(node => node.remove());
     fakeSlots.length = 0;
     hiddenSlots.forEach(node => node.style.display = '');
     hiddenSlots.length = 0;
     removeGlobalSpinner();
+    document.body.removeAttribute('name');
+    scrollHistory.restoreScroll()
 };
 
 export const addContentListener = slotName => {
     runGlobalSpinner();
+
+    if (window.location.hash) {
+        document.body.setAttribute('name', window.location.hash.slice(1));
+    }
 
     const observer = new MutationObserver((mutationsList, observer) => {
         for(let mutation of mutationsList) {
