@@ -14,9 +14,7 @@
   },
   "author": "Vladlen Fedosov",
   "license": "Apache-2.0",
-  "dependencies": {
-    "@mapbox/scroll-restorer": "1.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "concurrently": "4.0.1"
   }
