@@ -3,7 +3,7 @@ import * as Router from './router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import setupErrorHandlers from './client/setupErrorHandlers';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
-import scrollHistory from './client/scrollHistory'
+import scrollRestorer from '@mapbox/scroll-restorer';
 
 const System = window.System;
 
@@ -160,13 +160,12 @@ document.addEventListener('click', function (e) {
     const { specialRole } = router.match(pathname);
 
     if (specialRole === null) {
-        scrollHistory.saveScrollPosition();
         singleSpa.navigateToUrl(pathname);
         e.preventDefault();
     }
 });
 
-scrollHistory.init();
+scrollRestorer.start({ autoRestore: false })
 setupErrorHandlers();
 
 singleSpa.start();

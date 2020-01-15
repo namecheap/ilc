@@ -1,4 +1,4 @@
-import scrollHistory from './scrollHistory.js'
+import scrollRestorer from '@mapbox/scroll-restorer';
 
 let globalSpinner, spinnerTimeout;
 const runGlobalSpinner = () => {
@@ -32,7 +32,7 @@ const onAllSlotsLoaded = () => {
     hiddenSlots.length = 0;
     removeGlobalSpinner();
     document.body.removeAttribute('name');
-    scrollHistory.restoreScroll()
+    scrollRestorer.restoreScroll();
 };
 
 export const addContentListener = slotName => {
