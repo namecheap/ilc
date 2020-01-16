@@ -3,7 +3,6 @@ import * as Router from './router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import setupErrorHandlers from './client/setupErrorHandlers';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
-import scrollRestorer from '@mapbox/scroll-restorer';
 
 const System = window.System;
 
@@ -165,7 +164,6 @@ document.addEventListener('click', function (e) {
     }
 });
 
-scrollRestorer.start({ autoRestore: false })
 setupErrorHandlers();
 
 singleSpa.start();

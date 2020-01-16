@@ -1,4 +1,5 @@
 import scrollRestorer from '@mapbox/scroll-restorer';
+scrollRestorer.start({ autoRestore: false })
 
 let globalSpinner, spinnerTimeout;
 const runGlobalSpinner = () => {
