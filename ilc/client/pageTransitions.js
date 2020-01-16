@@ -32,7 +32,7 @@ const onAllSlotsLoaded = () => {
     hiddenSlots.length = 0;
     removeGlobalSpinner();
     document.body.removeAttribute('name');
-    scrollRestorer.restoreScroll(window.history.state ? window.history : {state: {scroll: 0}});
+    scrollRestorer.restoreScroll(window.history.state ? window.history : {state: {scroll: {x: 0, y: 0}}});
 };
 
 export const addContentListener = slotName => {
