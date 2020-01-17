@@ -29,6 +29,7 @@ const commonAppRouteSlot = {
     name: Joi.string().trim().min(1).max(255),
     appName: appNameSchema,
     props: Joi.object().default({}),
+    kind: Joi.string().valid('primary', 'essential', 'regular'),
 };
 
 export const partialAppRouteSlotSchema = Joi.object({

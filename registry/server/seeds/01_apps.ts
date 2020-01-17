@@ -16,9 +16,10 @@ export async function seed(knex: Knex): Promise<any> {
                     ssr: JSON.stringify({
                         src: 'http://localhost:9235/',
                         timeout: 1000,
-                        primary: false
                     }),
-                    initProps: '{}', props: '{}'
+                    initProps: '{}',
+                    props: '{}',
+                    kind: 'essential',
                 }, {
                     name: '@portal/people',
                     spaBundle: 'http://localhost:8236/people.js',
@@ -26,11 +27,17 @@ export async function seed(knex: Knex): Promise<any> {
                         react: 'https://cdnjs.cloudflare.com/ajax/libs/react/16.8.6/umd/react.development.js',
                         'react-dom': 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.6/umd/react-dom.development.js',
                         rxjs: 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.js',
-                    }), initProps: '{}', props: '{}'
+                    }),
+                    initProps: '{}',
+                    props: '{}',
+                    kind: 'primary',
                 }, {
                     name: '@portal/planets',
                     spaBundle: 'http://localhost:8237/planets.js',
-                    dependencies: '{}', initProps: '{}', props: '{}'
+                    dependencies: '{}',
+                    initProps: '{}',
+                    props: '{}',
+                    kind: 'primary',
                 }, {
                     name: '@portal/news',
                     spaBundle: 'http://127.0.0.1:3000/dist/single_spa.js',
@@ -38,23 +45,30 @@ export async function seed(knex: Knex): Promise<any> {
                     ssr: JSON.stringify({
                         src: "http://localhost:3000/news/?fragment=1",
                         timeout: 1000,
-                        primary: true,
                     }),
                     assetsDiscoveryUrl: 'http://127.0.0.1:3000/_spa/dev/assets-discovery',
-                    dependencies: '{}', initProps: '{}', props: '{}'
+                    dependencies: '{}',
+                    initProps: '{}',
+                    props: '{}',
+                    kind: 'primary',
                 }, {
                     name: '@portal/system',
                     spaBundle: 'http://127.0.0.1:8240/index.js',
                     ssr: JSON.stringify({
                         src: "http://127.0.0.1:8240/fragment",
                         timeout: 1000,
-                        primary: true,
                     }),
-                    dependencies: '{}', initProps: '{}', props: '{}'
+                    dependencies: '{}',
+                    initProps: '{}',
+                    props: '{}',
+                    kind: 'primary',
                 }, {
                     name: '@portal/fetchWithCache',
                     spaBundle: 'http://localhost:8238/fetchWithCache.js',
-                    dependencies: '{}', initProps: '{}', props: '{}'
+                    dependencies: '{}',
+                    initProps: '{}',
+                    props: '{}',
+                    kind: 'essential',
                 },
             ]);
         });

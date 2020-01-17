@@ -1,7 +1,8 @@
 import * as singleSpa from 'single-spa';
+
 import * as Router from './router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
-import setupErrorHandlers from './client/setupErrorHandlers';
+import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
 
 const System = window.System;
@@ -142,6 +143,7 @@ window.addEventListener('single-spa:before-routing-event', () => {
     if (currentPath !== null && path.template !== currentPath.template) {
         throw new Error('Base template was changed and I still don\'t know how to handle it :(');
     }
+
     currentPath = path;
 });
 
@@ -164,6 +166,11 @@ document.addEventListener('click', function (e) {
     }
 });
 
-setupErrorHandlers();
+setupErrorHandlers(registryConf, () => currentPath);
+
+singleSpa.setBootstrapMaxTime(5000, false);
+singleSpa.setMountMaxTime(5000, false);
+singleSpa.setUnmountMaxTime(3000, false);
+singleSpa.setUnloadMaxTime(3000, false);
 
 singleSpa.start();
