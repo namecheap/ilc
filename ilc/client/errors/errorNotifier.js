@@ -1,4 +1,4 @@
-import ErrorNotifier from '../../common/errors/ErrorNotifier';
+import ErrorNotifier from '../../common/ErrorNotifier';
 
 const newrelic = window.newrelic;
 

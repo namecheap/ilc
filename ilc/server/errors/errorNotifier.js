@@ -1,5 +1,5 @@
 const newrelic = require('newrelic');
-const ErrorNotifier = require('../../common/errors/ErrorNotifier');
+const ErrorNotifier = require('../../common/ErrorNotifier');
 
 module.exports = new ErrorNotifier({
     provider: newrelic,
