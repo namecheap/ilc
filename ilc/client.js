@@ -166,9 +166,11 @@ document.addEventListener('click', function (e) {
     }
 });
 
-setupErrorHandlers({
-    registryConf,
-    getCurrentPath: () => currentPath,
-});
+setupErrorHandlers(registryConf, () => currentPath);
+
+singleSpa.setBootstrapMaxTime(5000, false);
+singleSpa.setMountMaxTime(5000, false);
+singleSpa.setUnmountMaxTime(3000, false);
+singleSpa.setUnloadMaxTime(3000, false);
 
 singleSpa.start();

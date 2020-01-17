@@ -1,4 +1,8 @@
+import errors from './errors';
+
 export default class Registry {
+    errors = errors;
+
     constructor(wrapWithCache) {
         this.getTemplate = wrapWithCache(this.#getTemplate, {
             cacheForSeconds: 3600,
@@ -6,7 +10,11 @@ export default class Registry {
     }
 
     async preheat() {
-        await this.getTemplate('500');
+        try {
+            await this.getTemplate('500');
+        } catch (e) {
+            throw errors.PreheatError({cause: e});
+        }
     }
 
     #getTemplate = async (name) => {

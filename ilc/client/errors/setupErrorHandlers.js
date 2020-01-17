@@ -5,20 +5,6 @@ import noticeError from './noticeError';
 
 const System = window.System;
 
-// Initializing 500 error page to cache template of this page
-// to avoid a situation when localhost can't return this template in future
-registryService.preheat()
-    .then(() => console.log('Registry service preheated successfully'))
-    .catch((err) => {
-        noticeError(err, {
-            type: 'FETCH_PAGE_ERROR',
-            name: err.toString(),
-            extraInfo: {
-                errorId: uuidv4(),
-            },
-        });
-    });
-
 const FRAGMENT_KIND = Object.freeze({
     primary: 'primary',
     essential: 'essential',
@@ -37,10 +23,7 @@ const isEssentialOrPrimaryFragment = (fragmentKind) => [
     FRAGMENT_KIND.essential,
 ].includes(fragmentKind);
 
-export default function ({
-    registryConf,
-    getCurrentPath,
-}) {
+export default function (registryConf, getCurrentPath) {
     singleSpa.addErrorHandler((err) => {
         if (!navigator.onLine) {
             return window.location.reload();
@@ -48,6 +31,12 @@ export default function ({
 
         const errorId = uuidv4();
         const [appName, slotName] = err.appOrParcelName.split('__at__');
+
+        noticeError(err, {
+            type: 'FRAGMENT_ERROR',
+            appOrParcelName: err.appOrParcelName,
+            errorId,
+        });
 
         const currentPath = getCurrentPath();
         const fragmentKind = selectFragmentKind(registryConf, currentPath, `@portal/${appName}`, slotName);
@@ -60,27 +49,16 @@ export default function ({
                     document.querySelector('html').innerHTML = data;
                 })
                 .catch((err) => {
-                    alert('Something went wrong! Please try to reload page');
-
                     noticeError(err, {
                         type: 'FETCH_PAGE_ERROR',
                         name: err.toString(),
-                        extraInfo: {
-                            errorId: uuidv4(),
-                            fragmentErrorId: errorId,
-                        },
+                        errorId: uuidv4(),
+                        fragmentErrorId: errorId,
                     });
+
+                    alert('Something went wrong! Please try to reload page');
                 });
         }
-
-        noticeError(err, {
-            type: 'FRAGMENT_ERROR',
-            name: err.toString(),
-            moduleName: err.appName,
-            extraInfo: {
-                errorId,
-            },
-        })
     });
 
     window.addEventListener('error', function (event) {
@@ -93,10 +71,8 @@ export default function ({
 
         noticeError(event.error, {
             type: 'MODULE_ERROR',
-            name: event.error.toString(),
             moduleName: moduleInfo.name,
             dependants: moduleInfo.dependants,
-            stack: event.error.stack.split("\n"),
             location: {
                 fileName: event.filename,
                 lineNo: event.lineno,
@@ -108,10 +84,19 @@ export default function ({
     window.addEventListener('ilcFragmentError', function (event) {
         noticeError(event.detail.error, {
             type: 'FRAGMENT_ERROR',
-            name: event.detail.error.toString(),
             moduleName: event.detail.moduleInfo.name,
             extraInfo: event.detail.extraInfo,
-            stack: event.detail.error.stack.split("\n"),
         });
     });
+
+
+    // Initializing 500 error page to cache template of this page
+    // to avoid a situation when localhost can't return this template in future
+    registryService.preheat()
+        .then(() => console.log('Registry service preheated successfully'))
+        .catch((err) => {
+            noticeError(err, {
+                errorId: uuidv4(),
+            });
+        });
 }

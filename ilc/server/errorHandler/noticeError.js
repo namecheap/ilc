@@ -12,6 +12,10 @@ module.exports = function (err, errInfo) {
 
     newrelic.noticeError(err, infoData);
 
-    console.error(err);
-    console.error(errInfo);
+    console.error(JSON.stringify({
+        type: error.name,
+        message: error.message,
+        stack: error.stack.split("\n"),
+        additionalInfo: infoData,
+    }));
 };

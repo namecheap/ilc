@@ -1,8 +1,17 @@
 export default function (err, errInfo) {
-    if (window.newrelic && window.newrelic.noticeError) {
-        window.newrelic.noticeError(err, JSON.stringify(errInfo));
+    const infoData = Object.assign(errInfo);
+    if (err.data) {
+        Object.assign(infoData, err.data);
     }
 
-    console.error(err);
-    console.error(errInfo);
+    if (window.newrelic && window.newrelic.noticeError) {
+        window.newrelic.noticeError(err, infoData);
+    }
+
+    console.error(JSON.stringify({
+        type: error.name,
+        message: error.message,
+        stack: error.stack.split("\n"),
+        additionalInfo: infoData,
+    }));
 }
