@@ -23,7 +23,7 @@ app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
     return res.status(200).send(data.data.content);
 });
 
-app.get('*', (req, res, next) => {
+app.get('*', (req, res) => {
     req.headers['x-request-uri'] = req.url; //TODO: to be removed & replaced with routerProps
     tailor.requestHandler(req, res);
 });

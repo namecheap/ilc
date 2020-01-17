@@ -6,4 +6,4 @@ errors.PreheatError = extendError('PreheatError', {
     parent: errors.RegistryError
 });
 
-module.exports = Object.freeze(errors);
+export default Object.freeze(errors);
