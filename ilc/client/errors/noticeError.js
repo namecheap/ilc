@@ -9,9 +9,9 @@ export default function (err, errInfo) {
     }
 
     console.error(JSON.stringify({
-        type: error.name,
-        message: error.message,
-        stack: error.stack.split("\n"),
+        type: err.name,
+        message: err.message,
+        stack: err.stack.split("\n"),
         additionalInfo: infoData,
     }));
 }
