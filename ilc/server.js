@@ -8,16 +8,7 @@ const serveStatic = require('./serveStatic');
 const registryService = require('./server/registry/factory');
 const errorHandler = require('./server/errors/errorHandler');
 
-app.get('/ping', async (req, res, next) => {
-    await registryService.preheat();
-    res.status(200).send('pong');
-});
-
-// Support of legacy infrastructures
-app.get('/api/v1/monitor/ping/:code/:optional?', async (req, res) => {
-    await registryService.preheat();
-    res.send('PONG' + req.params.code);
-});
+app.use(require('./server/ping'));
 
 const tailor = tailorFactory(config.get('cdnUrl'));
 

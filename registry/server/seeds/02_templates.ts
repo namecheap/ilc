@@ -17,7 +17,7 @@ export async function seed(knex: Knex): Promise<any> {
                 },
                 {
                     name: '500',
-                    content: fs.readFileSync(path.join(__dirname, './data/templates/500.ejs'), {
+                    content: fs.readFileSync(path.join(__dirname, './data/templates/500.html'), {
                         encoding: 'utf8',
                     })
                 },

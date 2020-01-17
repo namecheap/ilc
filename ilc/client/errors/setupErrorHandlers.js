@@ -1,6 +1,5 @@
 import * as singleSpa from 'single-spa';
 import * as uuidv4 from 'uuid/v4';
-import * as ejs from 'ejs/ejs.min.js';
 import registryService from '../registry/factory';
 import errorNotifier from './errorNotifier';
 
@@ -31,7 +30,7 @@ const selectFragmentKind = (registryConf, path, appName, slotName) => {
     const slotKind = path.slots[slotName] && path.slots[slotName].kind;
 
     return slotKind || appKind;
-}
+};
 
 const isEssentialOrPrimaryFragment = (fragmentKind) => [
     FRAGMENT_KIND.primary,
@@ -56,9 +55,9 @@ export default function ({
         if (isEssentialOrPrimaryFragment(fragmentKind)) {
             registryService.getTemplate('500')
                 .then((data) => {
-                    document.querySelector('html').innerHTML = ejs.render(data.data, {
-                        errorId,
-                    });
+                    data = data.data.replace('%ERRORID%', `Error ID: ${errorId}`);
+
+                    document.querySelector('html').innerHTML = data;
                 })
                 .catch((err) => {
                     alert('Something went wrong! Please try to reload page');
