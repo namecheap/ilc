@@ -13,5 +13,5 @@ export default function (err, errInfo) {
         message: err.message,
         stack: err.stack.split("\n"),
         additionalInfo: infoData,
-    }));
+    }), err);
 }
