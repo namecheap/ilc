@@ -2,8 +2,8 @@ import * as singleSpa from 'single-spa';
 
 import * as Router from './router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
-import { renderFakeSlot, addContentListener } from './client/pageTransitions';
 import setupErrorHandlers from './client/errors/setupErrorHandlers';
+import { renderFakeSlot, addContentListener } from './client/pageTransitions';
 
 const System = window.System;
 

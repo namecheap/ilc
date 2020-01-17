@@ -1,15 +1,15 @@
 import * as singleSpa from 'single-spa';
 import * as uuidv4 from 'uuid/v4';
 import * as ejs from 'ejs/ejs.min.js';
-import page500Service from './page500Service';
+import registryService from '../registry/factory';
 import errorNotifier from './errorNotifier';
 
 const System = window.System;
 
 // Initializing 500 error page to cache template of this page
 // to avoid a situation when localhost can't return this template in future
-page500Service.getTemplate()
-    .then(() => console.log('500 error page template cached'))
+registryService.preheat()
+    .then(() => console.log('Registry service preheated successfully'))
     .catch((err) => {
         errorNotifier.notify(err, {
             type: 'FETCH_PAGE_ERROR',
@@ -54,7 +54,7 @@ export default function ({
         const fragmentKind = selectFragmentKind(registryConf, currentPath, `@portal/${appName}`, slotName);
 
         if (isEssentialOrPrimaryFragment(fragmentKind)) {
-            page500Service.getTemplate()
+            registryService.getTemplate('500')
                 .then((data) => {
                     document.querySelector('html').innerHTML = ejs.render(data.data, {
                         errorId,

@@ -25,9 +25,10 @@ if (config.get('cdnUrl') === null) {
     app.use('/_ilc/', serveStatic(config.get('productionMode')));
 }
 
-app.get('/_ilc/api/v1/page/500', async (req, res, next) => {
-    const data = await registryService.getTemplate('500');
-    res.status(200).send(data.data.content);
+app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
+    const data = await registryService.getTemplate(req.params.templateName);
+
+    return res.status(200).send(data.data.content);
 });
 
 app.get('*', (req, res, next) => {
