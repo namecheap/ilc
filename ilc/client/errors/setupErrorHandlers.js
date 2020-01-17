@@ -1,7 +1,7 @@
 import * as singleSpa from 'single-spa';
 import * as uuidv4 from 'uuid/v4';
 import registryService from '../registry/factory';
-import errorNotifier from './errorNotifier';
+import noticeError from './noticeError';
 
 const System = window.System;
 
@@ -10,7 +10,7 @@ const System = window.System;
 registryService.preheat()
     .then(() => console.log('Registry service preheated successfully'))
     .catch((err) => {
-        errorNotifier.notify(err, {
+        noticeError(err, {
             type: 'FETCH_PAGE_ERROR',
             name: err.toString(),
             extraInfo: {
@@ -62,7 +62,7 @@ export default function ({
                 .catch((err) => {
                     alert('Something went wrong! Please try to reload page');
 
-                    errorNotifier.notify(err, {
+                    noticeError(err, {
                         type: 'FETCH_PAGE_ERROR',
                         name: err.toString(),
                         extraInfo: {
@@ -73,7 +73,7 @@ export default function ({
                 });
         }
 
-        errorNotifier.notify(err, {
+        noticeError(err, {
             type: 'FRAGMENT_ERROR',
             name: err.toString(),
             moduleName: err.appName,
@@ -91,7 +91,7 @@ export default function ({
 
         event.preventDefault();
 
-        errorNotifier.notify(event.error, {
+        noticeError(event.error, {
             type: 'MODULE_ERROR',
             name: event.error.toString(),
             moduleName: moduleInfo.name,
@@ -106,7 +106,7 @@ export default function ({
     });
 
     window.addEventListener('ilcFragmentError', function (event) {
-        errorNotifier.notify(event.detail.error, {
+        noticeError(event.detail.error, {
             type: 'FRAGMENT_ERROR',
             name: event.detail.error.toString(),
             moduleName: event.detail.moduleInfo.name,

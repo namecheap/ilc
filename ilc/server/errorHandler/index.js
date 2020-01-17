@@ -1,7 +1,7 @@
 const uuidv4 = require('uuid/v4');
 const extendError = require('@namecheap/error-extender');
 
-const errorNotifier = require('./errorNotifier');
+const noticeError = require('./noticeError');
 const registryService = require('../registry/factory');
 
 const ErrorHandlingError = extendError('ErrorHandlingError');
@@ -10,7 +10,7 @@ module.exports = async (err, req, res, next) => {
     const errorId = uuidv4();
 
     try {
-        errorNotifier.notify(err, {
+        noticeError(err, {
             errorId
         });
 
