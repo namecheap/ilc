@@ -5,25 +5,21 @@ const server = require('./http');
 const app = require('express')();
 const tailorFactory = require('./tailorFactory');
 const serveStatic = require('./serveStatic');
-const registryService = require('./server/registry/registryService');
-const preheatRegistry = require('./server/registry/preheatRegistry');
+const registryService = require('./server/registry/factory');
 const errorHandler = require('./server/errors/errorHandler');
-const tailorErrorHandler = require('./server/errors/tailorErrorHandler');
 
 app.get('/ping', async (req, res, next) => {
-    await preheatRegistry();
+    await registryService.preheat();
     res.status(200).send('pong');
 });
 
 // Support of legacy infrastructures
-app.get('/api/v1/monitor/ping/:code/:optional?', (req, res) => {
-    await preheatRegistry();
+app.get('/api/v1/monitor/ping/:code/:optional?', async (req, res) => {
+    await registryService.preheat();
     res.send('PONG' + req.params.code);
 });
 
 const tailor = tailorFactory(config.get('cdnUrl'));
-
-tailor.on('error', tailorErrorHandler);
 
 if (config.get('cdnUrl') === null) {
     app.use('/_ilc/', serveStatic(config.get('productionMode')));

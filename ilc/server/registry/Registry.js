@@ -3,12 +3,24 @@ const urljoin = require('url-join');
 
 module.exports = class Registry {
     #address;
+    #logger;
+    #cacheHeated = {
+        config: false,
+        template: false
+    };
 
-    constructor({
+    /**
+     * @param {string} address - registry address. Ex: http://registry:8080/
+     * @param {Function} wrapFetchWithCache - cache provider
+     * @param {Object} logger - log provider that implements "console" interface
+     */
+    constructor(
         address,
-        wrapFetchWithCache
-    }) {
+        wrapFetchWithCache,
+        logger
+    ) {
         this.#address = address;
+        this.#logger = logger;
 
         this.getConfig = wrapFetchWithCache(this.#getConfig, {
             cacheForSeconds: 5,
@@ -18,23 +30,44 @@ module.exports = class Registry {
         });
     }
 
+    async preheat() {
+        this.#logger.log('Registry is preheating...');
+        if (this.#cacheHeated.template && this.#cacheHeated.config) {
+            return;
+        }
+
+        await Promise.all([
+            this.getConfig(),
+            this.getTemplate('500'),
+        ]);
+
+        this.#cacheHeated.config = true;
+        this.#cacheHeated.template = true;
+
+        this.#logger.log('Registry preheated successfully!');
+    }
+
     #getConfig = async () => {
-        console.log('Calling get config registry endpoint...');
+        this.#logger.debug('Calling get config registry endpoint...');
 
         const res = await axios.get(urljoin(this.#address, 'api/v1/config'), {
             responseType: 'json',
         });
 
+        this.#cacheHeated.config = true;
+
         return res.data;
-    }
+    };
 
     #getTemplate = async (templateName) => {
-        console.log('Calling get template registry endpoint...');
+        this.#logger.debug('Calling get template registry endpoint...');
 
         const res = await axios.get(urljoin(this.#address, 'api/v1/template', templateName), {
             responseType: 'json',
         });
 
+        this.#cacheHeated.template = true;
+
         return res.data;
-    }
+    };
 };
