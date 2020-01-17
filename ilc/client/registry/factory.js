@@ -1,6 +1,4 @@
 import Registry from './Registry';
-import wrapFetchWithCache from '../../common/wrapWithCache';
+import wrapWithCache from '../../common/wrapWithCache';
 
-export default new Registry({
-    wrapFetchWithCache,
-});
+export default new Registry(wrapWithCache);
