@@ -32,8 +32,15 @@ const wrapWithCache = (fn, cacheParams) => {
             }).catch(err => {
                 delete cacheResolutionPromise[hash];
 
-                console.error('Error refreshing cached cache...');
-                console.error(err); //TODO: add proper logging
+                if (cache[hash] === undefined) {
+                    return Promise.reject(err); //As someone is waiting for promise - just reject it
+                } else {
+                    // Here no one waiting for this promise anymore, thrown error would cause
+                    // unhandled promise rejection
+                    //TODO: add better error reporting
+                    console.error('Error during cache update function execution');
+                    console.error(err);
+                }
             });
 
             if (cache[hash] !== undefined) { // It's better to return stale cache rather then cause delay
