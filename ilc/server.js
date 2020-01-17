@@ -1,3 +1,4 @@
+require('newrelic');
 require('./express/monkey/express-promise');
 
 const config = require('config');
