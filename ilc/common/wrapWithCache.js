@@ -1,4 +1,4 @@
-const wrapFetchWithCache = (fetch, cacheParams) => {
+const wrapWithCache = (fn, cacheParams) => {
     const {
         cacheForSeconds,
     } = cacheParams;
@@ -19,7 +19,7 @@ const wrapFetchWithCache = (fetch, cacheParams) => {
                 return cacheResolutionPromise;
             }
 
-            cacheResolutionPromise = fetch(...args).then(data => {
+            cacheResolutionPromise = fn(...args).then(data => {
                 cacheResolutionPromise = null;
                 cachedAt = now;
                 cache = {
@@ -50,4 +50,4 @@ const wrapFetchWithCache = (fetch, cacheParams) => {
     };
 };
 
-module.exports = wrapFetchWithCache;
+module.exports = wrapWithCache;
