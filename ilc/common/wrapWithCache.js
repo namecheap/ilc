@@ -1,53 +1,56 @@
+//TODO: cover with tests
 const wrapWithCache = (fn, cacheParams) => {
     const {
         cacheForSeconds,
     } = cacheParams;
 
-    let cache = null;
-    let cachedAt = 0;
-    let cacheResolutionPromise = null;
+    const cache = {};
+    const cacheResolutionPromise = {};
 
     return (...args) => {
         const now = Math.floor(Date.now() / 1000);
+        const hash = args.length > 0 ? hashFn(JSON.stringify(args)) : '__null__';
 
-        if (cache === null || cachedAt < now - cacheForSeconds) {
-            if (cacheResolutionPromise !== null) {
-                if (cache !== null) { // It's better to return stale cache rather then cause delay
-                    return Promise.resolve(cache);
+        if (cache[hash] === undefined || cache[hash].cachedAt < now - cacheForSeconds) {
+            if (cacheResolutionPromise[hash] !== undefined) {
+                if (cache[hash] !== undefined) { // It's better to return stale cache rather then cause delay
+                    return Promise.resolve(cache[hash]);
                 }
 
-                return cacheResolutionPromise;
+                return cacheResolutionPromise[hash];
             }
 
-            cacheResolutionPromise = fn(...args).then(data => {
-                cacheResolutionPromise = null;
-                cachedAt = now;
-                cache = {
+            cacheResolutionPromise[hash] = fn(...args).then(data => {
+                delete cacheResolutionPromise[hash];
+                cache[hash] = {
                     data,
                     checkAfter: now + cacheForSeconds,
+                    cachedAt: now,
                 };
 
-                return cache;
+                return cache[hash];
             }).catch(err => {
-                cacheResolutionPromise = null;
+                delete cacheResolutionPromise[hash];
 
-                if (cache !== null) {
-                    console.error('Error refreshing cached cache...');
-                    console.error(err);
-                } else {
-                    return Promise.reject(err);
-                }
+                console.error('Error refreshing cached cache...');
+                console.error(err); //TODO: add proper logging
             });
 
-            if (cache !== null) { // It's better to return stale cache rather then cause delay
-                return Promise.resolve(cache);
+            if (cache[hash] !== undefined) { // It's better to return stale cache rather then cause delay
+                return Promise.resolve(cache[hash]);
             }
 
-            return cacheResolutionPromise;
+            return cacheResolutionPromise[hash];
         }
 
-        return Promise.resolve(cache);
+        return Promise.resolve(cache[hash]);
     };
 };
+
+function hashFn(s) {
+    for(var i = 0, h = 0xdeadbeef; i < s.length; i++)
+        h = Math.imul(h ^ s.charCodeAt(i), 2654435761);
+    return (h ^ h >>> 16) >>> 0;
+}
 
 module.exports = wrapWithCache;
