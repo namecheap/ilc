@@ -1,7 +1,6 @@
-import ErrorNotifier from '../../common/ErrorNotifier';
-
-const newrelic = window.newrelic;
-
-export default new ErrorNotifier({
-    provider: newrelic,
-});
+export default function (err, errInfo) {
+    if (window.newrelic && window.newrelic.noticeError) {
+        window.newrelic.noticeError(err, JSON.stringify(errInfo));
+    }
+    console.error(errInfo);
+}
