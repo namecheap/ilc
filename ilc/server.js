@@ -6,7 +6,7 @@ const app = require('express')();
 const tailorFactory = require('./tailorFactory');
 const serveStatic = require('./serveStatic');
 const registryService = require('./server/registry/factory');
-const errorHandler = require('./server/errors/errorHandler');
+const errorHandler = require('./server/errorHandler');
 
 app.use(require('./server/ping'));
 
