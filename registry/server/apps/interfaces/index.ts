@@ -1,31 +1,15 @@
 import Joi from '@hapi/joi';
 
-interface AppDependencies {
-    [packageName: string]: string
-}
-
-interface AppSSR {
-    src: string,
-    timeout: number,
-}
-
-interface AppInitProps {
-    [propName: string]: any
-}
-
-interface AppProps {
-    [propName: string]: any,
-}
-
 export default interface App {
     name: string,
     spaBundle: string,
     cssBundle: string,
     assetsDiscoveryUrl?: string,
-    dependencies?: AppDependencies,
-    props?: AppProps,
-    ssr: AppSSR,
-    initProps?: AppInitProps,
+    dependencies?: string, // JSON({ [packageName: string]: string })
+    props?: string, // JSON({ [propName: string]: any })
+    configSelector?: string,
+    ssr: string, // JSON({ src: string, timeout: number })
+    initProps?: string, // JSON({ [propName: string]: any })
 }
 
 export const appNameSchema = Joi.string().trim().min(1);
@@ -36,6 +20,7 @@ const commonApp = {
     assetsDiscoveryUrl: Joi.string().trim().uri(),
     dependencies: Joi.object().default({}),
     props: Joi.object().default({}),
+    configSelector: Joi.array().items(Joi.string()),
     ssr: Joi.object({
         src: Joi.string().trim().uri().required(),
         timeout: Joi.number().required(),

@@ -5,13 +5,14 @@ import knex from '../db';
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-    const [apps, templates, routes] = await Promise.all([
+    const [apps, templates, routes, sharedProps] = await Promise.all([
         knex.select().from('apps'),
         knex.select().from('templates'),
         knex.select()
             .orderBy('orderPos', 'ASC')
             .from('routes')
-            .join('route_slots', 'route_slots.routeId', 'routes.id')
+            .join('route_slots', 'route_slots.routeId', 'routes.id'),
+        knex.select().from('shared_props'),
     ]);
 
     const data = {
@@ -26,9 +27,17 @@ router.get('/', async (req, res) => {
         v.dependencies = JSON.parse(v.dependencies);
         v.initProps = JSON.parse(v.initProps);
         v.props = JSON.parse(v.props);
+        if (sharedProps.length && v.configSelector !== null) {
+            JSON.parse(v.configSelector).forEach((configSelectorName: string) => {
+                const commonConfig = sharedProps.find(n => n.name === configSelectorName);
+                if (commonConfig) {
+                    v.props = _.merge({}, JSON.parse(commonConfig.props), v.props);
+                }
+            });
+        }
 
         v = _.omitBy(v, v => v === null || (typeof v === 'object' && Object.keys(v).length === 0));
-        acc[v.name] = _.omit(v, ['name']);
+        acc[v.name] = _.omit(v, ['name', 'configSelector']);
 
         return acc;
     }, {});
@@ -67,7 +76,7 @@ router.get('/', async (req, res) => {
         return acc;
     }, {});
 
-    return res.send(JSON.stringify(data));
+    return res.send(data);
 });
 
 export default router;

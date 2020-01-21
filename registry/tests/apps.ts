@@ -7,6 +7,7 @@ const example = <any>{
         name: '@portal/ncTestAppReactssr',
         spaBundle: 'http://localhost:1234/ncTestAppReactssr.js',
         cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssr.css',
+        configSelector: ['ncTestSharedPropsName'],
         ssr: {
             src: "http://127.0.0.1:1234/fragment",
             timeout: 1000,
@@ -21,6 +22,7 @@ const example = <any>{
         name: '@portal/ncTestAppReactssr',
         spaBundle: 'http://localhost:1234/ncTestAppReactssrUpdated.js',
         cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssrUpdated.css',
+        configSelector: ['ncTestSharedPropsNameUpdated'],
         ssr: {
             src: "http://127.0.0.1:1234/fragmentUpdated",
             timeout: 2000,
@@ -58,6 +60,7 @@ describe(`Tests ${example.url}`, () => {
                 name: 123,
                 spaBundle: 456,
                 cssBundle: 789,
+                configSelector: 654,
                 ssr: 456,
                 assetsDiscoveryUrl: 789,
                 dependencies: 456,
@@ -77,6 +80,7 @@ describe(`Tests ${example.url}`, () => {
                 '"assetsDiscoveryUrl" must be a string\n' +
                 '"dependencies" must be of type object\n' +
                 '"props" must be of type object\n' +
+                '"configSelector" must be an array\n' +
                 '"ssr" must be of type object\n' +
                 '"initProps" must be of type object\n' +
                 '"name" must be a string'
@@ -166,6 +170,7 @@ describe(`Tests ${example.url}`, () => {
             const incorrect = {
                 spaBundle: 456,
                 cssBundle: 789,
+                configSelector: 654,
                 ssr: 456,
                 assetsDiscoveryUrl: 789,
                 dependencies: 456,
@@ -186,6 +191,7 @@ describe(`Tests ${example.url}`, () => {
                 '"assetsDiscoveryUrl" must be a string\n' +
                 '"dependencies" must be of type object\n' +
                 '"props" must be of type object\n' +
+                '"configSelector" must be an array\n' +
                 '"ssr" must be of type object\n' +
                 '"initProps" must be of type object\n' +
                 '"kind" must be one of [primary, essential, regular]'

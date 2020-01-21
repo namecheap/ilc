@@ -2,3 +2,4 @@ node_modules
 /.idea
 package-lock.json
 *.ncint.*
+.DS_Store

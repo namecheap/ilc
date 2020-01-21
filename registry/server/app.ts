@@ -22,6 +22,7 @@ app.use('/api/v1/config', routes.config);
 app.use('/api/v1/app', routes.apps);
 app.use('/api/v1/template', routes.templates);
 app.use('/api/v1/route', routes.appRoutes);
+app.use('/api/v1/shared_props', routes.sharedProps);
 
 app.disable('x-powered-by');
 
