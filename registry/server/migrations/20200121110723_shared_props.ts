@@ -4,7 +4,7 @@ import * as Knex from "knex";
 export async function up(knex: Knex): Promise<any> {
     return knex.schema.createTable('shared_props', table => {
         table.string('name', 255).notNullable();
-        table.string('props').notNullable();
+        table.json('props').notNullable();
     });
 }
 
