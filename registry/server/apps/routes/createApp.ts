@@ -10,7 +10,7 @@ import preProcessResponse from '../../common/services/preProcessResponse';
 import {
     stringifyJSON,
 } from '../../common/services/json';
-import {
+import App, {
     appSchema,
 } from '../interfaces';
 
@@ -22,9 +22,9 @@ const validateRequestBeforeCreateApp = validateRequestFactory([{
 const createApp = async (req: Request, res: Response): Promise<void> => {
     const app = req.body;
 
-    await db('apps').insert(stringifyJSON(['dependencies', 'props', 'ssr', 'initProps'], app));
+    await db('apps').insert(stringifyJSON(['dependencies', 'props', 'ssr', 'initProps', 'configSelector'], app));
 
-    const [savedApp] = await db.select().from('apps').where('name', app.name);
+    const [savedApp] = await db.select().from<App>('apps').where('name', app.name);
 
     res.status(200).send(preProcessResponse(savedApp));
 };

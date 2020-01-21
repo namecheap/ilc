@@ -11,7 +11,7 @@ import preProcessResponse from '../../common/services/preProcessResponse';
 import {
     stringifyJSON,
 } from '../../common/services/json';
-import {
+import App, {
     appNameSchema,
     partialAppSchema,
 } from '../interfaces';
@@ -43,9 +43,9 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
         return;
     }
 
-    await db('apps').where({ name: appName }).update(stringifyJSON(['dependencies', 'props', 'ssr', 'initProps'], app));
+    await db('apps').where({ name: appName }).update(stringifyJSON(['dependencies', 'props', 'ssr', 'initProps', 'configSelector'], app));
 
-    const [updatedApp] = await db.select().from('apps').where('name', appName);
+    const [updatedApp] = await db.select().from<App>('apps').where('name', appName);
 
     res.status(200).send(preProcessResponse(updatedApp));
 };
