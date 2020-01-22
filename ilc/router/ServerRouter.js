@@ -1,5 +1,4 @@
 const _ = require('lodash');
-const axios = require('axios');
 
 const errors = require('./errors');
 const Router = require('./Router');
@@ -80,7 +79,7 @@ module.exports = class ServerRouter {
             url.searchParams.append('routerProps', Buffer.from(JSON.stringify(reqProps)).toString('base64'));
 
             if (slotData.props !== undefined || appInfo.props !== undefined) {
-                const appProps = Object.assign(appInfo.props || {}, slotData.props || {});
+                const appProps =  _.merge({}, appInfo.props, slotData.props);
                 url.searchParams.append('appProps', Buffer.from(JSON.stringify(appProps)).toString('base64'));
             }
 

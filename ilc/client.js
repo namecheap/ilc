@@ -4,6 +4,7 @@ import * as Router from './router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
+import _ from 'lodash';
 
 const System = window.System;
 
@@ -129,7 +130,7 @@ function getCurrentPathPropsFactory(appName, slotName) {
 function getPathProps(appName, slotName, path) {
     const appProps = registryConf.apps[appName].props || {};
     const routeProps = path.slots[slotName] && path.slots[slotName].props || {};
-    return Object.assign({}, appProps, routeProps);
+    return _.merge({}, appProps, routeProps);
 }
 
 function getCurrentBasePath() {
