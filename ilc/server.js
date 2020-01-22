@@ -1,10 +1,10 @@
 require('newrelic');
-require('./express/monkey/express-promise');
+require('./server/express/express-promise');
 
 const config = require('config');
 const server = require('./http');
 const app = require('express')();
-const tailorFactory = require('./tailorFactory');
+const tailorFactory = require('./server/tailor/factory');
 const serveStatic = require('./serveStatic');
 const registryService = require('./server/registry/factory');
 const errorHandler = require('./server/errorHandler');

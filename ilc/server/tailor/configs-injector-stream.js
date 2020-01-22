@@ -5,7 +5,7 @@ const gunzip = util.promisify(zlib.gunzip);
 const _ = require('lodash');
 const urljoin = require('url-join');
 
-const helpers = require('../helpers');
+const helpers = require('../../helpers');
 
 module.exports = class StringifierStream extends stream.Transform {
     #placeholder = '<!-- %systemjs-importmap% -->';

@@ -2,10 +2,10 @@
 
 const urljoin = require('url-join');
 
-const Tailor = require('./tailor/Tailor');
-const fetchTemplate = require('./tailor/fetch-template');
-const Router = require('./router/ServerRouter');
-const registryService = require('./server/registry/factory');
+const Tailor = require('./Tailor');
+const fetchTemplate = require('./fetch-template');
+const Router = require('../../common/router/ServerRouter');
+const registryService = require('../registry/factory');
 
 module.exports = function (cdnUrl) {
     const tailor = new Tailor({
