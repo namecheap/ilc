@@ -1,6 +1,6 @@
 import * as singleSpa from 'single-spa';
 
-import * as Router from './router/Router';
+import * as Router from './common/router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';

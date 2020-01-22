@@ -31,10 +31,11 @@ module.exports = class Registry {
     }
 
     async preheat() {
-        this.#logger.log('Registry is preheating...');
         if (this.#cacheHeated.template && this.#cacheHeated.config) {
             return;
         }
+        
+        this.#logger.log('Registry is preheating...');
 
         await Promise.all([
             this.getConfig(),
