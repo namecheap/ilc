@@ -1,12 +1,13 @@
 const newrelic = require('newrelic');
 
 /**
- * @param {Error} err
+ * @param {Error|ExtendedErrorType} err
  * @param {Object} [errInfo]
  */
-module.exports = function (err, errInfo) {
-    const infoData = Object.assign(errInfo);
+module.exports = function (err, errInfo = {}) {
+    const infoData = Object.assign({}, errInfo);
     if (err.data) {
+        //TODO: fetch data from parent errors
         Object.assign(infoData, err.data);
     }
 

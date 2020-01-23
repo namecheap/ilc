@@ -7,6 +7,7 @@ const fetchTemplate = require('./fetch-template');
 const Router = require('../../common/router/ServerRouter');
 const registryService = require('../registry/factory');
 const filterHeaders = require('./filter-headers');
+const errorHandlerSetup = require('./error-handler');
 
 module.exports = function (cdnUrl) {
     const tailor = new Tailor({
@@ -21,11 +22,7 @@ module.exports = function (cdnUrl) {
         filterHeaders,
     });
 
-
-    tailor.on('error', (req, err) => {
-        console.error('Tailor error:');
-        console.error(err);
-    });
+    errorHandlerSetup(tailor);
 
     return tailor;
 };
