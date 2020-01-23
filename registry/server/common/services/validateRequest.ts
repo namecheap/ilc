@@ -13,9 +13,9 @@ const preProcessErrorResponse = _.compose<Array<Joi.ValidationError>, Array<Joi.
 
 type SelectDataToValidate = (req: Request) => any;
 interface ValidationConfig {
-    schema: Joi.Schema,
+    schema: Joi.ObjectSchema,
     selector: SelectDataToValidate,
-};
+}
 
 const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
     req: Request,
