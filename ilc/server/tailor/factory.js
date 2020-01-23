@@ -13,7 +13,7 @@ module.exports = function (cdnUrl) {
         amdLoaderUrl: cdnUrl === null ? '/_ilc/system.js' : urljoin(cdnUrl, '/system.js'),
         fetchTemplate: fetchTemplate(
             __dirname + '/templates',
-            new Router(registryService)
+            new Router(registryService, console)
         ),
         systemScripts: '',
         registrySvc: registryService,

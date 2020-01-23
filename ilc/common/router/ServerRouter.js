@@ -6,6 +6,7 @@ const Router = require('./Router');
 module.exports = class ServerRouter {
     errors = errors;
 
+    #logger;
     /** @type {Registry} */
     #registry;
     #registryConf = null;
@@ -14,8 +15,14 @@ module.exports = class ServerRouter {
     /** @type {Router} */
     #router = null;
 
-    constructor(registry) {
+    /**
+     *
+     * @param {Registry} registry
+     * @param logger - console compatible logger
+     */
+    constructor(registry, logger) {
         this.#registry = registry;
+        this.#logger = logger;
     }
 
     async getTemplateInfo(reqUrl) {
@@ -50,6 +57,8 @@ module.exports = class ServerRouter {
     };
 
     #generatePageTpl = (route) => {
+        let primarySlotDetected = false;
+
         return _.reduce(route.slots, (res, slotData, slotName) => {
             const appInfo = this.__apps[slotData.appName];
 
@@ -83,8 +92,14 @@ module.exports = class ServerRouter {
                 url.searchParams.append('appProps', Buffer.from(JSON.stringify(appProps)).toString('base64'));
             }
 
-            if (fragmentKind === 'primary') {
+            if (fragmentKind === 'primary' && primarySlotDetected === false) {
                 ssrOpts.primary = true;
+                primarySlotDetected = true;
+            } else {
+                if (fragmentKind === 'primary') {
+                    this.#logger.warn(`More then one primary slot "${slotName}" found for "${reqProps.reqUrl}". Making it regular to avoid unexpected behaviour.`);
+                }
+                delete ssrOpts.primary;
             }
 
             ssrOpts.src = url.toString();
