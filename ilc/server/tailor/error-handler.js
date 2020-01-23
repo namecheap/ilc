@@ -42,7 +42,10 @@ function handleFragmentWarn(req, fragmentAttrs, err) {
  * @param {Tailor} tailor
  */
 module.exports = function setup(tailor) {
+    //General Tailor & primary fragment errors
     tailor.on('error', handleError);
+    //Non-primary fragment errors
     tailor.on('fragment:error', handleFragmentError);
+    //Non-primary fragment warnings
     tailor.on('fragment:warn', handleFragmentWarn);
 };
