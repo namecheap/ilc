@@ -29,8 +29,6 @@ const FRAGMENT_EVENTS = [
     'timeout',
     'warn'
 ];
-// Occurs when Template parsing fails/Primary Fragment Errors out
-const INTERNAL_SERVER_ERROR = 'Internal Server Error';
 
 /**
  * Process the HTTP Request to the Tailor Middleware
@@ -145,7 +143,11 @@ module.exports = function processRequest(options, request, response) {
         });
 
         fragment.once('error', origErr => {
-            const err = new errors.FragmentError({message: `Fragment error for "${fragment.attributes.id}"`, cause: origErr});
+            const err = new errors.FragmentError({
+                message: `Fragment error for "${fragment.attributes.id}"`,
+                cause: origErr,
+                data: { fragmentAttrs: fragment.attributes }
+            });
 
             this.emit('error', request, err, response);
             span.addTags({
