@@ -26,7 +26,6 @@ const FRAGMENT_EVENTS = [
     'end',
     'error',
     'timeout',
-    'fallback',
     'warn'
 ];
 // Occurs when Template parsing fails/Primary Fragment Errors out
@@ -154,12 +153,6 @@ module.exports = function processRequest(options, request, response) {
             resultStream.pipe(injector).pipe(contentLengthStream).pipe(response);
         });
 
-        fragment.once('fallback', err => {
-            this.emit('error', request, err);
-            span.setTag(Tags.HTTP_STATUS_CODE, 500);
-            response.writeHead(500, responseHeaders);
-            resultStream.pipe(contentLengthStream).pipe(response);
-        });
 
         fragment.once('error', err => {
             this.emit('error', request, err);

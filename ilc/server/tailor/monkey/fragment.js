@@ -76,4 +76,15 @@ fragment.prototype.onResponse = function (response) {
     }
 
     onResponse.apply(this, arguments);
-}
+};
+
+/**
+ * Here we're disabling Tailor's feature of "fallback-src" for fragments.
+ * While this is a neat thing - we don't have any alternative for client side.
+ */
+const fetchOrig = fragment.prototype.fetch;
+fragment.prototype.fetch = function () {
+    this.attributes.fallbackUrl = undefined;
+    return fetchOrig.apply(this, arguments);
+};
+
