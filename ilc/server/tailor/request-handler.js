@@ -15,6 +15,7 @@ const {
 } = require('node-tailor/lib/utils');
 const HeadInjectorStream = require('./head-injector-stream');
 const ConfigsInjectorStream = require('./configs-injector-stream');
+const errors = require('./errors');
 
 const { globalTracer, Tags, FORMAT_HTTP_HEADERS } = require('opentracing');
 const tracer = globalTracer();
@@ -86,29 +87,19 @@ module.exports = function processRequest(options, request, response) {
     });
 
     const handleError = err => {
-        this.emit('error', request, err);
-        const { message, stack } = err;
         span.setTag(Tags.ERROR, true);
-        span.log({ message, stack });
+        span.log({ message: err.message, stack: err.stack });
+
         if (shouldWriteHead) {
             shouldWriteHead = false;
-            let statusCode = 500;
-            if (err.code === TEMPLATE_NOT_FOUND || (err.data && err.data.code === TEMPLATE_NOT_FOUND)) {
-                statusCode = 404;
-            }
-            span.setTag(Tags.HTTP_STATUS_CODE, statusCode);
 
-            response.writeHead(statusCode, responseHeaders);
-            // To render with custom error template
-            if (typeof err.presentable === 'string') {
-                response.end(`${err.presentable}`);
-            } else if (err.data && typeof err.data.presentable === 'string') {
-                response.end(`${err.data.presentable}`);
-            } else {
-                response.end(INTERNAL_SERVER_ERROR);
-            }
+            this.emit('error', request, err, response);
+
+            span.setTag(Tags.HTTP_STATUS_CODE, 500);
+
             span.finish();
         } else {
+            this.emit('error', request, err);
             contentLengthStream.end();
         }
     };
@@ -153,9 +144,10 @@ module.exports = function processRequest(options, request, response) {
             resultStream.pipe(injector).pipe(contentLengthStream).pipe(response);
         });
 
+        fragment.once('error', origErr => {
+            const err = new errors.FragmentError({message: `Fragment error for "${fragment.attributes.id}"`, cause: origErr});
 
-        fragment.once('error', err => {
-            this.emit('error', request, err);
+            this.emit('error', request, err, response);
             span.addTags({
                 [Tags.ERROR]: true,
                 [Tags.HTTP_STATUS_CODE]: 500
@@ -164,8 +156,6 @@ module.exports = function processRequest(options, request, response) {
                 message: err.message,
                 stack: err.stack
             });
-            response.writeHead(500, responseHeaders);
-            response.end(INTERNAL_SERVER_ERROR);
             span.finish();
         });
     };
