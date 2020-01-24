@@ -23,6 +23,9 @@ app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
     return res.status(200).send(data.data.content);
 });
 
+// Route to test 500 page appearance
+app.get('/_ilc/500', () => { throw new Error('500 page test error') });
+
 app.get('*', (req, res) => {
     req.headers['x-request-uri'] = req.url; //TODO: to be removed & replaced with routerProps
     tailor.requestHandler(req, res);
