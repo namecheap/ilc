@@ -15,6 +15,7 @@ const {
 } = require('node-tailor/lib/utils');
 const HeadInjectorStream = require('./head-injector-stream');
 const ConfigsInjectorStream = require('./configs-injector-stream');
+const BotsGuardStream = require('./seobots-guard-stream');
 const errors = require('./errors');
 
 const { globalTracer, Tags, FORMAT_HTTP_HEADERS } = require('opentracing');
@@ -83,6 +84,10 @@ module.exports = function processRequest(options, request, response) {
         this.emit('end', request, contentLength);
         span.finish();
     });
+    const botGuard = new BotsGuardStream(request.headers, response);
+    botGuard.on('error', (err) => {
+        this.emit('error', request, err, response);
+    });
 
     const handleError = err => {
         span.setTag(Tags.ERROR, true);
@@ -136,10 +141,10 @@ module.exports = function processRequest(options, request, response) {
             responseHeaders.link = assetsToPreload.join(',');
             this.emit('response', request, statusCode, responseHeaders);
 
-            const injector = new HeadInjectorStream(headers);
+            const headInjector = new HeadInjectorStream(headers);
 
-            response.writeHead(statusCode, responseHeaders);
-            resultStream.pipe(injector).pipe(contentLengthStream).pipe(response);
+            resultStream.writeHead(statusCode, responseHeaders);
+            resultStream.pipe(headInjector).pipe(contentLengthStream).pipe(response);
         });
 
         fragment.once('error', origErr => {
@@ -179,11 +184,14 @@ module.exports = function processRequest(options, request, response) {
             let isFragmentFound = false;
 
             const injector = new ConfigsInjectorStream(bundleVersionOverride, options.registrySvc, options.cdnUrl);
-            resultStream.pipe(injector);
+            resultStream.pipe(injector).pipe(botGuard);
 
 
             resultStream.on('fragment:found', fragment => {
                 isFragmentFound = true;
+
+                botGuard.addFragment(fragment);
+
                 const { attributes } = fragment;
                 FRAGMENT_EVENTS.forEach(eventName => {
                     fragment.once(eventName, (...args) => {
@@ -198,11 +206,11 @@ module.exports = function processRequest(options, request, response) {
                 });
 
                 attributes.primary &&
-                handlePrimaryFragment(fragment, injector);
+                handlePrimaryFragment(fragment, botGuard);
             });
 
             resultStream.once('finish', () => {
-                const statusCode = response.statusCode || 200;
+                const statusCode = botGuard.statusCode || 200;
                 if (shouldWriteHead) {
                     shouldWriteHead = false;
                     // Preload the loader script when at least
@@ -217,8 +225,8 @@ module.exports = function processRequest(options, request, response) {
                     }
                     this.emit('response', request, statusCode, responseHeaders);
 
-                    response.writeHead(statusCode, responseHeaders);
-                    injector.pipe(contentLengthStream).pipe(response);
+                    botGuard.writeHead(statusCode, responseHeaders);
+                    botGuard.pipe(contentLengthStream).pipe(response);
                 }
             });
 
