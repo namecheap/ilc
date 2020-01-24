@@ -1,15 +1,15 @@
 require('newrelic');
-require('./server/express/express-promise');
+require('./express/express-promise');
 
 const config = require('config');
-const server = require('./http');
+const server = require('./server');
 const app = require('express')();
-const tailorFactory = require('./server/tailor/factory');
+const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
-const registryService = require('./server/registry/factory');
-const errorHandler = require('./server/errorHandler');
+const registryService = require('./registry/factory');
+const errorHandler = require('./errorHandler');
 
-app.use(require('./server/ping'));
+app.use(require('./ping'));
 
 const tailor = tailorFactory(config.get('cdnUrl'));
 

@@ -7,13 +7,13 @@ module.exports = function (isProduction) {
         return express.static('public');
     }
 
-    require('./systemjs/build');
+    require('../systemjs/build');
 
     const webpackMiddleware = require('webpack-dev-middleware');
     const webpack = require('webpack');
 
     return [
-        webpackMiddleware(webpack(require('./build/webpack.dev')), {
+        webpackMiddleware(webpack(require('../build/webpack.dev')), {
             publicPath: '/',
             headers: {
                 "Access-Control-Allow-Origin": "*",
