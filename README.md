@@ -1,4 +1,6 @@
-# Isomorphic Layout Composer
+![Isomorphic Layout Composer logo](brand/cover_small.png)
+
+----
 
 [![Actions Status](https://github.com/StyleT/icl/workflows/Registry/badge.svg)](https://github.com/StyleT/icl/actions)
 [![Actions Status](https://github.com/StyleT/icl/workflows/ILC/badge.svg)](https://github.com/StyleT/icl/actions)

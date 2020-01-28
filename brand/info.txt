@@ -1,0 +1,10 @@
+font name: IBMPlexSans-Medium
+font link: https://fonts.google.com/specimen/IBM+Plex+Sans
+font author: Mike Abbink
+font author site: https://www.mikeabbink.com/
+
+
+icon designer: Pham Duy Phuong Hung
+icon designer link: /duyhung7689
+        
+{"bg":"transparent","icon-gradient-0":"#920DE9","icon-gradient-1":"#1536F1","font":"#000000","slogan":"#141414"}
