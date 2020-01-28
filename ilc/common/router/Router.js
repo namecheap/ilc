@@ -18,8 +18,8 @@ module.exports = class Router {
         const path = new URL('http://hack' + reqUrl).pathname;
 
         let res = {
-            basePath: '',
-            reqUrl: '',
+            basePath: '/',
+            reqUrl,
         };
 
         for (let route of this.#compiledRoutes) {
