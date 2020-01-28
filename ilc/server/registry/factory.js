@@ -4,6 +4,6 @@ const wrapFetchWithCache = require('../../common/wrapWithCache');
 
 module.exports = new Registry(
     config.get('registry.address'),
-    wrapFetchWithCache,
+    wrapFetchWithCache(new Map()),
     console
 );

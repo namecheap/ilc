@@ -1,20 +1,19 @@
 //TODO: cover with tests
-const wrapWithCache = (fn, cacheParams) => {
+const wrapWithCache = (cacheStorage) => (fn, cacheParams) => {
     const {
         cacheForSeconds,
     } = cacheParams;
 
-    const cache = {};
     const cacheResolutionPromise = {};
 
     return (...args) => {
         const now = Math.floor(Date.now() / 1000);
         const hash = args.length > 0 ? hashFn(JSON.stringify(args)) : '__null__';
 
-        if (cache[hash] === undefined || cache[hash].cachedAt < now - cacheForSeconds) {
+        if (!cacheStorage.has(hash) || cacheStorage.get(hash).cachedAt < now - cacheForSeconds) {
             if (cacheResolutionPromise[hash] !== undefined) {
-                if (cache[hash] !== undefined) { // It's better to return stale cache rather then cause delay
-                    return Promise.resolve(cache[hash]);
+                if (cacheStorage.has(hash)) { // It's better to return stale cache rather then cause delay
+                    return Promise.resolve(cacheStorage.get(hash));
                 }
 
                 return cacheResolutionPromise[hash];
@@ -22,17 +21,17 @@ const wrapWithCache = (fn, cacheParams) => {
 
             cacheResolutionPromise[hash] = fn(...args).then(data => {
                 delete cacheResolutionPromise[hash];
-                cache[hash] = {
+                cacheStorage.set(hash, {
                     data,
                     checkAfter: now + cacheForSeconds,
                     cachedAt: now,
-                };
+                });
 
-                return cache[hash];
+                return cacheStorage.get(hash);
             }).catch(err => {
                 delete cacheResolutionPromise[hash];
 
-                if (cache[hash] === undefined) {
+                if (!cacheStorage.has(hash)) {
                     return Promise.reject(err); //As someone is waiting for promise - just reject it
                 } else {
                     // Here no one waiting for this promise anymore, thrown error would cause
@@ -43,14 +42,14 @@ const wrapWithCache = (fn, cacheParams) => {
                 }
             });
 
-            if (cache[hash] !== undefined) { // It's better to return stale cache rather then cause delay
-                return Promise.resolve(cache[hash]);
+            if (cacheStorage.has(hash)) { // It's better to return stale cache rather then cause delay
+                return Promise.resolve(cacheStorage.get(hash));
             }
 
             return cacheResolutionPromise[hash];
         }
 
-        return Promise.resolve(cache[hash]);
+        return Promise.resolve(cacheStorage.get(hash));
     };
 };
 
