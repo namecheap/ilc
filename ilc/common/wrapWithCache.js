@@ -1,14 +1,13 @@
-//TODO: cover with tests
-const wrapWithCache = (cacheStorage) => (fn, cacheParams) => {
+const wrapWithCache = (cacheStorage, logger, createHash) => (fn, cacheParams = {}) => {
     const {
-        cacheForSeconds,
+        cacheForSeconds = 60,
     } = cacheParams;
 
     const cacheResolutionPromise = {};
 
     return (...args) => {
         const now = Math.floor(Date.now() / 1000);
-        const hash = args.length > 0 ? hashFn(JSON.stringify(args)) : '__null__';
+        const hash = args.length > 0 ? createHash(JSON.stringify(args)) : '__null__';
 
         if (!cacheStorage.has(hash) || cacheStorage.get(hash).cachedAt < now - cacheForSeconds) {
             if (cacheResolutionPromise[hash] !== undefined) {
@@ -37,8 +36,8 @@ const wrapWithCache = (cacheStorage) => (fn, cacheParams) => {
                     // Here no one waiting for this promise anymore, thrown error would cause
                     // unhandled promise rejection
                     //TODO: add better error reporting
-                    console.error('Error during cache update function execution');
-                    console.error(err);
+                    logger.error('Error during cache update function execution');
+                    logger.error(err);
                 }
             });
 
@@ -52,11 +51,5 @@ const wrapWithCache = (cacheStorage) => (fn, cacheParams) => {
         return Promise.resolve(cacheStorage.get(hash));
     };
 };
-
-function hashFn(s) {
-    for(var i = 0, h = 0xdeadbeef; i < s.length; i++)
-        h = Math.imul(h ^ s.charCodeAt(i), 2654435761);
-    return (h ^ h >>> 16) >>> 0;
-}
 
 module.exports = wrapWithCache;
