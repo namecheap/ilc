@@ -17,7 +17,10 @@ module.exports = class Router {
     match(reqUrl) {
         const path = new URL('http://hack' + reqUrl).pathname;
 
-        let res = {};
+        let res = {
+            basePath: '/',
+            reqUrl,
+        };
 
         for (let route of this.#compiledRoutes) {
             const match = path.match(route.routeExp);
@@ -47,7 +50,7 @@ module.exports = class Router {
 
         return _defaultsDeep({
             specialRole: 404,
-        }, this.#specialRoutes[404]);
+        }, this.#specialRoutes[404], res);
     }
 
     __compiler(routes) {
