@@ -121,16 +121,11 @@ describe('wrapWithCache', () => {
                 cacheStorage.set(cachedValueKey, oldCachedValue);
             });
 
-            it('should return a previous cached value when a user is calling a cached function the first time after expiring data', async () => {
+            it('should return a previous cached value when a user calls a cached function the first time after expiring data and a new cached value when a user calls it the second time', async () => {
                 const cachedValue = await wrapedFn(...fnArgs);
-
-                chai.expect(cachedValue).to.equal(oldCachedValue);
-            });
-
-            it('should return a new cached value when a user is calling a cached function the the second time after expiring data', async () => {
-                await wrapedFn(...fnArgs);
                 const newCachedValue = await wrapedFn(...fnArgs);
 
+                chai.expect(cachedValue).to.equal(oldCachedValue)
                 chai.expect(newCachedValue).to.own.include({
                     data: newData,
                 }).and.to.have.all.keys('checkAfter', 'cachedAt');
