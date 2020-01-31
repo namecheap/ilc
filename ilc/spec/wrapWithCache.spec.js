@@ -1,12 +1,12 @@
 import chai from 'chai';
 import sinon from 'sinon';
+import localStorage from 'localStorage';
 import wrapWithCache from '../common/wrapWithCache';
 
 describe('wrapWithCache', () => {
     let wrapedFn;
     let wrapWithCacheStorage;
 
-    const cacheStorage = new Map();
     const fn = sinon.stub();
     const createHash = sinon.stub();
     const logger = {
@@ -16,14 +16,14 @@ describe('wrapWithCache', () => {
     const fnError = new Error('Error message');
 
     before(() => {
-        wrapWithCacheStorage = wrapWithCache(cacheStorage, logger, createHash);
+        wrapWithCacheStorage = wrapWithCache(localStorage, logger, createHash);
     });
 
     afterEach(() => {
         fn.resetBehavior();
         createHash.resetBehavior();
         logger.error.resetBehavior();
-        cacheStorage.clear();
+        localStorage.clear();
     });
 
     describe('when cache storage is empty', () => {
@@ -43,7 +43,7 @@ describe('wrapWithCache', () => {
         it('should return a cached value when a user calls a cached function', async () => {
             const cachedValue = await wrapedFn();
 
-            chai.expect(cachedValue).to.own.include({
+            chai.expect(cachedValue).to.include({
                 data,
             }).and.to.have.all.keys('checkAfter', 'cachedAt');
         });
@@ -51,7 +51,7 @@ describe('wrapWithCache', () => {
         it('should save a value into the cache', async () => {
             await wrapedFn();
 
-            chai.expect(cacheStorage.get('__null__')).to.own.include({
+            chai.expect(JSON.parse(localStorage.getItem('__null__'))).to.include({
                 data,
             }).and.to.have.all.keys('checkAfter', 'cachedAt');
         });
@@ -66,7 +66,7 @@ describe('wrapWithCache', () => {
                     await wrapedFn();
                 } catch (error) { }
 
-                chai.expect(cacheStorage.get('__null__')).to.be.undefined;
+                chai.expect(localStorage.getItem('__null__')).to.be.null;
             });
 
             it('should reject an error when cashe storage does not have an old data', async () => {
@@ -118,15 +118,15 @@ describe('wrapWithCache', () => {
 
             beforeEach(() => {
                 fn.withArgs(...fnArgs).returns(Promise.resolve(newData));
-                cacheStorage.set(cachedValueKey, oldCachedValue);
+                localStorage.setItem(cachedValueKey, JSON.stringify(oldCachedValue));
             });
 
             it('should return a previous cached value when a user calls a cached function the first time after expiring data and a new cached value when a user calls it the second time', async () => {
                 const cachedValue = await wrapedFn(...fnArgs);
                 const newCachedValue = await wrapedFn(...fnArgs);
 
-                chai.expect(cachedValue).to.equal(oldCachedValue)
-                chai.expect(newCachedValue).to.own.include({
+                chai.expect(cachedValue).to.deep.equal(oldCachedValue)
+                chai.expect(newCachedValue).to.deep.include({
                     data: newData,
                 }).and.to.have.all.keys('checkAfter', 'cachedAt');
             });
@@ -134,14 +134,14 @@ describe('wrapWithCache', () => {
             describe('but fetching a new data was rejected when a user calls a cached function the second time after expiring data', () => {
                 beforeEach(() => {
                     fn.withArgs(...fnArgs).returns(Promise.reject(fnError));
-                    cacheStorage.set(cachedValueKey, oldCachedValue);
+                    localStorage.setItem(cachedValueKey, JSON.stringify(oldCachedValue));
                 });
 
                 it('should not be any errors because throwing an error would cause unhandled promise rejection', async () => {
                     await wrapedFn(...fnArgs);
                     const cachedValue = await wrapedFn(...fnArgs);
 
-                    chai.expect(cachedValue).to.equal(oldCachedValue);
+                    chai.expect(cachedValue).to.deep.equal(oldCachedValue);
                 });
 
                 it('a logger should notice an error', async () => {
@@ -165,13 +165,13 @@ describe('wrapWithCache', () => {
 
             beforeEach(() => {
                 wrapedFn = wrapWithCacheStorage(fn, cacheParams);
-                cacheStorage.set(cachedValueKey, oldCachedValue);
+                localStorage.setItem(cachedValueKey, JSON.stringify(oldCachedValue));
             });
 
             it('should return an old cached value when a user calls a cached function', async () => {
                 const cachedValue = await wrapedFn(...fnArgs);
 
-                chai.expect(cachedValue).to.equal(oldCachedValue);
+                chai.expect(cachedValue).to.deep.equal(oldCachedValue);
             });
         });
     });

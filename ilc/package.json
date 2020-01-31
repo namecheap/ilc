@@ -23,6 +23,7 @@
     "device-detector-js": "^2.1.1",
     "express": "^4.17.1",
     "http-shutdown": "^1.2.1",
+    "localStorage": "^1.0.4",
     "lodash": "^4.17.15",
     "newrelic": "^6.2.0",
     "nginx-plus-dynamic-upstream": "^2.0.0",
