@@ -40,7 +40,7 @@ describe('wrapWithCache', () => {
             fn.withArgs().returns(Promise.resolve(data));
         });
 
-        it('should return a cached value when a user is calling a cached function', async () => {
+        it('should return a cached value when a user calls a cached function', async () => {
             const cachedValue = await wrapedFn();
 
             chai.expect(cachedValue).to.own.include({
@@ -131,7 +131,7 @@ describe('wrapWithCache', () => {
                 }).and.to.have.all.keys('checkAfter', 'cachedAt');
             });
 
-            describe('but fetching a new data was rejected when a user is calling a cached function the second time after expiring data', () => {
+            describe('but fetching a new data was rejected when a user calls a cached function the second time after expiring data', () => {
                 beforeEach(() => {
                     fn.withArgs(...fnArgs).returns(Promise.reject(fnError));
                     cacheStorage.set(cachedValueKey, oldCachedValue);
@@ -168,7 +168,7 @@ describe('wrapWithCache', () => {
                 cacheStorage.set(cachedValueKey, oldCachedValue);
             });
 
-            it('should return an old cached value when a user is calling a cached function', async () => {
+            it('should return an old cached value when a user calls a cached function', async () => {
                 const cachedValue = await wrapedFn(...fnArgs);
 
                 chai.expect(cachedValue).to.equal(oldCachedValue);
