@@ -61,12 +61,12 @@ describe('wrapWithCache', () => {
                 fn.withArgs().returns(Promise.reject(fnError));
             });
 
-            it('should not save any value into the cache', async () => {
+            it('should not save a value into the cache', async () => {
                 try {
                     await wrapedFn();
                 } catch (error) { }
 
-                chai.expect(cacheStorage.size).to.equal(0);
+                chai.expect(cacheStorage.get('__null__')).to.be.undefined;
             });
 
             it('should reject an error when cashe storage does not have an old data', async () => {
