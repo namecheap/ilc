@@ -51,7 +51,9 @@ describe('wrapWithCache', () => {
         it('should save a value into the cache', async () => {
             await wrapedFn();
 
-            chai.expect(cacheStorage.size).to.equal(1);
+            chai.expect(cacheStorage.get('__null__')).to.own.include({
+                data,
+            }).and.to.have.all.keys('checkAfter', 'cachedAt');
         });
 
         describe('but fetching a data was rejected', () => {
