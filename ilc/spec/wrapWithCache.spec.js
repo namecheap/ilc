@@ -13,7 +13,7 @@ describe('wrapWithCache', () => {
         error: sinon.stub(),
     };
 
-    const errorThrowedByFn = new Error('Error message');
+    const fnError = new Error('Error message');
 
     before(() => {
         wrapWithCacheStorage = wrapWithCache(cacheStorage, logger, createHash);
@@ -56,31 +56,35 @@ describe('wrapWithCache', () => {
 
         describe('but fetching a data was rejected', () => {
             beforeEach(() => {
-                fn.withArgs().returns(Promise.reject(errorThrowedByFn));
+                fn.withArgs().returns(Promise.reject(fnError));
             });
 
             it('should not save any value into the cache', async () => {
                 try {
                     await wrapedFn();
-                } catch (error) {
-                    chai.expect(cacheStorage.size).to.equal(0);
-                }
+                } catch (error) { }
+
+                chai.expect(cacheStorage.size).to.equal(0);
             });
 
             it('should reject an error when cashe storage does not have an old data', async () => {
+                let catchedError;
+
                 try {
                     await wrapedFn();
                 } catch (error) {
-                    chai.expect(error).to.equal(errorThrowedByFn);
+                    catchedError = error;
                 }
+
+                chai.expect(catchedError).to.equal(fnError);
             });
 
             it('a logger should not notice any error', async () => {
                 try {
                     await wrapedFn();
-                } catch (error) {
-                    chai.expect(logger.error.called).to.be.false;
-                }
+                } catch (error) { }
+
+                chai.expect(logger.error.called).to.be.false;
             });
         });
     });
@@ -132,7 +136,7 @@ describe('wrapWithCache', () => {
 
             describe('but fetching a new data was rejected when a user is calling a cached function the second time after expiring data', () => {
                 beforeEach(() => {
-                    fn.withArgs(...fnArgs).returns(Promise.reject(errorThrowedByFn));
+                    fn.withArgs(...fnArgs).returns(Promise.reject(fnError));
                     cacheStorage.set(cachedValueKey, oldCachedValue);
                 });
 
