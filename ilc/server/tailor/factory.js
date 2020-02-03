@@ -8,6 +8,7 @@ const Router = require('../../common/router/ServerRouter');
 const registryService = require('../registry/factory');
 const filterHeaders = require('./filter-headers');
 const errorHandlerSetup = require('./error-handler');
+const fragmentHooks = require('./fragment-hooks');
 
 module.exports = function (cdnUrl) {
     const tailor = new Tailor({
@@ -18,6 +19,8 @@ module.exports = function (cdnUrl) {
         ),
         systemScripts: '',
         filterHeaders,
+        fragmentHooks,
+        botsGuardEnabled: true,
     });
 
     errorHandlerSetup(tailor);
