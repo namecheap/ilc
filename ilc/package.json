@@ -6,6 +6,7 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha",
     "test:ci": "npm run test",
+    "test:coverage": "nyc mocha",
     "start": "node --max-http-header-size 30000 server/app.js",
     "dev": "cross-env NODE_ENV=development nodemon --ignore './public/' --max-http-header-size 30000 server/app.js",
     "build": "rimraf public && npm run build:client && npm run build:systemjs",
@@ -48,6 +49,7 @@
     "chai": "^4.2.0",
     "mocha": "^7.0.1",
     "nodemon": "^1.19.4",
+    "nyc": "^15.0.0",
     "raw-loader": "^3.1.0",
     "sinon": "^8.1.1",
     "webpack": "^4.41.2",
