@@ -2,7 +2,7 @@
 
 const urljoin = require('url-join');
 
-const Tailor = require('./Tailor');
+const Tailor = require('tailorx');
 const fetchTemplate = require('./fetch-template');
 const Router = require('../../common/router/ServerRouter');
 const registryService = require('../registry/factory');
@@ -17,8 +17,6 @@ module.exports = function (cdnUrl) {
             new Router(registryService, console)
         ),
         systemScripts: '',
-        registrySvc: registryService,
-        cdnUrl,
         filterHeaders,
     });
 
