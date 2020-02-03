@@ -1,14 +1,25 @@
 name: ILC
+
 on: [push]
 
 jobs:
-
-  docker:
+  build:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v1
+
+    - name: Docker ilc auth
+      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username stylet --password-stdin
+
+    - name: Build the Docker image
+      run: |
+        cd ./ilc/
+        docker build . --tag ilc:tmp
+
+    - name: Run tests
+      run: docker run ilc:tmp npm run test
 
     - name: Calc tags
       id: tags
@@ -19,13 +30,12 @@ jobs:
         echo "Tags that will be used: $DOCKER_TAGS"
         echo ::set-output name=docker_tags::$DOCKER_TAGS
 
-    - uses: jerray/publish-docker-action@d035a9e
-      with:
-        username: stylet
-        password: ${{ secrets.DOCKER_HUB_TOKEN }}
-        repository: stylet/ilc
-        path: ./ilc/
-        file: ./ilc/Dockerfile
-        auto_tag: false
-        tags: ${{ steps.tags.outputs.docker_tags }}
-        allow_pull_request: false
+    - name: Push image
+      run: |
+        TAGS="${{ steps.tags.outputs.docker_tags }}"
+
+        for i in ${TAGS//,/ }
+        do
+            docker tag ilc:tmp stylet/ilc:$i
+            docker push stylet/ilc:$i
+        done
