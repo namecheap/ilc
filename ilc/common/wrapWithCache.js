@@ -1,20 +1,18 @@
-//TODO: cover with tests
-const wrapWithCache = (fn, cacheParams) => {
+const wrapWithCache = (localStorage, logger, createHash = hashFn) => (fn, cacheParams = {}) => {
     const {
-        cacheForSeconds,
+        cacheForSeconds = 60,
     } = cacheParams;
 
-    const cache = {};
     const cacheResolutionPromise = {};
 
     return (...args) => {
         const now = Math.floor(Date.now() / 1000);
-        const hash = args.length > 0 ? hashFn(JSON.stringify(args)) : '__null__';
+        const hash = args.length > 0 ? createHash(JSON.stringify(args)) : '__null__';
 
-        if (cache[hash] === undefined || cache[hash].cachedAt < now - cacheForSeconds) {
+        if (localStorage.getItem(hash) === null || JSON.parse(localStorage.getItem(hash)).cachedAt < now - cacheForSeconds) {
             if (cacheResolutionPromise[hash] !== undefined) {
-                if (cache[hash] !== undefined) { // It's better to return stale cache rather then cause delay
-                    return Promise.resolve(cache[hash]);
+                if (localStorage.getItem(hash) !== null) { // It's better to return stale cache rather then cause delay
+                    return Promise.resolve(JSON.parse(localStorage.getItem(hash)));
                 }
 
                 return cacheResolutionPromise[hash];
@@ -22,42 +20,42 @@ const wrapWithCache = (fn, cacheParams) => {
 
             cacheResolutionPromise[hash] = fn(...args).then(data => {
                 delete cacheResolutionPromise[hash];
-                cache[hash] = {
+                localStorage.setItem(hash, JSON.stringify({
                     data,
                     checkAfter: now + cacheForSeconds,
                     cachedAt: now,
-                };
+                }));
 
-                return cache[hash];
+                return JSON.parse(localStorage.getItem(hash));
             }).catch(err => {
                 delete cacheResolutionPromise[hash];
 
-                if (cache[hash] === undefined) {
+                if (localStorage.getItem(hash) === null) {
                     return Promise.reject(err); //As someone is waiting for promise - just reject it
                 } else {
                     // Here no one waiting for this promise anymore, thrown error would cause
                     // unhandled promise rejection
                     //TODO: add better error reporting
-                    console.error('Error during cache update function execution');
-                    console.error(err);
+                    logger.error('Error during cache update function execution');
+                    logger.error(err);
                 }
             });
 
-            if (cache[hash] !== undefined) { // It's better to return stale cache rather then cause delay
-                return Promise.resolve(cache[hash]);
+            if (localStorage.getItem(hash) !== null) { // It's better to return stale cache rather then cause delay
+                return Promise.resolve(JSON.parse(localStorage.getItem(hash)));
             }
 
             return cacheResolutionPromise[hash];
         }
 
-        return Promise.resolve(cache[hash]);
+        return Promise.resolve(JSON.parse(localStorage.getItem(hash)));
     };
 };
 
-function hashFn(s) {
-    for(var i = 0, h = 0xdeadbeef; i < s.length; i++)
-        h = Math.imul(h ^ s.charCodeAt(i), 2654435761);
-    return (h ^ h >>> 16) >>> 0;
+function hashFn(str) {
+    for (var i = 0, h = 0xdeadbeef; i < str.length; i++)
+        h = Math.imul(h ^ str.charCodeAt(i), 2654435761);
+    return ((h ^ h >>> 16) >>> 0).toString();
 }
 
 module.exports = wrapWithCache;

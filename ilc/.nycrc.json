@@ -1,0 +1,15 @@
+{
+    "all": true,
+    "reporter": "text",
+    "check-coverage": true,
+    "lines": 90,
+    "per-file": true,
+    "exclude": [
+        "**/*.spec.js",
+        "public",
+        "config",
+        "build",
+        "systemjs",
+        "node_modules"
+    ]
+  }
