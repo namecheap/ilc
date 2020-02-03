@@ -1,7 +1,7 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import localStorage from 'localStorage';
-import wrapWithCache from '../common/wrapWithCache';
+import wrapWithCache from './wrapWithCache';
 
 describe('wrapWithCache', () => {
     let wrapedFn;

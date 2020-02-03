@@ -1,6 +1,6 @@
 {
-    "spec": "./spec/**/*.spec.js",
+    "spec": "**/*.spec.js",
     "require": "@babel/register",
     "timeout": 5000,
-    "exit": true
+    "exclude": "node_modules/**/*"
 }
