@@ -5,8 +5,7 @@
   "main": "server/app.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha",
-    "test:ci": "npm run test",
-    "test:coverage": "nyc mocha",
+    "test:coverage": "cross-env NODE_ENV=test nyc mocha",
     "start": "node --max-http-header-size 30000 server/app.js",
     "dev": "cross-env NODE_ENV=development nodemon --ignore './public/' --max-http-header-size 30000 server/app.js",
     "build": "rimraf public && npm run build:client && npm run build:systemjs",
