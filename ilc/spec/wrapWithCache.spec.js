@@ -5,7 +5,6 @@ import wrapWithCache from '../common/wrapWithCache';
 
 describe('wrapWithCache', () => {
     let wrapedFn;
-    let wrapWithCacheStorage;
 
     const fn = sinon.stub();
     const createHash = sinon.stub();
@@ -30,7 +29,8 @@ describe('wrapWithCache', () => {
     };
 
     beforeEach(() => {
-        wrapWithCacheStorage = wrapWithCache(localStorage, logger, createHash);
+        const wrapWithCacheStorage = wrapWithCache(localStorage, logger, createHash);
+        wrapedFn = wrapWithCacheStorage(fn, cacheParams);
         createHash.withArgs(JSON.stringify(fnArgs)).returns(cachedValueKey);
     });
 
@@ -41,11 +41,28 @@ describe('wrapWithCache', () => {
         createHash.reset();
     });
 
-    describe('when a user calls a wrapped function the first time', () => {
-        beforeEach(() => {
-            wrapedFn = wrapWithCacheStorage(fn, cacheParams);
-        });
+    it('should return a value', async () => {
+        fn.withArgs().returns(Promise.resolve(data));
 
+        const value = await wrapedFn();
+
+        chai.expect(value).to.include({
+            data,
+        }).and.to.have.all.keys('checkAfter', 'cachedAt');
+    });
+
+    it('should return the prev cached value while respecting function params as a key', async () => {
+        fn.withArgs(...fnArgs)
+            .onFirstCall().returns(Promise.resolve(prevData))
+            .onSecondCall().returns(Promise.resolve(newData));
+
+        const firstValue = await wrapedFn(...fnArgs);
+        const secondValue = await wrapedFn(...fnArgs);
+
+        chai.expect(firstValue).to.deep.equals(secondValue);
+    });
+
+    describe('when a user calls a wrapped function the first time', () => {
         describe('without any params', () => {
             it('should return a cached value', async () => {
                 fn.withArgs().onFirstCall().returns(Promise.resolve(data));
@@ -104,7 +121,6 @@ describe('wrapWithCache', () => {
     describe('when a user calls a wrapped function which a user called before', () => {
         describe('but the previous cached value is not expired', () => {
             it('should return the prev cached value', async () => {
-                wrapedFn = wrapWithCacheStorage(fn, cacheParams);
                 fn.withArgs(...fnArgs)
                     .onFirstCall().returns(Promise.resolve(prevData))
                     .onSecondCall().returns(Promise.resolve(newData));
@@ -118,7 +134,6 @@ describe('wrapWithCache', () => {
 
         describe('but the previous cached value is expired', () => {
             it('should return the prev cached value because it is better then wait for the result for a new data', async () => {
-                wrapedFn = wrapWithCacheStorage(fn, cacheParams);
                 fn.withArgs(...fnArgs).onFirstCall().returns(Promise.resolve(newData));
                 localStorage.setItem(cachedValueKey, JSON.stringify(prevCachedValue));
 
