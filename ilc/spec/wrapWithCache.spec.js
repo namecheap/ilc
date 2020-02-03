@@ -29,23 +29,20 @@ describe('wrapWithCache', () => {
         cachedAt: now - cacheParams.cacheForSeconds - 60,
     };
 
-    before(() => {
+    beforeEach(() => {
         wrapWithCacheStorage = wrapWithCache(localStorage, logger, createHash);
         createHash.withArgs(JSON.stringify(fnArgs)).returns(cachedValueKey);
-    });
-
-    after(() => {
-        createHash.reset();
     });
 
     afterEach(() => {
         fn.reset();
         logger.error.reset();
         localStorage.clear();
+        createHash.reset();
     });
 
     describe('when a user calls a wrapped function the first time', () => {
-        before(() => {
+        beforeEach(() => {
             wrapedFn = wrapWithCacheStorage(fn, cacheParams);
         });
 
@@ -77,7 +74,7 @@ describe('wrapWithCache', () => {
             });
         });
 
-        describe('while fetching a new data is rejected', () => {
+        describe('but fetching a new data is rejected', () => {
             beforeEach(() => {
                 fn.withArgs().onFirstCall().returns(Promise.reject(fnError));
             });
@@ -113,7 +110,7 @@ describe('wrapWithCache', () => {
     });
 
     describe('when a user calls a wrapped function which a user called before', () => {
-        describe('while the previous cached value is not expired', () => {
+        describe('but the previous cached value is not expired', () => {
             beforeEach(() => {
                 wrapedFn = wrapWithCacheStorage(fn, cacheParams);
                 fn.withArgs(...fnArgs)
@@ -129,7 +126,7 @@ describe('wrapWithCache', () => {
             });
         });
 
-        describe('while the previous cached value is expired', () => {
+        describe('but the previous cached value is expired', () => {
             beforeEach(() => {
                 wrapedFn = wrapWithCacheStorage(fn, cacheParams);
                 fn.withArgs(...fnArgs).onFirstCall().returns(Promise.resolve(newData));
@@ -144,7 +141,7 @@ describe('wrapWithCache', () => {
             });
         });
 
-        describe('while fetching a new data is rejected', () => {
+        describe('but fetching a new data is rejected', () => {
             beforeEach(() => {
                 fn.withArgs(...fnArgs).onFirstCall().returns(Promise.reject(fnError));
                 localStorage.setItem(cachedValueKey, JSON.stringify(prevCachedValue));
