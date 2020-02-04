@@ -21,7 +21,7 @@ function insertStart(stream, attributes, headers, index) {
                         }>`
             );
         } else if (ref.rel === 'fragment-script') {
-            bundleVersionOverrides.cssBundle = ref.uri;
+            bundleVersionOverrides.spaBundle = ref.uri;
         } else if (ref.rel === 'fragment-dependency' && ref.params.name) {
             if (bundleVersionOverrides.dependencies === undefined) {
                 bundleVersionOverrides.dependencies = {};

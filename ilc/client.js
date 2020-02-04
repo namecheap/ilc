@@ -4,6 +4,7 @@ import * as Router from './common/router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
+import initSpaConfig from './client/initSpaConfig';
 import deepmerge from 'deepmerge';
 
 const System = window.System;
@@ -22,12 +23,7 @@ Array.from(document.body.querySelectorAll('link[data-fragment-id]')).reduce((hre
     return hrefs;
 }, new Set());
 
-const confScript = document.querySelector('script[type="spa-config"]');
-if (confScript === null) {
-    throw new Error('Can\'t find single-spa config');
-}
-
-const registryConf = JSON.parse(confScript.innerHTML);
+const registryConf = initSpaConfig();
 
 const router = new Router(registryConf);
 let currentPath = router.match(window.location.pathname + window.location.search);

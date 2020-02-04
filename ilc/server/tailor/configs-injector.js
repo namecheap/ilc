@@ -1,8 +1,6 @@
 const _ = require('lodash');
 const urljoin = require('url-join');
 
-const helpers = require('../../helpers');
-
 module.exports = class ConfigsInjector {
     #registry;
     #cdnUrl;
@@ -23,8 +21,7 @@ module.exports = class ConfigsInjector {
         const regConf = registryConf.data;
 
         const tpl =
-            helpers.getSystemjsImportmap(regConf.apps) +
-            helpers.getSPAConfig(regConf) +
+            this.#getSPAConfig(regConf) +
             `<script src="${this.#getClientjsUrl()}" type="text/javascript"></script>`;
 
         document = document.replace('</body>', tpl + '</body>');
@@ -42,4 +39,10 @@ module.exports = class ConfigsInjector {
 
     #getSystemjsUrl = () => this.#cdnUrl === null ? '/_ilc/system.js' : urljoin(this.#cdnUrl, '/system.js');
     #getClientjsUrl = () => this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js');
+
+    #getSPAConfig = (registryConf) => {
+        registryConf.apps = _.mapValues(registryConf.apps, v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'initProps', 'kind']));
+
+        return `<script type="spa-config">${JSON.stringify(_.omit(registryConf, ['templates']))}</script>`;
+    }
 };
