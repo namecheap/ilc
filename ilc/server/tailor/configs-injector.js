@@ -22,11 +22,14 @@ module.exports = class ConfigsInjector {
 
         const tpl =
             this.#getSPAConfig(regConf) +
-            `<script src="${this.#getClientjsUrl()}" type="text/javascript"></script>`;
+            this.#wrapWithScriptTag(this.#getClientjsUrl());
 
         document = document.replace('</body>', tpl + '</body>');
 
-        document = document.replace('<head>', `<head><script src="${this.#getSystemjsUrl()}" type="text/javascript"></script>`);
+        document = document.replace(
+            '<head>',
+            `<head>${this.#wrapWithScriptTag(this.#getSystemjsUrl())}`
+        );
 
         return document;
     }
@@ -44,5 +47,11 @@ module.exports = class ConfigsInjector {
         registryConf.apps = _.mapValues(registryConf.apps, v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'initProps', 'kind']));
 
         return `<script type="spa-config">${JSON.stringify(_.omit(registryConf, ['templates']))}</script>`;
-    }
+    };
+
+    #wrapWithScriptTag = (url) => {
+        const crossorigin = this.#cdnUrl !== null ? 'crossorigin' : '';
+
+        return `<script src="${url}" type="text/javascript" ${crossorigin}></script>`;
+    };
 };

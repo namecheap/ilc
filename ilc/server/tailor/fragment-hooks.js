@@ -3,6 +3,10 @@
 const parseLinkHeader = require('tailorx/lib/parse-link-header');
 
 function insertStart(stream, attributes, headers, index) {
+    if (!headers.link) {
+        return;
+    }
+
     const refs = parseLinkHeader(headers.link);
     const { async: isAsync, id } = attributes;
 
