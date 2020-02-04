@@ -9,17 +9,21 @@ const errorHandlerSetup = require('./error-handler');
 const fragmentHooks = require('./fragment-hooks');
 const ConfigsInjector = require('./configs-injector');
 
+
 module.exports = function (cdnUrl) {
+    const configsInjector = new ConfigsInjector(registryService, cdnUrl);
+
     const tailor = new Tailor({
         fetchTemplate: fetchTemplate(
             __dirname + '/templates',
             new Router(registryService, console),
-            new ConfigsInjector(registryService, cdnUrl)
+            configsInjector
         ),
         systemScripts: '',
         filterHeaders,
         fragmentHooks,
         botsGuardEnabled: true,
+        getAssetsToPreload: configsInjector.getAssetsToPreload
     });
 
     errorHandlerSetup(tailor);

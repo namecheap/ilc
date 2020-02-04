@@ -22,18 +22,24 @@ module.exports = class ConfigsInjector {
 
         const regConf = registryConf.data;
 
-        const systemjsUrl = this.#cdnUrl === null ? '/_ilc/system.js' : urljoin(this.#cdnUrl, '/system.js');
-        const clientjsUrl = this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js');
-
         const tpl =
             helpers.getSystemjsImportmap(regConf.apps) +
             helpers.getSPAConfig(regConf) +
-            `<script src="${clientjsUrl}" type="text/javascript"></script>`;
+            `<script src="${this.#getClientjsUrl()}" type="text/javascript"></script>`;
 
         document = document.replace('</body>', tpl + '</body>');
 
-        document = document.replace('<head>', `<head><script src="${systemjsUrl}" type="text/javascript"></script>`);
+        document = document.replace('<head>', `<head><script src="${this.#getSystemjsUrl()}" type="text/javascript"></script>`);
 
         return document;
     }
+
+    getAssetsToPreload = () => {
+        return {
+            scriptRefs: [this.#getSystemjsUrl(), this.#getClientjsUrl()]
+        };
+    };
+
+    #getSystemjsUrl = () => this.#cdnUrl === null ? '/_ilc/system.js' : urljoin(this.#cdnUrl, '/system.js');
+    #getClientjsUrl = () => this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js');
 };
