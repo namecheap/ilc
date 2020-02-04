@@ -9,14 +9,15 @@ const TEMPLATE_NOT_FOUND = 1;
  *
  * @param {string} templatesPath - The path where the templates are stored
  * @param {Router} router
+ * @param {ConfigsInjector} configsInjector
  */
-module.exports = (templatesPath, router) => async (
+module.exports = (templatesPath, router, configsInjector) => async (
     request,
     parseTemplate
 ) => {
     const tplInfo = await router.getTemplateInfo(request.url);
 
-    const baseTpl = tplInfo.base;
+    const baseTpl = await configsInjector.inject(tplInfo.base);
 
     const pageTemplate = tplInfo.page;
 
