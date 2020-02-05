@@ -8,20 +8,22 @@ async function renderTemplate(template: any) {
     const includesAttributes: any = Array.from(template.matchAll(includesRegExp)).reduce((
         includes: any,
         [include]: any,
-    ) => ({
-        ...includes,
-        [include]: Array.from(include.matchAll(includesAttributesRegExp)).reduce((
+    ) => {
+        const attributes = Array.from(include.matchAll(includesAttributesRegExp)).reduce((
             attributes: any,
             [attribute]: any,
         ) => {
             const [key, value] = attribute.split('=');
 
-            return {
-                ...attributes,
-                [key]: value.split('\"').join(''),
-            };
-        }, {}),
-    }), {});
+            attributes[key] = value.split('\"').join('');
+
+            return attributes;
+        }, {});
+
+        includes[include] = attributes;
+
+        return includes;
+    }, {});
 
     const includesData = await Object.keys(includesAttributes).reduce(async (
         promisifiedIncludes: any,
