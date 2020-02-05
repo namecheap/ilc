@@ -3,19 +3,16 @@ import axios from 'axios';
 // TODO Need to add types
 async function renderTemplate(template: any) {
     const includesAttributes: any = matchAllIncludesAttributes(template);
+    const includes = Object.keys(includesAttributes);
 
-    const includesData = await Object.keys(includesAttributes).reduce(async (
-        promisifiedIncludes: any,
-        include: any,
-    ) => {
-        const includes = await promisifiedIncludes;
-        const {
-            src,
-            timeout = 10000,
-            id,
-        } = includesAttributes[include];
-
+    const includesData = await Promise.all(includes.map(async (include: any) => {
         try {
+            const {
+                src,
+                timeout = 10000,
+                id,
+            } = includesAttributes[include];
+
             if (!id || !src) {
                 throw new Error(`Necessary attribute src or id was not provided by ${include}!`);
             }
@@ -24,25 +21,20 @@ async function renderTemplate(template: any) {
                 timeout: +timeout,
             });
 
-            return {
-                ...includes,
-                // TODO Need to add html comments above and beyound about an include with include's id
-                [include]: response.data,
-            };
+            // TODO Need to add html comments above and beyound about an include with include's id
+            return response.data;
         } catch (error) {
             // TODO Need to add correct error handling
             console.error(error);
-            return {
-                ...includes,
-                [include]: include,
-            };
+            return include;
         }
-    }, Promise.resolve({}));
+    }));
 
-    return Object.keys(includesData).reduce((
+    return includes.reduce((
         template: any,
         include: any,
-    ) => template.split(include).join(includesData[include]), template);
+        includeDataIndex,
+    ) => template.split(include).join(includesData[includeDataIndex]), template);
 };
 
 function matchAllIncludesAttributes(template: any) {
@@ -60,14 +52,11 @@ function matchAllIncludesAttributes(template: any) {
             [attribute]: any,
         ) => {
             const [key, value] = attribute.split('=');
-
             attributes[key] = value.split('\"').join('');
-
             return attributes;
         }, {});
 
         includes[include] = attributes;
-
         return includes;
     }, {});
 
