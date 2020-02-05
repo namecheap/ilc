@@ -1,5 +1,7 @@
 'use strict';
 
+const _ = require('lodash');
+
 const Tailor = require('tailorx');
 const fetchTemplate = require('./fetch-template');
 const Router = require('../../common/router/ServerRouter');
@@ -23,7 +25,8 @@ module.exports = function (cdnUrl) {
         filterHeaders,
         fragmentHooks,
         botsGuardEnabled: true,
-        getAssetsToPreload: configsInjector.getAssetsToPreload
+        getAssetsToPreload: configsInjector.getAssetsToPreload,
+        filterResponseHeaders: (attributes, headers) => _.pick(headers, ['set-cookie'])
     });
 
     errorHandlerSetup(tailor);
