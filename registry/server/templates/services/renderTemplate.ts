@@ -40,7 +40,7 @@ async function renderTemplate(template: any) {
             }
 
             const response = await axios.get(src, {
-                timeout,
+                timeout: +timeout,
             });
 
             return {
