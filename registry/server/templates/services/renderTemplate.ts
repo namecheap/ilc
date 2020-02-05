@@ -5,12 +5,12 @@ async function renderTemplate(template: any) {
     const includesRegExp = /\<include(?:\s*\w*\=\"[^\"]*\"\s*)*\s*(?:\/\>|\>\s*.*\s*\<\/include\>)/gmi;
     const includesAttributesRegExp = /\w*\=\"[^\"]*\"/gmi;
 
-    const includesAttributes: any = [...template.matchAll(includesRegExp)].reduce((
+    const includesAttributes: any = Array.from(template.matchAll(includesRegExp)).reduce((
         includes: any,
         [include]: any,
     ) => ({
         ...includes,
-        [include]: [...include.matchAll(includesAttributesRegExp)].reduce((
+        [include]: Array.from(include.matchAll(includesAttributesRegExp)).reduce((
             attributes: any,
             [attribute]: any,
         ) => {
