@@ -3,6 +3,15 @@ import axios from 'axios';
 // TODO Need to add types
 async function renderTemplate(template: any) {
     const includesAttributes: any = matchIncludesAttributes(template);
+    const duplicateIncludesAttributes = selectDuplicateIncludesAttributes(includesAttributes);
+
+    if (!!duplicateIncludesAttributes.length) {
+        throw new Error(
+            `The current template has next duplicate includes sources or ids as follows: \n`+
+            `${Array.from(new Set(duplicateIncludesAttributes.map(({id, src}: any) => (id || src)))).join(',\n')}`
+        );
+    };
+
     const includes = Object.keys(includesAttributes);
 
     const includesData = await Promise.all(includes.map(async (include: any) => {
@@ -63,22 +72,17 @@ function matchIncludesAttributes(template: any) {
         return includes;
     }, {});
 
-    const duplicateIncludesAttributes = Object.values(includesAttributes).filter((
+    return includesAttributes;
+}
+
+function selectDuplicateIncludesAttributes(includesAttributes: any) {
+    return Object.values(includesAttributes).filter((
         currentAttributes: any,
         index,
         attributes
     ) =>
         (currentAttributes.id || currentAttributes.src) &&
         attributes.findIndex(({id, src}: any) => id === currentAttributes.id || src === currentAttributes.src) !== index);
-
-    if (!!duplicateIncludesAttributes.length) {
-        throw new Error(
-            `The current template has next duplicate includes sources or ids as follows: \n`+
-            `${Array.from(new Set(duplicateIncludesAttributes.map(({id, src}: any) => (id || src)))).join(',\n')}`
-        );
-    };
-
-    return includesAttributes;
 }
 
 export default renderTemplate;

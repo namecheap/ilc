@@ -5,7 +5,7 @@
     "lines": 90,
     "per-file": true,
     "exclude": [
-        "**/*.spec.js",
+        "**/*.spec.ts",
         "config",
         "build",
         "node_modules"
