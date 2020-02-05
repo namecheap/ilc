@@ -29,6 +29,7 @@
         "@types/hapi__joi": "^16.0.3",
         "@types/lodash": "^4.14.144",
         "@types/mocha": "5.2.7",
+        "@types/nock": "^11.1.0",
         "@types/supertest": "2.0.8",
         "chai": "4.2.0",
         "cross-env": "6.0.3",
