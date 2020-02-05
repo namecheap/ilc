@@ -1,4 +1,4 @@
-const _defaultsDeep = require('lodash/defaultsDeep');
+const deepmerge = require('deepmerge');
 const _omit = require('lodash/omit');
 
 const errors = require('./errors');
@@ -28,9 +28,10 @@ module.exports = class Router {
                 continue;
             }
 
-            res = _defaultsDeep({
+            res = deepmerge({
                 specialRole: null,
-            }, _omit(route, ['route', 'next', 'routeExp']), res);
+                ..._omit(route, ['route', 'next', 'routeExp']),
+            }, res);
 
             if (route.next !== true) {
                 if (res.template === undefined) {
@@ -48,9 +49,10 @@ module.exports = class Router {
             throw new errors.NoRouteMatchError();
         }
 
-        return _defaultsDeep({
+        return deepmerge({
             specialRole: 404,
-        }, this.#specialRoutes[404], res);
+            ...this.#specialRoutes[404],
+        }, res);
     }
 
     __compiler(routes) {

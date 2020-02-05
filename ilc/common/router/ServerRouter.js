@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const deepmerge = require('deepmerge');
 
 const errors = require('./errors');
 const Router = require('./Router');
@@ -70,7 +71,7 @@ module.exports = class ServerRouter {
                 return res;
             }
 
-            const ssrOpts = _.defaultsDeep({}, appInfo.ssr);
+            const ssrOpts = deepmerge({}, appInfo.ssr);
             if (typeof ssrOpts.src !== "string") {
                 throw new errors.RouterError({ message: 'No url specified for fragment', data: { appInfo } });
             }
