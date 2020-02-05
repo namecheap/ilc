@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // TODO Need to add types
 async function renderTemplate(template: any) {
-    const includesAttributes: any = matchAllIncludesAttributes(template);
+    const includesAttributes: any = matchIncludesAttributes(template);
     const includes = Object.keys(includesAttributes);
 
     const includesData = await Promise.all(includes.map(async (include: any) => {
@@ -37,28 +37,46 @@ async function renderTemplate(template: any) {
     ) => template.split(include).join(includesData[includeDataIndex]), template);
 };
 
-function matchAllIncludesAttributes(template: any) {
+function matchIncludesAttributes(template: any) {
     const includesRegExp = /\<include(?:\s*\w*\=\"[^\"]*\"\s*)*\s*(?:\/\>|\>\s*.*\s*\<\/include\>)/gmi;
     const includesAttributesRegExp = /\w*\=\"[^\"]*\"/gmi;
 
-    const matchedAllIncludes = Array.from(template.matchAll(includesRegExp));
-    const includesAttributes: any = matchedAllIncludes.reduce((
+    const matchedIncludes = Array.from(template.matchAll(includesRegExp));
+    const includes = matchedIncludes.map(([include]: any) => include);
+
+    const includesAttributes: any = includes.reduce((
         includes: any,
-        [include]: any,
+        include: any,
     ) => {
-        const matchedAllAttributes = Array.from(include.matchAll(includesAttributesRegExp));
-        const attributes = matchedAllAttributes.reduce((
+        const matchedAttributes = Array.from(include.matchAll(includesAttributesRegExp));
+        const attributes = matchedAttributes.map(([attribute]: any) => attribute);
+
+        includes[include] = attributes.reduce((
             attributes: any,
-            [attribute]: any,
+            attribute: any,
         ) => {
             const [key, value] = attribute.split('=');
             attributes[key] = value.split('\"').join('');
             return attributes;
         }, {});
 
-        includes[include] = attributes;
         return includes;
     }, {});
+
+    const duplicateIncludesAttributes = Object.values(includesAttributes).filter((
+        currentAttributes: any,
+        index,
+        attributes
+    ) =>
+        (currentAttributes.id || currentAttributes.src) &&
+        attributes.findIndex(({id, src}: any) => id === currentAttributes.id || src === currentAttributes.src) !== index);
+
+    if (!!duplicateIncludesAttributes.length) {
+        throw new Error(
+            `The current template has next duplicate includes sources or ids as follows: \n`+
+            `${Array.from(new Set(duplicateIncludesAttributes.map(({id, src}: any) => (id || src)))).join(',\n')}`
+        );
+    };
 
     return includesAttributes;
 }
