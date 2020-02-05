@@ -56,7 +56,7 @@ export const addContentListener = slotName => {
     const targetNode = document.getElementById(slotName);
     targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
     hiddenSlots.push(targetNode);
-    observer.observe(targetNode, { childList: true, subtree: true });
+    observer.observe(targetNode, { childList: true });
 };
 
 export const renderFakeSlot = nodeId => {
