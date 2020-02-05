@@ -1,4 +1,4 @@
-import { request, expect } from './common';
+import { request, expect } from './common.spec';
 import _ from 'lodash';
 
 const example = {

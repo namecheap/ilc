@@ -14,8 +14,9 @@
         "migrate:make": "knex --knexfile config/knexfile.ts migrate:make",
         "seed": "knex --knexfile config/knexfile.ts seed:run",
         "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
-        "test": "cross-env NODE_ENV=test mocha -r ts-node/register ./tests/**/*.ts --exit --timeout 5000",
+        "test": "cross-env NODE_ENV=test mocha",
         "test:ci": "npm run migrate && npm run test",
+        "test:coverage": "cross-env NODE_ENV=test nyc mocha",
         "postinstall": "npm run migrate && npm run seed",
         "assetsdiscovery": "cross-env NODE_ENV=production INTERVAL=2000 node ./build/server/runnerAppAssetsDiscovery.js"
     },
@@ -31,8 +32,10 @@
         "@types/supertest": "2.0.8",
         "chai": "4.2.0",
         "cross-env": "6.0.3",
-        "mocha": "6.2.2",
+        "mocha": "^7.0.1",
+        "nock": "^11.7.2",
         "nodemon": "^1.19.4",
+        "nyc": "^15.0.0",
         "supertest": "4.0.2",
         "ts-node": "^8.4.1",
         "typescript": "^3.6.4"

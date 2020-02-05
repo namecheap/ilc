@@ -1,4 +1,4 @@
-import { request, expect } from './common';
+import { request, expect } from './common.spec';
 
 describe('Tests /', () => {
     it('Hello world', async () => {
