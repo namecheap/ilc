@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // TODO Need to add types
 async function renderTemplate(template: any) {
-    const includesRegExp = /(?:\<include)(?:\s*(?:(?:\w*)\=\"(?:[^\"]*)\")\s*)*(?:\s*(?:\/\>|\>\s*(?:.*)\s*\<\/include\>))/gmi;
-    const includesAttributesRegExp = /((?:\w*)\=\"(?:[^\"]*)\")/gmi;
+    const includesRegExp = /\<include(?:\s*\w*\=\"[^\"]*\"\s*)*\s*(?:\/\>|\>\s*.*\s*\<\/include\>)/gmi;
+    const includesAttributesRegExp = /\w*\=\"[^\"]*\"/gmi;
 
     const includesAttributes: any = [...template.matchAll(includesRegExp)].reduce((
         includes: any,
