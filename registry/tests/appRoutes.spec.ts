@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { request, expect } from './common.spec';
+import { request, expect } from './common';
 
 let example = <any>{
     template: {

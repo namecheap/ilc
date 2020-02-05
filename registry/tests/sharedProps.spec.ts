@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { request, expect } from './common.spec';
+import { request, expect } from './common';
 
 const example = {
     url: '/api/v1/shared_props/',
