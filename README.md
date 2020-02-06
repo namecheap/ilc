@@ -2,8 +2,8 @@
 
 ----
 
-[![Actions Status](https://github.com/StyleT/icl/workflows/Registry/badge.svg)](https://github.com/StyleT/icl/actions)
-[![Actions Status](https://github.com/StyleT/icl/workflows/ILC/badge.svg)](https://github.com/StyleT/icl/actions)
+[![Actions Status](https://github.com/namecheap/ilc/workflows/Registry/badge.svg)](https://github.com/namecheap/ilc/actions)
+[![Actions Status](https://github.com/namecheap/ilc/workflows/ILC/badge.svg)](https://github.com/namecheap/ilc/actions)
 
 Isomorphic Layout Composer (ILC) - layout service that compose a web page from fragment services.
 
