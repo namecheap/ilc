@@ -11,7 +11,7 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: Docker ilc auth
-      run: echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username stylet --password-stdin
+      run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
     - name: Build the Docker image
       run: |
@@ -36,6 +36,6 @@ jobs:
 
         for i in ${TAGS//,/ }
         do
-            docker tag ilc:tmp stylet/ilc:$i
-            docker push stylet/ilc:$i
+            docker tag ilc:tmp namecheap/ilc:$i
+            docker push namecheap/ilc:$i
         done
