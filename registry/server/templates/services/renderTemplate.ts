@@ -9,6 +9,12 @@ interface IncludesAttributes {
     [include: string]: IncludeAttributes
 }
 
+interface IncludeLinkHeader {
+    [href: string]: {
+        [key: string]: string,
+    }
+}
+
 async function renderTemplate(template: string): Promise<string> {
     const includesAttributes = matchIncludesAttributes(template);
 
@@ -20,39 +26,14 @@ async function renderTemplate(template: string): Promise<string> {
 
     if (!!duplicateIncludesAttributes.length) {
         throw new Error(
-            `The current template has next duplicate includes sources or ids as follows: \n`+
-            `${Array.from(new Set(duplicateIncludesAttributes.map(({id, src}: IncludeAttributes) => (id || src)))).join(',\n')}`
+            `The current template has next duplicate includes sources or ids as follows: \n` +
+            `${Array.from(new Set(duplicateIncludesAttributes.map(({ id, src }: IncludeAttributes) => (id || src)))).join(',\n')}`
         );
     };
 
-    const includes = Object.keys(includesAttributes);
+    const includesData = await fetchIncludes(includesAttributes);
 
-    const includesData = await Promise.all(includes.map(async (include: string) => {
-        try {
-            const {
-                src,
-                timeout = 10000,
-                id,
-            } = includesAttributes[include];
-
-            if (!id || !src) {
-                throw new Error(`Necessary attribute src or id was not provided by ${include}!`);
-            }
-
-            const response = await axios.get(src, {
-                timeout: +timeout,
-            });
-
-            // TODO Need to add html comments above and beyound about an include with include's id
-            return response.data;
-        } catch (error) {
-            // TODO Need to add correct error handling
-            console.error(error);
-            return include;
-        }
-    }));
-
-    return includes.reduce((
+    return Object.keys(includesAttributes).reduce((
         template: string,
         include: string,
         includeDataIndex: number,
@@ -95,7 +76,69 @@ function selectDuplicateIncludesAttributes(includesAttributes: IncludesAttribute
         attributes
     ) =>
         (currentAttributes.id || currentAttributes.src) &&
-        attributes.findIndex(({id, src}: IncludeAttributes) => id === currentAttributes.id || src === currentAttributes.src) !== index);
+        attributes.findIndex(({ id, src }: IncludeAttributes) => id === currentAttributes.id || src === currentAttributes.src) !== index);
+}
+
+async function fetchIncludes(includesAttributes: IncludesAttributes) {
+    return Promise.all(Object.keys(includesAttributes).map(async (include: string) => {
+        try {
+            const {
+                src,
+                timeout = 10000,
+                id,
+            } = includesAttributes[include];
+
+            if (!id || !src) {
+                throw new Error(`Necessary attribute src or id was not provided by ${include}!`);
+            }
+
+            const {
+                data,
+                headers: {
+                    link,
+                }
+            } = await axios.get(src, {
+                timeout: +timeout,
+            });
+            const includeLinkHeader = matchIncludeLinkHeader(link);
+            const stylesheets = selectStylesheets(includeLinkHeader);
+
+            // TODO Need to add html comments above and beyound about an include with include's id
+            return data + '\n' + stylesheets.join('\n');
+        } catch (error) {
+            // TODO Need to add correct error handling
+            console.error(error);
+            return include;
+        }
+    }));
+}
+
+function matchIncludeLinkHeader(linkHeader: string): IncludeLinkHeader {
+    const [href, ...attributes] = linkHeader.split(';');
+    const matchedAttributes = attributes.reduce((attributes: {[key: string]: string}, attribute: string) => {
+        const [key, value] = attribute.split('=');
+        attributes[key] = value;
+
+        return attributes;
+    }, {});
+
+    return {
+        [href]: matchedAttributes,
+    };
+};
+
+function selectStylesheets(includeLinkHeader: IncludeLinkHeader): Array<string> {
+    return Object.keys(includeLinkHeader).reduce((stylesheets: Array<string>, href: string) => {
+        const attributes = includeLinkHeader[href];
+
+        if (attributes.rel !== 'stylesheet') {
+            return stylesheets;
+        }
+
+        stylesheets.push(`<link rel="stylesheet" href="${href}">`);
+
+        return stylesheets;
+    }, []);
 }
 
 export default renderTemplate;
