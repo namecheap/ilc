@@ -1,20 +1,33 @@
 import axios from 'axios';
 
-// TODO Need to add types
-async function renderTemplate(template: any) {
-    const includesAttributes: any = matchIncludesAttributes(template);
+interface IncludeAttributes {
+    id: string,
+    src: string,
+    timeout?: string,
+}
+interface IncludesAttributes {
+    [include: string]: IncludeAttributes
+}
+
+async function renderTemplate(template: string): Promise<string> {
+    const includesAttributes = matchIncludesAttributes(template);
+
+    if (!Object.keys(includesAttributes).length) {
+        return template;
+    }
+
     const duplicateIncludesAttributes = selectDuplicateIncludesAttributes(includesAttributes);
 
     if (!!duplicateIncludesAttributes.length) {
         throw new Error(
             `The current template has next duplicate includes sources or ids as follows: \n`+
-            `${Array.from(new Set(duplicateIncludesAttributes.map(({id, src}: any) => (id || src)))).join(',\n')}`
+            `${Array.from(new Set(duplicateIncludesAttributes.map(({id, src}: IncludeAttributes) => (id || src)))).join(',\n')}`
         );
     };
 
     const includes = Object.keys(includesAttributes);
 
-    const includesData = await Promise.all(includes.map(async (include: any) => {
+    const includesData = await Promise.all(includes.map(async (include: string) => {
         try {
             const {
                 src,
@@ -40,13 +53,13 @@ async function renderTemplate(template: any) {
     }));
 
     return includes.reduce((
-        template: any,
-        include: any,
-        includeDataIndex,
+        template: string,
+        include: string,
+        includeDataIndex: number,
     ) => template.split(include).join(includesData[includeDataIndex]), template);
 };
 
-function matchIncludesAttributes(template: any) {
+function matchIncludesAttributes(template: string): IncludesAttributes {
     const includesRegExp = /\<include(?:\s*\w*\=\"[^\"]*\"\s*)*\s*(?:\/\>|\>\s*.*\s*\<\/include\>)/gmi;
     const includesAttributesRegExp = /\w*\=\"[^\"]*\"/gmi;
 
@@ -75,14 +88,14 @@ function matchIncludesAttributes(template: any) {
     return includesAttributes;
 }
 
-function selectDuplicateIncludesAttributes(includesAttributes: any) {
+function selectDuplicateIncludesAttributes(includesAttributes: IncludesAttributes): Array<IncludeAttributes> {
     return Object.values(includesAttributes).filter((
-        currentAttributes: any,
+        currentAttributes: IncludeAttributes,
         index,
         attributes
     ) =>
         (currentAttributes.id || currentAttributes.src) &&
-        attributes.findIndex(({id, src}: any) => id === currentAttributes.id || src === currentAttributes.src) !== index);
+        attributes.findIndex(({id, src}: IncludeAttributes) => id === currentAttributes.id || src === currentAttributes.src) !== index);
 }
 
 export default renderTemplate;

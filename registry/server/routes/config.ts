@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
     const [apps, templates, routes, sharedProps] = await Promise.all([
         knex.select().from('apps'),
-        knex.select().from('templates'),
+        knex.select('name').from('templates'),
         knex.select()
             .orderBy('orderPos', 'ASC')
             .from('routes')
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 
     const data = {
         apps: {},
-        templates: {},
+        templates: [] as string[],
         routes: [] as any[],
         specialRoutes: {},
     };
@@ -42,10 +42,7 @@ router.get('/', async (req, res) => {
         return acc;
     }, {});
 
-    data.templates = templates.reduce((acc, v) => {
-        acc[v.name] = v.content;
-        return acc;
-    }, {});
+    data.templates = templates.map(({name}) => name);
 
     const routesTmp: Array<any> = [];
     routes.forEach(v => {

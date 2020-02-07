@@ -30,13 +30,14 @@ module.exports = class ServerRouter {
         const router = await this.#getRouter();
         let route = router.match(reqUrl);
 
-        const baseTemplate = this.__templates[route.template];
+        const baseTemplate = await this.#registry.getTemplate(route.template);
+
         if (baseTemplate === undefined) {
             throw new Error('Can\'t match route base template to config map');
         }
 
         return {
-            base: baseTemplate,
+            base: baseTemplate.data.content,
             page: this.#generatePageTpl(route),
         }
     }
@@ -49,7 +50,6 @@ module.exports = class ServerRouter {
 
             this.#router = new Router(conf.data);
             this.__apps = conf.data.apps;
-            this.__templates = conf.data.templates;
 
             this.#checkAfter = conf.checkAfter;
         }
