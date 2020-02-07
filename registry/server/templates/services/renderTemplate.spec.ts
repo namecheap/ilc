@@ -18,8 +18,14 @@ describe('renderTemplate', () => {
                         data: `
                             <div id="include-id-1">
                                 This include has all necessary attributes
+                                and a specified link header which is a stylesheet
                             </div>
                         `,
+                        headers: {
+                            'X-Powered-By': 'JS',
+                            'X-My-Awesome-Header': 'Awesome',
+                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
+                        },
                     },
                 },
                 attributes: {
@@ -37,9 +43,15 @@ describe('renderTemplate', () => {
                         data: `
                             <div id="include-id-2">
                                 This include has all necessary attributes
+                                and a specified link header which is not a stylesheet
                                 but response is delayed
                             </div>
                         `,
+                        headers: {
+                            'X-Powered-By': 'JS',
+                            'X-My-Awesome-Header': 'Awesome',
+                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=txt;loveyou=3000',
+                        },
                     }
                 },
                 attributes: {
@@ -57,10 +69,16 @@ describe('renderTemplate', () => {
                         data: `
                             <div id="include-id-3">
                                 This include has all necessary attributes
+                                and a specified header link which is a stylesheet
                                 and its timeout is equal 0
                                 but response is delayed
                             </div>
                         `,
+                        headers: {
+                            'X-Powered-By': 'JS',
+                            'X-My-Awesome-Header': 'Awesome',
+                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000;',
+                        },
                     }
                 },
                 attributes: {
@@ -78,9 +96,15 @@ describe('renderTemplate', () => {
                         data: `
                             <div id="include-id-4">
                                 This include has all necessary attributes
+                                and a specified header link which is a stylesheet
                                 and does not have a provided timeout
                             </div>
                         `,
+                        headers: {
+                            'X-Powered-By': 'JS',
+                            'X-My-Awesome-Header': 'Awesome',
+                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
+                        },
                     }
                 },
                 attributes: {
@@ -98,8 +122,14 @@ describe('renderTemplate', () => {
                             <div id="include-id-5">
                                 This include does not have a source
                                 but have an id
+                                and a specified link header which is a stylesheet
                             </div>
                         `,
+                        headers: {
+                            'X-Powered-By': 'JS',
+                            'X-My-Awesome-Header': 'Awesome',
+                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
+                        },
                     }
                 },
                 attributes: {
@@ -117,8 +147,14 @@ describe('renderTemplate', () => {
                             <div id="include-id-6">
                                 This include does not have an id
                                 but have a source
+                                and a specified link header which is a stylesheet
                             </div>
                         `,
+                        headers: {
+                            'X-Powered-By': 'JS',
+                            'X-My-Awesome-Header': 'Awesome',
+                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
+                        },
                     }
                 },
                 attributes: {
@@ -135,8 +171,14 @@ describe('renderTemplate', () => {
                         data: `
                             <div id="include-id-7">
                                 This include does not have all necessary attributes
+                                but has a specified header link which is a stylesheet
                             </div>
                         `,
+                        headers: {
+                            'X-Powered-By': 'JS',
+                            'X-My-Awesome-Header': 'Awesome',
+                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
+                        },
                     }
                 },
                 attributes: {
@@ -150,6 +192,11 @@ describe('renderTemplate', () => {
                     response: {
                         status: 500,
                         data: `The server threw an error when we are trying to get data from API`,
+                        headers: {
+                            'X-Powered-By': 'JS',
+                            'X-My-Awesome-Header': 'Awesome',
+                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
+                        },
                     }
                 },
                 attributes: {
@@ -167,9 +214,10 @@ describe('renderTemplate', () => {
                 response: {
                     status,
                     data,
+                    headers,
                 },
             },
-        }) => scope.get(route).delay(delay).reply(status, data));
+        }) => scope.get(route).delay(delay).reply(status, data, headers));
 
         const template = `
             <html>
@@ -216,15 +264,15 @@ describe('renderTemplate', () => {
             <head>
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-                ${includes[0].api.response.data}
+                ${includes[0].api.response.data + '\n' + '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">'}
                 ${includes[1].api.response.data}
                 <script>window.console.log('Something...')</script>
-                ${includes[2].api.response.data}
+                ${includes[2].api.response.data + '\n' + '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">'}
             </head>
             <body>
                 <include only with timeout="3000" />
                 <div class="class-name-1">Something...</div>
-                ${includes[3].api.response.data}
+                ${includes[3].api.response.data + '\n' + '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">'}
                 <div id="div-id-1" class="class-name-2">Something...</div>
                 <include id="${includes[4].attributes.id}" timeout="${includes[4].attributes.timeout}"/>
                 <div id="div-id-2" data-id="data-id-2" />
