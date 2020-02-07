@@ -28,10 +28,10 @@ module.exports = class Router {
                 continue;
             }
 
-            res = deepmerge({
+            res = deepmerge(res, {
                 specialRole: null,
                 ..._omit(route, ['route', 'next', 'routeExp']),
-            }, res);
+            });
 
             if (route.next !== true) {
                 if (res.template === undefined) {
@@ -49,10 +49,10 @@ module.exports = class Router {
             throw new errors.NoRouteMatchError();
         }
 
-        return deepmerge({
+        return deepmerge(res, {
             specialRole: 404,
             ...this.#specialRoutes[404],
-        }, res);
+        });
     }
 
     __compiler(routes) {
