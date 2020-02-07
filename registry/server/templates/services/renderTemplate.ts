@@ -45,9 +45,14 @@ function matchIncludesAttributes(template: string): IncludesAttributes {
     const includesAttributesRegExp = /\w*\=\"[^\"]*\"/gmi;
 
     const matchedIncludes = Array.from(template.matchAll(includesRegExp));
+
+    if (!matchedIncludes.length) {
+        return {};
+    }
+
     const includes = matchedIncludes.map(([include]: any) => include);
 
-    const includesAttributes: any = includes.reduce((
+    return includes.reduce((
         includes: any,
         include: any,
     ) => {
@@ -65,11 +70,15 @@ function matchIncludesAttributes(template: string): IncludesAttributes {
 
         return includes;
     }, {});
-
-    return includesAttributes;
 }
 
 function selectDuplicateIncludesAttributes(includesAttributes: IncludesAttributes): Array<IncludeAttributes> {
+    const attributes = Object.values(includesAttributes);
+
+    if (!attributes.length) {
+        return [];
+    }
+
     return Object.values(includesAttributes).filter((
         currentAttributes: IncludeAttributes,
         index,
@@ -79,8 +88,14 @@ function selectDuplicateIncludesAttributes(includesAttributes: IncludesAttribute
         attributes.findIndex(({ id, src }: IncludeAttributes) => id === currentAttributes.id || src === currentAttributes.src) !== index);
 }
 
-async function fetchIncludes(includesAttributes: IncludesAttributes) {
-    return Promise.all(Object.keys(includesAttributes).map(async (include: string) => {
+async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Array<string>> {
+    const includes = Object.keys(includesAttributes);
+
+    if (!includes.length) {
+        return [];
+    }
+
+    return Promise.all(includes.map(async (include: string) => {
         try {
             const {
                 src,
@@ -103,6 +118,10 @@ async function fetchIncludes(includesAttributes: IncludesAttributes) {
             const includeLinkHeader = matchIncludeLinkHeader(link);
             const stylesheets = selectStylesheets(includeLinkHeader);
 
+            if (!stylesheets.length) {
+                return data;
+            }
+
             // TODO Need to add html comments above and beyound about an include with include's id
             return data + '\n' + stylesheets.join('\n');
         } catch (error) {
@@ -114,6 +133,11 @@ async function fetchIncludes(includesAttributes: IncludesAttributes) {
 }
 
 function matchIncludeLinkHeader(linkHeader: string): IncludeLinkHeader {
+    if (!linkHeader) {
+        return {};
+    };
+
+    // TODO It need to update to cover all cases with a link header
     const [href, ...attributes] = linkHeader.split(';');
     const matchedAttributes = attributes.reduce((attributes: {[key: string]: string}, attribute: string) => {
         const [key, value] = attribute.split('=');
@@ -128,7 +152,13 @@ function matchIncludeLinkHeader(linkHeader: string): IncludeLinkHeader {
 };
 
 function selectStylesheets(includeLinkHeader: IncludeLinkHeader): Array<string> {
-    return Object.keys(includeLinkHeader).reduce((stylesheets: Array<string>, href: string) => {
+    const hrefs = Object.keys(includeLinkHeader);
+
+    if (!hrefs.length) {
+        return [];
+    }
+
+    return hrefs.reduce((stylesheets: Array<string>, href: string) => {
         const attributes = includeLinkHeader[href];
 
         if (attributes.rel !== 'stylesheet') {

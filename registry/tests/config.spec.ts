@@ -53,7 +53,7 @@ describe('Tests /api/v1/config', () => {
             expect(response.body).to.be.an('object');
 
             expect(response.body.apps).to.be.an('object');
-            expect(response.body.templates).to.be.an('object');
+            expect(response.body.templates).to.be.an('array');
             expect(response.body.routes).to.be.an('array');
             expect(response.body.specialRoutes).to.be.an('object');
 
@@ -73,7 +73,7 @@ describe('Tests /api/v1/config', () => {
                 )
             );
 
-            expect(response.body.templates).has.property(example.templates.name, example.templates.content);
+            expect(response.body.templates).to.include(example.templates.name);
 
             await request.delete('/api/v1/route/' + responseRoute.body.id).expect(204);
             await request.delete('/api/v1/template/' + example.templates.name).expect(204);
