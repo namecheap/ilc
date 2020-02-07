@@ -5,11 +5,9 @@
     "lines": 90,
     "per-file": true,
     "exclude": [
-        "**/*.spec.js",
-        "public",
+        "**/*.spec.ts",
         "config",
         "build",
-        "systemjs",
         "node_modules"
     ]
 }
