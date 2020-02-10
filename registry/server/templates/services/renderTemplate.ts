@@ -36,8 +36,8 @@ async function renderTemplate(template: string): Promise<string> {
 };
 
 function matchIncludesAttributes(template: string): IncludesAttributes {
-    const includesRegExp = /\<include(?:\s*\w*\=\"[^\"]*\"\s*)*\s*(?:\/\>|\>\s*.*\s*\<\/include\>)/gmi;
-    const includesAttributesRegExp = /\w*\=\"[^\"]*\"/gmi;
+    const includesRegExp = /<include(?:\s*\w*="[^"]*"\s*)*\s*(?:\/>|>\s*.*\s*<\/include>)/gmi;
+    const includesAttributesRegExp = /\w*="[^"]*"/gmi;
 
     const matchedIncludes = Array.from(template.matchAll(includesRegExp));
 
@@ -117,7 +117,7 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
                 return wrapWithComments(id, data);
             }
 
-            return wrapWithComments(id, data + '\n' + stylesheets.join('\n'));
+            return wrapWithComments(id, stylesheets.join('\n') + '\n' + data);
         } catch (error) {
             // TODO Need to add correct error handling
             console.error(error);
@@ -128,10 +128,6 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
 
 function selectStylesheets(link: string): Array<string> {
     const includeLinkHeader = parseLinkHeader(link);
-
-    if (!includeLinkHeader.length) {
-        return [];
-    }
 
     return includeLinkHeader.reduce((stylesheets: Array<string>, attributes: any) => {
         if (attributes.rel !== 'stylesheet') {
@@ -145,7 +141,7 @@ function selectStylesheets(link: string): Array<string> {
 }
 
 function wrapWithComments(id: string, data: string): string {
-    return `<!-- Include "${id}" START -->\n` + data + `\n<!-- Include "${id}" END -->`;
+    return `<!-- Template include "${id}" START -->\n` + data + `\n<!-- Template include "${id}" END -->`;
 }
 
 export default renderTemplate;

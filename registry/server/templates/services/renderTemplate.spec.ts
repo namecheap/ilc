@@ -265,32 +265,32 @@ describe('renderTemplate', () => {
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width,initial-scale=1"/>
                 ${
-                    `<!-- Include "${includes[0].attributes.id}" START -->\n` +
+                    `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
+                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
                     includes[0].api.response.data +
-                    '\n<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
-                    `\n<!-- Include "${includes[0].attributes.id}" END -->`
+                    `\n<!-- Template include "${includes[0].attributes.id}" END -->`
                 }
                 ${
-                    `<!-- Include "${includes[1].attributes.id}" START -->\n` +
+                    `<!-- Template include "${includes[1].attributes.id}" START -->\n` +
                     includes[1].api.response.data +
-                    `\n<!-- Include "${includes[1].attributes.id}" END -->`
+                    `\n<!-- Template include "${includes[1].attributes.id}" END -->`
                 }
                 <script>window.console.log('Something...')</script>
                 ${
-                    `<!-- Include "${includes[2].attributes.id}" START -->\n` +
+                    `<!-- Template include "${includes[2].attributes.id}" START -->\n` +
+                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
                     includes[2].api.response.data +
-                    '\n<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
-                    `\n<!-- Include "${includes[2].attributes.id}" END -->`
+                    `\n<!-- Template include "${includes[2].attributes.id}" END -->`
                 }
             </head>
             <body>
                 <include only with timeout="3000" />
                 <div class="class-name-1">Something...</div>
                 ${
-                    `<!-- Include "${includes[3].attributes.id}" START -->\n` +
+                    `<!-- Template include "${includes[3].attributes.id}" START -->\n` +
+                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
                     includes[3].api.response.data +
-                    '\n<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
-                    `\n<!-- Include "${includes[3].attributes.id}" END -->`
+                    `\n<!-- Template include "${includes[3].attributes.id}" END -->`
                 }
                 <div id="div-id-1" class="class-name-2">Something...</div>
                 <include id="${includes[4].attributes.id}" timeout="${includes[4].attributes.timeout}"/>
