@@ -68,12 +68,6 @@ function matchIncludesAttributes(template: string): IncludesAttributes {
 }
 
 function selectDuplicateIncludesAttributes(includesAttributes: IncludesAttributes): Array<IncludeAttributes> {
-    const attributes = Object.values(includesAttributes);
-
-    if (!attributes.length) {
-        return [];
-    }
-
     return Object.values(includesAttributes).filter((
         currentAttributes: IncludeAttributes,
         index,
@@ -113,11 +107,7 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
 
             const stylesheets = selectStylesheets(link);
 
-            if (!stylesheets.length) {
-                return wrapWithComments(id, data);
-            }
-
-            return wrapWithComments(id, stylesheets.join('\n') + '\n' + data);
+            return wrapWithComments(id, stylesheets.join('\n') + data);
         } catch (error) {
             // TODO Need to add correct error handling
             console.error(error);

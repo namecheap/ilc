@@ -266,7 +266,7 @@ describe('renderTemplate', () => {
                 <meta name="viewport" content="width=device-width,initial-scale=1"/>
                 ${
                     `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
-                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
+                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
                     includes[0].api.response.data +
                     `\n<!-- Template include "${includes[0].attributes.id}" END -->`
                 }
@@ -278,7 +278,7 @@ describe('renderTemplate', () => {
                 <script>window.console.log('Something...')</script>
                 ${
                     `<!-- Template include "${includes[2].attributes.id}" START -->\n` +
-                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
+                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
                     includes[2].api.response.data +
                     `\n<!-- Template include "${includes[2].attributes.id}" END -->`
                 }
@@ -288,7 +288,7 @@ describe('renderTemplate', () => {
                 <div class="class-name-1">Something...</div>
                 ${
                     `<!-- Template include "${includes[3].attributes.id}" START -->\n` +
-                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
+                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
                     includes[3].api.response.data +
                     `\n<!-- Template include "${includes[3].attributes.id}" END -->`
                 }
