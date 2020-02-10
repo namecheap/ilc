@@ -1,4 +1,5 @@
 import axios from 'axios';
+import parseLinkHeader from './parseLinkHeader';
 
 interface IncludeAttributes {
     id: string,
@@ -7,12 +8,6 @@ interface IncludeAttributes {
 }
 interface IncludesAttributes {
     [include: string]: IncludeAttributes
-}
-
-interface IncludeLinkHeader {
-    [href: string]: {
-        [key: string]: string,
-    }
 }
 
 async function renderTemplate(template: string): Promise<string> {
@@ -115,15 +110,14 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
             } = await axios.get(src, {
                 timeout: +timeout,
             });
-            const includeLinkHeader = matchIncludeLinkHeader(link);
-            const stylesheets = selectStylesheets(includeLinkHeader);
+
+            const stylesheets = selectStylesheets(link);
 
             if (!stylesheets.length) {
-                return data;
+                return wrapWithComments(id, data);
             }
 
-            // TODO Need to add html comments above and beyound about an include with include's id
-            return data + '\n' + stylesheets.join('\n');
+            return wrapWithComments(id, data + '\n' + stylesheets.join('\n'));
         } catch (error) {
             // TODO Need to add correct error handling
             console.error(error);
@@ -132,43 +126,26 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
     }));
 }
 
-function matchIncludeLinkHeader(linkHeader: string): IncludeLinkHeader {
-    if (!linkHeader) {
-        return {};
-    };
+function selectStylesheets(link: string): Array<string> {
+    const includeLinkHeader = parseLinkHeader(link);
 
-    // TODO It need to update to cover all cases with a link header
-    const [href, ...attributes] = linkHeader.split(';');
-    const matchedAttributes = attributes.reduce((attributes: {[key: string]: string}, attribute: string) => {
-        const [key, value] = attribute.split('=');
-        attributes[key] = value;
-
-        return attributes;
-    }, {});
-
-    return {
-        [href]: matchedAttributes,
-    };
-};
-
-function selectStylesheets(includeLinkHeader: IncludeLinkHeader): Array<string> {
-    const hrefs = Object.keys(includeLinkHeader);
-
-    if (!hrefs.length) {
+    if (!includeLinkHeader.length) {
         return [];
     }
 
-    return hrefs.reduce((stylesheets: Array<string>, href: string) => {
-        const attributes = includeLinkHeader[href];
-
+    return includeLinkHeader.reduce((stylesheets: Array<string>, attributes: any) => {
         if (attributes.rel !== 'stylesheet') {
             return stylesheets;
         }
 
-        stylesheets.push(`<link rel="stylesheet" href="${href}">`);
+        stylesheets.push(`<link rel="stylesheet" href="${attributes.uri}">`);
 
         return stylesheets;
     }, []);
+}
+
+function wrapWithComments(id: string, data: string): string {
+    return `<!-- Include "${id}" START -->\n` + data + `\n<!-- Include "${id}" END -->`;
 }
 
 export default renderTemplate;
