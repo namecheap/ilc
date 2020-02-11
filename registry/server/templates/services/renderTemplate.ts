@@ -1,5 +1,8 @@
 import axios from 'axios';
+import uuidv4 from 'uuid/v4';
+
 import parseLinkHeader from './parseLinkHeader';
+import noticeError from '../../errorHandler/noticeError';
 
 interface IncludeAttributes {
     id: string,
@@ -109,8 +112,11 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
 
             return wrapWithComments(id, stylesheets.join('\n') + data);
         } catch (error) {
-            // TODO Need to add correct error handling
-            console.error(error);
+            noticeError(error, {
+                type: 'FETCH_INCLUDE_ERROR',
+                errorId: uuidv4(),
+            });
+
             return include;
         }
     }));
