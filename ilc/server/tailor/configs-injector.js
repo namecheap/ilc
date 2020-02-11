@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const urljoin = require('url-join');
+const newrelic = require('newrelic');
 
 module.exports = class ConfigsInjector {
     #registry;
@@ -28,7 +29,11 @@ module.exports = class ConfigsInjector {
 
         document = document.replace(
             '<head>',
-            `<head>${this.#wrapWithScriptTag(this.#getSystemjsUrl())}`
+            `<head>${
+                this.#wrapWithScriptTag(this.#getSystemjsUrl())
+            }${
+                newrelic.getBrowserTimingHeader()
+            }`
         );
 
         return document;
