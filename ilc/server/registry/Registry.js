@@ -26,7 +26,7 @@ module.exports = class Registry {
             cacheForSeconds: 5,
         });
         this.getTemplate = wrapFetchWithCache(this.#getTemplate, {
-            cacheForSeconds: 3600,
+            cacheForSeconds: 30,
         });
     }
 
@@ -63,7 +63,7 @@ module.exports = class Registry {
     #getTemplate = async (templateName) => {
         this.#logger.debug('Calling get template registry endpoint...');
 
-        const res = await axios.get(urljoin(this.#address, 'api/v1/template', templateName), {
+        const res = await axios.get(urljoin(this.#address, 'api/v1/template', templateName, 'rendered'), {
             responseType: 'json',
         });
 
