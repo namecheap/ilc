@@ -7,12 +7,13 @@ async function errorHandler(error: Error, req: Request, res: Response, next: Nex
     const errorId = uuidv4();
 
     noticeError(error, {
+        type: 'INTERNAL_SERVER_ERROR',
         errorId
     });
 
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
-    res.status(500).send('Internal server error occurred.');
+    res.status(500).send(`Internal server error occurred. Error ID: ${errorId}`);
 };
 
 export default errorHandler;
