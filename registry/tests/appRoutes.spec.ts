@@ -132,7 +132,7 @@ describe(`Tests ${example.url}`, () => {
             .send(example.correct)
             .expect(500);
 
-            expect(response.text).to.include('UNIQUE constraint failed: routes.orderPos');
+            expect(response.text).to.include('Internal server error occurred.');
 
             await request.delete(example.url + id);
         });
@@ -145,7 +145,7 @@ describe(`Tests ${example.url}`, () => {
             })
             .expect(500);
 
-            expect(response.text).to.include('SQLITE_CONSTRAINT: FOREIGN KEY constraint failed');
+            expect(response.text).to.include('Internal server error occurred.');
         });
 
         it('should not create record with non-existing slots/appName', async () => {
@@ -160,7 +160,7 @@ describe(`Tests ${example.url}`, () => {
             })
             .expect(500);
 
-            expect(response.text).to.include('SQLITE_CONSTRAINT: FOREIGN KEY constraint failed');
+            expect(response.text).to.include('Internal server error occurred.');
         });
 
         it('should not create record without required slots/appName', async () => {
@@ -285,7 +285,7 @@ describe(`Tests ${example.url}`, () => {
             .send({ ...example.correct, orderPos: 200000, })
             .expect(500);
 
-            expect(response.text).to.include('UNIQUE constraint failed: routes.orderPos');
+            expect(response.text).to.include('Internal server error occurred.');
 
             await request.delete(example.url + id1).expect(204);
             await request.delete(example.url + id2).expect(204);
@@ -302,7 +302,7 @@ describe(`Tests ${example.url}`, () => {
             })
             .expect(500);
 
-            expect(response.text).to.include('SQLITE_CONSTRAINT: FOREIGN KEY constraint failed');
+            expect(response.text).to.include('Internal server error occurred.');
 
             await request.delete(example.url + id).expect(204);
         });
@@ -322,7 +322,7 @@ describe(`Tests ${example.url}`, () => {
             })
             .expect(500);
 
-            expect(response.text).to.include('SQLITE_CONSTRAINT: FOREIGN KEY constraint failed');
+            expect(response.text).to.include('Internal server error occurred.');
 
             await request.delete(example.url + id).expect(204);
         });

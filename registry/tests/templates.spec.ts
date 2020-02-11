@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import nock from 'nock';
-import db from '../server/db';
 
 import { request, expect } from './common';
 
