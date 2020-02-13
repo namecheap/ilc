@@ -9,7 +9,6 @@ module.exports = {
         '@babel/plugin-syntax-dynamic-import',
         '@babel/plugin-proposal-class-properties',
         '@babel/plugin-proposal-private-methods',
-        '@babel/plugin-transform-literals',
         [
             '@babel/plugin-transform-runtime', {
                 regenerator: true,
