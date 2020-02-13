@@ -13,7 +13,7 @@ module.exports = {
       {parser: {System: false}},
       {
         test: /\.js?$/,
-        exclude: [path.resolve(__dirname, 'node_modules')],
+        exclude: /node_modules\/(?!(@namecheap\/error-extender)\/).*/,
         loader: 'babel-loader',
       },
     ],
