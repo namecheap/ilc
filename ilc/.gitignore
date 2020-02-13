@@ -1,2 +1,3 @@
-/public
+/public/*
+!/public/polyfill.min.js
 /.nyc_output

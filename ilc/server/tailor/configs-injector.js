@@ -29,11 +29,10 @@ module.exports = class ConfigsInjector {
 
         document = document.replace(
             '<head>',
-            `<head>${
-                this.#wrapWithScriptTag(this.#getSystemjsUrl())
-            }${
-                newrelic.getBrowserTimingHeader()
-            }`
+            `<head>
+                ${this.#getPolyfill()}
+                ${this.#wrapWithScriptTag(this.#getSystemjsUrl())}
+                ${newrelic.getBrowserTimingHeader()}`
         );
 
         return document;
@@ -45,8 +44,25 @@ module.exports = class ConfigsInjector {
         };
     };
 
+    #getPolyfill = () =>
+        `<script type="text/javascript">
+            if (!(
+                typeof window.URL === 'function' ||
+                Object.entries ||
+                Object.assign ||
+                Object.fromEntries ||
+                Array.from ||
+                DocumentFragment.prototype.append ||
+                Element.prototype.append ||
+                Element.prototype.remove
+            )) {
+                document.write('<script src="${this.#getPolyfillUrl()}" type="text/javascript" ${this.#cdnUrl !== null ? 'crossorigin' : ''}></scr' + 'ipt>');
+            }
+        </script>`;
+
     #getSystemjsUrl = () => this.#cdnUrl === null ? '/_ilc/system.js' : urljoin(this.#cdnUrl, '/system.js');
     #getClientjsUrl = () => this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js');
+    #getPolyfillUrl = () => this.#cdnUrl === null ? '/_ilc/polyfill.min.js' : urljoin(this.#cdnUrl, '/polyfill.min.js');
 
     #getSPAConfig = (registryConf) => {
         registryConf.apps = _.mapValues(registryConf.apps, v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'initProps', 'kind']));
