@@ -23,6 +23,7 @@
     "deepmerge": "4.2.2",
     "device-detector-js": "^2.1.1",
     "express": "^4.17.1",
+    "fastify": "^2.12.0",
     "http-shutdown": "^1.2.1",
     "localStorage": "^1.0.4",
     "lodash": "^4.17.15",

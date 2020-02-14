@@ -3,7 +3,7 @@ require('./express/express-promise');
 
 const config = require('config');
 const server = require('./server');
-const app = require('express')();
+const app = require('fastify')({ serverFactory: server });
 const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const registryService = require('./registry/factory');
@@ -28,11 +28,13 @@ app.get('/_ilc/500', () => { throw new Error('500 page test error') });
 
 app.get('*', (req, res) => {
     req.headers['x-request-uri'] = req.url; //TODO: to be removed & replaced with routerProps
-    tailor.requestHandler(req, res);
+    tailor.requestHandler(req.raw, res.res);
 });
 
-app.use(errorHandler);
+app.setErrorHandler(errorHandler);
 
-app.disable('x-powered-by');
+//app.disable('x-powered-by');
 
-server(app);
+app.listen(config.get('port'));
+
+//server(app);
