@@ -9,11 +9,13 @@ nginxConf.myAddr = nginxConf.myIp + (nginxConf.myPort ? `:${nginxConf.myPort}` :
 nginxConf.apiAddrs = nginxConf.apiAddrs && nginxConf.apiAddrs.split(',');
 const nginxReg = new (require('nginx-plus-dynamic-upstream'))(nginxConf, console);
 
-function exitHandler(app) {
+function exitHandler(app, type) {
     return () => {
-        console.log('Exit handler was called, trying to close the app...');
+        console.log(`Exit handler "${type}" was called, trying to close the app...`);
 
-        app.close().then(() => {
+        nginxReg.exitHandler()
+            .then(() => app.close())
+            .then(() => {
             console.log('Successfully closed app server!');
             process.exit(0);
         }, (err) => {
@@ -26,20 +28,10 @@ function exitHandler(app) {
 module.exports = app => {
     app.server.keepAliveTimeout = 5 * 60; //in seconds, should be higher then at load balancer
 
-    process.on('SIGTERM', exitHandler(app));
-    process.on('SIGINT', exitHandler(app));
+    process.on('SIGTERM', exitHandler(app, 'SIGTERM'));
+    process.on('SIGINT', exitHandler(app, 'SIGINT'));
 
-    app.addHook('onClose', async () => {
-        app.log.info('Shutting down HTTP server...');
-        try {
-            await nginxReg.exitHandler();
-        } catch (err) {
-            app.log.error('Error happened during unregistration in Nginx. Ending execution...');
-            app.log.error(err);
-        }
-    });
-
-    app.listen(config.get('port'), (err) => {
+    app.listen(config.get('port'), '0.0.0.0', (err) => {
         if (err) {
             app.log.error(err);
             return process.exit(1);
