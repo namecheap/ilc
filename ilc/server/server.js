@@ -9,86 +9,46 @@ nginxConf.myAddr = nginxConf.myIp + (nginxConf.myPort ? `:${nginxConf.myPort}` :
 nginxConf.apiAddrs = nginxConf.apiAddrs && nginxConf.apiAddrs.split(',');
 const nginxReg = new (require('nginx-plus-dynamic-upstream'))(nginxConf, console);
 
-// .extend adds a .withShutdown prototype method to the Server object
-require('http-shutdown').extend();
-const http = require('http');
+function exitHandler(app) {
+    return () => {
+        console.log('Exit handler was called, trying to close the app...');
 
-
-/**
- * Create HTTP server.
- */
-const server = http.createServer().withShutdown();
-server.keepAliveTimeout = 5 * 60; //in seconds, should be higher then at load balancer
-
-server.on('error', onError);
-server.on('listening', onListening);
-
-/**
- * Setup exit handlers
- */
-process.on('SIGTERM', () => exitHandler());
-process.on('SIGINT', () => exitHandler());
-process.on('exit', () => exitHandler());
-
-/**
- * Event listener for HTTP server "error" event.
- * @param {Error} error
- */
-function onError(error) {
-    if (error.syscall !== 'listen') {
-        throw error;
-    }
-
-    const addr = server.address();
-    const bind = typeof addr === 'string' ? 'Pipe ' + addr : 'Port ' + addr.port;
-
-    // handle specific listen errors with friendly messages
-    switch (error.code) {
-        case 'EACCES':
-            global.console.error(bind + ' requires elevated privileges');
-            process.exit(1);
-            break;
-
-        case 'EADDRINUSE':
-            global.console.error(bind + ' is already in use');
-            process.exit(1);
-            break;
-
-        default:
-            throw error;
+        app.close().then(() => {
+            console.log('Successfully closed app server!');
+            process.exit(0);
+        }, (err) => {
+            console.error('An error happened while trying to close app server', err);
+            process.exit(7);
+        });
     }
 }
 
-/**
- * Event listener for HTTP server "listening" event.
- */
-function onListening() {
-    const addr = server.address();
-    const bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
-    global.console.log('Listening on ' + bind);
+module.exports = app => {
+    app.server.keepAliveTimeout = 5 * 60; //in seconds, should be higher then at load balancer
 
-    nginxReg.initHandler().catch(err => {
-        global.console.error('Error happened during registration in Nginx. Ending execution...');
-        global.console.error(err);
-        process.exit(8);
-    })
-}
+    process.on('SIGTERM', exitHandler(app));
+    process.on('SIGINT', exitHandler(app));
 
-function exitHandler() {
-    global.console.log('Shutting down HTTP server...');
-
-    nginxReg.exitHandler().then(() => {
-        server.shutdown(() => process.exit(7));
-    }).catch(err => {
-        global.console.error('Error happened during unregistration in Nginx. Ending execution...');
-        global.console.error(err);
-        server.shutdown(() => process.exit(9));
+    app.addHook('onClose', async () => {
+        app.log.info('Shutting down HTTP server...');
+        try {
+            await nginxReg.exitHandler();
+        } catch (err) {
+            app.log.error('Error happened during unregistration in Nginx. Ending execution...');
+            app.log.error(err);
+        }
     });
-}
 
-module.exports = requestHandler => {
-    server.on('request', requestHandler);
-    //server.listen(config.get('port'));
+    app.listen(config.get('port'), (err) => {
+        if (err) {
+            app.log.error(err);
+            return process.exit(1);
+        }
 
-    return server;
+        nginxReg.initHandler().catch(err => {
+            app.log.error('Error happened during registration in Nginx. Ending execution...');
+            app.log.error(err);
+            process.exit(8);
+        });
+    });
 };
