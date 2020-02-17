@@ -11,7 +11,7 @@ describe('renderTemplate', () => {
         const includes = [
             {
                 api: {
-                    route: '/get/include/1',
+                    route: '/get/include/1?tst=a&lol=b',
                     delay: 0,
                     response: {
                         status: 200,
@@ -30,7 +30,7 @@ describe('renderTemplate', () => {
                 },
                 attributes: {
                     id: 'include-id-1',
-                    src: `${includesHost}/get/include/1`,
+                    src: `${includesHost}/get/include/1?tst=a&lol=b`,
                     timeout: 100,
                 },
             },

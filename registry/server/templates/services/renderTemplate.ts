@@ -61,7 +61,8 @@ function matchIncludesAttributes(template: string): IncludesAttributes {
             attributes: any,
             attribute: any,
         ) => {
-            const [key, value] = attribute.split('=');
+            const key = attribute.split('=', 1)[0];
+            const value = attribute.substring(attribute.indexOf('=') + 1);
             attributes[key] = value.split('\"').join('');
             return attributes;
         }, {});
