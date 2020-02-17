@@ -6,7 +6,7 @@ const registryService = require('../registry/factory');
 
 const ErrorHandlingError = extendError('ErrorHandlingError');
 
-module.exports = async (err, req, res, next) => {
+module.exports = async (err, req, res) => {
     const errorId = uuidv4();
 
     try {

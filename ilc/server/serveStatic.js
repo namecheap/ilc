@@ -1,10 +1,10 @@
 'use strict';
 
-const express = require('express');
+const serveStatic = require('serve-static')
 
 module.exports = function (isProduction) {
     if (isProduction) {
-        return express.static('public');
+        return serveStatic('public');
     }
 
     require('../systemjs/build');
@@ -20,7 +20,7 @@ module.exports = function (isProduction) {
             },
             logLevel: 'debug',
         }),
-        express.static('public')
+        serveStatic('public')
     ];
 };
 

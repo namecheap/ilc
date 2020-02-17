@@ -1,15 +1,14 @@
 require('newrelic');
-require('./express/express-promise');
 
 const config = require('config');
 const server = require('./server');
-const app = require('express')();
+const app = require('fastify')({ logger: true });
 const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const registryService = require('./registry/factory');
 const errorHandler = require('./errorHandler');
 
-app.use(require('./ping'));
+app.register(require('./ping'));
 
 const tailor = tailorFactory(config.get('cdnUrl'));
 
@@ -26,13 +25,11 @@ app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
 // Route to test 500 page appearance
 app.get('/_ilc/500', () => { throw new Error('500 page test error') });
 
-app.get('*', (req, res) => {
+app.all('*', (req, res) => {
     req.headers['x-request-uri'] = req.url; //TODO: to be removed & replaced with routerProps
-    tailor.requestHandler(req, res);
+    tailor.requestHandler(req.raw, res.res);
 });
 
-app.use(errorHandler);
-
-app.disable('x-powered-by');
+app.setErrorHandler(errorHandler);
 
 server(app);
