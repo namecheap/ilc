@@ -32,7 +32,7 @@ module.exports = class ConfigsInjector {
             `<head>
                 ${this.#getPolyfill()}
                 ${this.#wrapWithScriptTag(this.#getSystemjsUrl())}
-                ${newrelic.getBrowserTimingHeader()}`
+                ${this.#wrapWithIgnoreDuringParsing(newrelic.getBrowserTimingHeader())}`
         );
 
         return document;
@@ -75,4 +75,6 @@ module.exports = class ConfigsInjector {
 
         return `<script src="${url}" type="text/javascript" ${crossorigin}></script>`;
     };
+
+    #wrapWithIgnoreDuringParsing = (content) => `<!-- TailorX: Ignore during parsing START -->${content}<!-- TailorX: Ignore during parsing END -->`;
 };
