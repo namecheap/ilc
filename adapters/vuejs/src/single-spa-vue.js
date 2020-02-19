@@ -6,6 +6,7 @@ const defaultOpts = {
 };
 
 let fragmentName = null;
+let errorHandler = null;
 
 export default function singleSpaVue(userOpts) {
     if (typeof userOpts !== 'object') {
@@ -25,20 +26,12 @@ export default function singleSpaVue(userOpts) {
         throw new Error('single-spa-vuejs must be passed opts.appOptions');
     }
 
-    opts.Vue.config.errorHandler = function (err, vm, info) {
-        const event = new CustomEvent('ilcFragmentError', {
-            detail: {
-                error: err,
-                moduleInfo: {
-                    name: fragmentName
-                },
-                extraInfo: {
-                    context: info,
-                }
-            },
-        });
-
-        window.dispatchEvent(event);
+    opts.Vue.config.errorHandler = function (error, vm, info) {
+        if (errorHandler) {
+            errorHandler(error, {
+                context: info,
+            });
+        }
     };
 
     // Just a shared object to store the mounted object state
@@ -55,6 +48,10 @@ export default function singleSpaVue(userOpts) {
 function bootstrap(opts, mountedInstances, props) {
     if (props.name) {
         fragmentName = props.name;
+    }
+
+    if (props.errorHandler) {
+        errorHandler = props.errorHandler;
     }
 
     if (opts.loadRootComponent) {
