@@ -25,14 +25,15 @@ module.exports = class ConfigsInjector {
             this.#getSPAConfig(regConf) +
             this.#wrapWithScriptTag(this.#getClientjsUrl());
 
-        document = document.replace('</body>', tpl + '</body>');
+        document = document.replace('</body>', this.#wrapWithIgnoreDuringParsing(tpl) + '</body>');
 
         document = document.replace(
             '<head>',
-            `<head>
-                ${this.#getPolyfill()}
-                ${this.#wrapWithScriptTag(this.#getSystemjsUrl())}
-                ${newrelic.getBrowserTimingHeader()}`
+            '<head>' + this.#wrapWithIgnoreDuringParsing(
+                this.#getPolyfill(),
+                this.#wrapWithScriptTag(this.#getSystemjsUrl()),
+                newrelic.getBrowserTimingHeader(),
+            )
         );
 
         return document;
@@ -75,4 +76,6 @@ module.exports = class ConfigsInjector {
 
         return `<script src="${url}" type="text/javascript" ${crossorigin}></script>`;
     };
+
+    #wrapWithIgnoreDuringParsing = (...content) => `<!-- TailorX: Ignore during parsing START -->${content.join('')}<!-- TailorX: Ignore during parsing END -->`;
 };

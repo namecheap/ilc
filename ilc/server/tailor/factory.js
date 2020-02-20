@@ -26,7 +26,8 @@ module.exports = function (cdnUrl) {
         fragmentHooks,
         botsGuardEnabled: true,
         getAssetsToPreload: configsInjector.getAssetsToPreload,
-        filterResponseHeaders: (attributes, headers) => _.pick(headers, ['set-cookie'])
+        filterResponseHeaders: (attributes, headers) => _.pick(headers, ['set-cookie']),
+        baseTemplatesCacheSize: 1,
     });
 
     errorHandlerSetup(tailor);
