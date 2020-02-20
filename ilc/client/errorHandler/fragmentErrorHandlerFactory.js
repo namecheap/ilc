@@ -20,7 +20,7 @@ function fragmentErrorHandlerFactory(registryConf, getCurrentPath) {
         });
 
         const currentPath = getCurrentPath();
-        const fragmentKind = selectFragmentKind(registryConf, currentPath, `@portal/${appName}`, slotName);
+        const fragmentKind = selectFragmentKind(registryConf, currentPath, appName, slotName);
 
         if (isEssentialOrPrimaryFragment(fragmentKind)) {
             registryService.getTemplate('500')

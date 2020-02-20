@@ -11,7 +11,8 @@ export default function (registryConf, getCurrentPath) {
     const getFragmentErrorHandler = fragmentErrorHandlerFactory(registryConf, getCurrentPath);
 
     singleSpa.addErrorHandler((error) => {
-        const [appName, slotName] = error.appOrParcelName.split('__at__');
+        const [appNameWithoutPrefix, slotName] = error.appOrParcelName.split('__at__');
+        const appName = `@portal/${appNameWithoutPrefix}`;
         const fragmentErrorHandler = getFragmentErrorHandler(appName, slotName);
 
         fragmentErrorHandler(error);
