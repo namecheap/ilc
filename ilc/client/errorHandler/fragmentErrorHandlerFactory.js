@@ -3,8 +3,8 @@ import * as uuidv4 from 'uuid/v4';
 import noticeError from './noticeError';
 import registryService from '../registry/factory';
 
-function fragmentErrorHandlerFactory(registryConf, getCurrentPath) {
-    return (appName, slotName) => (error, errorInfo = {}) => {
+function fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName) {
+    return (error, errorInfo = {}) => {
         if (!navigator.onLine) {
             return window.location.reload();
         }

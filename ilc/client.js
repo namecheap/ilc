@@ -30,8 +30,6 @@ const router = new Router(registryConf);
 let currentPath = router.match(window.location.pathname + window.location.search);
 let prevPath = currentPath;
 
-const getFragmentErrorHandler = fragmentErrorHandlerFactory(registryConf, getCurrentPath);
-
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
         const appName = slots[slotName].appName;
@@ -60,7 +58,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 domElementGetter: getMountPointFactory(slotName),
                 getCurrentPathProps: getCurrentPathPropsFactory(appName, slotName),
                 getCurrentBasePath,
-                errorHandler: getFragmentErrorHandler(appName, slotName)
+                errorHandler: fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName)
             }
         );
     });

@@ -8,12 +8,10 @@ import noticeError from './noticeError';
 const System = window.System;
 
 export default function (registryConf, getCurrentPath) {
-    const getFragmentErrorHandler = fragmentErrorHandlerFactory(registryConf, getCurrentPath);
-
     singleSpa.addErrorHandler((error) => {
         const [appNameWithoutPrefix, slotName] = error.appOrParcelName.split('__at__');
         const appName = `@portal/${appNameWithoutPrefix}`;
-        const fragmentErrorHandler = getFragmentErrorHandler(appName, slotName);
+        const fragmentErrorHandler = fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName);
 
         fragmentErrorHandler(error);
     });
