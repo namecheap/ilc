@@ -1,11 +1,12 @@
 import * as singleSpa from 'single-spa';
+import deepmerge from 'deepmerge';
 
 import * as Router from './common/router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
+import fragmentErrorHandlerFactory from './client/errorHandler/fragmentErrorHandlerFactory';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
 import initSpaConfig from './client/initSpaConfig';
-import deepmerge from 'deepmerge';
 
 const System = window.System;
 
@@ -57,6 +58,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 domElementGetter: getMountPointFactory(slotName),
                 getCurrentPathProps: getCurrentPathPropsFactory(appName, slotName),
                 getCurrentBasePath,
+                errorHandler: fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName)
             }
         );
     });
@@ -69,7 +71,6 @@ function getMountPointFactory(slotName) {
 }
 
 function isActiveFactory(appName, slotName) {
-
     let reload = false;
 
     return () => {
@@ -129,6 +130,10 @@ function getPathProps(appName, slotName, path) {
     return deepmerge(appProps, routeProps);
 }
 
+function getCurrentPath() {
+    return currentPath;
+}
+
 function getCurrentBasePath() {
     return currentPath.basePath;
 }
@@ -163,7 +168,7 @@ document.addEventListener('click', function (e) {
     }
 });
 
-setupErrorHandlers(registryConf, () => currentPath);
+setupErrorHandlers(registryConf, getCurrentPath);
 
 singleSpa.setBootstrapMaxTime(5000, false);
 singleSpa.setMountMaxTime(5000, false);

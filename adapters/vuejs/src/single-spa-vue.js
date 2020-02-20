@@ -5,11 +5,11 @@ const defaultOpts = {
     template: null,
 };
 
-let fragmentName = null;
+let errorHandler = null;
 
 export default function singleSpaVue(userOpts) {
     if (typeof userOpts !== 'object') {
-        throw new Error(`single-spa-vue requires a configuration object`);
+        throw new Error(`single-spa-vuejs requires a configuration object`);
     }
 
     const opts = {
@@ -25,20 +25,10 @@ export default function singleSpaVue(userOpts) {
         throw new Error('single-spa-vuejs must be passed opts.appOptions');
     }
 
-    opts.Vue.config.errorHandler = function (err, vm, info) {
-        const event = new CustomEvent('ilcFragmentError', {
-            detail: {
-                error: err,
-                moduleInfo: {
-                    name: fragmentName
-                },
-                extraInfo: {
-                    context: info,
-                }
-            },
+    opts.Vue.config.errorHandler = function (error, vm, info) {
+        errorHandler(error, {
+            context: info,
         });
-
-        window.dispatchEvent(event);
     };
 
     // Just a shared object to store the mounted object state
@@ -53,9 +43,11 @@ export default function singleSpaVue(userOpts) {
 }
 
 function bootstrap(opts, mountedInstances, props) {
-    if (props.name) {
-        fragmentName = props.name;
+    if (typeof props.errorHandler !== 'function') {
+        return Promise.reject(`single-spa-vuejs: an error handler for vuejs application '${props.name}' is not a function`);
     }
+
+    errorHandler = props.errorHandler;
 
     if (opts.loadRootComponent) {
         return opts.loadRootComponent().then(root => opts.rootComponent = root)

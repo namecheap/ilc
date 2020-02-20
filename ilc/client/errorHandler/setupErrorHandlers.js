@@ -1,64 +1,19 @@
 import * as singleSpa from 'single-spa';
 import * as uuidv4 from 'uuid/v4';
+
+import fragmentErrorHandlerFactory from './fragmentErrorHandlerFactory';
 import registryService from '../registry/factory';
 import noticeError from './noticeError';
 
 const System = window.System;
 
-const FRAGMENT_KIND = Object.freeze({
-    primary: 'primary',
-    essential: 'essential',
-    regular: 'regular',
-});
-
-const selectFragmentKind = (registryConf, path, appName, slotName) => {
-    const appKind = registryConf.apps[appName].kind;
-    const slotKind = path.slots[slotName] && path.slots[slotName].kind;
-
-    return slotKind || appKind;
-};
-
-const isEssentialOrPrimaryFragment = (fragmentKind) => [
-    FRAGMENT_KIND.primary,
-    FRAGMENT_KIND.essential,
-].includes(fragmentKind);
-
 export default function (registryConf, getCurrentPath) {
-    singleSpa.addErrorHandler((err) => {
-        if (!navigator.onLine) {
-            return window.location.reload();
-        }
+    singleSpa.addErrorHandler((error) => {
+        const [appNameWithoutPrefix, slotName] = error.appOrParcelName.split('__at__');
+        const appName = `@portal/${appNameWithoutPrefix}`;
+        const fragmentErrorHandler = fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName);
 
-        const errorId = uuidv4();
-        const [appName, slotName] = err.appOrParcelName.split('__at__');
-
-        noticeError(err, {
-            type: 'FRAGMENT_ERROR',
-            appOrParcelName: err.appOrParcelName,
-            errorId,
-        });
-
-        const currentPath = getCurrentPath();
-        const fragmentKind = selectFragmentKind(registryConf, currentPath, `@portal/${appName}`, slotName);
-
-        if (isEssentialOrPrimaryFragment(fragmentKind)) {
-            registryService.getTemplate('500')
-                .then((data) => {
-                    data = data.data.replace('%ERRORID%', `Error ID: ${errorId}`);
-
-                    document.querySelector('html').innerHTML = data;
-                })
-                .catch((err) => {
-                    noticeError(err, {
-                        type: 'FETCH_PAGE_ERROR',
-                        name: err.toString(),
-                        errorId: uuidv4(),
-                        fragmentErrorId: errorId,
-                    });
-
-                    alert('Something went wrong! Please try to reload page');
-                });
-        }
+        fragmentErrorHandler(error);
     });
 
     window.addEventListener('error', function (event) {
@@ -80,15 +35,6 @@ export default function (registryConf, getCurrentPath) {
             }
         });
     });
-
-    window.addEventListener('ilcFragmentError', function (event) {
-        noticeError(event.detail.error, {
-            type: 'FRAGMENT_ERROR',
-            moduleName: event.detail.moduleInfo.name,
-            extraInfo: event.detail.extraInfo,
-        });
-    });
-
 
     // Initializing 500 error page to cache template of this page
     // to avoid a situation when localhost can't return this template in future
