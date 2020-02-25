@@ -31,7 +31,7 @@
     "single-spa": "^4.4.1",
     "systemjs": "^6.2.2",
     "systemjs-css-extra": "^1.0.2",
-    "tailorx": "^5.3.0",
+    "tailorx": "^5.4.0",
     "url-join": "^4.0.1",
     "uuid": "^3.3.3"
   },
