@@ -8,4 +8,7 @@ WORKDIR /codebase
 RUN npm install --no-package-lock --no-progress
 RUN npm run build
 
+# Legacy infrastructure support
+RUN npm install -g stdout-mq@^2.1.0
+
 CMD ["npm", "start"]
