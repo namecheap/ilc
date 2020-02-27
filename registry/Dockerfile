@@ -10,6 +10,6 @@ RUN npm install sqlite3 mysql
 RUN npm run compile
 
 # Legacy infrastructure support
-RUN npm install -g stdout-mq@^2.1.0
+RUN npm install -g stdout-mq@^2.2.0
 
 CMD ["npm", "run", "start-docker"]
