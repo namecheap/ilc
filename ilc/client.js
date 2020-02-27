@@ -138,6 +138,7 @@ function getCurrentBasePath() {
     return currentPath.basePath;
 }
 
+let startRouting;
 window.addEventListener('single-spa:before-routing-event', () => {
     prevPath = currentPath;
 
@@ -147,6 +148,18 @@ window.addEventListener('single-spa:before-routing-event', () => {
     }
 
     currentPath = path;
+    startRouting = performance.now();
+});
+
+window.addEventListener('ilc:all-slots-loaded', () => {
+    const endRouting = performance.now();
+    const timeMs = parseInt(endRouting - startRouting);
+
+    console.info(`Client side route change to "${currentPath.route}" took ${timeMs} milliseconds.`);
+
+    if (newrelic && newrelic.addPageAction) {
+        newrelic.addPageAction('routeChange', { time: timeMs, route: currentPath.route })
+    }
 });
 
 document.addEventListener('click', function (e) {

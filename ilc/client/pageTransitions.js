@@ -34,6 +34,8 @@ const onAllSlotsLoaded = () => {
     removeGlobalSpinner();
     document.body.removeAttribute('name');
     scrollRestorer.restoreScroll(window.history.state ? window.history : {state: {scroll: {x: 0, y: 0}}});
+
+    window.dispatchEvent(new CustomEvent('ilc:all-slots-loaded'));
 };
 
 export const addContentListener = slotName => {
