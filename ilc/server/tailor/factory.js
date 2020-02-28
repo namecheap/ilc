@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
+const newrelic = require('newrelic');
 
 const Tailor = require('tailorx');
 const fetchTemplate = require('./fetch-template');
@@ -19,7 +20,8 @@ module.exports = function (cdnUrl) {
         fetchTemplate: fetchTemplate(
             __dirname + '/templates',
             new Router(registryService, console),
-            configsInjector
+            configsInjector,
+            newrelic
         ),
         systemScripts: '',
         filterHeaders,
