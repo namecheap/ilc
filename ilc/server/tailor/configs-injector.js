@@ -48,13 +48,13 @@ module.exports = class ConfigsInjector {
     #getPolyfill = () =>
         `<script type="text/javascript">
             if (!(
-                typeof window.URL === 'function' ||
-                Object.entries ||
-                Object.assign ||
-                Object.fromEntries ||
-                Array.from ||
-                DocumentFragment.prototype.append ||
-                Element.prototype.append ||
+                typeof window.URL === 'function' &&
+                Object.entries &&
+                Object.assign &&
+                Object.fromEntries &&
+                Array.from &&
+                DocumentFragment.prototype.append &&
+                Element.prototype.append &&
                 Element.prototype.remove
             )) {
                 document.write('<script src="${this.#getPolyfillUrl()}" type="text/javascript" ${this.#cdnUrl !== null ? 'crossorigin' : ''}></scr' + 'ipt>');
