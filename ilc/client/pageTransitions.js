@@ -46,7 +46,7 @@ export const addContentListener = slotName => {
     }
 
     const observer = new MutationObserver((mutationsList, observer) => {
-        for(let mutation of mutationsList) {
+        for (let mutation of mutationsList) {
             if (mutation.addedNodes.length) {
                 observer.disconnect();
                 contentListeners.splice(contentListeners.indexOf(observer), 1);
