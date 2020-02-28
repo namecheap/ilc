@@ -1,15 +1,13 @@
 
 export default function init(getCurrentPath) {
     let startRouting;
-    let nrInteraction = null;
     let nrTrace = null;
 
     window.addEventListener('single-spa:before-routing-event', () => {
         startRouting = performance.now();
 
         if (newrelic && newrelic.interaction) {
-            nrInteraction = newrelic.interaction();
-            nrTrace = nrInteraction.createTracer('routeChange');
+            nrTrace = newrelic.interaction().createTracer('routeChange');
         }
     });
 
@@ -26,9 +24,6 @@ export default function init(getCurrentPath) {
 
         if (nrTrace) {
             nrTrace();
-        }
-        if (nrInteraction) {
-            nrInteraction.end();
         }
     });
 }
