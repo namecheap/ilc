@@ -1,13 +1,19 @@
 
 export default function init(getCurrentPath) {
+    let initPageLoading = true;
     let startRouting;
     let nrTrace = null;
 
-    window.addEventListener('single-spa:before-routing-event', () => {
+    window.addEventListener('single-spa:before-routing-event', (e) => {
+        if (initPageLoading) {
+            initPageLoading = false;
+
+            return;
+        }
         startRouting = performance.now();
 
-        if (newrelic && newrelic.interaction) {
-            nrTrace = newrelic.interaction().createTracer('routeChange');
+        if (window.newrelic && window.newrelic.interaction) {
+            nrTrace = window.newrelic.interaction().createTracer('routeChange');
         }
     });
 
@@ -18,8 +24,8 @@ export default function init(getCurrentPath) {
 
         console.info(`ILC: Client side route change to "${currentPath.route}" took ${timeMs} milliseconds.`);
 
-        if (newrelic && newrelic.addPageAction) {
-            newrelic.addPageAction('routeChange', { time: timeMs, route: currentPath.route })
+        if (window.newrelic && window.newrelic.addPageAction) {
+            window.newrelic.addPageAction('routeChange', { time: timeMs, route: currentPath.route })
         }
 
         if (nrTrace) {
