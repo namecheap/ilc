@@ -37,6 +37,7 @@ module.exports = class ServerRouter {
         }
 
         return {
+            routeName: route.route,
             base: baseTemplate.data.content,
             page: this.#generatePageTpl(route),
         }

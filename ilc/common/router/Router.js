@@ -30,7 +30,7 @@ module.exports = class Router {
 
             res = deepmerge(res, {
                 specialRole: null,
-                ..._omit(route, ['route', 'next', 'routeExp']),
+                ..._omit(route, ['next', 'routeExp']),
             });
 
             if (route.next !== true) {

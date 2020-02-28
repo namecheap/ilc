@@ -34,6 +34,8 @@ const onAllSlotsLoaded = () => {
     removeGlobalSpinner();
     document.body.removeAttribute('name');
     scrollRestorer.restoreScroll(window.history.state ? window.history : {state: {scroll: {x: 0, y: 0}}});
+
+    window.dispatchEvent(new CustomEvent('ilc:all-slots-loaded'));
 };
 
 export const addContentListener = slotName => {
@@ -44,7 +46,7 @@ export const addContentListener = slotName => {
     }
 
     const observer = new MutationObserver((mutationsList, observer) => {
-        for(let mutation of mutationsList) {
+        for (let mutation of mutationsList) {
             if (mutation.addedNodes.length) {
                 observer.disconnect();
                 contentListeners.splice(contentListeners.indexOf(observer), 1);

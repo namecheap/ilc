@@ -7,6 +7,7 @@ import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import fragmentErrorHandlerFactory from './client/errorHandler/fragmentErrorHandlerFactory';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
 import initSpaConfig from './client/initSpaConfig';
+import setupPerformanceMonitoring from './client/performance';
 
 const System = window.System;
 
@@ -93,7 +94,7 @@ function isActiveFactory(appName, slotName) {
             if (JSON.stringify(oldProps) !== JSON.stringify(currProps)) {
                 window.addEventListener('single-spa:app-change', () => {
                     //TODO: need to consider addition of the new update() hook to the adapter. So it will be called instead of re-mount, if available.
-                    console.log(`Triggering app re-mount for ${appName} due to changed props.`);
+                    console.log(`ILC: Triggering app re-mount for ${appName} due to changed props.`);
 
                     reload = true;
 
@@ -169,6 +170,7 @@ document.addEventListener('click', function (e) {
 });
 
 setupErrorHandlers(registryConf, getCurrentPath);
+setupPerformanceMonitoring(getCurrentPath);
 
 singleSpa.setBootstrapMaxTime(5000, false);
 singleSpa.setMountMaxTime(5000, false);

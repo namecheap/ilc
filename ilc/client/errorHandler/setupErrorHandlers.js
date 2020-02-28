@@ -39,7 +39,7 @@ export default function (registryConf, getCurrentPath) {
     // Initializing 500 error page to cache template of this page
     // to avoid a situation when localhost can't return this template in future
     registryService.preheat()
-        .then(() => console.log('Registry service preheated successfully'))
+        .then(() => console.log('ILC: Registry service preheated successfully'))
         .catch((err) => {
             noticeError(err, {
                 errorId: uuidv4(),
