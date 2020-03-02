@@ -47,15 +47,20 @@ repo and follow the guide to setup NC specific applications.
 4. run `npm start`
 5. Open running code at `http://localhost:8233/`
 
-## Current demo applications
+## Further reading
+
+* [ILC to App interface](docs/ilc_app_interface.md)
+
+## Demo applications & services
+### Applications
 1. [System](./devFragments/system) (written in vanilla JS, with SSR)
 1. [News](./devFragments/news-ssr) (written in Vue.js, with SSR)
 1. [People](./devFragments/people) (written in React, no SSR)
 1. [Planets](./devFragments/planets) (written in Vue.js, no SSR)
 1. [Navigation](./devFragments/navbar) (written in React, no SSR)
 
-## Current Services
-1. fetchWithCache (used by News & People)
+### Services
+1. [fetchWithCache](./devFragments/fetchWithCache) (used by News & People)
 
 ## Notes
 

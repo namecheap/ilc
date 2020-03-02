@@ -84,7 +84,7 @@ module.exports = class ServerRouter {
             const reqProps = {
                 basePath: route.basePath,
                 reqUrl: route.reqUrl,
-                fragmentName,
+                fragmentName, //TODO: to be removed
             };
 
             url.searchParams.append('routerProps', Buffer.from(JSON.stringify(reqProps)).toString('base64'));
