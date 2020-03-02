@@ -21,14 +21,22 @@ What if we could have microservices on the frontend? This would allow frontend d
 counterparts on the same feature and independently deploy parts of the website — “fragments” such as Header, Product, and Footer. 
 Bringing microservices to the frontend requires a layout service that composes a website out of fragments. ILC was developed to solve this need.
 
-## Technologies used in PoC
-1. [single-spa](https://single-spa.js.org/)
-2. [Zalando Tailor](https://github.com/zalando/tailor)
+## Used core technologies
+1. [single-spa](https://single-spa.js.org/) - framework for front-end microservices
+2. [TailorX](https://github.com/StyleT/tailorx) - backend  layout service that uses streams to compose a web page from fragment services
 
 ## Maturity level
 
-Currently project is in the PoC stage and is not intended to be used in production.
-Stay tuned with us. We work hardly to prepare it for production.
+Currently project is under active development and some of the features are missing. 
+Stay tuned with us.
+
+## Repo structure
+```
+|– adapters: folder contains customized "single-spa" adapters for different frameworks
+|– devFragments: folder contains demo apps used for local testing & demonstration purposes
+|– ilc: code of the Isomorphic Layout Composer
+|– registry: app that contains configuration used by ILC. Such as list of micro-fragments, routes, etc...
+```
 
 ## Installation and setup
 1. Clone the repo
@@ -40,11 +48,11 @@ repo and follow the guide to setup NC specific applications.
 5. Open running code at `http://localhost:8233/`
 
 ## Current demo applications
-1. System (written in vanilla JS, with SSR)
-1. News (written in Vue.js, with SSR)
-1. People (written in React, no SSR)
-1. Planets (written in Vue.js, no SSR)
-1. Navigation (written in React, no SSR)
+1. [System](./devFragments/system) (written in vanilla JS, with SSR)
+1. [News](./devFragments/news-ssr) (written in Vue.js, with SSR)
+1. [People](./devFragments/people) (written in React, no SSR)
+1. [Planets](./devFragments/planets) (written in Vue.js, no SSR)
+1. [Navigation](./devFragments/navbar) (written in React, no SSR)
 
 ## Current Services
 1. fetchWithCache (used by News & People)
@@ -52,7 +60,7 @@ repo and follow the guide to setup NC specific applications.
 ## Notes
 
 ### Why `@portal/`
-I'm using webpack (a static module bundler) to build each application for our micro-frontend approach. Webpack requires
+We're using webpack (a static module bundler) to build each application for our micro-frontend approach. Webpack requires
 access to everything it needs to include in the bundle at build time. This means when an app that imports a service,
 for example planets importing the fetchWithCache service, webpack will try to bundle the service into the planets bundle.
 The built in way to avoid webpack doing this is [webpack externals](https://webpack.js.org/configuration/externals/), 
