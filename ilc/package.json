@@ -7,10 +7,11 @@
     "test": "cross-env NODE_ENV=test mocha",
     "test:coverage": "cross-env NODE_ENV=test nyc mocha",
     "start": "node --max-http-header-size 30000 server/app.js",
-    "dev": "cross-env NODE_ENV=development nodemon --ignore './public/' --max-http-header-size 30000 server/app.js",
-    "build": "rimraf public && npm run build:client && npm run build:systemjs",
+    "dev": "npm run build:polyfills && cross-env NODE_ENV=development nodemon --ignore './public/' --max-http-header-size 30000 server/app.js",
+    "build": "rimraf public && npm run build:client && npm run build:systemjs && npm run build:polyfills",
     "build:client": "webpack --config build/webpack.js --progress --hide-modules",
-    "build:systemjs": "node ./systemjs/build.js"
+    "build:systemjs": "node ./systemjs/build.js",
+    "build:polyfills": "wget -O ./public/polyfill.min.js https://polyfill.io/v3/polyfill.min.js?features=URL%2CObject.entries%2CObject.fromEntries%2CArray.from%2CDocumentFragment.prototype.append%2CElement.prototype.append%2CElement.prototype.remove%2CObject.assign%2CElement.prototype.closest%2CCustomEvent"
   },
   "author": "Vladlen Fedosov",
   "license": "Apache-2.0",
