@@ -92,14 +92,15 @@ function isActiveFactory(appName, slotName) {
             const currProps = getPathProps(appName, slotName, currentPath);
 
             if (JSON.stringify(oldProps) !== JSON.stringify(currProps)) {
-                window.addEventListener('single-spa:app-change', () => {
+                window.addEventListener('single-spa:app-change', function singleSpaAppChange() {
+                    window.removeEventListener('single-spa:app-change', singleSpaAppChange);
                     //TODO: need to consider addition of the new update() hook to the adapter. So it will be called instead of re-mount, if available.
                     console.log(`ILC: Triggering app re-mount for ${appName} due to changed props.`);
 
                     reload = true;
 
                     singleSpa.triggerAppChange();
-                }, { once: true });
+                });
 
                 isActive = false;
                 willBeRerendered = true;
