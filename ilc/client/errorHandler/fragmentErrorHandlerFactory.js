@@ -28,6 +28,7 @@ function fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slot
                     data = data.data.replace('%ERRORID%', `Error ID: ${errorId}`);
 
                     document.querySelector('html').innerHTML = data;
+                    window.dispatchEvent(new CustomEvent('ilc:crash'));
                 })
                 .catch((error) => {
                     noticeError(error, {
