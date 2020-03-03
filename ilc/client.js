@@ -4,12 +4,16 @@ import deepmerge from 'deepmerge';
 import * as Router from './common/router/Router';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
-import fragmentErrorHandlerFactory from './client/errorHandler/fragmentErrorHandlerFactory';
+import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
 import initSpaConfig from './client/initSpaConfig';
 import setupPerformanceMonitoring from './client/performance';
 
 const System = window.System;
+if (System === undefined) {
+    crashIlc();
+    throw new Error('ILC: can\'t find SystemJS on a page, crashing everything');
+}
 
 // Tailor injects <link> tags near SSRed body of the app inside "slot" tag
 // this causes removal of the loaded CSS from the DOM after app unmount.
