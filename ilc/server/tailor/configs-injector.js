@@ -51,7 +51,6 @@ module.exports = class ConfigsInjector {
                 typeof window.URL === 'function' &&
                 Object.entries &&
                 Object.assign &&
-                Object.fromEntries &&
                 Array.from &&
                 DocumentFragment.prototype.append &&
                 Element.prototype.append &&
