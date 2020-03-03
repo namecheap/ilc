@@ -21,7 +21,10 @@ const selectSlotsToRegister = (routes) => routes.map((route) => route.slots).red
 
     return [
         ...slotsList,
-        Object.fromEntries(currentSlotsEntries),
+        [...currentSlotsEntries].reduce((obj, [key, val]) => {
+            obj[key] = val
+            return obj
+        }, {}),
     ];
 }, []);
 
