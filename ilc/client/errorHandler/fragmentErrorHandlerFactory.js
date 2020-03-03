@@ -3,7 +3,7 @@ import * as uuidv4 from 'uuid/v4';
 import noticeError from './noticeError';
 import registryService from '../registry/factory';
 
-function fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName) {
+export function fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName) {
     return (error, errorInfo = {}) => {
         if (!navigator.onLine) {
             return window.location.reload();
@@ -23,23 +23,7 @@ function fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slot
         const fragmentKind = selectFragmentKind(registryConf, currentPath, appName, slotName);
 
         if (isEssentialOrPrimaryFragment(fragmentKind)) {
-            registryService.getTemplate('500')
-                .then((data) => {
-                    data = data.data.replace('%ERRORID%', `Error ID: ${errorId}`);
-
-                    document.querySelector('html').innerHTML = data;
-                    window.dispatchEvent(new CustomEvent('ilc:crash'));
-                })
-                .catch((error) => {
-                    noticeError(error, {
-                        type: 'FETCH_PAGE_ERROR',
-                        name: error.toString(),
-                        errorId: uuidv4(),
-                        fragmentErrorId: errorId,
-                    });
-
-                    alert('Something went wrong! Please try to reload page or contact support.');
-                });
+            crashIlc(errorId);
         }
     };
 }
@@ -64,4 +48,22 @@ function isEssentialOrPrimaryFragment(fragmentKind) {
     ].includes(fragmentKind);
 }
 
-export default fragmentErrorHandlerFactory;
+export function crashIlc(errorId = '') {
+    registryService.getTemplate('500')
+        .then((data) => {
+            data = data.data.replace('%ERRORID%', errorId ? `Error ID: ${errorId}` : '');
+
+            document.querySelector('html').innerHTML = data;
+            window.dispatchEvent(new CustomEvent('ilc:crash'));
+        })
+        .catch((error) => {
+            noticeError(error, {
+                type: 'FETCH_PAGE_ERROR',
+                name: error.toString(),
+                errorId: uuidv4(),
+                fragmentErrorId: errorId,
+            });
+
+            alert('Something went wrong! Please try to reload page or contact support.');
+        });
+}
