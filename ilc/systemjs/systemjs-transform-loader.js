@@ -25,6 +25,9 @@
     };
 
     systemJSPrototype.transform = function (_id, source) {
+        if (source.indexOf('window.ILC.define') !== -1) {
+            return source;
+        }
         return (
             '(function(define){\n' +
             source +
