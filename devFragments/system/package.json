@@ -13,7 +13,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "express": "^4.17.1",
-    "lodash.template": "^4.5.0"
+    "lodash.template": "^4.5.0",
+    "wrapper-webpack-plugin": "^2.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
