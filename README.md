@@ -44,8 +44,9 @@ Stay tuned with us.
 "[ilc.internal](https://git.namecheap.net/projects/RND/repos/ilc.internal/browse)" 
 repo and follow the guide to setup NC specific applications.
 3. Run `npm install`
-4. run `npm start`
-5. Open running code at `http://localhost:8233/`
+4. Run `npm run build`
+5. Run `npm start`
+6. Open running code at `http://localhost:8233/`
 
 ## Further reading
 
