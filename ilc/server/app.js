@@ -26,7 +26,7 @@ app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
 app.get('/_ilc/500', () => { throw new Error('500 page test error') });
 
 app.all('*', (req, res) => {
-    req.headers['x-request-uri'] = req.url; //TODO: to be removed & replaced with routerProps
+    req.headers['x-request-uri'] = req.raw.url; //TODO: to be removed & replaced with routerProps
     tailor.requestHandler(req.raw, res.res);
 });
 
