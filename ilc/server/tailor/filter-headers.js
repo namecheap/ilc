@@ -24,8 +24,11 @@ module.exports = (attributes, request) => {
     // Headers are not forwarded to public fragment for security reasons
     return isPublic
         ? {}
-        : ACCEPT_HEADERS.reduce((newHeaders, key) => {
-            headers[key] && (newHeaders[key] = headers[key]);
+        : Object.keys(headers).reduce((newHeaders, key) => {
+            if (ACCEPT_HEADERS.includes(key) || key.startsWith('x-forwarded')) {
+                newHeaders[key] = headers[key]
+            }
+
             return newHeaders;
         }, {});
 };
