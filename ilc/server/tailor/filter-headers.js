@@ -25,7 +25,7 @@ module.exports = (attributes, request) => {
     return isPublic
         ? {}
         : Object.keys(headers).reduce((newHeaders, key) => {
-            if (ACCEPT_HEADERS.includes(key) || key.startsWith('x-forwarded')) {
+            if ((ACCEPT_HEADERS.includes(key) || key.startsWith('x-forwarded')) && headers[key]) {
                 newHeaders[key] = headers[key]
             }
 
