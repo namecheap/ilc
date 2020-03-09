@@ -82,16 +82,10 @@ function mount(opts, mountedInstances, props) {
             // vue@>=2 always REPLACES the `el` instead of appending to it.
             // We want domEl to stick around and not be replaced. So we tell Vue to mount
             // into a container div inside of the main domEl
-            let spaContainer = mountPoint.querySelector('.single-spa-container');
-            if (!spaContainer) {
-                const singleSpaContainer = document.createElement('div');
-                singleSpaContainer.className = 'single-spa-container';
-
-                mountPoint.appendChild(singleSpaContainer);
-
-                spaContainer = singleSpaContainer;
-            }
-            mountPoint = spaContainer;
+            const singleSpaContainer = document.createElement('div');
+            singleSpaContainer.className = 'single-spa-container';
+            mountPoint.appendChild(singleSpaContainer);
+            mountPoint = singleSpaContainer;
 
 
             mountedInstances.domEl = mountPoint;
@@ -132,12 +126,12 @@ function unmount(opts, mountedInstances) {
         .then(() => {
             if (mountedInstances.instance) {
                 mountedInstances.instance.$destroy();
-                mountedInstances.instance.$el.innerHTML = '';
+                mountedInstances.instance.$el.remove();
                 delete mountedInstances.instance;
             }
 
             if (mountedInstances.domEl) {
-                mountedInstances.domEl.innerHTML = ''
+                mountedInstances.domEl.remove();
                 delete mountedInstances.domEl
             }
         })
