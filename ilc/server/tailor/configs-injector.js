@@ -21,27 +21,22 @@ module.exports = class ConfigsInjector {
 
         const regConf = registryConf.data;
 
-        const tpl =
-            this.#getSPAConfig(regConf) +
-            this.#wrapWithScriptTag(this.#getClientjsUrl());
+        document = document.replace('</body>', this.#wrapWithIgnoreDuringParsing(
+            this.#getSPAConfig(regConf),
+            this.#getPolyfill(),
+            this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
+        ) + '</body>');
 
-        document = document.replace('</body>', this.#wrapWithIgnoreDuringParsing(tpl) + '</body>');
-
-        document = document.replace(
-            '<head>',
-            '<head>' + this.#wrapWithIgnoreDuringParsing(
-                this.#getPolyfill(),
-                this.#wrapWithScriptTag(this.#getSystemjsUrl()),
-                newrelic.getBrowserTimingHeader(),
-            )
-        );
+        document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(
+            newrelic.getBrowserTimingHeader(),
+        ));
 
         return document;
     }
 
     getAssetsToPreload = () => {
         return {
-            scriptRefs: [this.#getSystemjsUrl(), this.#getClientjsUrl()]
+            scriptRefs: [this.#getClientjsUrl()]
         };
     };
 
@@ -60,7 +55,6 @@ module.exports = class ConfigsInjector {
             }
         </script>`;
 
-    #getSystemjsUrl = () => this.#cdnUrl === null ? '/_ilc/system.js' : urljoin(this.#cdnUrl, '/system.js');
     #getClientjsUrl = () => this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js');
     #getPolyfillUrl = () => this.#cdnUrl === null ? '/_ilc/polyfill.min.js' : urljoin(this.#cdnUrl, '/polyfill.min.js');
 
@@ -70,10 +64,10 @@ module.exports = class ConfigsInjector {
         return `<script type="spa-config">${JSON.stringify(_.omit(registryConf, ['templates']))}</script>`;
     };
 
-    #wrapWithScriptTag = (url) => {
+    #wrapWithAsyncScriptTag = (url) => {
         const crossorigin = this.#cdnUrl !== null ? 'crossorigin' : '';
 
-        return `<script src="${url}" type="text/javascript" ${crossorigin}></script>`;
+        return `<script src="${url}" type="text/javascript" ${crossorigin} async></script>`;
     };
 
     #wrapWithIgnoreDuringParsing = (...content) => `<!-- TailorX: Ignore during parsing START -->${content.join('')}<!-- TailorX: Ignore during parsing END -->`;

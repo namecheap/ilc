@@ -8,7 +8,7 @@
     "test:coverage": "cross-env NODE_ENV=test nyc mocha",
     "start": "node --max-http-header-size 30000 server/app.js",
     "dev": "npm run build:polyfills && cross-env NODE_ENV=development nodemon --ignore './public/' --max-http-header-size 30000 server/app.js",
-    "build": "rimraf public && npm run build:client && npm run build:systemjs && npm run build:polyfills",
+    "build": "rimraf public && npm run build:systemjs && npm run build:client && npm run build:polyfills",
     "build:client": "webpack --config build/webpack.js --progress --hide-modules",
     "build:systemjs": "node ./systemjs/build.js",
     "build:polyfills": "wget -O ./public/polyfill.min.js https://polyfill.io/v3/polyfill.min.js?features=URL%2CObject.entries%2CArray.from%2CDocumentFragment.prototype.append%2CElement.prototype.append%2CElement.prototype.remove%2CObject.assign%2CElement.prototype.closest%2CCustomEvent"
@@ -54,6 +54,7 @@
     "sinon": "^8.1.1",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.9",
-    "webpack-dev-middleware": "^3.7.2"
+    "webpack-dev-middleware": "^3.7.2",
+    "wrapper-webpack-plugin": "^2.1.0"
   }
 }

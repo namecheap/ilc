@@ -15,11 +15,13 @@ sources.push(require.resolve('systemjs-css-extra/dist/css.min'));
 sources.push(require.resolve('./systemjs-name-resolver'));
 
 fs.writeFileSync(`${dest}/system.js`, sources.reduce((res, v) => {
+    const resWithNewLine = res === '' ? res : res + "\n\n";
+
     if (/\.exec\.js$/.test(v)) {
-        return res + "\n\n" + require(v);
+        return resWithNewLine + require(v);
     }
 
-    return res + "\n\n" + fs.readFileSync(v);
+    return resWithNewLine + fs.readFileSync(v);
 }, ''));
 
 console.log('SystemJS build finished!');
