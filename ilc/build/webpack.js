@@ -1,5 +1,7 @@
 /* eslint-env node */
+const fs = require('fs');
 const path = require('path');
+const WrapperPlugin = require('wrapper-webpack-plugin');
 
 module.exports = {
     entry: path.resolve(__dirname, '../client.js'),
@@ -27,7 +29,12 @@ module.exports = {
             'single-spa': require.resolve('single-spa/lib/umd/single-spa.min.js'),
         }
     },
-    plugins: [],
+    plugins: [
+        new WrapperPlugin({
+            test: /\.js$/,
+            header: () => fs.readFileSync(path.resolve(__dirname, '../public/system.js')),
+        }),
+    ],
     devtool: 'source-map',
     externals: [],
 };
