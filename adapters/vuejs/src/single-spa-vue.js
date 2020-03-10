@@ -84,16 +84,13 @@ function mount(opts, mountedInstances, props) {
             // into a container div inside of the main domEl
             let spaContainer = mountPoint.querySelector('.single-spa-container');
             if (!spaContainer) {
-                singleSpaContainer.className = 'single-spa-container';
                 const singleSpaContainer = document.createElement('div');
-                mountPoint.appendChild(singleSpaContainer);
                 singleSpaContainer.className = 'single-spa-container';
-                mountPoint = singleSpaContainer;
 
-                mountPoint.appendChild(singleSpaContainer);	
+                mountPoint.appendChild(singleSpaContainer);
 
-                spaContainer = singleSpaContainer;	
-            }	
+                spaContainer = singleSpaContainer;
+            }
             mountPoint = spaContainer;
 
             mountedInstances.domEl = mountPoint;
