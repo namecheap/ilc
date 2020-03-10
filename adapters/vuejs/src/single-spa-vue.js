@@ -93,7 +93,6 @@ function mount(opts, mountedInstances, props) {
             }
             mountPoint = spaContainer;
 
-
             mountedInstances.domEl = mountPoint;
             appOptions.el = mountPoint;
 
@@ -132,12 +131,12 @@ function unmount(opts, mountedInstances) {
         .then(() => {
             if (mountedInstances.instance) {
                 mountedInstances.instance.$destroy();
-                mountedInstances.instance.$el.innerHTML = '';
+                mountedInstances.instance.$el.remove();
                 delete mountedInstances.instance;
             }
 
             if (mountedInstances.domEl) {
-                mountedInstances.domEl.innerHTML = ''
+                mountedInstances.domEl.remove();
                 delete mountedInstances.domEl
             }
         })
