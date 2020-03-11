@@ -8,7 +8,7 @@ describe('renderTemplate', () => {
     it('should return a rendered template with replaced includes', async () => {
         const scope = nock(includesHost);
 
-        const includes: any[] = [
+        const includes = [
             {
                 api: {
                     route: '/get/include/1?tst=a&lol=b',
@@ -205,30 +205,6 @@ describe('renderTemplate', () => {
                     timeout: 100,
                 },
             },
-            {
-                api: {
-                    route: '/get/include/9',
-                    delay: 0,
-                    response: {
-                        status: 200,
-                        data: `
-                            <div id="include-id-9">
-                                This include has all necessary attributes
-                                and an empty link header
-                            </div>
-                        `,
-                        headers: {
-                            'X-Powered-By': 'JS',
-                            'X-My-Awesome-Header': 'Awesome',
-                        },
-                    },
-                },
-                attributes: {
-                    id: 'include-id-9',
-                    src: `${includesHost}/get/include/9`,
-                    timeout: 100,
-                },
-            },
         ];
 
         includes.forEach(({
@@ -249,7 +225,6 @@ describe('renderTemplate', () => {
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width,initial-scale=1"/>
                 <include    id="${includes[0].attributes.id}"   src="${includes[0].attributes.src}"    timeout="${includes[0].attributes.timeout}" />
-                <include    id="${includes[8].attributes.id}"   src="${includes[8].attributes.src}"    timeout="${includes[8].attributes.timeout}" />
                 <include
                     id="${includes[1].attributes.id}"
                         src="${includes[1].attributes.src}"
@@ -296,11 +271,6 @@ describe('renderTemplate', () => {
                     `\n<!-- Template include "${includes[0].attributes.id}" END -->`
                 }
                 ${
-                    `<!-- Template include "${includes[8].attributes.id}" START -->\n` +
-                    includes[8].api.response.data +
-                    `\n<!-- Template include "${includes[8].attributes.id}" END -->`
-                }
-                ${
                     `<!-- Template include "${includes[1].attributes.id}" START -->\n` +
                     includes[1].api.response.data +
                     `\n<!-- Template include "${includes[1].attributes.id}" END -->`
@@ -339,6 +309,54 @@ describe('renderTemplate', () => {
             </body>
             </html>
         `);
+    });
+
+    it('should return a rendered template with has all necessary attributes and an empty link header ', async () => {
+        const scope = nock(includesHost);
+        const include = {
+            api: {
+                route: '/get/include/9',
+                delay: 0,
+                response: {
+                    status: 200,
+                    data: `
+                        <div id="include-id-9">
+                            This include has all necessary attributes
+                            and an empty link header
+                        </div>
+                    `,
+                    headers: {
+                        'X-Powered-By': 'JS',
+                        'X-My-Awesome-Header': 'Awesome',
+                    },
+                },
+            },
+            attributes: {
+                id: 'include-id-9',
+                src: `${includesHost}/get/include/9`,
+                timeout: 100,
+            },
+        };
+
+        const {
+            api: {
+                route,
+                delay,
+                response,
+            },
+        } = include;
+
+        scope.get(route).delay(delay).reply(response.status, response.data, response.headers);
+
+        const template = `<include id="${include.attributes.id}" src="${include.attributes.src}" timeout="${include.attributes.timeout}" />`;
+
+        const renderedTemplate = await renderTemplate(template);
+
+        chai.expect(renderedTemplate).to.be.equal(`${
+            `<!-- Template include "${include.attributes.id}" START -->\n` +
+            include.api.response.data +
+            `\n<!-- Template include "${include.attributes.id}" END -->`
+        }`);
     });
 
     it('should throw an error when a template has dublicate includes sources or ids', async () => {
