@@ -18,7 +18,7 @@ describe('renderTemplate', () => {
                         data: `
                             <div id="include-id-1">
                                 This include has all necessary attributes
-                                and a specific link header which is a stylesheet
+                                and a specified link header which is a stylesheet
                             </div>
                         `,
                         headers: {
