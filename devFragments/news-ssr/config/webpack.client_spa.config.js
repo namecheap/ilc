@@ -2,6 +2,8 @@ const merge = require("webpack-merge");
 const webpack = require("webpack");
 const baseConfig = require("./webpack.base.config");
 const VueSSRClientPlugin = require('vue-server-renderer/client-plugin');
+const WrapperPlugin = require('wrapper-webpack-plugin');
+
 
 module.exports = merge(baseConfig, {
 	output: {
@@ -25,5 +27,10 @@ module.exports = merge(baseConfig, {
 		new VueSSRClientPlugin({
 			filename: 'vue-ssr-client-manifest-spa.json'
 		}),
-	]
+        new WrapperPlugin({
+            test: /\.js$/, // only wrap output of bundle files with '.js' extension
+            header: '(function(define){\n',
+            footer: '\n})((window.ILC && window.ILC.define) || window.define);'
+        }),
+    ]
 });

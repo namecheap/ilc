@@ -14,7 +14,8 @@
     "rxjs": "6.3.3",
     "single-spa-vue": "^1.4.0",
     "vue": "2.5.17",
-    "vue-router": "3.0.1"
+    "vue-router": "3.0.1",
+    "wrapper-webpack-plugin": "^2.1.0"
   },
   "devDependencies": {
     "@babel/core": "7.1.2",
