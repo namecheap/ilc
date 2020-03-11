@@ -18,13 +18,13 @@ describe('renderTemplate', () => {
                         data: `
                             <div id="include-id-1">
                                 This include has all necessary attributes
-                                and a specified link header which is a stylesheet
+                                and an empty link header which is a stylesheet
                             </div>
                         `,
                         headers: {
                             'X-Powered-By': 'JS',
                             'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
+                            'Link': '',
                         },
                     },
                 },
@@ -266,7 +266,6 @@ describe('renderTemplate', () => {
                 <meta name="viewport" content="width=device-width,initial-scale=1"/>
                 ${
                     `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
-                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
                     includes[0].api.response.data +
                     `\n<!-- Template include "${includes[0].attributes.id}" END -->`
                 }
