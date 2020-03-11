@@ -13,6 +13,18 @@ module.exports = {
             '@babel/plugin-transform-runtime', {
                 regenerator: true,
             }
+        ],
+        [
+            "@babel/plugin-transform-for-of", {
+                /**
+                 * Babel converts for...of into using Symbol.iterator by default
+                 * We have an issue with that when we try to open the app with the help of old browsers
+                 *
+                 * @see {@link https://babeljs.io/docs/en/babel-plugin-transform-for-of#assumearray}
+                 * @see {@link https://daverupert.com/2017/10/for-of-loops-are-bad/}
+                 */
+                "assumeArray": true,
+            }
         ]
     ],
     sourceType: 'unambiguous'
