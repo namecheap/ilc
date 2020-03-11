@@ -100,7 +100,7 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
                 throw new Error(`Necessary attribute src or id was not provided by ${include}!`);
             }
 
-            const {
+            let {
                 data,
                 headers: {
                     link,
@@ -109,9 +109,12 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
                 timeout: +timeout,
             });
 
-            const stylesheets = selectStylesheets(link);
+            if (link) {
+                const stylesheets = selectStylesheets(link);
+                data = stylesheets.join('\n') + data;
+            }
 
-            return wrapWithComments(id, stylesheets.join('\n') + data);
+            return wrapWithComments(id, data);
         } catch (error) {
             noticeError(error, {
                 type: 'FETCH_INCLUDE_ERROR',

@@ -311,6 +311,54 @@ describe('renderTemplate', () => {
         `);
     });
 
+    it('should return a rendered template with has all necessary attributes but without link header ', async () => {
+        const scope = nock(includesHost);
+        const include = {
+            api: {
+                route: '/get/include/9',
+                delay: 0,
+                response: {
+                    status: 200,
+                    data: `
+                        <div id="include-id-9">
+                            This include has all necessary attributes
+                            and an empty link header
+                        </div>
+                    `,
+                    headers: {
+                        'X-Powered-By': 'JS',
+                        'X-My-Awesome-Header': 'Awesome',
+                    },
+                },
+            },
+            attributes: {
+                id: 'include-id-9',
+                src: `${includesHost}/get/include/9`,
+                timeout: 100,
+            },
+        };
+
+        const {
+            api: {
+                route,
+                delay,
+                response,
+            },
+        } = include;
+
+        scope.get(route).delay(delay).reply(response.status, response.data, response.headers);
+
+        const template = `<include id="${include.attributes.id}" src="${include.attributes.src}" timeout="${include.attributes.timeout}" />`;
+
+        const renderedTemplate = await renderTemplate(template);
+
+        chai.expect(renderedTemplate).to.be.equal(`${
+            `<!-- Template include "${include.attributes.id}" START -->\n` +
+            include.api.response.data +
+            `\n<!-- Template include "${include.attributes.id}" END -->`
+        }`);
+    });
+
     it('should throw an error when a template has dublicate includes sources or ids', async () => {
         let catchedError;
 
