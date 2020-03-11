@@ -33,6 +33,7 @@ module.exports = {
         new WrapperPlugin({
             test: /\.js$/,
             header: () => fs.readFileSync(path.resolve(__dirname, '../public/system.js')),
+            afterOptimizations: true,
         }),
     ],
     devtool: 'source-map',
