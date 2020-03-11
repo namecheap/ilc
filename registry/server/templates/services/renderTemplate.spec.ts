@@ -8,7 +8,7 @@ describe('renderTemplate', () => {
     it('should return a rendered template with replaced includes', async () => {
         const scope = nock(includesHost);
 
-        const includes = [
+        const includes: any[] = [
             {
                 api: {
                     route: '/get/include/1?tst=a&lol=b',
@@ -220,7 +220,6 @@ describe('renderTemplate', () => {
                         headers: {
                             'X-Powered-By': 'JS',
                             'X-My-Awesome-Header': 'Awesome',
-                            'Link': '',
                         },
                     },
                 },
