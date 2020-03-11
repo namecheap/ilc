@@ -311,7 +311,7 @@ describe('renderTemplate', () => {
         `);
     });
 
-    it('should return a rendered template with has all necessary attributes and an empty link header ', async () => {
+    it('should return a rendered template with has all necessary attributes but without link header ', async () => {
         const scope = nock(includesHost);
         const include = {
             api: {
