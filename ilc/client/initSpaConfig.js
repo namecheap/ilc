@@ -8,7 +8,7 @@ export default function () {
 
     const registryConf = JSON.parse(confScript.innerHTML);
 
-    Array.from(document.querySelectorAll('script[type="spa-config-override"]')).map(el => {
+    Array.prototype.slice.call(document.querySelectorAll('script[type="spa-config-override"]')).map(el => {
         const conf = JSON.parse(el.innerHTML);
         registryConf.apps = deepmerge(registryConf.apps, conf);
     });
