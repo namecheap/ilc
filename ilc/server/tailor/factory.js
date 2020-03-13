@@ -14,12 +14,13 @@ const ConfigsInjector = require('./configs-injector');
 
 
 module.exports = function (cdnUrl) {
-    const configsInjector = new ConfigsInjector(registryService, cdnUrl);
+    const router = new Router(registryService, console);
+    const configsInjector = new ConfigsInjector(registryService, router, cdnUrl);
 
     const tailor = new Tailor({
         fetchTemplate: fetchTemplate(
             __dirname + '/templates',
-            new Router(registryService, console),
+            router,
             configsInjector,
             newrelic
         ),

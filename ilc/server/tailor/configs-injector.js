@@ -4,10 +4,12 @@ const newrelic = require('newrelic');
 
 module.exports = class ConfigsInjector {
     #registry;
+    #router;
     #cdnUrl;
 
-    constructor(registry, cdnUrl = null) {
+    constructor(registry, router, cdnUrl = null) {
         this.#registry = registry;
+        this.#router = router;
         this.#cdnUrl = cdnUrl;
     }
 
@@ -34,9 +36,11 @@ module.exports = class ConfigsInjector {
         return document;
     }
 
-    getAssetsToPreload = () => {
+    getAssetsToPreload = async (request) => {
+        const assets = await this.#router.getRouteAssets(request.url);
+
         return {
-            scriptRefs: [this.#getClientjsUrl()]
+            scriptRefs: [this.#getClientjsUrl()].concat(assets),
         };
     };
 
