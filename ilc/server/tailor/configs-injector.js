@@ -27,9 +27,9 @@ module.exports = class ConfigsInjector {
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
         ) + '</body>');
 
-        document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(
+        document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
             newrelic.getBrowserTimingHeader(),
-        ));
+        ) + '</head>');
 
         return document;
     }
