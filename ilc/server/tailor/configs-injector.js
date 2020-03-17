@@ -53,6 +53,14 @@ module.exports = class ConfigsInjector {
 
         const routeAssets = _.reduce(route.slots, (routeAssets, slotData) => {
             const appInfo = apps[slotData.appName];
+
+            /**
+             * Need to save app's dependencies based on all merged apps dependencies
+             * to avoid duplicate vendors preloads on client side
+             * because apps may have common dependencies but from different sources
+             * 
+             * @see {@path ilc/client/initSpaConfig.js}
+             */
             const appDependencies = _.reduce(_.keys(appInfo.dependencies), (appDependencies, dependencyName) => {
                 appDependencies[dependencyName] = appsDependencies[dependencyName];
                 return appDependencies;
