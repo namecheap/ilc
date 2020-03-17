@@ -4,10 +4,12 @@ const newrelic = require('newrelic');
 
 module.exports = class ConfigsInjector {
     #registry;
+    #router;
     #cdnUrl;
 
-    constructor(registry, cdnUrl = null) {
+    constructor(registry, router, cdnUrl = null) {
         this.#registry = registry;
+        this.#router = router;
         this.#cdnUrl = cdnUrl;
     }
 
@@ -34,10 +36,31 @@ module.exports = class ConfigsInjector {
         return document;
     }
 
-    getAssetsToPreload = () => {
+    getAssetsToPreload = async (request) => {
+        const routeAssets = await this.#getRouteAssets(request.url);
+        
         return {
-            scriptRefs: [this.#getClientjsUrl()]
+            scriptRefs: _.concat([this.#getClientjsUrl()], routeAssets),
         };
+    };
+    
+    #getRouteAssets = async (reqUrl) => {
+        const registryConf = await this.#registry.getConfig();
+        const route = await this.#router.getRouteInfo(reqUrl);
+
+        const routeAssets = _.reduce(route.slots, (routeAssets, slotData) => {
+            const appInfo = registryConf.data.apps[slotData.appName];
+
+            if (!_.includes(routeAssets.spaBundles, appInfo.spaBundle)) {
+                routeAssets.spaBundles.push(appInfo.spaBundle);
+            }
+
+            routeAssets.dependencies = _.assign(routeAssets.dependencies, appInfo.dependencies);
+
+            return routeAssets;
+        }, {spaBundles: [], dependencies: {}});
+
+        return _.concat(routeAssets.spaBundles, _.values(routeAssets.dependencies));
     };
 
     #getPolyfill = () =>

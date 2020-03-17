@@ -27,9 +27,7 @@ module.exports = class ServerRouter {
     }
 
     async getTemplateInfo(reqUrl) {
-        const router = await this.#getRouter();
-        let route = router.match(reqUrl);
-
+        const route = await this.getRouteInfo(reqUrl);
         const baseTemplate = await this.#registry.getTemplate(route.template);
 
         if (baseTemplate === undefined) {
@@ -41,6 +39,11 @@ module.exports = class ServerRouter {
             base: baseTemplate.data.content,
             page: this.#generatePageTpl(route),
         }
+    }
+
+    async getRouteInfo(reqUrl) {
+        const router = await this.#getRouter();
+        return router.match(reqUrl);
     }
 
     #getRouter = async () => {
