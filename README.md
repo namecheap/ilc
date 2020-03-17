@@ -5,12 +5,22 @@
 [![Actions Status](https://github.com/namecheap/ilc/workflows/Registry/badge.svg)](https://github.com/namecheap/ilc/actions)
 [![Actions Status](https://github.com/namecheap/ilc/workflows/ILC/badge.svg)](https://github.com/namecheap/ilc/actions)
 
-Isomorphic Layout Composer (ILC) - layout service that compose a web page from fragment services.
+Isomorphic Layout Composer (ILC) - layout service that compose a web page from fragment services. 
+It supports client/server based page composition.
 
-This repository also contains an example of how using ILC you can create a micro service front-end and enable multiple 
-applications to work in concert in a unified experience.
+It's key difference and advantage against other solutions lays in the fact that it does page composition isomorphically.
+It means that page will be assembled at server side using apps that support server side rendering (SSR) and after that 
+it will be hydrated at client side so all further navigation will be handled by client side rendering.
 
-# Why a Layout Composer service?
+Such approach allows to **combine advantages of the 
+[Micro Frontends](https://martinfowler.com/articles/micro-frontends.html), 
+[SPA](https://en.wikipedia.org/wiki/Single-page_application) & 
+[Server Side Rendering](https://developers.google.com/web/updates/2019/02/rendering-on-the-web#server-rendering) approaches**.
+
+This repository also contains an example of how you can create a front-end that is composed from multiple 
+applications which work in concert and deliver unified experience.
+
+## Why do I need ILC?
 
 Microservices get a lot of traction these days. They allow multiple teams to work independently from each other, choose 
 their own technology stacks and establish their own release cycles. Unfortunately, frontend development hasn’t fully capitalized 
@@ -23,7 +33,7 @@ Bringing microservices to the frontend requires a layout service that composes a
 
 ## Used core technologies
 1. [single-spa](https://single-spa.js.org/) - framework for front-end microservices
-2. [TailorX](https://github.com/StyleT/tailorx) - backend  layout service that uses streams to compose a web page from fragment services
+2. [TailorX](https://github.com/StyleT/tailorx) - backend layout service that uses streams to compose a web page from fragment services
 
 ## Maturity level
 
