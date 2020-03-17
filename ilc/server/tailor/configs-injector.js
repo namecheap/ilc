@@ -48,14 +48,29 @@ module.exports = class ConfigsInjector {
         const registryConf = await this.#registry.getConfig();
         const route = await this.#router.getRouteInfo(reqUrl);
 
+        const apps = registryConf.data.apps;
+        const appsDependencies = _.reduce(apps, (dependencies, appInfo) => _.assign(dependencies, appInfo.dependencies), {});
+
         const routeAssets = _.reduce(route.slots, (routeAssets, slotData) => {
-            const appInfo = registryConf.data.apps[slotData.appName];
+            const appInfo = apps[slotData.appName];
+
+            /**
+             * Need to save app's dependencies based on all merged apps dependencies
+             * to avoid duplicate vendors preloads on client side
+             * because apps may have common dependencies but from different sources
+             * 
+             * @see {@path ilc/client/initSpaConfig.js}
+             */
+            const appDependencies = _.reduce(_.keys(appInfo.dependencies), (appDependencies, dependencyName) => {
+                appDependencies[dependencyName] = appsDependencies[dependencyName];
+                return appDependencies;
+            }, {});
+
+            routeAssets.dependencies = _.assign(routeAssets.dependencies, appDependencies);
 
             if (!_.includes(routeAssets.spaBundles, appInfo.spaBundle)) {
                 routeAssets.spaBundles.push(appInfo.spaBundle);
             }
-
-            routeAssets.dependencies = _.assign(routeAssets.dependencies, appInfo.dependencies);
 
             return routeAssets;
         }, {spaBundles: [], dependencies: {}});

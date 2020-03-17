@@ -22,6 +22,13 @@ function getSystemjsImportmap(apps) {
     const res = {};
     const deps = {};
 
+    /**
+     * Need to save app's dependencies based on all merged apps dependencies
+     * to avoid duplicate vendors preloads on client side
+     * because apps may have common dependencies but from different sources
+     * 
+     * @see {@path ilc/server/tailor/configs-injector.js}
+     */
     for (let appName in apps) {
         if (!apps.hasOwnProperty(appName)) {
             continue;
