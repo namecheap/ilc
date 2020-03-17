@@ -37,11 +37,30 @@ module.exports = class ConfigsInjector {
     }
 
     getAssetsToPreload = async (request) => {
-        const assets = await this.#router.getRouteAssets(request.url);
-
+        const routeAssets = await this.#getRouteAssets(request.url);
+        
         return {
-            scriptRefs: [this.#getClientjsUrl()].concat(assets),
+            scriptRefs: _.concat([this.#getClientjsUrl()], routeAssets),
         };
+    };
+    
+    #getRouteAssets = async (reqUrl) => {
+        const registryConf = await this.#registry.getConfig();
+        const route = await this.#router.getRouteInfo(reqUrl);
+
+        const routeAssets = _.reduce(route.slots, (routeAssets, slotData) => {
+            const appInfo = registryConf.data.apps[slotData.appName];
+
+            if (!_.includes(routeAssets.spaBundles, appInfo.spaBundle)) {
+                routeAssets.spaBundles.push(appInfo.spaBundle);
+            }
+
+            routeAssets.dependencies = _.assign(routeAssets.dependencies, appInfo.dependencies);
+
+            return routeAssets;
+        }, {spaBundles: [], dependencies: {}});
+
+        return _.concat(routeAssets.spaBundles, _.values(routeAssets.dependencies));
     };
 
     #getPolyfill = () =>

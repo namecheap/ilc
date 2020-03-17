@@ -27,7 +27,7 @@ module.exports = class ServerRouter {
     }
 
     async getTemplateInfo(reqUrl) {
-        const route = await this.#getRouteInfo(reqUrl);
+        const route = await this.getRouteInfo(reqUrl);
         const baseTemplate = await this.#registry.getTemplate(route.template);
 
         if (baseTemplate === undefined) {
@@ -41,36 +41,7 @@ module.exports = class ServerRouter {
         }
     }
 
-    async getRouteAssets(reqUrl) {
-        const route = await this.#getRouteInfo(reqUrl);
-
-        return _.reduce(route.slots, (routeAssets, slotData) => {
-            const appInfo = this.__apps[slotData.appName];
-
-            if (!routeAssets.includes(appInfo.spaBundle)) {
-                routeAssets.push(appInfo.spaBundle);
-            }
-
-            Object.keys(appInfo.dependencies).filter((dependencyName) => {
-                const dependency = appInfo.dependencies[dependencyName];
-
-                if (!(/\.js$/.test(dependency))) {
-                    return;
-                }
-
-                const fileName = dependency.substring(dependency.lastIndexOf('/') + 1);
-                const hasDependency = routeAssets.some((dependency) => dependency.includes(fileName));
-
-                if (!hasDependency) {
-                    routeAssets.push(dependency);
-                }
-            });
-
-            return routeAssets;
-        }, []);
-    }
-
-    #getRouteInfo = async (reqUrl) => {
+    async getRouteInfo(reqUrl) {
         const router = await this.#getRouter();
         return router.match(reqUrl);
     }
