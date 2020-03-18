@@ -36,7 +36,7 @@ module.exports = class ServerRouter {
 
         return {
             routeName: route.route,
-            base: baseTemplate.data.content,
+            base: this.#injectCssBundles(route, baseTemplate.data.content),
             page: this.#generatePageTpl(route),
         }
     }
@@ -60,6 +60,21 @@ module.exports = class ServerRouter {
 
         return this.#router;
     };
+
+    #injectCssBundles = (route, baseTemplate) => {
+        return _.reduce(route.slots, (baseTemplate, slotData) => {
+            const appInfo = this.__apps[slotData.appName];
+
+            if (!appInfo.cssBundle) {
+                return baseTemplate;
+            }
+            
+            return baseTemplate.replace('</head>',
+                `<link rel="stylesheet" href="${appInfo.cssBundle}" data-fragment-id="${slotData.appName}" />` +
+                '</head>'
+            );
+        }, baseTemplate);
+    }
 
     #generatePageTpl = (route) => {
         let primarySlotDetected = false;

@@ -19,8 +19,11 @@ if (System === undefined) {
 // this causes removal of the loaded CSS from the DOM after app unmount.
 // So we're "saving" such elements by moving them to the <head>
 Array.prototype.slice.call(document.body.querySelectorAll('link[data-fragment-id]')).reduce((hrefs, link) => {
-    if (hrefs.has(link.href)) {
-        link.parentNode.removeChild(link)
+    if (
+        hrefs.has(link.href) ||
+        document.head.querySelector(`link[href="${link.href}"]`)
+    ) {
+        link.parentNode.removeChild(link);
     } else {
         hrefs.add(link.href);
         document.head.append(link);
