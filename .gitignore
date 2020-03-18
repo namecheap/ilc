@@ -3,3 +3,4 @@ node_modules
 package-lock.json
 *.ncint.*
 .DS_Store
+.vscode

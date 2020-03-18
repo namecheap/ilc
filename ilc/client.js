@@ -32,7 +32,7 @@ Array.prototype.slice.call(document.body.querySelectorAll('link[data-fragment-id
 const registryConf = initSpaConfig();
 
 const router = new Router(registryConf);
-let currentPath = router.match(window.location.pathname + window.location.search);
+let currentPath = router.match(getNormalizedLocation().pathname + getNormalizedLocation().search);
 let prevPath = currentPath;
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
@@ -144,10 +144,20 @@ function getCurrentBasePath() {
     return currentPath.basePath;
 }
 
+function getNormalizedLocation() {
+    // we should respect base tag for cached pages
+    const base = document.querySelector('base');
+    if (!base) return window.location;
+
+    var a = document.createElement('a');
+    a.href = base.getAttribute('href');
+    return a;
+}
+
 window.addEventListener('single-spa:before-routing-event', () => {
     prevPath = currentPath;
 
-    const path = router.match(window.location.pathname + window.location.search);
+    const path = router.match(getNormalizedLocation().pathname + getNormalizedLocation().search);
     if (currentPath !== null && path.template !== currentPath.template) {
         throw new Error('Base template was changed and I still don\'t know how to handle it :(');
     }
@@ -166,6 +176,7 @@ document.addEventListener('click', function (e) {
     }
 
     const pathname = href.replace(window.location.origin, '');
+
     const { specialRole } = router.match(pathname);
 
     if (specialRole === null) {
