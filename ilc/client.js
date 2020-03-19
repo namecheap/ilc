@@ -157,7 +157,10 @@ window.addEventListener('single-spa:before-routing-event', () => {
     currentUrl = window.location.pathname + window.location.search;
     if (currentUrl !== prevUrl) {
         const base = document.querySelector('base');
-        base && base.remove();
+        if (base) {
+            base.remove();
+            console.warn('Base tag is removed!!!');
+        }
     }
 
     prevPath = currentPath;
