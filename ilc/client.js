@@ -32,8 +32,9 @@ Array.prototype.slice.call(document.body.querySelectorAll('link[data-fragment-id
 const registryConf = initSpaConfig();
 
 const router = new Router(registryConf);
-let currentPath = router.match(getNormalizedLocation().pathname + getNormalizedLocation().search);
-let prevPath = currentPath;
+
+let currentPath;
+let prevPath;
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
@@ -79,15 +80,17 @@ function isActiveFactory(appName, slotName) {
     let reload = false;
 
     return () => {
-        const checkActivity = (path) => Object.entries(path.slots).some(([
+        const checkActivity = (path) => !!path && Object.entries(path.slots).some(([
             currentSlotName,
             slot
-        ]) => slot.appName === appName && currentSlotName === slotName);
+        ]) => {
+            return slot.appName === appName && currentSlotName === slotName;
+        });
 
         let isActive = checkActivity(currentPath);
         const wasActive = checkActivity(prevPath);
 
-        const willBeRendered = !wasActive && isActive;
+        const willBeRendered = !wasActive && isActive && prevPath; // prevPath - ignore first render, after SSR
         const willBeRemoved = wasActive && !isActive;
         let willBeRerendered = false;
 
@@ -144,21 +147,33 @@ function getCurrentBasePath() {
     return currentPath.basePath;
 }
 
-function getNormalizedLocation() {
-    // we should respect base tag for cached pages
-    const base = document.querySelector('base');
-    if (!base) return window.location;
 
-    var a = document.createElement('a');
-    a.href = base.getAttribute('href');
-    return a;
-}
-
+let prevUrl;
+let currentUrl = window.location.pathname + window.location.search;
 window.addEventListener('single-spa:before-routing-event', () => {
+    // !!! TODO remove it after fix https://github.com/single-spa/single-spa/issues/484
+    // and add "base.remove();" after first time of using
+    prevUrl = currentUrl;
+    currentUrl = window.location.pathname + window.location.search;
+    if (currentUrl !== prevUrl) {
+        const base = document.querySelector('base');
+        base && base.remove();
+    }
+
     prevPath = currentPath;
 
-    const path = router.match(getNormalizedLocation().pathname + getNormalizedLocation().search);
-    if (currentPath !== null && path.template !== currentPath.template) {
+    let path;
+    // we should respect base tag for cached pages
+    const base = document.querySelector('base');
+    if (base) {
+        const a = document.createElement('a');
+        a.href = base.getAttribute('href');
+        path = router.match(a.pathname + a.search);
+    } else {
+        path = router.match(window.location.pathname + window.location.search);
+    }
+
+    if (currentPath && path.template !== currentPath.template) {
         throw new Error('Base template was changed and I still don\'t know how to handle it :(');
     }
 
