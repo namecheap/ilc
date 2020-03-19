@@ -24,6 +24,7 @@ module.exports = class ConfigsInjector {
         const regConf = registryConf.data;
 
         document = document.replace('</body>', this.#wrapWithIgnoreDuringParsing(
+            this.#hideHTMLtoAvoidFOUC(false),
             this.#getSPAConfig(regConf),
             this.#getPolyfill(),
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
@@ -31,6 +32,7 @@ module.exports = class ConfigsInjector {
 
         document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
             newrelic.getBrowserTimingHeader(),
+            this.#hideHTMLtoAvoidFOUC(),
         ) + '</head>');
 
         return document;
@@ -100,6 +102,19 @@ module.exports = class ConfigsInjector {
 
         return `<script type="spa-config">${JSON.stringify(_.omit(registryConf, ['templates']))}</script>`;
     };
+
+    /**
+     * This style is needed to avoid a flash of unstyled content (FOUC) on Firefox
+     * 
+     * @see {@link https://gist.github.com/electrotype/7960ddcc44bc4aea07a35603d1c41cb0#file-fouc-fix-md}
+     * @see {@link https://stackoverflow.com/questions/952861/targeting-only-firefox-with-css}
+     */
+    #hideHTMLtoAvoidFOUC = (hideHTML = true) => {
+        const visibility = hideHTML ? 'hidden' : 'visible';
+        const opacity = hideHTML ? 0 : 1;
+
+        return `<style>@supports (-moz-appearance:none) { html { visibility: ${visibility}; opacity: ${opacity}; }}</style>`;
+    }
 
     #wrapWithAsyncScriptTag = (url) => {
         const crossorigin = this.#cdnUrl !== null ? 'crossorigin' : '';
