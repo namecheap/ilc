@@ -106,6 +106,8 @@ module.exports = class ConfigsInjector {
     /**
      * This style is needed to avoid a flash of unstyled content (FOUC) on Firefox
      * 
+     * @see {@link https://bugzilla.mozilla.org/show_bug.cgi?id=1404468}
+     * @see {@link https://petrey.co/2017/05/the-most-effective-way-to-avoid-the-fouc/}
      * @see {@link https://gist.github.com/electrotype/7960ddcc44bc4aea07a35603d1c41cb0#file-fouc-fix-md}
      * @see {@link https://stackoverflow.com/questions/952861/targeting-only-firefox-with-css}
      */
