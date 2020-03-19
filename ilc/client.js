@@ -83,9 +83,7 @@ function isActiveFactory(appName, slotName) {
         const checkActivity = (path) => !!path && Object.entries(path.slots).some(([
             currentSlotName,
             slot
-        ]) => {
-            return slot.appName === appName && currentSlotName === slotName;
-        });
+        ]) => slot.appName === appName && currentSlotName === slotName);
 
         let isActive = checkActivity(currentPath);
         const wasActive = checkActivity(prevPath);
