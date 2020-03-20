@@ -1,10 +1,16 @@
 'use strict';
 
-const serveStatic = require('serve-static')
+const serveStatic = require('serve-static');
 
 module.exports = function (isProduction) {
+    const serveStaticMiddleware = serveStatic('public', {
+        setHeaders: (res, path) => {
+            res.setHeader('Content-Encoding', 'gzip');
+        },
+    });
+
     if (isProduction) {
-        return serveStatic('public');
+        return serveStaticMiddleware;
     }
 
     require('../systemjs/build');
@@ -21,11 +27,7 @@ module.exports = function (isProduction) {
             },
             logLevel: 'debug',
         }),
-        serveStatic('public', {
-            setHeaders: (res, path) => {
-                res.setHeader('Content-Encoding', 'gzip');
-            }
-        })
+        serveStaticMiddleware
     ];
 };
 
