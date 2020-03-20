@@ -1,6 +1,6 @@
 FROM node:12-alpine
 
-RUN apk update && apk add --no-cache bash git openssh python make g++ findutils
+RUN apk update && apk add --no-cache bash git openssh python make g++ findutils gzip
 
 ADD ./ /codebase
 WORKDIR /codebase
