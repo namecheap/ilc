@@ -33,11 +33,27 @@ const registryConf = initSpaConfig();
 
 const router = new Router(registryConf);
 
-let currentPath;
-let prevPath;
+let currentPath = (function() {
+    // we should respect base tag for cached pages
+    const base = document.querySelector('base');
+    let path;
+    if (base) {
+        const a = document.createElement('a');
+        a.href = base.getAttribute('href');
+        path = a.pathname + a.search;
+        base.remove();
+        console.warn('ILC: <base> tag was used only for initial rendering & removed afterwards. Currently we\'re not respecting it fully. Pls open an issue if you need this functionality.');
+    } else {
+        path = window.location.pathname + window.location.search;
+    }
+    return router.match(path);
+})();
+let prevPath = currentPath;
+
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
+
         const appName = slots[slotName].appName;
 
         const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
@@ -80,7 +96,7 @@ function isActiveFactory(appName, slotName) {
     let reload = false;
 
     return () => {
-        const checkActivity = (path) => !!path && Object.entries(path.slots).some(([
+        const checkActivity = (path) => Object.entries(path.slots).some(([
             currentSlotName,
             slot
         ]) => slot.appName === appName && currentSlotName === slotName);
@@ -88,7 +104,7 @@ function isActiveFactory(appName, slotName) {
         let isActive = checkActivity(currentPath);
         const wasActive = checkActivity(prevPath);
 
-        const willBeRendered = !wasActive && isActive && prevPath; // prevPath - ignore first render, after SSR
+        const willBeRendered = !wasActive && isActive;
         const willBeRemoved = wasActive && !isActive;
         let willBeRerendered = false;
 
@@ -145,40 +161,23 @@ function getCurrentBasePath() {
     return currentPath.basePath;
 }
 
-
-let prevUrl;
 let currentUrl = window.location.pathname + window.location.search;
 window.addEventListener('single-spa:before-routing-event', () => {
-    // !!! TODO remove it after fix https://github.com/single-spa/single-spa/issues/484
-    // and add "base.remove();" after first time of using
-    prevUrl = currentUrl;
-    currentUrl = window.location.pathname + window.location.search;
-    if (currentUrl !== prevUrl) {
-        const base = document.querySelector('base');
-        if (base) {
-            base.remove();
-            console.warn('Base tag is removed!!!');
-        }
-    }
-
     prevPath = currentPath;
 
-    let path;
-    // we should respect base tag for cached pages
-    const base = document.querySelector('base');
-    if (base) {
-        const a = document.createElement('a');
-        a.href = base.getAttribute('href');
-        path = router.match(a.pathname + a.search);
-    } else {
-        path = router.match(window.location.pathname + window.location.search);
+    // fix for google cached pages.
+    // if open any cached page and scroll to "#features"
+    // url changed and <base> tag has already removed and router.match will return error
+    // so in this case we shouldn't regenerate currentPath
+    const newUrl = window.location.pathname + window.location.search
+    if (currentUrl !== newUrl) {
+        currentPath = router.match(window.location.pathname + window.location.search);
+        currentUrl = newUrl;
     }
 
-    if (currentPath && path.template !== currentPath.template) {
+    if (currentPath && prevPath.template !== currentPath.template) {
         throw new Error('Base template was changed and I still don\'t know how to handle it :(');
     }
-
-    currentPath = path;
 });
 
 document.addEventListener('click', function (e) {
@@ -209,4 +208,6 @@ singleSpa.setMountMaxTime(5000, false);
 singleSpa.setUnmountMaxTime(3000, false);
 singleSpa.setUnloadMaxTime(3000, false);
 
-singleSpa.start();
+singleSpa.start({
+    urlRerouteOnly: true,
+});
