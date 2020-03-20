@@ -11,7 +11,7 @@
     "build": "rimraf public && npm run build:systemjs && npm run build:client && npm run build:polyfills",
     "build:client": "webpack --config build/webpack.js --progress --hide-modules",
     "build:systemjs": "node ./systemjs/build.js",
-    "build:polyfills": "wget -O ./public/polyfill.min.js https://polyfill.io/v3/polyfill.min.js?features=URL%2CObject.entries%2CDocumentFragment.prototype.append%2CElement.prototype.append%2CElement.prototype.remove%2CObject.assign%2CElement.prototype.closest%2CCustomEvent"
+    "build:polyfills": "wget --quiet --output-document - https://polyfill.io/v3/polyfill.min.js?features=URL%2CObject.entries%2CDocumentFragment.prototype.append%2CElement.prototype.append%2CElement.prototype.remove%2CObject.assign%2CElement.prototype.closest%2CCustomEvent | gzip --stdout > ./public/polyfill.min.js.gz"
   },
   "author": "Vladlen Fedosov",
   "license": "Apache-2.0",
@@ -46,6 +46,7 @@
     "babel-loader": "^8.0.6",
     "babel-plugin-transform-async-to-promises": "^0.8.15",
     "chai": "^4.2.0",
+    "compression-webpack-plugin": "^3.1.0",
     "mocha": "^7.0.1",
     "nodemon": "^1.19.4",
     "nyc": "^15.0.0",

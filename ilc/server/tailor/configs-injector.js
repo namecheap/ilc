@@ -94,8 +94,8 @@ module.exports = class ConfigsInjector {
             }
         </script>`;
 
-    #getClientjsUrl = () => this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js');
-    #getPolyfillUrl = () => this.#cdnUrl === null ? '/_ilc/polyfill.min.js' : urljoin(this.#cdnUrl, '/polyfill.min.js');
+    #getClientjsUrl = () => this.#cdnUrl === null ? '/_ilc/client.js.gz' : urljoin(this.#cdnUrl, '/client.js.gz');
+    #getPolyfillUrl = () => this.#cdnUrl === null ? '/_ilc/polyfill.min.js.gz' : urljoin(this.#cdnUrl, '/polyfill.min.js.gz');
 
     #getSPAConfig = (registryConf) => {
         registryConf.apps = _.mapValues(registryConf.apps, v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'initProps', 'kind']));

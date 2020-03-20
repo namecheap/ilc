@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const WrapperPlugin = require('wrapper-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
 
 module.exports = {
     entry: path.resolve(__dirname, '../client.js'),
@@ -35,6 +36,7 @@ module.exports = {
             header: () => fs.readFileSync(path.resolve(__dirname, '../public/system.js')),
             afterOptimizations: true,
         }),
+        new CompressionPlugin(),
     ],
     devtool: 'source-map',
     externals: [],

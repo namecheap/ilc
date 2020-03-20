@@ -17,10 +17,15 @@ module.exports = function (isProduction) {
             publicPath: '/',
             headers: {
                 "Access-Control-Allow-Origin": "*",
+                "Content-Encoding": "gzip",
             },
             logLevel: 'debug',
         }),
-        serveStatic('public')
+        serveStatic('public', {
+            setHeaders: (res, path) => {
+                res.setHeader('Content-Encoding', 'gzip');
+            }
+        })
     ];
 };
 
