@@ -1,6 +1,4 @@
 const deepmerge = require('deepmerge');
-const _omit = require('lodash/omit');
-
 const errors = require('./errors');
 
 module.exports = class Router {
@@ -23,17 +21,24 @@ module.exports = class Router {
         };
 
         for (let route of this.#compiledRoutes) {
-            const match = path.match(route.routeExp);
+            const {
+                next,
+                routeExp,
+                ...routeProps
+            } = route;
+
+            const match = path.match(routeExp);
+
             if (match === null) {
                 continue;
             }
 
             res = deepmerge(res, {
                 specialRole: null,
-                ..._omit(route, ['next', 'routeExp']),
+                ...routeProps,
             });
 
-            if (route.next !== true) {
+            if (next !== true) {
                 if (res.template === undefined) {
                     throw new Error('Can\'t determine base template for passed route');
                 }
