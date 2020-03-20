@@ -2,18 +2,11 @@ module.exports = {
     presets: [
         '@babel/preset-env',
     ],
-    ignore: [
-        /@babel[\/\\]runtime/
-    ],
     plugins: [
         '@babel/plugin-syntax-dynamic-import',
         '@babel/plugin-proposal-class-properties',
         '@babel/plugin-proposal-private-methods',
-        [
-            '@babel/plugin-transform-runtime', {
-                regenerator: true,
-            }
-        ],
+        'babel-plugin-transform-async-to-promises',
         [
             "@babel/plugin-transform-for-of", {
                 /**
