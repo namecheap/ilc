@@ -1,7 +1,6 @@
 import * as singleSpa from 'single-spa';
-import deepmerge from 'deepmerge';
 
-import * as Router from './common/router/Router';
+import Router from './common/router/ClientRouter';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
@@ -30,10 +29,7 @@ Array.prototype.slice.call(document.body.querySelectorAll('link[data-fragment-id
 }, new Set());
 
 const registryConf = initSpaConfig();
-
 const router = new Router(registryConf);
-let currentPath = router.match(window.location.pathname + window.location.search);
-let prevPath = currentPath;
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
@@ -60,40 +56,34 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
             },
             isActiveFactory(appName, slotName),
             {
-                domElementGetter: getMountPointFactory(slotName),
-                getCurrentPathProps: getCurrentPathPropsFactory(appName, slotName),
-                getCurrentBasePath,
-                errorHandler: fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName)
+                domElementGetter: () => document.getElementById(slotName),
+                getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
+                getCurrentBasePath: () => router.getCurrentRoute().basePath,
+                errorHandler: fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName)
             }
         );
     });
 });
 
-function getMountPointFactory(slotName) {
-    return () => {
-        return document.getElementById(slotName)
-    };
-}
-
 function isActiveFactory(appName, slotName) {
     let reload = false;
 
     return () => {
-        const checkActivity = (path) => Object.entries(path.slots).some(([
+        const checkActivity = (route) => Object.entries(route.slots).some(([
             currentSlotName,
             slot
         ]) => slot.appName === appName && currentSlotName === slotName);
 
-        let isActive = checkActivity(currentPath);
-        const wasActive = checkActivity(prevPath);
+        let isActive = checkActivity(router.getCurrentRoute());
+        const wasActive = checkActivity(router.getPrevRoute());
 
         const willBeRendered = !wasActive && isActive;
         const willBeRemoved = wasActive && !isActive;
         let willBeRerendered = false;
 
         if (isActive && wasActive && reload === false) {
-            const oldProps = getPathProps(appName, slotName, prevPath);
-            const currProps = getPathProps(appName, slotName, currentPath);
+            const oldProps = router.getPrevRouteProps(appName, slotName);
+            const currProps = router.getCurrentRouteProps(appName, slotName);
 
             if (JSON.stringify(oldProps) !== JSON.stringify(currProps)) {
                 window.addEventListener('single-spa:app-change', function singleSpaAppChange() {
@@ -126,60 +116,12 @@ function isActiveFactory(appName, slotName) {
     }
 }
 
-function getCurrentPathPropsFactory(appName, slotName) {
-    return () => getPathProps(appName, slotName, currentPath);
-}
-
-function getPathProps(appName, slotName, path) {
-    const appProps = registryConf.apps[appName].props || {};
-    const routeProps = path.slots[slotName] && path.slots[slotName].props || {};
-    return deepmerge(appProps, routeProps);
-}
-
-function getCurrentPath() {
-    return currentPath;
-}
-
-function getCurrentBasePath() {
-    return currentPath.basePath;
-}
-
-window.addEventListener('single-spa:before-routing-event', () => {
-    prevPath = currentPath;
-
-    const path = router.match(window.location.pathname + window.location.search);
-    if (currentPath !== null && path.template !== currentPath.template) {
-        throw new Error('Base template was changed and I still don\'t know how to handle it :(');
-    }
-
-    currentPath = path;
-});
-
-document.addEventListener('click', function (e) {
-    const anchor = e.target.tagName === 'A'
-        ? e.target
-        : e.target.closest('a');
-    const href = anchor && anchor.getAttribute('href');
-
-    if (e.defaultPrevented === true || !href) {
-        return;
-    }
-
-    const pathname = href.replace(window.location.origin, '');
-    const { specialRole } = router.match(pathname);
-
-    if (specialRole === null) {
-        singleSpa.navigateToUrl(pathname);
-        e.preventDefault();
-    }
-});
-
-setupErrorHandlers(registryConf, getCurrentPath);
-setupPerformanceMonitoring(getCurrentPath);
+setupErrorHandlers(registryConf, router.getCurrentRoute);
+setupPerformanceMonitoring(router.getCurrentRoute);
 
 singleSpa.setBootstrapMaxTime(5000, false);
 singleSpa.setMountMaxTime(5000, false);
 singleSpa.setUnmountMaxTime(3000, false);
 singleSpa.setUnloadMaxTime(3000, false);
 
-singleSpa.start();
+singleSpa.start({ urlRerouteOnly: true });

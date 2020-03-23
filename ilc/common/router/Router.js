@@ -8,7 +8,7 @@ module.exports = class Router {
     #specialRoutes = {};
 
     constructor({routes, specialRoutes}) {
-        this.#compiledRoutes =  this.__compiler(routes);
+        this.#compiledRoutes = this.#compiler(routes);
         this.#specialRoutes = specialRoutes;
     }
 
@@ -60,7 +60,7 @@ module.exports = class Router {
         });
     }
 
-    __compiler(routes) {
+    #compiler = (routes) => {
         return routes.map(v => {
             const route = this.#escapeStringRegexp(v.route);
 
