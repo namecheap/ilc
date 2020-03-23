@@ -52,9 +52,9 @@ export default class ClientRouter {
             this.#prevRoute = this.#currentRoute;
 
             // fix for google cached pages.
-            // if open any cached page and scroll to "#features"
-            // url changed and <base> tag has already removed and router.match will return error
-            // so in this case we shouldn't regenerate currentRoute
+            // if open any cached page and scroll to "#features" section:
+            // only hash will be changed so router.match will return error, since <base> tag has already been removed.
+            // so in this cases we shouldn't regenerate currentRoute
             const newUrl = window.location.pathname + window.location.search
             if (currentUrl !== newUrl) {
                 this.#currentRoute = this.#router.match(window.location.pathname + window.location.search);
