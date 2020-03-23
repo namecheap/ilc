@@ -10,7 +10,6 @@ module.exports = class ServerRouter {
     #logger;
     /** @type {Registry} */
     #registry;
-    #registryConf = null;
     #checkAfter = 0;
 
     /** @type {Router} */
@@ -49,7 +48,7 @@ module.exports = class ServerRouter {
     #getRouter = async () => {
         const now = Math.floor(Date.now() / 1000);
 
-        if (this.#registryConf === null || this.#checkAfter < now) {
+        if (this.#checkAfter < now) {
             const conf = await this.#registry.getConfig();
 
             this.#router = new Router(conf.data);
