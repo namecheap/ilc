@@ -52,7 +52,9 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                     }));
                 }
 
-                return Promise.all(waitTill).then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
+                return Promise.all(waitTill)
+                    .then(v => new Promise(resolve => setTimeout(resolve(v)))) //Scheduling macrotask to avoid low FPS
+                    .then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
             },
             isActiveFactory(appName, slotName),
             {
