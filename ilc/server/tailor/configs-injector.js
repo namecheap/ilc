@@ -14,7 +14,7 @@ module.exports = class ConfigsInjector {
     }
 
 
-    async inject(document) {
+    async inject(document, reqUrl) {
         if (typeof document !== 'string' || document.indexOf('<head>') === -1 || document.indexOf('</body>') === -1) {
             throw new Error(`Can't inject ILC configs into invalid document.`);
         }
@@ -35,18 +35,42 @@ module.exports = class ConfigsInjector {
             this.#hideHTMLtoAvoidFOUC(),
         ) + '</head>');
 
+        const scriptRefs = await this.#getRouteScriptRefs(reqUrl);
+
+        document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(
+            ...scriptRefs.map(this.#wrapWithLinkToPreloadScript),
+        ));
+
         return document;
     }
 
     getAssetsToPreload = async (request) => {
-        const routeAssets = await this.#getRouteAssets(request.url);
-        
+        const styleRefs = await this.#getRouteCssBundles(request.url);
+
         return {
-            scriptRefs: _.concat([this.#getClientjsUrl()], routeAssets),
+            scriptRefs: [this.#getClientjsUrl()],
+            styleRefs,
         };
     };
-    
-    #getRouteAssets = async (reqUrl) => {
+
+    #getRouteCssBundles = async (reqUrl) => {
+        const registryConf = await this.#registry.getConfig();
+        const route = await this.#router.getRouteInfo(reqUrl);
+
+        const apps = registryConf.data.apps;
+
+        return _.reduce(route.slots, (cssBundles, slotData) => {
+            const appInfo = apps[slotData.appName];
+
+            if (!_.includes(cssBundles, appInfo.cssBundle)) {
+                cssBundles.push(appInfo.cssBundle);
+            }
+
+            return cssBundles;
+        }, []);
+    };
+
+    #getRouteScriptRefs = async (reqUrl) => {
         const registryConf = await this.#registry.getConfig();
         const route = await this.#router.getRouteInfo(reqUrl);
 
@@ -80,19 +104,24 @@ module.exports = class ConfigsInjector {
         return _.concat(routeAssets.spaBundles, _.values(routeAssets.dependencies));
     };
 
-    #getPolyfill = () =>
-        `<script type="text/javascript">
-            if (!(
-                typeof window.URL === 'function' &&
-                Object.entries &&
-                Object.assign &&
-                DocumentFragment.prototype.append &&
-                Element.prototype.append &&
-                Element.prototype.remove
-            )) {
-                document.write('<script src="${this.#getPolyfillUrl()}" type="text/javascript" ${this.#cdnUrl !== null ? 'crossorigin' : ''}></scr' + 'ipt>');
-            }
-        </script>`;
+    #getPolyfill = () => {
+        const url = this.#getPolyfillUrl();
+
+        return (
+            `<script type="text/javascript">
+                if (!(
+                    typeof window.URL === 'function' &&
+                    Object.entries &&
+                    Object.assign &&
+                    DocumentFragment.prototype.append &&
+                    Element.prototype.append &&
+                    Element.prototype.remove
+                )) {
+                    document.write('<script src="${url}" type="text/javascript" ${this.#getCrossoriginAttribute(url)}></scr' + 'ipt>');
+                }
+            </script>`
+        );
+    };
 
     #getClientjsUrl = () => this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js');
     #getPolyfillUrl = () => this.#cdnUrl === null ? '/_ilc/polyfill.min.js' : urljoin(this.#cdnUrl, '/polyfill.min.js');
@@ -119,9 +148,15 @@ module.exports = class ConfigsInjector {
     }
 
     #wrapWithAsyncScriptTag = (url) => {
-        const crossorigin = this.#cdnUrl !== null ? 'crossorigin' : '';
+        return `<script src="${url}" type="text/javascript" ${this.#getCrossoriginAttribute(url)} async></script>`;
+    };
 
-        return `<script src="${url}" type="text/javascript" ${crossorigin} async></script>`;
+    #wrapWithLinkToPreloadScript = (url) => {
+        return `<link rel="preload" href="${url}" as="script" ${this.#getCrossoriginAttribute(url)}>`;
+    };
+
+    #getCrossoriginAttribute = (url) => {
+        return (this.#cdnUrl !== null && url.includes(this.#cdnUrl)) || !url.includes('://') ? '' : 'crossorigin';
     };
 
     #wrapWithIgnoreDuringParsing = (...content) => `<!-- TailorX: Ignore during parsing START -->${content.join('')}<!-- TailorX: Ignore during parsing END -->`;

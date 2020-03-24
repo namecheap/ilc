@@ -23,7 +23,7 @@ module.exports = (templatesPath, router, configsInjector, newrelic) => async (
         newrelic.setTransactionName(routeName);
     }
 
-    const baseTpl = await configsInjector.inject(tplInfo.base);
+    const baseTpl = await configsInjector.inject(tplInfo.base, request.url);
 
     const pageTemplate = tplInfo.page;
 
