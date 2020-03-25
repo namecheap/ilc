@@ -35,42 +35,23 @@ module.exports = class ConfigsInjector {
             this.#hideHTMLtoAvoidFOUC(),
         ) + '</head>');
 
-        const scriptRefs = await this.#getRouteScriptRefs(reqUrl);
-
+        const routeAssets = await this.#getRouteAssets(reqUrl);
+        
         document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(
-            ...scriptRefs.map(this.#wrapWithLinkToPreloadScript),
+            ...routeAssets.scriptLinks,
+            ...routeAssets.stylesheetLinks,
         ));
 
         return document;
     }
 
-    getAssetsToPreload = async (request) => {
-        const styleRefs = await this.#getRouteCssBundles(request.url);
-
+    getAssetsToPreload = async () => {
         return {
             scriptRefs: [this.#getClientjsUrl()],
-            styleRefs,
         };
     };
 
-    #getRouteCssBundles = async (reqUrl) => {
-        const registryConf = await this.#registry.getConfig();
-        const route = await this.#router.getRouteInfo(reqUrl);
-
-        const apps = registryConf.data.apps;
-
-        return _.reduce(route.slots, (cssBundles, slotData) => {
-            const appInfo = apps[slotData.appName];
-
-            if (!_.includes(cssBundles, appInfo.cssBundle)) {
-                cssBundles.push(appInfo.cssBundle);
-            }
-
-            return cssBundles;
-        }, []);
-    };
-
-    #getRouteScriptRefs = async (reqUrl) => {
+    #getRouteAssets = async (reqUrl) => {
         const registryConf = await this.#registry.getConfig();
         const route = await this.#router.getRouteInfo(reqUrl);
 
@@ -98,10 +79,19 @@ module.exports = class ConfigsInjector {
                 routeAssets.spaBundles.push(appInfo.spaBundle);
             }
 
-            return routeAssets;
-        }, {spaBundles: [], dependencies: {}});
+            const stylesheetLink = this.#wrapWithFragmentStylesheetLink(appInfo.cssBundle, slotData.appName);
 
-        return _.concat(routeAssets.spaBundles, _.values(routeAssets.dependencies));
+            if (!_.includes(routeAssets.stylesheetLinks, stylesheetLink)) {
+                routeAssets.stylesheetLinks.push(stylesheetLink);
+            }
+
+            return routeAssets;
+        }, {spaBundles: [], dependencies: {}, stylesheetLinks: []});
+
+        return {
+            scriptLinks: _.map(_.concat(routeAssets.spaBundles, _.values(routeAssets.dependencies)), this.#wrapWithLinkToPreloadScript),
+            stylesheetLinks: routeAssets.stylesheetLinks,
+        };
     };
 
     #getPolyfill = () => {
@@ -154,6 +144,10 @@ module.exports = class ConfigsInjector {
     #wrapWithLinkToPreloadScript = (url) => {
         return `<link rel="preload" href="${url}" as="script" ${this.#getCrossoriginAttribute(url)}>`;
     };
+
+    #wrapWithFragmentStylesheetLink = (url, fragmentId) => {
+        return `<link rel="stylesheet" type="text/css" href="${url}" data-fragment-id="${fragmentId}">`;
+    }
 
     #getCrossoriginAttribute = (url) => {
         return (this.#cdnUrl !== null && url.includes(this.#cdnUrl)) || url.includes('://') ? 'crossorigin' : '';

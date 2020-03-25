@@ -18,11 +18,15 @@ function insertStart(stream, attributes, headers, index) {
             stream.write(
                 isAsync
                     ? `<!-- Async fragments are not fully implemented yet: ${ref.uri} -->`
-                    : `<link rel="stylesheet" href="${ref.uri}"${
-                        id !== undefined
-                            ? ` data-fragment-id="${id}"`
-                            : ''
-                        }>`
+                    : id
+                        ?
+                            '<script>(function(url, id){' + 
+                                `const link = document.head.querySelector('link[data-fragment-id="' + id + '"]');` +
+                                'if (link) {' +
+                                    `link.href = url;` +
+                                '}' +
+                            `})("${ref.uri}", "${id}");document.currentScript.remove();</script>`
+                        : ''
             );
         } else if (ref.rel === 'fragment-script') {
             bundleVersionOverrides.spaBundle = ref.uri;
