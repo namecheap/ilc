@@ -55,7 +55,7 @@ export default class ClientRouter {
             // if open any cached page and scroll to "#features" section:
             // only hash will be changed so router.match will return error, since <base> tag has already been removed.
             // so in this cases we shouldn't regenerate currentRoute
-            const newUrl = window.location.pathname + window.location.search
+            const newUrl = window.location.pathname + window.location.search;
             if (currentUrl !== newUrl) {
                 this.#currentRoute = this.#router.match(window.location.pathname + window.location.search);
                 currentUrl = newUrl;

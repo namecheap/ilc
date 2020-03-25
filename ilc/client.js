@@ -7,6 +7,7 @@ import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragm
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
 import initSpaConfig from './client/initSpaConfig';
 import setupPerformanceMonitoring from './client/performance';
+import { getSlotElement } from './client/utils';
 
 const System = window.System;
 if (System === undefined) {
@@ -60,7 +61,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
             },
             isActiveFactory(appName, slotName),
             {
-                domElementGetter: () => document.getElementById(slotName),
+                domElementGetter: () => getSlotElement(slotName),
                 getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
                 getCurrentBasePath: () => router.getCurrentRoute().basePath,
                 errorHandler: fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName)

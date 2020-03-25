@@ -1,3 +1,5 @@
+import { getSlotElement } from './utils';
+
 import scrollRestorer from '@mapbox/scroll-restorer';
 scrollRestorer.start({ autoRestore: false });
 
@@ -59,16 +61,17 @@ export const addContentListener = slotName => {
         }
     });
     contentListeners.push(observer);
-    const targetNode = document.getElementById(slotName);
+    const targetNode = getSlotElement(slotName);
     targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
     hiddenSlots.push(targetNode);
     observer.observe(targetNode, { childList: true });
 };
 
-export const renderFakeSlot = nodeId => {
-    const targetNode = document.getElementById(nodeId);
+export const renderFakeSlot = slotName => {
+    const targetNode = getSlotElement(slotName);
     const clonedNode = targetNode.cloneNode(true);
     clonedNode.removeAttribute('id');
+    clonedNode.removeAttribute('class');
     fakeSlots.push(clonedNode);
     targetNode.parentNode.insertBefore(clonedNode, targetNode.nextSibling);
     targetNode.style.display = 'none'; // we hide old slot because fake already in the DOM.
