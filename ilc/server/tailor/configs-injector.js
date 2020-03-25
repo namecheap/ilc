@@ -77,10 +77,12 @@ module.exports = class ConfigsInjector {
                 routeAssets.spaBundles.push(appInfo.spaBundle);
             }
 
-            const stylesheetLink = this.#wrapWithFragmentStylesheetLink(appInfo.cssBundle, slotData.appName);
-
-            if (!_.includes(routeAssets.stylesheetLinks, stylesheetLink)) {
-                routeAssets.stylesheetLinks.push(stylesheetLink);
+            if (appInfo.cssBundle) {
+                const stylesheetLink = this.#wrapWithFragmentStylesheetLink(appInfo.cssBundle, slotData.appName);
+    
+                if (!_.includes(routeAssets.stylesheetLinks, stylesheetLink)) {
+                    routeAssets.stylesheetLinks.push(stylesheetLink);
+                }
             }
 
             return routeAssets;
