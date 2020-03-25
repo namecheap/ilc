@@ -36,8 +36,8 @@ module.exports = class ConfigsInjector {
         const routeAssets = await this.#getRouteAssets(reqUrl);
         
         document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(
-            ...routeAssets.scriptLinks,
             ...routeAssets.stylesheetLinks,
+            ...routeAssets.scriptLinks,
         ));
 
         return document;
