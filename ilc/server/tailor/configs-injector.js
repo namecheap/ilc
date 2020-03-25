@@ -129,7 +129,7 @@ module.exports = class ConfigsInjector {
     };
 
     #wrapWithFragmentStylesheetLink = (url, fragmentId) => {
-        return `<link rel="stylesheet" type="text/css" href="${url}" data-fragment-id="${fragmentId}">`;
+        return `<link rel="stylesheet" href="${url}" data-fragment-id="${fragmentId}">`;
     }
 
     #getCrossoriginAttribute = (url) => {
