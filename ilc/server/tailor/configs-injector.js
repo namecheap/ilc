@@ -156,7 +156,7 @@ module.exports = class ConfigsInjector {
     };
 
     #getCrossoriginAttribute = (url) => {
-        return (this.#cdnUrl !== null && url.includes(this.#cdnUrl)) || !url.includes('://') ? '' : 'crossorigin';
+        return (this.#cdnUrl !== null && url.includes(this.#cdnUrl)) || url.includes('://') ? 'crossorigin' : '';
     };
 
     #wrapWithIgnoreDuringParsing = (...content) => `<!-- TailorX: Ignore during parsing START -->${content.join('')}<!-- TailorX: Ignore during parsing END -->`;
