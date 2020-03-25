@@ -22,10 +22,10 @@ function insertStart(stream, attributes, headers, index) {
                         ?
                             '<script>(function(url, id){' + 
                                 `const link = document.head.querySelector('link[data-fragment-id="' + id + '"]');` +
-                                'if (link) {' +
+                                'if (link && link.href !== url) {' +
                                     `link.href = url;` +
                                 '}' +
-                            `})("${ref.uri}", "${id}");document.currentScript.remove();</script>`
+                            `})("${ref.uri}", "${id}");</script>`
                         : ''
             );
         } else if (ref.rel === 'fragment-script') {
