@@ -24,7 +24,6 @@ module.exports = class ConfigsInjector {
         const regConf = registryConf.data;
 
         document = document.replace('</body>', this.#wrapWithIgnoreDuringParsing(
-            this.#hideHTMLtoAvoidFOUC(false),
             this.#getSPAConfig(regConf),
             this.#getPolyfill(),
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
@@ -32,45 +31,25 @@ module.exports = class ConfigsInjector {
 
         document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
             newrelic.getBrowserTimingHeader(),
-            this.#hideHTMLtoAvoidFOUC(),
         ) + '</head>');
 
-        const scriptRefs = await this.#getRouteScriptRefs(reqUrl);
-
+        const routeAssets = await this.#getRouteAssets(reqUrl);
+        
         document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(
-            ...scriptRefs.map(this.#wrapWithLinkToPreloadScript),
+            ...routeAssets.stylesheetLinks,
+            ...routeAssets.scriptLinks,
         ));
 
         return document;
     }
 
-    getAssetsToPreload = async (request) => {
-        const styleRefs = await this.#getRouteCssBundles(request.url);
-
+    getAssetsToPreload = async () => {
         return {
             scriptRefs: [this.#getClientjsUrl()],
-            styleRefs,
         };
     };
 
-    #getRouteCssBundles = async (reqUrl) => {
-        const registryConf = await this.#registry.getConfig();
-        const route = await this.#router.getRouteInfo(reqUrl);
-
-        const apps = registryConf.data.apps;
-
-        return _.reduce(route.slots, (cssBundles, slotData) => {
-            const appInfo = apps[slotData.appName];
-
-            if (!_.includes(cssBundles, appInfo.cssBundle)) {
-                cssBundles.push(appInfo.cssBundle);
-            }
-
-            return cssBundles;
-        }, []);
-    };
-
-    #getRouteScriptRefs = async (reqUrl) => {
+    #getRouteAssets = async (reqUrl) => {
         const registryConf = await this.#registry.getConfig();
         const route = await this.#router.getRouteInfo(reqUrl);
 
@@ -98,10 +77,19 @@ module.exports = class ConfigsInjector {
                 routeAssets.spaBundles.push(appInfo.spaBundle);
             }
 
-            return routeAssets;
-        }, {spaBundles: [], dependencies: {}});
+            const stylesheetLink = this.#wrapWithFragmentStylesheetLink(appInfo.cssBundle, slotData.appName);
 
-        return _.concat(routeAssets.spaBundles, _.values(routeAssets.dependencies));
+            if (!_.includes(routeAssets.stylesheetLinks, stylesheetLink)) {
+                routeAssets.stylesheetLinks.push(stylesheetLink);
+            }
+
+            return routeAssets;
+        }, {spaBundles: [], dependencies: {}, stylesheetLinks: []});
+
+        return {
+            scriptLinks: _.map(_.concat(routeAssets.spaBundles, _.values(routeAssets.dependencies)), this.#wrapWithLinkToPreloadScript),
+            stylesheetLinks: routeAssets.stylesheetLinks,
+        };
     };
 
     #getPolyfill = () => {
@@ -132,21 +120,6 @@ module.exports = class ConfigsInjector {
         return `<script type="spa-config">${JSON.stringify(_.omit(registryConf, ['templates']))}</script>`;
     };
 
-    /**
-     * This style is needed to avoid a flash of unstyled content (FOUC) on Firefox
-     * 
-     * @see {@link https://bugzilla.mozilla.org/show_bug.cgi?id=1404468}
-     * @see {@link https://petrey.co/2017/05/the-most-effective-way-to-avoid-the-fouc/}
-     * @see {@link https://gist.github.com/electrotype/7960ddcc44bc4aea07a35603d1c41cb0#file-fouc-fix-md}
-     * @see {@link https://stackoverflow.com/questions/952861/targeting-only-firefox-with-css}
-     */
-    #hideHTMLtoAvoidFOUC = (hideHTML = true) => {
-        const visibility = hideHTML ? 'hidden' : 'visible';
-        const opacity = hideHTML ? 0 : 1;
-
-        return `<style>@supports (-moz-appearance:none) { html { visibility: ${visibility}; opacity: ${opacity}; }}</style>`;
-    }
-
     #wrapWithAsyncScriptTag = (url) => {
         return `<script src="${url}" type="text/javascript" ${this.#getCrossoriginAttribute(url)} async></script>`;
     };
@@ -154,6 +127,10 @@ module.exports = class ConfigsInjector {
     #wrapWithLinkToPreloadScript = (url) => {
         return `<link rel="preload" href="${url}" as="script" ${this.#getCrossoriginAttribute(url)}>`;
     };
+
+    #wrapWithFragmentStylesheetLink = (url, fragmentId) => {
+        return `<link rel="stylesheet" href="${url}" data-fragment-id="${fragmentId}">`;
+    }
 
     #getCrossoriginAttribute = (url) => {
         return (this.#cdnUrl !== null && url.includes(this.#cdnUrl)) || url.includes('://') ? 'crossorigin' : '';

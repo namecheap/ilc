@@ -15,20 +15,6 @@ if (System === undefined) {
     throw new Error('ILC: can\'t find SystemJS on a page, crashing everything');
 }
 
-// Tailor injects <link> tags near SSRed body of the app inside "slot" tag
-// this causes removal of the loaded CSS from the DOM after app unmount.
-// So we're "saving" such elements by moving them to the <head>
-Array.prototype.slice.call(document.body.querySelectorAll('link[data-fragment-id]')).reduce((hrefs, link) => {
-    if (hrefs.has(link.href)) {
-        link.parentNode.removeChild(link)
-    } else {
-        hrefs.add(link.href);
-        document.head.append(link);
-    }
-
-    return hrefs;
-}, new Set());
-
 const registryConf = initSpaConfig();
 const router = new Router(registryConf);
 
