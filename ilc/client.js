@@ -116,7 +116,7 @@ singleSpa.setUnloadMaxTime(3000, false);
 singleSpa.start({ urlRerouteOnly: true });
 };
 
-if (window.localStorage.getItem('nei') === 'on') {
+if (window.location.search === '?nei') {
     console.log('START delay');
     console.time('qwe');
     requestIdleCallback(() => {
@@ -124,7 +124,7 @@ if (window.localStorage.getItem('nei') === 'on') {
         runSingleSpa();
     });
 } else {
-    console.timeEnd('START immediately');
+    console.log('START immediately');
     runSingleSpa();
 }
 
