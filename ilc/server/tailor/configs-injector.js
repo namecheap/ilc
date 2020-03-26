@@ -13,7 +13,6 @@ module.exports = class ConfigsInjector {
         this.#cdnUrl = cdnUrl;
     }
 
-
     async inject(document, reqUrl) {
         if (typeof document !== 'string' || document.indexOf('<head>') === -1 || document.indexOf('</body>') === -1) {
             throw new Error(`Can't inject ILC configs into invalid document.`);
@@ -28,25 +27,45 @@ module.exports = class ConfigsInjector {
             this.#getPolyfill(),
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
         ) + '</body>');
+        
+        const routeAssets = await this.#getRouteAssets(reqUrl);
 
         document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
+            ...routeAssets.scriptLinks,
             newrelic.getBrowserTimingHeader(),
         ) + '</head>');
 
-        const routeAssets = await this.#getRouteAssets(reqUrl);
-        
         document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.stylesheetLinks,
-            ...routeAssets.scriptLinks,
         ));
 
         return document;
     }
 
-    getAssetsToPreload = async () => {
+    getAssetsToPreload = async (request) => {
+        const styleRefs = await this.#getRouteStyleRefsToPreload(request.url);
+
         return {
-            scriptRefs: [this.#getClientjsUrl()],
+            scriptRefs: [],
+            styleRefs,
         };
+    };
+
+    #getRouteStyleRefsToPreload = async (reqUrl) => {
+        const registryConf = await this.#registry.getConfig();
+        const route = await this.#router.getRouteInfo(reqUrl);
+
+        const apps = registryConf.data.apps;
+
+        return _.reduce(route.slots, (styleRefs, slotData) => {
+            const appInfo = apps[slotData.appName];
+
+            if (appInfo.cssBundle && !_.includes(styleRefs, appInfo.cssBundle)) {
+                styleRefs.push(appInfo.cssBundle);
+            }
+
+            return styleRefs;
+        }, []);
     };
 
     #getRouteAssets = async (reqUrl) => {
@@ -79,17 +98,19 @@ module.exports = class ConfigsInjector {
 
             if (appInfo.cssBundle) {
                 const stylesheetLink = this.#wrapWithFragmentStylesheetLink(appInfo.cssBundle, slotData.appName);
-    
+
                 if (!_.includes(routeAssets.stylesheetLinks, stylesheetLink)) {
                     routeAssets.stylesheetLinks.push(stylesheetLink);
                 }
             }
 
             return routeAssets;
-        }, {spaBundles: [], dependencies: {}, stylesheetLinks: []});
+        }, { spaBundles: [], dependencies: {}, stylesheetLinks: [] });
+
+        const scriptRefs = _.concat([this.#getClientjsUrl()], routeAssets.spaBundles, _.values(routeAssets.dependencies));
 
         return {
-            scriptLinks: _.map(_.concat(routeAssets.spaBundles, _.values(routeAssets.dependencies)), this.#wrapWithLinkToPreloadScript),
+            scriptLinks: _.map(scriptRefs, this.#wrapWithLinkToPreloadScript),
             stylesheetLinks: routeAssets.stylesheetLinks,
         };
     };
