@@ -6,6 +6,7 @@ import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragm
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
 import initSpaConfig from './client/initSpaConfig';
 import setupPerformanceMonitoring from './client/performance';
+import selectSlotsToRegister from './client/selectSlotsToRegister';
 import { getSlotElement } from './client/utils';
 
 const System = window.System;
@@ -18,17 +19,19 @@ const registryConf = initSpaConfig();
 const router = new Router(registryConf);
 
 const perfStart = performance.now();
-for (let item of window.ilcApps) {
-    registerApplication(item);
+let afterRoutingEvent = false;
+const appsWaitingForSlot = {};
+for (let id of window.ilcApps) {
+    appsWaitingForSlot[id] && appsWaitingForSlot[id]();
 }
-window.ilcApps = {push: registerApplication};
+window.ilcApps = {push: (id) => (appsWaitingForSlot[id] && appsWaitingForSlot[id]())};
 
-function registerApplication({slotName, appName}) {
-    const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
+selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
+    Object.keys(slots).forEach((slotName) => {
+        const appName = slots[slotName].appName;
 
-    console.info(`ILC: Registering ${fragmentName} after ` + (performance.now() - perfStart) + ` milliseconds.`);
+        const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
 
-    setTimeout(() => {
         singleSpa.registerApplication(
             fragmentName,
             () => {
@@ -44,6 +47,19 @@ function registerApplication({slotName, appName}) {
                     }));
                 }
 
+                const waitForSlot = new Promise(resolve => {
+                    const id = `${appName}:::${slotName}`;
+                    try {
+                        getSlotElement(slotName);
+                        return resolve();
+                    } catch (e) {}
+
+                    appsWaitingForSlot[id] = resolve;
+                }).then(() => {
+                    !afterRoutingEvent && console.info(`ILC: Registering ${fragmentName} after ` + (performance.now() - perfStart) + ` milliseconds.`);
+                });
+                waitTill.push(waitForSlot);
+
                 return Promise.all(waitTill)
                     .then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
             },
@@ -56,7 +72,8 @@ function registerApplication({slotName, appName}) {
             }
         );
     });
-}
+});
+window.addEventListener('single-spa:routing-event', () => (afterRoutingEvent = true));
 
 function isActiveFactory(appName, slotName) {
     let reload = false;

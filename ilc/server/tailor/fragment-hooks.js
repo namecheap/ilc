@@ -48,7 +48,7 @@ function insertEnd(stream, attributes, headers, index) {
     //TODO: pass spa-config-override here
     //TODO: Move link related script here
     stream.write(`<script>` +
-        `window.ilcApps.push({slotName: document.currentScript.parentElement.id, appName: '${attributes.id}'});` +
+        `window.ilcApps.push('${attributes.id}:::' + document.currentScript.parentElement.id);` +
         `</script>`);
 }
 
