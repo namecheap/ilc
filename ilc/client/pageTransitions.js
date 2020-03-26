@@ -1,7 +1,7 @@
 import { getSlotElement } from './utils';
 
 import scrollRestorer from '@mapbox/scroll-restorer';
-scrollRestorer.start({ autoRestore: false });
+scrollRestorer.start({ autoRestore: false, captureScrollDebounce: 150 });
 
 let globalSpinner, spinnerTimeout;
 const runGlobalSpinner = () => {
