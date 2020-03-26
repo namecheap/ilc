@@ -31,6 +31,7 @@ module.exports = function (cdnUrl) {
         getAssetsToPreload: configsInjector.getAssetsToPreload,
         filterResponseHeaders: (attributes, headers) => _.pick(headers, ['set-cookie']),
         baseTemplatesCacheSize: 1,
+        shouldSetPrimaryFragmentAssetsToPreload: false,
     });
 
     errorHandlerSetup(tailor);
