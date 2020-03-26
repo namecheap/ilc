@@ -1,7 +1,6 @@
 import * as singleSpa from 'single-spa';
 
 import Router from './common/router/ClientRouter';
-import selectSlotsToRegister from './client/selectSlotsToRegister';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
 import { renderFakeSlot, addContentListener } from './client/pageTransitions';
@@ -18,12 +17,18 @@ if (System === undefined) {
 const registryConf = initSpaConfig();
 const router = new Router(registryConf);
 
-selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
-    Object.keys(slots).forEach((slotName) => {
-        const appName = slots[slotName].appName;
+const perfStart = performance.now();
+for (let item of window.ilcApps) {
+    registerApplication(item);
+}
+window.ilcApps = {push: registerApplication};
 
-        const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
+function registerApplication({slotName, appName}) {
+    const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
 
+    console.info(`ILC: Registering ${fragmentName} after ` + (performance.now() - perfStart) + ` milliseconds.`);
+
+    setTimeout(() => {
         singleSpa.registerApplication(
             fragmentName,
             () => {
@@ -51,7 +56,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
             }
         );
     });
-});
+}
 
 function isActiveFactory(appName, slotName) {
     let reload = false;

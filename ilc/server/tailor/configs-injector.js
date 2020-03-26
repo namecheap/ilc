@@ -23,9 +23,6 @@ module.exports = class ConfigsInjector {
         const regConf = registryConf.data;
 
         document = document.replace('</body>', this.#wrapWithIgnoreDuringParsing(
-            this.#getSPAConfig(regConf),
-            this.#getPolyfill(),
-            this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
         ) + '</body>');
         
         const routeAssets = await this.#getRouteAssets(reqUrl);
@@ -33,6 +30,10 @@ module.exports = class ConfigsInjector {
         document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.scriptLinks,
             newrelic.getBrowserTimingHeader(),
+            this.#getSPAConfig(regConf),
+            `<script>window.ilcApps = [];</script>`,
+            this.#getPolyfill(),
+            this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
         ) + '</head>');
 
         document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(

@@ -44,7 +44,12 @@ function insertStart(stream, attributes, headers, index) {
 }
 
 function insertEnd(stream, attributes, headers, index) {
-    //disabling default behaviour
+    //TODO: document.currentScript doesn't work in IE, pass slot name via custom TailorX props
+    //TODO: pass spa-config-override here
+    //TODO: Move link related script here
+    stream.write(`<script>` +
+        `window.ilcApps.push({slotName: document.currentScript.parentElement.id, appName: '${attributes.id}'});` +
+        `</script>`);
 }
 
 module.exports = {
