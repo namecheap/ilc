@@ -9,6 +9,7 @@ import initSpaConfig from './client/initSpaConfig';
 import setupPerformanceMonitoring from './client/performance';
 import { getSlotElement } from './client/utils';
 
+const runSingleSpa = () => {
 const System = window.System;
 if (System === undefined) {
     crashIlc();
@@ -113,3 +114,17 @@ singleSpa.setUnmountMaxTime(3000, false);
 singleSpa.setUnloadMaxTime(3000, false);
 
 singleSpa.start({ urlRerouteOnly: true });
+};
+
+if (window.localStorage.getItem('nei') === 'on') {
+    console.log('START delay');
+    console.time('qwe');
+    requestIdleCallback(() => {
+        console.timeEnd('qwe');
+        runSingleSpa();
+    });
+} else {
+    console.timeEnd('START immediately');
+    runSingleSpa();
+}
+
