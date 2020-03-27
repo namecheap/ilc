@@ -13,11 +13,14 @@ interface IncludesAttributes {
     [include: string]: IncludeAttributes
 }
 
-async function renderTemplate(template: string): Promise<string> {
+async function renderTemplate(template: string): Promise<{content: string, styleRefs: Array<string>}> {
     const includesAttributes = matchIncludesAttributes(template);
 
     if (!Object.keys(includesAttributes).length) {
-        return template;
+        return {
+            content: template,
+            styleRefs: [],
+        };
     }
 
     const duplicateIncludesAttributes = selectDuplicateIncludesAttributes(includesAttributes);
@@ -29,13 +32,22 @@ async function renderTemplate(template: string): Promise<string> {
         );
     };
 
-    const includesData = await fetchIncludes(includesAttributes);
+    const includes = await fetchIncludes(includesAttributes);
 
-    return Object.keys(includesAttributes).reduce((
+    const content = Object.keys(includesAttributes).reduce((
         template: string,
         include: string,
         includeDataIndex: number,
-    ) => template.split(include).join(includesData[includeDataIndex]), template);
+    ) => template.split(include).join(includes[includeDataIndex].data), template);
+
+    const styleRefs = includes
+        .reduce((styleRefs: Array<string>, currInclude) => styleRefs.concat(currInclude.styleRefs), [])
+        .filter((styleRef, index, styleRefs) => styleRefs.indexOf(styleRef) === index);
+
+    return {
+        content,
+        styleRefs,
+    };
 };
 
 function matchIncludesAttributes(template: string): IncludesAttributes {
@@ -81,7 +93,7 @@ function selectDuplicateIncludesAttributes(includesAttributes: IncludesAttribute
         attributes.findIndex(({ id, src }: IncludeAttributes) => id === currentAttributes.id || src === currentAttributes.src) !== index);
 }
 
-async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Array<string>> {
+async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Array<{data: string, styleRefs: Array<string>}>> {
     const includes = Object.keys(includesAttributes);
 
     if (!includes.length) {
@@ -109,35 +121,47 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
                 timeout: +timeout,
             });
 
+            let styleRefs: Array<string> = [];
+
             if (link) {
-                const stylesheets = selectStylesheets(link);
-                data = stylesheets.join('\n') + data;
+                styleRefs = selectStyleRefs(link);
+                data = styleRefs.map(wrapWithStylesheetLink).join('\n') + data;
             }
 
-            return wrapWithComments(id, data);
+            return {
+                data: wrapWithComments(id, data),
+                styleRefs,
+            };
         } catch (error) {
             noticeError(error, {
                 type: 'FETCH_INCLUDE_ERROR',
                 errorId: uuidv4(),
             });
 
-            return include;
+            return {
+                data: include,
+                styleRefs: [],
+            };
         }
     }));
 }
 
-function selectStylesheets(link: string): Array<string> {
+function selectStyleRefs(link: string): Array<string> {
     const includeLinkHeader = parseLinkHeader(link);
 
-    return includeLinkHeader.reduce((stylesheets: Array<string>, attributes: any) => {
+    return includeLinkHeader.reduce((styleRefs: Array<string>, attributes: any) => {
         if (attributes.rel !== 'stylesheet') {
-            return stylesheets;
+            return styleRefs;
         }
 
-        stylesheets.push(`<link rel="stylesheet" href="${attributes.uri}">`);
+        styleRefs.push(attributes.uri);
 
-        return stylesheets;
+        return styleRefs;
     }, []);
+}
+
+function wrapWithStylesheetLink(styleRef: string): string {
+    return `<link rel="stylesheet" href="${styleRef}">`;
 }
 
 function wrapWithComments(id: string, data: string): string {

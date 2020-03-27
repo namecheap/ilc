@@ -156,6 +156,7 @@ describe(`Tests ${example.url}`, () => {
             await request.delete(example.url + template.name).expect(204);
 
             expect(response.body).to.eql({
+                styleRefs: ['https://my.awesome.server/my-awesome-stylesheet.css'],
                 name: template.name,
                 content: `
                     <html>

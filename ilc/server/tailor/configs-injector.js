@@ -54,10 +54,11 @@ module.exports = class ConfigsInjector {
     #getRouteStyleRefsToPreload = async (reqUrl) => {
         const registryConf = await this.#registry.getConfig();
         const route = await this.#router.getRouteInfo(reqUrl);
+        const baseTemplate = await this.#registry.getTemplate(route.template);
 
         const apps = registryConf.data.apps;
 
-        return _.reduce(route.slots, (styleRefs, slotData) => {
+        const routeStyleRefs = _.reduce(route.slots, (styleRefs, slotData) => {
             const appInfo = apps[slotData.appName];
 
             if (appInfo.cssBundle && !_.includes(styleRefs, appInfo.cssBundle)) {
@@ -66,6 +67,10 @@ module.exports = class ConfigsInjector {
 
             return styleRefs;
         }, []);
+
+        const styleRefs = _.concat(routeStyleRefs, baseTemplate.data.styleRefs);
+
+        return _.filter(styleRefs, (styleRef, index, styleRefs) => styleRefs.indexOf(styleRef) === index);
     };
 
     #getRouteAssets = async (reqUrl) => {
