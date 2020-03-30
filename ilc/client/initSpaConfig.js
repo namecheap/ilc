@@ -1,5 +1,3 @@
-import deepmerge from "deepmerge";
-
 export default function () {
     const confScript = document.querySelector('script[type="spa-config"]');
     if (confScript === null) {
@@ -8,10 +6,6 @@ export default function () {
 
     const registryConf = JSON.parse(confScript.innerHTML);
 
-    Array.prototype.slice.call(document.querySelectorAll('script[type="spa-config-override"]')).map(el => {
-        const conf = JSON.parse(el.innerHTML);
-        registryConf.apps = deepmerge(registryConf.apps, conf);
-    });
     document.head.appendChild(getSystemjsImportmap(registryConf.apps));
 
     return registryConf;
