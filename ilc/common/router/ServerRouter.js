@@ -10,7 +10,7 @@ module.exports = class ServerRouter {
     #logger;
     /** @type {Registry} */
     #registry;
-    #registryConfig = null;
+    #checkAfter = 0;
 
     /** @type {Router} */
     #router = null;
@@ -26,7 +26,9 @@ module.exports = class ServerRouter {
     }
 
     async getTemplateInfo(reqUrl) {
-        const route = await this.getRouteInfo(reqUrl);
+        const registryConfig = await this.#registry.getConfig();
+        const router = this.#getRouter(registryConfig);
+        const route = router.match(reqUrl);
         const template = await this.#registry.getTemplate(route.template);
 
         if (template === undefined) {
@@ -36,32 +38,25 @@ module.exports = class ServerRouter {
         return {
             route,
             template: template.data,
-            registryConfig: this.#registryConfig,
-            page: this.#generatePageTpl(route),
+            registryConfig,
+            page: this.#generatePageTpl(route, registryConfig.data.apps),
         }
-    }
+    }   
 
-    async getRouteInfo(reqUrl) {
-        const router = await this.#getRouter();
-        return router.match(reqUrl);
-    }
-
-    #getRouter = async () => {
-        const now = Math.floor(Date.now() / 1000);
-
-        if (this.#router === null || (this.#registryConfig !== null && this.#registryConfig.checkAfter < now)) {
-            this.#registryConfig = await this.#registry.getConfig();
-            this.#router = new Router(this.#registryConfig.data);
+    #getRouter = (registryConfig) => {
+        if (this.#router === null || registryConfig.checkAfter !== this.#checkAfter) {
+            this.#checkAfter = registryConfig.checkAfter;
+            this.#router = new Router(registryConfig.data);
         }
 
         return this.#router;
     };
 
-    #generatePageTpl = (route) => {
+    #generatePageTpl = (route, apps) => {
         let primarySlotDetected = false;
 
         return _.reduce(route.slots, (res, slotData, slotName) => {
-            const appInfo = this.#registryConfig.data.apps[slotData.appName];
+            const appInfo = apps[slotData.appName];
 
             if (appInfo === undefined) {
                 throw new Error('Can\'t find info about app: ' + slotData.appName);
