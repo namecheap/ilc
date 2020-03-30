@@ -38,7 +38,7 @@ module.exports = class ServerRouter {
         return {
             route,
             template: template.data,
-            registryConfig,
+            registryConfig: registryConfig.data,
             page: this.#generatePageTpl(route, registryConfig.data.apps),
         }
     }   

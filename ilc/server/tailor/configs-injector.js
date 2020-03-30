@@ -23,12 +23,12 @@ module.exports = class ConfigsInjector {
         }
 
         document = document.replace('</body>', this.#wrapWithIgnoreDuringParsing(
-            this.#getSPAConfig(registryConfig.data),
+            this.#getSPAConfig(registryConfig),
             this.#getPolyfill(),
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
         ) + '</body>');
         
-        const routeAssets = this.#getRouteAssets(registryConfig.data.apps, route.slots);
+        const routeAssets = this.#getRouteAssets(registryConfig.apps, route.slots);
 
         document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.scriptLinks,
@@ -39,7 +39,7 @@ module.exports = class ConfigsInjector {
             ...routeAssets.stylesheetLinks,
         ));
 
-        request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.data.apps, route.slots, template.styleRefs);
+        request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, route.slots, template.styleRefs);
 
         return document;
     }
