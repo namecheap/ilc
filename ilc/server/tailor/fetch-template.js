@@ -26,6 +26,7 @@ module.exports = (templatesPath, router, configsInjector, newrelic) => async (
     tplInfo.base = tplInfo.base.replace(/<ilc-slot\s+id="(.+)"\s*\/?>/gm, function (match, id) {
         return `<!-- Region "${id}" START -->\n` +
             `<div id="${id}"><slot name="${id}"></slot></div>\n` +
+            `<script>window.ilcApps.push('${id}');</script>\n` +
             `<!-- Region "navbar" END -->`;
     });
 

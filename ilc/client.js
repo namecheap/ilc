@@ -8,6 +8,7 @@ import initSpaConfig from './client/initSpaConfig';
 import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import { getSlotElement } from './client/utils';
+import * as asyncBootup from './client/asyncBootup';
 
 const System = window.System;
 if (System === undefined) {
@@ -18,13 +19,7 @@ if (System === undefined) {
 const registryConf = initSpaConfig();
 const router = new Router(registryConf);
 
-const perfStart = performance.now();
-let afterRoutingEvent = false;
-const appsWaitingForSlot = {};
-for (let id of window.ilcApps) {
-    appsWaitingForSlot[id] && appsWaitingForSlot[id]();
-}
-window.ilcApps = {push: (id) => (appsWaitingForSlot[id] && appsWaitingForSlot[id]())};
+asyncBootup.init();
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
@@ -34,31 +29,23 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
 
         singleSpa.registerApplication(
             fragmentName,
-            () => {
-                const waitTill = [System.import(appName)];
+            async () => {
                 const appConf = registryConf.apps[appName];
 
-                if (appConf.cssBundle !== undefined) {
-                    waitTill.push(System.import(appConf.cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
+                const overrides = await asyncBootup.waitForSlot(slotName);
+                const spaBundle = overrides.spaBundle ? overrides.spaBundle : appConf.spaBundle;
+                const cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
+
+                const waitTill = [System.import(spaBundle)];
+
+                if (cssBundle !== undefined) {
+                    waitTill.push(System.import(cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
                         //TODO: error handling should be improved, need to submit PR with typed errors
                         if (err.message.indexOf('has already been loaded using another way') === -1) {
                             throw err;
                         }
                     }));
                 }
-
-                const waitForSlot = new Promise(resolve => {
-                    const id = `${appName}:::${slotName}`;
-                    try {
-                        getSlotElement(slotName);
-                        return resolve();
-                    } catch (e) {}
-
-                    appsWaitingForSlot[id] = resolve;
-                }).then(() => {
-                    !afterRoutingEvent && console.info(`ILC: Registering ${fragmentName} after ` + (performance.now() - perfStart) + ` milliseconds.`);
-                });
-                waitTill.push(waitForSlot);
 
                 return Promise.all(waitTill)
                     .then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
@@ -73,7 +60,6 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
         );
     });
 });
-window.addEventListener('single-spa:routing-event', () => (afterRoutingEvent = true));
 
 function isActiveFactory(appName, slotName) {
     let reload = false;

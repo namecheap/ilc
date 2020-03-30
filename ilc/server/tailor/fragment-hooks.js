@@ -39,17 +39,12 @@ function insertStart(stream, attributes, headers, index) {
     });
 
     if (Object.keys(bundleVersionOverrides).length > 0) {
-        stream.write(`<script type="spa-config-override">${JSON.stringify({[id]: bundleVersionOverrides})}</script>`);
+        stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
     }
 }
 
 function insertEnd(stream, attributes, headers, index) {
-    //TODO: document.currentScript doesn't work in IE, pass slot name via custom TailorX props
-    //TODO: pass spa-config-override here
-    //TODO: Move link related script here
-    stream.write(`<script>` +
-        `window.ilcApps.push('${attributes.id}:::' + document.currentScript.parentElement.id);` +
-        `</script>`);
+    // disabling default TailorX behaviour
 }
 
 module.exports = {
