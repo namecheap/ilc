@@ -10,7 +10,7 @@ module.exports = class ServerRouter {
     #logger;
     /** @type {Registry} */
     #registry;
-    #checkAfter = 0;
+    #registryConfig = null;
 
     /** @type {Router} */
     #router = null;
@@ -27,15 +27,16 @@ module.exports = class ServerRouter {
 
     async getTemplateInfo(reqUrl) {
         const route = await this.getRouteInfo(reqUrl);
-        const baseTemplate = await this.#registry.getTemplate(route.template);
+        const template = await this.#registry.getTemplate(route.template);
 
-        if (baseTemplate === undefined) {
+        if (template === undefined) {
             throw new Error('Can\'t match route base template to config map');
         }
 
         return {
-            routeName: route.route,
-            base: baseTemplate.data.content,
+            route,
+            template: template.data,
+            registryConfig: this.#registryConfig,
             page: this.#generatePageTpl(route),
         }
     }
@@ -48,13 +49,9 @@ module.exports = class ServerRouter {
     #getRouter = async () => {
         const now = Math.floor(Date.now() / 1000);
 
-        if (this.#router === null || this.#checkAfter < now) {
-            const conf = await this.#registry.getConfig();
-
-            this.#router = new Router(conf.data);
-            this.__apps = conf.data.apps;
-
-            this.#checkAfter = conf.checkAfter;
+        if (this.#router === null || (this.#registryConfig !== null && this.#registryConfig.checkAfter < now)) {
+            this.#registryConfig = await this.#registry.getConfig();
+            this.#router = new Router(this.#registryConfig.data);
         }
 
         return this.#router;
@@ -64,7 +61,7 @@ module.exports = class ServerRouter {
         let primarySlotDetected = false;
 
         return _.reduce(route.slots, (res, slotData, slotName) => {
-            const appInfo = this.__apps[slotData.appName];
+            const appInfo = this.#registryConfig.data.apps[slotData.appName];
 
             if (appInfo === undefined) {
                 throw new Error('Can\'t find info about app: ' + slotData.appName);

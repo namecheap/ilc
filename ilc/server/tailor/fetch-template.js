@@ -16,18 +16,16 @@ module.exports = (templatesPath, router, configsInjector, newrelic) => async (
     request,
     parseTemplate
 ) => {
-    const tplInfo = await router.getTemplateInfo(request.url);
+    const templateInfo = await router.getTemplateInfo(request.url);
 
-    const routeName = tplInfo.routeName.replace(/^\/(.+)/, '$1');
+    const routeName = templateInfo.route.route.replace(/^\/(.+)/, '$1');
     if (routeName) {
         newrelic.setTransactionName(routeName);
     }
 
-    const baseTpl = await configsInjector.inject(tplInfo.base, request.url);
+    const baseTemplate = configsInjector.inject(request, templateInfo);
 
-    const pageTemplate = tplInfo.page;
-
-    return parseTemplate(baseTpl, pageTemplate);
+    return parseTemplate(baseTemplate, templateInfo.page);
 };
 
 module.exports.TEMPLATE_ERROR = TEMPLATE_ERROR;
