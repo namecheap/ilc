@@ -12,7 +12,7 @@ export default function () {
         const conf = JSON.parse(el.innerHTML);
         registryConf.apps = deepmerge(registryConf.apps, conf);
     });
-    document.body.appendChild(getSystemjsImportmap(registryConf.apps));
+    document.head.appendChild(getSystemjsImportmap(registryConf.apps));
 
     return registryConf;
 }
