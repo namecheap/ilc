@@ -1,5 +1,5 @@
 const config = require('config');
-const localStorage = require('localStorage');
+const localStorage = require('../../common/localStorage');
 const Registry = require('./Registry');
 const wrapFetchWithCache = require('../../common/wrapWithCache');
 
