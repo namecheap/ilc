@@ -25,6 +25,7 @@ module.exports = class ConfigsInjector {
         const routeAssets = await this.#getRouteAssets(reqUrl);
 
         document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
+            ...routeAssets.scriptLinks,
             newrelic.getBrowserTimingHeader(),
             this.#getSPAConfig(regConf),
             `<script>window.ilcApps = [];</script>`,
@@ -34,7 +35,6 @@ module.exports = class ConfigsInjector {
 
         document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.stylesheetLinks,
-            ...routeAssets.scriptLinks,
         ));
 
         return document;
