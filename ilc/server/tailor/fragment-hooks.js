@@ -39,12 +39,12 @@ function insertStart(stream, attributes, headers, index) {
     });
 
     if (Object.keys(bundleVersionOverrides).length > 0) {
-        stream.write(`<script type="spa-config-override">${JSON.stringify({[id]: bundleVersionOverrides})}</script>`);
+        stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
     }
 }
 
 function insertEnd(stream, attributes, headers, index) {
-    //disabling default behaviour
+    // disabling default TailorX behaviour
 }
 
 module.exports = {

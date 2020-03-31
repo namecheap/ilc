@@ -1,6 +1,6 @@
 import chai from 'chai';
 import sinon from 'sinon';
-import localStorage from 'localStorage';
+import localStorage from './localStorage';
 import wrapWithCache from './wrapWithCache';
 
 describe('wrapWithCache', () => {

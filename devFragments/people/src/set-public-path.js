@@ -11,5 +11,6 @@ export default function setPublicPath() {
 }
 
 function getUrl () {
-  return window.System.resolve('@portal/people')
+  //return window.System.resolve('@portal/people')
+    return 'http://localhost:8236/people.js';
 }

@@ -15,18 +15,16 @@ module.exports = class ConfigsInjector {
         if (typeof document !== 'string' || document.indexOf('<head>') === -1 || document.indexOf('</body>') === -1) {
             throw new Error(`Can't inject ILC configs into invalid document.`);
         }
-
-        document = document.replace('</body>', this.#wrapWithIgnoreDuringParsing(
-            this.#getSPAConfig(registryConfig),
-            this.#getPolyfill(),
-            this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
-        ) + '</body>');
         
         const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);
 
         document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.scriptLinks,
             newrelic.getBrowserTimingHeader(),
+            this.#getSPAConfig(registryConfig),
+            `<script>window.ilcApps = [];</script>`,
+            this.#getPolyfill(),
+            this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
         ) + '</head>');
 
         document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(

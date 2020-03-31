@@ -12,6 +12,7 @@ sources.push(require.resolve('systemjs/dist/system.min'));
 sources.push(require.resolve('./amd.exec.js'));
 sources.push(require.resolve('systemjs/dist/extras/use-default.min'));
 sources.push(require.resolve('systemjs-css-extra/dist/css.min'));
+sources.push(require.resolve('./systemjs-override-importmap'));
 sources.push(require.resolve('./systemjs-name-resolver'));
 
 fs.writeFileSync(`${dest}/system.js`, sources.reduce((res, v) => {
