@@ -27,7 +27,7 @@ module.exports = (templatesPath, router, configsInjector, newrelic) => async (
         return `<!-- Region "${id}" START -->\n` +
             `<div id="${id}"><slot name="${id}"></slot></div>\n` +
             `<script>window.ilcApps.push('${id}');</script>\n` +
-            `<!-- Region "navbar" END -->`;
+            `<!-- Region "${id}" END -->`;
     });
 
     const baseTpl = await configsInjector.inject(tplInfo.base, request.url);
