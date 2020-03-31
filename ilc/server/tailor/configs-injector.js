@@ -4,6 +4,7 @@ const newrelic = require('newrelic');
 
 module.exports = class ConfigsInjector {
     #cdnUrl;
+    #jsInjectionPlaceholder = '<!-- ILC_JS -->';
 
     constructor(cdnUrl = null) {
         this.#cdnUrl = cdnUrl;
@@ -18,14 +19,20 @@ module.exports = class ConfigsInjector {
         
         const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);
 
-        document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
+        const ilcJsScripts = this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.scriptLinks,
-            newrelic.getBrowserTimingHeader(),
             this.#getSPAConfig(registryConfig),
             `<script>window.ilcApps = [];</script>`,
             this.#getPolyfill(),
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
-        ) + '</head>');
+            newrelic.getBrowserTimingHeader(),
+        );
+
+        if (document.includes(this.#jsInjectionPlaceholder)) {
+            document = document.replace(this.#jsInjectionPlaceholder, ilcJsScripts);
+        } else {
+            document = document.replace('</head>', ilcJsScripts + '</head>');
+        }
 
         document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.stylesheetLinks,
