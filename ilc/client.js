@@ -32,6 +32,8 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
             async () => {
                 const appConf = registryConf.apps[appName];
 
+                System.import(appConf.spaBundle); // Speculative preload of the JS bundle
+
                 const overrides = await asyncBootup.waitForSlot(slotName);
                 const spaBundle = overrides.spaBundle ? overrides.spaBundle : appConf.spaBundle;
                 const cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
