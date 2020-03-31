@@ -9,13 +9,7 @@ module.exports = class ConfigsInjector {
         this.#cdnUrl = cdnUrl;
     }
 
-    inject(request, templateInfo) {
-        const {
-            registryConfig,
-            route,
-            template
-        } = templateInfo;
-
+    inject(request, registryConfig, template, slots) {
         let document = template.content;
 
         if (typeof document !== 'string' || document.indexOf('<head>') === -1 || document.indexOf('</body>') === -1) {
@@ -28,7 +22,7 @@ module.exports = class ConfigsInjector {
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
         ) + '</body>');
         
-        const routeAssets = this.#getRouteAssets(registryConfig.apps, route.slots);
+        const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);
 
         document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.scriptLinks,
@@ -39,7 +33,7 @@ module.exports = class ConfigsInjector {
             ...routeAssets.stylesheetLinks,
         ));
 
-        request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, route.slots, template.styleRefs);
+        request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, slots, template.styleRefs);
 
         return document;
     }

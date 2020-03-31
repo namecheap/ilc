@@ -14,7 +14,7 @@ const ConfigsInjector = require('./configs-injector');
 
 
 module.exports = function (cdnUrl) {
-    const router = new Router(registryService, console);
+    const router = new Router(console);
     const configsInjector = new ConfigsInjector(cdnUrl);
 
     const tailor = new Tailor({
@@ -22,7 +22,8 @@ module.exports = function (cdnUrl) {
             __dirname + '/templates',
             router,
             configsInjector,
-            newrelic
+            newrelic,
+            registryService
         ),
         systemScripts: '',
         filterHeaders,

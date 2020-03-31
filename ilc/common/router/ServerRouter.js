@@ -8,49 +8,24 @@ module.exports = class ServerRouter {
     errors = errors;
 
     #logger;
-    /** @type {Registry} */
-    #registry;
-    #checkAfter = 0;
-
-    /** @type {Router} */
-    #router = null;
 
     /**
-     *
-     * @param {Registry} registry
      * @param logger - console compatible logger
      */
-    constructor(registry, logger) {
-        this.#registry = registry;
+    constructor(logger) {
         this.#logger = logger;
     }
 
-    async getTemplateInfo(reqUrl) {
-        const registryConfig = await this.#registry.getConfig();
-        const router = this.#getRouter(registryConfig);
+    getTemplateInfo(registryConfig, reqUrl) {
+        const router = new Router(registryConfig);
         const route = router.match(reqUrl);
-        const template = await this.#registry.getTemplate(route.template);
-
-        if (template === undefined) {
-            throw new Error('Can\'t match route base template to config map');
-        }
+        const page = this.#generatePageTpl(route, registryConfig.apps);
 
         return {
             route,
-            template: template.data,
-            registryConfig: registryConfig.data,
-            page: this.#generatePageTpl(route, registryConfig.data.apps),
-        }
-    }   
-
-    #getRouter = (registryConfig) => {
-        if (this.#router === null || registryConfig.checkAfter !== this.#checkAfter) {
-            this.#checkAfter = registryConfig.checkAfter;
-            this.#router = new Router(registryConfig.data);
-        }
-
-        return this.#router;
-    };
+            page,
+        };
+    }
 
     #generatePageTpl = (route, apps) => {
         let primarySlotDetected = false;
@@ -110,5 +85,4 @@ module.exports = class ServerRouter {
             `;
         }, '');
     };
-
 };
