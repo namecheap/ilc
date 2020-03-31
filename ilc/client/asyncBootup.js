@@ -2,14 +2,15 @@ const System = window.System;
 
 let perfStart;
 let afterRoutingEvent = false;
-let appsWaitingForSlot = {};
+const appsWaitingForSlot = {};
+const readySlots = [];
 
 export function init() {
     perfStart = performance.now();
     for (let id of window.ilcApps) {
-        appsWaitingForSlot[id] && appsWaitingForSlot[id]();
+        markSlotAsReady(id);
     }
-    window.ilcApps = {push: (id) => (appsWaitingForSlot[id] && appsWaitingForSlot[id]())};
+    window.ilcApps = {push: id => markSlotAsReady(id)};
 
     window.addEventListener('single-spa:routing-event', () => (afterRoutingEvent = true));
 }
@@ -20,8 +21,12 @@ export async function waitForSlot(slotName) {
         cssBundle: null,
     };
 
+    if (afterRoutingEvent) {
+        return res;
+    }
+
     await new Promise(resolve => {
-        if (document.getElementById(slotName) !== null) {
+        if (readySlots.includes(slotName)) {
             return resolve();
         }
 
@@ -49,4 +54,9 @@ export async function waitForSlot(slotName) {
     }
 
     return res;
+}
+
+function markSlotAsReady(id) {
+    readySlots.push(id);
+    appsWaitingForSlot[id] && appsWaitingForSlot[id]();
 }
