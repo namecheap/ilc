@@ -23,6 +23,13 @@ module.exports = (templatesPath, router, configsInjector, newrelic) => async (
         newrelic.setTransactionName(routeName);
     }
 
+    tplInfo.base = tplInfo.base.replace(/<ilc-slot\s+id="(.+)"\s*\/?>/gm, function (match, id) {
+        return `<!-- Region "${id}" START -->\n` +
+            `<div id="${id}"><slot name="${id}"></slot></div>\n` +
+            `<script>window.ilcApps.push('${id}');</script>\n` +
+            `<!-- Region "${id}" END -->`;
+    });
+
     const baseTpl = await configsInjector.inject(tplInfo.base, request.url);
 
     const pageTemplate = tplInfo.page;

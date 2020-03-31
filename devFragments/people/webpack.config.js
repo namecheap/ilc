@@ -9,7 +9,6 @@ module.exports = {
     entry: path.resolve(__dirname, 'src/people.js'),
     output: {
         filename: 'people.js',
-        library: 'people',
         libraryTarget: 'amd',
         path: path.resolve(__dirname, 'build/people'),
     },
