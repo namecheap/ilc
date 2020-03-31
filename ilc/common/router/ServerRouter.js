@@ -8,63 +8,30 @@ module.exports = class ServerRouter {
     errors = errors;
 
     #logger;
-    /** @type {Registry} */
-    #registry;
-    #checkAfter = 0;
-
-    /** @type {Router} */
-    #router = null;
 
     /**
-     *
-     * @param {Registry} registry
      * @param logger - console compatible logger
      */
-    constructor(registry, logger) {
-        this.#registry = registry;
+    constructor(logger) {
         this.#logger = logger;
     }
 
-    async getTemplateInfo(reqUrl) {
-        const route = await this.getRouteInfo(reqUrl);
-        const baseTemplate = await this.#registry.getTemplate(route.template);
-
-        if (baseTemplate === undefined) {
-            throw new Error('Can\'t match route base template to config map');
-        }
+    getTemplateInfo(registryConfig, reqUrl) {
+        const router = new Router(registryConfig);
+        const route = router.match(reqUrl);
+        const page = this.#generatePageTpl(route, registryConfig.apps);
 
         return {
-            routeName: route.route,
-            base: baseTemplate.data.content,
-            page: this.#generatePageTpl(route),
-        }
+            route,
+            page,
+        };
     }
 
-    async getRouteInfo(reqUrl) {
-        const router = await this.#getRouter();
-        return router.match(reqUrl);
-    }
-
-    #getRouter = async () => {
-        const now = Math.floor(Date.now() / 1000);
-
-        if (this.#router === null || this.#checkAfter < now) {
-            const conf = await this.#registry.getConfig();
-
-            this.#router = new Router(conf.data);
-            this.__apps = conf.data.apps;
-
-            this.#checkAfter = conf.checkAfter;
-        }
-
-        return this.#router;
-    };
-
-    #generatePageTpl = (route) => {
+    #generatePageTpl = (route, apps) => {
         let primarySlotDetected = false;
 
         return _.reduce(route.slots, (res, slotData, slotName) => {
-            const appInfo = this.__apps[slotData.appName];
+            const appInfo = apps[slotData.appName];
 
             if (appInfo === undefined) {
                 throw new Error('Can\'t find info about app: ' + slotData.appName);
@@ -118,5 +85,4 @@ module.exports = class ServerRouter {
             `;
         }, '');
     };
-
 };

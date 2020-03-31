@@ -3,31 +3,25 @@ const urljoin = require('url-join');
 const newrelic = require('newrelic');
 
 module.exports = class ConfigsInjector {
-    #registry;
-    #router;
     #cdnUrl;
 
-    constructor(registry, router, cdnUrl = null) {
-        this.#registry = registry;
-        this.#router = router;
+    constructor(cdnUrl = null) {
         this.#cdnUrl = cdnUrl;
     }
 
-    async inject(document, reqUrl) {
+    inject(request, registryConfig, template, slots) {
+        let document = template.content;
+
         if (typeof document !== 'string' || document.indexOf('<head>') === -1 || document.indexOf('</body>') === -1) {
             throw new Error(`Can't inject ILC configs into invalid document.`);
         }
-
-        const registryConf = await this.#registry.getConfig();
-
-        const regConf = registryConf.data;
         
-        const routeAssets = await this.#getRouteAssets(reqUrl);
+        const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);
 
         document = document.replace('</head>', this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.scriptLinks,
             newrelic.getBrowserTimingHeader(),
-            this.#getSPAConfig(regConf),
+            this.#getSPAConfig(registryConfig),
             `<script>window.ilcApps = [];</script>`,
             this.#getPolyfill(),
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
@@ -37,25 +31,20 @@ module.exports = class ConfigsInjector {
             ...routeAssets.stylesheetLinks,
         ));
 
+        request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, slots, template.styleRefs);
+
         return document;
     }
 
     getAssetsToPreload = async (request) => {
-        const styleRefs = await this.#getRouteStyleRefsToPreload(request.url);
-
         return {
             scriptRefs: [],
-            styleRefs,
+            styleRefs: request.styleRefs,
         };
     };
 
-    #getRouteStyleRefsToPreload = async (reqUrl) => {
-        const registryConf = await this.#registry.getConfig();
-        const route = await this.#router.getRouteInfo(reqUrl);
-
-        const apps = registryConf.data.apps;
-
-        return _.reduce(route.slots, (styleRefs, slotData) => {
+    #getRouteStyleRefsToPreload = (apps, slots, templateStyleRefs) => {
+        const routeStyleRefs = _.reduce(slots, (styleRefs, slotData) => {
             const appInfo = apps[slotData.appName];
 
             if (appInfo.cssBundle && !_.includes(styleRefs, appInfo.cssBundle)) {
@@ -64,16 +53,16 @@ module.exports = class ConfigsInjector {
 
             return styleRefs;
         }, []);
+
+        const styleRefs = _.concat(routeStyleRefs, templateStyleRefs);
+
+        return _.filter(styleRefs, (styleRef, index, styleRefs) => styleRefs.indexOf(styleRef) === index);
     };
 
-    #getRouteAssets = async (reqUrl) => {
-        const registryConf = await this.#registry.getConfig();
-        const route = await this.#router.getRouteInfo(reqUrl);
-
-        const apps = registryConf.data.apps;
+    #getRouteAssets = (apps, slots) => {
         const appsDependencies = _.reduce(apps, (dependencies, appInfo) => _.assign(dependencies, appInfo.dependencies), {});
 
-        const routeAssets = _.reduce(route.slots, (routeAssets, slotData) => {
+        const routeAssets = _.reduce(slots, (routeAssets, slotData) => {
             const appInfo = apps[slotData.appName];
 
             /**
@@ -135,10 +124,11 @@ module.exports = class ConfigsInjector {
     #getClientjsUrl = () => this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js');
     #getPolyfillUrl = () => this.#cdnUrl === null ? '/_ilc/polyfill.min.js' : urljoin(this.#cdnUrl, '/polyfill.min.js');
 
-    #getSPAConfig = (registryConf) => {
-        registryConf.apps = _.mapValues(registryConf.apps, v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'initProps', 'kind']));
+    #getSPAConfig = (registryConfig) => {
+        const apps = _.mapValues(registryConfig.apps, v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'initProps', 'kind']));
+        const spaConfig = JSON.stringify(_.omit({...registryConfig, apps}, ['templates']));
 
-        return `<script type="spa-config">${JSON.stringify(_.omit(registryConf, ['templates']))}</script>`;
+        return `<script type="spa-config">${spaConfig}</script>`;
     };
 
     #wrapWithAsyncScriptTag = (url) => {

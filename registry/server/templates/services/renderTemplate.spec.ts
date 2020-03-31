@@ -77,7 +77,7 @@ describe('renderTemplate', () => {
                         headers: {
                             'X-Powered-By': 'JS',
                             'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000;',
+                            'Link': 'https://my.amazing.server/my-amazing-stylesheet.css;rel=stylesheet;loveyou=3000;',
                         },
                     }
                 },
@@ -259,7 +259,11 @@ describe('renderTemplate', () => {
 
         const renderedTemplate = await renderTemplate(template);
 
-        chai.expect(renderedTemplate).to.be.equal(`
+        chai.expect(renderedTemplate.styleRefs).to.be.eqls([
+            'https://my.awesome.server/my-awesome-stylesheet.css',
+            'https://my.amazing.server/my-amazing-stylesheet.css',
+        ]);
+        chai.expect(renderedTemplate.content).to.be.equal(`
             <html>
             <head>
                 <meta charset="utf-8" />
@@ -278,7 +282,7 @@ describe('renderTemplate', () => {
                 <script>window.console.log('Something...')</script>
                 ${
                     `<!-- Template include "${includes[2].attributes.id}" START -->\n` +
-                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
+                    '<link rel="stylesheet" href="https://my.amazing.server/my-amazing-stylesheet.css">' +
                     includes[2].api.response.data +
                     `\n<!-- Template include "${includes[2].attributes.id}" END -->`
                 }
@@ -352,7 +356,8 @@ describe('renderTemplate', () => {
 
         const renderedTemplate = await renderTemplate(template);
 
-        chai.expect(renderedTemplate).to.be.equal(`${
+        chai.expect(renderedTemplate.styleRefs).to.be.eqls([]);
+        chai.expect(renderedTemplate.content).to.be.equal(`${
             `<!-- Template include "${include.attributes.id}" START -->\n` +
             include.api.response.data +
             `\n<!-- Template include "${include.attributes.id}" END -->`

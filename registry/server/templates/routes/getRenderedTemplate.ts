@@ -33,8 +33,8 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     if (!template) {
         res.status(404).send('Not found');
     } else {
-        template.content = await renderTemplate(template.content);
-        res.status(200).send(template);
+        const renderedTemplate = await renderTemplate(template.content);
+        res.status(200).send(_.assign(template, renderedTemplate));
     }
 };
 
