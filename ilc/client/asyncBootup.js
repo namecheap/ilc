@@ -57,6 +57,8 @@ export async function waitForSlot(slotName) {
 }
 
 function markSlotAsReady(id) {
-    readySlots.push(id);
-    appsWaitingForSlot[id] && appsWaitingForSlot[id]();
+    setTimeout(() => {
+        readySlots.push(id);
+        appsWaitingForSlot[id] && appsWaitingForSlot[id]();
+    }, 0);
 }
