@@ -1,9 +1,17 @@
 
 export default function init(getCurrentPath) {
     let startRouting;
+    let targetHref;
 
     window.addEventListener('single-spa:before-routing-event', () => {
+        // Check is needed as this event may be triggered 2 times
+        // due to "app re-mount due to changed props" functionality
+        if (targetHref === window.location.href) {
+            return;
+        }
+
         startRouting = performance.now();
+        targetHref = window.location.href;
     });
 
     window.addEventListener('ilc:all-slots-loaded', () => {
