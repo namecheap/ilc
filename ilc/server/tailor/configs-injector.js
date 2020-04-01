@@ -20,7 +20,7 @@ module.exports = class ConfigsInjector {
         const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);
 
         const ilcJsScripts = this.#wrapWithIgnoreDuringParsing(
-            ...routeAssets.scriptLinks,
+            //...routeAssets.scriptLinks,
             this.#getSPAConfig(registryConfig),
             `<script>window.ilcApps = [];</script>`,
             this.#getPolyfill(),
