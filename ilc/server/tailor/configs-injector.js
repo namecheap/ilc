@@ -5,6 +5,7 @@ const newrelic = require('newrelic');
 module.exports = class ConfigsInjector {
     #cdnUrl;
     #jsInjectionPlaceholder = '<!-- ILC_JS -->';
+    #cssInjectionPlaceholder = '<!-- ILC_CSS -->';
 
     constructor(cdnUrl = null) {
         this.#cdnUrl = cdnUrl;
@@ -18,6 +19,15 @@ module.exports = class ConfigsInjector {
         }
         
         const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);
+
+        const ilcCss = this.#wrapWithIgnoreDuringParsing(
+            ...routeAssets.stylesheetLinks,
+        );
+        if (document.includes(this.#cssInjectionPlaceholder)) {
+            document = document.replace(this.#cssInjectionPlaceholder, ilcCss);
+        } else {
+            document = document.replace('</head>', ilcCss + '</head>');
+        }
 
         const ilcJsScripts = this.#wrapWithIgnoreDuringParsing(
             //...routeAssets.scriptLinks,
@@ -33,10 +43,6 @@ module.exports = class ConfigsInjector {
         } else {
             document = document.replace('</head>', ilcJsScripts + '</head>');
         }
-
-        document = document.replace('<head>', '<head>' + this.#wrapWithIgnoreDuringParsing(
-            ...routeAssets.stylesheetLinks,
-        ));
 
         request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, slots, template.styleRefs);
 
