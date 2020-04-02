@@ -1,16 +1,15 @@
 {
-    "name": "simple",
+    "name": "ilc-registry-ui",
     "private": true,
-    "version": "3.0.0",
+    "version": "1.0.0",
     "description": "",
     "main": "index.html",
     "scripts": {
-        "start": "./node_modules/.bin/webpack-dev-server --progress --color --hot --watch --mode development",
-        "serve": "./node_modules/.bin/serve --listen 8080 ./dist",
-        "build": "./node_modules/.bin/webpack-cli --color --mode development --hide-modules true"
+        "start": "webpack-dev-server --progress --color --hot --watch --mode development",
+        "serve": "serve --listen 8080 ./dist",
+        "build": "webpack-cli --color --hide-modules true",
+        "build:watch": "npm run build --- --watch --mode development"
     },
-    "author": "",
-    "license": "MIT",
     "devDependencies": {
         "@babel/cli": "^7.1.2",
         "@babel/core": "^7.1.2",

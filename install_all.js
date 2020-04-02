@@ -4,6 +4,7 @@ const spawnSync = require('child_process').spawnSync;
 const commands = [
     { command: 'cd ./ilc/ && npm i', name: 'ilc' },
     { command: 'cd ./registry/ && npm i', name: 'registry' },
+    { command: 'cd ./registry/client && npm i', name: 'registry' },
     { command: 'cd ./adapters/vuejs/ && npm i', name: 'vuejs adapter' },
 ];
 

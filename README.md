@@ -57,6 +57,7 @@ repo and follow the guide to setup NC specific applications.
 4. Run `npm run build`
 5. Run `npm start`
 6. Open running code at `http://localhost:8233/`
+7. Registry UI is available at `http://localhost:4001/`
 
 ## Further reading
 
