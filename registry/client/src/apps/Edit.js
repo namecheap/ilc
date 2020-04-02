@@ -11,11 +11,11 @@ import {
     SimpleFormIterator
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import { JsonEditor as Editor } from 'jsoneditor-react';
-import PostTitle from './Title';
+import Title from './Title';
 
 
 const MyEdit = ({ permissions, ...props }) => (
-    <Edit title={<PostTitle />}  {...props}>
+    <Edit title={<Title />}  {...props}>
         <TabbedForm initialValues={{  }}>
             <FormTab label="Summary">
                 <TextInput source="name" validate={required()} fullWidth />

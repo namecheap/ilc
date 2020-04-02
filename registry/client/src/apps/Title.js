@@ -4,7 +4,7 @@ export default ({ record }) => {
     return (
         <span>
             {record
-                ? `Post "${record.title}"`
+                ? `App "${record.name}"`
                 : ''}
         </span>
     );
