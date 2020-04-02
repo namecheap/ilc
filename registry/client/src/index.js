@@ -16,7 +16,7 @@ render(
         layout={Layout}
     >
         {permissions => [
-            <Resource name="apps" {...apps} />,
+            <Resource name="app" {...apps} />,
         ]}
     </Admin>,
     document.getElementById('root')

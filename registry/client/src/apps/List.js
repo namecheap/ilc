@@ -2,15 +2,13 @@ import React, { Children, Fragment, cloneElement, memo } from 'react';
 import BookIcon from '@material-ui/icons/Book';
 import { useMediaQuery, makeStyles } from '@material-ui/core';
 import {
-    BooleanField,
     BulkDeleteButton,
     Datagrid,
-    DateField,
     EditButton,
     List,
-    NumberField,
     SimpleList,
     TextField,
+    ChipField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
 export const PostIcon = BookIcon;
@@ -59,6 +57,8 @@ const rowClick = (id, basePath, record) => {
     return 'edit';
 };
 
+const Pagination = () => (<div/>);
+
 const PostList = props => {
     const classes = useStyles();
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
@@ -68,30 +68,18 @@ const PostList = props => {
             bulkActionButtons={<PostListBulkActions />}
             sort={{ field: 'published_at', order: 'DESC' }}
             exporter={false}
+            pagination={<Pagination/>}
         >
             {isSmall ? (
                 <SimpleList
-                    primaryText={record => record.title}
-                    secondaryText={record => `${record.views} views`}
-                    tertiaryText={record =>
-                        new Date(record.published_at).toLocaleDateString()
-                    }
+                    primaryText={record => record.name}
+                    secondaryText={record => record.kind}
                 />
             ) : (
                 <Datagrid rowClick={rowClick} optimized>
-                    <TextField source="id" />
-                    <TextField source="title" cellClassName={classes.title} />
-                    <DateField
-                        source="published_at"
-                        cellClassName={classes.publishedAt}
-                    />
-
-                    <BooleanField
-                        source="commentable"
-                        label="Com."
-                        sortable={false}
-                    />
-                    <NumberField source="views" />
+                    <TextField source="name" />
+                    <TextField source="kind" cellClassName={classes.title} />
+                    <ChipField source="configSelector" emptyText=""/>
                     <PostListActionToolbar>
                         <EditButton />
                     </PostListActionToolbar>
