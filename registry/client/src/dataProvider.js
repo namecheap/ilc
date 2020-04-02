@@ -22,6 +22,10 @@ const myDataProvider = {
         return dataProvider.getOne(resource, params).then(v => {
             if (resource === 'app') {
                 v.data.id = v.data.name;
+                v.data.dependencies = Object.keys(v.data.dependencies).map(key => ({
+                    key,
+                    value: v.data.dependencies[key]
+                }))
             }
             return v;
         });
