@@ -1,5 +1,3 @@
-import englishMessages from 'ra-language-english';
-
 export const messages = {
     simple: {
         action: {
@@ -8,7 +6,6 @@ export const messages = {
         },
         'create-post': 'New post',
     },
-    ...englishMessages,
     resources: {
         posts: {
             name: 'Post |||| Posts',
@@ -31,24 +28,6 @@ export const messages = {
                 authors: 'Authors',
             },
         },
-        comments: {
-            name: 'Comment |||| Comments',
-            fields: {
-                body: 'Body',
-                created_at: 'Created at',
-                post_id: 'Posts',
-                author: {
-                    name: 'Author',
-                },
-            },
-        },
-        users: {
-            name: 'User |||| Users',
-            fields: {
-                name: 'Name',
-                role: 'Role',
-            },
-        },
     },
     post: {
         list: {
@@ -68,27 +47,6 @@ export const messages = {
             save_and_add: 'Save and Add',
             save_and_show: 'Save and Show',
             save_with_average_note: 'Save with Note',
-        },
-    },
-    comment: {
-        list: {
-            about: 'About',
-        },
-    },
-    user: {
-        list: {
-            search: 'Search',
-        },
-        form: {
-            summary: 'Summary',
-            security: 'Security',
-        },
-        edit: {
-            title: 'User "%{title}"',
-        },
-        action: {
-            save_and_add: 'Save and Add',
-            save_and_show: 'Save and Show',
         },
     },
 };

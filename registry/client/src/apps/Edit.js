@@ -6,23 +6,18 @@ import {
     ArrayInput,
     BooleanInput,
     CheckboxGroupInput,
-    Datagrid,
-    DateField,
     DateInput,
     Edit,
     CloneButton,
     ShowButton,
-    EditButton,
     FormTab,
     ImageField,
     ImageInput,
     NumberInput,
-    ReferenceManyField,
     ReferenceInput,
     SelectInput,
     SimpleFormIterator,
     TabbedForm,
-    TextField,
     TextInput,
     minValue,
     number,
@@ -120,11 +115,6 @@ const MyEdit = ({ permissions, ...props }) => (
                 />
             </FormTab>
             <FormTab label="Miscellaneous">
-                <TagReferenceInput
-                    reference="tags"
-                    source="tags"
-                    label="Tags"
-                />
                 <ArrayInput source="backlinks">
                     <SimpleFormIterator>
                         <DateInput source="date" />
@@ -147,21 +137,6 @@ const MyEdit = ({ permissions, ...props }) => (
                 />
                 <BooleanInput source="commentable" defaultValue />
                 <TextInput disabled source="views" />
-            </FormTab>
-            <FormTab label="Comments">
-                <ReferenceManyField
-                    reference="comments"
-                    target="post_id"
-                    addLabel={false}
-                    fullWidth
-                >
-                    <Datagrid>
-                        <DateField source="created_at" />
-                        <TextField source="author.name" />
-                        <TextField source="body" />
-                        <EditButton />
-                    </Datagrid>
-                </ReferenceManyField>
             </FormTab>
         </TabbedForm>
     </Edit>
