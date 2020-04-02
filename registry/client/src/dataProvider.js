@@ -19,7 +19,12 @@ const myDataProvider = {
     getOne: (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
-        return dataProvider.getOne(resource, params);
+        return dataProvider.getOne(resource, params).then(v => {
+            if (resource === 'app') {
+                v.data.id = v.data.name;
+            }
+            return v;
+        });
     },
     update: (resource, params) => {
         params.id = encodeURIComponent(params.id);
