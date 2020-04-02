@@ -24,6 +24,7 @@ import {
     required,
     FormDataConsumer,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
+import { JsonEditor as Editor } from 'jsoneditor-react';
 import PostTitle from './Title';
 import TagReferenceInput from './TagReferenceInput';
 
@@ -107,6 +108,10 @@ const MyEdit = ({ permissions, ...props }) => (
                 )}
             </FormTab>
             <FormTab label="Body">
+                <Editor
+                    mode="code"
+                    value={({})}
+                />
                 <RichTextInput
                     source="body"
                     label=""

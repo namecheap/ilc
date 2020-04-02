@@ -2,6 +2,7 @@
 import React from 'react';
 import { Admin, Resource } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import { render } from 'react-dom';
+import 'jsoneditor-react/es/editor.min.css';
 
 import authProvider from './authProvider';
 import dataProvider from './dataProvider';

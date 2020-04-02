@@ -21,6 +21,11 @@ const myDataProvider = {
 
         return dataProvider.getOne(resource, params);
     },
+    update: (resource, params) => {
+        params.id = encodeURIComponent(params.id);
+
+        return dataProvider.update(resource, params);
+    },
 };
 
 

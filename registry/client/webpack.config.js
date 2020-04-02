@@ -4,6 +4,7 @@ const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
 const IgnoreNotFoundExportPlugin = require('ignore-not-found-export-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
     .BundleAnalyzerPlugin;
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
     devtool: 'cheap-module-source-map',
@@ -19,9 +20,15 @@ module.exports = {
                 exclude: /node_modules/,
                 use: { loader: 'html-loader' },
             },
+            {
+                test: /\.css$/i,
+                use: [MiniCssExtractPlugin.loader, 'css-loader'],
+            },
+            {test: /\.svg$/, loader: 'file-loader'}
         ],
     },
     plugins: [
+        new MiniCssExtractPlugin(),
         new HtmlWebpackPlugin({
             template: './src/index.html',
         }),
