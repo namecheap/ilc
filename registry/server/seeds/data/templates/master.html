@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width" />
     <title></title>
 
+    <!-- TailorX: Ignore during parsing START -->
     <!-- Shared stylesheets -->
     <style>
         body {
@@ -56,23 +57,12 @@
 
     </style>
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <!-- TailorX: Ignore during parsing END -->
 </head>
 <body>
 
-<!-- Region "navbar" START -->
-<div id="navbar">
-    <slot name="navbar"></slot>
-</div>
-<!-- Region "navbar" END -->
-
-<!-- Region "body" START -->
-<div id="body">
-    <slot name="body"></slot>
-</div>
-<!-- Region "body" END -->
-
-<!-- %systemjs-importmap% -->
-<!-- Load the common deps-->
+<ilc-slot id="navbar"/>
+<ilc-slot id="body"/>
 
 </body>
 </html>
