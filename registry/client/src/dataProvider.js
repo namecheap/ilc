@@ -32,14 +32,28 @@ const myDataProvider = {
         });
     },
     create: (resource, params) => {
-        params.id = encodeURIComponent(params.id);
-
         transformAppSetter(resource, params.data);
 
         return dataProvider.create(resource, params).then(v => {
             transformAppGetter(resource, v.data);
             return v;
         });
+    },
+    delete: (resource, params) => {
+        params.id = encodeURIComponent(params.id);
+
+        return dataProvider.delete(resource, params);
+    },
+    deleteMany: (resource, params) => {
+        params.ids = params.ids.map(v => encodeURIComponent(v));
+
+        return Promise.all(
+            params.ids.map(id =>
+                dataProvider.delete(resource, { id }, {
+                    method: 'DELETE',
+                })
+            )
+        ).then(() => ({data: params.ids}));
     },
 };
 
