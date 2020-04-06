@@ -15,7 +15,7 @@ import Title from './Title';
 import JsonField from '../JsonField/index';
 
 const MyEdit = ({ permissions, ...props }) => (
-    <Edit title={<Title />}  {...props}>
+    <Edit title={<Title />} undoable={false} {...props}>
         <TabbedForm initialValues={{ dependencies: [] }}>
             <FormTab label="Summary">
                 <TextField source="name" />

@@ -8,9 +8,7 @@ const myDataProvider = {
     getList: (resource, params) => {
 
         return dataProvider.getList(resource, params).then(v => {
-            if (resource === 'app') {
-                v.data.forEach(v => transformAppGetter(v))
-            }
+            v.data.forEach(v => transformAppGetter(resource, v))
             return v;
         });
     },
@@ -18,22 +16,38 @@ const myDataProvider = {
         params.id = encodeURIComponent(params.id);
 
         return dataProvider.getOne(resource, params).then(v => {
-            if (resource === 'app') {
-                transformAppGetter(v.data);
-            }
+            transformAppGetter(resource, v.data);
             return v;
         });
     },
     update: (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
-        transformAppSetter(params.data);
+        transformAppSetter(resource, params.data);
+        delete params.data.name;
 
-        return dataProvider.update(resource, params);
+        return dataProvider.update(resource, params).then(v => {
+            transformAppGetter(resource, v.data);
+            return v;
+        });
+    },
+    create: (resource, params) => {
+        params.id = encodeURIComponent(params.id);
+
+        transformAppSetter(resource, params.data);
+
+        return dataProvider.create(resource, params).then(v => {
+            transformAppGetter(resource, v.data);
+            return v;
+        });
     },
 };
 
-function transformAppGetter(app) {
+function transformAppGetter(resource, app) {
+    if (resource !== 'app') {
+        return;
+    }
+
     app.id = app.name;
     if (app.dependencies) {
         app.dependencies = Object.keys(app.dependencies).map(key => ({
@@ -49,7 +63,11 @@ function transformAppGetter(app) {
     }
 }
 
-function transformAppSetter(app) {
+function transformAppSetter(resource, app) {
+    if (resource !== 'app') {
+        return;
+    }
+
     if (app.props) {
         app.props = JSON.parse(app.props);
     }
@@ -62,7 +80,6 @@ function transformAppSetter(app) {
             return acc;
         }, {})
     }
-    delete app.name;
     delete app.id;
     delete app.assetsDiscoveryUpdatedAt;
 }
