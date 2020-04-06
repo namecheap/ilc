@@ -3,12 +3,11 @@ const presets = [
         '@babel/env',
         {
             targets: {
-                edge: '17',
-                firefox: '60',
-                chrome: '67',
-                safari: '11.1',
+                firefox: '74',
+                chrome: '80',
+                safari: '13.0',
             },
-            useBuiltIns: 'usage',
+            useBuiltIns: 'usage'
         },
     ],
     '@babel/preset-react',
