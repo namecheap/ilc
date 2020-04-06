@@ -27,6 +27,8 @@ const myDataProvider = {
     update: (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
+        transformAppSetter(params.data);
+
         return dataProvider.update(resource, params);
     },
 };
@@ -39,6 +41,30 @@ function transformAppGetter(app) {
             value: app.dependencies[key]
         }));
     }
+    if (app.props) {
+        app.props = JSON.stringify(app.props);
+    }
+    if (app.initProps) {
+        app.initProps = JSON.stringify(app.initProps);
+    }
+}
+
+function transformAppSetter(app) {
+    if (app.props) {
+        app.props = JSON.parse(app.props);
+    }
+    if (app.initProps) {
+        app.initProps = JSON.parse(app.initProps);
+    }
+    if (app.dependencies) {
+        app.dependencies = app.dependencies.reduce((acc, v) => {
+            acc[v.key] = v.value;
+            return acc;
+        }, {})
+    }
+    delete app.name;
+    delete app.id;
+    delete app.assetsDiscoveryUpdatedAt;
 }
 
 

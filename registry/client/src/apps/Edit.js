@@ -8,22 +8,23 @@ import {
     NumberInput,
     required,
     ArrayInput,
-    SimpleFormIterator
+    SimpleFormIterator,
+    TextField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
-import { JsonEditor as Editor } from 'jsoneditor-react';
 import Title from './Title';
-
+import JsonField from '../JsonField/index';
 
 const MyEdit = ({ permissions, ...props }) => (
     <Edit title={<Title />}  {...props}>
         <TabbedForm initialValues={{ dependencies: [] }}>
             <FormTab label="Summary">
-                <TextInput source="name" validate={required()} fullWidth />
+                <TextField source="name" />
                 <SelectInput source="kind" choices={[
                     { id: 'primary', name: 'Primary' },
                     { id: 'essential', name: 'Essential' },
                     { id: 'regular', name: 'Regular' },
                 ]} />
+                <TextInput source="assetsDiscoveryUrl" fullWidth />
             </FormTab>
             <FormTab label="Assets">
                 <TextInput source="spaBundle" validate={required()} fullWidth />
@@ -39,11 +40,9 @@ const MyEdit = ({ permissions, ...props }) => (
                 <TextInput source="ssr.src" label="URL" fullWidth />
                 <NumberInput source="ssr.timeout" label="Request timeout, in ms" />
             </FormTab>
-            <FormTab label="Body">
-                <Editor
-                    mode="code"
-                    value={({})}
-                />
+            <FormTab label="Props">
+                <JsonField source="props"/>
+                <JsonField source="initProps"/>
             </FormTab>
         </TabbedForm>
     </Edit>
