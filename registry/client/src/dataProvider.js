@@ -8,7 +8,7 @@ const myDataProvider = {
     getList: (resource, params) => {
 
         return dataProvider.getList(resource, params).then(v => {
-            v.data.forEach(v => transformAppGetter(resource, v))
+            v.data.forEach(v => transformGetter(resource, v));
             return v;
         });
     },
@@ -16,26 +16,26 @@ const myDataProvider = {
         params.id = encodeURIComponent(params.id);
 
         return dataProvider.getOne(resource, params).then(v => {
-            transformAppGetter(resource, v.data);
+            transformGetter(resource, v.data);
             return v;
         });
     },
     update: (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
-        transformAppSetter(resource, params.data);
+        transformSetter(resource, params.data);
         delete params.data.name;
 
         return dataProvider.update(resource, params).then(v => {
-            transformAppGetter(resource, v.data);
+            transformGetter(resource, v.data);
             return v;
         });
     },
     create: (resource, params) => {
-        transformAppSetter(resource, params.data);
+        transformSetter(resource, params.data);
 
         return dataProvider.create(resource, params).then(v => {
-            transformAppGetter(resource, v.data);
+            transformGetter(resource, v.data);
             return v;
         });
     },
@@ -57,11 +57,31 @@ const myDataProvider = {
     },
 };
 
-function transformAppGetter(resource, app) {
-    if (resource !== 'app') {
-        return;
+function transformGetter(resource, data) {
+    switch (resource) {
+        case 'app':
+            transformAppGetter(data);
+            break;
+        case 'shared_props':
+            transformSharedPropsGetter(data);
+            break;
+        default:
     }
+}
 
+function transformSetter(resource, data) {
+    switch (resource) {
+        case 'app':
+            transformAppSetter(data);
+            break;
+        case 'shared_props':
+            transformSharedPropsSetter(data);
+            break;
+        default:
+    }
+}
+
+function transformAppGetter(app) {
     app.id = app.name;
     if (app.dependencies) {
         app.dependencies = Object.keys(app.dependencies).map(key => ({
@@ -77,11 +97,7 @@ function transformAppGetter(resource, app) {
     }
 }
 
-function transformAppSetter(resource, app) {
-    if (resource !== 'app') {
-        return;
-    }
-
+function transformAppSetter(app) {
     if (app.props) {
         app.props = JSON.parse(app.props);
     }
@@ -98,5 +114,19 @@ function transformAppSetter(resource, app) {
     delete app.assetsDiscoveryUpdatedAt;
 }
 
+
+function transformSharedPropsGetter(data) {
+    data.id = data.name;
+    if (data.props) {
+        data.props = JSON.stringify(data.props);
+    }
+}
+
+function transformSharedPropsSetter(data) {
+    if (data.props) {
+        data.props = JSON.parse(data.props);
+    }
+    delete data.id;
+}
 
 export default myDataProvider;
