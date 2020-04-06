@@ -3,6 +3,7 @@ import simpleRestProvider from 'ra-data-simple-rest';
 
 import * as sharedProps from './sharedProps/dataTransform';
 import * as apps from './apps/dataTransform';
+import * as templates from './templates/dataTransform';
 
 const dataProvider = simpleRestProvider('/api/v1');
 
@@ -68,6 +69,9 @@ function transformGetter(resource, data) {
         case 'shared_props':
             sharedProps.transformGet(data);
             break;
+        case 'template':
+            templates.transformGet(data);
+            break;
         default:
     }
 }
@@ -79,6 +83,9 @@ function transformSetter(resource, data) {
             break;
         case 'shared_props':
             sharedProps.transformSet(data);
+            break;
+        case 'template':
+            templates.transformSet(data);
             break;
         default:
     }

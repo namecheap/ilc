@@ -8,6 +8,7 @@ import dataProvider from './dataProvider';
 import Layout from './Layout';
 import apps from './apps';
 import sharedProps from './sharedProps';
+import templates from './templates';
 
 render(
     <Admin
@@ -19,6 +20,7 @@ render(
         {permissions => [
             <Resource name="app" {...apps} />,
             <Resource name="shared_props" {...sharedProps} />,
+            <Resource name="template" {...templates} />,
         ]}
     </Admin>,
     document.getElementById('root')
