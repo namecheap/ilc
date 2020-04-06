@@ -11,6 +11,8 @@ import {
     ArrayInput,
     SimpleFormIterator,
     TextField,
+    ReferenceArrayInput,
+    AutocompleteArrayInput
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import JsonField from '../JsonField/index';
 
@@ -31,12 +33,17 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     { id: 'regular', name: 'Regular' },
                 ]} />
                 <TextInput source="assetsDiscoveryUrl" fullWidth />
+                <ReferenceArrayInput reference="shared_props"
+                                     source="configSelector"
+                                     label="Shared props selector">
+                    <AutocompleteArrayInput />
+                </ReferenceArrayInput>
             </FormTab>
             <FormTab label="Assets">
                 <TextInput source="spaBundle" validate={required()} fullWidth />
                 <TextInput source="cssBundle" fullWidth />
                 <ArrayInput source="dependencies">
-                    <SimpleFormIterator >
+                    <SimpleFormIterator>
                         <TextInput source="key" label="Name" fullWidth />
                         <TextInput source="value" label="URL" fullWidth />
                     </SimpleFormIterator>
