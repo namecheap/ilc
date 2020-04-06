@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+    Create,
     Edit,
     FormTab,
     SelectInput,
@@ -11,14 +12,19 @@ import {
     SimpleFormIterator,
     TextField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
-import Title from './Title';
 import JsonField from '../JsonField/index';
 
-const MyEdit = ({ permissions, ...props }) => (
-    <Edit title={<Title />} undoable={false} {...props}>
-        <TabbedForm initialValues={{ dependencies: [] }}>
+const Title = ({ record }) => {
+    return (<span>{record ? `App "${record.name}"` : ''}</span>);
+};
+
+const InputForm = ({mode = 'edit', ...props}) => {
+    return (
+        <TabbedForm initialValues={{ dependencies: [] }} {...props}>
             <FormTab label="Summary">
-                <TextField source="name" />
+                {mode === 'edit'
+                    ? <TextField source="name" />
+                    : <TextInput source="name" fullWidth validate={required()} />}
                 <SelectInput source="kind" choices={[
                     { id: 'primary', name: 'Primary' },
                     { id: 'essential', name: 'Essential' },
@@ -45,7 +51,18 @@ const MyEdit = ({ permissions, ...props }) => (
                 <JsonField source="initProps"/>
             </FormTab>
         </TabbedForm>
+    );
+};
+
+export const MyEdit = ({ permissions, ...props }) => (
+    <Edit title={<Title />} undoable={false} {...props}>
+        <InputForm mode="edit"/>
     </Edit>
 );
-
-export default MyEdit;
+export const MyCreate = ({ permissions, ...props }) => {
+    return (
+        <Create {...props}>
+            <InputForm mode="create"/>
+        </Create>
+    );
+};
