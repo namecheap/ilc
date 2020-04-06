@@ -1,6 +1,9 @@
 
 import simpleRestProvider from 'ra-data-simple-rest';
 
+import * as sharedProps from './sharedProps/dataTransform';
+import * as apps from './apps/dataTransform';
+
 const dataProvider = simpleRestProvider('/api/v1');
 
 const myDataProvider = {
@@ -60,10 +63,10 @@ const myDataProvider = {
 function transformGetter(resource, data) {
     switch (resource) {
         case 'app':
-            transformAppGetter(data);
+            apps.transformGet(data);
             break;
         case 'shared_props':
-            transformSharedPropsGetter(data);
+            sharedProps.transformGet(data);
             break;
         default:
     }
@@ -72,61 +75,13 @@ function transformGetter(resource, data) {
 function transformSetter(resource, data) {
     switch (resource) {
         case 'app':
-            transformAppSetter(data);
+            apps.transformSet(data);
             break;
         case 'shared_props':
-            transformSharedPropsSetter(data);
+            sharedProps.transformSet(data);
             break;
         default:
     }
-}
-
-function transformAppGetter(app) {
-    app.id = app.name;
-    if (app.dependencies) {
-        app.dependencies = Object.keys(app.dependencies).map(key => ({
-            key,
-            value: app.dependencies[key]
-        }));
-    }
-    if (app.props) {
-        app.props = JSON.stringify(app.props);
-    }
-    if (app.initProps) {
-        app.initProps = JSON.stringify(app.initProps);
-    }
-}
-
-function transformAppSetter(app) {
-    if (app.props) {
-        app.props = JSON.parse(app.props);
-    }
-    if (app.initProps) {
-        app.initProps = JSON.parse(app.initProps);
-    }
-    if (app.dependencies) {
-        app.dependencies = app.dependencies.reduce((acc, v) => {
-            acc[v.key] = v.value;
-            return acc;
-        }, {})
-    }
-    delete app.id;
-    delete app.assetsDiscoveryUpdatedAt;
-}
-
-
-function transformSharedPropsGetter(data) {
-    data.id = data.name;
-    if (data.props) {
-        data.props = JSON.stringify(data.props);
-    }
-}
-
-function transformSharedPropsSetter(data) {
-    if (data.props) {
-        data.props = JSON.parse(data.props);
-    }
-    delete data.id;
 }
 
 export default myDataProvider;
