@@ -9,9 +9,7 @@ const myDataProvider = {
 
         return dataProvider.getList(resource, params).then(v => {
             if (resource === 'app') {
-                v.data.forEach(v => {
-                    v.id = v.name;
-                })
+                v.data.forEach(v => transformAppGetter(v))
             }
             return v;
         });
@@ -21,11 +19,7 @@ const myDataProvider = {
 
         return dataProvider.getOne(resource, params).then(v => {
             if (resource === 'app') {
-                v.data.id = v.data.name;
-                v.data.dependencies = Object.keys(v.data.dependencies).map(key => ({
-                    key,
-                    value: v.data.dependencies[key]
-                }))
+                transformAppGetter(v.data);
             }
             return v;
         });
@@ -36,6 +30,16 @@ const myDataProvider = {
         return dataProvider.update(resource, params);
     },
 };
+
+function transformAppGetter(app) {
+    app.id = app.name;
+    if (app.dependencies) {
+        app.dependencies = Object.keys(app.dependencies).map(key => ({
+            key,
+            value: app.dependencies[key]
+        }));
+    }
+}
 
 
 export default myDataProvider;

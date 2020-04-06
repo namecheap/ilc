@@ -16,7 +16,7 @@ import Title from './Title';
 
 const MyEdit = ({ permissions, ...props }) => (
     <Edit title={<Title />}  {...props}>
-        <TabbedForm initialValues={{  }}>
+        <TabbedForm initialValues={{ dependencies: [] }}>
             <FormTab label="Summary">
                 <TextInput source="name" validate={required()} fullWidth />
                 <SelectInput source="kind" choices={[
