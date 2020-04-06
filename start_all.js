@@ -4,6 +4,7 @@ const concurrently = require('concurrently');
 const commands = [
     { command: 'cd ./ilc/ && npm run dev', name: 'ilc' },
     { command: 'cd ./registry/ && npm run dev', name: 'registry' },
+    { command: 'cd ./registry/client && npm run build:watch', name: 'registry:ui' },
 ];
 
 fs.readdirSync('./devFragments').forEach(fileName => {

@@ -14,7 +14,7 @@
         "migrate:make": "knex --knexfile config/knexfile.ts migrate:make",
         "seed": "knex --knexfile config/knexfile.ts seed:run",
         "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
-        "test": "cross-env NODE_ENV=test mocha",
+        "test": "cross-env NODE_ENV=test mocha --exclude=client/node_modules/**",
         "test:ci": "npm run migrate && npm run test",
         "test:coverage": "cross-env NODE_ENV=test nyc mocha",
         "postinstall": "npm run migrate && npm run seed",
@@ -57,6 +57,7 @@
         "source-map-support": "^0.5.13",
         "sqlite3": "^4.1.0",
         "url-join": "^4.0.1",
+        "serve-static": "^1.14.1",
         "uuid": "^3.4.0"
     }
 }

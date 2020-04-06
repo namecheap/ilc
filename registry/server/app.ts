@@ -8,17 +8,19 @@ import bodyParser from 'body-parser';
 import pong from './util/ping';
 import * as routes from "./routes";
 import errorHandler from './errorHandler';
+import serveStatic from 'serve-static';
 
 //production use 2+ instances of the registry with help of "npm run assetsdiscovery" and run manualy
 !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAppAssetsDiscovery');
 
 const app = express();
 
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 
 app.get('/ping', pong);
 
-app.get('/', (req, res) => res.send('Hello! This is Micro Fragments registry service.'));
+app.use('/', serveStatic('client/dist'));
+
 app.use('/api/v1/config', routes.config);
 app.use('/api/v1/app', routes.apps);
 app.use('/api/v1/template', routes.templates);

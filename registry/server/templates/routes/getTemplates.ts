@@ -10,6 +10,7 @@ import Template from '../interfaces';
 const getTemplates = async (req: Request, res: Response): Promise<void> => {
     const templates = await db.select().from<Template>('templates');
 
+    res.setHeader('Content-Range', templates.length); //Stub for future pagination capabilities
     res.status(200).send(templates);
 };
 
