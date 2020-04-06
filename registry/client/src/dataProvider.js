@@ -46,7 +46,8 @@ const myDataProvider = {
     delete: (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
-        return dataProvider.delete(resource, params);
+        return dataProvider.delete(resource, params)
+            .then(() => ({data: {id: params.id}}));
     },
     deleteMany: (resource, params) => {
         params.ids = params.ids.map(v => encodeURIComponent(v));
