@@ -67,9 +67,9 @@ repo and follow the guide to setup NC specific applications.
 ### Applications
 1. [System](./devFragments/system) (written in vanilla JS, with SSR)
 1. [News](./devFragments/news-ssr) (written in Vue.js, with SSR)
+1. [Navigation](./devFragments/navbar) (written in React, with SSR)
 1. [People](./devFragments/people) (written in React, no SSR)
 1. [Planets](./devFragments/planets) (written in Vue.js, no SSR)
-1. [Navigation](./devFragments/navbar) (written in React, no SSR)
 
 ### Services
 1. [fetchWithCache](./devFragments/fetchWithCache) (used by News & People)
