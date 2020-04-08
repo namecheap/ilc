@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import {
     FieldTitle,
@@ -17,11 +17,6 @@ export default ({
    label,
    source,
    resource,
-   onBlur,
-   onChange,
-   onFocus,
-   parse,
-   validate,
    ...rest
 }) => {
     const {
@@ -29,22 +24,33 @@ export default ({
         isRequired,
         //meta: { error, touched },
     } = useInput({
-        onBlur,
-        onChange,
-        onFocus,
-        parse,
         resource,
         source,
-        validate,
         ...rest,
     });
+
+    const [oldJson, setOldJson] = useState({});
+    const [jsonEditorRef, setJsonEditorRef] = useState(null);
 
     let jsonVal = {};
     try {
         jsonVal = JSON.parse(value)
     } catch (e) {}
 
+    if (JSON.stringify(oldJson) !== JSON.stringify(jsonVal) && jsonEditorRef) {
+        setOldJson(jsonVal);
+        jsonEditorRef.set(jsonVal);
+    }
+
     const style = {height: '400px'};
+
+    const setRef = instance => {
+        if (instance) {
+            setJsonEditorRef(instance.jsonEditor);
+        } else {
+            setJsonEditorRef(null);
+        }
+    };
 
     return (
         <div>
@@ -58,6 +64,7 @@ export default ({
             </Typography>
 
             <JsonEditor
+                ref={setRef}
                 style={style}
                 mode="code"
                 value={jsonVal}
