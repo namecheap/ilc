@@ -9,7 +9,7 @@ import {
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
 const Title = ({ record }) => {
-    return (<span>{record ? `App "${record.name}"` : ''}</span>);
+    return (<span>{record ? `Template "${record.name}"` : ''}</span>);
 };
 
 const InputForm = ({mode = 'edit', ...props}) => {

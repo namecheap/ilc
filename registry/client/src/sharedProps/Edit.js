@@ -10,7 +10,7 @@ import {
 import JsonField from '../JsonField/index';
 
 const Title = ({ record }) => {
-    return (<span>{record ? `App "${record.name}"` : ''}</span>);
+    return (<span>{record ? `Props set "${record.name}"` : ''}</span>);
 };
 
 const InputForm = ({mode = 'edit', ...props}) => {
