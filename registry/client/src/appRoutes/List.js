@@ -7,10 +7,12 @@ import {
     List,
     SimpleList,
     TextField,
-    ChipField,
+    BooleanField,
+    Filter,
+    BooleanInput,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
-const PostListBulkActions = memo(props => (
+const ListBulkActions = memo(props => (
     <Fragment>
         <BulkDeleteButton {...props} />
     </Fragment>
@@ -33,28 +35,45 @@ const ListActionsToolbar = ({ children, ...props }) => {
     );
 };
 
+const ListFilter = (props) => (
+    <Filter {...props}>
+        <BooleanInput label="Show special" source="showSpecial" alwaysOn />
+    </Filter>
+);
+
+const ListGrid = (props) => {
+    return (
+        <Datagrid {...props} rowClick="edit" optimized>
+            {!props.filterValues.showSpecial ? <TextField source="id" sortable={false} /> : null }
+            {!props.filterValues.showSpecial ? <TextField source="orderPos" sortable={false} /> : null }
+            {!props.filterValues.showSpecial ? <TextField source="route" sortable={false} /> : null }
+            {!props.filterValues.showSpecial ? <BooleanField source="next" sortable={false} /> : null }
+            {props.filterValues.showSpecial ? <TextField source="specialRole" sortable={false} /> : null }
+            <TextField source="templateName" emptyText="-" sortable={false} />
+            <ListActionsToolbar>
+                <EditButton />
+            </ListActionsToolbar>
+        </Datagrid>
+    );
+};
+
 
 const PostList = props => {
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
     return (
         <List
             {...props}
-            bulkActionButtons={<PostListBulkActions />}
+            bulkActionButtons={<ListBulkActions />}
             exporter={false}
+            filters={<ListFilter />}
         >
             {isSmall ? (
                 <SimpleList
-                    primaryText={record => record.route}
+                    primaryText={record => record.specialRole ? record.specialRole : record.route}
+                    secondaryText={record => `next: ${record.next ? 'true' : 'false'}; template: ${record.templateName || '-'}`}
                 />
             ) : (
-                <Datagrid rowClick="edit" optimized>
-                    <TextField source="id" />
-                    <TextField source="orderPos" />
-                    <TextField source="route" />
-                    <ListActionsToolbar>
-                        <EditButton />
-                    </ListActionsToolbar>
-                </Datagrid>
+                <ListGrid />
             )}
         </List>
     );

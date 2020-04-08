@@ -37,7 +37,14 @@ const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response
         });
 
     if (appRoutes.length) {
-        res.status(200).send(prepareAppRouteToRespond(appRoutes));
+        const data = prepareAppRouteToRespond(appRoutes);
+        if (data.specialRole) {
+            data.specialRole = data.specialRole.toString();
+        }
+        if (data.templateName) {
+            data.templateName = data.templateName.toString();
+        }
+        res.status(200).send(data);
     } else {
         res.status(404).send('Not found');
     }
