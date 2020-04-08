@@ -9,6 +9,6 @@ RUN npm install --no-package-lock --no-progress
 RUN npm run build
 
 # Legacy infrastructure support
-RUN npm install -g stdout-mq@^2.2.0
+RUN npm install -g stdout-mq@^2.3.0
 
 CMD ["npm", "start"]
