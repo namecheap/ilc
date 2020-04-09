@@ -31,6 +31,7 @@ export default ({
 
     const [oldJson, setOldJson] = useState({});
     const [jsonEditorRef, setJsonEditorRef] = useState(null);
+    const [autoHeight, setAutoHeight] = useState(false);
 
     let jsonVal = {};
     try {
@@ -69,9 +70,14 @@ export default ({
                 mode="code"
                 value={jsonVal}
                 ace={ace}
-                theme="ace/theme/github"
                 onChange={value => { // Here we receive only valid values
-                    inputOnChange(JSON.stringify(value))
+                    inputOnChange(JSON.stringify(value));
+                    if (jsonEditorRef && !autoHeight) {
+                        jsonEditorRef.aceEditor.setOptions({
+                            maxLines: 10000
+                        });
+                        setAutoHeight(true)
+                    }
                 }}
             />
         </div>
