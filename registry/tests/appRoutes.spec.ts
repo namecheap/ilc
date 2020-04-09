@@ -128,13 +128,15 @@ describe(`Tests ${example.url}`, () => {
             let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
-            response = await request.post(example.url)
-            .send(example.correct)
-            .expect(500);
+            try {
+                response = await request.post(example.url)
+                    .send(example.correct)
+                    .expect(500);
 
-            expect(response.text).to.include('Internal server error occurred.');
-
-            await request.delete(example.url + id);
+                expect(response.text).to.include('Internal server error occurred.');
+            } finally {
+                await request.delete(example.url + id);
+            }
         });
 
         it('should not create record with non-existing templateName', async () => {
@@ -184,15 +186,17 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).to.have.property('id');
             const id = response.body.id;
 
-            const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
-            expect(response.body).deep.equal(expectedRoute);
+            try {
+                const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
+                expect(response.body).deep.equal(expectedRoute);
 
-            response = await request.get(example.url + id)
-            .expect(200);
+                response = await request.get(example.url + id)
+                    .expect(200);
 
-            expect(response.body).deep.equal(expectedRoute);
-
-            await request.delete(example.url + id);
+                expect(response.body).deep.equal(expectedRoute);
+            } finally {
+                await request.delete(example.url + id);
+            }
         });
     });
 
@@ -208,27 +212,32 @@ describe(`Tests ${example.url}`, () => {
             let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
-            response = await request.get(example.url + id)
-            .expect(200);
+            try {
+                response = await request.get(example.url + id)
+                    .expect(200);
 
-            const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
-            expect(response.body).deep.equal(expectedRoute);
-
-            await request.delete(example.url + id).expect(204);
+                const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
+                expect(response.body).deep.equal(expectedRoute);
+            } finally {
+                await request.delete(example.url + id).expect(204);
+            }
         });
 
         it('should successfully return all existed records', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const id = response.body.id;
+            let id;
+            try {
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                id = response.body.id;
 
-            response = await request.get(example.url)
-            .expect(200);
+                response = await request.get(example.url)
+                    .expect(200);
 
-            expect(response.body.routes).to.be.an('array').that.is.not.empty;
-            const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
-            expect(response.body.routes).to.deep.include(expectedRoute);
-
-            await request.delete(example.url + id).expect(204);
+                expect(response.body).to.be.an('array').that.is.not.empty;
+                const expectedRoute = { id, ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil) };
+                expect(response.body).to.deep.include(expectedRoute);
+            } finally {
+                id && await request.delete(example.url + id).expect(204);
+            }
         });
     });
 
@@ -245,117 +254,130 @@ describe(`Tests ${example.url}`, () => {
             let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
-            response = await request.put(example.url + id)
-            .send({
-                ...example.correct,
-                specialRole: 'ncTestRouteIncorrectSpecialRole',
-                orderPos: 'ncTestRouteIncorrectOrderPos',
-                route: 123,
-                next: 456,
-                templateName: 789,
-                slots: 'ncTestRouteIncorrectSlots'
-            })
-            .expect(
-                422,
-                '"specialRole" must be [404]\n' +
-                '"orderPos" must be a number\n' +
-                '"route" must be a string\n' +
-                '"next" must be a boolean\n' +
-                '"templateName" must be a string\n' +
-                '"slots" must be of type object'
-            );
+            try {
+                response = await request.put(example.url + id)
+                    .send({
+                        ...example.correct,
+                        specialRole: 'ncTestRouteIncorrectSpecialRole',
+                        orderPos: 'ncTestRouteIncorrectOrderPos',
+                        route: 123,
+                        next: 456,
+                        templateName: 789,
+                        slots: 'ncTestRouteIncorrectSlots'
+                    })
+                    .expect(
+                        422,
+                        '"specialRole" must be [404]\n' +
+                        '"orderPos" must be a number\n' +
+                        '"route" must be a string\n' +
+                        '"next" must be a boolean\n' +
+                        '"templateName" must be a string\n' +
+                        '"slots" must be of type object'
+                    );
 
-            expect(response.body).deep.equal({});
-
-            await request.delete(example.url + id).expect(204);
+                expect(response.body).deep.equal({});
+            } finally {
+                await request.delete(example.url + id).expect(204);
+            }
         });
 
         it('should not update record with the same orderPos', async () => {
-            let response = await request.post(example.url)
-            .send({ ...example.correct, orderPos: 100000, })
-            .expect(200);
-            const id1 = response.body.id;
+            let id1, id2;
+            try {
+                let response = await request.post(example.url)
+                    .send({ ...example.correct, orderPos: 100000, })
+                    .expect(200);
+                id1 = response.body.id;
 
-            response = await request.post(example.url)
-            .send({ ...example.correct, orderPos: 200000, })
-            .expect(200);
-            const id2 = response.body.id;
+                response = await request.post(example.url)
+                    .send({ ...example.correct, orderPos: 200000, })
+                    .expect(200);
+                id2 = response.body.id;
 
-            response = await request.put(example.url + id1)
-            .send({ ...example.correct, orderPos: 200000, })
-            .expect(500);
+                response = await request.put(example.url + id1)
+                    .send({ ...example.correct, orderPos: 200000, })
+                    .expect(500);
 
-            expect(response.text).to.include('Internal server error occurred.');
-
-            await request.delete(example.url + id1).expect(204);
-            await request.delete(example.url + id2).expect(204);
+                expect(response.text).to.include('Internal server error occurred.');
+            } finally {
+                id1 && await request.delete(example.url + id1).expect(204);
+                id2 && await request.delete(example.url + id2).expect(204);
+            }
         });
 
         it('should not update record with non-existing templateName', async () => {
             let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
-            response = await request.put(example.url + id)
-            .send({
-                ...example.correct,
-                templateName: 'ncTestNonExistingTemplateName',
-            })
-            .expect(500);
+            try {
+                response = await request.put(example.url + id)
+                    .send({
+                        ...example.correct,
+                        templateName: 'ncTestNonExistingTemplateName',
+                    })
+                    .expect(500);
 
-            expect(response.text).to.include('Internal server error occurred.');
-
-            await request.delete(example.url + id).expect(204);
+                expect(response.text).to.include('Internal server error occurred.');
+            } finally {
+                await request.delete(example.url + id).expect(204);
+            }
         });
 
         it('should not update record with non-existing slots/appName', async () => {
             let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
-            response = await request.put(example.url + id)
-            .send({
-                ...example.correct,
-                slots: {
-                    ncTestRouteSlotNavbar: {
-                        appName: '@portal/ncTestNonExistingAppName',
-                    },
-                }
-            })
-            .expect(500);
+            try {
+                response = await request.put(example.url + id)
+                    .send({
+                        ...example.correct,
+                        slots: {
+                            ncTestRouteSlotNavbar: {
+                                appName: '@portal/ncTestNonExistingAppName',
+                            },
+                        }
+                    })
+                    .expect(500);
 
-            expect(response.text).to.include('Internal server error occurred.');
-
-            await request.delete(example.url + id).expect(204);
+                expect(response.text).to.include('Internal server error occurred.');
+            } finally {
+                await request.delete(example.url + id).expect(204);
+            }
         });
 
         it('should not update record without required slots/appName', async () => {
             let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
-            response = await request.put(example.url + id)
-            .send({
-                ...example.correct,
-                slots: {
-                    ncTestRouteSlotNavbar: {
-                        appName: undefined,
-                    },
-                }
-            })
-            .expect(422, '"slots.ncTestRouteSlotNavbar.appName" is required');
-
-            await request.delete(example.url + id).expect(204);
+            try {
+                response = await request.put(example.url + id)
+                    .send({
+                        ...example.correct,
+                        slots: {
+                            ncTestRouteSlotNavbar: {
+                                appName: undefined,
+                            },
+                        }
+                    })
+                    .expect(422, '"slots.ncTestRouteSlotNavbar.appName" is required');
+            } finally {
+                await request.delete(example.url + id).expect(204);
+            }
         });
 
         it('should successfully update record', async () => {
             let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
-            response = await request.put(example.url + id)
-            .send(example.updated)
-            .expect(200);
+            try {
+                response = await request.put(example.url + id)
+                    .send(example.updated)
+                    .expect(200);
 
-            expect(response.body).deep.equal({ ...example.updated, id });
-
-            await request.delete(example.url + id).expect(204);
+                expect(response.body).deep.equal({ ...example.updated, id });
+            } finally {
+                await request.delete(example.url + id).expect(204);
+            }
         });
     });
 

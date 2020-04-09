@@ -29,13 +29,8 @@ const commonAppRouteSlot = {
     name: Joi.string().trim().min(1).max(255),
     appName: appNameSchema,
     props: Joi.object().default({}),
-    kind: Joi.string().valid('primary', 'essential', 'regular'),
+    kind: Joi.string().valid('primary', 'essential', 'regular', null),
 };
-
-export const partialAppRouteSlotSchema = Joi.object({
-    ...commonAppRouteSlot,
-    name: commonAppRouteSlot.name.forbidden(),
-});
 
 export const appRouteSlotSchema = Joi.object({
     ...commonAppRouteSlot,
@@ -50,7 +45,7 @@ const commonAppRoute = {
     orderPos: Joi.number(),
     route: Joi.string().trim().max(255),
     next: Joi.bool().default(false),
-    templateName: templateNameSchema,
+    templateName: templateNameSchema.allow(null),
     slots: Joi.object().pattern(commonAppRouteSlot.name, appRouteSlotSchema),
 };
 

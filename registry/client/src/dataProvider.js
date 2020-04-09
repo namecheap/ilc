@@ -4,6 +4,7 @@ import simpleRestProvider from 'ra-data-simple-rest';
 import * as sharedProps from './sharedProps/dataTransform';
 import * as apps from './apps/dataTransform';
 import * as templates from './templates/dataTransform';
+import * as appRoutes from './appRoutes/dataTransform';
 
 const dataProvider = simpleRestProvider('/api/v1');
 
@@ -73,6 +74,9 @@ function transformGetter(resource, data) {
         case 'template':
             templates.transformGet(data);
             break;
+        case 'route':
+            appRoutes.transformGet(data);
+            break;
         default:
     }
 }
@@ -87,6 +91,9 @@ function transformSetter(resource, data) {
             break;
         case 'template':
             templates.transformSet(data);
+            break;
+        case 'route':
+            appRoutes.transformSet(data);
             break;
         default:
     }

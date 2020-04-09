@@ -24,6 +24,12 @@ const prepareRoutesWithSlotsToRespond = _.compose(
             props,
             kind,
         };
+
+        const slots = { ...prevSavedAppRouteSlots };
+        if (name) {
+            slots[name] = preProcessResponse(nextAppRouteSlot);
+        }
+
         const nextAppRoute = {
             id: routeId,
             route,
@@ -31,10 +37,7 @@ const prepareRoutesWithSlotsToRespond = _.compose(
             specialRole,
             templateName,
             orderPos,
-            slots: {
-                ...prevSavedAppRouteSlots,
-                [name]: preProcessResponse(nextAppRouteSlot),
-            },
+            slots
         };
 
         return {
@@ -44,32 +47,11 @@ const prepareRoutesWithSlotsToRespond = _.compose(
     }, {}),
 );
 
-const prepareRoutesAndSpecialRoutes = _.reduce((appRoutes: any, appRoute: any) => {
-    if (appRoute.specialRole) {
-        return {
-            ...appRoutes,
-            specialRoutes: [
-                ...appRoutes.specialRoutes,
-                appRoute,
-            ]
-        };
-    } else {
-        return {
-            ...appRoutes,
-            routes: [
-                ...appRoutes.routes,
-                appRoute
-            ]
-        };
-    }
-}, {routes: [], specialRoutes: []});
-
 export const prepareAppRouteToRespond = _.compose(
     _.first,
     prepareRoutesWithSlotsToRespond,
 );
 
 export const prepareAppRoutesToRespond = _.compose(
-    prepareRoutesAndSpecialRoutes,
     prepareRoutesWithSlotsToRespond,
 );
