@@ -1,7 +1,7 @@
 require('./util/express-promise');
 
 import config from 'config';
-import express from 'express';
+import express, {RequestHandler} from 'express';
 import bodyParser from 'body-parser';
 
 import pong from './util/ping';
@@ -23,17 +23,18 @@ export default (withAuth: boolean = true) => {
 
     app.use('/', serveStatic('client/dist'));
 
+    let authMw: RequestHandler = (req, res, next) => next();
     if (withAuth) {
-        auth(app, {
+        authMw = auth(app, {
             session: {secret: config.get('auth.sessionSecret')}
         });
     }
 
     app.use('/api/v1/config', routes.config);
-    app.use('/api/v1/app', routes.apps);
-    app.use('/api/v1/template', routes.templates);
-    app.use('/api/v1/route', routes.appRoutes);
-    app.use('/api/v1/shared_props', routes.sharedProps);
+    app.use('/api/v1/app', authMw, routes.apps);
+    app.use('/api/v1/template', routes.templates(authMw));
+    app.use('/api/v1/route', authMw, routes.appRoutes);
+    app.use('/api/v1/shared_props', authMw, routes.sharedProps);
 
     app.use(errorHandler);
 

@@ -2,13 +2,13 @@ import passport from 'passport';
 import {Strategy as LocalStrategy} from 'passport-local';
 import session from 'express-session';
 import sessionKnex from 'connect-session-knex';
-import {Express} from 'express';
+import {Express, RequestHandler} from 'express';
 import {Strategy as BearerStrategy} from 'passport-http-bearer';
 import * as bcrypt from 'bcrypt';
 
 import db from './db';
 
-export default (app: Express, config: any) => {
+export default (app: Express, config: any): RequestHandler => {
     const SessionKnex = sessionKnex(session);
     const sessionConfig = Object.assign({
         resave: false,
@@ -80,13 +80,13 @@ export default (app: Express, config: any) => {
         res.redirect('/');
     });
 
-    app.use((req, res, next) => {
+    return (req: any, res: any, next: any) => {
         if (!req.user) {
             return passport.authenticate('bearer', { session: false })(req, res, next);
         }
 
         return next();
-    });
+    };
 }
 
 async function getEntityWithCreds(provider: string, identifier: string, secret: string):Promise<object|null> {
