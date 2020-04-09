@@ -10,7 +10,8 @@ import errorHandler from './errorHandler';
 import serveStatic from 'serve-static';
 import auth from './auth';
 
-//production use 2+ instances of the registry with help of "npm run assetsdiscovery" and run manualy
+// As in production there can be 2+ instances of the ILC registry
+// AppAssetsDiscovery should be run separately via "npm run assetsdiscovery"
 !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAppAssetsDiscovery');
 
 const app = express();
