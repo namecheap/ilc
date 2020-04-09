@@ -4,6 +4,7 @@ import session from 'express-session';
 import sessionKnex from 'connect-session-knex';
 import {Express} from 'express';
 import {Strategy as BearerStrategy} from 'passport-http-bearer';
+import * as bcrypt from 'bcrypt';
 
 import db from './db';
 
@@ -24,41 +25,38 @@ export default (app: Express, config: any) => {
     app.use(session(sessionConfig));
 
 
-    passport.use(new LocalStrategy(
-        function(username, password, done) {
-            if (username === 'root' && password === 'pwd') {
-                return done(null, {username: 'root', role: 'admin'});
+    passport.use(new LocalStrategy(async function(username, password, done) {
+        try {
+            const user = await getEntityWithCreds('local', username, password);
+            if (!user) {
+                return done(null, false);
             }
 
-            return done(null, false, { message: 'Incorrect username.' });
-
-            // User.findOne({ username: username }, function(err, user) {
-            //     if (err) { return done(err); }
-            //     if (!user) {
-            //         return done(null, false, { message: 'Incorrect username.' });
-            //     }
-            //     if (!user.validPassword(password)) {
-            //         return done(null, false, { message: 'Incorrect password.' });
-            //     }
-            //     return done(null, user);
-            // });
+            return done(null, user);
+        } catch (e) {
+            return done(e);
         }
-    ));
-    passport.use(new BearerStrategy(
-        function(token, done) {
-            if (token === 'super') {
-                console.log('ADMIN IS HERE');
-                return done(null, {username: 'root', role: 'admin'});
+    }));
+    passport.use(new BearerStrategy(async function(token, done) {
+        try {
+            const tokenParts = token.split(':');
+            if (tokenParts.length !== 2) {
+                return done(null, false);
             }
-            return done(null, false);
 
-            // User.findOne({ token: token }, function (err, user) {
-            //     if (err) { return done(err); }
-            //     if (!user) { return done(null, false); }
-            //     return done(null, user, { scope: 'all' });
-            // });
+            const id = Buffer.from(tokenParts[0], 'base64').toString('utf8');
+            const secret = Buffer.from(tokenParts[1], 'base64').toString('utf8');
+
+            const user = await getEntityWithCreds('bearer', id, secret);
+            if (!user) {
+                return done(null, false);
+            }
+
+            return done(null, user);
+        } catch (e) {
+            return done(e);
         }
-    ));
+    }));
 
     // This can be used to keep a smaller payload
     passport.serializeUser(function(user, done) {
@@ -89,4 +87,23 @@ export default (app: Express, config: any) => {
 
         return next();
     });
+}
+
+async function getEntityWithCreds(provider: string, identifier: string, secret: string):Promise<object|null> {
+    const user = await db.select().from('auth_entities')
+        .first('identifier', 'role', 'secret')
+        .where({
+            provider,
+            identifier
+        });
+    if (!user) {
+        return null;
+    }
+    if (!await bcrypt.compare(secret, user.secret)) {
+        return null;
+    }
+
+    delete user.secret;
+
+    return user;
 }
