@@ -218,17 +218,20 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully return all existed records', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const id = response.body.id;
+            let id;
+            try {
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                id = response.body.id;
 
-            response = await request.get(example.url)
-            .expect(200);
+                response = await request.get(example.url)
+                    .expect(200);
 
-            expect(response.body.routes).to.be.an('array').that.is.not.empty;
-            const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
-            expect(response.body.routes).to.deep.include(expectedRoute);
-
-            await request.delete(example.url + id).expect(204);
+                expect(response.body).to.be.an('array').that.is.not.empty;
+                const expectedRoute = { id, ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil) };
+                expect(response.body).to.deep.include(expectedRoute);
+            } finally {
+                id && await request.delete(example.url + id).expect(204);
+            }
         });
     });
 
