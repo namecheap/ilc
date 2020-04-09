@@ -9,7 +9,7 @@ import {
 } from '../services/prepareAppRoute';
 
 const getAppRoutes = async (req: Request, res: Response) => {
-    let filters = req.query.filter ? JSON.parse(req.query.filter) : {};
+    let filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
 
     const query = db
         .select('routes.id as routeId', '*')
@@ -22,7 +22,7 @@ const getAppRoutes = async (req: Request, res: Response) => {
         query.whereNull('routes.specialRole');
     }
 
-    const appRoutes = await query.range(req.query.range);
+    const appRoutes = await query.range(req.query.range as string | undefined);
 
     res.setHeader('Content-Range', appRoutes.pagination.total); //Stub for future pagination capabilities
     res.status(200).send(prepareAppRoutesToRespond(appRoutes.data));
