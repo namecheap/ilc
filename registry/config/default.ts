@@ -17,5 +17,8 @@ module.exports = {
     },
     newrelic: {
         licenseKey: null,
+    },
+    auth: {
+        sessionSecret: 'zaM7%#BjyZZ3A5zV@Mpt'
     }
 };
