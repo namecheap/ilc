@@ -7,7 +7,6 @@ import {
 
 import Typography from "@material-ui/core/Typography";
 import {JsonEditor} from "jsoneditor-react";
-import './editor.css';
 
 import ace from "brace";
 import 'brace/mode/json';
