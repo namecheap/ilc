@@ -10,7 +10,6 @@ import {JsonEditor} from "jsoneditor-react";
 
 import ace from "brace";
 import 'brace/mode/json';
-import 'brace/theme/github';
 
 export default ({
    label,
@@ -21,7 +20,6 @@ export default ({
     const {
         input: {onChange: inputOnChange, value},
         isRequired,
-        //meta: { error, touched },
     } = useInput({
         resource,
         source,
