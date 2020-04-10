@@ -32,9 +32,15 @@ What if we could have microservices on the frontend? This would allow frontend d
 counterparts on the same feature and independently deploy parts of the website — “fragments” such as Header, Product, and Footer. 
 Bringing microservices to the frontend requires a layout service that composes a website out of fragments. ILC was developed to solve this need.
 
-## Used core technologies
-1. [single-spa](https://single-spa.js.org/) - framework for front-end microservices
-2. [TailorX](https://github.com/StyleT/tailorx) - backend layout service that uses streams to compose a web page from fragment services
+## Key features
+
+* 📦 **Based on [single-spa](https://single-spa.js.org/) & [TailorX](https://github.com/StyleT/tailorx)** - battle tested solutions inside
+* 📱 **Technology Agnostic** - use it with React, Vue.js, Angular, etc...
+* ⚙️ **Server Side Rendering support** - key advantage over competitors
+* 🗄 **Built-in registry** - add new apps, pages or change configs and templates in few clicks
+* ⚡️ **Built for speed** - server side part of the system adds just ~17ms of latency
+* 👨‍💻 **Develop right at production** - _coming soon..._
+* 💲 **Baked by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with community
 
 ## Architecture overview
 
