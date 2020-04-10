@@ -21,14 +21,12 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
 
     const { cookie } = request.headers;
     try {
-        let overrideConfig = typeof cookie === 'string' && cookie.split('; ').find(n => n.startsWith('overrideConfig'));
+        let overrideConfig = typeof cookie === 'string' && cookie.split(';').find(n => n.trim().startsWith('ILC-overrideConfig'));
         if (overrideConfig) {
-            overrideConfig = JSON.parse(overrideConfig.replace(/^overrideConfig=/, ''));
-            mergeConfigs(registryConfig.data, overrideConfig);
+            overrideConfig = JSON.parse(overrideConfig.replace(/^\s?ILC\-overrideConfig=/, ''));
+            registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
         }
-    } catch (e) {
-        console.error('Can\'t handle overrideConfig from cookies', e);
-    }
+    } catch (e) {}
 
     const {route, page} = router.getTemplateInfo(registryConfig.data, request.url);
     const template = await registryService.getTemplate(route.template);
