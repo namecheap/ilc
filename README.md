@@ -36,6 +36,10 @@ Bringing microservices to the frontend requires a layout service that composes a
 1. [single-spa](https://single-spa.js.org/) - framework for front-end microservices
 2. [TailorX](https://github.com/StyleT/tailorx) - backend layout service that uses streams to compose a web page from fragment services
 
+## Architecture overview
+
+![ILC Architecture overview](docs/assets/ILC-Architecture.svg)
+
 ## Maturity level
 
 Currently project is under active development and some of the features are missing. 
