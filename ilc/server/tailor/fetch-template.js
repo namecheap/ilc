@@ -1,5 +1,7 @@
 'use strict';
 
+const mergeConfigs = require('./merge-configs');
+
 const TEMPLATE_ERROR = 0;
 const TEMPLATE_NOT_FOUND = 1;
 
@@ -15,7 +17,19 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
     request,
     parseTemplate
 ) => {
-    const registryConfig = await registryService.getConfig();
+    let registryConfig = await registryService.getConfig();
+
+    const { cookie } = request.headers;
+    try {
+        let overrideConfig = typeof cookie === 'string' && cookie.split('; ').find(n => n.startsWith('overrideConfig'));
+        if (overrideConfig) {
+            overrideConfig = JSON.parse(overrideConfig.replace(/^overrideConfig=/, ''));
+            mergeConfigs(registryConfig.data, overrideConfig);
+        }
+    } catch (e) {
+        console.error('Can\'t handle overrideConfig from cookies', e);
+    }
+
     const {route, page} = router.getTemplateInfo(registryConfig.data, request.url);
     const template = await registryService.getTemplate(route.template);
 
