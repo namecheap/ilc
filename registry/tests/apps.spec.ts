@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { request, expect } from './common';
+import { request, requestWithAuth, expect } from './common';
 
 const example = <any>{
     url: '/api/v1/app/',
@@ -97,7 +97,7 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully create record', async () => {
             let response = await request.post(example.url)
             .send(example.correct)
-            .expect(200)
+            .expect(200);
 
             expect(response.body).deep.equal(example.correct);
 
@@ -107,6 +107,14 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).deep.equal(example.correct);
 
             await request.delete(example.url + example.encodedName).expect(204);
+        });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.post(example.url)
+                    .send(example.correct)
+                    .expect(401);
+            });
         });
     });
 
@@ -140,6 +148,16 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).to.deep.include(example.correct);
 
             await request.delete(example.url + example.encodedName).expect(204);
+        });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.get(example.url)
+                    .expect(401);
+
+                await requestWithAuth.get(example.url + 123)
+                    .expect(401);
+            });
         });
     });
 
@@ -212,6 +230,14 @@ describe(`Tests ${example.url}`, () => {
 
             await request.delete(example.url + example.encodedName).expect(204);
         });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.put(example.url + 123)
+                    .send(example.correct)
+                    .expect(401);
+            });
+        });
     });
 
     describe('Delete', () => {
@@ -230,6 +256,14 @@ describe(`Tests ${example.url}`, () => {
             .expect(204, '');
 
             expect(response.body).deep.equal({});
+        });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.delete(example.url + 123)
+                    .send(example.correct)
+                    .expect(401);
+            });
         });
     });
 });
