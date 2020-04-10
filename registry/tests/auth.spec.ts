@@ -18,7 +18,7 @@ const getApp = () => {
     return app;
 };
 
-describe('Tests /api/v1/config', () => {
+describe('Authentication / Authorization', () => {
     const request = supertest(getApp());
     //It's hardcoded in DB migrations
     const authToken = Buffer.from('root_api_token', 'utf8').toString('base64')
