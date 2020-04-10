@@ -23,7 +23,7 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
     try {
         let overrideConfig = typeof cookie === 'string' && cookie.split(';').find(n => n.trim().startsWith('ILC-overrideConfig'));
         if (overrideConfig) {
-            overrideConfig = JSON.parse(overrideConfig.replace(/^\s?ILC\-overrideConfig=/, ''));
+            overrideConfig = JSON.parse(decodeURIComponent(overrideConfig.replace(/^\s?ILC\-overrideConfig=/, '')));
             registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
         }
     } catch (e) {}
