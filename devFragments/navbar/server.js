@@ -1,14 +1,17 @@
 'use strict';
 
 const express = require('express');
+const cors = require('cors');
 
 const React = require('react');
 const ReactDOMServer = require('react-dom/server');
 const {default: App} = require('./build/server');
-const PORT = 9235;
+const PORT = 8235;
 
 const server = express();
+server.use(cors());
 
+server.use(express.static('build'));
 
 server.use((req, res, next) => {
     if (req.headers['x-request-uri'] !== undefined) {

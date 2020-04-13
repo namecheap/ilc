@@ -4,16 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "echo \"Production start not implemented yet\" && exit 1",
+    "start": "node server.js",
     "dev": "concurrently --kill-others --kill-others-on-fail -n client,server \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "webpack-dev-server --config ./webpack.dev.js --port 8235",
     "dev:server": "nodemon --ignore ./build/ --exec \"webpack --config ./webpack.server.js && node server.js\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "webpack --config webpack.config.js --progress --hide-modules",
+    "build:server": "webpack --config webpack.server.js --progress --hide-modules"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@reach/router": "1.2.1",
+    "cors": "^2.8.5",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
     "react-router": "4.3.1",
