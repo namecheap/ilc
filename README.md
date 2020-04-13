@@ -39,7 +39,7 @@ Bringing microservices to the frontend requires a layout service that composes a
 * ⚙️ **Server Side Rendering support** - key advantage over competitors
 * 🗄 **Built-in registry** - add new apps, pages or change configs and templates in few clicks
 * ⚡️ **Built for speed** - server side part of the system adds just ~17ms of latency
-* 👨‍💻 **Develop right at production** - _coming soon..._
+* 👨‍💻 **Develop right at production** - [Doc](https://github.com/namecheap/ilc/blob/master/docs/develop_at_production.md)
 * 💲 **Baked by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with community
 
 ## Architecture overview
