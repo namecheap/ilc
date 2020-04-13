@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import nock from 'nock';
 
-import { request, expect } from './common';
+import {request, expect, requestWithAuth} from './common';
 
 const example = {
     url: '/api/v1/template/',
@@ -65,6 +65,14 @@ describe(`Tests ${example.url}`, () => {
 
             await request.delete(example.url + example.correct.name).expect(204);
         });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.post(example.url)
+                    .send(example.correct)
+                    .expect(401);
+            });
+        });
     });
 
     describe('Read', () => {
@@ -76,10 +84,10 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).deep.equal({});
         });
 
-        it('should successfully return record', async () => {
+        it('should successfully return record w/o authentication', async () => {
             await request.post(example.url).send(example.correct).expect(200);
 
-            const response = await request.get(example.url + example.correct.name)
+            const response = await requestWithAuth.get(example.url + example.correct.name)
                 .expect(200);
 
             expect(response.body).deep.equal(example.correct);
@@ -87,7 +95,7 @@ describe(`Tests ${example.url}`, () => {
             await request.delete(example.url + example.correct.name).expect(204);
         });
 
-        it('should return a rendered template', async () => {
+        it('should return a rendered template w/o authentication', async () => {
             const includesHost = 'https://api.include.com';
             const scope = nock(includesHost);
 
@@ -151,7 +159,7 @@ describe(`Tests ${example.url}`, () => {
                 },
             }) => scope.log(console.log).get(route).delay(delay).reply(status, data, headers));
 
-            const response = await request.get(example.url + template.name + '/rendered').expect(200);
+            const response = await requestWithAuth.get(example.url + template.name + '/rendered').expect(200);
 
             await request.delete(example.url + template.name).expect(204);
 
@@ -251,6 +259,14 @@ describe(`Tests ${example.url}`, () => {
 
             await request.delete(example.url + example.correct.name).expect(204);
         });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.put(example.url + example.correct.name)
+                    .send(_.omit(example.updated, 'name'))
+                    .expect(401);
+            });
+        });
     });
 
     describe('Delete', () => {
@@ -269,6 +285,13 @@ describe(`Tests ${example.url}`, () => {
                 .expect(204, '');
 
             expect(response.body).deep.equal({});
+        });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.delete(example.url + example.correct.name)
+                    .expect(401);
+            });
         });
     });
 });

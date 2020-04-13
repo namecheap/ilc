@@ -1,9 +1,12 @@
 FROM node:12-alpine
 
+RUN apk --no-cache add --virtual builds-deps build-base python
+
 ADD ./ /codebase
 WORKDIR /codebase
 
 RUN npm install --no-package-lock --no-progress --ignore-scripts
+RUN npm rebuild bcrypt --build-from-source
 RUN npm install sqlite3 mysql
 RUN npm run compile
 

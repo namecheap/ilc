@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { request, expect } from './common';
+import {request, expect, requestWithAuth} from './common';
 
 let example = <any>{
     template: {
@@ -198,6 +198,13 @@ describe(`Tests ${example.url}`, () => {
                 await request.delete(example.url + id);
             }
         });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.post(example.url).send(example.correct)
+                    .expect(401);
+            });
+        });
     });
 
     describe('Read', () => {
@@ -238,6 +245,16 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 id && await request.delete(example.url + id).expect(204);
             }
+        });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.get(example.url)
+                    .expect(401);
+
+                await requestWithAuth.get(example.url + 123)
+                    .expect(401);
+            });
         });
     });
 
@@ -379,6 +396,14 @@ describe(`Tests ${example.url}`, () => {
                 await request.delete(example.url + id).expect(204);
             }
         });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.put(example.url + 123)
+                    .send(example.updated)
+                    .expect(401);
+            });
+        });
     });
 
     describe('Delete', () => {
@@ -397,6 +422,13 @@ describe(`Tests ${example.url}`, () => {
             .expect(204, '');
 
             expect(response.body).deep.equal({});
+        });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.delete(example.url + 123)
+                    .expect(401);
+            });
         });
     });
 });
