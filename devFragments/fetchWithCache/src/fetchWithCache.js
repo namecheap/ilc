@@ -4,7 +4,7 @@ import axios from 'axios'
 import addId from './addId.js'
 
 const axiosInstance = axios.create({
-  baseURL: 'https://swapi.co/api/',
+  baseURL: 'https://swapi-v2.herokuapp.com/api/',
   timeout: 20000,
 })
 
