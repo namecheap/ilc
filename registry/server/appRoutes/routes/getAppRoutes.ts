@@ -12,7 +12,7 @@ const getAppRoutes = async (req: Request, res: Response) => {
     let filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
 
     const query = db
-        .select('routes.id as routeId', '*')
+        .select('routes.id as routeId', 'routes.*')
         .orderBy('orderPos', 'ASC')
         .from('routes');
 
