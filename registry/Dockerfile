@@ -13,6 +13,6 @@ RUN cd ./client && \
     cd ..
 
 # Legacy infrastructure support
-RUN npm install -g stdout-mq@^2.3.0
+RUN npm install -g stdout-mq@^2.4.0
 
 CMD ["npm", "run", "start-docker"]
