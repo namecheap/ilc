@@ -10,7 +10,7 @@ module.exports = {
     output: {
         filename: 'fetchWithCache.js',
         libraryTarget: 'amd',
-        path: path.resolve(__dirname, 'build/fetchWithCache'),
+        path: path.resolve(__dirname, 'build'),
     },
     mode: 'production',
     module: {
