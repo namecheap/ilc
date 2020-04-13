@@ -29,7 +29,7 @@ const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response
     const appRouteId = req.params.id;
 
     const appRoutes = await db
-        .select('routes.id as routeId', 'route_slots.id as routeSlotId', '*')
+        .select('routes.id as routeId', 'route_slots.id as routeSlotId', 'routes.*', 'route_slots.*')
         .from('routes')
         .where('routeId', appRouteId)
         .join('route_slots', {
