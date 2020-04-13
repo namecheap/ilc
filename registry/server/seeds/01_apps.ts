@@ -27,6 +27,7 @@ export async function seed(knex: Knex): Promise<any> {
                         react: 'https://cdnjs.cloudflare.com/ajax/libs/react/16.8.6/umd/react.development.js',
                         'react-dom': 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.6/umd/react-dom.development.js',
                         rxjs: 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.js',
+                        '@portal/fetchWithCache': 'http://localhost:8238/fetchWithCache.js',
                     }),
                     initProps: '{}',
                     props: '{}',
@@ -34,7 +35,9 @@ export async function seed(knex: Knex): Promise<any> {
                 }, {
                     name: '@portal/planets',
                     spaBundle: 'http://localhost:8237/planets.js',
-                    dependencies: '{}',
+                    dependencies: JSON.stringify({
+                        '@portal/fetchWithCache': 'http://localhost:8238/fetchWithCache.js',
+                    }),
                     initProps: '{}',
                     props: '{}',
                     kind: 'primary',
