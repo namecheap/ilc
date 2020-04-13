@@ -1,28 +1,30 @@
 // Authenticatd by default
 export default {
     login: ({ username, password }) => {
-        if (username === 'login' && password === 'password') {
-            localStorage.removeItem('not_authenticated');
-            localStorage.removeItem('role');
-            return Promise.resolve();
-        }
-        if (username === 'user' && password === 'password') {
-            localStorage.setItem('role', 'user');
-            localStorage.removeItem('not_authenticated');
-            return Promise.resolve();
-        }
-        if (username === 'admin' && password === 'password') {
-            localStorage.setItem('role', 'admin');
-            localStorage.removeItem('not_authenticated');
-            return Promise.resolve();
-        }
-        localStorage.setItem('not_authenticated', true);
-        return Promise.reject();
+        const request = new Request('/login', {
+            method: 'POST',
+            body: JSON.stringify({ username, password }),
+            headers: new Headers({ 'Content-Type': 'application/json' }),
+        });
+        return fetch(request)
+            .then(response => {
+                if (response.status < 200 || response.status >= 300) {
+                    throw new Error(response.statusText);
+                }
+                return response.json();
+            })
+            .then((userInfo) => {
+                localStorage.setItem('ilc:userInfo', JSON.stringify(userInfo));
+            });
     },
     logout: () => {
-        localStorage.setItem('not_authenticated', true);
-        localStorage.removeItem('role');
-        return Promise.resolve();
+        return fetch('/logout')
+            .then(response => {
+                if (response.status < 200 || response.status >= 300) {
+                    throw new Error(response.statusText);
+                }
+                localStorage.removeItem('ilc:userInfo');
+            });
     },
     checkError: ({ status }) => {
         return status === 401 || status === 403
@@ -30,12 +32,12 @@ export default {
             : Promise.resolve();
     },
     checkAuth: () => {
-        return localStorage.getItem('not_authenticated')
-            ? Promise.reject()
-            : Promise.resolve();
+        return localStorage.getItem('ilc:userInfo')
+            ? Promise.resolve()
+            : Promise.reject();
     },
     getPermissions: () => {
-        const role = localStorage.getItem('role');
-        return Promise.resolve(role);
+        const userInfo = localStorage.getItem('ilc:userInfo');
+        return userInfo ? Promise.resolve(JSON.parse(userInfo).role) : Promise.reject();
     },
 };

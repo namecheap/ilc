@@ -6,4 +6,4 @@ require('newrelic'); //Should be lower then NODE_CONFIG_DIR env var definition
 import app from './app';
 import server from './server';
 
-server(app);
+server(app());

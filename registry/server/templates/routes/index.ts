@@ -1,4 +1,4 @@
-import express from 'express';
+import express, {RequestHandler} from 'express';
 
 import getTemplate from './getTemplate';
 import getRenderedTemplate from './getRenderedTemplate'
@@ -7,13 +7,15 @@ import updateTemplate from './updateTemplate';
 import createTemplate from './createTemplate';
 import deleteTemplate from './deleteTemplate';
 
-const templatesRouter = express.Router();
+export default (authMw: RequestHandler) => {
+    const templatesRouter = express.Router();
 
-templatesRouter.get('/', ...getTemplates);
-templatesRouter.post('/', ...createTemplate);
-templatesRouter.get('/:name/rendered', ...getRenderedTemplate)
-templatesRouter.get('/:name', ...getTemplate);
-templatesRouter.put('/:name', ...updateTemplate);
-templatesRouter.delete('/:name', ...deleteTemplate);
+    templatesRouter.get('/', authMw, ...getTemplates);
+    templatesRouter.post('/', authMw, ...createTemplate);
+    templatesRouter.get('/:name/rendered', ...getRenderedTemplate);
+    templatesRouter.get('/:name', ...getTemplate);
+    templatesRouter.put('/:name', authMw, ...updateTemplate);
+    templatesRouter.delete('/:name', authMw, ...deleteTemplate);
 
-export default templatesRouter;
+    return templatesRouter;
+};

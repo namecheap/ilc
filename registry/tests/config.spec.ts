@@ -1,4 +1,4 @@
-import { request, expect } from './common';
+import {request, expect, requestWithAuth} from './common';
 import _ from 'lodash';
 
 const example = {
@@ -80,5 +80,12 @@ describe('Tests /api/v1/config', () => {
             await request.delete('/api/v1/app/' + encodeURIComponent(example.apps.name)).expect(204);
             await request.delete('/api/v1/shared_props/' + example.sharedProps.name).expect(204);
         })
+    });
+
+    describe('Authentication / Authorization', () => {
+        it('should be accessible w/o authentication', async () => {
+            await requestWithAuth.get('/api/v1/config')
+                .expect(200);
+        });
     });
 });
