@@ -2,7 +2,7 @@ require('newrelic');
 
 const config = require('config');
 const server = require('./server');
-const app = require('fastify')({ logger: true });
+const app = require('fastify')({ logger: config.get('productionMode') });
 const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const registryService = require('./registry/factory');
