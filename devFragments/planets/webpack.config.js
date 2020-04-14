@@ -9,7 +9,7 @@ module.exports = {
     output: {
         filename: 'planets.js',
         libraryTarget: 'amd',
-        path: path.resolve(__dirname, 'build/planets'),
+        path: path.resolve(__dirname, 'build'),
     },
     mode: 'production',
     module: {

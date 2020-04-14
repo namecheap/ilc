@@ -10,7 +10,7 @@ module.exports = {
     output: {
         filename: 'people.js',
         libraryTarget: 'amd',
-        path: path.resolve(__dirname, 'build/people'),
+        path: path.resolve(__dirname, 'build'),
     },
     mode: 'production',
     module: {
