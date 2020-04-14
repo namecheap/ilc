@@ -10,7 +10,7 @@ module.exports = {
     output: {
         filename: 'index.js',
         libraryTarget: 'amd',
-        path: path.resolve(__dirname, 'build/system'),
+        path: path.resolve(__dirname, 'build'),
     },
     mode: 'production',
     module: {
