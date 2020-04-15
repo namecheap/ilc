@@ -1,4 +1,3 @@
-const fs = require('fs');
 const concurrently = require('concurrently');
 
 const commands = [
