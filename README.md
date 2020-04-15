@@ -46,11 +46,6 @@ Bringing microservices to the frontend requires a layout service that composes a
 
 ![ILC Architecture overview](docs/assets/ILC-Architecture.svg)
 
-## Maturity level
-
-Currently project is under active development and some of the features are missing. 
-Stay tuned with us.
-
 ## Repo structure
 ```
 |– devFragments: folder contains demo apps used for local testing & demonstration purposes
