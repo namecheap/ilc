@@ -1,6 +1,7 @@
 'use strict';
 
 const mergeConfigs = require('./merge-configs');
+const parseOverrideConfig = require('./parse-override-config');
 
 const TEMPLATE_ERROR = 0;
 const TEMPLATE_NOT_FOUND = 1;
@@ -17,16 +18,11 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
     request,
     parseTemplate
 ) => {
-    let registryConfig = await registryService.getConfig();
-
-    const { cookie } = request.headers;
-    try {
-        let overrideConfig = typeof cookie === 'string' && cookie.split(';').find(n => n.trim().startsWith('ILC-overrideConfig'));
-        if (overrideConfig) {
-            overrideConfig = JSON.parse(decodeURIComponent(overrideConfig.replace(/^\s?ILC\-overrideConfig=/, '')));
-            registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
-        }
-    } catch (e) {}
+    const registryConfig = await registryService.getConfig();
+    const overrideConfig = parseOverrideConfig(request.headers.cookie);
+    if (overrideConfig) {
+        registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
+    }
 
     const {route, page} = router.getTemplateInfo(registryConfig.data, request.url);
     const template = await registryService.getTemplate(route.template);
