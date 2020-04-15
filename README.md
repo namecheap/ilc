@@ -42,14 +42,10 @@ Bringing microservices to the frontend requires a layout service that composes a
 * 👨‍💻 **Develop right at production** - [Doc](https://github.com/namecheap/ilc/blob/master/docs/develop_at_production.md)
 * 💲 **Baked by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with community
 
-## Architecture overview
-
-![ILC Architecture overview](docs/assets/ILC-Architecture.svg)
-
 ## Quick start
 1. Clone this repository
 1. Run `docker-compose up -d`
-1. During first launch only run `docker-compose run registry npm run seed`
+1. _During first launch only._ Run `docker-compose run registry npm run seed`
 1. PROFIT 😎
     * View logs via `docker-compose logs -f --tail=10`
     * Open ILC at http://localhost:4002/
@@ -57,6 +53,10 @@ Bringing microservices to the frontend requires a layout service that composes a
     * Shutdown everything with `docker-compose down`
 
 More information about demo applications used in this quick start [you can find here](https://github.com/namecheap/ilc-demo-apps).
+
+## Architecture overview
+
+![ILC Architecture overview](docs/assets/ILC-Architecture.svg)
 
 ## Repo structure
 ```
