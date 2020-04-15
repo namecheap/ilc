@@ -31,7 +31,7 @@ services:
   ilc:
     image: namecheap/ilc:latest
     ports:
-      - "4002:8233"
+      - "8233:8233"
       - "8235-8240:8235-8240" # Ports from "demo-apps" container
     environment:
       NODE_ENV: production
@@ -49,7 +49,7 @@ services:
       MYSQL_ROOT_PASSWORD: pwd
       MYSQL_DATABASE: ilc
     healthcheck:
-      test: ["CMD", "mysqladmin", "-uroot", "-ppwd", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "-uroot", "-ppwd", "processlist", "-h", "localhost"]
       interval: 3s
       timeout: 3s
       retries: 50
