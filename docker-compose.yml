@@ -1,0 +1,55 @@
+version: "2.4"
+services:
+  registry:
+    image: namecheap/ilc_registry:latest
+    ports:
+      - "4001:4001"
+    environment:
+      NODE_ENV: production
+      DB_CLIENT: mysql
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: pwd
+      DB_NAME: ilc
+    depends_on:
+      mysql:
+        condition: service_healthy
+  registry_worker:
+    image: namecheap/ilc_registry:latest
+    command: ["npm", "run", "assetsdiscovery"]
+    environment:
+      NODE_ENV: production
+      DB_CLIENT: mysql
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: pwd
+      DB_NAME: ilc
+    network_mode: "service:ilc" # We need this to make apps accessible at 127.0.0.1
+    depends_on:
+      mysql:
+        condition: service_healthy
+  ilc:
+    image: namecheap/ilc:latest
+    ports:
+      - "4002:8233"
+      - "8235-8240:8235-8240" # Ports from "demo-apps" container
+    environment:
+      NODE_ENV: production
+      REGISTRY_ADDR: "http://registry:4001"
+  demo-apps:
+    image: namecheap/ilc-demo-apps:latest
+    network_mode: "service:ilc" # We need this to make apps accessible at 127.0.0.1 inside "ilc" container
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - "./dbfiles:/var/lib/mysql"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: pwd
+      MYSQL_DATABASE: ilc
+    healthcheck:
+      test: ["CMD", "mysqladmin", "-uroot", "-ppwd", "ping", "-h", "localhost"]
+      interval: 3s
+      timeout: 3s
+      retries: 50

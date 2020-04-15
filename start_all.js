@@ -5,16 +5,8 @@ const commands = [
     { command: 'cd ./ilc/ && npm run dev', name: 'ilc' },
     { command: 'cd ./registry/ && npm run dev', name: 'registry' },
     { command: 'cd ./registry/client && npm run build:watch', name: 'registry:ui' },
+    { command: 'docker run --rm -p 8235-8240:8235-8240 namecheap/ilc-demo-apps', name: 'demo-apps' },
 ];
-
-fs.readdirSync('./devFragments').forEach(fileName => {
-    const stat = fs.lstatSync(`./devFragments/${fileName}`);
-    if (stat.isFile()) {
-        return;
-    }
-
-    commands.push({ command: `cd ./devFragments/${fileName}/ && npm run dev`, name: fileName });
-});
 
 concurrently(commands, {
     prefix: 'name',

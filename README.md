@@ -46,38 +46,28 @@ Bringing microservices to the frontend requires a layout service that composes a
 
 ![ILC Architecture overview](docs/assets/ILC-Architecture.svg)
 
+## Quick start
+1. Clone this repository
+1. Run `docker-compose up -d`
+1. During first launch only run `docker-compose run registry npm run seed`
+1. PROFIT 😎
+    * View logs via `docker-compose logs -f --tail=10`
+    * Open ILC at http://localhost:4002/
+    * Open Registry UI at http://localhost:4001/ & use `root/pwd` credentials to sign in.
+    * Shutdown everything with `docker-compose down`
+
+More information about demo applications used in this quick start [you can find here](https://github.com/namecheap/ilc-demo-apps).
+
 ## Repo structure
 ```
-|– devFragments: folder contains demo apps used for local testing & demonstration purposes
 |– ilc: code of the Isomorphic Layout Composer
 |– registry: app that contains configuration used by ILC. Such as list of micro-fragments, routes, etc...
 ```
 
-## Installation and setup
-1. Clone the repo
-2. _For Namecheap employees only_: clone 
-"[ilc.internal](https://git.namecheap.net/projects/RND/repos/ilc.internal/browse)" 
-repo and follow the guide to setup NC specific applications.
-3. Run `npm install`
-4. Run `npm run build`
-5. Run `npm start`
-6. Open running code at `http://localhost:8233/`
-7. Registry UI is available at `http://localhost:4001/`
-
 ## Further reading
 
 * [ILC to App interface](docs/ilc_app_interface.md)
-
-## Demo applications & services
-### Applications
-1. [System](./devFragments/system) (written in vanilla JS, with SSR)
-1. [News](./devFragments/news-ssr) (written in Vue.js, with SSR)
-1. [Navigation](./devFragments/navbar) (written in React, with SSR)
-1. [People](./devFragments/people) (written in React, no SSR)
-1. [Planets](./devFragments/planets) (written in Vue.js, no SSR)
-
-### Services
-1. [fetchWithCache](./devFragments/fetchWithCache) (used by News & People)
+* [Demo applications used in quick start](https://github.com/namecheap/ilc-demo-apps)
 
 ## 🔌 Adapters
 To conveniently connect various frameworks to ILC we rely on the [ecosystem of the single-spa](https://single-spa.js.org/docs/ecosystem)
