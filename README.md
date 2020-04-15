@@ -53,7 +53,6 @@ Stay tuned with us.
 
 ## Repo structure
 ```
-|– adapters: folder contains customized "single-spa" adapters for different frameworks
 |– devFragments: folder contains demo apps used for local testing & demonstration purposes
 |– ilc: code of the Isomorphic Layout Composer
 |– registry: app that contains configuration used by ILC. Such as list of micro-fragments, routes, etc...
@@ -84,6 +83,13 @@ repo and follow the guide to setup NC specific applications.
 
 ### Services
 1. [fetchWithCache](./devFragments/fetchWithCache) (used by News & People)
+
+## 🔌 Adapters
+To conveniently connect various frameworks to ILC we rely on the [ecosystem of the single-spa](https://single-spa.js.org/docs/ecosystem)
+provided adapters. However sometimes we need to extend original ones to deliver better integration with ILC. 
+Here are the list of the adapters that were forked & modified:
+
+*  [Vue.js - ilc-adapter-vue](https://github.com/namecheap/ilc-adapter-vue)
 
 ## Notes
 
