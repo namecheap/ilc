@@ -9,7 +9,7 @@ $ npm start
 
 And then browse to [http://localhost:8080/](http://localhost:8080/).
 
-The credentials are **login/password**
+The default credentials are: **root / pwd**
 
 ## How to build/run
 

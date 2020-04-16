@@ -1,5 +1,11 @@
-const fs = require('fs');
 const concurrently = require('concurrently');
+
+let runWithApps = true;
+
+const myCmd = process.argv.slice(2).join(' ').trim();
+if (myCmd.includes('--no-apps')) {
+    runWithApps = false;
+}
 
 const commands = [
     { command: 'cd ./ilc/ && npm run dev', name: 'ilc' },
@@ -7,14 +13,9 @@ const commands = [
     { command: 'cd ./registry/client && npm run build:watch', name: 'registry:ui' },
 ];
 
-fs.readdirSync('./devFragments').forEach(fileName => {
-    const stat = fs.lstatSync(`./devFragments/${fileName}`);
-    if (stat.isFile()) {
-        return;
-    }
-
-    commands.push({ command: `cd ./devFragments/${fileName}/ && npm run dev`, name: fileName });
-});
+if (runWithApps) {
+    commands.push({ command: 'docker run --rm -p 8235-8240:8235-8240 namecheap/ilc-demo-apps', name: 'demo-apps' });
+}
 
 concurrently(commands, {
     prefix: 'name',
