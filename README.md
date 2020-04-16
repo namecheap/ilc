@@ -2,6 +2,7 @@
 
 ----
 
+[![Demo website](./docs/assets/demo-website.svg)](http://demo.microfrontends.online/)
 [![Actions Status](https://github.com/namecheap/ilc/workflows/Registry/badge.svg)](https://github.com/namecheap/ilc/actions)
 [![Actions Status](https://github.com/namecheap/ilc/workflows/ILC/badge.svg)](https://github.com/namecheap/ilc/actions)
 [![Docker Pulls](https://img.shields.io/docker/pulls/namecheap/ilc?logo=docker&logoColor=white)](https://hub.docker.com/r/namecheap/ilc)
@@ -43,6 +44,9 @@ Bringing microservices to the frontend requires a layout service that composes a
 * 💲 **Baked by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with community
 
 ## 🚀 Quick start
+
+Check out [demo website available online](http://demo.microfrontends.online/) or go through the steps to spin it up locally:
+
 1. Clone this repository
 1. Run `docker-compose up -d`
 1. _During first launch or shutdown only._ Run `docker-compose run registry npm run seed`
