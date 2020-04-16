@@ -25,6 +25,7 @@
     "deepmerge": "4.2.2",
     "device-detector-js": "^2.1.1",
     "fastify": "^2.12.0",
+    "is-url": "^1.2.4",
     "lodash": "^4.17.15",
     "newrelic": "^6.2.0",
     "nginx-plus-dynamic-upstream": "^2.1.2",

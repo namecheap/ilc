@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const CIDRMatcher = require('cidr-matcher');
+const isUrl = require('is-url');
 
 const privateNetworks = new CIDRMatcher([
     '10.0.0.0/8',
@@ -12,13 +13,12 @@ const isPrivateNetwork = link => {
     const matchedIp = link.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/);
     return matchedIp && matchedIp[0] && privateNetworks.contains(matchedIp[0]);
 }
-const isLink = text => typeof text === 'string' && /^https?:\/\/?/.test(text);
 
 const sanitizeSpoofedLinks = obj => {
     Object.entries(obj).forEach(([key, value]) => {
         if (_.isPlainObject(value)) {
           sanitizeSpoofedLinks(value);
-        } else if (isLink(value) && !isPrivateNetwork(value)) {
+        } else if (typeof value === 'string' && isUrl(value.trim()) && !isPrivateNetwork(value)) {
           delete obj[key];
         }
     });
