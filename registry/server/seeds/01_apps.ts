@@ -14,7 +14,7 @@ export async function seed(knex: Knex): Promise<any> {
                         'react-dom': 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.6/umd/react-dom.development.js',
                     }),
                     ssr: JSON.stringify({
-                        src: 'http://localhost:9235/',
+                        src: 'http://localhost:8235/',
                         timeout: 1000,
                     }),
                     initProps: '{}',
