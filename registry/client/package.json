@@ -6,7 +6,6 @@
     "main": "index.html",
     "scripts": {
         "start": "webpack-dev-server --progress --color --hot --watch --mode development",
-        "serve": "serve --listen 8080 ./dist",
         "build": "webpack-cli --color --hide-modules true",
         "build:watch": "npm run build --- --watch --mode development"
     },
@@ -26,7 +25,6 @@
         "html-webpack-plugin": "~3.2.0",
         "ignore-not-found-export-plugin": "^1.0.1",
         "mini-css-extract-plugin": "^0.9.0",
-        "serve": "~9.1.0",
         "style-loader": "~0.20.3",
         "wait-on": "^3.2.0",
         "webpack": "^4.42.1",
