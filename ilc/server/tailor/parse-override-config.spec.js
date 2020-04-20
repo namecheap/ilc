@@ -71,7 +71,7 @@ const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:') => {
 };
 
 
-describe.only('overrideConfig', () => {
+describe('overrideConfig', () => {
 
     describe('return undefined', () => {
         it('should return undefined if type non string', async () => {
