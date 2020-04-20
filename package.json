@@ -17,6 +17,6 @@
   "license": "Apache-2.0",
   "dependencies": {},
   "devDependencies": {
-    "concurrently": "4.0.1"
+    "concurrently": "^5.0.0"
   }
 }
