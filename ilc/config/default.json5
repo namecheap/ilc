@@ -14,5 +14,6 @@
     },
     newrelic: {
         licenseKey: null,
-    }
+    },
+    overrideConfigTrustedOrigins: null
 }

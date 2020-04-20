@@ -14,22 +14,32 @@ const isPrivateNetwork = link => {
     return matchedIp && matchedIp[0] && privateNetworks.contains(matchedIp[0]);
 }
 
-const sanitizeSpoofedLinks = obj => {
+const isTrustedOrigin = (link, trustedOrigins) => {
+    if (!trustedOrigins) return false;
+
+    const linkWoProtocol = link.trim().replace(/(^\w+:|^)\/\//, '');
+    return trustedOrigins.some(trustedOrigin => linkWoProtocol.startsWith(trustedOrigin));
+};
+
+const sanitizeSpoofedLinks = (obj, trustedOrigins) => {
     Object.entries(obj).forEach(([key, value]) => {
         if (_.isPlainObject(value)) {
-          sanitizeSpoofedLinks(value);
-        } else if (typeof value === 'string' && isUrl(value.trim()) && !isPrivateNetwork(value)) {
-          delete obj[key];
+          sanitizeSpoofedLinks(value, trustedOrigins);
+        } else if (typeof value === 'string' && isUrl(value.trim())) {
+            !isPrivateNetwork(value) && !isTrustedOrigin(value, trustedOrigins) && delete obj[key];
         }
     });
 };
 
-module.exports = cookie => {
+module.exports = (cookie, trustedOrigins) => {
     try {
         let overrideConfig = typeof cookie === 'string' && cookie.split(';').find(n => n.trim().startsWith('ILC-overrideConfig'));
         if (overrideConfig) {
             overrideConfig = JSON.parse(decodeURIComponent(overrideConfig.replace(/^\s?ILC-overrideConfig=/, '')));
-            overrideConfig.apps && sanitizeSpoofedLinks(overrideConfig.apps);
+            if (overrideConfig.apps && trustedOrigins !== 'all') {
+                const parsedTrustedOrigin = typeof trustedOrigins === 'string' && trustedOrigins.split(',').map(n=>n.trim());
+                sanitizeSpoofedLinks(overrideConfig.apps, parsedTrustedOrigin);
+            }
             return overrideConfig;
         }
     } catch (e) {}
