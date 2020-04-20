@@ -71,7 +71,7 @@ const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:') => {
 };
 
 
-describe('overrideConfig', () => {
+describe.only('overrideConfig', () => {
 
     describe('return undefined', () => {
         it('should return undefined if type non string', async () => {
@@ -197,6 +197,67 @@ describe('overrideConfig', () => {
             incorrectIps.forEach(incorrectIp => {
                 let exampleCookies = getExampleCookies(incorrectIp);
                 expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject(incorrectIp));
+            });
+        });
+    });
+
+    describe('trust all domains', () => {
+        it('should not sanitize domain names', async () => {
+            const ip = 'foo.com';
+            const exampleCookies = getExampleCookies(ip);
+            const expectedResult = getExampleObject(ip);
+
+            expect(parseOverrideConfig(exampleCookies, 'all')).deep.equal(expectedResult);
+        });
+
+        it('should not sanitize url w/o protocol', async () => {
+            const ip = 'foo.com';
+            const exampleCookies = getExampleCookies(ip, '');
+            const expectedResult = getExampleObject(ip, '');
+
+            expect(parseOverrideConfig(exampleCookies, 'all')).deep.equal(expectedResult);
+        });
+
+        it('should not sanitize any ip', async () => {
+            const incorrectIps = ['172.15.0.0', '172.32.255.255', '171.16.0.0', '173.31.255.255', '192.1.1.1', '1.168.1.1'];
+
+            incorrectIps.forEach(incorrectIp => {
+                const exampleCookies = getExampleCookies(incorrectIp);
+                const expectedResult = getExampleObject(incorrectIp);
+                expect(parseOverrideConfig(exampleCookies, 'all')).deep.equal(expectedResult);
+            });
+        });
+    });
+
+    describe('trust certain domains', () => {
+        it('should not sanitize trusted domain names', async () => {
+            const trustedExamples = ['foo.com', 'bar.com', '1.1.1.1'];
+
+            trustedExamples.forEach(ip => {
+                const exampleCookies = getExampleCookies(ip);
+                const expectedResult = getExampleObject(ip);
+                expect(parseOverrideConfig(exampleCookies, trustedExamples.toString())).deep.equal(expectedResult);
+            });
+        });
+
+        it('should not sanitize trusted url w/o protocol', async () => {
+            const trustedExamples = ['foo.com', 'bar.com', '1.1.1.1'];
+
+            trustedExamples.forEach(ip => {
+                const exampleCookies = getExampleCookies(ip, '');
+                const expectedResult = getExampleObject(ip, '');
+                expect(parseOverrideConfig(exampleCookies, trustedExamples.toString())).deep.equal(expectedResult);
+            });
+        });
+
+        it('should sanitize non trusted domain names', async () => {
+            const trustedExamples = ['foo.com', 'bar.com', '1.1.1.1'];
+            const nonTrustedExamples = ['incorrect.com', '2.2.2.2'];
+
+            nonTrustedExamples.forEach(ip => {
+                const exampleCookies = getExampleCookies(ip);
+                const expectedResult = getSanitizedObject(ip);
+                expect(parseOverrideConfig(exampleCookies, trustedExamples.toString())).deep.equal(expectedResult);
             });
         });
     });

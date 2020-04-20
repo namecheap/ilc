@@ -19,7 +19,7 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
     parseTemplate
 ) => {
     const registryConfig = await registryService.getConfig();
-    const overrideConfig = parseOverrideConfig(request.headers.cookie);
+    const overrideConfig = parseOverrideConfig(request.headers.cookie, process.env.TRUST_DOMAINS);
     if (overrideConfig) {
         registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
     }
