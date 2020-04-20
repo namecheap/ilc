@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Docker registry auth
+        run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
+
+      - name: Calc tags
+        id: tags
+        run: |
+          if ! isSemver "${GITHUB_REF}"; then
+            echo "Invalid tag name format. Use semver style. Ex: v1.2.3"
+            exit 1
+          fi
+
+          DOCKER_TAGS=$(echo ${GITHUB_REF} | sed -e "s/refs\/tags\///g" | sed -E "s/v?([0-9]+)\.([0-9+])\.([0-9]+)(-[a-zA-Z]+(\.[0-9]+)?)?/\1.\2.\3\4 \1.\2\4 \1\4/g")
+
+          echo "Tags that will be used: $DOCKER_TAGS"
+          echo ::set-output name=docker_tags::$DOCKER_TAGS
+
+          function isSemver() {
+            echo "${1}" | grep -Eq '^refs/tags/v?([0-9]+)\.([0-9+])\.([0-9]+)(-[a-zA-Z]+(\.[0-9]+)?)?$'
+          }
+
+      - name: Pull & tag images for release
+        run: |
+          docker pull namecheap/ilc:${GITHUB_SHA:0:7}
+          docker pull namecheap/ilc_registry:${GITHUB_SHA:0:7}
+
+
+      - name: Push images
+        run: |
+          TAGS="${{ steps.tags.outputs.docker_tags }}"
+
+          for i in ${TAGS//,/ }
+          do
+              docker tag namecheap/ilc:${GITHUB_SHA:0:7} namecheap/ilc:$i
+              docker push namecheap/ilc:$i
+
+              docker tag namecheap/ilc_registry:${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
+              docker push namecheap/ilc_registry:$i
+          done
