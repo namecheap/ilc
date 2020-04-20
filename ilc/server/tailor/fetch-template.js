@@ -2,6 +2,7 @@
 
 const mergeConfigs = require('./merge-configs');
 const parseOverrideConfig = require('./parse-override-config');
+const config = require('config');
 
 const TEMPLATE_ERROR = 0;
 const TEMPLATE_NOT_FOUND = 1;
@@ -19,7 +20,7 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
     parseTemplate
 ) => {
     const registryConfig = await registryService.getConfig();
-    const overrideConfig = parseOverrideConfig(request.headers.cookie, process.env.TRUST_DOMAINS);
+    const overrideConfig = parseOverrideConfig(request.headers.cookie, config.get('trustDomains'));
     if (overrideConfig) {
         registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
     }

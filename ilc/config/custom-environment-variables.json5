@@ -15,5 +15,6 @@
     },
     newrelic: {
         licenseKey: 'NR_LICENSE_KEY',
-    }
+    },
+    trustDomains: 'TRUST_DOMAINS'
 }
