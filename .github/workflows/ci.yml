@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+jobs:
+  build_ilc:
+    name: Build ILC
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Docker ilc auth
+      run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
+
+    - name: Build the Docker image
+      run: |
+        cd ./ilc/
+        docker build . --tag ilc:tmp
+
+    - name: Run tests
+      run: docker run ilc:tmp npm run test
+
+    - name: Calc tags
+      id: tags
+      run: |
+        BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
+        LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
+        DOCKER_TAGS="$LATEST${BRANCH//\//_}"
+        echo "Tags that will be used: $DOCKER_TAGS"
+        echo ::set-output name=docker_tags::$DOCKER_TAGS
+
+    - name: Push image
+      run: |
+        TAGS="${{ steps.tags.outputs.docker_tags }}"
+
+        for i in ${TAGS//,/ }
+        do
+            docker tag ilc:tmp namecheap/ilc:$i
+            docker push namecheap/ilc:$i
+        done
+
+  build_registry:
+    name: Build Registry
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Docker registry auth
+        run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
+
+      - name: Build the Docker image
+        run: |
+          cd ./registry/
+          docker build . --tag registry:tmp
+
+      - name: Run tests
+        run: docker run registry:tmp npm run test:ci
+
+      - name: Calc tags
+        id: tags
+        run: |
+          BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
+          LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
+          DOCKER_TAGS="$LATEST${BRANCH//\//_}"
+          echo "Tags that will be used: $DOCKER_TAGS"
+          echo ::set-output name=docker_tags::$DOCKER_TAGS
+
+      - name: Push image
+        run: |
+          TAGS="${{ steps.tags.outputs.docker_tags }}"
+
+          for i in ${TAGS//,/ }
+          do
+              docker tag registry:tmp namecheap/ilc_registry:$i
+              docker push namecheap/ilc_registry:$i
+          done

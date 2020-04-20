@@ -3,8 +3,7 @@
 ----
 
 [![Demo website](./docs/assets/demo-website.svg)](http://demo.microfrontends.online/)
-[![Actions Status](https://github.com/namecheap/ilc/workflows/Registry/badge.svg)](https://github.com/namecheap/ilc/actions)
-[![Actions Status](https://github.com/namecheap/ilc/workflows/ILC/badge.svg)](https://github.com/namecheap/ilc/actions)
+[![Actions Status](https://github.com/namecheap/ilc/workflows/CI/badge.svg)](https://github.com/namecheap/ilc/actions)
 [![Docker Pulls](https://img.shields.io/docker/pulls/namecheap/ilc?logo=docker&logoColor=white)](https://hub.docker.com/r/namecheap/ilc)
 
 Isomorphic Layout Composer (ILC) - layout service that compose a web page from fragment services. 
