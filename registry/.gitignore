@@ -1,3 +1,4 @@
 /build
 /.nyc_output
 /client/dist
+/package-lock.json

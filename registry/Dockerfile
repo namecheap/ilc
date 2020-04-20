@@ -11,7 +11,7 @@ RUN npm install sqlite3 mysql
 RUN npm run compile
 
 RUN cd ./client && \
-    npm install --no-package-lock --no-progress --ignore-scripts && \
+    npm install --no-progress --ignore-scripts && \
     npm run build && \
     cd ..
 
