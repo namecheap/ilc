@@ -71,8 +71,8 @@ jobs:
           id: "id"
           body: "body"
 
-      - uses: octokit/request-action@v2.x
-        id: update_check_run
+      - name: Update release description
+        uses: octokit/request-action@v2.x
         with:
           route: PATCH /repos/:repository/releases/:release_id
           repository: ${{ github.repository }}
