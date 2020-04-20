@@ -201,7 +201,7 @@ describe('overrideConfig', () => {
         });
     });
 
-    describe('trust all domains', () => {
+    describe('trust all origins', () => {
         it('should not sanitize domain names', async () => {
             const ip = 'foo.com';
             const exampleCookies = getExampleCookies(ip);
@@ -229,8 +229,8 @@ describe('overrideConfig', () => {
         });
     });
 
-    describe('trust certain domains', () => {
-        it('should not sanitize trusted domain names', async () => {
+    describe('trust certain origins', () => {
+        it('should not sanitize trusted origins', async () => {
             const trustedExamples = ['foo.com', 'bar.com', '1.1.1.1'];
 
             trustedExamples.forEach(ip => {
@@ -250,7 +250,7 @@ describe('overrideConfig', () => {
             });
         });
 
-        it('should sanitize non trusted domain names', async () => {
+        it('should sanitize non trusted origins', async () => {
             const trustedExamples = ['foo.com', 'bar.com', '1.1.1.1'];
             const nonTrustedExamples = ['incorrect.com', '2.2.2.2'];
 

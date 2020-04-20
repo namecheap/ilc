@@ -14,31 +14,31 @@ const isPrivateNetwork = link => {
     return matchedIp && matchedIp[0] && privateNetworks.contains(matchedIp[0]);
 }
 
-const isTrustDomain = (link, trustDomains) => {
-    if (!trustDomains) return false;
+const isTrustedOrigin = (link, trustedOrigins) => {
+    if (!trustedOrigins) return false;
 
     const linkWoProtocol = link.trim().replace(/(^\w+:|^)\/\//, '');
-    return trustDomains.some(trustDomain => linkWoProtocol.startsWith(trustDomain));
+    return trustedOrigins.some(trustedOrigin => linkWoProtocol.startsWith(trustedOrigin));
 };
 
-const sanitizeSpoofedLinks = (obj, trustDomains) => {
+const sanitizeSpoofedLinks = (obj, trustedOrigins) => {
     Object.entries(obj).forEach(([key, value]) => {
         if (_.isPlainObject(value)) {
-          sanitizeSpoofedLinks(value, trustDomains);
+          sanitizeSpoofedLinks(value, trustedOrigins);
         } else if (typeof value === 'string' && isUrl(value.trim())) {
-            !isPrivateNetwork(value) && !isTrustDomain(value, trustDomains) && delete obj[key];
+            !isPrivateNetwork(value) && !isTrustedOrigin(value, trustedOrigins) && delete obj[key];
         }
     });
 };
 
-module.exports = (cookie, trustDomains) => {
+module.exports = (cookie, trustedOrigins) => {
     try {
         let overrideConfig = typeof cookie === 'string' && cookie.split(';').find(n => n.trim().startsWith('ILC-overrideConfig'));
         if (overrideConfig) {
             overrideConfig = JSON.parse(decodeURIComponent(overrideConfig.replace(/^\s?ILC-overrideConfig=/, '')));
-            if (overrideConfig.apps && trustDomains !== 'all') {
-                const parsedTrustDomains = typeof trustDomains === 'string' && trustDomains.split(',').map(n=>n.trim());
-                sanitizeSpoofedLinks(overrideConfig.apps, parsedTrustDomains);
+            if (overrideConfig.apps && trustedOrigins !== 'all') {
+                const parsedTrustedOrigin = typeof trustedOrigins === 'string' && trustedOrigins.split(',').map(n=>n.trim());
+                sanitizeSpoofedLinks(overrideConfig.apps, parsedTrustedOrigin);
             }
             return overrideConfig;
         }
