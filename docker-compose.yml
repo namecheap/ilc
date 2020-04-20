@@ -37,6 +37,7 @@ services:
     environment:
       NODE_ENV: production
       REGISTRY_ADDR: "http://registry:4001"
+      OVERRIDE_CONFIG_TRUSTED_ORIGINS: all
   demo-apps:
     image: namecheap/ilc-demo-apps:latest
     network_mode: "service:ilc" # We need this to make apps accessible at 127.0.0.1 inside "ilc" container
