@@ -1,18 +1,23 @@
-# Develop right at production
+# Develop right at "production"
 
+ILC gives you ability to develop your Micro Frontends in context of the "production" environment.
+This means that you can render your new app or changed version of the existing one right at the 
+production website.
 
-## Practical example of using existed MS on our [demo site](http://demo.microfrontends.online/news/)
-We created demo site with a few examples of React and Vue apps with SSR and hydration.
+This gives you ability to see the final result sooner w/o necessity to mock other Micro Frontends inside your
+local development environment.
 
-- To run these demo apps locally you need just:
-    - clone repo `git clone https://github.com/namecheap/ilc-demo-apps.git`.
-    - start in development mode [ilc-demo-apps#development-process](https://github.com/namecheap/ilc-demo-apps#development-process).
-- if you use NAT - you need [ngrok](https://ngrok.com/) or any another similar tool to create public url for exposing your local apps.
-    - [download](https://ngrok.com/download) ngrok.
-    - configuration in just a few steps is on the same [download page](https://ngrok.com/download).
-    - news app uses 8239 port, so run `ngrok http 8239` and you will receive your exposed url, e.g. `http://c6960219.ngrok.io`.
-- open [demo site](http://demo.microfrontends.online/news/) and add next cookies:
-```js
+## Practical example, how to develop your app within our [demo site](http://demo.microfrontends.online/news/)
+
+Let's imagine that our [demo site](http://demo.microfrontends.online/news/) is your production environment.
+And let's try to substitute _News app_ with the one that you'll run locally.
+
+1. Run our demo apps locally. To do so, follow the instruction here [ilc-demo-apps#development-process](https://github.com/namecheap/ilc-demo-apps#development-process).
+1. If you're behind NAT and don't have "white" IP address on your machine - use [ngrok](https://ngrok.com/) or any another similar tool to create public url for exposing your local apps.
+    - [Download & install](https://ngrok.com/download) ngrok using instruction from their website.
+    - As _News app_ uses `8239` port – run `ngrok http 8239` and you will receive your exposed url, e.g. `http://c6960219.ngrok.io`.
+1. Open [demo site](http://demo.microfrontends.online/news/) and add next cookies:
+    ```javascript
     const exposedUrl = 'http://c6960219.ngrok.io'; // or if you don't have NAT - http://YOUR_PUBLIC_IP:8239
     const overrideConfig = encodeURIComponent(JSON.stringify({
         apps: {
@@ -29,14 +34,29 @@ We created demo site with a few examples of React and Vue apps with SSR and hydr
     }));
 
     document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`
-```
-- that's all. so let's try to make some update in our local news app.
-- go to cloned demo apps, open the file `/ilc-demo-apps/apps/news-ssr/src/components/Home.vue` and replace `<h1>Pick a news source</h1>` with `<h1>Hello world</h1>`.
-- go to browser and refresh page [http://demo.microfrontends.online/news/](http://demo.microfrontends.online/news/).
-- if everything is ok, you will see h1 with text "Hello world".
-- and one more step is let's try to check SSR:
-    - turn off javascript with the help of dev-tools of your browser. e.g. [explanation how to do it for Chrome](https://developers.google.com/web/tools/chrome-devtools/javascript/disable)
-    - and after reloading of the page we still see correct page with h1 - Hello world
+    ```
+1. Try to refresh http://demo.microfrontends.online/news/ several times & using "Network" tabs in browser dev tools ensure 
+that some requests now go to the URL we specified before in `exposedUrl` variable.
+1. Now let's try to make some changes in our local _News app_ and see them appeared at our Demo website.
+    - Go to cloned `ilc-demo-apps` repo, open the file `/ilc-demo-apps/apps/news-ssr/src/components/Home.vue` and replace `<h1>Pick a news source</h1>` with `<h1>Hello world</h1>`.
+    - Now switch to your browser and refresh page http://demo.microfrontends.online/news/.
+    - If everything is ok, you will see h1 with text "Hello world".
+1. Last step is to check that SSR works correctly:
+    - Turn off javascript with the help of dev-tools in your browser. e.g. [explanation how to do it for Chrome](https://developers.google.com/web/tools/chrome-devtools/javascript/disable)
+    - And after reload of the page we still see correct page with h1 - Hello world
+
+
+
+## Security considerations
+
+The fact that you can override ILC config for particular browser using cookies introduces a risk of having 
+[website defacement](https://en.wikipedia.org/wiki/Website_defacement) attack with the help of [XSS](https://owasp.org/www-community/attacks/xss/).
+To mitigate this risk ILC by default will restrict all domains and all real IPs (only [private IPv4 addresses](https://en.wikipedia.org/wiki/Private_network) are allowed) specified for all links in configuration. 
+
+However you can allow additional origins by setting environment variable `OVERRIDE_CONFIG_TRUSTED_ORIGINS`
+- **default** - any origin is disallowed, except for [private IPv4 addresses](https://en.wikipedia.org/wiki/Private_network)
+- `all` - trust any origins
+- `foo.com, bar.com` - trust only foo.com and bar.com (recommended)
 
 ## Creating own MS
 - first of all, you should take [adapter](https://single-spa.js.org/docs/ecosystem) for your framework, wrap your app with it and export lifecycle functions.
@@ -100,9 +120,3 @@ document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`
 - since you probably run your MS locally via http and if your production site uses https so you will have problems with mixed content when you try to send request to http from https, so the simplest way to resolve it - just turn off checking in your browser. Details [link](https://docs.adobe.com/content/help/en/target/using/experiences/vec/troubleshoot-composer/mixed-content.html).
 - if you exclude some libs e.g. via ["externals"](https://github.com/namecheap/ilc/blob/e1ea372f822fc95790e73743c5ad7ddf31e3c892/devFragments/people/webpack.config.js#L95) property of webpack config - comment it during developing at production.
 
-
-## Trusted origins
-You can allow some origins via setting environment variable `OVERRIDE_CONFIG_TRUSTED_ORIGINS`
-- default - setting any url is disallowed(for security reasons)
-- `all` - trust any origin
-- `foo.com, bar.com` - trust only foo.com and bar.com(recommended)
