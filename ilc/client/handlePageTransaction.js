@@ -44,7 +44,7 @@ const onAllSlotsLoaded = () => {
     window.dispatchEvent(new CustomEvent('ilc:all-slots-loaded'));
 };
 
-export const addContentListener = slotName => {
+const addContentListener = slotName => {
     runGlobalSpinner();
 
     if (window.location.hash) {
@@ -67,7 +67,7 @@ export const addContentListener = slotName => {
     observer.observe(targetNode, { childList: true });
 };
 
-export const renderFakeSlot = slotName => {
+const renderFakeSlot = slotName => {
     const targetNode = getSlotElement(slotName);
     const clonedNode = targetNode.cloneNode(true);
     clonedNode.removeAttribute('id');
@@ -77,3 +77,20 @@ export const renderFakeSlot = slotName => {
     targetNode.style.display = 'none'; // we hide old slot because fake already in the DOM.
     hiddenSlots.push(targetNode);
 };
+
+/**
+ * @param {string} slotName
+ * @param {string} willBe - possible values: rendered, removed, rerendered
+ */
+export default function (slotName, willBe) {
+    if (!slotName || !willBe) return;
+
+    if (willBe === 'rendered') {
+        addContentListener(slotName);
+    } else if (willBe === 'removed') {
+        renderFakeSlot(slotName);
+    } else if (willBe === 'rerendered') {
+        renderFakeSlot(slotName);
+        addContentListener(slotName);
+    }
+}

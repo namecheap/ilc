@@ -60,3 +60,4 @@ See more information about the [lifecycle functions here](https://single-spa.js.
 * `getCurrentPathProps(): {}` - returns _Props_ that were defined for current path
 * `getCurrentBasePath(): string` - returns same value as `basePath` param in `routerProps` query parameter
 * `errorHandler(error, errorInfo = {}): void` - app MUST use it to propagate all unhandled errors
+
