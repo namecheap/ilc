@@ -6,7 +6,7 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha",
     "test:coverage": "cross-env NODE_ENV=test nyc mocha",
-    "test:e2e": "npx codeceptjs run --steps --verbose",
+    "test:e2e": "codeceptjs run --steps --verbose",
     "start": "node --max-http-header-size 30000 server/app.js",
     "start:ilc-demo-apps": "docker run --rm -it -p 8235-8240:8235-8240 namecheap/ilc-demo-apps",
     "dev": "npm run build:polyfills && cross-env NODE_ENV=development nodemon --ignore './public/' --max-http-header-size 30000 server/app.js",

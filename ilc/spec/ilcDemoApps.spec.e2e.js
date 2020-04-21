@@ -158,11 +158,11 @@ Scenario('a user tries to interact with a news page', async (I) => {
   /**
    * Should open a new page from a direct link which ILC does not handle
    */
-  const firstNewsSourceArticle = await I.grabAttributeFrom(firstNewsSourceArticle);
+  const firstNewsSourceArticleHref = await I.grabAttributeFrom(firstNewsSourceArticle, 'href');
 
   I.click(firstNewsSourceArticle);
   I.switchToNextTab();
-  I.seeInCurrentUrl(href);
+  I.seeInCurrentUrl(firstNewsSourceArticleHref);
   I.switchToPreviousTab();
   I.seeInCurrentUrl(lastNewsSourceLinkHref);
   I.closeOtherTabs();
