@@ -135,6 +135,7 @@ const generateError = `${newsView} > div.banner > a`;
 const lastNewsSource = `${newsView} > div.sources > div.container > ol > li.source:last-child`;
 const lastNewsSourceLink = `${lastNewsSource} > p.action > a`;
 const newsSourceArticles = `${newsView} > div.container > div.articles > ol > li.article`;
+const firstNewsSourceArticle = `${newsView} > div.container > div.articles > ol > li.article:first-child > div.meta > div.redirect > a`;
 
 Scenario('a user tries to interact with a news page', async (I) => {
   I.click(goToNews);
@@ -154,11 +155,26 @@ Scenario('a user tries to interact with a news page', async (I) => {
   I.scrollPageToTop();
   I.waitNumberOfVisibleElements(newsSourceArticles, 10);
 
+  /**
+   * Should open a new page from a direct link which ILC does not handle
+   */
+  const firstNewsSourceArticle = await I.grabAttributeFrom(firstNewsSourceArticle);
+
+  I.click(firstNewsSourceArticle);
+  I.switchToNextTab();
+  I.seeInCurrentUrl(href);
+  I.switchToPreviousTab();
+  I.seeInCurrentUrl(lastNewsSourceLinkHref);
+  I.closeOtherTabs();
+
   I.click(goToNewsSources);
   I.waitInUrl(newsUrl);
   I.waitForElement(newsSources, 5);
   I.see('Pick a news source', bannerHeadline);
 
+  /**
+   * Should handle an application error by ILC
+   */
   I.click(generateError);
   I.waitForText('Error ID', 5);
   I.seeInCurrentUrl(newsUrl);
