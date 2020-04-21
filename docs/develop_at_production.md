@@ -2,30 +2,41 @@
 
 
 ## Practical example of using existed MS on our [demo site](http://demo.microfrontends.online/news/)
-- run [demo apps](https://github.com/namecheap/ilc-demo-apps) locally
+We created demo site with a few examples of React and Vue apps with SSR and hydration.
+
+- To run these demo apps locally you need just:
+    - clone repo `git clone https://github.com/namecheap/ilc-demo-apps.git`.
+    - start in development mode [ilc-demo-apps#development-process](https://github.com/namecheap/ilc-demo-apps#development-process).
+- if you use NAT - you need [ngrok](https://ngrok.com/) or any another similar tool to create public url for exposing your local apps.
+    - [download](https://ngrok.com/download) ngrok.
+    - configuration in just a few steps is on the same [download page](https://ngrok.com/download).
+    - news app uses 8239 port, so run `ngrok http 8239` and you will receive your exposed url, e.g. `http://c6960219.ngrok.io`.
 - open [demo site](http://demo.microfrontends.online/news/) and add next cookies:
 ```js
+    const exposedUrl = 'http://c6960219.ngrok.io'; // or if you don't have NAT - http://YOUR_PUBLIC_IP:8239
     const overrideConfig = encodeURIComponent(JSON.stringify({
         apps: {
             '@portal/news': {
-                spaBundle: 'http://YOUR_IP:8239/dist/single_spa.js',
+                spaBundle: exposedUrl+ '/dist/single_spa.js',
                 ssr: {
-                    src: 'http://YOUR_IP:8239/news/?fragment=1',
+                    src: exposedUrl + '/news/?fragment=1',
                 },
                 props: {
-                    publicPath: 'http://YOUR_IP:8239/dist/',
+                    publicPath: exposedUrl + '/dist/',
                 },
             },
         },
     }));
 
     document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`
-
-    // to use SSR you should have either static public IP or just use any tools, e.g. https://ngrok.com/
-    // if you just need to work with CSR - you can use localhost.
-
 ```
-
+- that's all. so let's try to make some update in our local news app.
+- go to cloned demo apps, open the file `/ilc-demo-apps/apps/news-ssr/src/components/Home.vue` and replace `<h1>Pick a news source</h1>` with `<h1>Hello world</h1>`.
+- go to browser and refresh page [http://demo.microfrontends.online/news/](http://demo.microfrontends.online/news/).
+- if everything is ok, you will see h1 with text "Hello world".
+- and one more step is let's try to check SSR:
+    - turn off javascript with the help of dev-tools of your browser. e.g. [explanation how to do it for Chrome](https://developers.google.com/web/tools/chrome-devtools/javascript/disable)
+    - and after reloading of the page we still see correct page with h1 - Hello world
 
 ## Creating own MS
 - first of all, you should take [adapter](https://single-spa.js.org/docs/ecosystem) for your framework, wrap your app with it and export lifecycle functions.
