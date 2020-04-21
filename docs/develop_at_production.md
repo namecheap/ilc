@@ -22,7 +22,8 @@ And let's try to substitute _News app_ with the one that you'll run locally.
     const overrideConfig = encodeURIComponent(JSON.stringify({
         apps: {
             '@portal/news': {
-                spaBundle: exposedUrl+ '/dist/single_spa.js',
+                spaBundle: exposedUrl + '/dist/single_spa.js',
+                cssBundle: exposedUrl + '/dist/common.css',
                 ssr: {
                     src: exposedUrl + '/news/?fragment=1',
                 },
