@@ -1,7 +1,7 @@
 const config = require('config');
 
 exports.config = {
-  output: './codecept_output',
+  output: './.codecept_output',
   helpers: {
     Puppeteer: {
       url: `http://localhost:${config.port}`,
@@ -22,6 +22,9 @@ exports.config = {
       enabled: true
     },
     retryFailedStep: {
+      enabled: true
+    },
+    autoDelay: {
       enabled: true
     }
   },

@@ -6,7 +6,7 @@ Before((I) => {
 
 const planetsUrl = '/planets';
 
-const goToPlanets = 'body > div#navbar a[href="/planets"]';
+const goToPlanets = `body > div#navbar a[href="${planetsUrl}"]`;
 const planetsView = 'body > div#body > div.single-spa-container > div.view';
 const fetchMorePlanets = `${planetsView} > div.left > div.planetList > button.brand-button`;
 const selectedPlanet = `${planetsView} > div.right > div > div.selectedPlanet`;
@@ -75,7 +75,7 @@ Scenario('a user tries to interact with a planets page', async (I) => {
 
 const peopleUrl = '/people';
 
-const goToPeople = 'body > div#navbar a[href="/people"]';
+const goToPeople = `body > div#navbar a[href="${peopleUrl}"]`;
 const peopleView = 'body > div#body > div.peoplePage > div.peoplePageContents';
 const lastPerson = `${peopleView} > div.listWrapper > div.peopleList > a.person:last-child`;
 const fetchMorePeople = `${peopleView} > div.listWrapper > button.brand-button`;
