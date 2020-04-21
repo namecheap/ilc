@@ -78,6 +78,10 @@ const renderFakeSlot = slotName => {
     hiddenSlots.push(targetNode);
 };
 
+/**
+ * @param {string} slotName
+ * @param {string} willBe - possible values: rendered, removed, rerendered
+ */
 export default function (slotName, willBe) {
     if (!slotName || !willBe) return;
 
