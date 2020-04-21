@@ -3,7 +3,7 @@ import * as singleSpa from 'single-spa';
 import Router from './common/router/ClientRouter';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
-import { renderFakeSlot, addContentListener } from './client/pageTransitions';
+import handlePageTransaction from './client/handlePageTransaction';
 import initSpaConfig from './client/initSpaConfig';
 import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
@@ -75,9 +75,9 @@ function isActiveFactory(appName, slotName) {
         let isActive = checkActivity(router.getCurrentRoute());
         const wasActive = checkActivity(router.getPrevRoute());
 
-        const willBeRendered = !wasActive && isActive;
-        const willBeRemoved = wasActive && !isActive;
-        let willBeRerendered = false;
+        let willBe;
+        !wasActive && isActive && (willBe = 'rendered');
+        wasActive && !isActive && (willBe = 'removed');
 
         if (isActive && wasActive && reload === false) {
             const oldProps = router.getPrevRouteProps(appName, slotName);
@@ -95,17 +95,12 @@ function isActiveFactory(appName, slotName) {
                 });
 
                 isActive = false;
-                willBeRerendered = true;
+                willBe = 'rerendered';
             }
         }
 
-        if (willBeRendered) {
-            addContentListener(slotName);
-        } else if (willBeRemoved) {
-            renderFakeSlot(slotName);
-        } else if (willBeRerendered) {
-            renderFakeSlot(slotName);
-            addContentListener(slotName);
+        if (window.ilcConfig && window.ilcConfig.tmplSpinner) {
+            willBe && handlePageTransaction(slotName, willBe);
         }
 
         reload = false;
