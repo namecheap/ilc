@@ -4,6 +4,8 @@ Before((I) => {
     I.amOnPage('/');
 });
 
+const ilcSpinner = 'body > div > div.ilc-spinner';
+
 const planetsUrl = '/planets';
 
 const goToPlanets = `body > div#navbar a[href="${planetsUrl}"]`;
@@ -24,10 +26,12 @@ Scenario('a user tries to interact with a planets page', async (I) => {
      */
     I.waitInUrl('/');
     I.click(goToPlanets);
+    I.seeElement(ilcSpinner);
     I.waitInUrl(planetsUrl);
     I.seeAttributesOnElements(goToPlanets, {
       'aria-current': 'page',
     });
+    I.dontSeeElement(ilcSpinner);
     I.see('No planet selected', selectedPlanet);
     I.waitForClickable(fetchMorePlanets, 5);
     I.seeNumberOfVisibleElements(planetsList, 10);
@@ -88,10 +92,12 @@ Scenario('a user tries to interact with a people page', async (I) => {
    */
   I.waitInUrl('/');
   I.click(goToPeople);
+  I.seeElement(ilcSpinner);
   I.waitInUrl(peopleUrl);
   I.seeAttributesOnElements(goToPeople, {
     'aria-current': 'page',
   });
+  I.dontSeeElement(ilcSpinner);
   I.see('No one selected', selectedPerson);
   I.waitForClickable(fetchMorePeople, 5);
   I.seeNumberOfVisibleElements(personsList, 10);
