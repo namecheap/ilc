@@ -39,9 +39,9 @@ Bringing microservices to the frontend requires a layout service that composes a
 * 📦 **Based on [single-spa](https://single-spa.js.org/) & [TailorX](https://github.com/StyleT/tailorx)** - battle tested solutions inside
 * 📱 **Technology Agnostic** - use it with React, Vue.js, Angular, etc...
 * ⚙️ **Server Side Rendering support** - key advantage over competitors
-* 🗄 **Built-in registry** - add new apps, pages or change configs and templates in few clicks
+* 🗄 **Built-in registry** - add new apps, pages or change configs and templates in few clicks. [More info here](./docs/registry.md).
 * ⚡️ **Built for speed** - server side part of the system adds just ~17ms of latency
-* 👨‍💻 **Develop right at production** - [Doc](https://github.com/namecheap/ilc/blob/master/docs/develop_at_production.md)
+* 👨‍💻 **Develop right at production** - [Doc](./docs/develop_at_production.md)
 * 💲 **Baked by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with community
 
 ## 🚀 Quick start
@@ -72,6 +72,8 @@ More information about demo applications used in this quick start [you can find 
 ## Further reading
 
 * [ILC to App interface](docs/ilc_app_interface.md)
+* [ILC Registry](./docs/registry.md) 
+* [Animation during reroute](./docs/animation_during_reroute.md)
 * [Demo applications used in quick start](https://github.com/namecheap/ilc-demo-apps)
 
 ## 🔌 Adapters
