@@ -64,9 +64,22 @@ See more information about the [lifecycle functions here](https://single-spa.js.
 ### Page transitions spinner
 You can set own spinner with help of your main html-template:
 ```js
+   <style type="text/css">
+        .ilc-global-spinner {
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+   </style>
    <script>
         window.ilcConfig = {
-            tmplSpinner: '<div class="spinner">loading...</div>',
+            tmplSpinner: '<div class="ilc-global-spinner">LOADING...</div>',
         }
     </script>
 ```
