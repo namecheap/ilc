@@ -2,7 +2,7 @@
 
 ----
 
-[![Latest version](https://badgen.net/github/tag/namecheap/ilc?label=Latest%20version&color=green)](https://github.com/namecheap/ilc/releases)
+[![Latest version](https://badgen.net/github/tag/namecheap/ilc?label=Latest%20version&color=green&cache=900)](https://github.com/namecheap/ilc/releases)
 [![Demo website](./docs/assets/demo-website.svg)](http://demo.microfrontends.online/)
 [![Actions Status](https://github.com/namecheap/ilc/workflows/CI/badge.svg)](https://github.com/namecheap/ilc/actions)
 [![Docker Pulls](https://badgen.net/docker/pulls/namecheap/ilc?icon=docker&label=ILC%20pulls)](https://hub.docker.com/r/namecheap/ilc)
