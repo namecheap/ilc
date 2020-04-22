@@ -59,6 +59,8 @@ Check out [demo website available online](http://demo.microfrontends.online/) or
 
 More information about demo applications used in this quick start [you can find here](https://github.com/namecheap/ilc-demo-apps).
 
+And don't miss the **[Step-By-Step lessons about apps development with ILC](./docs/stepbystep/)**.
+
 ## Architecture overview
 
 ![ILC Architecture overview](docs/assets/ILC-Architecture.svg)
@@ -71,6 +73,7 @@ More information about demo applications used in this quick start [you can find 
 
 ## Further reading
 
+* [Step-By-Step lessons about apps development with ILC](./docs/stepbystep/)
 * [ILC to App interface](docs/ilc_app_interface.md)
 * [ILC Registry](./docs/registry.md) 
 * [Animation during reroute](./docs/animation_during_reroute.md)
