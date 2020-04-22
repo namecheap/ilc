@@ -32,13 +32,13 @@ However you can achieve pretty the same results using ILC that you run locally.
 
 To make your new fancy micro frontend work we need to determine your `publicPath` & `ssrPath` first.
 
-* If you're using codesandbox.io
+* If you're using codesandbox.io _(recommended approach)_
     * Your `publicPath` will be somewhat like `https://abcde.sse.codesandbox.io/public/`. 
     Check the address bar of your virtual browser.
     * And your `ssrPath` will be `https://abcde.sse.codesandbox.io/microfrontend`
 * If you're running app locally
-    * Your `publicPath` will be `http://127.0.0.1/public/`. 
-    * And your `ssrPath` will be `http://XXX.XXX.XXX.XXX/microfrontend` where you need to replace XXX with the white IP address of your machine.
+    * Your `publicPath` will be `http://127.0.0.1:5000/public/`. 
+    * And your `ssrPath` will be `http://XXX.XXX.XXX.XXX:5000/microfrontend` where you need to replace XXX with the white IP address of your machine.
     You can use services like https://ngrok.com/ to get one if your Internet provider keeps you behind NAT.
     
 As soon as you've figured out all the details - let's change the ILC config for us. 
