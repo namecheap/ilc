@@ -1,4 +1,4 @@
-const locators = require('./locators.e2e');
+import * as locators from './locators';
 
 Feature('planets ilc demo application');
 
@@ -34,7 +34,7 @@ Scenario('a user tries to interact with a planets page', async (I) => {
    */
   I.scrollPageToBottom();
 
-  const lastPlanetName = await I.grabTextFrom(locators.lastPlanet);
+  const lastPlanetName = await I.grabTextFrom(locators.lastPlanet) as string;
   const lastPlanetHref = await I.grabAttributeFrom(locators.lastPlanet, 'href');
 
   I.click(locators.lastPlanet);

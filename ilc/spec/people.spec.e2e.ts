@@ -1,4 +1,4 @@
-const locators = require('./locators.e2e');
+import * as locators from './locators';
 
 Feature('people ilc demo application');
 
@@ -34,7 +34,7 @@ Scenario('a user tries to interact with a people page', async (I) => {
    */
   I.scrollPageToBottom();
 
-  const lastPersonName = await I.grabTextFrom(locators.lastPerson);
+  const lastPersonName = await I.grabTextFrom(locators.lastPerson) as string;
   const lastPersonHref = await I.grabAttributeFrom(locators.lastPerson, 'href');
 
   I.click(locators.lastPerson);

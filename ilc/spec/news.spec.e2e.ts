@@ -1,4 +1,4 @@
-const locators = require('./locators.e2e');
+import * as locators from './locators';
 
 Feature('news ilc demo application');
 
