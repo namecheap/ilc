@@ -19,7 +19,7 @@ let childProcess;
 const forwardSignal = (signal) => {
     console.log(`Receive ${signal} signal.`);
 
-    if (!childProcess.kill(signal)) {
+    if (childProcess && !childProcess.kill(signal)) {
         console.log('Child process failed to stop.');
         return;
     }
@@ -27,9 +27,13 @@ const forwardSignal = (signal) => {
     console.log('Child process was successfully stopped. Shutting down...');
 };
 
-const gracefullyShutDown = (done) => {
-    childProcess.once('exit', () => done());
-    forwardSignal('SIGTERM');
+const shutDown = (done) => {
+    if (childProcess && !childProcess.killed) {
+        childProcess.once('exit', () => done());
+        forwardSignal('SIGKILL');
+    } else {
+        done();
+    }
 }
 
 const bootstrap = async (done) => {
@@ -54,15 +58,11 @@ const bootstrap = async (done) => {
 
         done();
     } catch (error) {
-        if (!childProcess.killed) {
-            gracefullyShutDown(() => done(error));
-        } else {
-            done(error);
-        }
+        shutDown(() => done(error));
     }
 };
 
-const teardown = (done) => gracefullyShutDown(() => done());
+const teardown = (done) => shutDown(() => done());
 
 module.exports = {
     bootstrap,

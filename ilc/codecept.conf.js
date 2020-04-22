@@ -10,6 +10,19 @@ exports.config = {
       show: true,
       windowSize: '1200x900',
     },
+    MockRequestHelper: {
+      require: '@codeceptjs/mock-request',
+      mode: 'record',
+      recordIfMissing: true,
+      recordFailedRequests: false,
+      expiresIn: null,
+      persisterOptions: {
+        keepUnusedRequests: false,
+        fs: {
+          recordingsDir: path.join(__dirname, '.codecept_output', 'requests'),
+        },
+      },
+    },
   },
   mocha: {},
   bootstrap: presettings.bootstrap,
