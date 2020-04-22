@@ -1,7 +1,9 @@
+const path = require('path');
 const config = require('config');
+const presettings = require('./codecept.presettings');
 
 exports.config = {
-  output: './.codecept_output',
+  output: path.join(__dirname, '.codecept_output', 'artifacts'),
   helpers: {
     Puppeteer: {
       url: `http://localhost:${config.port}`,
@@ -10,8 +12,8 @@ exports.config = {
     },
   },
   mocha: {},
-  bootstrap: null,
-  teardown: null,
+  bootstrap: presettings.bootstrap,
+  teardown: presettings.teardown,
   hooks: [],
   plugins: {
     screenshotOnFail: {
@@ -22,7 +24,11 @@ exports.config = {
     },
     autoDelay: {
       enabled: true,
-    }
+    },
+    puppeteerCoverage: {
+      enabled: true,
+      coverageDir: path.join(__dirname, '.codecept_output', 'coverage'),
+    },
   },
   tests: './spec/**/*.spec.e2e.ts',
   name: 'ilc',
