@@ -74,6 +74,7 @@ And don't miss the **[Step-By-Step lessons about apps development with ILC](./do
 ## Further reading
 
 * [Step-By-Step lessons about apps development with ILC](./docs/stepbystep/)
+* [Installation guide](./docs/installation_guide.md)
 * [ILC to App interface](docs/ilc_app_interface.md)
 * [ILC Registry](./docs/registry.md) 
 * [Animation during reroute](./docs/animation_during_reroute.md)
