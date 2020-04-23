@@ -1,5 +1,3 @@
-import * as locators from './locators';
-
 Feature('news ilc demo application');
 
 Before((I) => {
@@ -25,46 +23,46 @@ After((I) => {
     I.stopMocking();
 });
 
-Scenario('a user tries to interact with a news page', async (I) => {
+Scenario('a user tries to interact with a news page', async (I, newsPage) => {
     I.waitInUrl('/', 5);
-    I.click(locators.goToNews);
-    I.waitInUrl(locators.newsUrl, 5);
-    I.seeAttributesOnElements(locators.goToNews, {
+    I.click(newsPage.goToNews);
+    I.waitInUrl(newsPage.newsUrl, 5);
+    I.seeAttributesOnElements(newsPage.goToNews, {
         'aria-current': 'page',
     });
-    I.waitForElement(locators.newsSources, 5);
-    I.see('Pick a news source', locators.bannerHeadline);
+    I.waitForElement(newsPage.newsSources, 5);
+    I.see('Pick a news source', newsPage.bannerHeadline);
 
     I.scrollPageToBottom();
 
-    const lastNewsSourceLinkHref = await I.grabAttributeFrom(locators.lastNewsSourceLink, 'href');
+    const lastNewsSourceLinkHref = await I.grabAttributeFrom(newsPage.lastNewsSourceLink, 'href');
 
-    I.click(locators.lastNewsSourceLink);
+    I.click(newsPage.lastNewsSourceLink);
     I.seeInCurrentUrl(lastNewsSourceLinkHref);
     I.scrollPageToTop();
-    I.waitNumberOfVisibleElements(locators.newsSourceArticles, 10, 5);
+    I.waitNumberOfVisibleElements(newsPage.newsSourceArticles, 10, 5);
 
     /**
      * Should open a new page from a direct link which ILC does not handle
      */
-    const firstNewsSourceArticleHref = await I.grabAttributeFrom(locators.firstNewsSourceArticle, 'href');
+    const firstNewsSourceArticleHref = await I.grabAttributeFrom(newsPage.firstNewsSourceArticle, 'href');
 
-    I.click(locators.firstNewsSourceArticle);
+    I.click(newsPage.firstNewsSourceArticle);
     I.switchToNextTab();
     I.seeInCurrentUrl(firstNewsSourceArticleHref);
     I.switchToPreviousTab();
     I.seeInCurrentUrl(lastNewsSourceLinkHref);
     I.closeOtherTabs();
 
-    I.click(locators.goToNewsSources);
-    I.waitInUrl(locators.newsUrl, 5);
-    I.waitForElement(locators.newsSources, 5);
-    I.see('Pick a news source', locators.bannerHeadline);
+    I.click(newsPage.goToNewsSources);
+    I.waitInUrl(newsPage.newsUrl, 5);
+    I.waitForElement(newsPage.newsSources, 5);
+    I.see('Pick a news source', newsPage.bannerHeadline);
 
     /**
      * Should handle an application error by ILC
      */
-    I.click(locators.generateError);
+    I.click(newsPage.generateError);
     I.waitForText('Error ID', 5);
-    I.seeInCurrentUrl(locators.newsUrl);
+    I.seeInCurrentUrl(newsPage.newsUrl);
 });

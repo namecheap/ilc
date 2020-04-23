@@ -1,5 +1,3 @@
-import * as locators from './locators';
-
 Feature('people ilc demo application');
 
 Before((I) => {
@@ -45,40 +43,40 @@ After((I) => {
     I.stopMocking();
 });
 
-Scenario('a user tries to interact with a people page', async (I) => {
+Scenario('a user tries to interact with a people page', async (I, peoplePage) => {
     /**
      * Should open a people page without any selected planet initially
      */
     I.waitInUrl('/', 5);
-    I.click(locators.goToPeople);
-    // I.seeElement(locators.ilcSpinner); TODO Need to add a delay
-    I.waitInUrl(locators.peopleUrl, 5);
-    I.seeAttributesOnElements(locators.goToPeople, {
+    I.click(peoplePage.goToPeople);
+    // I.seeElement(peoplePage.ilcSpinner); TODO Need to add a delay
+    I.waitInUrl(peoplePage.peopleUrl, 5);
+    I.seeAttributesOnElements(peoplePage.goToPeople, {
         'aria-current': 'page',
     });
-    I.dontSeeElement(locators.ilcSpinner);
-    I.see('No one selected', locators.selectedPerson);
-    I.waitForClickable(locators.fetchMorePeople, 5);
-    I.seeNumberOfVisibleElements(locators.personsList, 10);
+    I.dontSeeElement(peoplePage.ilcSpinner);
+    I.see('No one selected', peoplePage.selectedPerson);
+    I.waitForClickable(peoplePage.fetchMorePeople, 5);
+    I.seeNumberOfVisibleElements(peoplePage.personsList, 10);
 
     /**
      * Should show more persons when a user clicks to fetch more them
      */
-    I.click(locators.fetchMorePeople);
-    I.waitForClickable(locators.fetchMorePeople, 5);
-    I.seeNumberOfVisibleElements(locators.personsList, 20);
+    I.click(peoplePage.fetchMorePeople);
+    I.waitForClickable(peoplePage.fetchMorePeople, 5);
+    I.seeNumberOfVisibleElements(peoplePage.personsList, 20);
 
     /**
      * Should show person`s details when a user choses one of a people list
      */
     I.scrollPageToBottom();
 
-    const lastPersonName = await I.grabTextFrom(locators.lastPerson) as string;
-    const lastPersonHref = await I.grabAttributeFrom(locators.lastPerson, 'href');
+    const lastPersonName = await I.grabTextFrom(peoplePage.lastPerson) as string;
+    const lastPersonHref = await I.grabAttributeFrom(peoplePage.lastPerson, 'href');
 
-    I.click(locators.lastPerson);
+    I.click(peoplePage.lastPerson);
     I.scrollPageToTop();
     I.waitInUrl(lastPersonHref, 5);
-    I.dontSee('No planet selected', locators.selectedPerson);
-    I.see(lastPersonName, locators.selectedPerson);
+    I.dontSee('No planet selected', peoplePage.selectedPerson);
+    I.see(lastPersonName, peoplePage.selectedPerson);
 });
