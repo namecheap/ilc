@@ -30,7 +30,7 @@ const forwardSignal = (signal) => {
 const shutDown = (done) => {
     if (childProcess && !childProcess.killed) {
         childProcess.once('exit', () => done());
-        forwardSignal('SIGKILL');
+        forwardSignal('SIGINT');
     } else {
         done();
     }

@@ -3,50 +3,46 @@ import * as locators from './locators';
 Feature('people ilc demo application');
 
 Before((I) => {
-    // @ts-ignore
+    I.startMocking();
     I.mockServer((server) => {
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/people/?page=1').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/people/?page=1').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/people.page.01.json'));
         });
 
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/people/?page=2').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/people/?page=2').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/people.page.02.json'));
         });
 
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/planets/8/').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/planets/8/').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/planet.08.json'));
         });
 
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/films/2/').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/films/2/').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/film.02.json'));
         });
 
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/films/3/').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/films/3/').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/film.03.json'));
         });
 
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/films/4/').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/films/4/').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/film.04.json'));
         });
 
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/films/5/').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/films/5/').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/film.05.json'));
         });
 
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/films/6/').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/films/6/').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/film.06.json'));
         });
     });
 
     I.amOnPage('/');
+});
+
+After((I) => {
+    I.stopMocking();
 });
 
 Scenario('a user tries to interact with a people page', async (I) => {

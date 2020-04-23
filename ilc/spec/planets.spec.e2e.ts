@@ -3,25 +3,26 @@ import * as locators from './locators';
 Feature('planets ilc demo application');
 
 Before((I) => {
-    // @ts-ignore
+    I.startMocking();
     I.mockServer((server) => {
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/planets/?page=1').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/planets/?page=1').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/planets.page.01.json'));
         });
 
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/planets/?page=2').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/planets/?page=2').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/planets.page.02.json'));
         });
 
-        // @ts-ignore
-        server.get('https://swapi-v2.herokuapp.com/api/people/10/').intercept((req, res) => {
+        server.get('https://swapi-v2.herokuapp.com/api/people/10/').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/people.10.json'));
         });
     });
 
     I.amOnPage('/');
+});
+
+After((I) => {
+    I.stopMocking();
 });
 
 Scenario('a user tries to interact with a planets page', async (I) => {

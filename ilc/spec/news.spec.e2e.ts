@@ -3,25 +3,26 @@ import * as locators from './locators';
 Feature('news ilc demo application');
 
 Before((I) => {
-    // @ts-ignore
+    I.startMocking();
     I.mockServer((server) => {
-        // @ts-ignore
-        server.get('https://newsapi.org/v1/sources').intercept((req, res) => {
+        server.get('https://newsapi.org/v1/sources').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/news.sources.json'));
         });
 
-        // @ts-ignore
-        server.get('https://newsapi.org/v1/articles?source=wirtschafts-woche&apiKey=97c568e8528f40be944a8c047aef2210').intercept((req, res) => {
+        server.get('https://newsapi.org/v1/articles?source=wirtschafts-woche&apiKey=97c568e8528f40be944a8c047aef2210').intercept((req: any, res: any) => {
             res.status(200).json(require('./data/news.source.articles.json'));
         });
 
-        // @ts-ignore
-        server.get('https://www.wiwo.de/unternehmen/auto/wandel-kostet-milliarden-suv-und-china-sollen-audi-wieder-nach-vorne-bringen/21069566.html').intercept((req, res) => {
+        server.get('https://www.wiwo.de/unternehmen/auto/wandel-kostet-milliarden-suv-und-china-sollen-audi-wieder-nach-vorne-bringen/21069566.html').intercept((req: any, res: any) => {
             res.status(200).send();
         });
     });
 
     I.amOnPage('/');
+});
+
+After((I) => {
+    I.stopMocking();
 });
 
 Scenario('a user tries to interact with a news page', async (I) => {
