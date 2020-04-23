@@ -29,23 +29,23 @@ Scenario('a user tries to interact with a planets page', async (I) => {
     /**
      * Should open a planets page without any selected planet initially
      */
-    I.waitInUrl('/');
+    I.waitInUrl('/', 5);
     I.click(locators.goToPlanets);
     // I.seeElement(locators.ilcSpinner); TODO Need to add a delay
-    I.waitInUrl(locators.planetsUrl);
+    I.waitInUrl(locators.planetsUrl, 5);
     I.seeAttributesOnElements(locators.goToPlanets, {
         'aria-current': 'page',
     });
     I.dontSeeElement(locators.ilcSpinner);
     I.see('No planet selected', locators.selectedPlanet);
-    I.waitForClickable(locators.fetchMorePlanets);
+    I.waitForClickable(locators.fetchMorePlanets, 5);
     I.seeNumberOfVisibleElements(locators.planetsList, 10);
 
     /**
      * Should show more planets when a user clicks to fetch more them
      */
     I.click(locators.fetchMorePlanets);
-    I.waitForClickable(locators.fetchMorePlanets);
+    I.waitForClickable(locators.fetchMorePlanets, 5);
     I.seeNumberOfVisibleElements(locators.planetsList, 20);
 
     /**
@@ -58,7 +58,7 @@ Scenario('a user tries to interact with a planets page', async (I) => {
 
     I.click(locators.lastPlanet);
     I.scrollPageToTop();
-    I.waitInUrl(lastPlanetHref);
+    I.waitInUrl(lastPlanetHref, 5);
     I.dontSee('No planet selected', locators.selectedPlanet);
     I.see(lastPlanetName, locators.selectedPlanetName);
     I.seeElement(locators.selectedPlanetTabAttributes);
@@ -73,11 +73,11 @@ Scenario('a user tries to interact with a planets page', async (I) => {
     const selectedPlanetTabTodoHref = await I.grabAttributeFrom(locators.selectedPlanetTabTodo, 'href');
 
     I.click(locators.selectedPlanetTabAttributes);
-    I.waitInUrl(selectedPlanetTabAttributesHref);
+    I.waitInUrl(selectedPlanetTabAttributesHref, 5);
 
     I.click(locators.selectedPlanetTabPeople);
-    I.waitInUrl(selectedPlanetTabPeopleHref);
+    I.waitInUrl(selectedPlanetTabPeopleHref, 5);
 
     I.click(locators.selectedPlanetTabTodo);
-    I.waitInUrl(selectedPlanetTabTodoHref);
+    I.waitInUrl(selectedPlanetTabTodoHref, 5);
 });

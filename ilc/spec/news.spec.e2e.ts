@@ -26,13 +26,13 @@ After((I) => {
 });
 
 Scenario('a user tries to interact with a news page', async (I) => {
-    I.waitInUrl('/');
+    I.waitInUrl('/', 5);
     I.click(locators.goToNews);
-    I.waitInUrl(locators.newsUrl);
+    I.waitInUrl(locators.newsUrl, 5);
     I.seeAttributesOnElements(locators.goToNews, {
         'aria-current': 'page',
     });
-    I.waitForElement(locators.newsSources);
+    I.waitForElement(locators.newsSources, 5);
     I.see('Pick a news source', locators.bannerHeadline);
 
     I.scrollPageToBottom();
@@ -42,7 +42,7 @@ Scenario('a user tries to interact with a news page', async (I) => {
     I.click(locators.lastNewsSourceLink);
     I.seeInCurrentUrl(lastNewsSourceLinkHref);
     I.scrollPageToTop();
-    I.waitNumberOfVisibleElements(locators.newsSourceArticles, 10);
+    I.waitNumberOfVisibleElements(locators.newsSourceArticles, 10, 5);
 
     /**
      * Should open a new page from a direct link which ILC does not handle
@@ -57,14 +57,14 @@ Scenario('a user tries to interact with a news page', async (I) => {
     I.closeOtherTabs();
 
     I.click(locators.goToNewsSources);
-    I.waitInUrl(locators.newsUrl);
-    I.waitForElement(locators.newsSources);
+    I.waitInUrl(locators.newsUrl, 5);
+    I.waitForElement(locators.newsSources, 5);
     I.see('Pick a news source', locators.bannerHeadline);
 
     /**
      * Should handle an application error by ILC
      */
     I.click(locators.generateError);
-    I.waitForText('Error ID');
+    I.waitForText('Error ID', 5);
     I.seeInCurrentUrl(locators.newsUrl);
 });

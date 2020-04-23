@@ -5,7 +5,7 @@ Before((I) => {
 });
 
 Scenario('a user tries to interact with a nonexistent page', (I) => {
-    I.waitInUrl('/');
+    I.waitInUrl('/', 5);
     I.amOnPage('/nonexistent-path');
-    I.see('404 not found', 'body > div#body');
+    I.waitForText('404 not found', 5, 'body > div#body');
 });

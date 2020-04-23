@@ -49,23 +49,23 @@ Scenario('a user tries to interact with a people page', async (I) => {
     /**
      * Should open a people page without any selected planet initially
      */
-    I.waitInUrl('/');
+    I.waitInUrl('/', 5);
     I.click(locators.goToPeople);
     // I.seeElement(locators.ilcSpinner); TODO Need to add a delay
-    I.waitInUrl(locators.peopleUrl);
+    I.waitInUrl(locators.peopleUrl, 5);
     I.seeAttributesOnElements(locators.goToPeople, {
         'aria-current': 'page',
     });
     I.dontSeeElement(locators.ilcSpinner);
     I.see('No one selected', locators.selectedPerson);
-    I.waitForClickable(locators.fetchMorePeople);
+    I.waitForClickable(locators.fetchMorePeople, 5);
     I.seeNumberOfVisibleElements(locators.personsList, 10);
 
     /**
      * Should show more persons when a user clicks to fetch more them
      */
     I.click(locators.fetchMorePeople);
-    I.waitForClickable(locators.fetchMorePeople);
+    I.waitForClickable(locators.fetchMorePeople, 5);
     I.seeNumberOfVisibleElements(locators.personsList, 20);
 
     /**
@@ -78,7 +78,7 @@ Scenario('a user tries to interact with a people page', async (I) => {
 
     I.click(locators.lastPerson);
     I.scrollPageToTop();
-    I.waitInUrl(lastPersonHref);
+    I.waitInUrl(lastPersonHref, 5);
     I.dontSee('No planet selected', locators.selectedPerson);
     I.see(lastPersonName, locators.selectedPerson);
 });
