@@ -11,6 +11,16 @@ exports.config = {
         },
         MockRequestHelper: {
             require: '@codeceptjs/mock-request',
+            mode: 'record',
+            recordIfMissing: true,
+            recordFailedRequests: false,
+            expiresIn: null,
+            persisterOptions: {
+                keepUnusedRequests: false,
+                fs: {
+                    recordingsDir: path.join(__dirname, '.codecept_output', 'requests'),
+                },
+            },
         },
     },
     mocha: {},
