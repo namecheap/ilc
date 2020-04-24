@@ -1,18 +1,15 @@
 /// <reference types='codeceptjs' />
+type peoplePage = typeof import('/Users/vladlenfedosov/www/rnd/spa_fragments/single-spa-portal-example/ilc/spec/pages/people');
+type newsPage = typeof import('/Users/vladlenfedosov/www/rnd/spa_fragments/single-spa-portal-example/ilc/spec/pages/news');
+type planetsPage = typeof import('/Users/vladlenfedosov/www/rnd/spa_fragments/single-spa-portal-example/ilc/spec/pages/planets');
+type MockRequestHelper = import('@codeceptjs/mock-request');
 
 declare namespace CodeceptJS {
-    class MockRequestHelper {
-        mockServer(callback: (server: any) => void): void;
-        mockRequest(method: string, path: string | Array<string>, status: number, data?: any): void;
-        startMocking(): void;
-        stopMocking(): void;
-    }
-
-    interface SupportObject { I: CodeceptJS.I }
-    interface CallbackOrder { [0]: CodeceptJS.I }
-    interface Methods extends CodeceptJS.Puppeteer, MockRequestHelper { }
-    interface I extends WithTranslation<Methods> { }
-    namespace Translation {
-        interface Actions { }
-    }
+  interface SupportObject { I: CodeceptJS.I, peoplePage: peoplePage, newsPage: newsPage, planetsPage: planetsPage }
+  interface CallbackOrder { [0]: CodeceptJS.I; [1]: peoplePage; [2]: newsPage; [3]: planetsPage }
+  interface Methods extends CodeceptJS.Puppeteer, MockRequestHelper {}
+  interface I extends WithTranslation<Methods> {}
+  namespace Translation {
+    interface Actions {}
+  }
 }

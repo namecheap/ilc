@@ -1,6 +1,6 @@
 Feature('navbar ilc demo application');
 
-Scenario('should open every page and show a content only of an opened page', async (I, newsPage, peoplePage, planetsPage) => {
+Scenario('should open every page and show a content only of an opened page', async (I, peoplePage, newsPage, planetsPage) => {
     I.amOnPage('/');
     I.waitForElement(newsPage.goToNews, 30);
     I.click(newsPage.goToNews);
