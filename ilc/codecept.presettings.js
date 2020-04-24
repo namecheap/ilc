@@ -48,7 +48,6 @@ const bootstrap = async (done) => {
             waitOn({
                 resources: ports.map((port) => `tcp:${port}`),
                 timeout: 60*1000,
-                simultaneous: 1,
                 interval: 1000,
                 delay: 5*1000,
             }).then(() => resolve()).catch((error) => {

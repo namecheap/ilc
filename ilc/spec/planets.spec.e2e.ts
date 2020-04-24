@@ -1,8 +1,6 @@
 Feature('planets ilc demo application');
 
 Scenario('should open a planets page without any selected planet initially', async (I, planetsPage) => {
-    planetsPage.mockFirstPlanetsPage();
-
     I.amOnPage('/');
     I.waitForElement(planetsPage.goToPlanets, 5);
     I.click(planetsPage.goToPlanets);
@@ -15,9 +13,6 @@ Scenario('should open a planets page without any selected planet initially', asy
 });
 
 Scenario('should show more planets', async (I, planetsPage) => {
-    planetsPage.mockFirstPlanetsPage();
-    planetsPage.mockSecondPlanetsPage();
-
     I.amOnPage(planetsPage.planetsUrl);
     I.waitForElement(planetsPage.fetchMorePlanets);
     I.waitForClickable(planetsPage.fetchMorePlanets, 5);
@@ -28,8 +23,6 @@ Scenario('should show more planets', async (I, planetsPage) => {
 });
 
 Scenario('should show planet`s details', async (I, planetsPage) => {
-    planetsPage.mockFirstPlanetsPage();
-
     I.amOnPage(planetsPage.planetsUrl);
     I.waitNumberOfVisibleElements(planetsPage.planetsList, 10, 5);
     I.seeElement(planetsPage.lastPlanet);
