@@ -3,15 +3,39 @@ const config = require('config');
 const path = require('path');
 const exec = require('child_process').exec;
 
+const apps = {
+    registry: {
+        port: 4001
+    },
+    navigation: {
+        port: 8235
+    },
+    people: {
+        port: 8236
+    },
+    planets: {
+        port: 8237
+    },
+    fetchWithCache: {
+        port: 8238
+    },
+    news: {
+        port: 8239
+    },
+    system: {
+        port: 8240
+    }
+};
+
 const ports = [
-    config.get('navigation.port'),
-    config.get('people.port'),
-    config.get('planets.port'),
-    config.get('news.port'),
-    config.get('system.port'),
-    config.get('fetchWithCache.port'),
+    apps.navigation.port,
+    apps.people.port,
+    apps.planets.port,
+    apps.news.port,
+    apps.system.port,
+    apps.fetchWithCache.port,
     config.get('port'),
-    config.get('registry.port'),
+    apps.registry.port,
 ];
 
 let childProcess;

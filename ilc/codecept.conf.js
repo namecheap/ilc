@@ -5,7 +5,7 @@ exports.config = {
     output: path.join(__dirname, '.codecept_output', 'artifacts'),
     helpers: {
         Puppeteer: {
-            url: `http://localhost:${config.port}`,
+            url: `http://localhost:${config.get('port')}`,
             show: true,
             windowSize: '1200x900',
         },
