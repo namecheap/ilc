@@ -6,7 +6,7 @@ exports.config = {
     helpers: {
         Puppeteer: {
             url: `http://localhost:${config.get('port')}`,
-            show: true,
+            show: process.env.TEST_ENV === 'verbose',
             windowSize: '1200x900',
         },
         MockRequestHelper: {
