@@ -7,7 +7,6 @@
     "test": "cross-env NODE_ENV=test mocha",
     "test:coverage": "cross-env NODE_ENV=test nyc mocha",
     "test:e2e": "cross-env NODE_ENV=test codeceptjs run --verbose",
-    "test:e2e:def": "cross-env NODE_ENV=test codeceptjs def --output ./spec/typings",
     "start": "node --max-http-header-size 30000 server/app.js",
     "dev": "npm run build:polyfills && cross-env NODE_ENV=development nodemon --ignore './public/' --max-http-header-size 30000 server/app.js",
     "build": "rimraf public && npm run build:systemjs && npm run build:client && npm run build:polyfills",
