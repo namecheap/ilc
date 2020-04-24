@@ -1,7 +1,7 @@
 const waitOn = require('wait-on');
 const config = require('config');
 const path = require('path');
-const exec = require('child_process').exec;
+const execa = require('execa').command;
 
 const apps = {
     registry: {
@@ -40,40 +40,28 @@ const ports = [
 
 let childProcess;
 
-const forwardSignal = (signal) => {
-    console.log(`Receive ${signal} signal.`);
-
-    if (childProcess && !childProcess.kill(signal)) {
-        console.log('Child process failed to stop.');
-        return;
-    }
-
-    console.log('Child process was successfully stopped. Shutting down...');
-};
-
 const shutDown = (done) => {
-    if (childProcess && !childProcess.killed) {
-        childProcess.once('exit', () => done());
-        forwardSignal('SIGINT');
-    } else {
+    console.log(`Killing child process...`);
+    childProcess.on('exit', () => {
+        console.log(`Child process was successfully killed. Shutting down...`);
         done();
-    }
-}
+    });
+    childProcess.kill('SIGINT', { forceKillAfterTimeout: 3000 });
+};
 
 const bootstrap = async (done) => {
     try {
         await new Promise((resolve, reject) => {
-            childProcess = exec(`cd ${path.join(__dirname, '..')} && npm run start`, (error) => {
-                if (error !== null) {
-                    reject(error);
-                }
+            childProcess = execa(`npm run start`, { cwd: path.join(__dirname, '..') });
+            childProcess.on('error', (error) => {
+                reject(error);
             });
 
             waitOn({
                 resources: ports.map((port) => `tcp:localhost:${port}`),
-                timeout: 60*1000,
+                timeout: 60 * 1000,
                 interval: 1000,
-                delay: 5*1000,
+                delay: 5 * 1000,
             }).then(() => resolve()).catch((error) => {
                 reject(error);
             });
@@ -90,4 +78,4 @@ const teardown = (done) => shutDown(() => done());
 module.exports = {
     bootstrap,
     teardown,
-}
+};
