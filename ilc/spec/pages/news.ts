@@ -1,5 +1,7 @@
 const { I } = inject();
 
+const newsSourcesData = require('./data/news.sources.json');
+
 export const newsUrl = '/news/';
 
 export const goToNews = `body > div#navbar a[href="${newsUrl}"]`;
@@ -14,4 +16,9 @@ export const lastNewsSourceLink = `${lastNewsSource} > p.action > a`;
 export const newsSourceArticles = `${newsView} > div.container > div.articles > ol > li.article`;
 export const firstNewsSourceArticle = `${newsSourceArticles}:first-child > div.meta > div.redirect > a`;
 
-export const ilcSpinner = 'body > div > div.ilc-spinner';
+export const mockNewsSources = () => I.mockRequest(
+    'GET',
+    'https://newsapi.org/v1/sources',
+    200,
+    newsSourcesData,
+);

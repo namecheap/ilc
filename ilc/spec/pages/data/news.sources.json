@@ -1,0 +1,90 @@
+{
+    "status":"ok",
+    "sources":[
+        {
+            "id":"the-washington-post",
+            "name":"The Washington Post",
+            "description":"Breaking news and analysis on politics, business, world national news, entertainment more. In-depth DC, Virginia, Maryland news coverage including traffic, weather, crime, education, restaurant reviews and more.",
+            "url":"https://www.washingtonpost.com",
+            "category":"general",
+            "language":"en",
+            "country":"us",
+            "urlsToLogos":{
+                "small":"",
+                "medium":"",
+                "large":""
+            },
+            "sortBysAvailable":[
+                "top"
+            ]
+        },
+        {
+            "id":"time",
+            "name":"Time",
+            "description":"Breaking news and analysis from TIME.com. Politics, world news, photos, video, tech reviews, health, science and entertainment news.",
+            "url":"http://time.com",
+            "category":"general",
+            "language":"en",
+            "country":"us",
+            "urlsToLogos":{
+                "small":"",
+                "medium":"",
+                "large":""
+            },
+            "sortBysAvailable":[
+                "top"
+            ]
+        },
+        {
+            "id":"usa-today",
+            "name":"USA Today",
+            "description":"Get the latest national, international, and political news at USATODAY.com.",
+            "url":"http://www.usatoday.com/news",
+            "category":"general",
+            "language":"en",
+            "country":"us",
+            "urlsToLogos":{
+                "small":"",
+                "medium":"",
+                "large":""
+            },
+            "sortBysAvailable":[
+                "top"
+            ]
+        },
+        {
+            "id":"wired-de",
+            "name":"Wired.de",
+            "description":"Wired reports on how emerging technologies affect culture, the economy and politics.",
+            "url":"https://www.wired.de",
+            "category":"technology",
+            "language":"de",
+            "country":"de",
+            "urlsToLogos":{
+                "small":"",
+                "medium":"",
+                "large":""
+            },
+            "sortBysAvailable":[
+                "top"
+            ]
+        },
+        {
+            "id":"wirtschafts-woche",
+            "name":"Wirtschafts Woche",
+            "description":"Das Online-Portal des führenden Wirtschaftsmagazins in Deutschland. Das Entscheidende zu Unternehmen, Finanzen, Erfolg und Technik.",
+            "url":"http://www.wiwo.de",
+            "category":"business",
+            "language":"de",
+            "country":"de",
+            "urlsToLogos":{
+                "small":"",
+                "medium":"",
+                "large":""
+            },
+            "sortBysAvailable":[
+                "top"
+            ]
+        }
+    ]
+}

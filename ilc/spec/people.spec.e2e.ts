@@ -1,21 +1,24 @@
 Feature('people ilc demo application');
 
 Scenario('should open a people page without any selected planet initially', async (I, peoplePage) => {
+    peoplePage.mockFirstPeoplePage();
+
     I.amOnPage('/');
     I.waitForElement(peoplePage.goToPeople, 5);
     I.click(peoplePage.goToPeople);
-    I.waitForElement(peoplePage.ilcSpinner);
     I.waitInUrl(peoplePage.peopleUrl, 5);
     I.seeAttributesOnElements(peoplePage.goToPeople, {
         'aria-current': 'page',
     });
-    I.dontSeeElement(peoplePage.ilcSpinner);
     I.see('No one selected', peoplePage.selectedPerson);
     I.waitForClickable(peoplePage.fetchMorePeople, 5);
     I.seeNumberOfVisibleElements(peoplePage.personsList, 10);
 });
 
 Scenario('should show more persons', async (I, peoplePage) => {
+    peoplePage.mockFirstPeoplePage();
+    peoplePage.mockSecondPeoplePage();
+
     I.amOnPage(peoplePage.peopleUrl);
     I.waitForElement(peoplePage.fetchMorePeople, 5);
     I.waitForClickable(peoplePage.fetchMorePeople, 5);
@@ -26,6 +29,8 @@ Scenario('should show more persons', async (I, peoplePage) => {
 });
 
 Scenario('should show person`s details', async (I, peoplePage) => {
+    peoplePage.mockFirstPeoplePage();
+
     I.amOnPage(peoplePage.peopleUrl);
     I.waitNumberOfVisibleElements(peoplePage.personsList, 10, 5);
 
