@@ -9,8 +9,8 @@
     ],
     "types": [
       "node",
-      "./spec/typings/steps",
-      "./spec/typings/mock-request"
+      "./typings/steps",
+      "./typings/mock-request"
     ],
     "esModuleInterop": true
   }

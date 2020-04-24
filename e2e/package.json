@@ -1,0 +1,26 @@
+{
+    "name": "e2e",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "private": true,
+    "scripts": {
+        "test:e2e": "cross-env TEST_ENV=verbose npm run test:e2e:ci -- --verbose",
+        "test:e2e:generate-typings": "codeceptjs def -o ./typings",
+        "test:e2e:ci": "cross-env NODE_ENV=test codeceptjs run"
+    },
+    "author": "",
+    "license": "UNLICENSED",
+    "dependencies": {
+        "@codeceptjs/mock-request": "^0.3.0",
+        "@pollyjs/adapter-puppeteer": "^4.1.0",
+        "@pollyjs/core": "^4.1.0",
+        "codeceptjs": "^2.6.2",
+        "cross-env": "^7.0.2",
+        "execa": "^4.0.0",
+        "puppeteer": "^3.0.1",
+        "ts-node": "^8.9.0",
+        "typescript": "^3.8.3",
+        "wait-on": "^4.0.2"
+    }
+}

@@ -1,11 +1,10 @@
 const path = require('path');
-const config = require('config');
 
 exports.config = {
     output: path.join(__dirname, '.codecept_output', 'artifacts'),
     helpers: {
         Puppeteer: {
-            url: `http://localhost:${config.get('port')}`,
+            url: `http://localhost:8233`,
             show: process.env.TEST_ENV === 'verbose',
             windowSize: '1200x900',
         },
@@ -33,6 +32,7 @@ exports.config = {
         },
         retryFailedStep: {
             enabled: true,
+            defaultIgnoredSteps: []
         },
         autoDelay: {
             enabled: true,

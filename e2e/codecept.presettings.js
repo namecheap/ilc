@@ -1,9 +1,11 @@
 const waitOn = require('wait-on');
-const config = require('config');
 const path = require('path');
 const execa = require('execa').command;
 
 const apps = {
+    ilc: {
+        port: 8233
+    },
     registry: {
         port: 4001
     },
@@ -34,7 +36,7 @@ const ports = [
     apps.news.port,
     apps.system.port,
     apps.fetchWithCache.port,
-    config.get('port'),
+    apps.ilc.port,
     apps.registry.port,
 ];
 

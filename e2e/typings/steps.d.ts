@@ -1,7 +1,7 @@
 /// <reference types='codeceptjs' />
-type peoplePage = typeof import('/Users/vladlenfedosov/www/rnd/spa_fragments/single-spa-portal-example/ilc/spec/pages/people');
-type newsPage = typeof import('/Users/vladlenfedosov/www/rnd/spa_fragments/single-spa-portal-example/ilc/spec/pages/news');
-type planetsPage = typeof import('/Users/vladlenfedosov/www/rnd/spa_fragments/single-spa-portal-example/ilc/spec/pages/planets');
+type peoplePage = typeof import('../spec/pages/people');
+type newsPage = typeof import('../spec/pages/news');
+type planetsPage = typeof import('../spec/pages/planets');
 type MockRequestHelper = import('@codeceptjs/mock-request');
 
 declare namespace CodeceptJS {

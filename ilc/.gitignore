@@ -1,4 +1,3 @@
 /public/*
 /.nyc_output
 /package-lock.json
-/.codecept_output
