@@ -20,9 +20,8 @@ server.on('listening', onListening);
 /**
  * Setup exit handlers
  */
-process.on('SIGTERM', () => exitHandler());
-process.on('SIGINT', () => exitHandler());
-process.on('exit', () => exitHandler());
+process.on('SIGTERM', exitHandler);
+process.on('SIGINT', exitHandler);
 
 /**
  * Event listener for HTTP server "error" event.
@@ -62,9 +61,9 @@ function onListening() {
     global.console.log('Listening on ' + bind);
 }
 
-function exitHandler() {
-    global.console.log('Shutting down HTTP server...');
-    server.shutdown(() => process.exit(7));
+function exitHandler(signal: string) {
+    global.console.log(`Exit handler "${signal}" was called, trying to close the HTTP server...`);
+    server.shutdown(() => process.exit(0));
 }
 
 export default (requestHandler: any) => {
