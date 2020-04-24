@@ -70,7 +70,7 @@ const bootstrap = async (done) => {
             });
 
             waitOn({
-                resources: ports.map((port) => `tcp:${port}`),
+                resources: ports.map((port) => `tcp:localhost:${port}`),
                 timeout: 60*1000,
                 interval: 1000,
                 delay: 5*1000,
