@@ -1,12 +1,12 @@
 const webpackConfig = require('./build/webpack');
 const nycConfig = require('./nyc.config');
 
-const thresholds = {
+const getThresholds = () => ({
     statements: nycConfig.statements,
     branches: nycConfig.branches,
     functions: nycConfig.functions,
     lines: nycConfig.lines
-};
+});
 
 module.exports = function (config) {
     config.set({
@@ -72,8 +72,8 @@ module.exports = function (config) {
                 },
             },
             check: {
-                global: thresholds,
-                each: thresholds,
+                global: getThresholds(),
+                each: getThresholds(),
             },
             watermarks: nycConfig.watermarks,
         },
