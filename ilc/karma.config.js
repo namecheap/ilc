@@ -1,3 +1,4 @@
+const path = require('path');
 const webpackConfig = require('./build/webpack');
 const nycConfig = require('./nyc.config');
 
@@ -61,7 +62,7 @@ module.exports = function (config) {
             'coverage',
         ],
         coverageReporter: {
-            dir: nycConfig['report-dir'],
+            dir: path.join(__dirname, '.karma_output', 'coverage'),
             subdir: (browser) => browser.toLowerCase().split(/[\s/-]/)[0],
             reporters: nycConfig.reporter.map((type) => ({
                 type,
