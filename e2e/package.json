@@ -6,7 +6,7 @@
     "private": true,
     "scripts": {
         "start": "codeceptjs run",
-        "start:verbose": "cross-env TEST_ENV=verbose npm start --- --verbose",
+        "start:verbose": "cross-env TEST_ENV=verbose npm start -- --verbose",
         "start:verbose:ui": "cross-env SHOW_UI=true npm run start:verbose",
         "generate-typings": "codeceptjs def -o ./typings"
     },
