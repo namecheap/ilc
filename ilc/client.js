@@ -43,7 +43,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 if (cssBundle !== undefined) {
                     waitTill.push(System.import(cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
                         //TODO: error handling should be improved, need to submit PR with typed errors
-                        if (err.message.indexOf('has already been loaded using another way') === -1) {
+                        if (typeof err.message !== 'string' || err.message.indexOf('has already been loaded using another way') === -1) {
                             throw err;
                         }
                     }));
