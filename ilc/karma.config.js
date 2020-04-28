@@ -76,9 +76,13 @@ module.exports = function (config) {
                 global: getThresholds(),
                 each: getThresholds(),
             },
-            watermarks: nycConfig.watermarks,
+            watermarks: {
+                ...nycConfig.watermarks,
+            },
         },
-        webpack: webpackConfig,
+        webpack: {
+            ...webpackConfig,
+        },
         webpackMiddleware: {
             noInfo: true
         },
