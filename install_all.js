@@ -4,6 +4,7 @@ const commands = [
     { command: 'cd ./ilc/ && npm i', name: 'ilc' },
     { command: 'cd ./registry/ && npm i', name: 'registry' },
     { command: 'cd ./registry/client && npm i', name: 'registry:ui' },
+    { command: 'cd ./e2e && npm i', name: 'e2e' },
 ];
 
 commands.forEach(cmd => {

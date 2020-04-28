@@ -5,9 +5,10 @@
     "main": "index.js",
     "private": true,
     "scripts": {
-        "test:e2e": "cross-env TEST_ENV=verbose npm run test:e2e:ci -- --verbose",
-        "test:e2e:generate-typings": "codeceptjs def -o ./typings",
-        "test:e2e:ci": "cross-env NODE_ENV=test codeceptjs run"
+        "start": "codeceptjs run",
+        "start:verbose": "cross-env TEST_ENV=verbose npm start -- --verbose",
+        "start:verbose:ui": "cross-env SHOW_UI=true npm run start:verbose",
+        "generate-typings": "codeceptjs def -o ./typings"
     },
     "author": "",
     "license": "UNLICENSED",

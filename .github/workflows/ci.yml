@@ -26,24 +26,10 @@ jobs:
     - name: Run tests
       run: docker run ilc:tmp npm run test
 
-    - name: Calc tags
-      id: tags
+    - name: Push to temp repo
       run: |
-        BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
-        LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
-        DOCKER_TAGS="$LATEST${BRANCH//\//_}"
-        echo "Tags that will be used: $DOCKER_TAGS"
-        echo ::set-output name=docker_tags::$DOCKER_TAGS
-
-    - name: Push image
-      run: |
-        TAGS="${{ steps.tags.outputs.docker_tags }}"
-
-        for i in ${TAGS//,/ }
-        do
-            docker tag ilc:tmp namecheap/ilc:$i
-            docker push namecheap/ilc:$i
-        done
+        docker tag ilc:tmp namecheap/ilc_tmp:${GITHUB_SHA:0:7}
+        docker push namecheap/ilc_tmp:${GITHUB_SHA:0:7}
 
   build_registry:
     name: Build Registry
@@ -63,6 +49,52 @@ jobs:
       - name: Run tests
         run: docker run registry:tmp npm run test:ci
 
+      - name: Push to temp repo
+        run: |
+          docker tag registry:tmp namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
+          docker push namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
+
+
+  e2e_tests:
+    name: Run E2E test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Use Node.js 12
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - name: Install Chrome deps
+        run: sudo apt-get update && sudo apt-get install -y libgbm-dev
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-build
+
+      - name: Install dependencies
+        run: npm i
+
+      - name: Build ILC & Registry
+        run: npm run build
+
+      - name: Run E2E tests
+        run: cd e2e && npm start
+
+
+  push_images:
+    needs: [build_ilc, build_registry, e2e_tests]
+    name: Push images to registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Docker registry auth
+        run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
+
       - name: Calc tags
         id: tags
         run: |
@@ -72,12 +104,20 @@ jobs:
           echo "Tags that will be used: $DOCKER_TAGS"
           echo ::set-output name=docker_tags::$DOCKER_TAGS
 
-      - name: Push image
+      - name: Pull images
+        run: |
+          docker pull namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
+          docker pull namecheap/ilc_tmp:${GITHUB_SHA:0:7}
+
+      - name: Push images
         run: |
           TAGS="${{ steps.tags.outputs.docker_tags }}"
 
           for i in ${TAGS//,/ }
           do
-              docker tag registry:tmp namecheap/ilc_registry:$i
+              docker tag namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
               docker push namecheap/ilc_registry:$i
+
+              docker tag namecheap/ilc_tmp:${GITHUB_SHA:0:7} namecheap/ilc:$i
+              docker push namecheap/ilc:$i
           done

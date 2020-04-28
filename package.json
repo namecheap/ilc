@@ -1,16 +1,15 @@
 {
-  "name": "single-spa-portal-example",
+  "name": "ilc",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "install-all": "node install_all.js",
     "start": "node start_all.js",
     "start:no-apps": "node start_all.js --no-apps",
     "build": "npm run build:ilc && npm run build:registry",
     "build:ilc": "cd ./ilc/ && npm run build",
-    "build:registry": "cd ./registry/ && npm run compile",
+    "build:registry": "cd ./registry/ && npm run build",
     "postinstall": "npm run install-all"
   },
   "author": "Vladlen Fedosov",

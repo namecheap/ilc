@@ -5,7 +5,7 @@ exports.config = {
     helpers: {
         Puppeteer: {
             url: `http://localhost:8233`,
-            show: process.env.TEST_ENV === 'verbose',
+            show: process.env.SHOW_UI === 'true',
             windowSize: '1200x900',
         },
         MockRequestHelper: {
@@ -31,15 +31,10 @@ exports.config = {
             enabled: true,
         },
         retryFailedStep: {
-            enabled: true,
-            defaultIgnoredSteps: []
+            enabled: true
         },
         autoDelay: {
             enabled: true,
-        },
-        puppeteerCoverage: {
-            enabled: true,
-            coverageDir: path.join(__dirname, '.codecept_output', 'coverage'),
         },
     },
     include: {
@@ -50,4 +45,4 @@ exports.config = {
     tests: './spec/**/*.spec.e2e.ts',
     name: 'ilc',
     require: ['ts-node/register'],
-}
+};

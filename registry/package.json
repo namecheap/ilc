@@ -7,6 +7,7 @@
         "tsc": "tsc",
         "compile": "tsc --incremental",
         "dev": "nodemon -e ts,json5 --exec \"tsc --incremental && npm run start\"",
+        "build": "npm run compile && cd ./client && npm run build",
         "start": "node -r source-map-support/register ./build/server/index.js",
         "start-docker": "npm run migrate && npm start",
         "knex": "knex",
