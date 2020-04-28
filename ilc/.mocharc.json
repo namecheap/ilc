@@ -1,5 +1,8 @@
 {
-    "spec": "**/*.spec.js",
+    "spec": [
+        "server/**/*.spec.js",
+        "common/**/*.spec.js"
+    ],
     "require": "@babel/register",
     "timeout": 5000,
     "exclude": "node_modules/**/*"
