@@ -9,7 +9,7 @@
     "test:coverage": "cross-env NODE_ENV=test nyc mocha",
     "test:client": "npm run build:systemjs && cross-env NODE_ENV=test karma start",
     "test:client:watch": "npm run test:client -- --no-single-run",
-    "start": "node --max-http-header-size 30000 server/app.js",
+    "start": "NODE_ENV=production node --max-http-header-size 30000 server/app.js",
     "dev": "npm run build:polyfills && cross-env NODE_ENV=development nodemon --ignore './public/' --max-http-header-size 30000 server/app.js",
     "build": "rimraf public && npm run build:systemjs && npm run build:client && npm run build:polyfills",
     "build:client": "webpack --config build/webpack.js --progress --hide-modules",

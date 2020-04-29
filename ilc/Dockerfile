@@ -5,7 +5,7 @@ RUN apk update && apk add --no-cache bash git openssh python make g++ findutils 
 ENV CHROME_BIN=/usr/bin/chromium-browser
 ENV CHROME_DRIVER=/usr/bin/chromedriver
 
-ADD ./ /temporary
+COPY ./ /temporary
 WORKDIR /temporary
 
 RUN npm install --no-package-lock --no-progress
@@ -18,14 +18,15 @@ FROM node:12-alpine AS release
 # Legacy infrastructure support
 RUN npm install -g stdout-mq@^2.4.0
 
-ADD ./ /codebase
 WORKDIR /codebase
 
-COPY --from=build /temporary/package.json ./package.json
-COPY --from=build /temporary/server ./server
-COPY --from=build /temporary/common ./common
+COPY ./package.json ./package.json
+COPY ./newrelic.js ./newrelic.js
+COPY ./server ./server
+COPY ./common ./common
+COPY ./config ./config
+
 COPY --from=build /temporary/public ./public
-COPY --from=build /temporary/config ./config
 
 RUN npm install --no-package-lock --no-progress --production
 

@@ -12,7 +12,7 @@ if (myCmd.includes('--no-watch')) {
 }
 
 const commands = [
-    { command: `cd ./ilc/ && ${noWatch ? 'NODE_ENV=production' : ''} npm run ${noWatch ? 'start' : 'dev'}`, name: 'ilc' },
+    { command: `cd ./ilc/ && npm run ${noWatch ? 'start' : 'dev'}`, name: 'ilc' },
     { command: `cd ./registry/ && npm run ${noWatch ? 'start' : 'dev'}`, name: 'registry' },
 ];
 
