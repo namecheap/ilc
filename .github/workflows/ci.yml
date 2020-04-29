@@ -21,10 +21,7 @@ jobs:
     - name: Build the Docker image
       run: |
         cd ./ilc/
-        docker build . --tag ilc:tmp
-
-    - name: Run tests
-      run: docker run ilc:tmp npm run test
+        DOCKER_BUILDKIT=1 docker build . --tag ilc:tmp
 
     - name: Push to temp repo
       run: |
@@ -53,7 +50,6 @@ jobs:
         run: |
           docker tag registry:tmp namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
           docker push namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
-
 
   e2e_tests:
     name: Run E2E test
@@ -85,7 +81,6 @@ jobs:
 
       - name: Run E2E tests
         run: cd e2e && npm start
-
 
   push_images:
     needs: [build_ilc, build_registry, e2e_tests]

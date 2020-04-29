@@ -5,10 +5,10 @@
   "main": "server/app.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha",
-    "test:watch": "cross-env NODE_ENV=test mocha --watch",
+    "test:watch": "npm run test -- --watch",
     "test:coverage": "cross-env NODE_ENV=test nyc mocha",
-    "test:client": "cross-env NODE_ENV=test karma start --single-run",
-    "test:client:watch": "cross-env NODE_ENV=test karma start --no-single-run",
+    "test:client": "npm run build:systemjs && cross-env NODE_ENV=test karma start",
+    "test:client:watch": "npm run test:client -- --no-single-run",
     "start": "node --max-http-header-size 30000 server/app.js",
     "dev": "npm run build:polyfills && cross-env NODE_ENV=development nodemon --ignore './public/' --max-http-header-size 30000 server/app.js",
     "build": "rimraf public && npm run build:systemjs && npm run build:client && npm run build:polyfills",

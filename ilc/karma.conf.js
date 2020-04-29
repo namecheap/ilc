@@ -11,9 +11,16 @@ const getThresholds = () => ({
 
 module.exports = function (config) {
     config.set({
+        singleRun: true,
         browsers: [
             'ChromeHeadless',
         ],
+        customLaunchers: {
+            ChromeHeadlessWithoutSecurity: {
+                base: 'ChromeHeadless',
+                flags: ['--no-sandbox'],
+            },
+        },
         frameworks: [
             'mocha',
             'chai',
