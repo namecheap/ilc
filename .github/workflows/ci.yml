@@ -18,6 +18,16 @@ jobs:
     - name: Docker ilc auth
       run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
+    - name: Run tests
+      run: |
+        cd ./ilc/
+        DOCKER_BUILDKIT=1 docker build --output .test_output . --file Test.Dockerfile
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: test-artifacts
+        path: ./ilc/.test_output/artifacts/
+
     - name: Build the Docker image
       run: |
         cd ./ilc/
