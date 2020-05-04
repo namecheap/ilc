@@ -18,20 +18,34 @@ jobs:
     - name: Docker ilc auth
       run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
-    - name: Run tests
-      run: |
-        cd ./ilc/
-        DOCKER_BUILDKIT=1 docker build --output .test_output . --file Test.Dockerfile
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: test-artifacts
-        path: ./ilc/.test_output/artifacts/
-
     - name: Build the Docker image
       run: |
         cd ./ilc/
         DOCKER_BUILDKIT=1 docker build . --tag ilc:tmp
+
+    - name: Run sever side tests
+      run: docker run ilc:tmp npm run test
+
+    - name: Run server side tests coverage
+      run: docker run --volume /artifacts/ilc/.test_output/server:/temporary ilc:tmp bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: server-side-tests-artifacts
+        path: /artifacts/ilc/.test_output/server/
+
+    - name: Build the Docker image to test client side
+      run: |
+        cd ./ilc/
+        DOCKER_BUILDKIT=1 docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=ilc:tmp
+
+    - name: Run client side tests
+      run: docker run --volume /artifacts/ilc/.test_output/client:/temporary ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /temporary"
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: client-side-tests-artifacts
+        path: /artifacts/ilc/.test_output/client/
 
     - name: Push to temp repo
       run: |
