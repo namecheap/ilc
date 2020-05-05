@@ -8,7 +8,7 @@ import initSpaConfig from './client/initSpaConfig';
 import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import { getSlotElement } from './client/utils';
-import * as asyncBootup from './client/asyncBootup';
+import * as asyncBootUp from './client/asyncBootUp';
 
 const System = window.System;
 if (System === undefined) {
@@ -19,7 +19,7 @@ if (System === undefined) {
 const registryConf = initSpaConfig();
 const router = new Router(registryConf);
 
-asyncBootup.init();
+asyncBootUp.init();
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
@@ -34,7 +34,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
 
                 System.import(appConf.spaBundle); // Speculative preload of the JS bundle
 
-                const overrides = await asyncBootup.waitForSlot(slotName);
+                const overrides = await asyncBootUp.waitForSlot(slotName);
                 const spaBundle = overrides.spaBundle ? overrides.spaBundle : appConf.spaBundle;
                 const cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
 
