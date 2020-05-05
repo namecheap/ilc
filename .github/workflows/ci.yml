@@ -21,10 +21,31 @@ jobs:
     - name: Build the Docker image
       run: |
         cd ./ilc/
-        docker build . --tag ilc:tmp
+        DOCKER_BUILDKIT=1 docker build . --tag ilc:tmp
 
-    - name: Run tests
+    - name: Run sever side tests
       run: docker run ilc:tmp npm run test
+
+    - name: Run server side tests coverage
+      run: docker run --volume /artifacts/ilc/.test_output/server:/temporary ilc:tmp bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: server-side-tests-artifacts
+        path: /artifacts/ilc/.test_output/server/
+
+    - name: Build the Docker image to test client side
+      run: |
+        cd ./ilc/
+        DOCKER_BUILDKIT=1 docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=ilc:tmp
+
+    - name: Run client side tests
+      run: docker run --volume /artifacts/ilc/.test_output/client:/temporary ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /temporary"
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: client-side-tests-artifacts
+        path: /artifacts/ilc/.test_output/client/
 
     - name: Push to temp repo
       run: |
@@ -53,7 +74,6 @@ jobs:
         run: |
           docker tag registry:tmp namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
           docker push namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
-
 
   e2e_tests:
     name: Run E2E test
@@ -85,7 +105,6 @@ jobs:
 
       - name: Run E2E tests
         run: cd e2e && npm start
-
 
   push_images:
     needs: [build_ilc, build_registry, e2e_tests]

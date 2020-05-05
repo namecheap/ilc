@@ -2,13 +2,15 @@ FROM node:12-alpine
 
 RUN apk update && apk add --no-cache bash git openssh python make g++ findutils
 
-ADD ./ /codebase
+# Legacy infrastructure support
+RUN npm install -g stdout-mq@^2.4.0
+
+COPY ./ /codebase
 WORKDIR /codebase
 
 RUN npm install --no-package-lock --no-progress
 RUN npm run build
 
-# Legacy infrastructure support
-RUN npm install -g stdout-mq@^2.4.0
+ENV NODE_ENV=production
 
 CMD ["npm", "start"]
