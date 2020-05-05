@@ -13,6 +13,14 @@ describe('handle page transaction', () => {
         id: 'slots',
         appendSlots: () => document.body.appendChild(slots.ref),
         removeSlots: () => document.body.removeChild(slots.ref),
+        resetRef: () => {
+            slots.ref = html`
+                <div id="${slots.id}">
+                    <div id="${slots.navbar.id}"></div>
+                    <div id="${slots.body.id}"></div>
+                </div>
+            `;
+        },
         navbar: {
             id: 'navbar',
             getComputedStyle: () => window.getComputedStyle(slots.navbar.ref, null),
@@ -27,14 +35,28 @@ describe('handle page transaction', () => {
     const applications = {
         navbar: {
             id: 'navbar-application',
-            class: 'navbar-spa-application',
+            class: 'navbar-spa',
             appendApplication: () => slots.navbar.ref.appendChild(applications.navbar.ref),
+            resetRef: () => {
+                applications.navbar.ref = html`
+                    <div id="${applications.navbar.id}" class="${applications.navbar.class}">
+                        Hello! I am Navbar SPA
+                    </div>
+                `;
+            },
         },
         body: {
             id: 'body-application',
-            class: 'body-spa-application',
+            class: 'body-spa',
             appendApplication: () => slots.body.ref.appendChild(applications.body.ref),
-            removeApplication: () => slots.body.ref.removeChild(applications.body.ref)
+            removeApplication: () => slots.body.ref.removeChild(applications.body.ref),
+            resetRef: () => {
+                applications.body.ref = html`
+                    <div id="${applications.body.id}" class="${applications.body.class}">
+                        Hello! I am Body SPA
+                    </div>
+                `;
+            },
         },
     };
 
@@ -48,26 +70,13 @@ describe('handle page transaction', () => {
 
     beforeEach(() => {
         window.location.hash = locationHash;
-
         window.ilcConfig = {
             tmplSpinner: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
         };
 
-        applications.navbar.ref = html`
-            <div id="${applications.navbar.id}" class="${applications.navbar.class}">
-                Hello! I am Navbar SPA application
-            </div>`;
-
-        applications.body.ref = html`
-            <div id="${applications.body.id}" class="${applications.body.class}">
-                Hello! I am Body SPA application
-            </div>`;
-
-        slots.ref = html`
-            <div id="${slots.id}">
-                <div id="${slots.navbar.id}"></div>
-                <div id="${slots.body.id}"></div>
-            </div>`;
+        slots.resetRef();
+        applications.body.resetRef();
+        applications.navbar.resetRef();
 
         slots.appendSlots();
 
@@ -114,7 +123,7 @@ describe('handle page transaction', () => {
             `<div id="${slots.navbar.id}"></div>` +
             `<div id="${slots.body.id}">` +
             `<div id="${applications.body.id}" class="${applications.body.class}">` +
-            'Hello! I am Body SPA application' +
+            'Hello! I am Body SPA' +
             '</div>' +
             '</div>'
         );
@@ -203,12 +212,12 @@ describe('handle page transaction', () => {
     it('should render a fake slot and listen to slot content changes when a slot is going to be rerendered', async () => {
         const newBodyApplication = {
             id: 'new-body-application',
-            class: 'new-body-spa-application',
+            class: 'new-body-spa',
         };
 
         newBodyApplication.ref = html`
             <div id="${newBodyApplication.id}" class="${newBodyApplication.class}">
-                Hello! I am new Body SPA application
+                Hello! I am new Body SPA
             </div>
         `;
 
