@@ -92,29 +92,15 @@ describe('handle page transaction', () => {
     });
 
     it('should throw an error when a slot name is not provided', async () => {
-        let caughtError;
-
-        try {
-            handlePageTransaction();
-        } catch(error) {
-            caughtError = error;
-        }
-
-        chai.expect(caughtError).to.be.an.instanceof(Error);
-        chai.expect(caughtError.message).to.be.eql('A slot name was not provided!');
+        chai.expect(() => handlePageTransaction()).to.throw(
+            'A slot name was not provided!'
+        );
     });
 
     it('should throw an error when a slot action does not match any possible option to handle', async () => {
-        let caughtError;
-
-        try {
-            handlePageTransaction(slots.body.id, 'undefined');
-        } catch(error) {
-            caughtError = error;
-        }
-
-        chai.expect(caughtError).to.be.an.instanceof(Error);
-        chai.expect(caughtError.message).to.be.eql(`The slot action 'undefined' did not match any possible values!`);
+        chai.expect(() => handlePageTransaction(slots.body.id, 'undefined')).to.throw(
+            `The slot action 'undefined' did not match any possible values!`
+        );
     });
 
     it('should do nothing when a slot action is default', async () => {
