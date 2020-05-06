@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import html from 'nanohtml';
 
 import handlePageTransaction, {
-    slotCanBe,
+    slotWillBe,
 } from './handlePageTransaction';
 
 describe('handle page transaction', () => {
@@ -104,7 +104,7 @@ describe('handle page transaction', () => {
     });
 
     it('should do nothing when a slot action does not match any possible option to handle', async () => {
-        handlePageTransaction(slots.body.id, 'undefined');
+        handlePageTransaction(slots.body.id, null);
 
         await clock.runAllAsync();
 
@@ -140,7 +140,7 @@ describe('handle page transaction', () => {
     });
 
     it('should listen to slot content changes when a slot is going to be rendered', async () => {
-        handlePageTransaction(slots.navbar.id, slotCanBe.rendered);
+        handlePageTransaction(slots.navbar.id, slotWillBe.rendered);
 
         await clock.runAllAsync();
 
@@ -148,7 +148,7 @@ describe('handle page transaction', () => {
         chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
         chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
 
-        handlePageTransaction(slots.body.id, slotCanBe.rendered);
+        handlePageTransaction(slots.body.id, slotWillBe.rendered);
 
         await clock.runAllAsync();
 
@@ -181,7 +181,7 @@ describe('handle page transaction', () => {
         applications.navbar.appendApplication();
         applications.body.appendApplication();
 
-        handlePageTransaction(slots.body.id, slotCanBe.removed);
+        handlePageTransaction(slots.body.id, slotWillBe.removed);
 
         await clock.runAllAsync();
 
@@ -224,7 +224,7 @@ describe('handle page transaction', () => {
         applications.navbar.appendApplication();
         applications.body.appendApplication();
 
-        handlePageTransaction(slots.body.id, slotCanBe.rerendered);
+        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
 
         await clock.runAllAsync();
 

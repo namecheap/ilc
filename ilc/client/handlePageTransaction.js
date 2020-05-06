@@ -78,31 +78,27 @@ const renderFakeSlot = slotName => {
     hiddenSlots.push(targetNode);
 };
 
-export const slotCanBe = {
+export const slotWillBe = {
     rendered: 'rendered',
     removed: 'removed',
     rerendered: 'rerendered',
 };
 
-export default function handlePageTransaction(slotName, slotWillBe) {
-    if (!slotName || !slotWillBe) return;
+export default function handlePageTransaction(slotName, willBe) {
+    if (!slotName || !willBe) return;
 
-    switch (slotWillBe) {
-        case slotCanBe.rendered: {
+    switch (willBe) {
+        case slotWillBe.rendered:
             addContentListener(slotName);
             break;
-        }
-        case slotCanBe.removed: {
+        case slotWillBe.removed:
             renderFakeSlot(slotName);
             break;
-        }
-        case slotCanBe.rerendered: {
+        case slotWillBe.rerendered:
             renderFakeSlot(slotName);
             addContentListener(slotName);
             break;
-        }
-        default: {
+        default:
             break;
-        }
     }
 }

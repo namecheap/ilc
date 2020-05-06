@@ -3,7 +3,7 @@ import * as singleSpa from 'single-spa';
 import Router from './common/router/ClientRouter';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
-import handlePageTransaction, {slotCanBe} from './client/handlePageTransaction';
+import handlePageTransaction, {slotWillBe} from './client/handlePageTransaction';
 import initSpaConfig from './client/initSpaConfig';
 import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
@@ -75,9 +75,9 @@ function isActiveFactory(appName, slotName) {
         let isActive = checkActivity(router.getCurrentRoute());
         const wasActive = checkActivity(router.getPrevRoute());
 
-        let willBe;
-        !wasActive && isActive && (willBe = slotCanBe.rendered);
-        wasActive && !isActive && (willBe = slotCanBe.removed);
+        let willBe = null;
+        !wasActive && isActive && (willBe = slotWillBe.rendered);
+        wasActive && !isActive && (willBe = slotWillBe.removed);
 
         if (isActive && wasActive && reload === false) {
             const oldProps = router.getPrevRouteProps(appName, slotName);
@@ -95,7 +95,7 @@ function isActiveFactory(appName, slotName) {
                 });
 
                 isActive = false;
-                willBe = slotCanBe.rerendered;
+                willBe = slotWillBe.rerendered;
             }
         }
 
