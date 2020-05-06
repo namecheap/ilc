@@ -78,19 +78,32 @@ const renderFakeSlot = slotName => {
     hiddenSlots.push(targetNode);
 };
 
-/**
- * @param {string} slotName
- * @param {string} willBe - possible values: rendered, removed, rerendered
- */
-export default function (slotName, willBe) {
-    if (!slotName || !willBe) return;
+export const slotWillBe = {
+    rendered: 'rendered',
+    removed: 'removed',
+    rerendered: 'rerendered',
+    default: null,
+};
 
-    if (willBe === 'rendered') {
-        addContentListener(slotName);
-    } else if (willBe === 'removed') {
-        renderFakeSlot(slotName);
-    } else if (willBe === 'rerendered') {
-        renderFakeSlot(slotName);
-        addContentListener(slotName);
+export default function handlePageTransaction(slotName, willBe) {
+    if (!slotName) {
+        throw new Error('A slot name was not provided!');
+    }
+
+    switch (willBe) {
+        case slotWillBe.rendered:
+            addContentListener(slotName);
+            break;
+        case slotWillBe.removed:
+            renderFakeSlot(slotName);
+            break;
+        case slotWillBe.rerendered:
+            renderFakeSlot(slotName);
+            addContentListener(slotName);
+            break;
+        case slotWillBe.default:
+            break;
+        default:
+            throw new Error(`The slot action '${willBe}' did not match any possible values!`);
     }
 }
