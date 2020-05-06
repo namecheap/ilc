@@ -15,7 +15,7 @@
     newrelic: {
         licenseKey: null,
         /**
-         * Usage example: <script type="text/javascript">function myjs(){ %CONTENT% }; myjs();</script>
+         * Usage example: <script type="text/javascript">(function mygdprWrapper(){ %CONTENT% })()</script>
          */
         customClientJsWrapper: null,
     },
