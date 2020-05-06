@@ -82,10 +82,13 @@ export const slotWillBe = {
     rendered: 'rendered',
     removed: 'removed',
     rerendered: 'rerendered',
+    default: null,
 };
 
 export default function handlePageTransaction(slotName, willBe) {
-    if (!slotName || !willBe) return;
+    if (!slotName) {
+        throw new Error('A slot name was not provided!');
+    }
 
     switch (willBe) {
         case slotWillBe.rendered:
@@ -98,7 +101,9 @@ export default function handlePageTransaction(slotName, willBe) {
             renderFakeSlot(slotName);
             addContentListener(slotName);
             break;
-        default:
+        case slotWillBe.default:
             break;
+        default:
+            throw new Error(`The slot action '${willBe}' did not match any possible values!`);
     }
 }

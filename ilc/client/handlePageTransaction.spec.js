@@ -91,20 +91,34 @@ describe('handle page transaction', () => {
         clock.restore();
     });
 
-    it('should do nothing when a slot name or a slot action are not provided', async () => {
-        handlePageTransaction(null, null);
+    it('should throw an error when a slot name is not provided', async () => {
+        let caughtError;
 
-        await clock.runAllAsync();
+        try {
+            handlePageTransaction();
+        } catch(error) {
+            caughtError = error;
+        }
 
-        chai.expect(spinner.getRef()).to.be.null;
-        chai.expect(slots.ref.innerHTML).to.be.equal(
-            `<div id="${slots.navbar.id}"></div>` +
-            `<div id="${slots.body.id}"></div>`
-        );
+        chai.expect(caughtError).to.be.an.instanceof(Error);
+        chai.expect(caughtError.message).to.be.eql('A slot name was not provided!');
     });
 
-    it('should do nothing when a slot action does not match any possible option to handle', async () => {
-        handlePageTransaction(slots.body.id, null);
+    it('should throw an error when a slot action does not match any possible option to handle', async () => {
+        let caughtError;
+
+        try {
+            handlePageTransaction(slots.body.id, 'undefined');
+        } catch(error) {
+            caughtError = error;
+        }
+
+        chai.expect(caughtError).to.be.an.instanceof(Error);
+        chai.expect(caughtError.message).to.be.eql(`The slot action 'undefined' did not match any possible values!`);
+    });
+
+    it('should do nothing when a slot action is default', async () => {
+        handlePageTransaction(slots.body.id, slotWillBe.default);
 
         await clock.runAllAsync();
 

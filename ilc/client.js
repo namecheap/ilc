@@ -75,7 +75,7 @@ function isActiveFactory(appName, slotName) {
         let isActive = checkActivity(router.getCurrentRoute());
         const wasActive = checkActivity(router.getPrevRoute());
 
-        let willBe = null;
+        let willBe = slotWillBe.default;
         !wasActive && isActive && (willBe = slotWillBe.rendered);
         wasActive && !isActive && (willBe = slotWillBe.removed);
 
