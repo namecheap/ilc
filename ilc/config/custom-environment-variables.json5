@@ -15,6 +15,7 @@
     },
     newrelic: {
         licenseKey: 'NR_LICENSE_KEY',
+        customClientJsWrapper: 'NR_CUSTOM_CLIENT_JS_WRAPPER',
     },
     overrideConfigTrustedOrigins: 'OVERRIDE_CONFIG_TRUSTED_ORIGINS'
 }

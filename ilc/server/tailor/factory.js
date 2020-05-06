@@ -13,9 +13,9 @@ const fragmentHooks = require('./fragment-hooks');
 const ConfigsInjector = require('./configs-injector');
 
 
-module.exports = function (cdnUrl) {
+module.exports = function (cdnUrl, nrCustomClientJsWrapper = null) {
     const router = new Router(console);
-    const configsInjector = new ConfigsInjector(cdnUrl);
+    const configsInjector = new ConfigsInjector(cdnUrl, nrCustomClientJsWrapper);
 
     const tailor = new Tailor({
         fetchTemplate: fetchTemplate(
