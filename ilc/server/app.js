@@ -10,7 +10,7 @@ const errorHandler = require('./errorHandler');
 
 app.register(require('./ping'));
 
-const tailor = tailorFactory(config.get('cdnUrl'));
+const tailor = tailorFactory(config.get('cdnUrl'), config.get('newrelic.customClientJsWrapper'));
 
 if (config.get('cdnUrl') === null) {
     app.use('/_ilc/', serveStatic(config.get('productionMode')));

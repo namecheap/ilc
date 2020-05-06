@@ -48,5 +48,11 @@ ILC supports integration with [NewRelic APM](https://newrelic.com/products/appli
  
 To turn it on you need to pass your NewRelic license key in `NR_LICENSE_KEY` env variable to ILC & Registry containers.
 
+You can also wrap JS code that NR will generate if you have NewRelic Browser product enabled via `NR_CUSTOM_CLIENT_JS_WRAPPER`
+env variable. This may be useful for the compliance with GDPR customer settings. Example of usage:
+```html
+<script type="text/javascript">(function mygdprWrapper(){ %CONTENT% })()</script>`
+```
+
 Custom metrics sent to Insights:
 * PageAction with Action Name `routeChange`. It contains duration of the reroute in ms.

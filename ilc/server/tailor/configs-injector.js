@@ -3,12 +3,14 @@ const urljoin = require('url-join');
 const newrelic = require('newrelic');
 
 module.exports = class ConfigsInjector {
+    #nrCustomClientJsWrapper;
     #cdnUrl;
     #jsInjectionPlaceholder = '<!-- ILC_JS -->';
     #cssInjectionPlaceholder = '<!-- ILC_CSS -->';
 
-    constructor(cdnUrl = null) {
+    constructor(cdnUrl = null, nrCustomClientJsWrapper = null) {
         this.#cdnUrl = cdnUrl;
+        this.#nrCustomClientJsWrapper = nrCustomClientJsWrapper;
     }
 
     inject(request, registryConfig, template, slots) {
@@ -35,7 +37,7 @@ module.exports = class ConfigsInjector {
             `<script>window.ilcApps = [];</script>`,
             this.#getPolyfill(),
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
-            newrelic.getBrowserTimingHeader(),
+            this.#getNewRelicScript(),
         );
 
         if (document.includes(this.#jsInjectionPlaceholder)) {
@@ -154,11 +156,23 @@ module.exports = class ConfigsInjector {
 
     #wrapWithFragmentStylesheetLink = (url, fragmentId) => {
         return `<link rel="stylesheet" href="${url}" data-fragment-id="${fragmentId}">`;
-    }
+    };
 
     #getCrossoriginAttribute = (url) => {
         return (this.#cdnUrl !== null && url.includes(this.#cdnUrl)) || url.includes('://') ? 'crossorigin' : '';
     };
 
     #wrapWithIgnoreDuringParsing = (...content) => `<!-- TailorX: Ignore during parsing START -->${content.join('')}<!-- TailorX: Ignore during parsing END -->`;
+
+    #getNewRelicScript = () => {
+        let nrCode = newrelic.getBrowserTimingHeader();
+
+        if (this.#nrCustomClientJsWrapper === null || !nrCode) {
+            return nrCode;
+        }
+
+        nrCode = nrCode.replace(/<script.*?>(.*)<\/script\s*>/s, '$1');
+
+        return this.#nrCustomClientJsWrapper.replace('%CONTENT%', nrCode);
+    }
 };
