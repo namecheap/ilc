@@ -7,8 +7,8 @@ import handlePageTransaction, {slotWillBe} from './client/handlePageTransaction'
 import initSpaConfig from './client/initSpaConfig';
 import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
-import { getSlotElement } from './client/utils';
-import * as asyncBootUp from './client/asyncBootUp';
+import {getSlotElement} from './client/utils';
+import AsyncBootUp from './client/AsyncBootUp';
 
 const System = window.System;
 if (System === undefined) {
@@ -18,8 +18,7 @@ if (System === undefined) {
 
 const registryConf = initSpaConfig();
 const router = new Router(registryConf);
-
-asyncBootUp.init();
+const asyncBootUp = new AsyncBootUp();
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
