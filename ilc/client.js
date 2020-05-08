@@ -3,7 +3,6 @@ import * as singleSpa from 'single-spa';
 import Router from './common/router/ClientRouter';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
-import handlePageTransaction, {slotWillBe} from './client/handlePageTransaction';
 import isActiveFactory from './client/isActiveFactory';
 import initSpaConfig from './client/initSpaConfig';
 import setupPerformanceMonitoring from './client/performance';
@@ -52,14 +51,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 return Promise.all(waitTill)
                     .then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
             },
-            isActiveFactory({
-                singleSpa,
-                router,
-                handlePageTransaction,
-                slotWillBe,
-                appName,
-                slotName,
-            }),
+            isActiveFactory(router, appName, slotName),
             {
                 domElementGetter: () => getSlotElement(slotName),
                 getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),

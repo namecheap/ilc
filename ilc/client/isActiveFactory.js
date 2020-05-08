@@ -1,11 +1,7 @@
-export default function isActiveFactory({
-    singleSpa,
-    router,
-    handlePageTransaction,
-    slotWillBe,
-    appName,
-    slotName,
-}) {
+import {triggerAppChange} from 'single-spa';
+import handlePageTransaction, {slotWillBe} from './handlePageTransaction';
+
+export const createFactory = (triggerAppChange, handlePageTransaction, slotWillBe) => (router, appName, slotName) => {
     let reload = false;
 
     return () => {
@@ -33,7 +29,7 @@ export default function isActiveFactory({
 
                     reload = true;
 
-                    singleSpa.triggerAppChange();
+                    triggerAppChange();
                 });
 
                 isActive = false;
@@ -50,3 +46,5 @@ export default function isActiveFactory({
         return isActive;
     };
 };
+
+export default createFactory(triggerAppChange, handlePageTransaction, slotWillBe);
