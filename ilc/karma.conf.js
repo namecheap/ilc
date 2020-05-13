@@ -42,6 +42,11 @@ module.exports = function (config) {
         files: [
             'client/**/*.js',
             'common/**/*.js',
+            'systemjs/**/*.spec.js',
+            {
+                pattern: 'systemjs/spec/fixtures/**/*.js',
+                included: false,
+            },
         ],
         preprocessors: {
             'client/**/!(*.spec).js': [
@@ -60,6 +65,10 @@ module.exports = function (config) {
                 'sourcemap',
             ],
             'common/**/*.spec.js': [
+                'webpack',
+                'sourcemap',
+            ],
+            'systemjs/**/*.spec.js': [
                 'webpack',
                 'sourcemap',
             ],
