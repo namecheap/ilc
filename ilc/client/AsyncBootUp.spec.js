@@ -31,6 +31,10 @@ describe('async boot up', () => {
         }
     });
 
+    after(() => {
+        overrideImportMap.restore();
+    });
+
     it('should throw an error when a slot can not be found on the page by slot name', async () => {
         const slots = {
             undefined: {
