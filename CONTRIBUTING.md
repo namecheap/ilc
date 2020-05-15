@@ -18,3 +18,15 @@ Docker container. While it's ok in most of the cases - sometimes you might need 
 
 To do so you need to clone [ilc-demo-apps](https://github.com/namecheap/ilc-demo-apps) repo and run them in dev mode.
 At the same time in parallel terminal you need to run `npm run start:no-apps`
+
+## E2E tests
+
+To make sure that all ILC components play well together we use E2E tests. We use our Demo applications as test micro frontends 
+so it also gives us ability to make sure that we don't break backward compatibility.
+
+In order to run tests - change your current directory to `./e2e` and launch one of the following commands:
+
+* Default mode: `npm start`
+* Verbose mode: `npm run start:verbose`
+* Verbose mode with Browser UI visible: `npm run start:verbose:ui`
+
