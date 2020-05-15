@@ -14,14 +14,14 @@
     "license": "UNLICENSED",
     "dependencies": {
         "@codeceptjs/mock-request": "^0.3.0",
-        "@pollyjs/adapter-puppeteer": "^4.1.0",
-        "@pollyjs/core": "^4.1.0",
-        "codeceptjs": "^2.6.2",
+        "@pollyjs/adapter-puppeteer": "^4.2.1",
+        "@pollyjs/core": "^4.2.1",
+        "codeceptjs": "^2.6.5",
         "cross-env": "^7.0.2",
-        "execa": "^4.0.0",
-        "puppeteer": "^3.0.1",
-        "ts-node": "^8.9.0",
-        "typescript": "^3.8.3",
-        "wait-on": "^4.0.2"
+        "execa": "^4.0.1",
+        "puppeteer": "^3.0.4",
+        "ts-node": "^8.10.1",
+        "typescript": "^3.9.2",
+        "wait-on": "^5.0.0"
     }
 }

@@ -32,7 +32,7 @@
     "newrelic": "^6.5.0",
     "nginx-plus-dynamic-upstream": "^2.1.2",
     "serve-static": "^1.14.1",
-    "single-spa": "^5.3.4",
+    "single-spa": "5.4.0",
     "systemjs": "^6.3.1",
     "systemjs-css-extra": "^1.0.2",
     "tailorx": "^5.7.0",
