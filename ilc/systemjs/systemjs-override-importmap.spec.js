@@ -1,6 +1,6 @@
 import chai from 'chai';
 
-describe.only('systemjs override import map', () => {
+describe('systemjs override import map', () => {
     it('should not override a module URL by id if a module can be found by id', async () => {
         const originalModuleId = './base/systemjs/spec/fixtures/anonymous-define.js';
         const overriddenModuleUrl = 'http://localhost:9876/base/systemjs/spec/fixtures/named-define-dependency.js';
