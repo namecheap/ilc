@@ -140,7 +140,7 @@ module.exports = class ConfigsInjector {
     #getPolyfillUrl = () => this.#cdnUrl === null ? '/_ilc/polyfill.min.js' : urljoin(this.#cdnUrl, '/polyfill.min.js');
 
     #getSPAConfig = (registryConfig) => {
-        const apps = _.mapValues(registryConfig.apps, v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'initProps', 'kind']));
+        const apps = _.mapValues(registryConfig.apps, v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind']));
         const spaConfig = JSON.stringify(_.omit({...registryConfig, apps}, ['templates']));
 
         return `<script type="spa-config">${spaConfig}</script>`;
