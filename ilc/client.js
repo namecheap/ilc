@@ -49,7 +49,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 }
 
                 return Promise.all(waitTill)
-                    .then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.initProps || {}) : v[0]);
+                    .then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.props || {}) : v[0]);
             },
             isActiveFactory(router, appName, slotName),
             {

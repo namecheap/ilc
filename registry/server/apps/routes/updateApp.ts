@@ -43,7 +43,7 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
         return;
     }
 
-    await db('apps').where({ name: appName }).update(stringifyJSON(['dependencies', 'props', 'ssr', 'initProps', 'configSelector'], app));
+    await db('apps').where({ name: appName }).update(stringifyJSON(['dependencies', 'props', 'ssr', 'configSelector'], app));
 
     const [updatedApp] = await db.select().from<App>('apps').where('name', appName);
 

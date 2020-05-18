@@ -15,7 +15,6 @@ export async function seed(knex: Knex): Promise<any> {
                 src: 'http://localhost:8235/',
                 timeout: 1000,
             }),
-            initProps: '{}',
             props: '{}',
             kind: 'essential',
         }, {
@@ -27,7 +26,6 @@ export async function seed(knex: Knex): Promise<any> {
                 rxjs: 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.js',
                 '@portal/fetchWithCache': `http://${publicHost}:8238/fetchWithCache.js`,
             }),
-            initProps: '{}',
             props: JSON.stringify({
                 publicPath: `http://${publicHost}:8236/`
             }),
@@ -38,7 +36,6 @@ export async function seed(knex: Knex): Promise<any> {
             dependencies: JSON.stringify({
                 '@portal/fetchWithCache': `http://${publicHost}:8238/fetchWithCache.js`,
             }),
-            initProps: '{}',
             props: '{}',
             kind: 'primary',
         }, {
@@ -51,9 +48,6 @@ export async function seed(knex: Knex): Promise<any> {
             }),
             assetsDiscoveryUrl: 'http://127.0.0.1:8239/_spa/dev/assets-discovery',
             dependencies: '{}',
-            initProps: JSON.stringify({
-                publicPath: `http://${publicHost}:8239/dist/`
-            }),
             props: JSON.stringify({
                 publicPath: `http://${publicHost}:8239/dist/`
             }),
@@ -66,14 +60,12 @@ export async function seed(knex: Knex): Promise<any> {
                 timeout: 1000,
             }),
             dependencies: '{}',
-            initProps: '{}',
             props: '{}',
             kind: 'primary',
         }, {
             name: '@portal/fetchWithCache',
             spaBundle: `http://${publicHost}:8238/fetchWithCache.js`,
             dependencies: '{}',
-            initProps: '{}',
             props: '{}',
             kind: 'essential',
         },

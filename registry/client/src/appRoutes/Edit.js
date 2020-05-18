@@ -65,7 +65,7 @@ const InputForm = ({mode = 'edit', ...props}) => {
                             { id: 'essential', name: 'Essential' },
                             { id: 'regular', name: 'Regular' },
                         ]} />
-                        <JsonField source="props" label="App props"/>
+                        <JsonField source="props" label="Properties that will be passed to application at current route"/>
                     </SimpleFormIterator>
                 </ArrayInput>
             </FormTab>

@@ -25,7 +25,6 @@ router.get('/', async (req, res) => {
     data.apps = apps.reduce((acc, v) => {
         v.ssr = JSON.parse(v.ssr);
         v.dependencies = JSON.parse(v.dependencies);
-        v.initProps = JSON.parse(v.initProps);
         v.props = JSON.parse(v.props);
         if (sharedProps.length && v.configSelector !== null) {
             JSON.parse(v.configSelector).forEach((configSelectorName: string) => {
