@@ -51,7 +51,9 @@ export async function seed(knex: Knex): Promise<any> {
             }),
             assetsDiscoveryUrl: 'http://127.0.0.1:8239/_spa/dev/assets-discovery',
             dependencies: '{}',
-            initProps: '{}',
+            initProps: JSON.stringify({
+                publicPath: `http://${publicHost}:8239/dist/`
+            }),
             props: JSON.stringify({
                 publicPath: `http://${publicHost}:8239/dist/`
             }),
