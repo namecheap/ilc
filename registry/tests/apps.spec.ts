@@ -16,7 +16,6 @@ const example = <any>{
         kind: 'primary',
         // dependencies: {},
         // props: {},
-        // initProps: {},
     }),
     updated: Object.freeze({
         name: '@portal/ncTestAppReactssr',
@@ -37,9 +36,6 @@ const example = <any>{
             fragmentModuleName: 'reactssr-app-mainUpdated',
             assetsPath: 'http://127.0.0.1:3001/uisamplereactUpdated',
             locationStrategy: 'browserHistoryUpdated',
-        },
-        initProps: {
-            assetsPath: 'http://127.0.0.1:3001/uisamplereact',
         },
     }),
 };
@@ -65,7 +61,6 @@ describe(`Tests ${example.url}`, () => {
                 assetsDiscoveryUrl: 789,
                 dependencies: 456,
                 props: 789,
-                initProps: 456,
             };
 
             let response = await request.post(example.url)
@@ -82,7 +77,6 @@ describe(`Tests ${example.url}`, () => {
                 '"props" must be of type object\n' +
                 '"configSelector" must be an array\n' +
                 '"ssr" must be of type object\n' +
-                '"initProps" must be of type object\n' +
                 '"name" must be a string'
                 );
 
@@ -193,7 +187,6 @@ describe(`Tests ${example.url}`, () => {
                 assetsDiscoveryUrl: 789,
                 dependencies: 456,
                 props: 789,
-                initProps: 456,
                 kind: 'origin',
             };
 
@@ -211,7 +204,6 @@ describe(`Tests ${example.url}`, () => {
                 '"props" must be of type object\n' +
                 '"configSelector" must be an array\n' +
                 '"ssr" must be of type object\n' +
-                '"initProps" must be of type object\n' +
                 '"kind" must be one of [primary, essential, regular]'
             );
             expect(response.body).deep.equal({});

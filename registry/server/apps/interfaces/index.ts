@@ -9,7 +9,6 @@ export default interface App {
     props?: string, // JSON({ [propName: string]: any })
     configSelector?: string,
     ssr: string, // JSON({ src: string, timeout: number })
-    initProps?: string, // JSON({ [propName: string]: any })
 }
 
 export const appNameSchema = Joi.string().trim().min(1);
@@ -25,7 +24,6 @@ const commonApp = {
         src: Joi.string().trim().uri().required(),
         timeout: Joi.number().required(),
     }),
-    initProps: Joi.object().default({}),
     kind: Joi.string().valid('primary', 'essential', 'regular'),
 };
 

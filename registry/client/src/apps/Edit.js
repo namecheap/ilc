@@ -54,8 +54,7 @@ const InputForm = ({mode = 'edit', ...props}) => {
                 <NumberInput source="ssr.timeout" label="Request timeout, in ms" />
             </FormTab>
             <FormTab label="Props">
-                <JsonField source="props"/>
-                <JsonField source="initProps"/>
+                <JsonField source="props" label="Properties that will be passed to application"/>
             </FormTab>
         </TabbedForm>
     );

@@ -9,17 +9,11 @@ export function transformGet(app) {
     if (app.props) {
         app.props = JSON.stringify(app.props);
     }
-    if (app.initProps) {
-        app.initProps = JSON.stringify(app.initProps);
-    }
 }
 
 export function transformSet(app) {
     if (app.props) {
         app.props = JSON.parse(app.props);
-    }
-    if (app.initProps) {
-        app.initProps = JSON.parse(app.initProps);
     }
     if (app.dependencies) {
         app.dependencies = app.dependencies.reduce((acc, v) => {
