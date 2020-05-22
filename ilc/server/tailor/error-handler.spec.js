@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
 
-const preSetupErrorHandlers = require('./error-handler').preSetupErrorHandlers;
+const errorHandlerSetup = require('./error-handler');
 const errors = require('./errors');
 
 describe('error handler', () => {
@@ -24,7 +24,7 @@ describe('error handler', () => {
     let clock;
 
     beforeEach(() => {
-        preSetupErrorHandlers(errors, noticeError, errorHandler)(tailorInstance);
+        errorHandlerSetup(tailorInstance, errorHandler, noticeError);
 
         clock = sinon.useFakeTimers();
     });
