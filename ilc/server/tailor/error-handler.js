@@ -3,7 +3,7 @@ const errorHandler = require('../errorHandler');
 const noticeError = require('../errorHandler/noticeError');
 
 //TODO: Handle Bot specific behaviour
-function handleError(req, err, res) {
+const createErrorHandler = (errors, noticeError, errorHandler) => (req, err, res) => {
     const urlPart = `while processing request "${req.originalUrl}"`;
     if (res !== undefined) {
         const e = new errors.TailorError({message: `Tailor error ${urlPart}`, cause: err});
@@ -15,7 +15,7 @@ function handleError(req, err, res) {
     }
 }
 
-function handleFragmentError(req, fragmentAttrs, err) {
+const createFragmentErrorHandler = (errors, noticeError) => (req, fragmentAttrs, err) => {
     if (fragmentAttrs.primary) {
         return;
     }
@@ -28,7 +28,7 @@ function handleFragmentError(req, fragmentAttrs, err) {
     noticeError(new errors.FragmentError(errOpts));
 }
 
-function handleFragmentWarn(req, fragmentAttrs, err) {
+const createFragmentWarnHandler = (errors, noticeError) => (req, fragmentAttrs, err) => {
     const errOpts = {
         message: `Non-primary "${fragmentAttrs.id}" fragment warning while processing "${req.originalUrl}"`,
         cause: err,
@@ -37,15 +37,18 @@ function handleFragmentWarn(req, fragmentAttrs, err) {
     noticeError(new errors.FragmentWarn(errOpts));
 }
 
+const preSetupErrorHandlers = (errors, noticeError, errorHandler) => (tailor) => {
+    //General Tailor & primary fragment errors
+    tailor.on('error', createErrorHandler(errors, noticeError, errorHandler));
+    //Non-primary fragment errors
+    tailor.on('fragment:error', createFragmentErrorHandler(errors, noticeError));
+    //Non-primary fragment warnings
+    tailor.on('fragment:warn', createFragmentWarnHandler(errors, noticeError));
+};
+
 /**
  * Setup error handlers for Tailor
  * @param {Tailor} tailor
  */
-module.exports = function setup(tailor) {
-    //General Tailor & primary fragment errors
-    tailor.on('error', handleError);
-    //Non-primary fragment errors
-    tailor.on('fragment:error', handleFragmentError);
-    //Non-primary fragment warnings
-    tailor.on('fragment:warn', handleFragmentWarn);
-};
+module.exports = preSetupErrorHandlers(errors, noticeError, errorHandler);
+module.exports.preSetupErrorHandlers = preSetupErrorHandlers;

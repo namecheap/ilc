@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
-const proxyquire = require('proxyquire').noPreserveCache();
 
+const preSetupErrorHandlers = require('./error-handler').preSetupErrorHandlers;
 const errors = require('./errors');
 
 describe('error handler', () => {
@@ -21,15 +21,10 @@ describe('error handler', () => {
     const errorHandler = sinon.stub();
     const noticeError = sinon.spy();
 
-    const setupErrorHandlers = proxyquire('./error-handler', {
-        '../errorHandler': errorHandler,
-        '../errorHandler/noticeError': noticeError,
-    });
-
     let clock;
 
     beforeEach(() => {
-        setupErrorHandlers(tailorInstance);
+        preSetupErrorHandlers(errors, noticeError, errorHandler)(tailorInstance);
 
         clock = sinon.useFakeTimers();
     });
