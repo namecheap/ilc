@@ -5,8 +5,9 @@ const server = require('./server');
 const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const registryService = require('./registry/factory');
-const errorHandler = require('./errorHandler');
 const app = require('fastify')({ logger: require('./fastifyLoggerConf') });
+const errorHandlingService = require('./errorHandler/factory');
+
 app.register(require('./ping'));
 
 const tailor = tailorFactory(config.get('cdnUrl'), config.get('newrelic.customClientJsWrapper'));
@@ -29,6 +30,6 @@ app.all('*', (req, res) => {
     tailor.requestHandler(req.raw, res.res);
 });
 
-app.setErrorHandler(errorHandler);
+app.setErrorHandler(errorHandlingService.handleError);
 
 server(app);

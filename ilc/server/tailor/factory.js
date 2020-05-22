@@ -8,8 +8,7 @@ const fetchTemplate = require('./fetch-template');
 const Router = require('../../common/router/ServerRouter');
 const registryService = require('../registry/factory');
 const filterHeaders = require('./filter-headers');
-const appErrorHandler = require('../errorHandler');
-const noticeError = require('../errorHandler/noticeError');
+const errorHandlingService = require('../errorHandler/factory');
 const errorHandlerSetup = require('./error-handler');
 const fragmentHooks = require('./fragment-hooks');
 const ConfigsInjector = require('./configs-injector');
@@ -36,7 +35,7 @@ module.exports = function (cdnUrl, nrCustomClientJsWrapper = null) {
         shouldSetPrimaryFragmentAssetsToPreload: false,
     });
 
-    errorHandlerSetup(tailor, appErrorHandler, noticeError);
+    errorHandlerSetup(tailor, errorHandlingService);
 
     return tailor;
 };

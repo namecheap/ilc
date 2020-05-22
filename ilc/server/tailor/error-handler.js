@@ -3,20 +3,19 @@ const errors = require('./errors');
 /**
  * Setup error handlers for Tailor
  * @param {Tailor} tailor
- * @param {Function} errorHandler Handle an error by the app
- * @param {Function} noticeError Log an error to any error handling service
+ * @param {ErrorHandler} errorHandlingService
  */
-module.exports = function setup(tailor, errorHandler, noticeError) {
+module.exports = function setup(tailor, errorHandlingService) {
     //TODO: Handle Bot specific behaviour
     function handleError(req, err, res) {
         const urlPart = `while processing request "${req.originalUrl}"`;
         if (res !== undefined) {
             const e = new errors.TailorError({message: `Tailor error ${urlPart}`, cause: err});
-            errorHandler(e, req, res).catch(err => {
-                noticeError(new errors.TailorError({message: 'Something went terribly wrong during error handling', cause: err}));
+            errorHandlingService.handleError(e, req, res).catch(err => {
+                errorHandlingService.noticeError(new errors.TailorError({message: 'Something went terribly wrong during error handling', cause: err}));
             });
         } else {
-            noticeError(new errors.TailorError({message: `Tailor error while headers already sent ${urlPart}`, cause: err}));
+            errorHandlingService.noticeError(new errors.TailorError({message: `Tailor error while headers already sent ${urlPart}`, cause: err}));
         }
     };
 
@@ -30,7 +29,7 @@ module.exports = function setup(tailor, errorHandler, noticeError) {
             cause: err,
             data: { fragmentAttrs }
         };
-        noticeError(new errors.FragmentError(errOpts));
+        errorHandlingService.noticeError(new errors.FragmentError(errOpts));
     };
 
     function handleFragmentWarn(req, fragmentAttrs, err) {
@@ -39,7 +38,7 @@ module.exports = function setup(tailor, errorHandler, noticeError) {
             cause: err,
             data: { fragmentAttrs }
         };
-        noticeError(new errors.FragmentWarn(errOpts));
+        errorHandlingService.noticeError(new errors.FragmentWarn(errOpts));
     };
 
     //General Tailor & primary fragment errors
