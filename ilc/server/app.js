@@ -23,7 +23,7 @@ module.exports = () => {
     });
 
     // Route to test 500 page appearance
-    app.get('/_ilc/500', () => { throw new Error('500 page test error') });
+    app.get('/_ilc/500', async () => { throw new Error('500 page test error') });
 
     app.all('*', (req, res) => {
         req.headers['x-request-uri'] = req.raw.url; //TODO: to be removed & replaced with routerProps
