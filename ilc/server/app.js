@@ -2,12 +2,11 @@ require('newrelic');
 
 const config = require('config');
 const server = require('./server');
-const app = require('fastify')({ logger: true });
 const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const registryService = require('./registry/factory');
 const errorHandler = require('./errorHandler');
-
+const app = require('fastify')({ logger: require('./fastifyLoggerConf') });
 app.register(require('./ping'));
 
 const tailor = tailorFactory(config.get('cdnUrl'), config.get('newrelic.customClientJsWrapper'));

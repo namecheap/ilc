@@ -27,6 +27,7 @@
     "cross-env": "^6.0.3",
     "deepmerge": "4.2.2",
     "fastify": "^2.13.1",
+    "http-headers": "^3.0.2",
     "is-url": "^1.2.4",
     "lodash": "^4.17.15",
     "newrelic": "^6.5.0",
