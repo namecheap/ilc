@@ -17,22 +17,23 @@ describe('error handler', () => {
             eventHandlers.set(eventName, eventHandler);
         }),
     };
-
-    const errorHandler = sinon.stub();
-    const noticeError = sinon.spy();
+    const errorHandlingService = {
+        handleError: sinon.stub(),
+        noticeError: sinon.spy(),
+    };
 
     let clock;
 
     beforeEach(() => {
-        errorHandlerSetup(tailorInstance, errorHandler, noticeError);
+        errorHandlerSetup(tailorInstance, errorHandlingService);
 
         clock = sinon.useFakeTimers();
     });
 
     afterEach(() => {
         eventHandlers.clear();
-        errorHandler.reset();
-        noticeError.resetHistory();
+        errorHandlingService.handleError.reset();
+        errorHandlingService.noticeError.resetHistory();
 
         clock.restore();
     });
@@ -43,8 +44,8 @@ describe('error handler', () => {
 
             await clock.runAllAsync();
 
-            chai.expect(noticeError.calledOnce).to.be.true;
-            chai.expect(noticeError.getCall(0).args).to.be.eql([
+            chai.expect(errorHandlingService.noticeError.calledOnce).to.be.true;
+            chai.expect(errorHandlingService.noticeError.getCall(0).args).to.be.eql([
                 new errors.TailorError({
                     message: `Tailor error while headers already sent while processing request "${request.originalUrl}"`,
                     cause: error,
@@ -56,13 +57,13 @@ describe('error handler', () => {
             const response = {};
             const somethingWentWrongDuringErrorHandling = new Error('something went wrong during error handling');
 
-            errorHandler.onFirstCall().rejects(somethingWentWrongDuringErrorHandling);
+            errorHandlingService.handleError.onFirstCall().rejects(somethingWentWrongDuringErrorHandling);
             eventHandlers.get('error')(request, error, response);
 
             await clock.runAllAsync();
 
-            chai.expect(noticeError.calledOnce).to.be.true;
-            chai.expect(noticeError.getCall(0).args).to.be.eql([
+            chai.expect(errorHandlingService.noticeError.calledOnce).to.be.true;
+            chai.expect(errorHandlingService.noticeError.getCall(0).args).to.be.eql([
                 new errors.TailorError({
                     message: 'Something went terribly wrong during error handling',
                     cause: somethingWentWrongDuringErrorHandling,
@@ -73,13 +74,13 @@ describe('error handler', () => {
         it('should handle Tailor Error when headers did not send yet and error handling is going to be successful', async () => {
             const response = {};
 
-            errorHandler.onFirstCall().resolves();
+            errorHandlingService.handleError.onFirstCall().resolves();
             eventHandlers.get('error')(request, error, response);
 
             await clock.runAllAsync();
 
-            chai.expect(noticeError.called).to.be.false;
-            chai.expect(errorHandler.getCall(0).args).to.be.eql([
+            chai.expect(errorHandlingService.noticeError.called).to.be.false;
+            chai.expect(errorHandlingService.handleError.getCall(0).args).to.be.eql([
                 new errors.TailorError({
                     message: `Tailor error while processing request "${request.originalUrl}"`,
                     cause: error,
@@ -99,8 +100,8 @@ describe('error handler', () => {
 
             eventHandlers.get('fragment:error')(request, fragmentAttrs, error);
 
-            chai.expect(noticeError.calledOnce).to.be.true;
-            chai.expect(noticeError.getCall(0).args).to.be.eql([
+            chai.expect(errorHandlingService.noticeError.calledOnce).to.be.true;
+            chai.expect(errorHandlingService.noticeError.getCall(0).args).to.be.eql([
                 new errors.FragmentError({
                     message: `Non-primary "${fragmentAttrs.id}" fragment error while processing "${request.originalUrl}"`,
                     cause: error,
@@ -118,7 +119,7 @@ describe('error handler', () => {
 
             eventHandlers.get('fragment:error')(request, fragmentAttrs, error);
 
-            chai.expect(noticeError.called).to.be.false;
+            chai.expect(errorHandlingService.noticeError.called).to.be.false;
         });
     });
 
@@ -130,7 +131,7 @@ describe('error handler', () => {
 
             eventHandlers.get('fragment:warn')(request, fragmentAttrs, error);
 
-            chai.expect(noticeError.getCall(0).args).to.be.eql([
+            chai.expect(errorHandlingService.noticeError.getCall(0).args).to.be.eql([
                 new errors.FragmentWarn({
                     message: `Non-primary "${fragmentAttrs.id}" fragment warning while processing "${request.originalUrl}"`,
                     cause: error,
