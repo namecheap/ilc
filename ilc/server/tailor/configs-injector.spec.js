@@ -1,5 +1,6 @@
 const chai = require('chai');
 const sinon = require('sinon');
+const _ = require('lodash/fp');
 
 const ConfigsInjector = require('./configs-injector');
 
@@ -199,6 +200,18 @@ describe('configs injector', () => {
             },
         };
 
+        const getSpaConfig = () => {
+            const pickApp = _.pick(['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind']);
+
+            return JSON.stringify({
+                apps: {
+                    firstApp: pickApp(registryConfig.apps.firstApp),
+                    secondApp: pickApp(registryConfig.apps.secondApp),
+                    thirdApp: pickApp(registryConfig.apps.thirdApp),
+                },
+            });
+        };
+
         it('should inject SPA config, polyfills, client js and new relic <script>, route assets style sheets links into the end of <head> tag', () => {
             const browserTimingHeader = `window.browserTimingHeader = 'Hi there! I should add a timing header.';`;
             newrelic.getBrowserTimingHeader.withArgs().returns(`<script defer type="text/javascript">${browserTimingHeader}</script>`);
@@ -244,43 +257,7 @@ describe('configs injector', () => {
                         '<!-- TailorX: Ignore during parsing END -->' +
 
                         '<!-- TailorX: Ignore during parsing START -->' +
-                        `<script type="spa-config">${JSON.stringify({
-                            apps: {
-                                firstApp: {
-                                    spaBundle: registryConfig.apps.firstApp.spaBundle,
-                                    cssBundle: registryConfig.apps.firstApp.cssBundle,
-                                    dependencies: {
-                                        ...registryConfig.apps.firstApp.dependencies,
-                                    },
-                                    props: {
-                                        ...registryConfig.apps.firstApp.props,
-                                    },
-                                    kind: registryConfig.apps.firstApp.kind,
-                                },
-                                secondApp: {
-                                    spaBundle: registryConfig.apps.secondApp.spaBundle,
-                                    cssBundle: registryConfig.apps.secondApp.cssBundle,
-                                    dependencies: {
-                                        ...registryConfig.apps.secondApp.dependencies,
-                                    },
-                                    props: {
-                                        ...registryConfig.apps.secondApp.props,
-                                    },
-                                    kind: registryConfig.apps.secondApp.kind,
-                                },
-                                thirdApp: {
-                                    spaBundle: registryConfig.apps.thirdApp.spaBundle,
-                                    cssBundle: registryConfig.apps.thirdApp.cssBundle,
-                                    dependencies: {
-                                        ...registryConfig.apps.thirdApp.dependencies,
-                                    },
-                                    props: {
-                                        ...registryConfig.apps.thirdApp.props,
-                                    },
-                                    kind: registryConfig.apps.thirdApp.kind,
-                                },
-                            },
-                        })}</script>` +
+                        `<script type="spa-config">${getSpaConfig()}</script>` +
                         '<script>window.ilcApps = [];</script>' +
                         `<script type="text/javascript">` +
                             `if (!(` +
@@ -346,43 +323,7 @@ describe('configs injector', () => {
                 '<html>' +
                     '<head>' +
                         '<!-- TailorX: Ignore during parsing START -->' +
-                        `<script type="spa-config">${JSON.stringify({
-                            apps: {
-                                firstApp: {
-                                    spaBundle: registryConfig.apps.firstApp.spaBundle,
-                                    cssBundle: registryConfig.apps.firstApp.cssBundle,
-                                    dependencies: {
-                                        ...registryConfig.apps.firstApp.dependencies,
-                                    },
-                                    props: {
-                                        ...registryConfig.apps.firstApp.props,
-                                    },
-                                    kind: registryConfig.apps.firstApp.kind,
-                                },
-                                secondApp: {
-                                    spaBundle: registryConfig.apps.secondApp.spaBundle,
-                                    cssBundle: registryConfig.apps.secondApp.cssBundle,
-                                    dependencies: {
-                                        ...registryConfig.apps.secondApp.dependencies,
-                                    },
-                                    props: {
-                                        ...registryConfig.apps.secondApp.props,
-                                    },
-                                    kind: registryConfig.apps.secondApp.kind,
-                                },
-                                thirdApp: {
-                                    spaBundle: registryConfig.apps.thirdApp.spaBundle,
-                                    cssBundle: registryConfig.apps.thirdApp.cssBundle,
-                                    dependencies: {
-                                        ...registryConfig.apps.thirdApp.dependencies,
-                                    },
-                                    props: {
-                                        ...registryConfig.apps.thirdApp.props,
-                                    },
-                                    kind: registryConfig.apps.thirdApp.kind,
-                                },
-                            },
-                        })}</script>` +
+                        `<script type="spa-config">${getSpaConfig()}</script>` +
                         '<script>window.ilcApps = [];</script>' +
                         `<script type="text/javascript">` +
                             `if (!(` +
