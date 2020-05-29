@@ -1,4 +1,5 @@
 const deepmerge = require('deepmerge');
+
 const errors = require('./errors');
 
 module.exports = class Router {
@@ -7,7 +8,12 @@ module.exports = class Router {
     #compiledRoutes = [];
     #specialRoutes = {};
 
-    constructor({routes, specialRoutes}) {
+    constructor(registryConfig) {
+        const {
+            routes,
+            specialRoutes,
+        } = registryConfig;
+
         this.#compiledRoutes = this.#compiler(routes);
         this.#specialRoutes = specialRoutes;
     }
@@ -40,7 +46,7 @@ module.exports = class Router {
 
             if (next !== true) {
                 if (res.template === undefined) {
-                    throw new Error('Can\'t determine base template for passed route');
+                    throw new this.errors.NoBaseTemplateMatchError();
                 }
 
                 res.basePath = match[1];
@@ -51,7 +57,7 @@ module.exports = class Router {
         }
 
         if (this.#specialRoutes[404] === undefined) {
-            throw new errors.NoRouteMatchError();
+            throw new this.errors.NoRouteMatchError();
         }
 
         return deepmerge(res, {
