@@ -5,7 +5,7 @@ const newrelic = require('newrelic');
 
 const Tailor = require('tailorx');
 const fetchTemplate = require('./fetch-template');
-const Router = require('../../common/router/ServerRouter');
+const Router = require('./server-router');
 const registryService = require('../registry/factory');
 const filterHeaders = require('./filter-headers');
 const errorHandlingService = require('../errorHandler/factory');

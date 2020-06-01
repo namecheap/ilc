@@ -1,6 +1,6 @@
 import * as singleSpa from 'single-spa';
 
-import Router from './common/router/ClientRouter';
+import Router from './client/ClientRouter';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
 import isActiveFactory from './client/isActiveFactory';

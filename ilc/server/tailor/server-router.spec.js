@@ -2,9 +2,9 @@ const chai = require('chai');
 const sinon = require('sinon');
 const _ = require('lodash');
 
-const ServerRouter = require('./ServerRouter');
+const ServerRouter = require('./server-router.js');
 
-describe.only('server router', () => {
+describe('server router', () => {
     const logger = {
         warn: sinon.spy(),
     };

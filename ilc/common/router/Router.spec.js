@@ -2,7 +2,7 @@ const chai = require('chai');
 
 const Router = require('./Router');
 
-describe.only('router', () => {
+describe('router', () => {
     const registryConfig = {
         routes: [
             {

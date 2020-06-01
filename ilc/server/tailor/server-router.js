@@ -1,8 +1,8 @@
 const _ = require('lodash');
 const deepmerge = require('deepmerge');
 
-const errors = require('./errors');
-const Router = require('./Router');
+const errors = require('../../common/router/errors');
+const Router = require('../../common/router/Router');
 
 module.exports = class ServerRouter {
     errors = errors;

@@ -1,5 +1,5 @@
 import * as singleSpa from 'single-spa';
-import * as Router from './Router';
+import * as Router from '../common/router/Router';
 import deepmerge from 'deepmerge';
 
 export default class ClientRouter {
