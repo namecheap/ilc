@@ -70,17 +70,22 @@ module.exports = class Router {
         return routes.map(v => {
             const route = this.#escapeStringRegexp(v.route);
 
+            let routeExp;
+
             if (v.route === '*') {
-                v.routeExp = new RegExp(`(.*)`);
+                routeExp = new RegExp(`(.*)`);
             } else if (v.route.match(/\/\*$/) !== null) {
                 const basePath = route.substring(0, route.length - 3);
 
-                v.routeExp = new RegExp(`^(${basePath})/?.*`);
+                routeExp = new RegExp(`^(${basePath})/?.*`);
             } else {
-                v.routeExp = new RegExp(`^(${route})$`);
+                routeExp = new RegExp(`^(${route})$`);
             }
 
-            return v;
+            return {
+                ...v,
+                routeExp,
+            };
         });
     }
 
