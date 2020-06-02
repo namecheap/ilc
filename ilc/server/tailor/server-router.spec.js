@@ -198,11 +198,11 @@ describe('server router', () => {
                 next: true,
                 template: 'commonTemplate',
                 slots: {
-                    navbarSlot: {
+                    navbar: {
                         appName: apps['@portal/navbar'].name,
                         kind: 'regular',
                     },
-                    footerSlot: {
+                    footer: {
                         appName: apps['@portal/footer'].name,
                         props: {
                             firstFooterSlotProp: 'firstFooterSlotProp',
@@ -218,10 +218,10 @@ describe('server router', () => {
                 next: true,
                 template: 'heroTemplate',
                 slots: {
-                    heroSlot: {
+                    hero: {
                         appName: apps['@portal/hero'].name,
                     },
-                    contactSlot: {
+                    contact: {
                         appName: apps['contact'].name,
                         props: {
                             contactFirstProp: 'changedContactFirstProp',
@@ -236,7 +236,7 @@ describe('server router', () => {
                 route: '/hero/apps',
                 next: false,
                 slots: {
-                    appsSlot: {
+                    apps: {
                         appName: apps['apps'].name,
                     },
                 },
@@ -246,7 +246,7 @@ describe('server router', () => {
                 route: '/news',
                 next: false,
                 slots: {
-                    newsSlot: {
+                    news: {
                         appName: apps['@portal/news'].name,
                     },
                 },
@@ -279,7 +279,7 @@ describe('server router', () => {
         expectedNavbarUrl.searchParams.append('routerProps', Buffer.from(JSON.stringify({
             basePath: expectedRoute.basePath,
             reqUrl: expectedRoute.reqUrl,
-            fragmentName: 'navbar__at__navbarSlot',
+            fragmentName: 'navbar__at__navbar',
         })).toString('base64'));
         expectedNavbarUrl.searchParams.append('appProps', Buffer.from(JSON.stringify(registryConfig.apps['@portal/navbar'].props)).toString('base64'));
 
@@ -287,33 +287,33 @@ describe('server router', () => {
         expectedFooterUrl.searchParams.append('routerProps', Buffer.from(JSON.stringify({
             basePath: expectedRoute.basePath,
             reqUrl: expectedRoute.reqUrl,
-            fragmentName: 'footer__at__footerSlot',
+            fragmentName: 'footer__at__footer',
         })).toString('base64'));
-        expectedFooterUrl.searchParams.append('appProps', Buffer.from(JSON.stringify(registryConfig.routes[0].slots.footerSlot.props)).toString('base64'));
+        expectedFooterUrl.searchParams.append('appProps', Buffer.from(JSON.stringify(registryConfig.routes[0].slots.footer.props)).toString('base64'));
 
         const expectedContactUrl = new URL(registryConfig.apps.contact.ssr.src);
         expectedContactUrl.searchParams.append('routerProps', Buffer.from(JSON.stringify({
             basePath: expectedRoute.basePath,
             reqUrl: expectedRoute.reqUrl,
-            fragmentName: 'contact__at__contactSlot',
+            fragmentName: 'contact__at__contact',
         })).toString('base64'));
         expectedContactUrl.searchParams.append('appProps', Buffer.from(JSON.stringify({
             ...registryConfig.apps.contact.props,
-            ...registryConfig.routes[1].slots.contactSlot.props,
+            ...registryConfig.routes[1].slots.contact.props,
         })).toString('base64'));
 
         const expectedAppsUrl = new URL(registryConfig.apps.apps.ssr.src);
         expectedAppsUrl.searchParams.append('routerProps', Buffer.from(JSON.stringify({
             basePath: expectedRoute.basePath,
             reqUrl: expectedRoute.reqUrl,
-            fragmentName: 'apps__at__appsSlot',
+            fragmentName: 'apps__at__apps',
         })).toString('base64'));
 
         const expectedPage =
-            `<fragment id="${registryConfig.apps['@portal/navbar'].name}" slot="navbarSlot" timeout="${registryConfig.apps['@portal/navbar'].ssr.timeout}" src="${expectedNavbarUrl.toString()}"></fragment>` +
-            `<fragment id="${registryConfig.apps['@portal/footer'].name}" slot="footerSlot" timeout="${registryConfig.apps['@portal/footer'].ssr.timeout}" src="${expectedFooterUrl.toString()}" primary="true"></fragment>` +
-            `<fragment id="${registryConfig.apps['contact'].name}" slot="contactSlot" timeout="${registryConfig.apps.contact.ssr.timeout}" src="${expectedContactUrl.toString()}"></fragment>` +
-            `<fragment id="${registryConfig.apps['apps'].name}" slot="appsSlot" timeout="${registryConfig.apps.apps.ssr.timeout}" src="${expectedAppsUrl.toString()}"></fragment>`;
+            `<fragment id="${registryConfig.apps['@portal/navbar'].name}" slot="navbar" timeout="${registryConfig.apps['@portal/navbar'].ssr.timeout}" src="${expectedNavbarUrl.toString()}"></fragment>` +
+            `<fragment id="${registryConfig.apps['@portal/footer'].name}" slot="footer" timeout="${registryConfig.apps['@portal/footer'].ssr.timeout}" src="${expectedFooterUrl.toString()}" primary="true"></fragment>` +
+            `<fragment id="${registryConfig.apps['contact'].name}" slot="contact" timeout="${registryConfig.apps.contact.ssr.timeout}" src="${expectedContactUrl.toString()}"></fragment>` +
+            `<fragment id="${registryConfig.apps['apps'].name}" slot="apps" timeout="${registryConfig.apps.apps.ssr.timeout}" src="${expectedAppsUrl.toString()}"></fragment>`;
 
         const router = new ServerRouter(logger);
 
@@ -322,7 +322,7 @@ describe('server router', () => {
             page: expectedPage,
         });
         chai.expect(logger.warn.calledOnceWithExactly(
-            `More then one primary slot "appsSlot" found for "${expectedRoute.reqUrl}". Making it regular to avoid unexpected behaviour.`
+            `More then one primary slot "apps" found for "${expectedRoute.reqUrl}". Making it regular to avoid unexpected behaviour.`
         )).to.be.true;
     });
 });
