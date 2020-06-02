@@ -1,5 +1,4 @@
 import deepmerge from 'deepmerge';
-import * as singleSpa from 'single-spa';
 
 import * as Router from '../common/router/Router';
 import * as errors from '../common/router/errors';
@@ -7,6 +6,8 @@ import * as errors from '../common/router/errors';
 export default class ClientRouter {
     errors = errors;
 
+    #currentUrl;
+    #navigateToUrl;
     #location;
     #logger;
     #registryConf;
@@ -14,15 +15,16 @@ export default class ClientRouter {
     #prevRoute;
     #currentRoute;
 
-    constructor(registryConf, logger = window.console, location = window.location) {
+    constructor(registryConf, navigateToUrl, location = window.location, logger = window.console) {
+        this.#navigateToUrl = navigateToUrl;
         this.#location = location;
         this.#logger = logger;
         this.#registryConf = registryConf;
         this.#router = new Router(registryConf);
+        this.#currentUrl = this.#location.pathname + this.#location.search;
 
         this.#setInitialRoutes();
-        this.#handleSingleSpaRoutingEvents();
-        this.#handleLinks();
+        this.#addEventListeners();
     }
 
     getPrevRoute = () => this.#prevRoute;
@@ -57,7 +59,11 @@ export default class ClientRouter {
             path = a.pathname + a.search;
 
             base.remove();
-            this.#logger.warn('ILC: <base> tag was used only for initial rendering & removed afterwards. Currently we\'re not respecting it fully. Pls open an issue if you need this functionality.');
+            this.#logger.warn(
+                'ILC: <base> tag was used only for initial rendering and removed afterwards. ' +
+                'Currently, ILC does not support it fully. ' +
+                'Please open an issue if you need this functionality.'
+            );
         } else {
             path = this.#location.pathname + this.#location.search;
         }
@@ -66,45 +72,59 @@ export default class ClientRouter {
         this.#prevRoute = this.#currentRoute;
     };
 
-    #handleSingleSpaRoutingEvents = () => {
-        let currentUrl = this.#location.pathname + this.#location.search;
-        window.addEventListener('single-spa:before-routing-event', () => {
-            this.#prevRoute = this.#currentRoute;
-
-            // fix for google cached pages.
-            // if open any cached page and scroll to "#features" section:
-            // only hash will be changed so router.match will return error, since <base> tag has already been removed.
-            // so in this cases we shouldn't regenerate currentRoute
-            const newUrl = this.#location.pathname + this.#location.search;
-            if (currentUrl !== newUrl) {
-                this.#currentRoute = this.#router.match(this.#location.pathname + this.#location.search);
-                currentUrl = newUrl;
-            }
-
-            if (this.#currentRoute && this.#prevRoute.template !== this.#currentRoute.template) {
-                throw new Error('Base template was changed and I still don\'t know how to handle it :(');
-            }
-        });
+    #addEventListeners = () => {
+        window.addEventListener('single-spa:before-routing-event', this.#onSingleSpaRoutingEvents);
+        document.addEventListener('click', this.#onClickLink);
     };
 
-    #handleLinks = () => {
-        document.addEventListener('click', e => {
-            const anchor = e.target.tagName === 'A'
-                ? e.target
-                : e.target.closest('a');
-            const href = anchor && anchor.getAttribute('href');
+    removeEventListeners() {
+        window.removeEventListener('single-spa:before-routing-event', this.#onSingleSpaRoutingEvents);
+        document.removeEventListener('click', this.#onClickLink);
+    }
 
-            if (e.defaultPrevented === true || !href) {
-                return;
-            }
+    #onSingleSpaRoutingEvents = () => {
+        this.#prevRoute = this.#currentRoute;
 
-            const pathname = href.replace(this.#location.origin, '');
-            const { specialRole } = this.#router.match(pathname);
+        // fix for google cached pages.
+        // if open any cached page and scroll to "#features" section:
+        // only hash will be changed so router.match will return error, since <base> tag has already been removed.
+        // so in this cases we shouldn't regenerate currentRoute
+        const newUrl = this.#location.pathname + this.#location.search;
+        if (this.#currentUrl !== newUrl) {
+            this.#currentRoute = this.#router.match(this.#location.pathname + this.#location.search);
+            this.#currentUrl = newUrl;
+        }
 
-            if (specialRole === null) {
-                singleSpa.navigateToUrl(pathname);
-                e.preventDefault();
-            }
-        });
+        if (this.#currentRoute && this.#prevRoute.template !== this.#currentRoute.template) {
+            throw new this.errors.RouterError({
+                message:
+                    'Base template was changed. ' +
+                    'Currently, ILC does not handle it. ' +
+                    'Please open an issue if you need this functionality.',
+                data: {
+                    prevTemplate: this.#prevRoute.template,
+                    currentTemplate: this.#currentRoute.template
+                },
+            });
+        }
+    };
+
+    #onClickLink = (event) => {
+        const anchor = event.target.tagName === 'A'
+            ? event.target
+            : event.target.closest('a');
+        const href = anchor && anchor.getAttribute('href');
+
+        if (event.defaultPrevented || !href) {
+            return;
+        }
+
+        const pathname = href.replace(this.#location.origin, '');
+        const {specialRole} = this.#router.match(pathname);
+
+        if (specialRole === null) {
+            this.#navigateToUrl(pathname);
+            event.preventDefault();
+        }
     };
 }

@@ -30,6 +30,26 @@ describe('client router', () => {
                 src: '/hero',
             },
         },
+        '@portal/opponent': {
+            spaBundle: 'https://somewhere.com/opponentSpaBundle.js',
+            cssBundle: 'https://somewhere.com/opponentCssBundle.css',
+            dependencies: {
+                opponentFirstDependency: 'https://somewhere.com/opponentFirstDependency.js',
+                opponentSecondDependency: 'https://somewhere.com/opponentSecondDependency.js',
+            },
+            props: {
+                opponentFirstProp: {
+                    firstPropOfOpponentFirstProp: 'firstPropOfOpponentFirstProp',
+                },
+                opponentSecondProp: 'opponentSecondProp',
+            },
+            kind: 'primary',
+            name: '@portal/opponent',
+            ssr: {
+                timeout: 5000,
+                src: '/opponent',
+            },
+        },
     };
 
     const routes = [
@@ -63,6 +83,36 @@ describe('client router', () => {
                 },
             },
         },
+        {
+            routeId: 'opponentRoute',
+            route: '/opponent',
+            next: false,
+            slots: {
+                opponent: {
+                    appName: apps['@portal/opponent'].name,
+                    props: {
+                        opponentSlotFirstProp: 'opponentSlotFirstProp',
+                        opponentSlotSecondProp: {
+                            firstPropOfOpponentSlotSecondProp: 'firstPropOfOpponentSlotSecondProp',
+                        },
+                    },
+                },
+            },
+        },
+        {
+            routeId: 'baseRoute',
+            route: '/base',
+            next: false,
+            template: 'baseTemplate',
+            slots: {
+                opponent: {
+                    appName: apps['@portal/opponent'].name,
+                },
+                hero: {
+                    appName: apps['@portal/hero'].name,
+                },
+            },
+        }
     ];
 
     const specialRoutes = {
@@ -81,53 +131,34 @@ describe('client router', () => {
         specialRoutes,
     };
 
-    const logger = {
-        warn: sinon.spy(),
-    };
+    let router;
 
     afterEach(() => {
-        logger.warn.resetHistory();
+        document.body.innerHTML = '';
+        router.removeEventListeners();
     });
 
-    describe('error throwing', () => {
-        let router;
-
-        beforeEach(() => {
-            router = new ClientRouter(registryConfig, logger);
-        });
-
-        it('should throw an error when an app is not defined while getting route props', () => {
-            chai.expect(router.getCurrentRouteProps.bind(router, '@portal/undefined', 'hero')).to.throw('Can not find info about the app.');
-            chai.expect(router.getPrevRouteProps.bind(router, '@portal/undefined', 'hero')).to.throw('Can not find info about the app.');
-        });
-
-        it('should throw an error when a slot is not defined while getting route props', () => {
-            chai.expect(router.getCurrentRouteProps.bind(router, '@portal/hero', 'undefined')).to.throw('Can not find info about the slot');
-            chai.expect(router.getPrevRouteProps.bind(router, '@portal/hero', 'undefined')).to.throw('Can not find info about the slot');
-        });
-    });
-
-    describe('when client router is going to init', () => {
+    describe('should set initial routes while client router is initializing', () => {
         it('should set initial routes based on location when <base> tag is not defined', () => {
             const location = {
-                pathname: '/hero',
+                pathname: registryConfig.routes[1].route,
                 search: '?hi=there',
             };
 
             const mainRef = html`
                 <main>
-                    <div>Hi there! I do not have a base tag, so router should initialize based on location.</div>
-                </main>getCurrentRoute
+                    <div>Hi there! I do not have a base tag, so client router should initialize based on location.</div>
+                </main>
             `;
 
             document.body.appendChild(mainRef);
 
             const expectedRoute = {
-                routeId: 'heroRoute',
-                route: '/hero',
-                basePath: '/hero',
+                routeId: registryConfig.routes[1].routeId,
+                route: location.pathname,
+                basePath: location.pathname,
                 reqUrl: location.pathname + location.search,
-                template: 'commonTemplate',
+                template: registryConfig.routes[0].template,
                 specialRole: null,
                 slots: {
                     ...registryConfig.routes[1].slots,
@@ -151,7 +182,7 @@ describe('client router', () => {
                 },
             };
 
-            const router = new ClientRouter(registryConfig, logger, location);
+            router = new ClientRouter(registryConfig, () => {}, location);
 
             chai.expect(router.getCurrentRoute()).to.be.eql(expectedRoute);
             chai.expect(router.getPrevRoute()).to.be.eql(expectedRoute);
@@ -161,10 +192,19 @@ describe('client router', () => {
         });
 
         it('should remove <base> tag when this tag exists and set initial routes based on <base> tag', () => {
-            const reqUrl = '/hero?hi=there';
+            const logger = {
+                warn: sinon.spy(),
+            };
+
+            const location = {
+                pathname: registryConfig.routes[2].route,
+                search: '?see=you',
+            };
+
+            const reqUrl = `${registryConfig.routes[1].route}?hi=there`;
             const mainRef = html`
                 <main>
-                    <div>Hi there! I have a base tag, so router should initialize based on href of the base tag.</div>
+                    <div>Hi there! I have a base tag, so client router should initialize based on href of the base tag.</div>
                     <base href="${reqUrl}">
                 </main>
             `;
@@ -172,11 +212,11 @@ describe('client router', () => {
             document.body.appendChild(mainRef);
 
             const expectedRoute = {
-                routeId: 'heroRoute',
-                route: '/hero',
-                basePath: '/hero',
+                routeId: registryConfig.routes[1].routeId,
+                route: registryConfig.routes[1].route,
+                basePath: registryConfig.routes[1].route,
                 reqUrl,
-                template: 'commonTemplate',
+                template: registryConfig.routes[0].template,
                 specialRole: null,
                 slots: {
                     ...registryConfig.routes[1].slots,
@@ -200,7 +240,7 @@ describe('client router', () => {
                 },
             };
 
-            const router = new ClientRouter(registryConfig, logger);
+            router = new ClientRouter(registryConfig, () => {}, location, logger);
 
             chai.expect(mainRef.getElementsByTagName('base')).to.be.empty;
 
@@ -209,6 +249,227 @@ describe('client router', () => {
 
             chai.expect(router.getCurrentRouteProps('@portal/hero', 'hero')).to.be.eql(expectedRouteProps);
             chai.expect(router.getPrevRouteProps('@portal/hero', 'hero')).to.be.eql(expectedRouteProps);
+
+            chai.expect(logger.warn.calledOnceWithExactly(
+                'ILC: <base> tag was used only for initial rendering and removed afterwards. ' +
+                'Currently, ILC does not support it fully. ' +
+                'Please open an issue if you need this functionality.'
+            )).to.be.true;
+        });
+    });
+
+    describe('should listen to single-spa:before-routing-event when client routes was initialized', () => {
+        let singleSpaBeforeRoutingEvent;
+
+        beforeEach(() => {
+            singleSpaBeforeRoutingEvent = new Event('single-spa:before-routing-event');
+        });
+
+        it('should update a current route when it does not equal current URL', () => {
+            const location = {
+                pathname: registryConfig.routes[1].route,
+                search: '?hi=there',
+            };
+
+            const expectedPrevRoute = {
+                routeId: registryConfig.routes[1].routeId,
+                route: location.pathname,
+                basePath: location.pathname,
+                reqUrl: location.pathname + location.search,
+                template: registryConfig.routes[0].template,
+                specialRole: null,
+                slots: {
+                    ...registryConfig.routes[1].slots,
+                },
+            };
+
+            router = new ClientRouter(registryConfig, () => {}, location);
+
+            location.pathname = registryConfig.routes[2].route;
+            location.search = '?see=you';
+
+            const expectedCurrentRoute = {
+                routeId: registryConfig.routes[2].routeId,
+                route: location.pathname,
+                basePath: location.pathname,
+                reqUrl: location.pathname + location.search,
+                template: registryConfig.routes[0].template,
+                specialRole: null,
+                slots: {
+                    ...registryConfig.routes[2].slots,
+                },
+            };
+
+            window.dispatchEvent(singleSpaBeforeRoutingEvent);
+
+            chai.expect(router.getCurrentRoute()).to.be.eql(expectedCurrentRoute);
+            chai.expect(router.getPrevRoute()).to.be.eql(expectedPrevRoute);
+        });
+
+        it('should not update a current route when a route was not changed', () => {
+            const location = {
+                pathname: registryConfig.routes[1].route,
+                search: '?hi=there',
+            };
+
+            const expectedRoute = {
+                routeId: registryConfig.routes[1].routeId,
+                route: location.pathname,
+                basePath: location.pathname,
+                reqUrl: location.pathname + location.search,
+                template: registryConfig.routes[0].template,
+                specialRole: null,
+                slots: {
+                    ...registryConfig.routes[1].slots,
+                },
+            };
+
+            router = new ClientRouter(registryConfig, () => {}, location);
+
+            window.dispatchEvent(singleSpaBeforeRoutingEvent);
+
+            chai.expect(router.getCurrentRoute()).to.be.eql(expectedRoute);
+            chai.expect(router.getPrevRoute()).to.be.eql(expectedRoute);
+        });
+
+        /**
+         * @todo Handle uncaught error
+         */
+        it.skip('should throw an error when a base template changed', () => {
+            const location = {
+                pathname: registryConfig.routes[1].route,
+                search: '?hi=there',
+            };
+
+            router = new ClientRouter(registryConfig, () => {}, location);
+
+            location.pathname = registryConfig.routes[3].route;
+            location.search = '?throw=error';
+
+            window.dispatchEvent(singleSpaBeforeRoutingEvent);
+
+            chai.expect(true).to.be.true;
+        });
+    });
+
+    describe('should listen to anchors click events when client router was initialized', () => {
+        let clickEvent;
+
+        const singleSpa = {
+            navigateToUrl: sinon.spy(),
+        };
+
+        beforeEach(() => {
+            router = new ClientRouter(registryConfig, singleSpa.navigateToUrl);
+            clickEvent = new Event('click', {
+                bubbles: true,
+                cancelable: true,
+            });
+        });
+
+        afterEach(() => {
+            singleSpa.navigateToUrl.resetHistory();
+        });
+
+        it('should prevent click events on anchors and navigate to a registered micro front-end page', () => {
+            const anchor = {
+                id: 'click-me',
+                href: registryConfig.routes[2].route,
+            };
+
+            anchor.ref = html`
+                <a id="${anchor.id}" href="${anchor.href}">
+                    Hi there! I am anchor tag and I have href attribute.
+                    So I should forward you to registered micro front-end page.
+                </a>
+            `;
+
+            document.body.appendChild(anchor.ref);
+            document.getElementById(anchor.id).dispatchEvent(clickEvent);
+
+            chai.expect(singleSpa.navigateToUrl.calledOnceWithExactly(anchor.href)).to.be.true;
+            chai.expect(clickEvent.defaultPrevented).to.be.true;
+        });
+
+        it('should not prevent click events on anchors when anchors do not have href attribute', () => {
+            const anchor = {
+                id: 'click-me',
+            };
+
+            anchor.ref = html`
+                <a id="${anchor.id}">
+                    Hi there! I am anchor tag and I do not have href attribute.
+                    So I should not forward you to a registered micro front-end page.
+                </a>
+            `;
+
+            document.body.appendChild(anchor.ref);
+            document.getElementById(anchor.id).dispatchEvent(clickEvent);
+
+            chai.expect(singleSpa.navigateToUrl.called).to.be.false;
+            chai.expect(clickEvent.defaultPrevented).to.be.false;
+        });
+
+        it('should not prevent click events on anchors when these events were already default prevented', () => {
+            const anchor = {
+                id: 'click-me',
+                href: registryConfig.routes[2].route,
+            };
+
+            anchor.ref = html`
+                <a href="${anchor.href}">
+                    <span id="${anchor.id}">
+                        Hi there! I am span tag and I have the closest anchor tag that has href attribute.
+                        But event click is going to be prevented previously.
+                        So I should not forward you to registered micro front-end page.
+                    </span>
+                </a>
+            `;
+
+            document.body.appendChild(anchor.ref);
+            clickEvent.preventDefault();
+            document.getElementById(anchor.id).dispatchEvent(clickEvent);
+
+            chai.expect(singleSpa.navigateToUrl.called).to.be.false;
+        });
+
+        it('should not prevent click events on anchors when anchors are not going to a registered micro front-end page', () => {
+            const anchor = {
+                id: 'click-me',
+                href: '/undefined',
+            };
+
+            anchor.ref = html`
+                <a href="${anchor.href}">
+                    <span id="${anchor.id}">
+                        Hi there! I am span tag and I have the closest anchor tag that has href attribute.
+                        But event click is going to be prevented previously.
+                        So I should not forward you to registered micro front-end page.
+                    </span>
+                </a>
+            `;
+
+            document.body.appendChild(anchor.ref);
+            document.getElementById(anchor.id).dispatchEvent(clickEvent);
+
+            chai.expect(singleSpa.navigateToUrl.called).to.be.false;
+            chai.expect(clickEvent.defaultPrevented).to.be.false;
+        });
+    });
+
+    describe('while getting route props', () => {
+        beforeEach(() => {
+            router = new ClientRouter(registryConfig, () => {});
+        });
+
+        it('should throw an error when an app is not defined', () => {
+            chai.expect(router.getCurrentRouteProps.bind(router, '@portal/undefined', 'hero')).to.throw('Can not find info about the app.');
+            chai.expect(router.getPrevRouteProps.bind(router, '@portal/undefined', 'hero')).to.throw('Can not find info about the app.');
+        });
+
+        it('should throw an error when a slot is not defined', () => {
+            chai.expect(router.getCurrentRouteProps.bind(router, '@portal/hero', 'undefined')).to.throw('Can not find info about the slot');
+            chai.expect(router.getPrevRouteProps.bind(router, '@portal/hero', 'undefined')).to.throw('Can not find info about the slot');
         });
     });
 });

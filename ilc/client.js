@@ -17,7 +17,7 @@ if (System === undefined) {
 }
 
 const registryConf = initSpaConfig();
-const router = new Router(registryConf);
+const router = new Router(registryConf, singleSpa.navigateToUrl);
 const asyncBootUp = new AsyncBootUp();
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
