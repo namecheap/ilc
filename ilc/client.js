@@ -1,6 +1,6 @@
 import * as singleSpa from 'single-spa';
 
-import Router from './common/router/ClientRouter';
+import Router from './client/ClientRouter';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
 import isActiveFactory from './client/isActiveFactory';
@@ -17,7 +17,7 @@ if (System === undefined) {
 }
 
 const registryConf = initSpaConfig();
-const router = new Router(registryConf);
+const router = new Router(registryConf, singleSpa.navigateToUrl);
 const asyncBootUp = new AsyncBootUp();
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {

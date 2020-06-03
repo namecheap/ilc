@@ -1,8 +1,8 @@
 const _ = require('lodash');
 const deepmerge = require('deepmerge');
 
-const errors = require('./errors');
-const Router = require('./Router');
+const errors = require('../../common/router/errors');
+const Router = require('../../common/router/Router');
 
 module.exports = class ServerRouter {
     errors = errors;
@@ -31,10 +31,11 @@ module.exports = class ServerRouter {
         let primarySlotDetected = false;
 
         return _.reduce(route.slots, (res, slotData, slotName) => {
-            const appInfo = apps[slotData.appName];
+            const appName = slotData.appName;
+            const appInfo = apps[appName];
 
             if (appInfo === undefined) {
-                throw new Error('Can\'t find info about app: ' + slotData.appName);
+                throw new this.errors.RouterError({message: 'Can\'t find info about app.', data: {appName}});
             }
 
             if (appInfo.ssr === undefined) {
@@ -42,12 +43,12 @@ module.exports = class ServerRouter {
             }
 
             const ssrOpts = deepmerge({}, appInfo.ssr);
-            if (typeof ssrOpts.src !== "string") {
-                throw new errors.RouterError({ message: 'No url specified for fragment', data: { appInfo } });
+            if (typeof ssrOpts.src !== 'string') {
+                throw new this.errors.RouterError({message: 'No url specified for fragment!', data: {appInfo}});
             }
 
             const url = new URL(ssrOpts.src);
-            const fragmentName = `${slotData.appName.replace('@portal/', '')}__at__${slotName}`;
+            const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
             const fragmentKind = slotData.kind || appInfo.kind;
 
             const reqProps = {
@@ -59,7 +60,7 @@ module.exports = class ServerRouter {
             url.searchParams.append('routerProps', Buffer.from(JSON.stringify(reqProps)).toString('base64'));
 
             if (slotData.props !== undefined || appInfo.props !== undefined) {
-                const appProps =  _.merge({}, appInfo.props, slotData.props);
+                const appProps = _.merge({}, appInfo.props, slotData.props);
                 url.searchParams.append('appProps', Buffer.from(JSON.stringify(appProps)).toString('base64'));
             }
 
@@ -75,14 +76,9 @@ module.exports = class ServerRouter {
 
             ssrOpts.src = url.toString();
 
-            return res + `
-                <fragment
-                    id="${slotData.appName}"
-                    slot="${slotName}"
-                    ${_.map(ssrOpts, (v, k) => `${k}="${v}"`).join(' ')}
-                >
-                </fragment>
-            `;
+            return res + `<fragment id="${appName}" slot="${slotName}" ${
+                _.map(ssrOpts, (v, k) => `${k}="${v}"`).join(' ')
+            }></fragment>`;
         }, '');
     };
 };

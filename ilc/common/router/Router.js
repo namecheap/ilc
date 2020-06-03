@@ -1,4 +1,5 @@
 const deepmerge = require('deepmerge');
+
 const errors = require('./errors');
 
 module.exports = class Router {
@@ -7,7 +8,12 @@ module.exports = class Router {
     #compiledRoutes = [];
     #specialRoutes = {};
 
-    constructor({routes, specialRoutes}) {
+    constructor(registryConfig) {
+        const {
+            routes,
+            specialRoutes,
+        } = registryConfig;
+
         this.#compiledRoutes = this.#compiler(routes);
         this.#specialRoutes = specialRoutes;
     }
@@ -40,7 +46,7 @@ module.exports = class Router {
 
             if (next !== true) {
                 if (res.template === undefined) {
-                    throw new Error('Can\'t determine base template for passed route');
+                    throw new this.errors.NoBaseTemplateMatchError();
                 }
 
                 res.basePath = match[1];
@@ -51,7 +57,7 @@ module.exports = class Router {
         }
 
         if (this.#specialRoutes[404] === undefined) {
-            throw new errors.NoRouteMatchError();
+            throw new this.errors.NoRouteMatchError();
         }
 
         return deepmerge(res, {
@@ -64,17 +70,22 @@ module.exports = class Router {
         return routes.map(v => {
             const route = this.#escapeStringRegexp(v.route);
 
+            let routeExp;
+
             if (v.route === '*') {
-                v.routeExp = new RegExp(`(.*)`);
+                routeExp = new RegExp(`(.*)`);
             } else if (v.route.match(/\/\*$/) !== null) {
                 const basePath = route.substring(0, route.length - 3);
 
-                v.routeExp = new RegExp(`^(${basePath})/?.*`);
+                routeExp = new RegExp(`^(${basePath})/?.*`);
             } else {
-                v.routeExp = new RegExp(`^(${route})$`);
+                routeExp = new RegExp(`^(${route})$`);
             }
 
-            return v;
+            return {
+                ...v,
+                routeExp,
+            };
         });
     }
 
