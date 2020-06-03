@@ -261,8 +261,10 @@ describe('client router', () => {
     describe('should listen to single-spa:before-routing-event when client routes was initialized', () => {
         let singleSpaBeforeRoutingEvent;
 
+        const singleSpaBeforeRoutingEventName = 'single-spa:before-routing-event';
+
         beforeEach(() => {
-            singleSpaBeforeRoutingEvent = new Event('single-spa:before-routing-event');
+            singleSpaBeforeRoutingEvent = new Event(singleSpaBeforeRoutingEventName);
         });
 
         it('should update a current route when it does not equal current URL', () => {
@@ -332,23 +334,31 @@ describe('client router', () => {
             chai.expect(router.getPrevRoute()).to.be.eql(expectedRoute);
         });
 
-        /**
-         * @todo Handle uncaught error
-         */
-        it.skip('should throw an error when a base template changed', () => {
-            const location = {
-                pathname: registryConfig.routes[1].route,
-                search: '?hi=there',
-            };
+        it('should throw an error when a base template changed', () => {
+            const addEventListener = sinon.spy(window, 'addEventListener');
 
-            router = new ClientRouter(registryConfig, () => {}, location);
+            try {
+                const location = {
+                    pathname: registryConfig.routes[1].route,
+                    search: '?hi=there',
+                };
 
-            location.pathname = registryConfig.routes[3].route;
-            location.search = '?throw=error';
+                router = new ClientRouter(registryConfig, () => {}, location);
 
-            window.dispatchEvent(singleSpaBeforeRoutingEvent);
+                const [eventName, eventListener] = addEventListener.getCall(0).args;
 
-            chai.expect(true).to.be.true;
+                location.pathname = registryConfig.routes[3].route;
+                location.search = '?throw=error';
+
+                chai.expect(eventName).to.be.eql(singleSpaBeforeRoutingEventName);
+                chai.expect(eventListener).to.throw(
+                    'Base template was changed. ' +
+                    'Currently, ILC does not handle it. ' +
+                    'Please open an issue if you need this functionality.'
+                );
+            } finally {
+                addEventListener.restore();
+            }
         });
     });
 
