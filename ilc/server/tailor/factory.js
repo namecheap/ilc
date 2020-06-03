@@ -15,7 +15,7 @@ const ConfigsInjector = require('./configs-injector');
 
 module.exports = function (cdnUrl, nrCustomClientJsWrapper = null) {
     const router = new Router(console);
-    const configsInjector = new ConfigsInjector(cdnUrl, nrCustomClientJsWrapper);
+    const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper);
 
     const tailor = new Tailor({
         fetchTemplate: fetchTemplate(

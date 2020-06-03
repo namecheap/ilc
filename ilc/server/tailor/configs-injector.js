@@ -1,14 +1,15 @@
 const _ = require('lodash');
 const urljoin = require('url-join');
-const newrelic = require('newrelic');
 
 module.exports = class ConfigsInjector {
+    #newrelic;
     #nrCustomClientJsWrapper;
     #cdnUrl;
     #jsInjectionPlaceholder = '<!-- ILC_JS -->';
     #cssInjectionPlaceholder = '<!-- ILC_CSS -->';
 
-    constructor(cdnUrl = null, nrCustomClientJsWrapper = null) {
+    constructor(newrelic, cdnUrl = null, nrCustomClientJsWrapper = null) {
+        this.#newrelic = newrelic;
         this.#cdnUrl = cdnUrl;
         this.#nrCustomClientJsWrapper = nrCustomClientJsWrapper;
     }
@@ -16,15 +17,19 @@ module.exports = class ConfigsInjector {
     inject(request, registryConfig, template, slots) {
         let document = template.content;
 
-        if (typeof document !== 'string' || document.indexOf('<head>') === -1 || document.indexOf('</body>') === -1) {
+        if (
+            typeof document !== 'string' ||
+            document.indexOf('</head>') === -1 || document.indexOf('<head>') === -1 ||
+            document.indexOf('</body>') === -1 || document.indexOf('<body>') === -1
+        ) {
             throw new Error(`Can't inject ILC configs into invalid document.`);
         }
-        
-        const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);
 
+        const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);
         const ilcCss = this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.stylesheetLinks,
         );
+
         if (document.includes(this.#cssInjectionPlaceholder)) {
             document = document.replace(this.#cssInjectionPlaceholder, ilcCss);
         } else {
@@ -84,7 +89,7 @@ module.exports = class ConfigsInjector {
              * Need to save app's dependencies based on all merged apps dependencies
              * to avoid duplicate vendors preloads on client side
              * because apps may have common dependencies but from different sources
-             * 
+             *
              * @see {@path ilc/client/initSpaConfig.js}
              */
             const appDependencies = _.reduce(_.keys(appInfo.dependencies), (appDependencies, dependencyName) => {
@@ -98,21 +103,22 @@ module.exports = class ConfigsInjector {
                 routeAssets.spaBundles.push(appInfo.spaBundle);
             }
 
-            if (appInfo.cssBundle) {
+            if (
+                appInfo.cssBundle &&
+                !_.some(routeAssets.stylesheetLinks, (stylesheetLink) => _.includes(stylesheetLink, appInfo.cssBundle))
+            ) {
                 const stylesheetLink = this.#wrapWithFragmentStylesheetLink(appInfo.cssBundle, slotData.appName);
-
-                if (!_.includes(routeAssets.stylesheetLinks, stylesheetLink)) {
-                    routeAssets.stylesheetLinks.push(stylesheetLink);
-                }
+                routeAssets.stylesheetLinks.push(stylesheetLink);
             }
 
             return routeAssets;
-        }, { spaBundles: [], dependencies: {}, stylesheetLinks: [] });
+        }, {spaBundles: [], dependencies: {}, stylesheetLinks: []});
 
         const scriptRefs = _.concat([this.#getClientjsUrl()], routeAssets.spaBundles, _.values(routeAssets.dependencies));
+        const withoutDuplicateScriptRefs = _.filter(scriptRefs, (scriptRef, index, scriptRefs) => scriptRefs.indexOf(scriptRef) === index);
 
         return {
-            scriptLinks: _.map(scriptRefs, this.#wrapWithLinkToPreloadScript),
+            scriptLinks: _.map(withoutDuplicateScriptRefs, this.#wrapWithLinkToPreloadScript),
             stylesheetLinks: routeAssets.stylesheetLinks,
         };
     };
@@ -121,18 +127,18 @@ module.exports = class ConfigsInjector {
         const url = this.#getPolyfillUrl();
 
         return (
-            `<script type="text/javascript">
-                if (!(
-                    typeof window.URL === 'function' &&
-                    Object.entries &&
-                    Object.assign &&
-                    DocumentFragment.prototype.append &&
-                    Element.prototype.append &&
-                    Element.prototype.remove
-                )) {
-                    document.write('<script src="${url}" type="text/javascript" ${this.#getCrossoriginAttribute(url)}></scr' + 'ipt>');
-                }
-            </script>`
+            `<script type="text/javascript">` +
+                `if (!(` +
+                    `typeof window.URL === 'function' && ` +
+                    `Object.entries && ` +
+                    `Object.assign && ` +
+                    `DocumentFragment.prototype.append && ` +
+                    `Element.prototype.append && ` +
+                    `Element.prototype.remove` +
+                `)) {` +
+                    `document.write('<script src="${url}" type="text/javascript" ${this.#getCrossoriginAttribute(url)}></scr' + 'ipt>');` +
+                `}` +
+            `</script>`
         );
     };
 
@@ -165,7 +171,7 @@ module.exports = class ConfigsInjector {
     #wrapWithIgnoreDuringParsing = (...content) => `<!-- TailorX: Ignore during parsing START -->${content.join('')}<!-- TailorX: Ignore during parsing END -->`;
 
     #getNewRelicScript = () => {
-        let nrCode = newrelic.getBrowserTimingHeader();
+        let nrCode = this.#newrelic.getBrowserTimingHeader();
 
         if (this.#nrCustomClientJsWrapper === null || !nrCode) {
             return nrCode;
