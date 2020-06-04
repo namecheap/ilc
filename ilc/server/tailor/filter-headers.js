@@ -19,16 +19,19 @@ const ACCEPT_HEADERS = [
  * @returns {Object} New filtered header object
  */
 module.exports = (attributes, request) => {
-    const { public: isPublic } = attributes;
-    const { headers = {} } = request;
+    const {public: isPublic} = attributes;
+    const {headers = {}} = request;
     // Headers are not forwarded to public fragment for security reasons
-    return isPublic
-        ? {}
-        : Object.keys(headers).reduce((newHeaders, key) => {
-            if ((ACCEPT_HEADERS.includes(key) || key.startsWith('x-forwarded')) && headers[key]) {
-                newHeaders[key] = headers[key]
-            }
 
-            return newHeaders;
-        }, {});
+    if (isPublic) {
+        return {};
+    }
+
+    return Object.keys(headers).reduce((newHeaders, key) => {
+        if ((ACCEPT_HEADERS.includes(key) || key.startsWith('x-forwarded')) && headers[key]) {
+            newHeaders[key] = headers[key]
+        }
+
+        return newHeaders;
+    }, {});
 };
