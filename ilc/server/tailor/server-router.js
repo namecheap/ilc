@@ -71,7 +71,7 @@ module.exports = class ServerRouter {
                 if (fragmentKind === 'primary') {
                     this.#logger.warn(
                         `More then one primary slot "${slotName}" found for "${reqProps.reqUrl}".\n` +
-                        'Making it regular to avoid unexpected behaviour.'
+                        'Make it regular to avoid unexpected behaviour.'
                     );
                 }
                 delete ssrOpts.primary;
