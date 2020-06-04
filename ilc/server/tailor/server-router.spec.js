@@ -322,7 +322,8 @@ describe('server router', () => {
             page: expectedPage,
         });
         chai.expect(logger.warn.calledOnceWithExactly(
-            `More then one primary slot "apps" found for "${expectedRoute.reqUrl}". Making it regular to avoid unexpected behaviour.`
+            `More then one primary slot "apps" found for "${expectedRoute.reqUrl}".\n` +
+            'Making it regular to avoid unexpected behaviour.'
         )).to.be.true;
     });
 });

@@ -60,8 +60,8 @@ export default class ClientRouter {
 
             base.remove();
             this.#logger.warn(
-                'ILC: <base> tag was used only for initial rendering and removed afterwards. ' +
-                'Currently, ILC does not support it fully. ' +
+                'ILC: <base> tag was used only for initial rendering and removed afterwards.\n' +
+                'Currently, ILC does not support it fully.\n' +
                 'Please open an issue if you need this functionality.'
             );
         } else {
@@ -98,8 +98,8 @@ export default class ClientRouter {
         if (this.#currentRoute && this.#prevRoute.template !== this.#currentRoute.template) {
             throw new this.errors.RouterError({
                 message:
-                    'Base template was changed. ' +
-                    'Currently, ILC does not handle it. ' +
+                    'Base template was changed.\n' +
+                    'Currently, ILC does not handle it.\n' +
                     'Please open an issue if you need this functionality.',
                 data: {
                     prevTemplate: this.#prevRoute.template,
