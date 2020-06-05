@@ -251,8 +251,8 @@ describe('client router', () => {
             chai.expect(router.getPrevRouteProps('@portal/hero', 'hero')).to.be.eql(expectedRouteProps);
 
             chai.expect(logger.warn.calledOnceWithExactly(
-                'ILC: <base> tag was used only for initial rendering and removed afterwards. ' +
-                'Currently, ILC does not support it fully. ' +
+                'ILC: <base> tag was used only for initial rendering and removed afterwards.\n' +
+                'Currently, ILC does not support it fully.\n' +
                 'Please open an issue if you need this functionality.'
             )).to.be.true;
         });
@@ -352,8 +352,8 @@ describe('client router', () => {
 
                 chai.expect(eventName).to.be.eql(singleSpaBeforeRoutingEventName);
                 chai.expect(eventListener).to.throw(
-                    'Base template was changed. ' +
-                    'Currently, ILC does not handle it. ' +
+                    'Base template was changed.\n' +
+                    'Currently, ILC does not handle it.\n' +
                     'Please open an issue if you need this functionality.'
                 );
             } finally {
