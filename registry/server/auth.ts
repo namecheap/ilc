@@ -14,7 +14,7 @@ export default (app: Express, config: any): RequestHandler => {
         resave: false,
         saveUninitialized: false,
         cookie: {httpOnly: true, secure: false},
-        store: new SessionKnex({ knex: db, createtable: false, tablename: 'sessions' }),
+        store: new SessionKnex({ knex: db, createTable: false, tablename: 'sessions' }),
     }, config.session);
 
     if (app.get('env') === 'production') {
