@@ -67,7 +67,7 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
     });
 
     const updatedAppRoute = await db
-        .select('routes.id as routeId', 'route_slots.id as routeSlotId', '*')
+        .select('routes.id as routeId', 'route_slots.id as routeSlotId', 'routes.*', 'route_slots.*')
         .from('routes')
         .where('routeId', appRouteId)
         .join('route_slots', {
