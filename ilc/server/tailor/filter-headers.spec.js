@@ -38,6 +38,7 @@ describe('filter headers', () => {
 
         const request = {
             headers: {
+                'authorization': 'Bearer 12345',
                 'content-type': 'text/html',
                 'host': 'www.somewhere.com/host',
                 'accept-language': 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5',
@@ -54,6 +55,7 @@ describe('filter headers', () => {
         };
 
         chai.expect(filterHeaders(attributes, request)).to.be.eql({
+            'authorization': 'Bearer 12345',
             'accept-language': request.headers['accept-language'],
             'referer': request.headers['referer'],
             'user-agent': request.headers['user-agent'],

@@ -1,5 +1,6 @@
 'use strict';
 const ACCEPT_HEADERS = [
+    'authorization',
     'accept-language',
     'referer',
     'user-agent',
