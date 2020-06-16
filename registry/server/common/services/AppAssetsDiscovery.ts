@@ -3,6 +3,7 @@ import _ from 'lodash';
 import urljoin from 'url-join';
 
 import knex from '../../db';
+import manifestProcessor from './assetsManifestProcessor';
 
 export default class AppAssetsDiscovery {
     private timerId?: NodeJS.Timeout;
@@ -53,10 +54,7 @@ export default class AppAssetsDiscovery {
                 continue;
             }
 
-            let data = _.pick(res.data, ['spaBundle', 'cssBundle', 'dependencies']);
-            if (data.dependencies !== undefined) {
-                data.dependencies = JSON.stringify(data.dependencies);
-            }
+            let data = manifestProcessor(reqUrl, res.data);
 
             await knex('apps').where('name', app.name).update(Object.assign({}, data, {
                 assetsDiscoveryUpdatedAt: now,
