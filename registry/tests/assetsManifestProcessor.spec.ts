@@ -21,4 +21,39 @@ describe('assetsManifestProcessor', () => {
             })
         });
     });
+
+    it('handles absence of dependencies object or invalid type correctly',  () => {
+        expect(processor('https://example.com/folder/assets-discovery.js', {
+            spaBundle: 'https://example.com/aa.js',
+            cssBundle: './tst/aa.js',
+        })).to.eql({
+            spaBundle: 'https://example.com/aa.js',
+            cssBundle: 'https://example.com/folder/tst/aa.js',
+        });
+
+        expect(processor('https://example.com/folder/assets-discovery.js', {
+            spaBundle: 'https://example.com/aa.js',
+            cssBundle: './tst/aa.js',
+            dependencies: ['aaa']
+        })).to.eql({
+            spaBundle: 'https://example.com/aa.js',
+            cssBundle: 'https://example.com/folder/tst/aa.js',
+        });
+    });
+
+    it('handles absence of cssBundle correctly',  () => {
+        expect(processor('https://example.com/folder/assets-discovery.js', {
+            spaBundle: 'https://example.com/aa.js',
+        })).to.eql({
+            spaBundle: 'https://example.com/aa.js',
+        });
+    });
+
+    it('handles absence of spaBundle correctly',  () => {
+        expect(processor('https://example.com/folder/assets-discovery.js', {
+            cssBundle: 'https://example.com/aa.css',
+        })).to.eql({
+            cssBundle: 'https://example.com/aa.css',
+        });
+    });
 });
