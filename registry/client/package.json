@@ -30,7 +30,7 @@
         "webpack": "^4.42.1",
         "webpack-bundle-analyzer": "^3.3.2",
         "webpack-cli": "^3.3.11",
-        "webpack-dev-server": "^3.3.0"
+        "webpack-dev-server": "^3.11.0"
     },
     "dependencies": {
         "@babel/polyfill": "^7.0.0",
