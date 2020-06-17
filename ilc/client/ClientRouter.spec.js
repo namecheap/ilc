@@ -112,6 +112,20 @@ describe('client router', () => {
                     appName: apps['@portal/hero'].name,
                 },
             },
+        },
+        {
+            routeId: 'rootRoute',
+            route: '/',
+            next: false,
+            template: 'baseTemplate',
+            slots: {
+                opponent: {
+                    appName: apps['@portal/opponent'].name,
+                },
+                hero: {
+                    appName: apps['@portal/hero'].name,
+                },
+            },
         }
     ];
 
@@ -381,7 +395,7 @@ describe('client router', () => {
             singleSpa.navigateToUrl.resetHistory();
         });
 
-        it('should prevent click events on anchors and navigate to a registered micro front-end page', () => {
+        it('should handle click events on anchors and navigate to a registered micro front-end page', () => {
             const anchor = {
                 id: 'click-me',
                 href: registryConfig.routes[2].route,
@@ -401,7 +415,27 @@ describe('client router', () => {
             chai.expect(clickEvent.defaultPrevented).to.be.true;
         });
 
-        it('should not prevent click events on anchors when anchors do not have href attribute', () => {
+        it('should handle click events on "http(s)://domain" anchors if we have "/" route', () => {
+            const anchor = {
+                id: 'click-me',
+                href: location.origin,
+            };
+
+            anchor.ref = html`
+                <a id="${anchor.id}" href="${anchor.href}">
+                    Hi there! I am anchor tag and I have href attribute.
+                    So I should forward you to registered micro front-end page.
+                </a>
+            `;
+
+            document.body.appendChild(anchor.ref);
+            document.getElementById(anchor.id).dispatchEvent(clickEvent);
+
+            chai.expect(singleSpa.navigateToUrl.calledOnceWithExactly(anchor.href)).to.be.true;
+            chai.expect(clickEvent.defaultPrevented).to.be.true;
+        });
+
+        it('should NOT handle click events on anchors when anchors do not have href attribute', () => {
             const anchor = {
                 id: 'click-me',
             };
@@ -420,7 +454,7 @@ describe('client router', () => {
             chai.expect(clickEvent.defaultPrevented).to.be.false;
         });
 
-        it('should not prevent click events on anchors when these events were already default prevented', () => {
+        it('should NOT handle click events on anchors when these events were already default prevented', () => {
             const anchor = {
                 id: 'click-me',
                 href: registryConfig.routes[2].route,
@@ -443,7 +477,7 @@ describe('client router', () => {
             chai.expect(singleSpa.navigateToUrl.called).to.be.false;
         });
 
-        it('should not prevent click events on anchors when anchors are not going to a registered micro front-end page', () => {
+        it('should NOT handle click events on anchors when anchors are not going to a registered micro front-end page', () => {
             const anchor = {
                 id: 'click-me',
                 href: '/undefined',
