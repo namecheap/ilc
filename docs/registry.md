@@ -27,3 +27,30 @@ To correctly hash password before inserting it into DB you can use https://passw
 
 Currently there is no documentation for each API endpoint. However you can use network tab to see how UI
 communicates with API or feel free to explore code starting from here `/registry/server/app.ts` 
+
+
+## Update of the JS/CSS URLs during micro-frontends deployment
+
+It's a usual pattern to store JS/CSS files of the micro-frontend apps at CDN using unique URLs 
+(ex: `https://nc-img.com/layoutfragments-ui/app.80de7d4e36eae32662d2.js`). While following this approach we need to update 
+links to the JS/CSS bundles in registry after every deployment.
+
+To do so we have at least 3 options:
+* Manually via UI (_not recommended_)
+* Using Registry API (see API endpoints for more info)
+* **Using App Assets Discovery mechanism**
+
+While registering micro-frontend in _ILC Registry_ it's possible to set "Assets discovery url" which will be examined periodically 
+by Registry. The idea is that this file will contain actual references to the JS/CSS bundles and updated at CDN **right after** every deploy.
+
+Example file: 
+```json5
+// https://nc-img.com/layoutfragments-ui/assets-discovery.json
+{
+  "spaBundle": "https://nc-img.com/layoutfragments-ui/app.80de7d4e36eae32662d2.js",
+  "cssBundle": "./app.81340a47f3122508fd76.css", //It's possible to use relative links which will be resolved against manifest URL
+  "dependencies": {
+    "react": "https://unpkg.com/react@16.13.1/umd/react.production.min.js"
+  }
+}
+```
