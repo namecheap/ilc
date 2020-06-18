@@ -123,7 +123,7 @@ export default class ClientRouter {
         const {specialRole} = this.#router.match(pathname);
 
         if (specialRole === null) {
-            this.#navigateToUrl(pathname);
+            this.#navigateToUrl(href);
             event.preventDefault();
         }
     };
