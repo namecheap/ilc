@@ -78,6 +78,7 @@ And don't miss the **[Step-By-Step lessons about apps development with ILC](./do
 * [ILC to App interface](docs/ilc_app_interface.md)
 * [ILC Registry](./docs/registry.md) 
 * [Animation during reroute](./docs/animation_during_reroute.md)
+* [Global error handling](./docs/global_errors_handling.md)
 * [Demo applications used in quick start](https://github.com/namecheap/ilc-demo-apps)
 
 ## 🔌 Adapters
