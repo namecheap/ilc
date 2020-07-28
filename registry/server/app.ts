@@ -10,7 +10,7 @@ import errorHandler from './errorHandler';
 import serveStatic from 'serve-static';
 import auth from './auth';
 
-export default (withAuth: boolean = true) => {
+export default async (withAuth: boolean = true) => {
     // As in production there can be 2+ instances of the ILC registry
     // AppAssetsDiscovery should be run separately via "npm run assetsdiscovery"
     !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAppAssetsDiscovery');
@@ -25,7 +25,7 @@ export default (withAuth: boolean = true) => {
 
     let authMw: RequestHandler = (req, res, next) => next();
     if (withAuth) {
-        authMw = auth(app, {
+        authMw = await auth(app, {
             session: {secret: config.get('auth.sessionSecret')}
         });
     }

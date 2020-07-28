@@ -1,3 +1,5 @@
+import Cookies from 'js-cookie';
+
 // Authenticatd by default
 export default {
     login: ({ username, password }) => {
@@ -11,19 +13,15 @@ export default {
                 if (response.status < 200 || response.status >= 300) {
                     throw new Error(response.statusText);
                 }
-                return response.json();
-            })
-            .then((userInfo) => {
-                localStorage.setItem('ilc:userInfo', JSON.stringify(userInfo));
             });
     },
     logout: () => {
+        Cookies.remove('ilc:userInfo');
         return fetch('/logout')
             .then(response => {
                 if (response.status < 200 || response.status >= 300) {
                     throw new Error(response.statusText);
                 }
-                localStorage.removeItem('ilc:userInfo');
             });
     },
     checkError: ({ status }) => {
@@ -32,12 +30,12 @@ export default {
             : Promise.resolve();
     },
     checkAuth: () => {
-        return localStorage.getItem('ilc:userInfo')
+        return Cookies.get('ilc:userInfo')
             ? Promise.resolve()
             : Promise.reject();
     },
     getPermissions: () => {
-        const userInfo = localStorage.getItem('ilc:userInfo');
-        return userInfo ? Promise.resolve(JSON.parse(userInfo).role) : Promise.reject();
+        const userInfo = Cookies.getJSON('ilc:userInfo');
+        return userInfo ? Promise.resolve(userInfo.role) : Promise.reject();
     },
 };

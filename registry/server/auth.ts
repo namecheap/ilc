@@ -5,10 +5,16 @@ import sessionKnex from 'connect-session-knex';
 import {Express, RequestHandler} from 'express';
 import {Strategy as BearerStrategy} from 'passport-http-bearer';
 import * as bcrypt from 'bcrypt';
+import {
+    Issuer as OIDCIssuer,
+    Strategy as OIDCStrategy,
+    TokenSet,
+    UserinfoResponse
+} from 'openid-client';
 
 import db from './db';
 
-export default (app: Express, config: any): RequestHandler => {
+export default async (app: Express, config: any): Promise<RequestHandler> => {
     const SessionKnex = sessionKnex(session);
     const sessionConfig = Object.assign({
         resave: false,
@@ -23,6 +29,46 @@ export default (app: Express, config: any): RequestHandler => {
     }
 
     app.use(session(sessionConfig));
+
+    const issuer = await OIDCIssuer.discover('XXXX'); // => Promise
+
+    console.log('Discovered issuer %s %O', issuer.issuer, issuer.metadata);
+    const client = new issuer.Client({
+        client_id: 'XXXX',
+        client_secret: 'XXXX',
+        redirect_uris: ['http://localhost:4001/auth/openid/return'],
+        response_types: ['code'],
+    });
+
+    passport.use('openid', new OIDCStrategy(
+        {
+            client,
+            params: { scope: 'profile openid email' }
+        },
+        async function(tokenSet: TokenSet, userinfo: UserinfoResponse, done: any) {
+            try {
+                if (tokenSet.expired()) {
+                    return done(null, false);
+                }
+
+                const claims = tokenSet.claims();
+                console.log('Token claims:');
+                console.log(claims);
+                console.log('User info:');
+                console.log(userinfo);
+                console.log('Auth token:');
+                console.log(tokenSet.access_token);
+
+                const user = await getEntityWithCreds('openid', claims.unique_name as string, null);
+                if (!user) {
+                    return done(null, false);
+                }
+
+                return done(null, user);
+            } catch (e) {
+                return done(e);
+            }
+        }));
 
 
     passport.use(new LocalStrategy(async function(username, password, done) {
@@ -71,12 +117,40 @@ export default (app: Express, config: any): RequestHandler => {
     app.use(passport.initialize());
     app.use(passport.session());
 
+
+
+    // Accept the OpenID identifier and redirect the user to their OpenID
+    // provider for authentication.  When complete, the provider will redirect
+    // the user back to the application at:
+    //     /auth/openid/return
+    app.get('/auth/openid', passport.authenticate('openid'));
+
+    // The OpenID provider has redirected the user back to the application.
+    // Finish the authentication process by verifying the assertion.  If valid,
+    // the user will be logged in.  Otherwise, authentication has failed.
+    app.get('/auth/openid/return',
+        passport.authenticate('openid', { failureRedirect: '/' }),
+        (req, res) => {
+            res.cookie('ilc:userInfo', JSON.stringify(req.user));
+            res.redirect('/');
+        });
+
+    app.get('/auth/myinfo', (req, res) => {
+        if (req.user) {
+            return res.json(req.user);
+        }
+
+        return res.sendStatus(401);
+    });
+
     app.post('/login', passport.authenticate(['local']), (req, res) => {
-        res.json(req.user);
+        res.cookie('ilc:userInfo', JSON.stringify(req.user));
+        res.send('ok');
     });
 
     app.get('/logout', function(req, res){
         req.logout();
+        res.clearCookie('ilc:userInfo');
         res.redirect('/');
     });
 
@@ -89,7 +163,7 @@ export default (app: Express, config: any): RequestHandler => {
     };
 }
 
-async function getEntityWithCreds(provider: string, identifier: string, secret: string):Promise<object|null> {
+async function getEntityWithCreds(provider: string, identifier: string, secret: string|null):Promise<object|null> {
     const user = await db.select().from('auth_entities')
         .first('identifier', 'role', 'secret')
         .where({
@@ -99,8 +173,11 @@ async function getEntityWithCreds(provider: string, identifier: string, secret: 
     if (!user) {
         return null;
     }
-    if (!await bcrypt.compare(secret, user.secret)) {
-        return null;
+
+    if (secret !== null || user.secret !== null) { //Support of the password less auth methods, like OpenID Connect
+        if (!await bcrypt.compare(secret, user.secret)) {
+            return null;
+        }
     }
 
     delete user.secret;
