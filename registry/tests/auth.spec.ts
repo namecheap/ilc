@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import supertest, {agent as supertestAgent} from 'supertest';
+import settingsService from '../server/settings/services/SettingsService';
 
 import auth from '../server/auth';
 
@@ -9,7 +10,7 @@ const getApp = () => {
 
     app.use(bodyParser.json());
 
-    app.use(auth(app, {
+    app.use(auth(app, settingsService, {
         session: {secret: 'testSecret'}
     }));
 
@@ -18,7 +19,7 @@ const getApp = () => {
     return app;
 };
 
-describe('Authentication / Authorization', () => {
+describe.only('Authentication / Authorization', () => {
     const request = supertest(getApp());
     //It's hardcoded in DB migrations
     const authToken = Buffer.from('root_api_token', 'utf8').toString('base64')
@@ -48,18 +49,16 @@ describe('Authentication / Authorization', () => {
         const agent = supertestAgent(getApp());
 
         it('should authenticate with correct creds', async () => {
-            await agent.post('/login')
+            await agent.post('/auth/local')
                 .set('Content-Type', 'application/json')
                 .send({
                     //It's hardcoded in DB migrations
                     username: 'root',
                     password: 'pwd',
                 })
-                .expect(200, {
-                    identifier: 'root',
-                    role: 'admin',
-                })
-                .expect('set-cookie', /connect\.sid=.+; Path=\/; HttpOnly/);
+                .expect(200)
+                .expect('set-cookie', /connect\.sid=.+; Path=\/; HttpOnly/)
+                .expect('set-cookie', /ilc:userInfo=%7B%22identifier%22%3A%22root%22%2C%22role%22%3A%22admin%22%7D; Path=\//);
         });
 
         it('should respect session cookie', async () => {
@@ -68,7 +67,7 @@ describe('Authentication / Authorization', () => {
         });
 
         it('should correctly logout', async () => {
-            await agent.get('/logout')
+            await agent.get('/auth/logout')
                 .expect(302);
 
             await agent.get('/protected')
