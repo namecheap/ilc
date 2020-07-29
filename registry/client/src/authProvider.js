@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 // Authenticatd by default
 export default {
     login: ({ username, password }) => {
-        const request = new Request('/login', {
+        const request = new Request('/auth/local', {
             method: 'POST',
             body: JSON.stringify({ username, password }),
             headers: new Headers({ 'Content-Type': 'application/json' }),
@@ -17,7 +17,7 @@ export default {
     },
     logout: () => {
         Cookies.remove('ilc:userInfo');
-        return fetch('/logout')
+        return fetch('/auth/logout')
             .then(response => {
                 if (response.status < 200 || response.status >= 300) {
                     throw new Error(response.statusText);

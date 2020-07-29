@@ -5,16 +5,14 @@ import sessionKnex from 'connect-session-knex';
 import {Express, RequestHandler} from 'express';
 import {Strategy as BearerStrategy} from 'passport-http-bearer';
 import * as bcrypt from 'bcrypt';
-import {
-    Issuer as OIDCIssuer,
-    Strategy as OIDCStrategy,
-    TokenSet,
-    UserinfoResponse
-} from 'openid-client';
+import {Issuer as OIDCIssuer, Strategy as OIDCStrategy, TokenSet, UserinfoResponse} from 'openid-client';
 
 import db from './db';
+import {SettingsService} from "./settings/services/SettingsService";
+import {SettingKeys} from "./settings/interfaces";
+import urljoin from 'url-join';
 
-export default async (app: Express, config: any): Promise<RequestHandler> => {
+export default async (app: Express, settingsService: SettingsService, config: any): Promise<RequestHandler> => {
     const SessionKnex = sessionKnex(session);
     const sessionConfig = Object.assign({
         resave: false,
@@ -29,46 +27,6 @@ export default async (app: Express, config: any): Promise<RequestHandler> => {
     }
 
     app.use(session(sessionConfig));
-
-    const issuer = await OIDCIssuer.discover('XXXX'); // => Promise
-
-    console.log('Discovered issuer %s %O', issuer.issuer, issuer.metadata);
-    const client = new issuer.Client({
-        client_id: 'XXXX',
-        client_secret: 'XXXX',
-        redirect_uris: ['http://localhost:4001/auth/openid/return'],
-        response_types: ['code'],
-    });
-
-    passport.use('openid', new OIDCStrategy(
-        {
-            client,
-            params: { scope: 'profile openid email' }
-        },
-        async function(tokenSet: TokenSet, userinfo: UserinfoResponse, done: any) {
-            try {
-                if (tokenSet.expired()) {
-                    return done(null, false);
-                }
-
-                const claims = tokenSet.claims();
-                console.log('Token claims:');
-                console.log(claims);
-                console.log('User info:');
-                console.log(userinfo);
-                console.log('Auth token:');
-                console.log(tokenSet.access_token);
-
-                const user = await getEntityWithCreds('openid', claims.unique_name as string, null);
-                if (!user) {
-                    return done(null, false);
-                }
-
-                return done(null, user);
-            } catch (e) {
-                return done(e);
-            }
-        }));
 
 
     passport.use(new LocalStrategy(async function(username, password, done) {
@@ -123,32 +81,94 @@ export default async (app: Express, config: any): Promise<RequestHandler> => {
     // provider for authentication.  When complete, the provider will redirect
     // the user back to the application at:
     //     /auth/openid/return
-    app.get('/auth/openid', passport.authenticate('openid'));
+    app.get('/auth/openid', async (req, res, next) => {
+        if (await settingsService.get(SettingKeys.AuthOpenIdEnabled) === false) {
+            return res.sendStatus(404);
+        }
+        if (req.user) {
+            return res.redirect('/');
+        }
+
+        const callerId = 'auth';
+        const keysToWatch = [
+            SettingKeys.AuthOpenIdClientId,
+            SettingKeys.AuthOpenIdClientSecret,
+            SettingKeys.BaseUrl
+        ];
+        if (await settingsService.hasChanged(callerId, keysToWatch)) {
+            console.log('Change of the OpenID authentication config detected. Reinitializing auth backend...');
+            passport.unuse('openid');
+
+            const issuer = await OIDCIssuer.discover(await settingsService.get(SettingKeys.AuthOpenIdDiscoveryUrl, callerId)); // => Promise
+
+            console.log('Discovered issuer %s %O', issuer.issuer, issuer.metadata);
+            const client = new issuer.Client({
+                client_id: await settingsService.get(SettingKeys.AuthOpenIdClientId, callerId),
+                client_secret: await settingsService.get(SettingKeys.AuthOpenIdClientSecret, callerId),
+                redirect_uris: [urljoin(await settingsService.get(SettingKeys.BaseUrl, callerId), '/auth/openid/return')],
+                response_types: ['code'],
+            });
+
+            passport.use('openid', new OIDCStrategy(
+                {
+                    client,
+                    params: { scope: 'profile openid email' }
+                },
+                async function(tokenSet: TokenSet, userinfo: UserinfoResponse, done: any) {
+                    try {
+                        if (tokenSet.expired()) {
+                            return done(null, false);
+                        }
+
+                        const claims = tokenSet.claims();
+                        console.log('Token claims:');
+                        console.log(claims);
+                        console.log('User info:');
+                        console.log(userinfo);
+                        console.log('Auth token:');
+                        console.log(tokenSet.access_token);
+
+                        const user = await getEntityWithCreds('openid', claims.unique_name as string, null);
+                        if (!user) {
+                            return done(null, false);
+                        }
+
+                        return done(null, user);
+                    } catch (e) {
+                        return done(e);
+                    }
+                })
+            );
+        }
+
+        next();
+    }, passport.authenticate('openid'));
 
     // The OpenID provider has redirected the user back to the application.
     // Finish the authentication process by verifying the assertion.  If valid,
     // the user will be logged in.  Otherwise, authentication has failed.
     app.get('/auth/openid/return',
+        async (req, res, next) => {
+            if (await settingsService.get(SettingKeys.AuthOpenIdEnabled) === true) {
+                return next();
+            }
+
+            res.sendStatus(404);
+        },
         passport.authenticate('openid', { failureRedirect: '/' }),
         (req, res) => {
             res.cookie('ilc:userInfo', JSON.stringify(req.user));
             res.redirect('/');
-        });
-
-    app.get('/auth/myinfo', (req, res) => {
-        if (req.user) {
-            return res.json(req.user);
         }
+    );
 
-        return res.sendStatus(401);
-    });
-
-    app.post('/login', passport.authenticate(['local']), (req, res) => {
+    // Accept passed username/password pair & perform an attempt to authenticate against local DB
+    app.post('/auth/local', passport.authenticate(['local']), (req, res) => {
         res.cookie('ilc:userInfo', JSON.stringify(req.user));
         res.send('ok');
     });
 
-    app.get('/logout', function(req, res){
+    app.get('/auth/logout', function(req, res){
         req.logout();
         res.clearCookie('ilc:userInfo');
         res.redirect('/');

@@ -9,6 +9,7 @@ import * as routes from "./routes";
 import errorHandler from './errorHandler';
 import serveStatic from 'serve-static';
 import auth from './auth';
+import settingsService from './settings/services/SettingsService';
 
 export default async (withAuth: boolean = true) => {
     // As in production there can be 2+ instances of the ILC registry
@@ -25,7 +26,7 @@ export default async (withAuth: boolean = true) => {
 
     let authMw: RequestHandler = (req, res, next) => next();
     if (withAuth) {
-        authMw = await auth(app, {
+        authMw = await auth(app, settingsService, {
             session: {secret: config.get('auth.sessionSecret')}
         });
     }
