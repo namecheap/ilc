@@ -36,6 +36,7 @@ export default (withAuth: boolean = true) => {
     app.use('/api/v1/template', routes.templates(authMw));
     app.use('/api/v1/route', authMw, routes.appRoutes);
     app.use('/api/v1/shared_props', authMw, routes.sharedProps);
+    app.use('/api/v1/auth_entities', authMw, routes.authEntities);
 
     app.use(errorHandler);
 
