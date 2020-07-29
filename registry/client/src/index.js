@@ -12,6 +12,7 @@ import apps from './apps';
 import sharedProps from './sharedProps';
 import templates from './templates';
 import appRoutes from './appRoutes';
+import authEntities from './authEntities';
 
 render(
     <Admin
@@ -26,6 +27,7 @@ render(
             <Resource name="shared_props" {...sharedProps} />,
             <Resource name="template" {...templates} />,
             <Resource name="route" {...appRoutes} />,
+            <Resource name="auth_entities" {...authEntities} />,
         ]}
     </Admin>,
     document.getElementById('root')

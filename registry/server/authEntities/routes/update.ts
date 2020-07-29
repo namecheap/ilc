@@ -8,10 +8,10 @@ import _ from 'lodash/fp';
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import { stringifyJSON } from '../../common/services/json';
 import AuthEntity, {
     updateSchema,
 } from '../interfaces';
+import * as bcrypt from "bcrypt";
 
 type RequestParams = {
     id: string
@@ -38,6 +38,10 @@ const updateSharedProps = async (req: Request<RequestParams>, res: Response): Pr
     if (!countToUpdate.length) {
         res.status(404).send('Not found');
         return;
+    }
+
+    if (input.secret) {
+        input.secret = await bcrypt.hash(input.secret, await bcrypt.genSalt());
     }
 
     await db('auth_entities').where({ id: recordId }).update(input);

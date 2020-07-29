@@ -32,7 +32,6 @@ export const updateSchema = Joi.object({
     ...commonSchema,
     id: Joi.number().forbidden(),
     identifier: commonSchema.identifier.forbidden(),
-    secret: commonSchema.secret.forbidden(),
     provider: commonSchema.provider.forbidden(),
 });
 
