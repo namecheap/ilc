@@ -168,10 +168,20 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
         res.send('ok');
     });
 
-    app.get('/auth/logout', function(req, res){
+    app.get('/auth/logout', (req, res) => {
         req.logout();
         res.clearCookie('ilc:userInfo');
         res.redirect('/');
+    });
+
+    app.get('/auth/available-methods', async (req, res) => {
+        const availableMethods = ['local'];
+
+        if (await settingsService.get(SettingKeys.AuthOpenIdEnabled) === true) {
+            availableMethods.push('openid');
+        }
+
+        res.json(availableMethods);
     });
 
     return (req: any, res: any, next: any) => {
