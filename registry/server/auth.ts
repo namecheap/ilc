@@ -12,7 +12,7 @@ import {SettingsService} from "./settings/services/SettingsService";
 import {SettingKeys} from "./settings/interfaces";
 import urljoin from 'url-join';
 
-export default async (app: Express, settingsService: SettingsService, config: any): Promise<RequestHandler> => {
+export default (app: Express, settingsService: SettingsService, config: any): RequestHandler => {
     const SessionKnex = sessionKnex(session);
     const sessionConfig = Object.assign({
         resave: false,
