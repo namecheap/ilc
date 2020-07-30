@@ -1,3 +1,4 @@
+import tk from 'timekeeper';
 import express, {NextFunction, Request, Response} from 'express';
 import bodyParser from 'body-parser';
 import sinon from 'sinon';
@@ -34,6 +35,11 @@ describe('Authentication / Authorization', () => {
     const authToken = Buffer.from('root_api_token', 'utf8').toString('base64')
         + ':'
         + Buffer.from('token_secret', 'utf8').toString('base64');
+
+    // 1 minute before test JWT token expiration
+    // necessary for JWT signature validation
+    before(() => tk.travel(new Date(1596125628000)));
+    after(() => tk.reset());
 
     afterEach(() => {
         sinon.restore();
