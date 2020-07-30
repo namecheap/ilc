@@ -9,7 +9,7 @@ export class SettingsService {
         [SettingKeys.AuthOpenIdClientId]: '',
         [SettingKeys.AuthOpenIdClientSecret]: '',
         [SettingKeys.AuthOpenIdResponseMode]: 'query',
-        [SettingKeys.AuthOpenIdIdentityClaimName]: 'unique_name',
+        [SettingKeys.AuthOpenIdIdentifierClaimName]: 'unique_name',
         [SettingKeys.AuthOpenIdRequestedScopes]: 'openid',
     };
 

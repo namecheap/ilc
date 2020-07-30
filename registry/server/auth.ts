@@ -95,7 +95,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
             SettingKeys.AuthOpenIdClientSecret,
             SettingKeys.BaseUrl,
             SettingKeys.AuthOpenIdResponseMode,
-            SettingKeys.AuthOpenIdIdentityClaimName,
+            SettingKeys.AuthOpenIdIdentifierClaimName,
             SettingKeys.AuthOpenIdRequestedScopes,
         ];
         if (await settingsService.hasChanged(callerId, keysToWatch)) {
@@ -123,23 +123,29 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
                 async function(tokenSet: TokenSet/*, userinfo: UserinfoResponse*/, done: any) {
                     try {
                         if (tokenSet.expired()) {
-                            return done(null, false, { message: 'Expired OpenId token' });
+                            return done(null, false, { message: 'Expired OpenID token' });
                         }
 
                         const claims = tokenSet.claims();
-                        const idClaimName = await settingsService.get(SettingKeys.AuthOpenIdIdentityClaimName, callerId)
-                        // console.log('ID Token claims:');
-                        // console.log(claims);
-                        // //console.log('User info:');
-                        // //console.log(userinfo);
-                        // console.log('Auth token:');
-                        // console.log(tokenSet.access_token);
-                        // console.log('id_token:');
-                        // console.log(tokenSet.id_token);
+                        const idClaimName = await settingsService.get(SettingKeys.AuthOpenIdIdentifierClaimName, callerId);
 
-                        const user = await getEntityWithCreds('openid', claims[idClaimName] as string, null);
+                        let identifiers: string[] = claims[idClaimName] as any;
+                        if (!identifiers) {
+                            return done(null, false, { message: 'Can\'t find user identifier using IdentityClaimName' });
+                        } else if (!Array.isArray(identifiers)) {
+                            identifiers = [identifiers];
+                        }
+
+                        let user: any;
+                        for (let id of identifiers) {
+                            user = await getEntityWithCreds('openid', id, null);
+                            if (user) {
+                                break;
+                            }
+                        }
+
                         if (!user) {
-                            return done(null, false, { message: `Can\'t find presented identifier "${claims[idClaimName]}" in auth entities list` });
+                            return done(null, false, { message: `Can\'t find presented identifiers "${identifiers.toString()}" in auth entities list` });
                         }
 
                         return done(null, user);

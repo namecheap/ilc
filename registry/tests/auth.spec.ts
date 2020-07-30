@@ -146,7 +146,7 @@ describe('Authentication / Authorization', () => {
                 getStub.withArgs(SettingKeys.AuthOpenIdDiscoveryUrl).returns(Promise.resolve('https://adfs.service.namecheap.com/adfs/'));
                 getStub.withArgs(SettingKeys.AuthOpenIdClientId).returns(Promise.resolve('ba05c345-e144-4688-b0be-3e1097ddd32d'));
                 getStub.withArgs(SettingKeys.AuthOpenIdClientSecret).returns(Promise.resolve('test'));
-                getStub.withArgs(SettingKeys.AuthOpenIdIdentityClaimName).returns(Promise.resolve('email'));
+                getStub.withArgs(SettingKeys.AuthOpenIdIdentifierClaimName).returns(Promise.resolve('email'));
             });
 
             it('should fail against OpenID server for unknown auth entity', async () => {
@@ -158,7 +158,7 @@ describe('Authentication / Authorization', () => {
 
                 await agent.get(`/auth/openid/return?code=AAAAAAAAAAAAAAAAAAAAAA.7UjvqJE02Ag0ALN4QpjqgYZze6I.cStoX13h4k_jZPkfxNvFYEK8Vh4Vr1bAomKpI72xC457l5qyppB4pVq9YNyx-DFx6n9c7eWL4S36g-pa1dXd-KvwI32CjaadHDwfBogpGnBXX12_ytUsU8XIG0oRJrAix7MEDtHf1B_0W2DTO6cAJz8FUOTAh_VQ4QOETxnm458tHFu6iZvN5InmIVr5WILzFBhDnpaJEZzLgmKeYW5voCaoGa2gacPb7J5PJ0RBqP01JCi-K6XtIuO3JZNDikE9RlW2u5nKeaaojn6eRZKGu88NLywvjBXSzoMw5VfR9bH-RyaKe01QVtefeiY6ROGXNtdxw0i2K2a-YoG6SH49xA&state=${sessionState}`)
                     .expect(401)
-                    .expect(`<pre>Can't find presented identifier "vladlen.f@namecheap.com" in auth entities list</pre><br><a href="/">Go to main page</a>`);
+                    .expect(`<pre>Can't find presented identifiers "vladlen.f@namecheap.com" in auth entities list</pre><br><a href="/">Go to main page</a>`);
 
                 await agent.get('/protected')
                     .expect(401);
