@@ -7,6 +7,7 @@ export const enum SettingKeys {
     AuthOpenIdDiscoveryUrl = 'auth.openid.discoveryUrl',
     AuthOpenIdClientId = 'auth.openid.clientId',
     AuthOpenIdClientSecret = 'auth.openid.clientSecret',
+    AuthOpenIdResponseMode = 'auth.openid.responseMode',
 }
 
 export interface Setting {

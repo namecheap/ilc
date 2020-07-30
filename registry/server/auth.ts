@@ -93,7 +93,8 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
         const keysToWatch = [
             SettingKeys.AuthOpenIdClientId,
             SettingKeys.AuthOpenIdClientSecret,
-            SettingKeys.BaseUrl
+            SettingKeys.BaseUrl,
+            SettingKeys.AuthOpenIdResponseMode,
         ];
         if (await settingsService.hasChanged(callerId, keysToWatch)) {
             console.log('Change of the OpenID authentication config detected. Reinitializing auth backend...');
@@ -112,7 +113,10 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
             passport.use('openid', new OIDCStrategy(
                 {
                     client,
-                    params: { scope: 'profile openid email' }
+                    params: {
+                        scope: 'profile openid email',
+                        response_mode: await settingsService.get(SettingKeys.AuthOpenIdResponseMode, callerId),
+                    }
                 },
                 async function(tokenSet: TokenSet, userinfo: UserinfoResponse, done: any) {
                     try {
@@ -121,12 +125,14 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
                         }
 
                         const claims = tokenSet.claims();
-                        console.log('Token claims:');
+                        console.log('ID Token claims:');
                         console.log(claims);
                         console.log('User info:');
                         console.log(userinfo);
                         console.log('Auth token:');
                         console.log(tokenSet.access_token);
+                        console.log('id_token:');
+                        console.log(tokenSet.id_token);
 
                         const user = await getEntityWithCreds('openid', claims.unique_name as string, null);
                         if (!user) {
@@ -147,7 +153,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
     // The OpenID provider has redirected the user back to the application.
     // Finish the authentication process by verifying the assertion.  If valid,
     // the user will be logged in.  Otherwise, authentication has failed.
-    app.get('/auth/openid/return',
+    const openidReturnHandlers: RequestHandler[] = [
         async (req, res, next) => {
             if (await settingsService.get(SettingKeys.AuthOpenIdEnabled) === true) {
                 return next();
@@ -160,7 +166,9 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
             res.cookie('ilc:userInfo', JSON.stringify(req.user));
             res.redirect('/');
         }
-    );
+    ];
+    app.get('/auth/openid/return', openidReturnHandlers); //Regular flow
+    app.post('/auth/openid/return', openidReturnHandlers); //response_mode: 'form_post' flow
 
     // Accept passed username/password pair & perform an attempt to authenticate against local DB
     app.post('/auth/local', passport.authenticate(['local']), (req, res) => {

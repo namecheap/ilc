@@ -8,6 +8,7 @@ export class SettingsService {
         [SettingKeys.AuthOpenIdDiscoveryUrl]: '',
         [SettingKeys.AuthOpenIdClientId]: '',
         [SettingKeys.AuthOpenIdClientSecret]: '',
+        [SettingKeys.AuthOpenIdResponseMode]: 'query',
     };
 
     private changesTracking: any = {};

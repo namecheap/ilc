@@ -19,6 +19,7 @@ export default (withAuth: boolean = true) => {
     const app = express();
 
     app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded());
 
     app.get('/ping', pong);
 
