@@ -123,7 +123,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
                 async function(tokenSet: TokenSet/*, userinfo: UserinfoResponse*/, done: any) {
                     try {
                         if (tokenSet.expired()) {
-                            return done(null, false);
+                            return done(null, false, { message: 'Expired OpenId token' });
                         }
 
                         const claims = tokenSet.claims();
@@ -139,7 +139,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
 
                         const user = await getEntityWithCreds('openid', claims[idClaimName] as string, null);
                         if (!user) {
-                            return done(null, false);
+                            return done(null, false, { message: `Can\'t find presented identifier "${claims[idClaimName]}" in auth entities list` });
                         }
 
                         return done(null, user);
@@ -164,10 +164,25 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
 
             res.sendStatus(404);
         },
-        passport.authenticate('openid', { failureRedirect: '/' }),
-        (req, res) => {
-            res.cookie('ilc:userInfo', JSON.stringify(req.user));
-            res.redirect('/');
+        (req, res, next) => {
+            passport.authenticate('openid', function(err, user, info) {
+                if (err) {
+                    return next(err);
+                }
+                if (!user) {
+                    res.status(401);
+                    res.header('Content-type', 'text/html');
+                    return res.end(`<pre>${info.message}</pre><br><a href="/">Go to main page</a>`);
+                }
+                req.logIn(user, function(err) {
+                    if (err) {
+                        return next(err);
+                    }
+
+                    res.cookie('ilc:userInfo', JSON.stringify(user));
+                    return res.redirect('/');
+                });
+            })(req, res, next);
         }
     ];
     app.get('/auth/openid/return', openidReturnHandlers); //Regular flow
