@@ -8,6 +8,8 @@ export const enum SettingKeys {
     AuthOpenIdClientId = 'auth.openid.clientId',
     AuthOpenIdClientSecret = 'auth.openid.clientSecret',
     AuthOpenIdResponseMode = 'auth.openid.responseMode',
+    AuthOpenIdIdentityClaimName = 'auth.openid.idClaimName',
+    AuthOpenIdRequestedScopes = 'auth.openid.requestedScopes',
 }
 
 export interface Setting {

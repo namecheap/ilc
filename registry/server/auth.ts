@@ -95,6 +95,8 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
             SettingKeys.AuthOpenIdClientSecret,
             SettingKeys.BaseUrl,
             SettingKeys.AuthOpenIdResponseMode,
+            SettingKeys.AuthOpenIdIdentityClaimName,
+            SettingKeys.AuthOpenIdRequestedScopes,
         ];
         if (await settingsService.hasChanged(callerId, keysToWatch)) {
             console.log('Change of the OpenID authentication config detected. Reinitializing auth backend...');
@@ -102,7 +104,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
 
             const issuer = await OIDCIssuer.discover(await settingsService.get(SettingKeys.AuthOpenIdDiscoveryUrl, callerId)); // => Promise
 
-            console.log('Discovered issuer %s %O', issuer.issuer, issuer.metadata);
+            //console.log('Discovered issuer %s %O', issuer.issuer, issuer.metadata);
             const client = new issuer.Client({
                 client_id: await settingsService.get(SettingKeys.AuthOpenIdClientId, callerId),
                 client_secret: await settingsService.get(SettingKeys.AuthOpenIdClientSecret, callerId),
@@ -114,27 +116,28 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
                 {
                     client,
                     params: {
-                        scope: 'profile openid email',
+                        scope: await settingsService.get(SettingKeys.AuthOpenIdRequestedScopes, callerId),
                         response_mode: await settingsService.get(SettingKeys.AuthOpenIdResponseMode, callerId),
                     }
                 },
-                async function(tokenSet: TokenSet, userinfo: UserinfoResponse, done: any) {
+                async function(tokenSet: TokenSet/*, userinfo: UserinfoResponse*/, done: any) {
                     try {
                         if (tokenSet.expired()) {
                             return done(null, false);
                         }
 
                         const claims = tokenSet.claims();
-                        console.log('ID Token claims:');
-                        console.log(claims);
-                        console.log('User info:');
-                        console.log(userinfo);
-                        console.log('Auth token:');
-                        console.log(tokenSet.access_token);
-                        console.log('id_token:');
-                        console.log(tokenSet.id_token);
+                        const idClaimName = await settingsService.get(SettingKeys.AuthOpenIdIdentityClaimName, callerId)
+                        // console.log('ID Token claims:');
+                        // console.log(claims);
+                        // //console.log('User info:');
+                        // //console.log(userinfo);
+                        // console.log('Auth token:');
+                        // console.log(tokenSet.access_token);
+                        // console.log('id_token:');
+                        // console.log(tokenSet.id_token);
 
-                        const user = await getEntityWithCreds('openid', claims.unique_name as string, null);
+                        const user = await getEntityWithCreds('openid', claims[idClaimName] as string, null);
                         if (!user) {
                             return done(null, false);
                         }
