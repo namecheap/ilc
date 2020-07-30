@@ -153,9 +153,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
         next();
     }, passport.authenticate('openid'));
 
-    // The OpenID provider has redirected the user back to the application.
-    // Finish the authentication process by verifying the assertion.  If valid,
-    // the user will be logged in.  Otherwise, authentication has failed.
+
     const openidReturnHandlers: RequestHandler[] = [
         async (req, res, next) => {
             if (await settingsService.get(SettingKeys.AuthOpenIdEnabled) === true) {
@@ -185,6 +183,9 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
             })(req, res, next);
         }
     ];
+    // The OpenID provider has redirected the user back to the application.
+    // Finish the authentication process by verifying the assertion.  If valid,
+    // the user will be logged in.  Otherwise, authentication has failed.
     app.get('/auth/openid/return', openidReturnHandlers); //Regular flow
     app.post('/auth/openid/return', openidReturnHandlers); //response_mode: 'form_post' flow
 
