@@ -9,15 +9,35 @@ It's available at `4001` port by default (use http://127.0.0.1:4001 for locally 
 
 Currently Registry supports authentication only, all authenticated entities will receive all permissions possible.
 
-As for now we support 2 authentication providers:
+As for now we support 3 authentication providers:
 
+- OpenID Connect. **Turned off by default.**
 - Locally configured login/password. **Default credentials:** root / pwd
 - Locally configured Bearer token for API machine-to-machine access. 
 **Default credentials:** `Bearer cm9vdF9hcGlfdG9rZW4=:dG9rZW5fc2VjcmV0` (after base64 decode it's `Bearer root_api_token:token_secret`).
 
-Default credentials can be changed by editing data in `auth_entities` table. No API is available for now.
+Default credentials can be changed via "Auth entities" page through UI (or via API).
 
-To correctly hash password before inserting it into DB you can use https://passwordhashing.com/BCrypt
+### OpenID Configuration
+
+Currently it's only possible to configure OpenID auth method by manually editing values in `settings`
+DB table. 
+
+Available options list can be [checked here](../registry/server/settings/interfaces/index.ts#L4).
+While the default values are [located here](../registry/server/settings/services/SettingsService.ts#L5).
+
+Sample configuration (_note that values are JSON encoded_):
+
+| key | value |
+|---|---|
+|`baseUrl`| `"https://ilc-registry.example.com/"`|
+|`auth.openid.enabled`| `true`|
+|`auth.openid.discoveryUrl`| `"https://adfs.example.com/adfs/"`|
+|`auth.openid.clientId`| `"ba34c345-e543-6554-b0be-3e1097ddd32d"`|
+|`auth.openid.clientSecret`| `"XXXXXX"`|
+
+> Attention:
+  OpenID Connect returnURL should be specified at provider as follows: `{baseUrl}/auth/openid/return`
 
 ## User Interface
 
