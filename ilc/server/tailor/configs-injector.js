@@ -90,7 +90,7 @@ module.exports = class ConfigsInjector {
              * to avoid duplicate vendors preloads on client side
              * because apps may have common dependencies but from different sources
              *
-             * @see {@path ilc/client/initSpaConfig.js}
+             * @see {@path ilc/client/initIlcConfig.js}
              */
             const appDependencies = _.reduce(_.keys(appInfo.dependencies), (appDependencies, dependencyName) => {
                 appDependencies[dependencyName] = appsDependencies[dependencyName];
@@ -149,7 +149,7 @@ module.exports = class ConfigsInjector {
         const apps = _.mapValues(registryConfig.apps, v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind']));
         const spaConfig = JSON.stringify(_.omit({...registryConfig, apps}, ['templates']));
 
-        return `<script type="spa-config">${spaConfig}</script>`;
+        return `<script type="ilc-config">${spaConfig}</script>`;
     };
 
     #wrapWithAsyncScriptTag = (url) => {
