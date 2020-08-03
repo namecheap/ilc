@@ -15,7 +15,7 @@ export default class ClientRouter {
     #prevRoute;
     #currentRoute;
 
-    constructor(registryConf, navigateToUrl, location = window.location, logger = window.console) {
+    constructor(registryConf, state, navigateToUrl, location = window.location, logger = window.console) {
         this.#navigateToUrl = navigateToUrl;
         this.#location = location;
         this.#logger = logger;
@@ -23,7 +23,7 @@ export default class ClientRouter {
         this.#router = new Router(registryConf);
         this.#currentUrl = this.#location.pathname + this.#location.search;
 
-        this.#setInitialRoutes();
+        this.#setInitialRoutes(state);
         this.#addEventListeners();
     }
 
@@ -48,7 +48,7 @@ export default class ClientRouter {
         return deepmerge(appProps, routeProps);
     }
 
-    #setInitialRoutes = () => {
+    #setInitialRoutes = (state) => {
         // we should respect base tag for cached pages
         let path;
         const base = document.querySelector('base');
@@ -64,6 +64,8 @@ export default class ClientRouter {
                 'Currently, ILC does not support it fully.\n' +
                 'Please open an issue if you need this functionality.'
             );
+        } else if (state.forceSpecialRoute === '404') {
+            path = '/404'; //FIXME:
         } else {
             path = this.#location.pathname + this.#location.search;
         }

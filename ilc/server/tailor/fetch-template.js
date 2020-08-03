@@ -25,7 +25,12 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
         registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
     }
 
-    const {route, page} = router.getTemplateInfo(registryConfig.data, request.url);
+    let route, page;
+    if (request.ilcState.forceSpecialRoute) {
+        ({route, page} = router.getTemplateInfoBySpecialRoute(registryConfig.data, request.ilcState.forceSpecialRoute));
+    } else {
+        ({route, page} = router.getTemplateInfo(registryConfig.data, request.url));
+    }
     const template = await registryService.getTemplate(route.template);
 
     if (template === undefined) {

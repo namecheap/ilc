@@ -38,6 +38,7 @@ module.exports = class ConfigsInjector {
 
         const ilcJsScripts = this.#wrapWithIgnoreDuringParsing(
             //...routeAssets.scriptLinks,
+            this.#getIlcState(request),
             this.#getSPAConfig(registryConfig),
             `<script>window.ilcApps = [];</script>`,
             this.#getPolyfill(),
@@ -150,6 +151,15 @@ module.exports = class ConfigsInjector {
         const spaConfig = JSON.stringify(_.omit({...registryConfig, apps}, ['templates']));
 
         return `<script type="ilc-config">${spaConfig}</script>`;
+    };
+
+    #getIlcState = (request) => {
+        const state = request.ilcState || {};
+        if (Object.keys(state).length === 0) {
+            return '';
+        }
+
+        return `<script type="ilc-state">${JSON.stringify(state)}</script>`;
     };
 
     #wrapWithAsyncScriptTag = (url) => {

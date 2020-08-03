@@ -10,6 +10,12 @@ module.exports = function setup(tailor, errorHandlingService) {
     function handleError(req, err, res) {
         const urlPart = `while processing request "${req.originalUrl}"`;
         if (res !== undefined) {
+            if (err.stack.toString().indexOf('Caused by: Error: Request fragment error. statusCode: 404; statusMessage: Not Found; url: http://localhost:8239/news/') !== -1) {
+                req.ilcState.forceSpecialRoute = '404';
+                tailor.requestHandler(req, res);
+                return;
+            }
+
             const e = new errors.TailorError({message: `Tailor error ${urlPart}`, cause: err});
             errorHandlingService.handleError(e, req, res).catch(err => {
                 errorHandlingService.noticeError(new errors.TailorError({message: 'Something went terribly wrong during error handling', cause: err}));
@@ -17,7 +23,7 @@ module.exports = function setup(tailor, errorHandlingService) {
         } else {
             errorHandlingService.noticeError(new errors.TailorError({message: `Tailor error while headers already sent ${urlPart}`, cause: err}));
         }
-    };
+    }
 
     function handleFragmentError(req, fragmentAttrs, err) {
         if (fragmentAttrs.primary) {
@@ -30,7 +36,7 @@ module.exports = function setup(tailor, errorHandlingService) {
             data: { fragmentAttrs }
         };
         errorHandlingService.noticeError(new errors.FragmentError(errOpts));
-    };
+    }
 
     function handleFragmentWarn(req, fragmentAttrs, err) {
         const errOpts = {
@@ -39,7 +45,7 @@ module.exports = function setup(tailor, errorHandlingService) {
             data: { fragmentAttrs }
         };
         errorHandlingService.noticeError(new errors.FragmentWarn(errOpts));
-    };
+    }
 
     //General Tailor & primary fragment errors
     tailor.on('error', handleError);

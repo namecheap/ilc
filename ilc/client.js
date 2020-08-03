@@ -5,6 +5,7 @@ import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
 import isActiveFactory from './client/isActiveFactory';
 import initIlcConfig from './client/initIlcConfig';
+import initIlcState from './client/initIlcState';
 import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import {getSlotElement} from './client/utils';
@@ -17,7 +18,8 @@ if (System === undefined) {
 }
 
 const registryConf = initIlcConfig();
-const router = new Router(registryConf, singleSpa.navigateToUrl);
+const state = initIlcState();
+const router = new Router(registryConf, state, singleSpa.navigateToUrl);
 const asyncBootUp = new AsyncBootUp();
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {

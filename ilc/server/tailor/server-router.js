@@ -27,6 +27,21 @@ module.exports = class ServerRouter {
         };
     }
 
+    getTemplateInfoBySpecialRoute(registryConfig, routeId) {
+        if (routeId !== '404') {
+            throw new Error('Unsupported special route ID');
+        }
+
+        const router = new Router(registryConfig);
+        const route = router.match('/404'); // FIXME: handle route ID
+        const page = this.#generatePageTpl(route, registryConfig.apps);
+
+        return {
+            route,
+            page,
+        };
+    }
+
     #generatePageTpl = (route, apps) => {
         let primarySlotDetected = false;
 
