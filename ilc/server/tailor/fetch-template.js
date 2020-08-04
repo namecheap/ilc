@@ -11,7 +11,7 @@ const TEMPLATE_NOT_FOUND = 1;
  * Fetches the template from File System
  *
  * @param {string} templatesPath - The path where the templates are stored
- * @param {Router} router
+ * @param {Object<ServerRouter>} router
  * @param {ConfigsInjector} configsInjector
  * @param {Object} newrelic
  */
@@ -25,12 +25,7 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
         registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
     }
 
-    let route, page;
-    if (request.ilcState.forceSpecialRoute) {
-        ({route, page} = router.getTemplateInfoBySpecialRoute(registryConfig.data, request.ilcState.forceSpecialRoute));
-    } else {
-        ({route, page} = router.getTemplateInfo(registryConfig.data, request.url));
-    }
+    const {route, page} = router.getTemplateInfo(registryConfig.data, request);
     const template = await registryService.getTemplate(route.template);
 
     if (template === undefined) {

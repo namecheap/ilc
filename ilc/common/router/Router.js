@@ -56,13 +56,24 @@ module.exports = class Router {
             }
         }
 
-        if (this.#specialRoutes[404] === undefined) {
+        return this.matchSpecial(reqUrl, 404);
+    }
+
+    matchSpecial(reqUrl, specialRouteId) {
+        specialRouteId = parseInt(specialRouteId);
+
+        if (this.#specialRoutes[specialRouteId] === undefined) {
             throw new this.errors.NoRouteMatchError();
         }
 
+        let res = {
+            basePath: '/',
+            reqUrl,
+        };
+
         return deepmerge(res, {
-            specialRole: 404,
-            ...this.#specialRoutes[404],
+            specialRole: specialRouteId,
+            ...this.#specialRoutes[specialRouteId],
         });
     }
 

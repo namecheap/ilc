@@ -11,6 +11,7 @@ export default class ClientRouter {
     #location;
     #logger;
     #registryConf;
+    /** @type Object<Router> */
     #router;
     #prevRoute;
     #currentRoute;
@@ -50,13 +51,13 @@ export default class ClientRouter {
 
     #setInitialRoutes = (state) => {
         // we should respect base tag for cached pages
-        let path;
-        const base = document.querySelector('base');
+        const path = this.#location.pathname + this.#location.search;
 
+        const base = document.querySelector('base');
         if (base) {
             const a = document.createElement('a');
             a.href = base.getAttribute('href');
-            path = a.pathname + a.search;
+            this.#currentRoute = this.#router.match(a.pathname + a.search);
 
             base.remove();
             this.#logger.warn(
@@ -65,12 +66,11 @@ export default class ClientRouter {
                 'Please open an issue if you need this functionality.'
             );
         } else if (state.forceSpecialRoute === '404') {
-            path = '/404'; //FIXME:
+            this.#currentRoute = this.#router.matchSpecial(path, state.forceSpecialRoute);
         } else {
-            path = this.#location.pathname + this.#location.search;
+            this.#currentRoute = this.#router.match(path);
         }
 
-        this.#currentRoute = this.#router.match(path);
         this.#prevRoute = this.#currentRoute;
     };
 

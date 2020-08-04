@@ -16,24 +16,16 @@ module.exports = class ServerRouter {
         this.#logger = logger;
     }
 
-    getTemplateInfo(registryConfig, reqUrl) {
+    getTemplateInfo(registryConfig, request) {
         const router = new Router(registryConfig);
-        const route = router.match(reqUrl);
-        const page = this.#generatePageTpl(route, registryConfig.apps);
 
-        return {
-            route,
-            page,
-        };
-    }
-
-    getTemplateInfoBySpecialRoute(registryConfig, routeId) {
-        if (routeId !== '404') {
-            throw new Error('Unsupported special route ID');
+        let route;
+        if (request.ilcState.forceSpecialRoute) {
+            route = router.matchSpecial(request.url, request.ilcState.forceSpecialRoute);
+        } else {
+            route = router.match(request.url);
         }
 
-        const router = new Router(registryConfig);
-        const route = router.match('/404'); // FIXME: handle route ID
         const page = this.#generatePageTpl(route, registryConfig.apps);
 
         return {
