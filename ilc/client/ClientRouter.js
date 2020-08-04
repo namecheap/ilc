@@ -7,7 +7,7 @@ export default class ClientRouter {
     errors = errors;
 
     #currentUrl;
-    #navigateToUrl;
+    #singleSpa;
     #location;
     #logger;
     #registryConf;
@@ -15,14 +15,16 @@ export default class ClientRouter {
     #router;
     #prevRoute;
     #currentRoute;
+    #windowEventHandlers = {};
+    #forceSpecialRoute = null;
 
-    constructor(registryConf, state, navigateToUrl, location = window.location, logger = window.console) {
-        this.#navigateToUrl = navigateToUrl;
+    constructor(registryConf, state, singleSpa, location = window.location, logger = window.console) {
+        this.#singleSpa = singleSpa;
         this.#location = location;
         this.#logger = logger;
         this.#registryConf = registryConf;
         this.#router = new Router(registryConf);
-        this.#currentUrl = this.#location.pathname + this.#location.search;
+        this.#currentUrl = this.#getCurrUrl();
 
         this.#setInitialRoutes(state);
         this.#addEventListeners();
@@ -51,8 +53,6 @@ export default class ClientRouter {
 
     #setInitialRoutes = (state) => {
         // we should respect base tag for cached pages
-        const path = this.#location.pathname + this.#location.search;
-
         const base = document.querySelector('base');
         if (base) {
             const a = document.createElement('a');
@@ -66,32 +66,57 @@ export default class ClientRouter {
                 'Please open an issue if you need this functionality.'
             );
         } else if (state.forceSpecialRoute === '404') {
-            this.#currentRoute = this.#router.matchSpecial(path, state.forceSpecialRoute);
+            this.#currentRoute = this.#router.matchSpecial(this.#getCurrUrl(), state.forceSpecialRoute);
         } else {
-            this.#currentRoute = this.#router.match(path);
+            this.#currentRoute = this.#router.match(this.#getCurrUrl());
         }
 
         this.#prevRoute = this.#currentRoute;
     };
 
     #addEventListeners = () => {
-        window.addEventListener('single-spa:before-routing-event', this.#onSingleSpaRoutingEvents);
+        this.#windowEventHandlers['single-spa:before-routing-event'] = this.#onSingleSpaRoutingEvents;
+        this.#windowEventHandlers['ilc:404'] = this.#onSpecialRouteTrigger(404);
+
+        for (let key in this.#windowEventHandlers) {
+            if (!this.#windowEventHandlers.hasOwnProperty(key)) {
+                continue;
+            }
+
+            window.addEventListener(key, this.#windowEventHandlers[key]);
+        }
+
         document.addEventListener('click', this.#onClickLink);
     };
 
     removeEventListeners() {
-        window.removeEventListener('single-spa:before-routing-event', this.#onSingleSpaRoutingEvents);
+        for (let key in this.#windowEventHandlers) {
+            if (!this.#windowEventHandlers.hasOwnProperty(key)) {
+                continue;
+            }
+
+            window.removeEventListener(key, this.#windowEventHandlers[key]);
+        }
+        this.#windowEventHandlers = {};
+
         document.removeEventListener('click', this.#onClickLink);
     }
 
     #onSingleSpaRoutingEvents = () => {
         this.#prevRoute = this.#currentRoute;
 
+        const newUrl = this.#getCurrUrl();
+        if (this.#forceSpecialRoute !== null && this.#forceSpecialRoute.url === newUrl) {
+            this.#currentRoute = this.#router.matchSpecial(newUrl, this.#forceSpecialRoute.id);
+        } else if (this.#forceSpecialRoute !== null) {
+            // Reset variable if it was set & now we go to different route
+            this.#forceSpecialRoute = null;
+        }
+
         // fix for google cached pages.
         // if open any cached page and scroll to "#features" section:
         // only hash will be changed so router.match will return error, since <base> tag has already been removed.
         // so in this cases we shouldn't regenerate currentRoute
-        const newUrl = this.#location.pathname + this.#location.search;
         if (this.#currentUrl !== newUrl) {
             this.#currentRoute = this.#router.match(this.#location.pathname + this.#location.search);
             this.#currentUrl = newUrl;
@@ -125,8 +150,25 @@ export default class ClientRouter {
         const {specialRole} = this.#router.match(pathname);
 
         if (specialRole === null) {
-            this.#navigateToUrl(href);
+            this.#singleSpa.navigateToUrl(href);
             event.preventDefault();
         }
     };
+
+    #onSpecialRouteTrigger = (specialRouteId) => (e) => {
+        const appId = e?.detail?.appId;
+        const mountedApps = this.#singleSpa.getMountedApps();
+        if (!mountedApps.includes(appId)) {
+            return console.warn(
+                `ILC: Ignoring special route "${specialRouteId}" trigger which came from not mounted app "${appId}". ` +
+                `Currently mounted apps: ${mountedApps.join(', ')}.`
+            );
+        }
+
+        console.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
+        this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl()};
+        this.#singleSpa.triggerAppChange(); //This call would immediately invoke "single-spa:before-routing-event" and start apps mount/unmount process
+    };
+
+    #getCurrUrl = () => this.#location.pathname + this.#location.search;
 }
