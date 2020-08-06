@@ -156,7 +156,7 @@ export default class ClientRouter {
     };
 
     #onSpecialRouteTrigger = (specialRouteId) => (e) => {
-        const appId = e?.detail?.appId;
+        const appId = e.detail && e.detail.appId;
         const mountedApps = this.#singleSpa.getMountedApps();
         if (!mountedApps.includes(appId)) {
             return console.warn(

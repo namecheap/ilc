@@ -10,7 +10,9 @@ module.exports = function setup(tailor, errorHandlingService) {
     function handleError(req, err, res) {
         const urlPart = `while processing request "${req.originalUrl}"`;
         if (res !== undefined) {
-            if (err.stack.toString().indexOf('Caused by: Error: Request fragment error. statusCode: 404; statusMessage: Not Found; url: http://localhost:8239/news/') !== -1) {
+            // If fragment respond with 404 - force special 404 route
+            // See "process-fragment-response.js", there we throw this error
+            if (err.cause instanceof errors.Fragment404Response) {
                 req.ilcState.forceSpecialRoute = '404';
                 tailor.requestHandler(req, res);
                 return;

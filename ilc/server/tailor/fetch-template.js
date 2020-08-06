@@ -26,6 +26,9 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
     }
 
     const {route, page} = router.getTemplateInfo(registryConfig.data, request);
+    // Here we add contextual information about current route to the request
+    // For now we use it only in "process-fragment-response.js" to check if we're already processing special route
+    request.ilcRoute = route;
     const template = await registryService.getTemplate(route.template);
 
     if (template === undefined) {

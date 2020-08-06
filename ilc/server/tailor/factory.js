@@ -12,6 +12,7 @@ const errorHandlingService = require('../errorHandler/factory');
 const errorHandlerSetup = require('./error-handler');
 const fragmentHooks = require('./fragment-hooks');
 const ConfigsInjector = require('./configs-injector');
+const processFragmentResponse = require('./process-fragment-response');
 
 module.exports = function (cdnUrl, nrCustomClientJsWrapper = null) {
     const router = new Router(console);
@@ -25,6 +26,7 @@ module.exports = function (cdnUrl, nrCustomClientJsWrapper = null) {
             newrelic,
             registryService
         ),
+        processFragmentResponse,
         systemScripts: '',
         filterHeaders,
         fragmentHooks,
