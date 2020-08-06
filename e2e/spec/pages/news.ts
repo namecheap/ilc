@@ -13,3 +13,7 @@ export const lastNewsSource = `${newsSources}:last-child`;
 export const lastNewsSourceLink = `${lastNewsSource} > p.action > a`;
 export const newsSourceArticles = `${newsView} > div.container > div.articles > ol > li.article`;
 export const firstNewsSourceArticle = `${newsSourceArticles}:first-child > div.meta > div.redirect > a`;
+export const goToNonExistingRoute = `${newsView} a[href="/news/nonExisting"]`;
+export const goToNonExistingRouteOverride = `${newsView} a[href="/news/nonExisting?overrideErrorPage=1"]`;
+export const goToNonExistingResource = `${newsView} a[href="/news/article/abc-news-au34"]`;
+export const goToNonExistingResourceOverride = `${newsView} a[href="/news/article/abc-news-au34?overrideErrorPage=1"]`;
