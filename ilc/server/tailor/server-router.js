@@ -20,7 +20,7 @@ module.exports = class ServerRouter {
         const router = new Router(registryConfig);
 
         let route;
-        if (request.ilcState.forceSpecialRoute) {
+        if (request.ilcState?.forceSpecialRoute) {
             route = router.matchSpecial(request.url, request.ilcState.forceSpecialRoute);
         } else {
             route = router.match(request.url);

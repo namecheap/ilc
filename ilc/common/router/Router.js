@@ -15,7 +15,7 @@ module.exports = class Router {
         } = registryConfig;
 
         this.#compiledRoutes = this.#compiler(routes);
-        this.#specialRoutes = specialRoutes;
+        this.#specialRoutes = specialRoutes || {};
     }
 
     match(reqUrl) {
@@ -61,8 +61,9 @@ module.exports = class Router {
 
     matchSpecial(reqUrl, specialRouteId) {
         specialRouteId = parseInt(specialRouteId);
+        const specialRoute = this.#specialRoutes[specialRouteId];
 
-        if (this.#specialRoutes[specialRouteId] === undefined) {
+        if (specialRoute === undefined) {
             throw new this.errors.NoRouteMatchError();
         }
 
@@ -73,7 +74,10 @@ module.exports = class Router {
 
         return deepmerge(res, {
             specialRole: specialRouteId,
-            ...this.#specialRoutes[specialRouteId],
+            route: specialRoute.route,
+            routeId: specialRoute.routeId,
+            slots: specialRoute.slots,
+            template: specialRoute.template,
         });
     }
 

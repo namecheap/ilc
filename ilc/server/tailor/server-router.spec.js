@@ -41,11 +41,11 @@ describe('server router', () => {
             ],
             specialRoutes,
         };
-        const reqUrl = '/no-app';
+        const request = {url: '/no-app'};
 
         const router = new ServerRouter(logger);
 
-        chai.expect(router.getTemplateInfo.bind(router, registryConfig, reqUrl)).to.throw('Can\'t find info about app.');
+        chai.expect(() => router.getTemplateInfo(registryConfig, request)).to.throw('Can\'t find info about app.');
     });
 
     it('should throw an error when an application does not have a specified source of fragment', () => {
@@ -84,11 +84,11 @@ describe('server router', () => {
             ],
             specialRoutes,
         };
-        const reqUrl = '/no-ssr-src';
+        const request = {url: '/no-ssr-src'};
 
         const router = new ServerRouter(logger);
 
-        chai.expect(router.getTemplateInfo.bind(router, registryConfig, reqUrl)).to.throw('No url specified for fragment!');
+        chai.expect(() => router.getTemplateInfo(registryConfig, request)).to.throw('No url specified for fragment!');
     });
 
     it('should get template info', () => {
@@ -259,13 +259,13 @@ describe('server router', () => {
             specialRoutes,
         };
 
-        const reqUrl = '/hero/apps?prop=value';
+        const request = {url: '/hero/apps?prop=value'};
 
         const expectedRoute = {
             routeId: 'appsRoute',
             route: '/hero/apps',
             basePath: '/hero/apps',
-            reqUrl,
+            reqUrl: request.url,
             template: 'heroTemplate',
             specialRole: null,
             slots: {
@@ -317,7 +317,7 @@ describe('server router', () => {
 
         const router = new ServerRouter(logger);
 
-        chai.expect(router.getTemplateInfo(registryConfig, reqUrl)).to.be.eql({
+        chai.expect(router.getTemplateInfo(registryConfig, request)).to.be.eql({
             route: expectedRoute,
             page: expectedPage,
         });
@@ -325,5 +325,134 @@ describe('server router', () => {
             `More then one primary slot "apps" found for "${expectedRoute.reqUrl}".\n` +
             'Make it regular to avoid unexpected behaviour.'
         )).to.be.true;
+    });
+
+    it('should get template info when special route is enforced', () => {
+        const apps = {
+            '@portal/navbar': {
+                spaBundle: 'https://somewhere.com/navbarSpaBundle.js',
+                cssBundle: 'https://somewhere.com/navbarCssBundle.css',
+                dependencies: {
+                    navbarFirstDependency: 'https://somewhere.com/navbarFirstDependency.js',
+                    navbarSecondDependency: 'https://somewhere.com/navbarSecondDependency.js',
+                },
+                props: {
+                    navbarFirstProp: 'navbarFirstProp',
+                    navbarSecondProp: 'navbarSecondProp',
+                },
+                kind: 'primary',
+                name: '@portal/navbar',
+                ssr: {
+                    timeout: 1000,
+                    src: 'https://somewhere.com/navbar?prop=value',
+                },
+            },
+            '@portal/footer': {
+                spaBundle: 'https://somewhere.com/footerSpaBundle.js',
+                cssBundle: 'https://somewhere.com/footerCssBundle.css',
+                dependencies: {
+                    footerFirstDependency: 'https://somewhere.com/footerFirstDependency.js',
+                    footerSecondDependency: 'https://somewhere.com/footerSecondDependency.js',
+                },
+                kind: 'regular',
+                name: '@portal/footer',
+                ssr: {
+                    timeout: 2000,
+                    src: 'https://somewhere.com/footer?prop=value',
+                },
+            },
+            'apps': {
+                spaBundle: 'https://somewhere.com/appsSpaBundle.js',
+                cssBundle: 'https://somewhere.com/appsCssBundle.css',
+                dependencies: {
+                    appsFirstDependency: 'https://somewhere.com/appsFirstDependency.js',
+                    appsSecondDependency: 'https://somewhere.com/appsSecondDependency.js',
+                },
+                kind: 'primary',
+                name: 'apps',
+                ssr: {
+                    timeout: 4000,
+                    src: 'https://somewhere.com/apps?prop=value',
+                },
+            },
+        };
+
+        const routes = [
+            {
+                routeId: 'commonRoute',
+                route: '*',
+                next: true,
+                template: 'commonTemplate',
+                slots: {
+                    navbar: {
+                        appName: apps['@portal/navbar'].name,
+                        kind: 'regular',
+                    },
+                    footer: {
+                        appName: apps['@portal/footer'].name,
+                        props: {
+                            firstFooterSlotProp: 'firstFooterSlotProp',
+                            secondFooterSlotProp: 'secondFooterSlotProp',
+                        },
+                        kind: 'primary',
+                    },
+                },
+            },
+            {
+                routeId: 'appsRoute',
+                route: '/hero/apps',
+                next: false,
+                slots: {
+                    apps: {
+                        appName: apps['apps'].name,
+                    },
+                },
+            },
+        ];
+
+        const currSpecialRoutes = _.cloneDeep(specialRoutes);
+        currSpecialRoutes['404'].slots = {
+            apps: {
+                appName: apps['apps'].name,
+            },
+        };
+
+        const registryConfig = {
+            apps,
+            routes,
+            specialRoutes: currSpecialRoutes,
+        };
+
+        const request = {
+            ilcState: {forceSpecialRoute: 404},
+            url: '/hero/apps?prop=value'
+        };
+
+        const expectedRoute = {
+            routeId: currSpecialRoutes['404'].routeId,
+            route: currSpecialRoutes['404'].route,
+            basePath: '/',
+            reqUrl: request.url,
+            template: currSpecialRoutes['404'].template,
+            specialRole: 404,
+            slots: currSpecialRoutes['404'].slots,
+        };
+
+        const expectedAppsUrl = new URL(registryConfig.apps.apps.ssr.src);
+        expectedAppsUrl.searchParams.append('routerProps', Buffer.from(JSON.stringify({
+            basePath: expectedRoute.basePath,
+            reqUrl: expectedRoute.reqUrl,
+            fragmentName: 'apps__at__apps',
+        })).toString('base64'));
+
+        const expectedPage =
+            `<fragment id="${registryConfig.apps['apps'].name}" slot="apps" timeout="${registryConfig.apps.apps.ssr.timeout}" src="${expectedAppsUrl.toString()}" primary="true"></fragment>`;
+
+        const router = new ServerRouter(logger);
+
+        chai.expect(router.getTemplateInfo(registryConfig, request)).to.be.eql({
+            route: expectedRoute,
+            page: expectedPage,
+        });
     });
 });
