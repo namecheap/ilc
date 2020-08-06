@@ -27,6 +27,11 @@ Scenario('Renders (CSR) global 404 page for non-existing News app route', (I, ne
     I.waitForElement(newsPage.goToNonExistingRoute, 10);
     I.click(newsPage.goToNonExistingRoute);
     I.waitForText('404 not found', 10, 'body > div#body');
+
+    //After 404 page ILC continues normal operation
+    I.click(newsPage.goToNews);
+    I.waitForElement(newsPage.newsSources, 10);
+    I.see('Pick a news source', newsPage.bannerHeadline);
 });
 
 Scenario('Renders (SSR) overridden 404 page for non-existing News app route', (I, newsPage: newsPage) => {
@@ -55,6 +60,12 @@ Scenario('Renders (CSR) global 404 page for non-existing News resource', (I, new
     I.waitForElement(newsPage.goToNonExistingResource, 10);
     I.click(newsPage.goToNonExistingResource);
     I.waitForText('404 not found', 10, 'body > div#body');
+
+    //After 404 page ILC continues normal operation
+    I.wait(5); //Hack to fix issue with the Vue Router
+    I.click(newsPage.goToNews);
+    I.waitForElement(newsPage.newsSources, 10);
+    I.see('Pick a news source', newsPage.bannerHeadline);
 });
 
 Scenario('Renders (SSR) overridden 404 page for non-existing News resource', (I, newsPage: newsPage) => {
