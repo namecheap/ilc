@@ -24,9 +24,12 @@ At the same time in parallel terminal you need to run `npm run start:no-apps`
 To make sure that all ILC components play well together we use E2E tests. We use our Demo applications as test micro frontends 
 so it also gives us ability to make sure that we don't break backward compatibility.
 
-In order to run tests - change your current directory to `./e2e` and launch one of the following commands:
+In order to run tests:
 
-* Default mode: `npm start`
-* Verbose mode: `npm run start:verbose`
-* Verbose mode with Browser UI visible: `npm run start:verbose:ui`
+* Build ILC & Registry by running `npm run build`
+* Change your current directory to `./e2e`
+* Launch one of the following commands:
+    * Default mode: `npm start`
+    * Verbose mode: `npm run start:verbose`
+    * Verbose mode with Browser UI visible: `npm run start:verbose:ui`
 
