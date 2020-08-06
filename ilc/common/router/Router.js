@@ -45,12 +45,10 @@ module.exports = class Router {
             });
 
             if (next !== true) {
-                if (res.template === undefined) {
-                    throw new this.errors.NoBaseTemplateMatchError();
-                }
-
                 res.basePath = match[1];
                 res.reqUrl = reqUrl;
+
+                this.#validateResultingRoute(res);
 
                 return res;
             }
@@ -72,14 +70,25 @@ module.exports = class Router {
             reqUrl,
         };
 
-        return deepmerge(res, {
+        res = deepmerge(res, {
             specialRole: specialRouteId,
             route: specialRoute.route,
             routeId: specialRoute.routeId,
             slots: specialRoute.slots,
             template: specialRoute.template,
         });
+
+
+        this.#validateResultingRoute(res);
+
+        return res;
     }
+
+    #validateResultingRoute = (route) => {
+        if (!route.template) {
+            throw new this.errors.NoBaseTemplateMatchError();
+        }
+    };
 
     #compiler = (routes) => {
         return routes.map(v => {
@@ -102,9 +111,9 @@ module.exports = class Router {
                 routeExp,
             };
         });
-    }
+    };
 
     #escapeStringRegexp = (str) => {
         return str.replace(/[|\\{}()[\]^$+*?.-]/g, '\\$&');
-    }
+    };
 };

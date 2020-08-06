@@ -82,74 +82,131 @@ describe('router', () => {
                 route: '/404',
                 next: false,
                 template: 'errorsTemplate',
-                slots: {},
+                slots: {
+                    navbar: {
+                        appName: 'navbar',
+                        kind: 'essential',
+                    },
+                    footer: {
+                        appName: 'footer',
+                    },
+                },
             },
         },
     };
 
-    it('should throw an error when 404 special route does not exist', () => {
-        const router = new Router({
-            routes: registryConfig.routes,
-            specialRoutes: {},
-        });
-        const reqUrl = '/nonexistent';
+    describe('.match()', function () {
+        it('should throw an error when 404 special route does not exist', () => {
+            const router = new Router({
+                routes: registryConfig.routes,
+                specialRoutes: {},
+            });
+            const reqUrl = '/nonexistent';
 
-        chai.expect(router.match.bind(router, reqUrl)).to.throw(router.errors.NoRouteMatchError);
+            chai.expect(router.match.bind(router, reqUrl)).to.throw(router.errors.NoRouteMatchError);
+        });
+
+        it('should throw an error when a route does not have a template', () => {
+            const routes = [
+                {
+                    routeId: 'noTemplateRoute',
+                    route: '/no-template',
+                    next: false,
+                    slots: {}
+                },
+            ];
+
+            const router = new Router({
+                routes,
+                specialRoutes: registryConfig.specialRoutes,
+            });
+            const reqUrl = '/no-template';
+
+            chai.expect(router.match.bind(router, reqUrl)).to.throw(router.errors.NoBaseTemplateMatchError);
+        });
+
+        it('should return matched route by request url', () => {
+            const router = new Router(registryConfig);
+            const reqUrl = '/hero/apps?prop=value';
+
+            chai.expect(router.match(reqUrl)).to.be.eql({
+                routeId: 'appsRoute',
+                route: '/hero/apps',
+                basePath: '/hero/apps',
+                reqUrl,
+                template: 'heroTemplate',
+                specialRole: null,
+                slots: {
+                    ...registryConfig.routes[0].slots,
+                    ...registryConfig.routes[1].slots,
+                    ...registryConfig.routes[2].slots,
+                },
+            });
+        });
+
+        it('should return 404 route when a router does not match any route', () => {
+            const router = new Router(registryConfig);
+            const reqUrl = '/nonexistent?prop=value';
+
+            chai.expect(router.match(reqUrl)).to.be.eql({
+                routeId: 'errorsRoute',
+                route: '/404',
+                basePath: '/',
+                reqUrl,
+                template: 'errorsTemplate',
+                specialRole: 404,
+                slots: {
+                    ...registryConfig.specialRoutes['404'].slots,
+                },
+            });
+        });
     });
 
-    it('should throw an error when a route does not have a template', () => {
-        const routes = [
-            {
-                routeId: 'noTemplateRoute',
-                route: '/no-template',
-                next: false,
-                slots: {}
-            },
-        ];
+    describe('.matchSpecial()', function () {
+        it('should return special 404 route', () => {
+            const router = new Router(registryConfig);
+            const reqUrl = '/tst';
 
-        const router = new Router({
-            routes,
-            specialRoutes: registryConfig.specialRoutes,
+            chai.expect(router.matchSpecial(reqUrl, 404)).to.be.eql({
+                routeId: 'errorsRoute',
+                route: '/404',
+                basePath: '/',
+                reqUrl,
+                template: 'errorsTemplate',
+                specialRole: 404,
+                slots: {
+                    ...registryConfig.specialRoutes['404'].slots,
+                },
+            });
         });
-        const reqUrl = '/no-template';
 
-        chai.expect(router.match.bind(router, reqUrl)).to.throw(router.errors.NoBaseTemplateMatchError);
-    });
+        it('should throw an error when asked for non-existing special route', () => {
+            const router = new Router(registryConfig);
+            const reqUrl = '/tst';
 
-    it('should return matched route by request url', () => {
-        const router = new Router(registryConfig);
-        const reqUrl = '/hero/apps?prop=value';
-
-        chai.expect(router.match(reqUrl)).to.be.eql({
-            routeId: 'appsRoute',
-            route: '/hero/apps',
-            basePath: '/hero/apps',
-            reqUrl,
-            template: 'heroTemplate',
-            specialRole: null,
-            slots: {
-                ...registryConfig.routes[0].slots,
-                ...registryConfig.routes[1].slots,
-                ...registryConfig.routes[2].slots,
-            },
+            chai.expect(() => router.matchSpecial(reqUrl, 999)).to.throw(router.errors.NoRouteMatchError);
         });
-    });
 
-    it('should return 404 route when a router does not match any route', () => {
-        const router = new Router(registryConfig);
-        const reqUrl = '/nonexistent?prop=value';
+        it('should throw an error when a special route does not have a template', () => {
+            const router = new Router({
+                routes: registryConfig.routes,
+                specialRoutes: {
+                    '404': {
+                        routeId: 'errorsRoute',
+                        route: '/404',
+                        next: false,
+                        template: '',
+                        slots: {
+                            navbar: {
+                                appName: 'navbar',
+                            },
+                        },
+                    },
+                },
+            });
+            const reqUrl = '/no-template';
 
-        chai.expect(router.match(reqUrl)).to.be.eql({
-            routeId: 'errorsRoute',
-            route: '/404',
-            basePath: '/',
-            reqUrl,
-            template: 'errorsTemplate',
-            specialRole: 404,
-            next: false,
-            slots: {
-                ...registryConfig.routes[0].slots,
-            },
+            chai.expect(() => router.matchSpecial(reqUrl, '404')).to.throw(router.errors.NoBaseTemplateMatchError);
         });
     });
 });
