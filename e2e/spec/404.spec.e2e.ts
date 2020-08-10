@@ -16,8 +16,8 @@ Scenario('Renders (CSR) global 404 page for non-existing ILC route', (I, peopleP
 //endregion 404 page for non-existing ILC route
 
 //region 404 page for non-existing News app route
-Scenario('Renders (SSR) global 404 page for non-existing News app route', (I) => {
-    I.amOnPage('/news/nonExisting');
+Scenario('Renders (SSR) global 404 page for non-existing News app route', (I, newsPage: newsPage) => {
+    I.amOnPage(newsPage.url.nonExistingRoute);
     I.waitForText('404 not found', 10, 'body > div#body');
 });
 
@@ -70,7 +70,7 @@ Scenario('Renders (CSR) global 404 page for non-existing News resource', (I, new
 
 Scenario('Renders (SSR) overridden 404 page for non-existing News resource', (I, newsPage: newsPage) => {
     I.amOnPage(newsPage.url.nonExistingResourceWithOverride);
-    I.waitForText('404 not found component', 1000, 'body > div#body');
+    I.waitForText('404 not found component', 10, 'body > div#body');
 });
 
 Scenario('Renders (CSR) overridden 404 page for non-existing News resource', (I, newsPage: newsPage) => {
