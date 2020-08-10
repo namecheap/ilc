@@ -27,6 +27,7 @@ module.exports = () => {
 
     app.all('*', (req, res) => {
         req.headers['x-request-uri'] = req.raw.url; //TODO: to be removed & replaced with routerProps
+        req.raw.ilcState = {};
         tailor.requestHandler(req.raw, res.res);
     });
 

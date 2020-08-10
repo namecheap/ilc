@@ -2,10 +2,10 @@ Feature('navbar ilc demo application');
 
 Scenario('should open every page and show a content only of an opened page', async (I, peoplePage, newsPage, planetsPage) => {
     I.amOnPage('/');
-    I.waitForElement(newsPage.goToNews, 10);
-    I.click(newsPage.goToNews);
-    I.waitInUrl(newsPage.newsUrl, 10);
-    I.seeAttributesOnElements(newsPage.goToNews, {
+    I.waitForElement(newsPage.linkWithUrl(newsPage.url.main), 10);
+    I.click(newsPage.linkWithUrl(newsPage.url.main));
+    I.waitInUrl(newsPage.url.main, 10);
+    I.seeAttributesOnElements(newsPage.linkWithUrl(newsPage.url.main), {
         'aria-current': 'page',
     });
     I.waitForElement(newsPage.newsSources, 10);
@@ -59,9 +59,9 @@ Scenario('should open every page and show a content only of an opened page', asy
     I.waitForClickable(peoplePage.fetchMorePeople, 10);
     I.seeNumberOfVisibleElements(peoplePage.personsList, 10);
 
-    I.click(newsPage.goToNews);
-    I.waitInUrl(newsPage.newsUrl, 10);
-    I.seeAttributesOnElements(newsPage.goToNews, {
+    I.click(newsPage.linkWithUrl(newsPage.url.main));
+    I.waitInUrl(newsPage.url.main, 10);
+    I.seeAttributesOnElements(newsPage.linkWithUrl(newsPage.url.main), {
         'aria-current': 'page',
     });
     I.waitForElement(newsPage.newsSources, 10);

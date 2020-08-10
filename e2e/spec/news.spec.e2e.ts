@@ -2,10 +2,10 @@ Feature('news ilc demo application');
 
 Scenario('should open a news page and show news sources', async (I, newsPage: newsPage) => {
     I.amOnPage('/');
-    I.waitForElement(newsPage.goToNews, 10);
-    I.click(newsPage.goToNews);
-    I.waitInUrl(newsPage.newsUrl, 10);
-    I.seeAttributesOnElements(newsPage.goToNews, {
+    I.waitForElement(newsPage.linkWithUrl(newsPage.url.main), 10);
+    I.click(newsPage.linkWithUrl(newsPage.url.main));
+    I.waitInUrl(newsPage.url.main, 10);
+    I.seeAttributesOnElements(newsPage.linkWithUrl(newsPage.url.main), {
         'aria-current': 'page',
     });
     I.waitForElement(newsPage.newsSources, 10);
@@ -13,8 +13,8 @@ Scenario('should open a news page and show news sources', async (I, newsPage: ne
 });
 
 Scenario('should open an article page from a direct link', async (I, newsPage: newsPage) => {
-    I.amOnPage(newsPage.newsUrl);
-    I.waitInUrl(newsPage.newsUrl, 10);
+    I.amOnPage(newsPage.url.main);
+    I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.newsSources, 10);
     I.scrollPageToBottom();
 
@@ -38,10 +38,10 @@ Scenario('should open an article page from a direct link', async (I, newsPage: n
 });
 
 Scenario('should open 500 error page when an error happens', async (I, newsPage: newsPage) => {
-    I.amOnPage(newsPage.newsUrl);
-    I.waitInUrl(newsPage.newsUrl, 10);
+    I.amOnPage(newsPage.url.main);
+    I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.generateError, 10);
     I.click(newsPage.generateError);
     I.waitForElement(newsPage.errorId);
-    I.seeInCurrentUrl(newsPage.newsUrl);
+    I.seeInCurrentUrl(newsPage.url.main);
 });

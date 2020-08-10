@@ -44,7 +44,7 @@ export async function seed(knex: Knex): Promise<any> {
             cssBundle: `http://${publicHost}:8239/dist/common.21f11a2afc03af3d62f8.css`,
             ssr: JSON.stringify({
                 src: "http://localhost:8239/news/?fragment=1",
-                timeout: 1000,
+                timeout: 5000,
             }),
             assetsDiscoveryUrl: 'http://127.0.0.1:8239/_spa/dev/assets-discovery',
             dependencies: '{}',

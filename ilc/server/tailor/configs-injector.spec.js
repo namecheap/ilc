@@ -212,7 +212,7 @@ describe('configs injector', () => {
             });
         };
 
-        it('should inject SPA config, polyfills, client js and new relic <script>, route assets style sheets links into the end of <head> tag', () => {
+        it('should inject ILC config & state, polyfills, client js and new relic <script>, route assets style sheets links into the end of <head> tag', () => {
             const browserTimingHeader = `window.browserTimingHeader = 'Hi there! I should add a timing header.';`;
             newrelic.getBrowserTimingHeader.withArgs().returns(`<script defer type="text/javascript">${browserTimingHeader}</script>`);
 
@@ -221,7 +221,7 @@ describe('configs injector', () => {
 
             const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper);
 
-            const request = {};
+            const request = {ilcState: {test: 1}};
 
             const firstTemplateStyleRef = 'https://somewhere.com/firstTemplateStyleRef.css';
             const secondTemplateStyleRef = 'https://somewhere.com/secondTemplateStyleRef.css';
@@ -257,7 +257,8 @@ describe('configs injector', () => {
                         '<!-- TailorX: Ignore during parsing END -->' +
 
                         '<!-- TailorX: Ignore during parsing START -->' +
-                        `<script type="spa-config">${getSpaConfig()}</script>` +
+                        `<script type="ilc-state">${JSON.stringify(request.ilcState)}</script>` +
+                        `<script type="ilc-config">${getSpaConfig()}</script>` +
                         '<script>window.ilcApps = [];</script>' +
                         `<script type="text/javascript">` +
                             `if (!(` +
@@ -282,6 +283,7 @@ describe('configs injector', () => {
                 '</html>'
             );
             chai.expect(request).to.be.eql({
+                ilcState: request.ilcState,
                 styleRefs: [
                     registryConfig.apps.firstApp.cssBundle,
                     registryConfig.apps.secondApp.cssBundle,
@@ -291,7 +293,7 @@ describe('configs injector', () => {
             });
         });
 
-        it('should inject SPA config, polyfills, client js and new relic <script>, route assets style sheets links into a placeholder when a document has one', () => {
+        it('should inject ILC config, omit ILC state, polyfills, client js and new relic <script>, route assets style sheets links into a placeholder when a document has one', () => {
             const browserTimingHeader = `<script defer type="text/javascript">window.browserTimingHeader = 'Hi there! I should add a timing header.';</script>`;
             newrelic.getBrowserTimingHeader.withArgs().returns(browserTimingHeader);
 
@@ -323,7 +325,7 @@ describe('configs injector', () => {
                 '<html>' +
                     '<head>' +
                         '<!-- TailorX: Ignore during parsing START -->' +
-                        `<script type="spa-config">${getSpaConfig()}</script>` +
+                        `<script type="ilc-config">${getSpaConfig()}</script>` +
                         '<script>window.ilcApps = [];</script>' +
                         `<script type="text/javascript">` +
                             `if (!(` +

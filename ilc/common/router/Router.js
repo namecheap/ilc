@@ -15,7 +15,7 @@ module.exports = class Router {
         } = registryConfig;
 
         this.#compiledRoutes = this.#compiler(routes);
-        this.#specialRoutes = specialRoutes;
+        this.#specialRoutes = specialRoutes || {};
     }
 
     match(reqUrl) {
@@ -45,26 +45,50 @@ module.exports = class Router {
             });
 
             if (next !== true) {
-                if (res.template === undefined) {
-                    throw new this.errors.NoBaseTemplateMatchError();
-                }
-
                 res.basePath = match[1];
                 res.reqUrl = reqUrl;
+
+                this.#validateResultingRoute(res);
 
                 return res;
             }
         }
 
-        if (this.#specialRoutes[404] === undefined) {
+        return this.matchSpecial(reqUrl, 404);
+    }
+
+    matchSpecial(reqUrl, specialRouteId) {
+        specialRouteId = parseInt(specialRouteId);
+        const specialRoute = this.#specialRoutes[specialRouteId];
+
+        if (specialRoute === undefined) {
             throw new this.errors.NoRouteMatchError();
         }
 
-        return deepmerge(res, {
-            specialRole: 404,
-            ...this.#specialRoutes[404],
+        let res = {
+            basePath: '/',
+            reqUrl,
+        };
+
+        res = deepmerge(res, {
+            specialRole: specialRouteId,
+            route: specialRoute.route,
+            routeId: specialRoute.routeId,
+            slots: specialRoute.slots,
+            template: specialRoute.template,
         });
+
+
+        this.#validateResultingRoute(res);
+
+        return res;
     }
+
+    #validateResultingRoute = (route) => {
+        if (!route.template) {
+            throw new this.errors.NoBaseTemplateMatchError();
+        }
+    };
 
     #compiler = (routes) => {
         return routes.map(v => {
@@ -87,9 +111,9 @@ module.exports = class Router {
                 routeExp,
             };
         });
-    }
+    };
 
     #escapeStringRegexp = (str) => {
         return str.replace(/[|\\{}()[\]^$+*?.-]/g, '\\$&');
-    }
+    };
 };

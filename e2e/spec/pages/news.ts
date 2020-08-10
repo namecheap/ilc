@@ -1,10 +1,16 @@
 const { I } = inject();
 
-export const newsUrl = '/news/';
+export const url = {
+    main: '/news/',
+    nonExistingRoute: '/news/nonExisting',
+    nonExistingRouteWithOverride: '/news/nonExisting?overrideErrorPage=1',
+    nonExistingResource: '/news/article/abc-news-au34',
+    nonExistingResourceWithOverride: '/news/article/abc-news-au34?overrideErrorPage=1',
+};
 
-export const goToNews = `body > div#navbar a[href="${newsUrl}"]`;
+export const linkWithUrl = (url:string) => `a[href="${url}"]`;
+
 export const newsView = 'body > div#body > div.single-spa-container.news-app > div.view';
-export const goToNewsSources = `${newsView} > div.container > p.home > a[href="${newsUrl}"]`;
 export const newsSources = `${newsView} > div.sources > div.container > ol > li.source`;
 export const bannerHeadline = `${newsView} > div.banner > h1`;
 export const generateError = `${newsView} > div.banner > a`;

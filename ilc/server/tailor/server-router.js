@@ -16,9 +16,16 @@ module.exports = class ServerRouter {
         this.#logger = logger;
     }
 
-    getTemplateInfo(registryConfig, reqUrl) {
+    getTemplateInfo(registryConfig, request) {
         const router = new Router(registryConfig);
-        const route = router.match(reqUrl);
+
+        let route;
+        if (request.ilcState && request.ilcState.forceSpecialRoute) {
+            route = router.matchSpecial(request.url, request.ilcState.forceSpecialRoute);
+        } else {
+            route = router.match(request.url);
+        }
+
         const page = this.#generatePageTpl(route, registryConfig.apps);
 
         return {

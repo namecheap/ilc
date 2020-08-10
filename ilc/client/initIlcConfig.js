@@ -1,5 +1,5 @@
 export default function () {
-    const confScript = document.querySelector('script[type="spa-config"]');
+    const confScript = document.querySelector('script[type="ilc-config"]');
     if (confScript === null) {
         throw new Error('Can\'t find single-spa config');
     }

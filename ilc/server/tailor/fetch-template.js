@@ -11,7 +11,7 @@ const TEMPLATE_NOT_FOUND = 1;
  * Fetches the template from File System
  *
  * @param {string} templatesPath - The path where the templates are stored
- * @param {Router} router
+ * @param {Object<ServerRouter>} router
  * @param {ConfigsInjector} configsInjector
  * @param {Object} newrelic
  */
@@ -25,7 +25,10 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
         registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
     }
 
-    const {route, page} = router.getTemplateInfo(registryConfig.data, request.url);
+    const {route, page} = router.getTemplateInfo(registryConfig.data, request);
+    // Here we add contextual information about current route to the request
+    // For now we use it only in "process-fragment-response.js" to check if we're already processing special route
+    request.ilcRoute = route;
     const template = await registryService.getTemplate(route.template);
 
     if (template === undefined) {
