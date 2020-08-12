@@ -3,16 +3,6 @@
     registry: {
         address: 'REGISTRY_ADDR',
     },
-    nginxRegistration: {
-        enabled: {
-            __name: 'NGINX_REGISTRATION_ENABLED',
-            __format: 'json'
-        },
-        apiAddrs: 'NGINX_API_ADDRS',
-        upstreamName: 'NGINX_UPSTREAM_NAME',
-        myIp: 'NGINX_MY_IP',
-        myPort: 'NGINX_MY_PORT',
-    },
     newrelic: {
         licenseKey: 'NR_LICENSE_KEY',
         customClientJsWrapper: 'NR_CUSTOM_CLIENT_JS_WRAPPER',
