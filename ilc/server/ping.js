@@ -6,11 +6,5 @@ module.exports = function (fastify, opts, done) {
         res.status(200).send('pong');
     });
 
-    // Support of legacy infrastructures
-    fastify.get('/api/v1/monitor/ping/:code/:optional?', async (req, res) => {
-        await registryService.preheat();
-        res.send('PONG' + req.params.code);
-    });
-
     done();
 };
