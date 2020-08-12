@@ -5,13 +5,6 @@
     registry: {
         address: 'http://127.0.0.1:4001'
     },
-    nginxRegistration: {
-        enabled: false,
-        apiAddrs: null,
-        upstreamName: null,
-        myIp: null,
-        myPort: null
-    },
     newrelic: {
         licenseKey: null,
         /**
