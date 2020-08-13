@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const newrelic = require('newrelic');
 
+const logger = require('../logger');
 const Tailor = require('tailorx');
 const fetchTemplate = require('./fetch-template');
 const Router = require('./server-router');
@@ -15,7 +16,7 @@ const ConfigsInjector = require('./configs-injector');
 const processFragmentResponse = require('./process-fragment-response');
 
 module.exports = function (cdnUrl, nrCustomClientJsWrapper = null) {
-    const router = new Router(console);
+    const router = new Router(logger);
     const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper);
 
     const tailor = new Tailor({
