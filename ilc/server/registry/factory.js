@@ -6,6 +6,6 @@ const wrapFetchWithCache = require('../../common/wrapWithCache');
 
 module.exports = new Registry(
     config.get('registry.address'),
-    wrapFetchWithCache(localStorage, console),
+    wrapFetchWithCache(localStorage, logger),
     logger
 );
