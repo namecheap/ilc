@@ -37,6 +37,10 @@ module.exports = class ErrorHandler {
         // While Fastify will pass it's own Reply object
         // Tailor passes http.ServerResponse from Node core
         let nres = res.res ? res.res : res;
+        // Claim full responsibility of the low-level response from Fastify
+        if (res.res) {
+            res.sent = true;
+        }
 
         try {
             this.noticeError(err, {
