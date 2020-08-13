@@ -7,7 +7,7 @@ const errorHandlingService = require('./errorHandler/factory');
 
 module.exports = () => {
     const app = fastify({
-        logger: require('./fastifyLoggerConf'),
+        logger: require('./logger'),
     });
     const tailor = tailorFactory(config.get('cdnUrl'), config.get('newrelic.customClientJsWrapper'));
 

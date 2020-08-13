@@ -2,6 +2,7 @@ const httpHeaders = require('http-headers');
 
 module.exports = {
     level: 'info',
+    //nestedKey: 'payload', TODO: blocked by https://github.com/pinojs/pino/issues/883
     serializers: {
         res(res) {
             const r = {

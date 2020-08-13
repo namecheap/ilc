@@ -14,20 +14,40 @@ module.exports = class ErrorHandler {
         this.#logger = logger;
     }
 
+    /**
+     *
+     * @param {Error} err
+     * @param {{}} errInfo
+     */
     noticeError(err, errInfo = {}) {
         const infoData = Object.assign({}, errInfo);
         if (err.data) {
-            //TODO: fetch data from parent errors
             Object.assign(infoData, err.data);
         }
 
+        const causeData = [];
+        let rawErr = err.cause;
+        while (rawErr) {
+            if (rawErr.data) {
+                causeData.push(rawErr.data);
+            } else {
+                causeData.push({});
+            }
+            rawErr = rawErr.cause;
+        }
+
         this.#errorsService.noticeError(err, infoData);
-        this.#logger.error(JSON.stringify({
+
+        const logObj = {
             type: err.name,
             message: err.message,
             stack: err.stack.split("\n"),
             additionalInfo: infoData,
-        }));
+        };
+        if (causeData.length) {
+            logObj.causeData = causeData;
+        }
+        this.#logger.error(logObj);
     }
 
     handleError = async (err, req, res) => {
@@ -62,7 +82,7 @@ module.exports = class ErrorHandler {
                     errorId,
                 }
             });
-            this.#logger.error(err);
+            this.#logger.error({err});
 
             nres.statusCode = 500;
             nres.write('Oops! Something went wrong. Pls try to refresh page or contact support.');
