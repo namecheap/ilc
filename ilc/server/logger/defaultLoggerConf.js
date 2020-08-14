@@ -1,5 +1,4 @@
 const httpHeaders = require('http-headers');
-const pino = require('pino');
 
 module.exports = {
     level: 'info',
