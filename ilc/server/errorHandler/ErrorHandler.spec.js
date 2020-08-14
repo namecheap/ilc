@@ -71,14 +71,23 @@ describe('error handler', () => {
             '</body>' +
             '</html>'
         );
+
         const output = parseOutout(stdoutInspect.output);
+
         chai.expect(output[1]).to.deep.include({
+            level: 50,
             type: 'Error',
             message: '500 page test error',
             additionalInfo: {
                 errorId,
             },
         });
+
+        chai.expect(output[1].stack[0]).to.eql('Error: 500 page test error');
+        chai.expect(output[1].stack[1]).to.contain('    at Object.apply (');
+        chai.expect(output[1]).to.have.property('time');
+        chai.expect(output[1]).to.have.property('pid');
+        chai.expect(output[1]).to.have.property('hostname');
     });
 
     it('should send an error message when showing 500 error page throws an error', async () => {
@@ -91,11 +100,15 @@ describe('error handler', () => {
 
         chai.expect(response.text).to.be.eql('Oops! Something went wrong. Pls try to refresh page or contact support.');
         chai.expect(output[1]).to.deep.include({
+            level: 50,
             type: 'Error',
             message: '500 page test error',
         });
         chai.expect(output[1]).to.have.nested.property('additionalInfo.errorId');
         chai.expect(output[2].stack.join("\n")).to.have.string("ErrorHandlingError: \n");
         chai.expect(output[2].stack.join("\n")).to.have.string("Caused by: Error: Something awful happened.\n");
+        chai.expect(output[2]).to.have.property('time');
+        chai.expect(output[2]).to.have.property('pid');
+        chai.expect(output[2]).to.have.property('hostname');
     });
 });
