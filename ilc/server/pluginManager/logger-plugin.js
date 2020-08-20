@@ -31,6 +31,8 @@ const pinoConf = {
             } else if (object.res) {
                 object.fields = processResponse(object.res);
                 delete object.res;
+                object.fields.responseTime = object.responseTime;
+                delete object.responseTime;
             }
             return object;
         }
