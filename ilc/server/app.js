@@ -6,9 +6,9 @@ const registryService = require('./registry/factory');
 const errorHandlingService = require('./errorHandler/factory');
 
 module.exports = () => {
-    const app = fastify({
-        logger: require('./logger'),
-    });
+    const app = fastify(Object.assign({
+        trustProxy: false, //TODO: should be configurable via Registry
+    }, require('./logger/fastify')));
     const tailor = tailorFactory(config.get('cdnUrl'), config.get('newrelic.customClientJsWrapper'));
 
     app.register(require('./ping'));

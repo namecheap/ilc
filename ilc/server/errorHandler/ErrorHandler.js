@@ -44,6 +44,7 @@ module.exports = class ErrorHandler {
 
         try {
             this.noticeError(err, {
+                reqId: req.id,
                 errorId
             });
 

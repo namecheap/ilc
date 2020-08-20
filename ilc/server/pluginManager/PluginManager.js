@@ -7,7 +7,7 @@ module.exports = class PluginManager {
 
     }
 
-    getLogger() {
+    getReportingPlugin() {
         return null;
     }
 };
