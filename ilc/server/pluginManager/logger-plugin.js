@@ -4,6 +4,8 @@ const pino = require('pino');
 const httpHeaders = require('http-headers');
 const uniqid = require('uniqid');
 
+const REQ_ID = 'operationId';
+
 const pinoConf = {
     level: 'info',
     messageKey: 'message',
@@ -71,6 +73,9 @@ const pinoConf = {
                     message: `${logObj.name}: ${err.message}`,
                     fields
                 };
+                if (err.data && err.data.reqId) {
+                    inputArgs[0][REQ_ID] = err.data.reqId;
+                }
             }
 
             return method.apply(this, inputArgs)
@@ -97,6 +102,6 @@ function processResponse(res) {
 
 module.exports = {
     logger: pino(pinoConf),
-    requestIdLogLabel: 'operationId',
+    requestIdLogLabel: REQ_ID,
     genReqId: () => uniqid().substring(0, 16),
 };
