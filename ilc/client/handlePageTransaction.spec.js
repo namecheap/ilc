@@ -261,4 +261,69 @@ describe('handle page transaction', () => {
         chai.expect(slots.body.getComputedStyle().display).to.be.equal('block');
         chai.expect(slots.body.getAttributeName()).to.be.null;
     });
+
+    it('should destroy spinner when all fragments contain text nodes', async () => {
+        const newBodyApplicationWithoutContent = {
+            id: 'new-body-application',
+            class: 'new-body-spa',
+        };
+
+        newBodyApplicationWithoutContent.ref = html`
+            <div id="${newBodyApplicationWithoutContent.id}" class="${newBodyApplicationWithoutContent.class}">
+            </div>
+        `;
+
+        applications.navbar.appendApplication();
+        applications.body.appendApplication();
+
+        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+
+        applications.body.removeApplication();
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+
+        slots.body.ref.appendChild(newBodyApplicationWithoutContent.ref);
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+        
+        document.getElementById(newBodyApplicationWithoutContent.id).innerText = 'Hello! I am contentful text, so now spinner will be removed';
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.null;
+    });
+
+    it('should destroy spinner when all fragments contain optic nodes, e.g. input, select, img etc', async () => {
+        const newBodyApplicationWithoutContent = {
+            id: 'new-body-application',
+            class: 'new-body-spa',
+        };
+
+        newBodyApplicationWithoutContent.ref = html`
+            <div id="${newBodyApplicationWithoutContent.id}" class="${newBodyApplicationWithoutContent.class}">
+            </div>
+        `;
+
+        applications.navbar.appendApplication();
+        applications.body.appendApplication();
+
+        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+
+        applications.body.removeApplication();
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+
+        slots.body.ref.appendChild(newBodyApplicationWithoutContent.ref);
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+
+        const elInput = document.createElement('input');
+        document.getElementById(newBodyApplicationWithoutContent.id).appendChild(elInput);
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.null;
+    });
 });

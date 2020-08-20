@@ -52,19 +52,22 @@ const addContentListener = slotName => {
     }
 
     const observer = new MutationObserver((mutationsList, observer) => {
-        for (let mutation of mutationsList) {
-            if (mutation.addedNodes.length) {
-                observer.disconnect();
-                contentListeners.splice(contentListeners.indexOf(observer), 1);
-                !contentListeners.length && onAllSlotsLoaded();
-            }
-        }
+        const hasAddedNodes = !!mutationsList.find(mutation => mutation.addedNodes.length);
+        if (!hasAddedNodes) return;
+
+        const hasText = !!targetNode.innerText.trim().length
+        const hasOpticNodes = !!targetNode.querySelector(':not(div):not(span)');
+        if (!hasText && !hasOpticNodes) return;
+
+        observer.disconnect();
+        contentListeners.splice(contentListeners.indexOf(observer), 1);
+        !contentListeners.length && onAllSlotsLoaded();
     });
     contentListeners.push(observer);
     const targetNode = getSlotElement(slotName);
     targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
     hiddenSlots.push(targetNode);
-    observer.observe(targetNode, { childList: true });
+    observer.observe(targetNode, { childList: true, subtree: true });
 };
 
 const renderFakeSlot = slotName => {
