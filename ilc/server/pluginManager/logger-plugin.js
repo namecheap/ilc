@@ -16,26 +16,30 @@ const pinoConf = {
             return { hostName: bindings.hostname }
         },
         log (object) {
-            //object.dateTime = object.time;
-            //console.log(object);
             object.serviceName = 'ILC';
 
             if (object.req) {
                 const req = pino.stdSerializers.req(object.req);
                 delete req.headers;
                 delete req.id;
+
                 object.clientIp = req.remoteAddress;
                 delete req.remoteAddress;
+
                 object.userIp = object.req.ip;
                 object.fields = req;
                 object.path = req.url.split('?')[0];
+
                 delete object.req;
             } else if (object.res) {
                 object.fields = processResponse(object.res);
-                delete object.res;
+
                 object.fields.responseTime = object.responseTime;
                 delete object.responseTime;
+
+                delete object.res;
             }
+
             return object;
         }
     },
