@@ -80,6 +80,7 @@ describe('error handler', () => {
             message: '500 page test error',
             additionalInfo: {
                 errorId,
+                reqId: output[1].additionalInfo.reqId || 'some value should be here',
             },
         });
 
