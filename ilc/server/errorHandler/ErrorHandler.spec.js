@@ -7,7 +7,7 @@ const localStorage = require('../../common/localStorage');
 
 const createApp = require('../app');
 
-const parseOutout = capturedOutput => capturedOutput.map(v => {
+const parseOutput = capturedOutput => capturedOutput.map(v => {
     v = Buffer.from(v).toString('utf-8');
     try {
         return JSON.parse(v);
@@ -72,7 +72,7 @@ describe('error handler', () => {
             '</html>'
         );
 
-        const output = parseOutout(stdoutInspect.output);
+        const output = parseOutput(stdoutInspect.output);
 
         chai.expect(output[1]).to.deep.include({
             level: 50,
@@ -97,7 +97,7 @@ describe('error handler', () => {
         nock(config.get('registry').address).get(`/api/v1/template/500/rendered`).replyWithError(replyingError.message);
 
         const response = await server.get('/_ilc/500').expect(500);
-        const output = parseOutout(stdoutInspect.output);
+        const output = parseOutput(stdoutInspect.output);
 
         chai.expect(response.text).to.be.eql('Oops! Something went wrong. Pls try to refresh page or contact support.');
         chai.expect(output[1]).to.deep.include({
