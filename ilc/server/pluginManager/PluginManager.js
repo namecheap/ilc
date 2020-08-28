@@ -48,7 +48,5 @@ module.exports = class PluginManager {
             console.info(`Enabling plugin "${manifest.name}" of type "${pSource.type}"...`);
             this.#plugins[pSource.type] = pSource;
         }
-
-        return entries;
     }
 };
