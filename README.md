@@ -80,6 +80,7 @@ And don't miss the **[Step-By-Step lessons about apps development with ILC](./do
 * [Animation during reroute](./docs/animation_during_reroute.md)
 * [Global error handling](./docs/global_errors_handling.md)
 * [Demo applications used in quick start](https://github.com/namecheap/ilc-demo-apps)
+* [SDK for ILC plugins development](https://github.com/namecheap/ilc-plugins-sdk)
 
 ## 🔌 Adapters
 To conveniently connect various frameworks to ILC we rely on the [ecosystem of the single-spa](https://single-spa.js.org/docs/ecosystem)

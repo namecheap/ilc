@@ -35,7 +35,7 @@ module.exports = class Registry {
             return;
         }
 
-        this.#logger.log('Registry is preheating...');
+        this.#logger.info('Registry is preheating...');
 
         await Promise.all([
             this.getConfig(),
@@ -45,7 +45,7 @@ module.exports = class Registry {
         this.#cacheHeated.config = true;
         this.#cacheHeated.template = true;
 
-        this.#logger.log('Registry preheated successfully!');
+        this.#logger.info('Registry preheated successfully!');
     }
 
     #getConfig = async () => {

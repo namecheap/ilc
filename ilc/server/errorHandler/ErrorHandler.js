@@ -14,20 +14,20 @@ module.exports = class ErrorHandler {
         this.#logger = logger;
     }
 
+    /**
+     *
+     * @param {Error} err
+     * @param {{}} errInfo
+     */
     noticeError(err, errInfo = {}) {
         const infoData = Object.assign({}, errInfo);
         if (err.data) {
-            //TODO: fetch data from parent errors
             Object.assign(infoData, err.data);
         }
 
         this.#errorsService.noticeError(err, infoData);
-        this.#logger.error(JSON.stringify({
-            type: err.name,
-            message: err.message,
-            stack: err.stack.split("\n"),
-            additionalInfo: infoData,
-        }));
+        err.data = infoData;
+        this.#logger.error(err);
     }
 
     handleError = async (err, req, res) => {
@@ -37,9 +37,14 @@ module.exports = class ErrorHandler {
         // While Fastify will pass it's own Reply object
         // Tailor passes http.ServerResponse from Node core
         let nres = res.res ? res.res : res;
+        // Claim full responsibility of the low-level response from Fastify
+        if (res.res) {
+            res.sent = true;
+        }
 
         try {
             this.noticeError(err, {
+                reqId: req.id,
                 errorId
             });
 
@@ -52,13 +57,13 @@ module.exports = class ErrorHandler {
             nres.write(data);
             nres.end();
         } catch (causeErr) {
-            const err = new ErrorHandlingError({
+            const e = new ErrorHandlingError({
                 cause: causeErr,
                 d: {
                     errorId,
                 }
             });
-            this.#logger.error(err);
+            this.#logger.error(e);
 
             nres.statusCode = 500;
             nres.write('Oops! Something went wrong. Pls try to refresh page or contact support.');
