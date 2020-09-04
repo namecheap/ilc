@@ -7,13 +7,13 @@ const getExampleObject = (ip = '10.1.150.223', protocol = 'http:') => (
             '@portal/one': {
                 spaBundle: `${protocol}//${ip}:2273/api/fragment/uilandingpages/app.js`,
                 ssr: {
-                    src: `${protocol}//${ip}:2273/api/fragment/uilandingpages/`
+                    src: `${protocol}//${ip}/api/fragment/uilandingpages/`
                 }
             },
             '@portal/two': {
                 spaBundle: `${protocol}//${ip}:2222/example.js`,
                 ssr: {
-                    src: `${protocol}//${ip}:2222/`,
+                    src: `${protocol}//${ip}/`,
                     timeout: 1000,
                 },
                 kind: 'primary',
@@ -121,6 +121,12 @@ describe('overrideConfig', () => {
                 const exampleCookies = getExampleCookies(ip);
                 expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
             }
+        });
+
+        it('should not sanitize correct config for localhost', async () => {
+            const ip = `localhost`;
+            const exampleCookies = getExampleCookies(ip);
+            expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
         });
 
         it('should not sanitize correct config for any 10.x.x.x', async () => {

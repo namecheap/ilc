@@ -15,10 +15,15 @@ const isPrivateNetwork = link => {
 }
 
 const isTrustedOrigin = (link, trustedOrigins) => {
-    if (!trustedOrigins) return false;
+    if (!trustedOrigins) {
+        trustedOrigins = [];
+    }
+    trustedOrigins.push('localhost');
 
     const linkWoProtocol = link.trim().replace(/(^\w+:|^)\/\//, '');
-    return trustedOrigins.some(trustedOrigin => linkWoProtocol.startsWith(trustedOrigin));
+    return trustedOrigins.some(trustedOrigin =>
+        linkWoProtocol.startsWith(trustedOrigin + ':') || linkWoProtocol.startsWith(trustedOrigin + '/')
+    );
 };
 
 const sanitizeSpoofedLinks = (obj, trustedOrigins) => {
