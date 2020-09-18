@@ -4,6 +4,7 @@ const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const registryService = require('./registry/factory');
 const errorHandlingService = require('./errorHandler/factory');
+const i18n = require('./i18n');
 
 module.exports = () => {
     const app = fastify(Object.assign({
@@ -12,6 +13,11 @@ module.exports = () => {
     const tailor = tailorFactory(config.get('cdnUrl'), config.get('newrelic.customClientJsWrapper'));
 
     app.register(require('./ping'));
+    app.addHook('onRequest', (req, res, done) => {
+        req.raw.ilcState = {};
+        done();
+    });
+    app.addHook('onRequest', i18n.onRequest);
 
     if (config.get('cdnUrl') === null) {
         app.use('/_ilc/', serveStatic(config.get('productionMode')));
@@ -27,7 +33,6 @@ module.exports = () => {
 
     app.all('*', (req, res) => {
         req.headers['x-request-uri'] = req.raw.url; //TODO: to be removed & replaced with routerProps
-        req.raw.ilcState = {};
         tailor.requestHandler(req.raw, res.res);
     });
 
