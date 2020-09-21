@@ -25,7 +25,7 @@ module.exports = class ConfigsInjector {
             throw new Error(`Can't inject ILC configs into invalid document.`);
         }
 
-        if (request.ilcState.locale) {
+        if (request.ilcState && request.ilcState.locale) {
             document = document.replace('<html', `<html lang="${request.ilcState.locale}"`);
         }
 
