@@ -9,6 +9,11 @@ const SUPPORTED_LANGS = _.uniq(SUPPORTED_LOCALES.map(v => v.split('-')[0]));
 async function onRequest(req, reply) {
     const routeLocale = getLocaleFromUrl(req.raw.url);
     if (routeLocale !== null) {
+        if (routeLocale.locale === DEFAULT_LOCALE) {
+            reply.redirect(routeLocale.route);
+            return;
+        }
+
         req.raw.url = routeLocale.route;
         setReqLocale(req, routeLocale.locale);
         return;

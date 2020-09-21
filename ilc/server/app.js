@@ -2,15 +2,19 @@ const config = require('config');
 const fastify = require('fastify');
 const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
-const registryService = require('./registry/factory');
+const registryServiceImport = require('./registry/factory');
 const errorHandlingService = require('./errorHandler/factory');
 const i18n = require('./i18n');
 
-module.exports = () => {
+module.exports = (registryService = registryServiceImport) => {
     const app = fastify(Object.assign({
         trustProxy: false, //TODO: should be configurable via Registry
     }, require('./logger/fastify')));
-    const tailor = tailorFactory(config.get('cdnUrl'), config.get('newrelic.customClientJsWrapper'));
+    const tailor = tailorFactory(
+        config.get('cdnUrl'),
+        config.get('newrelic.customClientJsWrapper'),
+        registryService,
+    );
 
     app.register(require('./ping'));
     app.addHook('onRequest', (req, res, done) => {

@@ -7,7 +7,6 @@ const logger = require('../logger');
 const Tailor = require('tailorx');
 const fetchTemplate = require('./fetch-template');
 const Router = require('./server-router');
-const registryService = require('../registry/factory');
 const filterHeaders = require('./filter-headers');
 const errorHandlingService = require('../errorHandler/factory');
 const errorHandlerSetup = require('./error-handler');
@@ -15,7 +14,7 @@ const fragmentHooks = require('./fragment-hooks');
 const ConfigsInjector = require('./configs-injector');
 const processFragmentResponse = require('./process-fragment-response');
 
-module.exports = function (cdnUrl, nrCustomClientJsWrapper = null) {
+module.exports = function (cdnUrl, nrCustomClientJsWrapper = null, registryService) {
     const router = new Router(logger);
     const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper);
 
