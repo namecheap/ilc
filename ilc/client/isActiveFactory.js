@@ -1,4 +1,4 @@
-import {triggerAppChange} from 'single-spa';
+import {triggerAppChange} from './navigationEvents';
 import handlePageTransaction, {slotWillBe} from './handlePageTransaction';
 
 export const createFactory = (triggerAppChange, handlePageTransaction, slotWillBe) => (router, appName, slotName) => {
