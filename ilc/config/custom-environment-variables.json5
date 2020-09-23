@@ -7,5 +7,9 @@
         licenseKey: 'NR_LICENSE_KEY',
         customClientJsWrapper: 'NR_CUSTOM_CLIENT_JS_WRAPPER',
     },
-    overrideConfigTrustedOrigins: 'OVERRIDE_CONFIG_TRUSTED_ORIGINS'
+    overrideConfigTrustedOrigins: 'OVERRIDE_CONFIG_TRUSTED_ORIGINS',
+    amdDefineCompatibilityMode: {
+        __name: 'AMD_DEFINE_COMPATIBILITY_MODE',
+        __format: 'json',
+    },
 }
