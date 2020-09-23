@@ -11,9 +11,9 @@ module.exports = (registryService = registryServiceImport) => {
         trustProxy: false, //TODO: should be configurable via Registry
     }, require('./logger/fastify')));
     const tailor = tailorFactory(
+        registryService,
         config.get('cdnUrl'),
         config.get('newrelic.customClientJsWrapper'),
-        registryService,
     );
 
     app.register(require('./ping'));

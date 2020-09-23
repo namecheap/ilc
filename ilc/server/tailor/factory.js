@@ -14,7 +14,7 @@ const fragmentHooks = require('./fragment-hooks');
 const ConfigsInjector = require('./configs-injector');
 const processFragmentResponse = require('./process-fragment-response');
 
-module.exports = function (cdnUrl, nrCustomClientJsWrapper = null, registryService) {
+module.exports = function (registryService, cdnUrl, nrCustomClientJsWrapper = null) {
     const router = new Router(logger);
     const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper);
 
