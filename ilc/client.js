@@ -22,6 +22,12 @@ const state = initIlcState();
 const router = new Router(registryConf, state, singleSpa);
 const asyncBootUp = new AsyncBootUp();
 
+// Here we expose window.ILC.define also as window.define to ensure that regular AMD/UMD bundles work correctly by default
+// See docs/umd_bundles_compatibility.md
+if (!registryConf.settings.amdDefineCompatibilityMode) {
+    window.define = window.ILC.define;
+}
+
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
         const appName = slots[slotName].appName;
