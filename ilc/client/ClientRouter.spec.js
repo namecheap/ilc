@@ -277,10 +277,10 @@ describe('client router', () => {
         });
     });
 
-    describe('should listen to single-spa:before-routing-event when client routes was initialized', () => {
+    describe('should listen to ilc:before-routing event when client routes was initialized', () => {
         let singleSpaBeforeRoutingEvent;
 
-        const singleSpaBeforeRoutingEventName = 'single-spa:before-routing-event';
+        const singleSpaBeforeRoutingEventName = 'ilc:before-routing';
 
         beforeEach(() => {
             singleSpaBeforeRoutingEvent = new Event(singleSpaBeforeRoutingEventName);
