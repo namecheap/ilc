@@ -1,7 +1,6 @@
 const uuidv4 = require('uuid/v4');
 const extendError = require('@namecheap/error-extender');
 
-const ExtendedError = extendError('ExtendedError');
 const ErrorHandlingError = extendError('ErrorHandlingError');
 
 module.exports = class ErrorHandler {
@@ -24,7 +23,8 @@ module.exports = class ErrorHandler {
         const infoData = Object.assign({}, errInfo);
 
         if (err.data === undefined) {
-            err = new ExtendedError({cause: err, data: infoData});
+            const ExtendedError = extendError(err.name);
+            err = new ExtendedError({cause: err, data: infoData, message: err.message});
         } else {
             Object.assign(err.data, infoData);
         }

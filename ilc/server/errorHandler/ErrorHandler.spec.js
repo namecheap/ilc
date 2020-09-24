@@ -76,7 +76,7 @@ describe('error handler', () => {
 
         chai.expect(output[1]).to.deep.include({
             level: 50,
-            type: 'ExtendedError',
+            type: 'Error',
             message: '500 page test error',
             additionalInfo: {
                 errorId,
@@ -85,7 +85,6 @@ describe('error handler', () => {
         });
 
         chai.expect(output[1].stack[0]).to.eql('Error: 500 page test error');
-        chai.expect(output[1].stack[1]).to.contain('    at Object.');
         chai.expect(output[1]).to.have.property('time');
         chai.expect(output[1]).to.have.property('pid');
         chai.expect(output[1]).to.have.property('hostname');
@@ -102,7 +101,7 @@ describe('error handler', () => {
         chai.expect(response.text).to.be.eql('Oops! Something went wrong. Pls try to refresh page or contact support.');
         chai.expect(output[1]).to.deep.include({
             level: 50,
-            type: 'ExtendedError',
+            type: 'Error',
             message: '500 page test error',
         });
         chai.expect(output[1]).to.have.nested.property('additionalInfo.errorId');
