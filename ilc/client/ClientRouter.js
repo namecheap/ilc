@@ -75,7 +75,7 @@ export default class ClientRouter {
     };
 
     #addEventListeners = () => {
-        this.#windowEventHandlers['single-spa:before-routing-event'] = this.#onSingleSpaRoutingEvents;
+        this.#windowEventHandlers['ilc:before-routing'] = this.#onSingleSpaRoutingEvents;
         this.#windowEventHandlers['ilc:404'] = this.#onSpecialRouteTrigger(404);
 
         for (let key in this.#windowEventHandlers) {

@@ -1,3 +1,4 @@
+import './client/navigationEvents';
 import * as singleSpa from 'single-spa';
 
 import Router from './client/ClientRouter';
