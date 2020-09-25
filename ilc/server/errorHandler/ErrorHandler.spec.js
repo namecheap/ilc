@@ -85,7 +85,6 @@ describe('error handler', () => {
         });
 
         chai.expect(output[1].stack[0]).to.eql('Error: 500 page test error');
-        chai.expect(output[1].stack[1]).to.contain('    at Object.');
         chai.expect(output[1]).to.have.property('time');
         chai.expect(output[1]).to.have.property('pid');
         chai.expect(output[1]).to.have.property('hostname');

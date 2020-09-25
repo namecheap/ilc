@@ -21,12 +21,15 @@ module.exports = class ErrorHandler {
      */
     noticeError(err, errInfo = {}) {
         const infoData = Object.assign({}, errInfo);
-        if (err.data) {
-            Object.assign(infoData, err.data);
+
+        if (err.data === undefined) {
+            const ExtendedError = extendError(err.name);
+            err = new ExtendedError({cause: err, data: infoData, message: err.message});
+        } else {
+            Object.assign(err.data, infoData);
         }
 
         this.#errorsService.noticeError(err, infoData);
-        err.data = infoData;
         this.#logger.error(err);
     }
 

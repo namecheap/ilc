@@ -36,7 +36,7 @@
     "newrelic": "^6.11.0",
     "pino": "^6.5.0",
     "serve-static": "^1.14.1",
-    "single-spa": "5.4.0",
+    "single-spa": "5.6.0",
     "systemjs": "^6.4.2",
     "systemjs-css-extra": "^1.0.2",
     "tailorx": "^6.0.0",
