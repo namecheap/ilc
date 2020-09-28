@@ -19,6 +19,7 @@
         "@babel/preset-react": "^7.0.0",
         "@babel/preset-typescript": "^7.1.0",
         "babel-loader": "^8.0.4",
+        "copy-webpack-plugin": "^6.1.1",
         "css-loader": "^3.4.2",
         "file-loader": "^6.0.0",
         "html-loader": "~0.5.5",
