@@ -11,6 +11,7 @@ import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import {getSlotElement} from './client/utils';
 import AsyncBootUp from './client/AsyncBootUp';
+import IlcAppSdk from 'ilc-server-sdk/dist/client';
 
 const System = window.System;
 if (System === undefined) {
@@ -18,9 +19,34 @@ if (System === undefined) {
     throw new Error('ILC: can\'t find SystemJS on a page, crashing everything');
 }
 
+const intlAdapterSystem = {
+    get: () => ({locale: document.documentElement.lang, currency: 'USD'}),
+    getDefault: () => ({locale: 'en-US', currency: 'USD'}),
+    getSupported: () => ({locale: ['en-US', 'fr-FR', 'en-GB', 'fr-CA'], currency: ['USD', 'EUR', 'GBP']}),
+};
+
+const systemSdk = new IlcAppSdk({appId: 'ILC:System', intl: intlAdapterSystem});
+
+const patchedLocation = new Proxy(window.location, {
+    get(target, name) {
+        if (['assign', 'reload', 'replace', 'toString'].indexOf(name) !== -1) {
+            return target[name];
+        }
+
+        return systemSdk.intl.parseUrl(target).cleanUrl[name];
+    },
+});
+const patchedWindow = new Proxy(window, {
+    get(target, name) {
+        return name === 'location' ? patchedLocation : target[name];
+    },
+});
+
+window.ILC.window = patchedWindow;
+
 const registryConf = initIlcConfig();
 const state = initIlcState();
-const router = new Router(registryConf, state, singleSpa);
+const router = new Router(registryConf, state, singleSpa, window.ILC.window.location);
 const asyncBootUp = new AsyncBootUp();
 
 // Here we expose window.ILC.define also as window.define to ensure that regular AMD/UMD bundles work correctly by default
@@ -28,6 +54,60 @@ const asyncBootUp = new AsyncBootUp();
 if (!registryConf.settings.amdDefineCompatibilityMode) {
     window.define = window.ILC.define;
 }
+
+let startedLangChangeFor = null;
+
+const intlAdapter = Object.assign({
+    async set(conf) {
+        if (!conf.locale) {
+            return;
+        }
+
+        if (!this.getSupported().locale.includes(conf.locale)) {
+            throw new Error('Invalid locale passed');
+        }
+        document.documentElement.lang = conf.locale;
+        const newLocaleUrl = systemSdk.intl.localizeUrl(window.location, conf.locale).toString();
+        startedLangChangeFor = newLocaleUrl;
+        singleSpa.navigateToUrl(newLocaleUrl);
+    }
+}, intlAdapterSystem);
+
+window.addEventListener('single-spa:before-mount-routing-event', e => {
+    if (startedLangChangeFor !== null && startedLangChangeFor !== window.location.href) {
+        console.warn('ILC: looks like we have unfinished language chage process... Canceling it.');
+        startedLangChangeFor = null;
+    } else if (startedLangChangeFor === null) {
+        return;
+    }
+    startedLangChangeFor = null;
+
+    let loader = null;
+    const promises = [];
+
+    const onAllResourcesReady = () => iterablePromise(promises).then(() => {
+        if (loader) {
+            loader.close();
+            window.document.body.removeChild(loader);
+            loader = null;
+        }
+    });
+    const detail = Object.assign(systemSdk.intl.get(), {
+        addPendingResources: (promise) => {
+            if (!loader) {
+                loader = document.createElement('dialog');
+                loader.innerHTML = 'loading....';
+                window.document.body.append(loader);
+                loader.showModal();
+            }
+            promises.push(promise);
+        },
+        onAllResourcesReady: onAllResourcesReady,
+    });
+
+    window.dispatchEvent(new CustomEvent('ilc:intl-update', {detail}));
+    return onAllResourcesReady();
+});
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
@@ -66,11 +146,14 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
                 getCurrentBasePath: () => router.getCurrentRoute().basePath,
                 appId: fragmentName, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
-                errorHandler: fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName)
+                errorHandler: fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName),
+                clientSdk: new IlcAppSdk({appId: fragmentName, intl: intlAdapter}),
             }
         );
     });
 });
+
+window.zzz = new IlcAppSdk({appId: 'tst', intl: intlAdapter});
 
 setupErrorHandlers(registryConf, router.getCurrentRoute);
 setupPerformanceMonitoring(router.getCurrentRoute);
@@ -81,3 +164,16 @@ singleSpa.setUnmountMaxTime(3000, false);
 singleSpa.setUnloadMaxTime(3000, false);
 
 singleSpa.start({urlRerouteOnly: true});
+
+function iterablePromise(iterable) {
+    return Promise.all(iterable).then((resolvedIterable) => {
+        if (iterable.length !== resolvedIterable.length) {
+            // The list of promises or values changed. Return a new Promise.
+            // The original promise won't resolve until the new one does.
+            return iterablePromise(iterable);
+        }
+        // The list of promises or values stayed the same.
+        // Return results immediately.
+        return resolvedIterable;
+    });
+}

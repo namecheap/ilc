@@ -118,7 +118,7 @@ export default class ClientRouter {
         // only hash will be changed so router.match will return error, since <base> tag has already been removed.
         // so in this cases we shouldn't regenerate currentRoute
         if (this.#currentUrl !== newUrl) {
-            this.#currentRoute = this.#router.match(this.#location.pathname + this.#location.search);
+            this.#currentRoute = this.#router.match(this.#getCurrUrl());
             this.#currentUrl = newUrl;
         }
 

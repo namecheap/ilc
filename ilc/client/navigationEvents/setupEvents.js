@@ -4,9 +4,9 @@ function fireRoutingEvent() {
 
 function patchedUpdateState(updateState) {
     return function () {
-        const urlBefore = window.location.href;
+        const urlBefore = window.ILC.window.location.href;
         const result = updateState.apply(this, arguments);
-        const urlAfter = window.location.href;
+        const urlAfter = window.ILC.window.location.href;
 
         if (urlBefore !== urlAfter) {
             fireRoutingEvent();
