@@ -40,8 +40,7 @@
     "systemjs-css-extra": "^1.0.2",
     "tailorx": "^6.0.0",
     "url-join": "^4.0.1",
-    "uuid": "^3.4.0",
-    "wget-improved": "^3.2.1"
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
@@ -74,6 +73,7 @@
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-middleware": "^3.7.2",
+    "wget-improved": "^3.2.1",
     "wrapper-webpack-plugin": "^2.1.0"
   }
 }
