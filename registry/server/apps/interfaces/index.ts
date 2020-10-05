@@ -1,4 +1,4 @@
-import Joi from '@hapi/joi';
+import Joi from 'joi';
 
 export default interface App {
     name: string,
@@ -9,7 +9,7 @@ export default interface App {
     props?: string, // JSON({ [propName: string]: any })
     configSelector?: string,
     ssr: string, // JSON({ src: string, timeout: number })
-}
+};
 
 export const appNameSchema = Joi.string().trim().min(1);
 
