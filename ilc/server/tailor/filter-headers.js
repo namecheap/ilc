@@ -7,7 +7,7 @@ const ACCEPT_HEADERS = [
     'x-request-uri',
     'x-request-host',
     'cookie',
-    'z-lang',
+    'z-intl',
 ];
 
 /**

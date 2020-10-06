@@ -1,22 +1,23 @@
 const _ = require('lodash');
 const cookie = require('cookie');
+const config = require('config');
 
-const DEFAULT_LOCALE = 'en-US';
-const SUPPORTED_LOCALES = [DEFAULT_LOCALE, 'en-GB', 'fr-FR']; // http://cldr.unicode.org/core-spec?tmpl=%2Fsystem%2Fapp%2Ftemplates
+const DEFAULT_LOCALE = config.get('i18n.default.locale'); //TODO: should be moved to registry
+const SUPPORTED_LOCALES = config.get('i18n.supported.locale'); // http://cldr.unicode.org/core-spec?tmpl=%2Fsystem%2Fapp%2Ftemplates
 const SUPPORTED_LANGS = _.uniq(SUPPORTED_LOCALES.map(v => v.split('-')[0]));
 
 
-async function onRequest(req, reply) {
-    const routeLocale = getLocaleFromUrl(req.raw.url);
+async function onRequest(req, reply, next) {
+    const routeLocale = getLocaleFromUrl(req.url);
     if (routeLocale !== null) {
         if (routeLocale.locale === DEFAULT_LOCALE) {
             reply.redirect(routeLocale.route);
             return;
         }
 
-        req.raw.url = routeLocale.route;
+        req.url = routeLocale.route;
         setReqLocale(req, routeLocale.locale);
-        return;
+        return next();
     }
 
     let locale = null;
@@ -28,17 +29,20 @@ async function onRequest(req, reply) {
     //TODO: add auth token based detection https://collab.namecheap.net/pages/viewpage.action?spaceKey=NA&title=How+to+Detect+Language+and+Culture
 
     if (locale !== null && locale !== DEFAULT_LOCALE) {
-        reply.redirect(`/${locale}${req.raw.url}`);
+        reply.redirect(`/${locale}${req.url}`);
         return;
     }
 
     locale = DEFAULT_LOCALE;
     setReqLocale(req, locale);
+    next();
 }
 
 function setReqLocale(req, locale) {
-    req.raw.ilcState.locale = locale;
-    req.headers['z-lang'] = locale;
+    req.ilcState.locale = locale;
+    req.headers['z-intl'] =
+        `${locale}:${DEFAULT_LOCALE}:${SUPPORTED_LOCALES.join(',')};` +
+        `USD:${config.get('i18n.default.currency')}:${config.get('i18n.supported.currency').join(',')};`;
 }
 
 function getLocaleFromUrl(url) {

@@ -34,7 +34,7 @@ describe('i18n', () => {
 
             const fragmentResps = helpers.getFragmentResponses(response.body);
             _.each(fragmentResps, v => {
-                chai.expect(v.headers['z-lang']).to.eq('en-US');
+                chai.expect(v.headers['z-intl']).to.eq('en-US:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
                 chai.expect(helpers.getRouterProps(v.url).reqUrl).to.eq('/all');
             });
         });
@@ -49,7 +49,7 @@ describe('i18n', () => {
 
             const fragmentResps = helpers.getFragmentResponses(response.body);
             _.each(fragmentResps, v => {
-                chai.expect(v.headers['z-lang']).to.eq('fr-FR');
+                chai.expect(v.headers['z-intl']).to.eq('fr-FR:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
                 chai.expect(helpers.getRouterProps(v.url).reqUrl).to.eq('/all');
             });
         });
@@ -61,51 +61,51 @@ describe('i18n', () => {
                 const req = getReqMock('/fr-FR/test');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply);
+                await i18n.onRequest(req, reply, () => {});
 
-                chai.expect(req.raw.url).to.be.eql('/test');
-                chai.expect(req.raw.ilcState.locale).to.be.eql('fr-FR');
-                chai.expect(req.headers['z-lang']).to.be.eql('fr-FR');
+                chai.expect(req.url).to.be.eql('/test');
+                chai.expect(req.ilcState.locale).to.be.eql('fr-FR');
+                chai.expect(req.headers['z-intl']).to.be.eql('fr-FR:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
 
             it('fr-fr', async () => {
                 const req = getReqMock('/fr-fr/test');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply);
+                await i18n.onRequest(req, reply, () => {});
 
-                chai.expect(req.raw.url).to.be.eql('/test');
-                chai.expect(req.raw.ilcState.locale).to.be.eql('fr-FR');
-                chai.expect(req.headers['z-lang']).to.be.eql('fr-FR');
+                chai.expect(req.url).to.be.eql('/test');
+                chai.expect(req.ilcState.locale).to.be.eql('fr-FR');
+                chai.expect(req.headers['z-intl']).to.be.eql('fr-FR:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
 
             it('fr', async () => {
                 const req = getReqMock('/fr/test');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply);
+                await i18n.onRequest(req, reply, () => {});
 
-                chai.expect(req.raw.url).to.be.eql('/test');
-                chai.expect(req.raw.ilcState.locale).to.be.eql('fr-FR');
-                chai.expect(req.headers['z-lang']).to.be.eql('fr-FR');
+                chai.expect(req.url).to.be.eql('/test');
+                chai.expect(req.ilcState.locale).to.be.eql('fr-FR');
+                chai.expect(req.headers['z-intl']).to.be.eql('fr-FR:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
 
             it('bd-SM, ignores invalid locale and fallback to the default one', async () => {
                 const req = getReqMock('/bd-SM/test');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply);
+                await i18n.onRequest(req, reply, () => {});
 
-                chai.expect(req.raw.url).to.be.eql('/bd-SM/test');
-                chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
-                chai.expect(req.headers['z-lang']).to.be.eql('en-US');
+                chai.expect(req.url).to.be.eql('/bd-SM/test');
+                chai.expect(req.ilcState.locale).to.be.eql('en-US');
+                chai.expect(req.headers['z-intl']).to.be.eql('en-US:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
 
             it('handles default locale with redirect', async () => {
                 const req = getReqMock('/en-US/test');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply);
+                await i18n.onRequest(req, reply, () => {});
 
                 sinon.assert.calledWith(reply.redirect, '/test');
             });
@@ -116,7 +116,7 @@ describe('i18n', () => {
                 const req = getReqMock('/test', 'lang=fr-FR;');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply);
+                await i18n.onRequest(req, reply, () => {});
 
                 sinon.assert.calledWith(reply.redirect, '/fr-FR/test');
             });
@@ -125,23 +125,23 @@ describe('i18n', () => {
                 const req = getReqMock('/test', 'lang=en-US;');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply);
+                await i18n.onRequest(req, reply, () => {});
 
                 sinon.assert.notCalled(reply.redirect);
-                chai.expect(req.raw.url).to.be.eql('/test');
-                chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
-                chai.expect(req.headers['z-lang']).to.be.eql('en-US');
+                chai.expect(req.url).to.be.eql('/test');
+                chai.expect(req.ilcState.locale).to.be.eql('en-US');
+                chai.expect(req.headers['z-intl']).to.be.eql('en-US:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
 
             it('bd-SM, ignores invalid locale and fallback to the default one', async () => {
                 const req = getReqMock('/test', 'lang=bd-SM;');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply);
+                await i18n.onRequest(req, reply, () => {});
 
-                chai.expect(req.raw.url).to.be.eql('/test');
-                chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
-                chai.expect(req.headers['z-lang']).to.be.eql('en-US');
+                chai.expect(req.url).to.be.eql('/test');
+                chai.expect(req.ilcState.locale).to.be.eql('en-US');
+                chai.expect(req.headers['z-intl']).to.be.eql('en-US:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
         });
     });
@@ -149,7 +149,8 @@ describe('i18n', () => {
 
 function getReqMock(url = '/test', cookieString = '') {
     return {
-        raw: { url: url, ilcState: {} },
+        url: url,
+        ilcState: {},
         headers: { cookie: cookieString },
     };
 }

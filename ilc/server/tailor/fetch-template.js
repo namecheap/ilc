@@ -23,6 +23,11 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
     registryConfig.data.settings = { //TODO: this object should be fetched from registry
         amdDefineCompatibilityMode: config.get('amdDefineCompatibilityMode'),
     };
+    if (config.get('i18n.enabled') === true) { //TODO: this data should be fetched from registry
+        Object.assign(registryConfig.data.settings, {
+            i18n: { default: config.get('i18n.default'), supported: config.get('i18n.supported') }
+        })
+    }
     const overrideConfig = parseOverrideConfig(request.headers.cookie, config.get('overrideConfigTrustedOrigins'));
     if (overrideConfig) {
         registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);

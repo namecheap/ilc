@@ -10,22 +10,25 @@ module.exports = (registryService = registryServiceImport) => {
     const app = fastify(Object.assign({
         trustProxy: false, //TODO: should be configurable via Registry
     }, require('./logger/fastify')));
+
+    app.addHook('onRequest', (req, res, done) => {
+        req.raw.ilcState = {};
+        done();
+    });
+
     const tailor = tailorFactory(
         registryService,
         config.get('cdnUrl'),
         config.get('newrelic.customClientJsWrapper'),
     );
 
-    app.register(require('./ping'));
-    app.addHook('onRequest', (req, res, done) => {
-        req.raw.ilcState = {};
-        done();
-    });
-    app.addHook('onRequest', i18n.onRequest);
-
     if (config.get('cdnUrl') === null) {
         app.use('/_ilc/', serveStatic(config.get('productionMode')));
     }
+
+    app.register(require('./ping'));
+
+    app.use(i18n.onRequest);
 
     app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
         const data = await registryService.getTemplate(req.params.templateName);

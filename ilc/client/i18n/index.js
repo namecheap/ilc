@@ -6,13 +6,13 @@ export default class I18n {
     #singleSpa;
     #intlAdapterSystem;
 
-    constructor(registryConf, singleSpa) {
+    constructor(registrySettings, singleSpa) {
         this.#prevUrl = window.location.href;
         this.#singleSpa = singleSpa;
         this.#intlAdapterSystem = {
             get: () => ({locale: document.documentElement.lang, currency: 'USD'}),
-            getDefault: () => ({locale: 'en-US', currency: 'USD'}),
-            getSupported: () => ({locale: ['en-US', 'fr-FR', 'en-GB', 'fr-CA'], currency: ['USD', 'EUR', 'GBP']}),
+            getDefault: () => registrySettings.default,
+            getSupported: () => registrySettings.supported,
         };
 
         this.#systemSdk = new IlcAppSdk({appId: 'ILC:System', intl: this.#intlAdapterSystem});

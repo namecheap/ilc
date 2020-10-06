@@ -23,7 +23,7 @@ if (System === undefined) {
 const registryConf = initIlcConfig();
 const state = initIlcState();
 
-const i18n = new I18n(registryConf, singleSpa);
+const i18n = new I18n(registryConf.settings.i18n, singleSpa);
 const router = new Router(registryConf, state, singleSpa, window.ILC.window.location);
 const asyncBootUp = new AsyncBootUp();
 
