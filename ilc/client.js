@@ -5,7 +5,7 @@ import Router from './client/ClientRouter';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
 import isActiveFactory from './client/isActiveFactory';
-import initIlcConfig from './client/initIlcConfig';
+import getIlcConfig from './client/ilcConfig';
 import initIlcState from './client/initIlcState';
 import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
@@ -20,7 +20,7 @@ if (System === undefined) {
     throw new Error('ILC: can\'t find SystemJS on a page, crashing everything');
 }
 
-const registryConf = initIlcConfig();
+const registryConf = getIlcConfig();
 const state = initIlcState();
 
 const i18n = registryConf.settings.i18n ? new I18n(registryConf.settings.i18n, singleSpa) : null;

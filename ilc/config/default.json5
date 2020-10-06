@@ -24,5 +24,7 @@
             locale: ['en-US', 'en-GB', 'fr-FR', 'fr-CA', 'de-DE'],
             currency: ['USD', 'EUR', 'GBP']
         },
-    }
+    },
+    //TODO: should be moved to registry
+    globalSpinner: true, //Possible values: false, true, string with custom markup
 }

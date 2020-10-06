@@ -1,10 +1,16 @@
+let registryConf = null;
+
 export default function () {
+    if (registryConf !== null) {
+        return registryConf;
+    }
+
     const confScript = document.querySelector('script[type="ilc-config"]');
     if (confScript === null) {
         throw new Error('Can\'t find single-spa config');
     }
 
-    const registryConf = JSON.parse(confScript.innerHTML);
+    registryConf = JSON.parse(confScript.innerHTML);
 
     document.head.appendChild(getSystemjsImportmap(registryConf.apps));
 
@@ -20,7 +26,7 @@ function getSystemjsImportmap(apps) {
      * Need to save app's dependencies based on all merged apps dependencies
      * to avoid duplicate vendors preloads on client side
      * because apps may have common dependencies but from different sources
-     * 
+     *
      * @see {@path ilc/server/tailor/configs-injector.js}
      */
     for (let appName in apps) {

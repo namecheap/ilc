@@ -1,4 +1,5 @@
 import IlcAppSdk from 'ilc-server-sdk/dist/client';
+import {handleAsyncAction} from '../handlePageTransaction';
 
 export default class I18n {
     #prevUrl = null;
@@ -67,31 +68,19 @@ export default class I18n {
 
         document.documentElement.lang = currLocale;
 
-        let loader = null;
         const promises = [];
-
-        const onAllResourcesReady = () => this.#iterablePromise(promises).then(() => {
-            if (loader) {
-                loader.close();
-                window.document.body.removeChild(loader);
-                loader = null;
-            }
-        });
+        const onAllResourcesReady = () => this.#iterablePromise(promises);
         const detail = Object.assign(this.#systemSdk.intl.get(), {
-            addPendingResources: (promise) => {
-                if (!loader) {
-                    loader = document.createElement('dialog');
-                    loader.innerHTML = 'loading....';
-                    window.document.body.append(loader);
-                    loader.showModal();
-                }
-                promises.push(promise);
-            },
+            addPendingResources: promise => promises.push(promise),
             onAllResourcesReady: onAllResourcesReady,
         });
 
         window.dispatchEvent(new CustomEvent('ilc:intl-update', {detail}));
-        return onAllResourcesReady();
+
+        const afterAllResReady = onAllResourcesReady();
+        handleAsyncAction(afterAllResReady);
+
+        return afterAllResReady;
     };
 
     #iterablePromise = (iterable) => {

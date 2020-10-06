@@ -1,17 +1,25 @@
 import { getSlotElement } from './utils';
+import getIlcConfig from './ilcConfig';
 
 import scrollRestorer from '@mapbox/scroll-restorer';
 scrollRestorer.start({ autoRestore: false, captureScrollDebounce: 150 });
 
 let globalSpinner, spinnerTimeout;
 const runGlobalSpinner = () => {
-    const tmplSpinner = window.ilcConfig && window.ilcConfig.tmplSpinner;
-    if (!tmplSpinner || spinnerTimeout) return;
+    const registrySettings = getIlcConfig().settings;
+    if (registrySettings.globalSpinner === false || spinnerTimeout) return;
 
     spinnerTimeout = setTimeout(() => {
-        globalSpinner = document.createElement('div');
-        globalSpinner.innerHTML = tmplSpinner;
-        document.body.appendChild(globalSpinner);
+        if (registrySettings.globalSpinner === true) {
+            globalSpinner = document.createElement('dialog');
+            globalSpinner.innerHTML = 'loading....';
+            document.body.appendChild(globalSpinner);
+            globalSpinner.showModal();
+        } else {
+            globalSpinner = document.createElement('div');
+            globalSpinner.innerHTML = registrySettings.globalSpinner;
+            document.body.appendChild(globalSpinner);
+        }
     }, 200);
 };
 const removeGlobalSpinner = () => {
@@ -26,7 +34,12 @@ const removeGlobalSpinner = () => {
 
 const fakeSlots = [];
 const hiddenSlots = [];
-const contentListeners = [];
+const transactionBlockers = [];
+
+function removeTransactionBlocker(blocker) {
+    transactionBlockers.splice(transactionBlockers.indexOf(blocker), 1);
+    !transactionBlockers.length && onAllSlotsLoaded();
+}
 
 window.addEventListener('ilc:crash', () => {
     removeGlobalSpinner();
@@ -60,10 +73,9 @@ const addContentListener = slotName => {
         if (!hasText && !hasOpticNodes) return;
 
         observer.disconnect();
-        contentListeners.splice(contentListeners.indexOf(observer), 1);
-        !contentListeners.length && onAllSlotsLoaded();
+        removeTransactionBlocker(observer);
     });
-    contentListeners.push(observer);
+    transactionBlockers.push(observer);
     const targetNode = getSlotElement(slotName);
     targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
     hiddenSlots.push(targetNode);
@@ -88,7 +100,23 @@ export const slotWillBe = {
     default: null,
 };
 
+export function handleAsyncAction(promise) {
+    if (getIlcConfig().settings.globalSpinner === false) {
+        return;
+    }
+
+    runGlobalSpinner();
+    transactionBlockers.push(promise);
+
+    const afterPromise = () => removeTransactionBlocker(promise);
+    promise.then(afterPromise).catch(afterPromise)
+}
+
 export default function handlePageTransaction(slotName, willBe) {
+    if (getIlcConfig().settings.globalSpinner === false) {
+        return;
+    }
+
     if (!slotName) {
         throw new Error('A slot name was not provided!');
     }

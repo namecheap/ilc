@@ -37,10 +37,7 @@ export const createFactory = (triggerAppChange, handlePageTransaction, slotWillB
             }
         }
 
-        if (window.ilcConfig && window.ilcConfig.tmplSpinner) {
-            handlePageTransaction(slotName, willBe);
-        }
-
+        handlePageTransaction(slotName, willBe);
         reload = false;
 
         return isActive;
