@@ -15,6 +15,7 @@ module.exports = (registryService = registryServiceImport) => {
         req.raw.ilcState = {};
         done();
     });
+    app.addHook('onRequest', i18n.onRequest);
 
     const tailor = tailorFactory(
         registryService,
@@ -27,8 +28,6 @@ module.exports = (registryService = registryServiceImport) => {
     }
 
     app.register(require('./ping'));
-
-    app.use(i18n.onRequest);
 
     app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
         const data = await registryService.getTemplate(req.params.templateName);

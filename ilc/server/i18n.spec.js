@@ -61,10 +61,10 @@ describe('i18n', () => {
                 const req = getReqMock('/fr-FR/test');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply, () => {});
+                await i18n.onRequest(req, reply);
 
-                chai.expect(req.url).to.be.eql('/test');
-                chai.expect(req.ilcState.locale).to.be.eql('fr-FR');
+                chai.expect(req.raw.url).to.be.eql('/test');
+                chai.expect(req.raw.ilcState.locale).to.be.eql('fr-FR');
                 chai.expect(req.headers['z-intl']).to.be.eql('fr-FR:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
 
@@ -72,10 +72,10 @@ describe('i18n', () => {
                 const req = getReqMock('/fr-fr/test');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply, () => {});
+                await i18n.onRequest(req, reply);
 
-                chai.expect(req.url).to.be.eql('/test');
-                chai.expect(req.ilcState.locale).to.be.eql('fr-FR');
+                chai.expect(req.raw.url).to.be.eql('/test');
+                chai.expect(req.raw.ilcState.locale).to.be.eql('fr-FR');
                 chai.expect(req.headers['z-intl']).to.be.eql('fr-FR:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
 
@@ -83,10 +83,10 @@ describe('i18n', () => {
                 const req = getReqMock('/fr/test');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply, () => {});
+                await i18n.onRequest(req, reply);
 
-                chai.expect(req.url).to.be.eql('/test');
-                chai.expect(req.ilcState.locale).to.be.eql('fr-FR');
+                chai.expect(req.raw.url).to.be.eql('/test');
+                chai.expect(req.raw.ilcState.locale).to.be.eql('fr-FR');
                 chai.expect(req.headers['z-intl']).to.be.eql('fr-FR:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
 
@@ -94,10 +94,10 @@ describe('i18n', () => {
                 const req = getReqMock('/bd-SM/test');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply, () => {});
+                await i18n.onRequest(req, reply);
 
-                chai.expect(req.url).to.be.eql('/bd-SM/test');
-                chai.expect(req.ilcState.locale).to.be.eql('en-US');
+                chai.expect(req.raw.url).to.be.eql('/bd-SM/test');
+                chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
                 chai.expect(req.headers['z-intl']).to.be.eql('en-US:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
 
@@ -105,7 +105,7 @@ describe('i18n', () => {
                 const req = getReqMock('/en-US/test');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply, () => {});
+                await i18n.onRequest(req, reply);
 
                 sinon.assert.calledWith(reply.redirect, '/test');
             });
@@ -116,7 +116,7 @@ describe('i18n', () => {
                 const req = getReqMock('/test', 'lang=fr-FR;');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply, () => {});
+                await i18n.onRequest(req, reply);
 
                 sinon.assert.calledWith(reply.redirect, '/fr-FR/test');
             });
@@ -125,11 +125,11 @@ describe('i18n', () => {
                 const req = getReqMock('/test', 'lang=en-US;');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply, () => {});
+                await i18n.onRequest(req, reply);
 
                 sinon.assert.notCalled(reply.redirect);
-                chai.expect(req.url).to.be.eql('/test');
-                chai.expect(req.ilcState.locale).to.be.eql('en-US');
+                chai.expect(req.raw.url).to.be.eql('/test');
+                chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
                 chai.expect(req.headers['z-intl']).to.be.eql('en-US:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
 
@@ -137,10 +137,10 @@ describe('i18n', () => {
                 const req = getReqMock('/test', 'lang=bd-SM;');
                 const reply = getReplyMock();
 
-                await i18n.onRequest(req, reply, () => {});
+                await i18n.onRequest(req, reply);
 
-                chai.expect(req.url).to.be.eql('/test');
-                chai.expect(req.ilcState.locale).to.be.eql('en-US');
+                chai.expect(req.raw.url).to.be.eql('/test');
+                chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
                 chai.expect(req.headers['z-intl']).to.be.eql('en-US:en-US:en-US,en-GB,fr-FR,fr-CA,de-DE;USD:USD:USD,EUR,GBP;');
             });
         });
@@ -149,8 +149,7 @@ describe('i18n', () => {
 
 function getReqMock(url = '/test', cookieString = '') {
     return {
-        url: url,
-        ilcState: {},
+        raw: {url: url, ilcState: {}},
         headers: { cookie: cookieString },
     };
 }

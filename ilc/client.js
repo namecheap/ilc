@@ -23,8 +23,8 @@ if (System === undefined) {
 const registryConf = initIlcConfig();
 const state = initIlcState();
 
-const i18n = new I18n(registryConf.settings.i18n, singleSpa);
-const router = new Router(registryConf, state, singleSpa, window.ILC.window.location);
+const i18n = registryConf.settings.i18n ? new I18n(registryConf.settings.i18n, singleSpa) : null;
+const router = new Router(registryConf, state, singleSpa, window.ILC.window ? window.ILC.window.location : window.location);
 const asyncBootUp = new AsyncBootUp();
 
 // Here we expose window.ILC.define also as window.define to ensure that regular AMD/UMD bundles work correctly by default
@@ -72,13 +72,13 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 getCurrentBasePath: () => router.getCurrentRoute().basePath,
                 appId: fragmentName, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
                 errorHandler: fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName),
-                clientSdk: new IlcAppSdk({appId: fragmentName, intl: i18n.getAdapter()}),
+                clientSdk: new IlcAppSdk({appId: fragmentName, intl: i18n ? i18n.getAdapter() : null}),
             }
         );
     });
 });
 
-window.zzz = new IlcAppSdk({appId: 'tst', intl: i18n.getAdapter()});
+window.zzz = i18n ? new IlcAppSdk({appId: 'tst', intl: i18n.getAdapter()}) : null;
 
 setupErrorHandlers(registryConf, router.getCurrentRoute);
 setupPerformanceMonitoring(router.getCurrentRoute);
