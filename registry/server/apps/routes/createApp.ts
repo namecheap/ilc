@@ -7,6 +7,7 @@ import _ from 'lodash/fp';
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
+import setDataFromManifest from '../middlewares/setDataFromManifest';
 import {
     stringifyJSON,
 } from '../../common/services/json';
@@ -29,4 +30,4 @@ const createApp = async (req: Request, res: Response): Promise<void> => {
     res.status(200).send(preProcessResponse(savedApp));
 };
 
-export default [validateRequestBeforeCreateApp, createApp];
+export default [validateRequestBeforeCreateApp, setDataFromManifest, createApp];
