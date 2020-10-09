@@ -6,7 +6,9 @@ import * as apps from './apps/dataTransform';
 import * as templates from './templates/dataTransform';
 import * as appRoutes from './appRoutes/dataTransform';
 
-const dataProvider = simpleRestProvider('/api/v1');
+import httpClient from './httpClient';
+
+const dataProvider = simpleRestProvider('/api/v1', httpClient);
 
 const myDataProvider = {
     ...dataProvider,

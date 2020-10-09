@@ -11,7 +11,6 @@ const example = {
             src: "http://127.0.0.1:1234/fragment",
             timeout: 1000,
         },
-        assetsDiscoveryUrl: 'http://127.0.0.1:1234/_spa/dev/assets-discovery',
         kind: 'primary',
     }),
     appRoutes: Object.freeze({

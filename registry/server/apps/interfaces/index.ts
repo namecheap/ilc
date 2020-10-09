@@ -35,5 +35,9 @@ export const partialAppSchema = Joi.object({
 export const appSchema = Joi.object({
     ...commonApp,
     name: appNameSchema.required(),
-    spaBundle: commonApp.spaBundle.required(),
+    spaBundle: Joi.when('assetsDiscoveryUrl', {
+        is: commonApp.assetsDiscoveryUrl.exist(),
+        then: commonApp.spaBundle,
+        otherwise: commonApp.spaBundle.required(),
+    }),
 });

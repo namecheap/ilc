@@ -1,21 +1,39 @@
+import nock from 'nock';
 import _ from 'lodash';
 import { request, requestWithAuth, expect } from './common';
 
+const assetsDiscovery = {
+    host: 'http://127.0.0.1:1234',
+    path: '/_spa/dev/assets-discovery',
+};
+
+const assetsDiscoveryUrl = assetsDiscovery.host + assetsDiscovery.path;
+
+const correct = Object.freeze({
+    name: '@portal/ncTestAppReactssr',
+    spaBundle: 'http://localhost:1234/ncTestAppReactssr.js',
+    cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssr.css',
+    configSelector: ['ncTestSharedPropsName'],
+    ssr: {
+        src: "http://127.0.0.1:1234/fragment",
+        timeout: 1000,
+    },
+    kind: 'primary',
+    // dependencies: {},
+    // props: {},
+});
+
 const example = <any>{
     url: '/api/v1/app/',
-    correct: Object.freeze({
-        name: '@portal/ncTestAppReactssr',
-        spaBundle: 'http://localhost:1234/ncTestAppReactssr.js',
-        cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssr.css',
-        configSelector: ['ncTestSharedPropsName'],
-        ssr: {
-            src: "http://127.0.0.1:1234/fragment",
-            timeout: 1000,
-        },
-        assetsDiscoveryUrl: 'http://127.0.0.1:1234/_spa/dev/assets-discovery',
-        kind: 'primary',
-        // dependencies: {},
-        // props: {},
+    assetsDiscovery,
+    manifest: {
+        spaBundle: 'http://127.0.0.1:8239/dist/single_spa.js',
+        cssBundle: 'http://127.0.0.1:8239/dist/common.6c686c02a026a4af4016.css',
+    },
+    correct,
+    correctWithAssetsDiscoveryUrl: Object.freeze({
+        ...correct,
+        assetsDiscoveryUrl,
     }),
     updated: Object.freeze({
         name: '@portal/ncTestAppReactssr',
@@ -26,7 +44,6 @@ const example = <any>{
             src: "http://127.0.0.1:1234/fragmentUpdated",
             timeout: 2000,
         },
-        assetsDiscoveryUrl: 'http://127.0.0.1:1234/_spa/dev/assets-discoveryUpdated',
         kind: 'regular',
         dependencies: {
             react: 'https://cdnjs.cloudflare.com/ajax/libs/react/16.8.6/umd/react.development.js',
@@ -70,9 +87,9 @@ describe(`Tests ${example.url}`, () => {
             })
             .expect(
                 422,
-                '"spaBundle" must be a string\n' +
                 '"cssBundle" must be a string\n' +
                 '"assetsDiscoveryUrl" must be a string\n' +
+                '"spaBundle" must be a string\n' +
                 '"dependencies" must be of type object\n' +
                 '"props" must be of type object\n' +
                 '"configSelector" must be an array\n' +
@@ -101,6 +118,53 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).deep.equal(example.correct);
 
             await request.delete(example.url + example.encodedName).expect(204);
+        });
+
+        it('should not create a record when a manifest file can not be fetched', async () => {
+            try {
+                const scope = nock(example.assetsDiscovery.host);
+                scope.log(console.log).get(example.assetsDiscovery.path).delay(0).reply(404);
+
+                const response = await request
+                    .post(example.url)
+                    .send(example.correctWithAssetsDiscoveryUrl)
+                    .expect(422, `"spaBundle" can not be taken from a manifest file by provided "assetsDiscoveryUrl"`);
+
+                expect(response.body).deep.equal({});
+            } finally {
+                await request.delete(example.url + example.encodedName).expect(404);
+            }
+        });
+
+        it('should not create a record when a SPA bundle URL was not specified in a manifest file', async () => {
+            try {
+                const scope = nock(example.assetsDiscovery.host);
+                scope.log(console.log).get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify({}));
+
+                const response = await request
+                    .post(example.url)
+                    .send(example.correctWithAssetsDiscoveryUrl)
+                    .expect(422, `"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually`);
+
+                expect(response.body).deep.equal({});
+            } finally {
+                await request.delete(example.url + example.encodedName).expect(404);
+            }
+        });
+
+        it('should create a record when a SPA bundle URL was specified in a manifest file', async () => {
+            try {
+                const scope = nock(example.assetsDiscovery.host);
+                scope.log(console.log).get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
+
+                const response = await request.post(example.url).send(example.correctWithAssetsDiscoveryUrl).expect(200);
+                expect(response.body).deep.equal({
+                    ...example.correctWithAssetsDiscoveryUrl,
+                    ...example.manifest,
+                });
+            } finally {
+                await request.delete(example.url + example.encodedName).expect(204);
+            }
         });
 
         describe('Authentication / Authorization', () => {

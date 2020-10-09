@@ -8,6 +8,7 @@ import _ from 'lodash/fp';
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
+import setDataFromManifest from '../middlewares/setDataFromManifest';
 import {
     stringifyJSON,
 } from '../../common/services/json';
@@ -50,4 +51,4 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
     res.status(200).send(preProcessResponse(updatedApp));
 };
 
-export default [validateRequestBeforeUpdateApp, updateApp];
+export default [validateRequestBeforeUpdateApp, setDataFromManifest, updateApp];
