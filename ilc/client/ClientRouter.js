@@ -17,11 +17,20 @@ export default class ClientRouter {
     #currentRoute;
     #windowEventHandlers = {};
     #forceSpecialRoute = null;
+    #unlocalizeUrl;
 
-    constructor(registryConf, state, singleSpa, location = window.location, logger = window.console) {
+    constructor(
+        registryConf,
+        state,
+        singleSpa,
+        unlocalizeUrl = (v) => v,
+        location = window.location,
+        logger = window.console
+    ) {
         this.#singleSpa = singleSpa;
         this.#location = location;
         this.#logger = logger;
+        this.#unlocalizeUrl = unlocalizeUrl;
         this.#registryConf = registryConf;
         this.#router = new Router(registryConf);
         this.#currentUrl = this.#getCurrUrl();
@@ -170,5 +179,5 @@ export default class ClientRouter {
         this.#singleSpa.triggerAppChange(); //This call would immediately invoke "single-spa:before-routing-event" and start apps mount/unmount process
     };
 
-    #getCurrUrl = () => this.#location.pathname + this.#location.search;
+    #getCurrUrl = () => this.#unlocalizeUrl(this.#location.pathname + this.#location.search);
 }

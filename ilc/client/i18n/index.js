@@ -3,7 +3,8 @@ import {handleAsyncAction} from '../handlePageTransaction';
 
 export default class I18n {
     #prevUrl = null;
-    #systemSdk = null;
+    /** @type {IlcAppSdk} */
+    #systemSdk;
     #singleSpa;
     #intlAdapterSystem;
 
@@ -18,33 +19,23 @@ export default class I18n {
 
         this.#systemSdk = new IlcAppSdk({appId: 'ILC:System', intl: this.#intlAdapterSystem});
 
-        this.#initPatchedWindow(this.#systemSdk);
         window.addEventListener('single-spa:before-mount-routing-event', this.#onBeforeAppsMount);
     }
 
+    unlocalizeUrl = v => this.#systemSdk.intl.parseUrl(v).cleanUrl;
+
     getAdapter() {
-        return Object.assign({set: this.#setIntlSettings}, this.#intlAdapterSystem);
+        return Object.assign({set: this.#setIntl}, this.#intlAdapterSystem);
     }
 
-    #initPatchedWindow = (systemSdk) => {
-        const patchedLocation = new Proxy(window.location, { //TODO: fix issue with IE11, proxies are not supported there
-            get(target, name) {
-                if (typeof target[name] === 'function') {
-                    return target[name];
-                }
-
-                return systemSdk.intl.parseUrl(target).cleanUrl[name];
-            },
-        });
-
-        window.ILC.window = new Proxy(window, { //TODO: fix issue with IE11, proxies are not supported there
-            get(target, name) {
-                return name === 'location' ? patchedLocation : target[name];
-            },
-        });
-    };
-
-    #setIntlSettings = async (conf) => {
+    /**
+     *
+     * @param {object} conf
+     * @param {string} [conf.locale]
+     * @param {string} [conf.currency]
+     * @return void
+     */
+    #setIntl = (conf) => {
         if (!conf.locale) {
             return;
         }

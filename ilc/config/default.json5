@@ -21,7 +21,7 @@
             currency: 'USD'
         },
         supported: {
-            locale: ['en-US', 'en-GB', 'fr-FR', 'fr-CA', 'de-DE'],
+            locale: ['en-US', 'en-GB', 'fr-FR', 'fr-CA', 'de-DE', 'ua-UA'],
             currency: ['USD', 'EUR', 'GBP']
         },
     },
