@@ -43,7 +43,9 @@ export default class I18n {
         if (!this.#systemSdk.intl.getSupported().locale.includes(conf.locale)) {
             throw new Error('Invalid locale passed');
         }
-        const newLocaleUrl = this.#systemSdk.intl.localizeUrl(window.location.pathname, conf.locale).toString();
+
+        const url = window.location.href.replace(window.location.origin, '');
+        const newLocaleUrl = this.#systemSdk.intl.localizeUrl(url, conf.locale).toString();
         this.#singleSpa.navigateToUrl(newLocaleUrl);
     };
 
