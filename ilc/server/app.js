@@ -38,6 +38,7 @@ module.exports = (registryService = registryServiceImport) => {
     app.get('/_ilc/500', async () => { throw new Error('500 page test error') });
 
     app.all('*', (req, res) => {
+        req.headers['x-request-host'] = req.hostname;
         req.headers['x-request-uri'] = req.raw.url; //TODO: to be removed & replaced with routerProps
         tailor.requestHandler(req.raw, res.res);
     });
