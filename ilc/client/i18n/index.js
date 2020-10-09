@@ -48,7 +48,6 @@ export default class I18n {
     };
 
     #onBeforeAppsMount = () => {
-        const startUrl = this.#prevUrl;
         const prevLocale = this.#systemSdk.intl.parseUrl(this.#prevUrl).locale;
         const currLocale = this.#systemSdk.intl.parseUrl(window.location.pathname).locale;
         if (this.#prevUrl !== window.location.pathname) {
@@ -72,7 +71,7 @@ export default class I18n {
         const afterAllResReady = onAllResourcesReady().catch(err => {
             console.warn(`ILC: error happened during change of the i18n configuration. See error details below. Rolling back...`);
             console.error(err);
-            this.#singleSpa.navigateToUrl(startUrl);
+            this.#setIntl({locale: prevLocale});
         });
         handleAsyncAction(afterAllResReady);
 

@@ -115,7 +115,7 @@ export default class ClientRouter {
         this.#prevRoute = this.#currentRoute;
 
         const newUrl = this.#getCurrUrl();
-        if (this.#forceSpecialRoute !== null && this.#forceSpecialRoute.url === newUrl) {
+        if (this.#forceSpecialRoute !== null && this.#forceSpecialRoute.url === this.#getCurrUrl(true)) {
             this.#currentRoute = this.#router.matchSpecial(newUrl, this.#forceSpecialRoute.id);
         } else if (this.#forceSpecialRoute !== null) {
             // Reset variable if it was set & now we go to different route
@@ -175,9 +175,17 @@ export default class ClientRouter {
         }
 
         console.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
-        this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl()};
+        this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl(true)};
         this.#singleSpa.triggerAppChange(); //This call would immediately invoke "single-spa:before-routing-event" and start apps mount/unmount process
     };
 
-    #getCurrUrl = () => this.#unlocalizeUrl(this.#location.pathname + this.#location.search);
+    #getCurrUrl = (withLocale = false) => {
+        const url = this.#location.pathname + this.#location.search;
+
+        if (withLocale) {
+            return url;
+        }
+
+        return this.#unlocalizeUrl(url);
+    }
 }
