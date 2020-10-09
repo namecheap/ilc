@@ -13,9 +13,10 @@ const errorHandlerSetup = require('./error-handler');
 const fragmentHooks = require('./fragment-hooks');
 const ConfigsInjector = require('./configs-injector');
 const processFragmentResponse = require('./process-fragment-response');
+const {getLocaleFromUrl} = require('../i18n');
 
 module.exports = function (registryService, cdnUrl, nrCustomClientJsWrapper = null) {
-    const router = new Router(logger);
+    const router = new Router(logger, v => getLocaleFromUrl(v) ? getLocaleFromUrl(v).route : v);
     const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper);
 
     const tailor = new Tailor({

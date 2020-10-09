@@ -19,7 +19,6 @@ async function onRequest(req, reply) {
             return;
         }
 
-        req.raw.url = routeLocale.route;
         setReqLocale(req, routeLocale.locale);
         return;
     }
@@ -43,7 +42,7 @@ async function onRequest(req, reply) {
 
 function setReqLocale(req, locale) {
     req.raw.ilcState.locale = locale;
-    req.headers['z-intl'] =
+    req.headers['x-request-intl'] =
         `${locale}:${DEFAULT_LOCALE}:${SUPPORTED_LOCALES.join(',')};` +
         `USD:${config.get('i18n.default.currency')}:${config.get('i18n.supported.currency').join(',')};`;
 }
@@ -84,4 +83,5 @@ function getCanonicalLocale(locale) {
 
 module.exports = {
     onRequest,
+    getLocaleFromUrl,
 }

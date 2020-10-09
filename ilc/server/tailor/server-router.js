@@ -8,22 +8,26 @@ module.exports = class ServerRouter {
     errors = errors;
 
     #logger;
+    #unlocalizeUrl;
 
     /**
      * @param logger - console compatible logger
+     * @param {function} unlocalizeUrl
      */
-    constructor(logger) {
+    constructor(logger, unlocalizeUrl = v => v) {
         this.#logger = logger;
+        this.#unlocalizeUrl = unlocalizeUrl;
     }
 
     getTemplateInfo(registryConfig, request) {
         const router = new Router(registryConfig);
+        const url = this.#unlocalizeUrl(request.url);
 
         let route;
         if (request.ilcState && request.ilcState.forceSpecialRoute) {
-            route = router.matchSpecial(request.url, request.ilcState.forceSpecialRoute);
+            route = router.matchSpecial(url, request.ilcState.forceSpecialRoute);
         } else {
-            route = router.match(request.url);
+            route = router.match(url);
         }
 
         const page = this.#generatePageTpl(route, registryConfig.apps);
@@ -61,7 +65,7 @@ module.exports = class ServerRouter {
             const reqProps = {
                 basePath: route.basePath,
                 reqUrl: route.reqUrl,
-                fragmentName, //TODO: to be removed
+                fragmentName,
             };
 
             url.searchParams.append('routerProps', Buffer.from(JSON.stringify(reqProps)).toString('base64'));

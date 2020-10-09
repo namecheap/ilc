@@ -43,15 +43,16 @@ export default class I18n {
         if (!this.#systemSdk.intl.getSupported().locale.includes(conf.locale)) {
             throw new Error('Invalid locale passed');
         }
-        const newLocaleUrl = this.#systemSdk.intl.localizeUrl(window.location.href, conf.locale).toString();
+        const newLocaleUrl = this.#systemSdk.intl.localizeUrl(window.location.pathname, conf.locale).toString();
         this.#singleSpa.navigateToUrl(newLocaleUrl);
     };
 
     #onBeforeAppsMount = () => {
+        const startUrl = this.#prevUrl;
         const prevLocale = this.#systemSdk.intl.parseUrl(this.#prevUrl).locale;
-        const currLocale = this.#systemSdk.intl.parseUrl(window.location.href).locale;
-        if (this.#prevUrl !== window.location.href) {
-            this.#prevUrl = window.location.href;
+        const currLocale = this.#systemSdk.intl.parseUrl(window.location.pathname).locale;
+        if (this.#prevUrl !== window.location.pathname) {
+            this.#prevUrl = window.location.pathname;
         }
         if (prevLocale === currLocale) {
             return;
@@ -68,7 +69,11 @@ export default class I18n {
 
         window.dispatchEvent(new CustomEvent('ilc:intl-update', {detail}));
 
-        const afterAllResReady = onAllResourcesReady();
+        const afterAllResReady = onAllResourcesReady().catch(err => {
+            console.warn(`ILC: error happened during change of the i18n configuration. See error details below. Rolling back...`);
+            console.error(err);
+            this.#singleSpa.navigateToUrl(startUrl);
+        });
         handleAsyncAction(afterAllResReady);
 
         return afterAllResReady;

@@ -72,7 +72,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 getCurrentBasePath: () => router.getCurrentRoute().basePath,
                 appId: fragmentName, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
                 errorHandler: fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName),
-                clientSdk: new IlcAppSdk({appId: fragmentName, intl: i18n ? i18n.getAdapter() : null}),
+                appSdk: new IlcAppSdk({appId: fragmentName, intl: i18n ? i18n.getAdapter() : null}),
             }
         );
     });

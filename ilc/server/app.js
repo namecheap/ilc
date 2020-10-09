@@ -39,7 +39,7 @@ module.exports = (registryService = registryServiceImport) => {
 
     app.all('*', (req, res) => {
         req.headers['x-request-host'] = req.hostname;
-        req.headers['x-request-uri'] = req.raw.url; //TODO: to be removed & replaced with routerProps
+        req.headers['x-request-uri'] = req.raw.url;
         tailor.requestHandler(req.raw, res.res);
     });
 
