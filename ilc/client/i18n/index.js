@@ -40,7 +40,7 @@ export default class I18n {
             return;
         }
 
-        if (!this.#systemSdk.intl.getSupported().locale.includes(conf.locale)) {
+        if (!this.getAdapter().getSupported().locale.includes(conf.locale)) {
             throw new Error('Invalid locale passed');
         }
 
@@ -63,7 +63,7 @@ export default class I18n {
 
         const promises = [];
         const onAllResourcesReady = () => this.#iterablePromise(promises);
-        const detail = Object.assign(this.#systemSdk.intl.get(), {
+        const detail = Object.assign(this.getAdapter().get(), {
             addPendingResources: promise => promises.push(promise),
             onAllResourcesReady: onAllResourcesReady,
         });
