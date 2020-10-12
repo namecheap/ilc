@@ -20,10 +20,8 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
     parseTemplate
 ) => {
     const registryConfig = await registryService.getConfig();
-    registryConfig.data.settings = { //TODO: this object should be fetched from registry
-        amdDefineCompatibilityMode: config.get('amdDefineCompatibilityMode'),
-    };
     const overrideConfig = parseOverrideConfig(request.headers.cookie, config.get('overrideConfigTrustedOrigins'));
+
     if (overrideConfig) {
         registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
     }

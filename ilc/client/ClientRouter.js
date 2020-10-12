@@ -2,6 +2,7 @@ import deepmerge from 'deepmerge';
 
 import * as Router from '../common/router/Router';
 import * as errors from '../common/router/errors';
+import processHref from '../common/trailingSlash';
 
 export default class ClientRouter {
     errors = errors;
@@ -150,7 +151,7 @@ export default class ClientRouter {
         const {specialRole} = this.#router.match(pathname);
 
         if (specialRole === null) {
-            this.#singleSpa.navigateToUrl(href);
+            this.#singleSpa.navigateToUrl(processHref(this.#registryConf, href));
             event.preventDefault();
         }
     };

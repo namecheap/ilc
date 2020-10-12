@@ -2,6 +2,7 @@ import Joi from 'joi';
 
 export const enum SettingKeys {
     BaseUrl = 'baseUrl',
+    TrailingSlash = 'trailingSlash',
     AuthOpenIdEnabled = 'auth.openid.enabled',
     AuthOpenIdDiscoveryUrl = 'auth.openid.discoveryUrl',
     AuthOpenIdClientId = 'auth.openid.clientId',
@@ -9,26 +10,58 @@ export const enum SettingKeys {
     AuthOpenIdResponseMode = 'auth.openid.responseMode',
     AuthOpenIdIdentifierClaimName = 'auth.openid.idClaimName',
     AuthOpenIdRequestedScopes = 'auth.openid.requestedScopes',
+    AmdDefineCompatibilityMode = 'amdDefineCompatibilityMode',
+};
+
+export const enum TrailingSlashValues {
+    DoNothing = 'doNothing',
+    RedirectToBaseUrl = 'redirectToBaseUrl',
+    RedirectToBaseUrlWithTrailingSlash = 'redirectToBaseUrlWithTrailingSlash',
 };
 
 export interface Setting {
     key: SettingKeys,
-    value: string,
+    value: string | TrailingSlashValues,
+    secured: boolean,
 };
 
-const keySchema = Joi.string().min(1).max(50);
+export const keySchema = Joi.string().min(1).max(50).valid(
+    SettingKeys.TrailingSlash,
+    SettingKeys.BaseUrl,
+    SettingKeys.AuthOpenIdResponseMode,
+    SettingKeys.AuthOpenIdRequestedScopes,
+    SettingKeys.AuthOpenIdIdentifierClaimName,
+    SettingKeys.AuthOpenIdEnabled,
+    SettingKeys.AuthOpenIdDiscoveryUrl,
+    SettingKeys.AuthOpenIdClientSecret,
+    SettingKeys.AuthOpenIdClientId,
+    SettingKeys.AmdDefineCompatibilityMode
+);
 
-const commonSchema = {
-    value: Joi.string().min(1),
+export const valueSchema = Joi.alternatives().conditional('key', {
+    switch: [
+        {
+            is: Joi.valid(SettingKeys.TrailingSlash),
+            then: Joi.string().valid(
+                TrailingSlashValues.DoNothing,
+                TrailingSlashValues.RedirectToBaseUrl,
+                TrailingSlashValues.RedirectToBaseUrlWithTrailingSlash,
+            ).required(),
+        },
+        {
+            is: Joi.valid(SettingKeys.AmdDefineCompatibilityMode, SettingKeys.AuthOpenIdEnabled),
+            then: Joi.boolean().strict().sensitive().required(),
+        }
+    ],
+    otherwise: Joi.string().required(),
+});
+
+export const securedSchema = Joi.boolean();
+
+const commonSettingSchema = {
+    key: keySchema,
+    value: valueSchema,
+    secured: securedSchema,
 };
 
-export const partialTemplateSchema = Joi.object({
-    ...commonSchema,
-    key: keySchema.forbidden(),
-});
-
-export const templateSchema = Joi.object({
-    ...commonSchema,
-    key: keySchema.required(),
-    value: commonSchema.value.required(),
-});
+export const partialSettingSchema = Joi.object({...commonSettingSchema});

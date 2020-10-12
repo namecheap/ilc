@@ -2,6 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import html from 'nanohtml';
 
+import {routerHasTo} from '../common/trailingSlash';
 import ClientRouter from './ClientRouter';
 
 describe('client router', () => {
@@ -131,7 +132,18 @@ describe('client router', () => {
                     appName: apps['@portal/hero'].name,
                 },
             },
-        }
+        },
+        {
+            routeId: 'opponentRouteWithTrailingSlashAtTheEnd',
+            route: '/opponent-with-trailing-slash-at-the-end/',
+            next: false,
+            slots: {
+                opponent: {
+                    appName: apps['@portal/opponent'].name,
+                    props: {},
+                },
+            },
+        },
     ];
 
     const specialRoutes = {
@@ -144,10 +156,15 @@ describe('client router', () => {
         },
     };
 
+    const settings = {
+        trailingSlash: routerHasTo.doNothing,
+    };
+
     const registryConfig = {
         apps,
         routes,
         specialRoutes,
+        settings,
     };
 
     let router;
@@ -389,7 +406,6 @@ describe('client router', () => {
         };
 
         beforeEach(() => {
-            router = new ClientRouter(registryConfig, {}, singleSpa);
             clickEvent = new Event('click', {
                 bubbles: true,
                 cancelable: true,
@@ -405,6 +421,8 @@ describe('client router', () => {
                 id: 'click-me',
                 href: registryConfig.routes[2].route,
             };
+
+            router = new ClientRouter(registryConfig, {}, singleSpa);
 
             anchor.ref = html`
                 <a id="${anchor.id}" href="${anchor.href}">
@@ -426,6 +444,8 @@ describe('client router', () => {
                 href: location.origin,
             };
 
+            router = new ClientRouter(registryConfig, {}, singleSpa);
+
             anchor.ref = html`
                 <a id="${anchor.id}" href="${anchor.href}">
                     Hi there! I am anchor tag and I have href attribute.
@@ -440,7 +460,65 @@ describe('client router', () => {
             chai.expect(clickEvent.defaultPrevented).to.be.true;
         });
 
+        it('should handle click events on anchors and navigate to a registered micro front-end page URL with trailing slash', () => {
+            router = new ClientRouter({
+                ...registryConfig,
+                settings: {
+                    ...registryConfig.settings,
+                    trailingSlash: routerHasTo.redirectToBaseUrlWithTrailingSlash,
+                },
+            }, {}, singleSpa);
+
+            const anchor = {
+                id: 'click-me',
+                href: registryConfig.routes[2].route,
+            };
+
+            anchor.ref = html`
+                <a id="${anchor.id}" href="${anchor.href}">
+                    Hi there! I am anchor tag and I have href attribute.
+                    So I should forward you to registered micro front-end page.
+                </a>
+            `;
+
+            document.body.appendChild(anchor.ref);
+            document.getElementById(anchor.id).dispatchEvent(clickEvent);
+
+            chai.expect(singleSpa.navigateToUrl.calledOnceWithExactly(anchor.href.concat('/'))).to.be.true;
+            chai.expect(clickEvent.defaultPrevented).to.be.true;
+        });
+
+        it('should handle click events on anchors and navigate to a registered micro front-end page URL without trailing slash', () => {
+            router = new ClientRouter({
+                ...registryConfig,
+                settings: {
+                    ...registryConfig.settings,
+                    trailingSlash: routerHasTo.redirectToBaseUrl,
+                },
+            }, {}, singleSpa);
+
+            const anchor = {
+                id: 'click-me',
+                href: registryConfig.routes[5].route,
+            };
+
+            anchor.ref = html`
+                <a id="${anchor.id}" href="${anchor.href}">
+                    Hi there! I am anchor tag and I have href attribute.
+                    So I should forward you to registered micro front-end page.
+                </a>
+            `;
+
+            document.body.appendChild(anchor.ref);
+            document.getElementById(anchor.id).dispatchEvent(clickEvent);
+
+            chai.expect(singleSpa.navigateToUrl.calledOnceWithExactly(anchor.href.slice(0, -1))).to.be.true;
+            chai.expect(clickEvent.defaultPrevented).to.be.true;
+        });
+
         it('should NOT handle click events on anchors when anchors do not have href attribute', () => {
+            router = new ClientRouter(registryConfig, {}, singleSpa);
+
             const anchor = {
                 id: 'click-me',
             };
@@ -460,6 +538,8 @@ describe('client router', () => {
         });
 
         it('should NOT handle click events on anchors when these events were already default prevented', () => {
+            router = new ClientRouter(registryConfig, {}, singleSpa);
+
             const anchor = {
                 id: 'click-me',
                 href: registryConfig.routes[2].route,
@@ -483,6 +563,8 @@ describe('client router', () => {
         });
 
         it('should NOT handle click events on anchors when anchors are not going to a registered micro front-end page', () => {
+            router = new ClientRouter(registryConfig, {}, singleSpa);
+
             const anchor = {
                 id: 'click-me',
                 href: '/undefined',

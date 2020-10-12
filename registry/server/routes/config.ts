@@ -1,11 +1,13 @@
 import _ from 'lodash';
 import express from 'express';
+
 import knex from '../db';
+import {Setting} from '../settings/interfaces';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-    const [apps, templates, routes, sharedProps] = await Promise.all([
+    const [apps, templates, routes, sharedProps, settings] = await Promise.all([
         knex.select().from('apps'),
         knex.select('name').from('templates'),
         knex.select()
@@ -13,6 +15,7 @@ router.get('/', async (req, res) => {
             .from('routes')
             .join('route_slots', 'route_slots.routeId', 'routes.id'),
         knex.select().from('shared_props'),
+        knex.select().from('settings').where('secured', false),
     ]);
 
     const data = {
@@ -20,6 +23,7 @@ router.get('/', async (req, res) => {
         templates: [] as string[],
         routes: [] as any[],
         specialRoutes: {},
+        settings: {},
     };
 
     data.apps = apps.reduce((acc, v) => {
@@ -71,6 +75,11 @@ router.get('/', async (req, res) => {
         acc[v.specialRole] = _.omit(v, ['specialRole']);
         return acc;
     }, {});
+
+    data.settings = settings.reduce((acc: {[key: string]: any}, setting: Setting) => ({
+        ...acc,
+        [setting.key]: JSON.parse(setting.value),
+    }), {});
 
     return res.send(data);
 });

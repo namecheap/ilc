@@ -13,7 +13,7 @@ const preProcessErrorResponse = _.compose<Array<Joi.ValidationError>, Array<Joi.
 
 type SelectDataToValidate = (req: Request) => any;
 interface ValidationConfig {
-    schema: Joi.ObjectSchema,
+    schema: Joi.Schema,
     selector: SelectDataToValidate,
 }
 
@@ -29,6 +29,7 @@ const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
         ));
         next();
     } catch (e) {
+        console.error(e);
         res.status(422).send(preProcessErrorResponse(e));
     }
 };
