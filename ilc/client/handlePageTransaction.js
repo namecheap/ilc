@@ -92,6 +92,7 @@ const renderFakeSlot = slotName => {
     const clonedNode = targetNode.cloneNode(true);
     clonedNode.removeAttribute('id');
     clonedNode.removeAttribute('class');
+    clonedNode.style.display = ''; // in case if renderFakeSlot is run after addContentListener then reset "display: none". Since we hide (set display: none) for original DOM-node inside addContentListener.
     fakeSlots.push(clonedNode);
     targetNode.parentNode.insertBefore(clonedNode, targetNode.nextSibling);
     targetNode.style.display = 'none'; // we hide old slot because fake already in the DOM.
