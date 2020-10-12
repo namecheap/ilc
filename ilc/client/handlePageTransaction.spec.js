@@ -326,4 +326,36 @@ describe('handle page transaction', () => {
 
         chai.expect(spinner.getRef()).to.be.null;
     });
+
+    it('should destroy spinner when all fragments contain visible nodes', async () => {
+        const newBodyApplication = {
+            id: 'new-body-application',
+            class: 'new-body-spa',
+        };
+
+        newBodyApplication.ref = html`
+            <div id="${newBodyApplication.id}" class="${newBodyApplication.class}" style="display: none;">
+                Hello! I am hidden MS, so spinner is still visible
+            </div>
+        `;
+
+        applications.navbar.appendApplication();
+        applications.body.appendApplication();
+
+        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+
+        applications.body.removeApplication();
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+
+        slots.body.ref.appendChild(newBodyApplication.ref);
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+
+        document.getElementById(newBodyApplication.id).style.display = '';
+        await clock.runAllAsync();
+        chai.expect(spinner.getRef()).to.be.null;
+    });
 });

@@ -64,13 +64,30 @@ const addContentListener = slotName => {
         document.body.setAttribute('name', window.location.hash.slice(1));
     }
 
-    const observer = new MutationObserver((mutationsList, observer) => {
-        const hasAddedNodes = !!mutationsList.find(mutation => mutation.addedNodes.length);
-        if (!hasAddedNodes) return;
+    const status = {
+        hasAddedNodes: false,
+        hasTextOrOpticNodes: false,
+        isAnyChildVisible: false,
+    };
 
-        const hasText = !!targetNode.innerText.trim().length
-        const hasOpticNodes = !!targetNode.querySelector(':not(div):not(span)');
-        if (!hasText && !hasOpticNodes) return;
+    const observer = new MutationObserver((mutationsList, observer) => {
+        if (!status.hasAddedNodes) {
+            status.hasAddedNodes = !!mutationsList.find(mutation => mutation.addedNodes.length);
+        }
+
+        // if we have rendered MS to DOM but meaningful content isn't rendered, e.g. due to essential data preload
+        if (!status.hasTextOrOpticNodes) {
+            const hasText = !!targetNode.innerText.trim().length
+            const hasOpticNodes = !!targetNode.querySelector(':not(div):not(span)');
+            status.hasTextOrOpticNodes = hasText || hasOpticNodes;
+        }
+
+        // if we have rendered MS to DOM but temporary hide it for some reason, e.g. to fetch data
+        if (!status.isAnyChildVisible) {
+            status.isAnyChildVisible = Array.from(targetNode.children).some(node => node.style.display !== 'none');
+        }
+
+        if (Object.values(status).some(n => !n)) return;
 
         observer.disconnect();
         removeTransactionBlocker(observer);
@@ -79,7 +96,7 @@ const addContentListener = slotName => {
     const targetNode = getSlotElement(slotName);
     targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
     hiddenSlots.push(targetNode);
-    observer.observe(targetNode, { childList: true, subtree: true });
+    observer.observe(targetNode, { childList: true, subtree: true, attributeFilter: ['style'] });
 };
 
 const renderFakeSlot = slotName => {

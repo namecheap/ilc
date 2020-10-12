@@ -3,6 +3,8 @@ const IgnoreNotFoundExportPlugin = require('ignore-not-found-export-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
     .BundleAnalyzerPlugin;
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const path = require('path');
 
 module.exports = {
     devtool: 'cheap-module-source-map',
@@ -26,6 +28,11 @@ module.exports = {
         ],
     },
     plugins: [
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: path.resolve(__dirname, 'src/img/'), to: path.resolve(__dirname, 'dist/img/') },
+            ],
+        }),
         new MiniCssExtractPlugin(),
         new HtmlWebpackPlugin({
             template: './src/index.html',
