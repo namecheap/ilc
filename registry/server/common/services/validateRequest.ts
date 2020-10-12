@@ -2,7 +2,7 @@ import {
     Request,
     Response,
 } from 'express';
-import Joi from '@hapi/joi';
+import Joi from 'joi';
 import _ from 'lodash/fp';
 
 const preProcessErrorResponse = _.compose<Array<Joi.ValidationError>, Array<Joi.ValidationErrorItem>, Array<string | undefined>, string>(

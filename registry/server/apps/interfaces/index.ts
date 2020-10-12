@@ -1,4 +1,4 @@
-import Joi from '@hapi/joi';
+import Joi from 'joi';
 
 export default interface App {
     name: string,
@@ -9,7 +9,7 @@ export default interface App {
     props?: string, // JSON({ [propName: string]: any })
     configSelector?: string,
     ssr: string, // JSON({ src: string, timeout: number })
-}
+};
 
 export const appNameSchema = Joi.string().trim().min(1);
 
@@ -35,5 +35,9 @@ export const partialAppSchema = Joi.object({
 export const appSchema = Joi.object({
     ...commonApp,
     name: appNameSchema.required(),
-    spaBundle: commonApp.spaBundle.required(),
+    spaBundle: Joi.when('assetsDiscoveryUrl', {
+        is: commonApp.assetsDiscoveryUrl.exist(),
+        then: commonApp.spaBundle,
+        otherwise: commonApp.spaBundle.required(),
+    }),
 });
