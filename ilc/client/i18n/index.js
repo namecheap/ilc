@@ -7,6 +7,7 @@ export default class I18n {
     #systemSdk;
     #singleSpa;
     #intlAdapterSystem;
+    #rollbackInProgress = false;
 
     constructor(registrySettings, singleSpa) {
         this.#prevUrl = window.location.href;
@@ -62,7 +63,7 @@ export default class I18n {
         document.documentElement.lang = currLocale;
 
         const promises = [];
-        const onAllResourcesReady = () => this.#iterablePromise(promises);
+        const onAllResourcesReady = () => this.#iterablePromise(promises).then(() => this.#rollbackInProgress = false);
         const detail = Object.assign(this.getAdapter().get(), {
             addPendingResources: promise => promises.push(promise),
             onAllResourcesReady: onAllResourcesReady,
@@ -73,7 +74,12 @@ export default class I18n {
         const afterAllResReady = onAllResourcesReady().catch(err => {
             console.warn(`ILC: error happened during change of the i18n configuration. See error details below. Rolling back...`);
             console.error(err);
-            this.#setIntl({locale: prevLocale});
+            if (this.#rollbackInProgress === false) {
+                this.#rollbackInProgress = true;
+                this.#setIntl({locale: prevLocale});
+            } else {
+                console.error(`ILC: error happened during locale change rollback... See error details above.`)
+            }
         });
         handleAsyncAction(afterAllResReady);
 
