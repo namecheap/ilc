@@ -106,9 +106,11 @@ const InputForm = ({mode = 'edit', ...props}) => {
 };
 
 export const MyEdit = ({ permissions, ...props }) => {
-    <Edit title={<Title />} undoable={false} {...props}>
-        <InputForm mode="edit" validate={validateApp} />
-    </Edit>
+    return (
+        <Edit title={<Title />} undoable={false} {...props}>
+            <InputForm mode="edit" validate={validateApp} />
+        </Edit>
+    );
 };
 
 export const MyCreate = ({ permissions, ...props }) => {
