@@ -21,6 +21,9 @@ export function transformSet(app) {
             return acc;
         }, {})
     }
+    if (app.assetsDiscoveryUrl) {
+        delete app.spaBundle;
+    }
     delete app.id;
     delete app.assetsDiscoveryUpdatedAt;
 }

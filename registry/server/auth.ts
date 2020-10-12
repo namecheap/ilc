@@ -201,10 +201,20 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
         res.send('ok');
     });
 
-    app.get('/auth/logout', (req, res) => {
+    app.get('/auth/logout', (req, res, next) => {
         req.logout();
         res.clearCookie('ilc:userInfo');
-        res.redirect('/');
+        
+        if (req.session) {
+            req.session.regenerate((err) => {
+                if (err) {
+                    next(err);
+                }
+                res.redirect('/');
+            });
+        } else {
+            res.redirect('/');
+        }
     });
 
     app.get('/auth/available-methods', async (req, res) => {
