@@ -40,6 +40,9 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
 
         const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
 
+        const appSdk = new IlcAppSdk({appId: fragmentName, intl: i18n ? i18n.getAdapter() : null});
+        const onUnmount = async () => appSdk.unmount()
+
         singleSpa.registerApplication(
             fragmentName,
             async () => {
@@ -62,8 +65,23 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                     }));
                 }
 
-                return Promise.all(waitTill)
-                    .then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.props || {}) : v[0]);
+                return Promise.all(waitTill).then(([spaBundle]) => {
+                    const spaCallbacks = spaBundle.mainSpa !== undefined ? spaBundle.mainSpa(appConf.props || {}) : spaBundle;
+
+                    let unmount = spaCallbacks.unmount;
+                    if (Array.isArray(unmount)) {
+                        unmount.unshift(onUnmount)
+                    } else {
+                        unmount = [onUnmount, unmount];
+                    }
+
+                    return {
+                        bootstrap: spaCallbacks.bootstrap,
+                        mount: spaCallbacks.mount,
+                        unmount,
+                        unload: spaCallbacks.unload,
+                    };
+                });
             },
             isActiveFactory(router, appName, slotName),
             {
@@ -72,7 +90,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 getCurrentBasePath: () => router.getCurrentRoute().basePath,
                 appId: fragmentName, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
                 errorHandler: fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName),
-                appSdk: new IlcAppSdk({appId: fragmentName, intl: i18n ? i18n.getAdapter() : null}),
+                appSdk,
             }
         );
     });
