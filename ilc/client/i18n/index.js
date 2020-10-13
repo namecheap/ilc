@@ -1,4 +1,4 @@
-import IlcAppSdk from 'ilc-server-sdk/dist/client';
+import IlcAppSdk from 'ilc-sdk/dist/app';
 import {handleAsyncAction} from '../handlePageTransaction';
 import {triggerAppChange} from '../navigationEvents';
 
@@ -71,9 +71,9 @@ export default class I18n {
         ) {
             return;
         }
-        this.#prevConfig = this.#intlAdapterSystem.get();
 
         document.documentElement.lang = currLocale;
+        this.#prevConfig = this.#intlAdapterSystem.get();
 
         const promises = [];
         const onAllResourcesReady = () => this.#iterablePromise(promises).then(() => this.#rollbackInProgress = false);

@@ -11,7 +11,7 @@ import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import {getSlotElement} from './client/utils';
 import AsyncBootUp from './client/AsyncBootUp';
-import IlcAppSdk from 'ilc-server-sdk/dist/client';
+import IlcAppSdk from 'ilc-sdk/dist/app';
 import I18n from './client/i18n';
 
 const System = window.System;
@@ -41,7 +41,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
         const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
 
         const appSdk = new IlcAppSdk({appId: fragmentName, intl: i18n ? i18n.getAdapter() : null});
-        const onUnmount = async () => appSdk.unmount()
+        const onUnmount = async () => appSdk.unmount();
 
         singleSpa.registerApplication(
             fragmentName,
@@ -96,6 +96,10 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
     });
 });
 
+if (i18n !== null) {
+    window.ILC.appSdkAdapter = i18n.getAdapter();
+}
+//TODO: to be removed
 window.zzz = i18n ? new IlcAppSdk({appId: 'tst', intl: i18n.getAdapter()}) : null;
 
 setupErrorHandlers(registryConf, router.getCurrentRoute);

@@ -1,10 +1,9 @@
-const _ = require('lodash');
 const cookie = require('cookie');
 const config = require('config');
+const Intl = require('ilc-sdk/dist/app').Intl;
 
 const DEFAULT_LOCALE = config.get('i18n.default.locale'); //TODO: should be moved to registry
 const SUPPORTED_LOCALES = config.get('i18n.supported.locale'); // http://cldr.unicode.org/core-spec?tmpl=%2Fsystem%2Fapp%2Ftemplates
-const SUPPORTED_LANGS = _.uniq(SUPPORTED_LOCALES.map(v => v.split('-')[0]));
 
 
 async function onRequest(req, reply) {
@@ -14,8 +13,8 @@ async function onRequest(req, reply) {
 
     const routeLocale = getLocaleFromUrl(req.raw.url);
     if (routeLocale !== null) {
-        if (routeLocale.locale === DEFAULT_LOCALE) {
-            reply.redirect(routeLocale.route);
+        if (routeLocale.locale === DEFAULT_LOCALE && req.raw.url !== routeLocale.cleanUrl) {
+            reply.redirect(routeLocale.cleanUrl);
             return;
         }
 
@@ -36,8 +35,7 @@ async function onRequest(req, reply) {
         return;
     }
 
-    locale = DEFAULT_LOCALE;
-    setReqLocale(req, locale);
+    setReqLocale(req, DEFAULT_LOCALE);
 }
 
 function setReqLocale(req, locale) {
@@ -48,37 +46,11 @@ function setReqLocale(req, locale) {
 }
 
 function getLocaleFromUrl(url) {
-    let [, locale, ...route] = url.split('/');
-    route = '/' + route.join('/');
-
-    locale = getCanonicalLocale(locale);
-
-    if (locale === null) {
-        return null;
-    }
-
-    return { locale, route };
+    return Intl.parseUrl(url, DEFAULT_LOCALE, SUPPORTED_LOCALES);
 }
 
 function getCanonicalLocale(locale) {
-    try {
-        const fixedLocale = Intl.getCanonicalLocales(locale);
-        if (fixedLocale.length === 0) {
-            return null;
-        } else {
-            locale = fixedLocale[0];
-        }
-    } catch (e) {
-        return null;
-    }
-
-    if (SUPPORTED_LANGS.includes(locale)) {
-        locale = SUPPORTED_LOCALES.find(v => v.split('-')[0] === locale);
-    } else if (!SUPPORTED_LOCALES.includes(locale)) {
-        return null;
-    }
-
-    return locale;
+    return Intl.getCanonicalLocale(locale, SUPPORTED_LOCALES);
 }
 
 module.exports = {

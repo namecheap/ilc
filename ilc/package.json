@@ -31,7 +31,7 @@
     "fastify": "^2.15.2",
     "http-headers": "^3.0.2",
     "hyperid": "^2.0.5",
-    "ilc-server-sdk": "^1.2.3",
+    "ilc-sdk": "1.0.0-alpha.0",
     "is-url": "^1.2.4",
     "lodash": "^4.17.19",
     "newrelic": "^6.11.0",
