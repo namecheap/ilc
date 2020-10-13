@@ -21,8 +21,8 @@
             currency: 'USD'
         },
         supported: {
-            locale: ['en-US', 'en-GB', 'fr-FR', 'fr-CA', 'de-DE', 'ua-UA'],
-            currency: ['USD', 'EUR', 'GBP']
+            locale: ['en-US', 'ua-UA'],
+            currency: ['USD', 'UAH']
         },
     },
     //TODO: should be moved to registry
