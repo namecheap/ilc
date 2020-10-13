@@ -27,6 +27,7 @@ module.exports = class ConfigsInjector {
 
         if (request.ilcState && request.ilcState.locale) {
             document = document.replace('<html', `<html lang="${request.ilcState.locale}"`);
+            delete request.ilcState.locale; // We don't need it at client side
         }
 
         const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);

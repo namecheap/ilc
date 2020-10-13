@@ -1,22 +1,26 @@
 import IlcAppSdk from 'ilc-server-sdk/dist/client';
 import {handleAsyncAction} from '../handlePageTransaction';
+import {triggerAppChange} from '../navigationEvents';
 
 export default class I18n {
-    #prevUrl = null;
+    #prevConfig;
     /** @type {IlcAppSdk} */
     #systemSdk;
     #singleSpa;
     #intlAdapterSystem;
     #rollbackInProgress = false;
+    #triggerAppChange;
+    #currentCurrency = 'USD'; //TODO: to be changes in future
 
-    constructor(registrySettings, singleSpa) {
-        this.#prevUrl = window.location.href;
+    constructor(registrySettings, singleSpa, triggerAppsChange = triggerAppChange) {
+        this.#triggerAppChange = triggerAppsChange;
         this.#singleSpa = singleSpa;
         this.#intlAdapterSystem = {
-            get: () => ({locale: document.documentElement.lang, currency: 'USD'}),
+            get: () => ({locale: document.documentElement.lang, currency: this.#currentCurrency}),
             getDefault: () => registrySettings.default,
             getSupported: () => registrySettings.supported,
         };
+        this.#prevConfig = this.#intlAdapterSystem.get();
 
         this.#systemSdk = new IlcAppSdk({appId: 'ILC:System', intl: this.#intlAdapterSystem});
 
@@ -37,28 +41,37 @@ export default class I18n {
      * @return void
      */
     #setIntl = (conf) => {
-        if (!conf.locale) {
-            return;
-        }
-
-        if (!this.getAdapter().getSupported().locale.includes(conf.locale)) {
+        if (conf.locale && !this.getAdapter().getSupported().locale.includes(conf.locale)) {
             throw new Error('Invalid locale passed');
+        }
+        if (conf.currency && !this.getAdapter().getSupported().currency.includes(conf.currency)) {
+            throw new Error('Invalid currency passed');
         }
 
         const url = window.location.href.replace(window.location.origin, '');
-        const newLocaleUrl = this.#systemSdk.intl.localizeUrl(url, conf.locale).toString();
-        this.#singleSpa.navigateToUrl(newLocaleUrl);
+        const newLocaleUrl = this.#systemSdk.intl.localizeUrl(url, conf).toString();
+
+        if (conf.currency) {
+            this.#currentCurrency = conf.currency;
+        }
+
+        if (url !== newLocaleUrl) {
+            this.#singleSpa.navigateToUrl(newLocaleUrl);
+        } else {
+            this.#triggerAppChange();
+        }
     };
 
     #onBeforeAppsMount = () => {
-        const prevLocale = this.#systemSdk.intl.parseUrl(this.#prevUrl).locale;
+        const prevConfig = this.#prevConfig;
         const currLocale = this.#systemSdk.intl.parseUrl(window.location.pathname).locale;
-        if (this.#prevUrl !== window.location.pathname) {
-            this.#prevUrl = window.location.pathname;
-        }
-        if (prevLocale === currLocale) {
+        if (
+            this.#prevConfig.locale === currLocale &&
+            this.#intlAdapterSystem.get().currency === this.#prevConfig.currency
+        ) {
             return;
         }
+        this.#prevConfig = this.#intlAdapterSystem.get();
 
         document.documentElement.lang = currLocale;
 
@@ -76,9 +89,9 @@ export default class I18n {
             console.error(err);
             if (this.#rollbackInProgress === false) {
                 this.#rollbackInProgress = true;
-                this.#setIntl({locale: prevLocale});
+                this.#setIntl(prevConfig);
             } else {
-                console.error(`ILC: error happened during locale change rollback... See error details above.`)
+                console.error(`ILC: error happened during i18n configuration change rollback... See error details above.`)
             }
         });
         handleAsyncAction(afterAllResReady);
