@@ -1,6 +1,7 @@
 import {Intl as IlcIntl} from 'ilc-sdk/dist/app';
 import {handleAsyncAction} from '../handlePageTransaction';
 import {triggerAppChange} from '../navigationEvents';
+import {iterablePromise} from '../utils';
 
 export default class I18n {
     #adapterConfig;
@@ -71,7 +72,7 @@ export default class I18n {
         this.#prevConfig = this.getAdapter().get();
 
         const promises = [];
-        const onAllResourcesReady = () => this.#iterablePromise(promises).then(() => this.#rollbackInProgress = false);
+        const onAllResourcesReady = () => iterablePromise(promises).then(() => this.#rollbackInProgress = false);
         const detail = Object.assign(this.getAdapter().get(), {
             addPendingResources: promise => promises.push(promise),
             onAllResourcesReady: onAllResourcesReady,
@@ -92,18 +93,5 @@ export default class I18n {
         handleAsyncAction(afterAllResReady);
 
         return afterAllResReady;
-    };
-
-    #iterablePromise = (iterable) => {
-        return Promise.all(iterable).then((resolvedIterable) => {
-            if (iterable.length !== resolvedIterable.length) {
-                // The list of promises or values changed. Return a new Promise.
-                // The original promise won't resolve until the new one does.
-                return this.#iterablePromise(iterable);
-            }
-            // The list of promises or values stayed the same.
-            // Return results immediately.
-            return resolvedIterable;
-        });
     };
 }
