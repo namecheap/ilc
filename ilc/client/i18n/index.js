@@ -1,55 +1,50 @@
-import IlcAppSdk from 'ilc-sdk/dist/app';
+import {Intl as IlcIntl} from 'ilc-sdk/dist/app';
 import {handleAsyncAction} from '../handlePageTransaction';
 import {triggerAppChange} from '../navigationEvents';
 
 export default class I18n {
+    #adapterConfig;
     #prevConfig;
-    /** @type {IlcAppSdk} */
-    #systemSdk;
     #singleSpa;
-    #intlAdapterSystem;
     #rollbackInProgress = false;
     #triggerAppChange;
     #currentCurrency = 'USD'; //TODO: to be changes in future
 
-    constructor(registrySettings, singleSpa, triggerAppsChange = triggerAppChange) {
+    constructor(adapterConfig, singleSpa, triggerAppsChange = triggerAppChange) {
+        this.#adapterConfig = adapterConfig;
         this.#triggerAppChange = triggerAppsChange;
         this.#singleSpa = singleSpa;
-        this.#intlAdapterSystem = {
-            get: () => ({locale: document.documentElement.lang, currency: this.#currentCurrency}),
-            getDefault: () => registrySettings.default,
-            getSupported: () => registrySettings.supported,
-        };
-        this.#prevConfig = this.#intlAdapterSystem.get();
-
-        this.#systemSdk = new IlcAppSdk({appId: 'ILC:System', intl: this.#intlAdapterSystem});
+        this.#prevConfig = this.getAdapter().get();
 
         window.addEventListener('single-spa:before-mount-routing-event', this.#onBeforeAppsMount);
     }
 
-    unlocalizeUrl = v => this.#systemSdk.intl.parseUrl(v).cleanUrl;
+    unlocalizeUrl = v => IlcIntl.parseUrl(this.#adapterConfig, v).cleanUrl;
 
     getAdapter() {
-        return Object.assign({set: this.#setIntl}, this.#intlAdapterSystem);
+        return {
+            set: this.#setIntl,
+            get: () => ({locale: document.documentElement.lang, currency: this.#currentCurrency}),
+            config: this.#adapterConfig,
+        };
     }
 
     /**
-     *
      * @param {object} conf
      * @param {string} [conf.locale]
      * @param {string} [conf.currency]
      * @return void
      */
     #setIntl = (conf) => {
-        if (conf.locale && !this.getAdapter().getSupported().locale.includes(conf.locale)) {
+        if (conf.locale && !this.#adapterConfig.supported.locale.includes(conf.locale)) {
             throw new Error('Invalid locale passed');
         }
-        if (conf.currency && !this.getAdapter().getSupported().currency.includes(conf.currency)) {
+        if (conf.currency && !this.#adapterConfig.supported.currency.includes(conf.currency)) {
             throw new Error('Invalid currency passed');
         }
 
         const url = window.location.href.replace(window.location.origin, '');
-        const newLocaleUrl = this.#systemSdk.intl.localizeUrl(url, conf).toString();
+        const newLocaleUrl = IlcIntl.localizeUrl(this.#adapterConfig, url, conf);
 
         if (conf.currency) {
             this.#currentCurrency = conf.currency;
@@ -64,16 +59,16 @@ export default class I18n {
 
     #onBeforeAppsMount = () => {
         const prevConfig = this.#prevConfig;
-        const currLocale = this.#systemSdk.intl.parseUrl(window.location.pathname).locale;
+        const currLocale = IlcIntl.parseUrl(this.#adapterConfig, window.location.pathname).locale;
         if (
             this.#prevConfig.locale === currLocale &&
-            this.#intlAdapterSystem.get().currency === this.#prevConfig.currency
+            this.getAdapter().get().currency === this.#prevConfig.currency
         ) {
             return;
         }
 
         document.documentElement.lang = currLocale;
-        this.#prevConfig = this.#intlAdapterSystem.get();
+        this.#prevConfig = this.getAdapter().get();
 
         const promises = [];
         const onAllResourcesReady = () => this.#iterablePromise(promises).then(() => this.#rollbackInProgress = false);

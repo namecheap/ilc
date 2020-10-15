@@ -17,7 +17,7 @@
     i18n: { //TODO: should be moved to registry
         enabled: true,
         default: {
-            locale: 'en-US',
+            locale: 'en-US', // http://cldr.unicode.org/core-spec?tmpl=%2Fsystem%2Fapp%2Ftemplates
             currency: 'USD'
         },
         supported: {
