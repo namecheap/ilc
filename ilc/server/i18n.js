@@ -1,6 +1,6 @@
 const cookie = require('cookie');
 const config = require('config');
-const Intl = require('ilc-sdk/dist/app').Intl;
+const Intl = require('ilc-sdk/app').Intl;
 
 //TODO: should be moved to registry
 const adapterConfig = {default: config.get('i18n.default'), supported: config.get('i18n.supported')};

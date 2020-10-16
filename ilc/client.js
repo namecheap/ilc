@@ -11,7 +11,7 @@ import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import {getSlotElement} from './client/utils';
 import AsyncBootUp from './client/AsyncBootUp';
-import IlcAppSdk from 'ilc-sdk/dist/app';
+import IlcAppSdk from 'ilc-sdk/app';
 import I18n from './client/i18n';
 
 const System = window.System;
