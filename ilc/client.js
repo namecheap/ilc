@@ -32,7 +32,7 @@ const asyncBootUp = new AsyncBootUp();
 if (!registryConf.settings.amdDefineCompatibilityMode) {
     window.define = window.ILC.define;
 }
-
+window.ILC.getAppSdkAdapter = appId => ({appId, intl: i18n ? i18n.getAdapter() : null});
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
@@ -40,7 +40,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
 
         const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
 
-        const appSdk = new IlcAppSdk({appId: fragmentName, intl: i18n ? i18n.getAdapter() : null});
+        const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(fragmentName));
         const onUnmount = async () => appSdk.unmount();
 
         singleSpa.registerApplication(
@@ -96,11 +96,8 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
     });
 });
 
-if (i18n !== null) {
-    window.ILC.appSdkAdapter = i18n.getAdapter();
-}
 //TODO: to be removed
-window.zzz = i18n ? new IlcAppSdk({appId: 'tst', intl: i18n.getAdapter()}) : null;
+window.__IlcAppSdk = i18n ? new IlcAppSdk({appId: 'tst', intl: i18n.getAdapter()}) : null;
 
 setupErrorHandlers(registryConf, router.getCurrentRoute);
 setupPerformanceMonitoring(router.getCurrentRoute);

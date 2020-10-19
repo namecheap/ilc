@@ -5,7 +5,7 @@ import {iterablePromise} from '../utils';
 
 export default class I18n {
     #transactionManager;
-    #adapterConfig;
+    #config;
     #prevConfig;
     #singleSpa;
     #rollbackInProgress = false;
@@ -13,27 +13,27 @@ export default class I18n {
     #currentCurrency = 'USD'; //TODO: to be changes in future
 
     constructor(
-        adapterConfig,
+        config,
         singleSpa,
         triggerAppsChange = triggerAppChange,
         transactionManager = transactionManagerFactory()
     ) {
-        this.#transactionManager = transactionManager;
-        this.#adapterConfig = adapterConfig;
-        this.#triggerAppChange = triggerAppsChange;
+        this.#config = config;
         this.#singleSpa = singleSpa;
-        this.#prevConfig = this.getAdapter().get();
+        this.#triggerAppChange = triggerAppsChange;
+        this.#transactionManager = transactionManager;
+        this.#prevConfig = this.#get();
 
         window.addEventListener('single-spa:before-mount-routing-event', this.#onBeforeAppsMount);
     }
 
-    unlocalizeUrl = v => IlcIntl.parseUrl(this.#adapterConfig, v).cleanUrl;
+    unlocalizeUrl = v => IlcIntl.parseUrl(this.#config, v).cleanUrl;
 
     getAdapter() {
         return {
             set: this.#setIntl,
-            get: () => ({locale: document.documentElement.lang, currency: this.#currentCurrency}),
-            config: this.#adapterConfig,
+            get: () => this.#get(),
+            config: this.#config,
         };
     }
 
@@ -44,15 +44,15 @@ export default class I18n {
      * @return void
      */
     #setIntl = (conf) => {
-        if (conf.locale && !this.#adapterConfig.supported.locale.includes(conf.locale)) {
+        if (conf.locale && !this.#config.supported.locale.includes(conf.locale)) {
             throw new Error('Invalid locale passed');
         }
-        if (conf.currency && !this.#adapterConfig.supported.currency.includes(conf.currency)) {
+        if (conf.currency && !this.#config.supported.currency.includes(conf.currency)) {
             throw new Error('Invalid currency passed');
         }
 
         const url = window.location.href.replace(window.location.origin, '');
-        const newLocaleUrl = IlcIntl.localizeUrl(this.#adapterConfig, url, conf);
+        const newLocaleUrl = IlcIntl.localizeUrl(this.#config, url, conf);
 
         if (conf.currency) {
             this.#currentCurrency = conf.currency;
@@ -67,20 +67,20 @@ export default class I18n {
 
     #onBeforeAppsMount = () => {
         const prevConfig = this.#prevConfig;
-        const currLocale = IlcIntl.parseUrl(this.#adapterConfig, window.location.pathname).locale;
+        const currLocale = IlcIntl.parseUrl(this.#config, window.location.pathname).locale;
         if (
             this.#prevConfig.locale === currLocale &&
-            this.getAdapter().get().currency === this.#prevConfig.currency
+            this.#get().currency === this.#prevConfig.currency
         ) {
             return;
         }
 
         document.documentElement.lang = currLocale;
-        this.#prevConfig = this.getAdapter().get();
+        this.#prevConfig = this.#get();
 
         const promises = [];
         const onAllResourcesReady = () => iterablePromise(promises).then(() => this.#rollbackInProgress = false);
-        const detail = Object.assign(this.getAdapter().get(), {
+        const detail = Object.assign(this.#get(), {
             addPendingResources: promise => promises.push(promise),
             onAllResourcesReady: onAllResourcesReady,
         });
@@ -101,4 +101,6 @@ export default class I18n {
 
         return afterAllResReady;
     };
+
+    #get = () => ({locale: document.documentElement.lang, currency: this.#currentCurrency});
 }
