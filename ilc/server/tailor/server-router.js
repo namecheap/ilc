@@ -8,24 +8,20 @@ module.exports = class ServerRouter {
     errors = errors;
 
     #logger;
-    #unlocalizeUrl;
 
     /**
      * @param logger - console compatible logger
-     * @param {function} unlocalizeUrl
      */
-    constructor(logger, unlocalizeUrl = v => v) {
+    constructor(logger) {
         this.#logger = logger;
-        this.#unlocalizeUrl = unlocalizeUrl;
     }
 
-    getTemplateInfo(registryConfig, request) {
+    getTemplateInfo(registryConfig, url, ilcState = {}) {
         const router = new Router(registryConfig);
-        const url = this.#unlocalizeUrl(request.url);
 
         let route;
-        if (request.ilcState && request.ilcState.forceSpecialRoute) {
-            route = router.matchSpecial(url, request.ilcState.forceSpecialRoute);
+        if (ilcState.forceSpecialRoute) {
+            route = router.matchSpecial(url, ilcState.forceSpecialRoute);
         } else {
             route = router.match(url);
         }

@@ -11,11 +11,11 @@ module.exports = (registryService = registryServiceImport) => {
         trustProxy: false, //TODO: should be configurable via Registry
     }, require('./logger/fastify')));
 
-    app.addHook('onRequest', (req, res, done) => {
+    const i18nOnRequest = i18n.onRequestFactory(config.get('i18n')); //TODO: config should be fetched from registry
+    app.addHook('onRequest', async (req, reply) => {
         req.raw.ilcState = {};
-        done();
+        return i18nOnRequest(req, reply);
     });
-    app.addHook('onRequest', i18n.onRequest);
 
     const tailor = tailorFactory(
         registryService,

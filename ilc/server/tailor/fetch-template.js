@@ -3,6 +3,7 @@
 const mergeConfigs = require('./merge-configs');
 const parseOverrideConfig = require('./parse-override-config');
 const config = require('config');
+const {unlocalizeUrl} = require('../i18n');
 
 const TEMPLATE_ERROR = 0;
 const TEMPLATE_NOT_FOUND = 1;
@@ -34,7 +35,8 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
         registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
     }
 
-    const {route, page} = router.getTemplateInfo(registryConfig.data, request);
+    const reqUrl = unlocalizeUrl(config.get('i18n'), request.url);
+    const {route, page} = router.getTemplateInfo(registryConfig.data, reqUrl, request.ilcState);
     // Here we add contextual information about current route to the request
     // For now we use it only in "process-fragment-response.js" to check if we're already processing special route
     request.ilcRoute = route;
