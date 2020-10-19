@@ -3,62 +3,54 @@ import {
     Edit,
     SimpleForm,
     TextInput,
-    SelectInput,
+    RadioButtonGroupInput,
     BooleanInput,
+    PasswordInput,
+    Toolbar,
+    SaveButton,
 } from 'react-admin';
 
 import * as validators from '../validators';
-import {choices, keys} from './dataTransform';
+import {types} from './dataTransform';
 
-const Title = ({record}) => {
-    return (<span>{record ? `Setting "${record.key}"` : ''}</span>);
+const Title = (props) => {
+    return (<span>{props.record ? `Setting "${props.record.key}"` : ''}</span>);
 };
 
-const InputForm = (props) => {
-    switch(props.record.key) {
-        case keys.baseUrl: {
-            return (
-                <SimpleForm {...props}>
-                    <TextInput source="value" validate={validators.url} />
-                </SimpleForm>
-            );
+const MyToolbar = (props) => {
+    return (
+        <Toolbar {...props}>
+            <SaveButton />
+        </Toolbar>
+    );
+};
+
+const Input = (props) => {
+    switch(props.record.meta.type) {
+        case types.url: {
+            return (<TextInput source="value" validate={validators.url} />);
         }
-        case keys.trailingSlash: {
-            return (
-                <SimpleForm {...props}>
-                    <SelectInput source="value" choices={choices[keys.trailingSlash]} />
-                </SimpleForm>
-            );
+        case types.enum: {
+            return (<RadioButtonGroupInput row={false} source="value" choices={props.record.meta.choices} />);
         }
-        case keys.amdDefineCompatibilityMode:
-        case keys.authOpenIdEnabled: {
-            return (
-                <SimpleForm {...props}>
-                    <BooleanInput source="value" />
-                </SimpleForm>
-            );
+        case types.boolean: {
+            return (<BooleanInput source="value" />);
         }
-        case keys.authOpenIdDiscoveryUrl: {
-            return (
-                <SimpleForm {...props}>
-                    <TextInput source="value" validate={validators.url} />
-                </SimpleForm>
-            );
+        case types.password: {
+            return (<PasswordInput source="value" />);
         }
         default: {
-            return (
-                <SimpleForm {...props}>
-                    <TextInput source="value" />
-                </SimpleForm>
-            );
+            return (<TextInput source="value" />);
         }
     }
 };
 
-const MyEdit = ({permissions, ...props}) => {
+const MyEdit = (props) => {
     return (
         <Edit title={<Title />} undoable={false} {...props}>
-            <InputForm />
+            <SimpleForm toolbar={<MyToolbar />}>
+                <Input />
+            </SimpleForm>
         </Edit>
     );
 };

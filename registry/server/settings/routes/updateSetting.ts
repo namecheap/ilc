@@ -11,7 +11,7 @@ import {
     partialSettingSchema,
 } from '../interfaces';
 import db from '../../db';
-import preProcessResponse from '../../common/services/preProcessResponse';
+import preProcessResponse from '../services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 
 type RequestParams = {
@@ -32,9 +32,7 @@ const validateRequest = validateRequestFactory([
 ]);
 
 const updateSetting = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    await db('settings').where({key: req.params.key}).update({
-        value: JSON.stringify(req.body.value),
-    });
+    await db('settings').where('key', req.params.key).update('value', JSON.stringify(req.body.value));
     const [updated] = await db.select().from('settings').where('key', req.params.key);
     res.status(200).send(preProcessResponse(updated));
 };

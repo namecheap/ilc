@@ -1,32 +1,40 @@
-export const keys = {
-    trailingSlash: 'trailingSlash',
-    baseUrl: 'baseUrl',
-    authOpenIdEnabled: 'auth.openid.enabled',
-    authOpenIdDiscoveryUrl: 'auth.openid.discoveryUrl',
-    amdDefineCompatibilityMode: 'amdDefineCompatibilityMode',
-};
-
-export const choices = {
-    [keys.trailingSlash]: [
-        {id: 'doNothing', name: 'Do nothing'},
-        {id: 'redirectToBaseUrl', name: 'Redirect to base URL'},
-        {id: 'redirectToBaseUrlWithTrailingSlash', name: 'Redirect to base URL with trailing slash'},
-    ],
+export const types = {
+    url: 'url',
+    boolean: 'boolean',
+    string: 'string',
+    enum: 'enum',
+    password: 'password',
 };
 
 export function transformGet(setting) {
     setting.id = setting.key;
-    setting.secured = !!setting.secured;
+
+    if (setting.meta.type === types.enum) {
+        setting.meta.choices = setting.meta.choices.map((choice) => ({
+            id: choice,
+            name: choice,
+        }));
+    }
 
     if (setting.value === undefined) {
         setting.value = null;
     }
+
+    if (setting.default === undefined) {
+        setting.default = null;
+    }
 }
 
 export function transformSet(setting) {
-    delete setting.id;
-
     if (setting.value === null) {
         setting.value = '';
+    }
+
+    for (const key in setting) {
+        if (key === 'value' || key === 'key') {
+            continue;
+        }
+
+        delete setting[key];
     }
 }

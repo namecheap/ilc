@@ -19,10 +19,31 @@ export const enum TrailingSlashValues {
     RedirectToBaseUrlWithTrailingSlash = 'redirectToBaseUrlWithTrailingSlash',
 };
 
+export const enum Scope {
+    Ilc = 'ilc',
+    Registry = 'registry',
+};
+
+export const enum SettingTypes {
+    Boolean = 'boolean',
+    Url = 'url',
+    String = 'string',
+    Enum = 'enum',
+    Password = 'password',
+};
+
+type SettingValue = string | boolean | TrailingSlashValues;
+
 export interface Setting {
     key: SettingKeys,
-    value: string | TrailingSlashValues,
-    secured: boolean,
+    value: SettingValue,
+    default: SettingValue,
+    scope: Scope,
+    secret: boolean,
+    meta: {
+        type: SettingTypes,
+        choices?: any[],
+    },
 };
 
 export const keySchema = Joi.string().min(1).max(50).valid(
@@ -38,7 +59,7 @@ export const keySchema = Joi.string().min(1).max(50).valid(
     SettingKeys.AmdDefineCompatibilityMode
 );
 
-export const valueSchema = Joi.alternatives().conditional('key', {
+const valueSchema = Joi.alternatives().conditional('key', {
     switch: [
         {
             is: Joi.valid(SettingKeys.TrailingSlash),
@@ -51,17 +72,19 @@ export const valueSchema = Joi.alternatives().conditional('key', {
         {
             is: Joi.valid(SettingKeys.AmdDefineCompatibilityMode, SettingKeys.AuthOpenIdEnabled),
             then: Joi.boolean().strict().sensitive().required(),
+        },
+        {
+            is: Joi.valid(SettingKeys.BaseUrl, SettingKeys.AuthOpenIdDiscoveryUrl),
+            then: Joi.string().uri({
+                scheme: [/https?/],
+                allowRelative: false,
+            }).empty(''),
         }
     ],
-    otherwise: Joi.string().required(),
+    otherwise: Joi.string().empty(''),
 });
 
-export const securedSchema = Joi.boolean();
-
-const commonSettingSchema = {
-    key: keySchema,
+export const partialSettingSchema = Joi.object({
+    key: keySchema.required(),
     value: valueSchema,
-    secured: securedSchema,
-};
-
-export const partialSettingSchema = Joi.object({...commonSettingSchema});
+});

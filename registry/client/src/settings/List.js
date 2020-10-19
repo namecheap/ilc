@@ -10,7 +10,7 @@ import {
     TextField,
 } from 'react-admin';
 
-import {choices, keys} from './dataTransform';
+import {types} from './dataTransform';
 
 const ListActionsToolbar = ({children, ...props}) => {
     const classes = makeStyles({
@@ -32,18 +32,24 @@ const ListActionsToolbar = ({children, ...props}) => {
 const Pagination = () => (<div />);
 
 const SourceValueField = (props) => {
-    switch (props.record.key) {
-        case keys.trailingSlash: {
-            return (
-                <SelectField {...props} source="value" choices={choices[keys.trailingSlash]} />
-            );
+    const secret = '********';
+
+    if (props.record.secret) {
+        return secret;
+    }
+
+    switch (props.record.meta.type) {
+        case types.choices: {
+            return (<SelectField {...props} choices={props.record.meta.choices} />);
         }
-        case keys.amdDefineCompatibilityMode:
-        case keys.authOpenIdEnabled: {
-            return (<BooleanField {...props} source="value" />);
+        case types.boolean: {
+            return (<BooleanField {...props} />);
+        }
+        case types.password: {
+            return secret;
         }
         default: {
-            return (<TextField {...props} source="value" />);
+            return (<TextField {...props} />);
         }
     }
 }
@@ -66,8 +72,10 @@ const PostList = props => {
                 ) : (
                     <Datagrid rowClick="edit" optimized>
                         <TextField source="key" />
-                        <SourceValueField />
-                        <BooleanField source="secured" />
+                        <SourceValueField source="value" />
+                        <SourceValueField source="default" />
+                        <TextField source="scope" />
+                        <BooleanField source="secret" />
                         <ListActionsToolbar>
                             <EditButton />
                         </ListActionsToolbar>

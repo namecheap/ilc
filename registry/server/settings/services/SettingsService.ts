@@ -1,5 +1,5 @@
 import db from '../../db';
-import {SettingKeys, Setting} from '../interfaces';
+import {SettingKeys} from '../interfaces';
 
 export class SettingsService {
     private changesTracking: any = {};
@@ -40,8 +40,20 @@ export class SettingsService {
     }
 
     private async getVal(key: SettingKeys): Promise<any> {
-        const [res] = await db.select().from<Setting>('settings').where('key', key);
-        return JSON.parse(res.value);
+        const [setting] = await db.select().from('settings').where('key', key);
+        const value = JSON.parse(setting.value);
+
+        if (setting.value !== '') {
+            return value;
+        }
+
+        const defaultValue = JSON.parse(setting.default);
+
+        if (defaultValue !== '') {
+            return defaultValue;
+        }
+
+        return JSON.parse(setting.value);
     }
 }
 

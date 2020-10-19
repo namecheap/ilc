@@ -4,7 +4,7 @@ import {
 } from 'express';
 
 import db from '../../db';
-import preProcessResponse from '../../common/services/preProcessResponse';
+import preProcessResponse from '../services/preProcessResponse';
 
 const getSettings = async (req: Request, res: Response): Promise<void> => {
     const settings = await db.select().from('settings');

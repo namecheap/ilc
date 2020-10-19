@@ -10,7 +10,7 @@ import {
     keySchema,
 } from '../interfaces';
 import db from '../../db';
-import preProcessResponse from '../../common/services/preProcessResponse';
+import preProcessResponse from '../services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 
 type RequestParams = {

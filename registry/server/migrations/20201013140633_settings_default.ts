@@ -1,56 +1,129 @@
 import * as Knex from "knex";
-import {Setting, SettingKeys, TrailingSlashValues} from '../settings/interfaces';
+import {
+    Setting,
+    SettingKeys,
+    TrailingSlashValues,
+    Scope,
+    SettingTypes,
+} from "../settings/interfaces";
 
 
 export async function up(knex: Knex): Promise<any> {
     const settings: Setting[] = [{
         key: SettingKeys.BaseUrl,
-        value: JSON.stringify('http://localhost:4001/'),
-        secured: true,
+        value: 'http://localhost:4001/',
+        default: 'http://localhost:4001/',
+        scope: Scope.Registry,
+        secret: false,
+        meta: {
+            type: SettingTypes.Url,
+        },
     }, {
         key: SettingKeys.TrailingSlash,
-        value: JSON.stringify(TrailingSlashValues.DoNothing),
-        secured: false,
-    }, {
-        key: SettingKeys.AuthOpenIdEnabled,
-        value: JSON.stringify(false),
-        secured: true,
-    }, {
-        key: SettingKeys.AuthOpenIdDiscoveryUrl,
-        value: JSON.stringify(''),
-        secured: true,
-    }, {
-        key: SettingKeys.AuthOpenIdClientId,
-        value: JSON.stringify(''),
-        secured: true,
-    }, {
-        key: SettingKeys.AuthOpenIdClientSecret,
-        value: JSON.stringify(''),
-        secured: true,
-    }, {
-        key: SettingKeys.AuthOpenIdResponseMode,
-        value: JSON.stringify('query'),
-        secured: true,
-    }, {
-        key: SettingKeys.AuthOpenIdIdentifierClaimName,
-        value: JSON.stringify('unique_name'),
-        secured: true,
-    }, {
-        key: SettingKeys.AuthOpenIdRequestedScopes,
-        value: JSON.stringify('openid'),
-        secured: true,
+        value: TrailingSlashValues.DoNothing,
+        default: TrailingSlashValues.DoNothing,
+        scope: Scope.Ilc,
+        secret: false,
+        meta: {
+            type: SettingTypes.Enum,
+            choices: [
+                TrailingSlashValues.DoNothing,
+                TrailingSlashValues.RedirectToBaseUrl,
+                TrailingSlashValues.RedirectToBaseUrlWithTrailingSlash,
+            ],
+        },
     }, {
         key: SettingKeys.AmdDefineCompatibilityMode,
-        value: JSON.stringify(false),
-        secured: false,
+        value: false,
+        default: false,
+        scope: Scope.Ilc,
+        secret: false,
+        meta: {
+            type: SettingTypes.Boolean,
+        },
+    }, {
+        key: SettingKeys.AuthOpenIdEnabled,
+        value: false,
+        default: false,
+        scope: Scope.Registry,
+        secret: false,
+        meta: {
+            type: SettingTypes.Boolean,
+        },
+    }, {
+        key: SettingKeys.AuthOpenIdDiscoveryUrl,
+        value: '',
+        default: '',
+        scope: Scope.Registry,
+        secret: false,
+        meta: {
+            type: SettingTypes.Url,
+        },
+    }, {
+        key: SettingKeys.AuthOpenIdClientId,
+        value: '',
+        default: '',
+        scope: Scope.Registry,
+        secret: false,
+        meta: {
+            type: SettingTypes.String,
+        },
+    }, {
+        key: SettingKeys.AuthOpenIdClientSecret,
+        value: '',
+        default: '',
+        scope: Scope.Registry,
+        secret: true,
+        meta: {
+            type: SettingTypes.Password,
+        },
+    }, {
+        key: SettingKeys.AuthOpenIdResponseMode,
+        value: 'query',
+        default: 'query',
+        scope: Scope.Registry,
+        secret: false,
+        meta: {
+            type: SettingTypes.String,
+        },
+    }, {
+        key: SettingKeys.AuthOpenIdIdentifierClaimName,
+        value: 'unique_name',
+        default: 'unique_name',
+        scope: Scope.Registry,
+        secret: false,
+        meta: {
+            type: SettingTypes.String,
+        },
+    }, {
+        key: SettingKeys.AuthOpenIdRequestedScopes,
+        value: 'openid',
+        default: 'openid',
+        scope: Scope.Registry,
+        secret: false,
+        meta: {
+            type: SettingTypes.String,
+        },
     }];
 
     return knex.transaction(async (transaction) => {
-        await Promise.all(settings.map(async ({key, value, secured}) => {
-            const count = await knex('settings').where({key}).transacting(transaction);
+        await Promise.all(settings.map(async (setting) => {
+            const [selected] = await knex('settings').where('key', setting.key).transacting(transaction);
+            const toUpdate = {
+                default: JSON.stringify(setting.default),
+                scope: setting.scope,
+                secret: setting.secret,
+                meta: JSON.stringify(setting.meta),
+            };
 
-            if (!count.length) {
-                await knex('settings').insert({key, value, secured}).transacting(transaction);
+            if (selected === undefined) {
+                await knex('settings').insert({
+                    key: setting.key,
+                    value: JSON.stringify(setting.value),
+                    ...toUpdate
+                }).transacting(transaction);
+            } else {
+                await knex('settings').where('key', setting.key).update(toUpdate);
             }
         }));
     });

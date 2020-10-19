@@ -2,7 +2,8 @@ import _ from 'lodash';
 import express from 'express';
 
 import knex from '../db';
-import {Setting} from '../settings/interfaces';
+import {Setting, Scope} from '../settings/interfaces';
+import preProcessResponse from '../settings/services/preProcessResponse';
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ router.get('/', async (req, res) => {
             .from('routes')
             .join('route_slots', 'route_slots.routeId', 'routes.id'),
         knex.select().from('shared_props'),
-        knex.select().from('settings').where('secured', false),
+        knex.select().from('settings').where('scope', Scope.Ilc),
     ]);
 
     const data = {
@@ -76,9 +77,9 @@ router.get('/', async (req, res) => {
         return acc;
     }, {});
 
-    data.settings = settings.reduce((acc: {[key: string]: any}, setting: Setting) => ({
+    data.settings = preProcessResponse(settings).reduce((acc: {[key: string]: any}, setting: Setting) => ({
         ...acc,
-        [setting.key]: JSON.parse(setting.value),
+        [setting.key]: setting.value,
     }), {});
 
     return res.send(data);

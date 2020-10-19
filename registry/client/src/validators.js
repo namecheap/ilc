@@ -6,7 +6,7 @@ import {
 export const required = createRequiredValidator();
 export const number = createNumberValidator();
 export const url = (value) => {
-    if (value === undefined || value.length === 0) {
+    if (value === undefined || value === null || value.length === 0) {
         return;
     }
 
