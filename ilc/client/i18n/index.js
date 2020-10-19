@@ -1,9 +1,10 @@
 import {Intl as IlcIntl} from 'ilc-sdk/dist/app';
-import {handleAsyncAction} from '../handlePageTransaction';
+import transactionManagerFactory from '../TransactionManager';
 import {triggerAppChange} from '../navigationEvents';
 import {iterablePromise} from '../utils';
 
 export default class I18n {
+    #transactionManager;
     #adapterConfig;
     #prevConfig;
     #singleSpa;
@@ -11,7 +12,13 @@ export default class I18n {
     #triggerAppChange;
     #currentCurrency = 'USD'; //TODO: to be changes in future
 
-    constructor(adapterConfig, singleSpa, triggerAppsChange = triggerAppChange) {
+    constructor(
+        adapterConfig,
+        singleSpa,
+        triggerAppsChange = triggerAppChange,
+        transactionManager = transactionManagerFactory()
+    ) {
+        this.#transactionManager = transactionManager;
         this.#adapterConfig = adapterConfig;
         this.#triggerAppChange = triggerAppsChange;
         this.#singleSpa = singleSpa;
@@ -90,7 +97,7 @@ export default class I18n {
                 console.error(`ILC: error happened during i18n configuration change rollback... See error details above.`)
             }
         });
-        handleAsyncAction(afterAllResReady);
+        this.#transactionManager.handleAsyncAction(afterAllResReady);
 
         return afterAllResReady;
     };

@@ -1,7 +1,7 @@
 import chai from 'chai';
 import sinon from 'sinon';
 
-import {slotWillBe} from './handlePageTransaction';
+import {slotWillBe} from './TransactionManager';
 import {createFactory} from './isActiveFactory';
 
 describe('is active factory', () => {

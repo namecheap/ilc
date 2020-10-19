@@ -11,7 +11,7 @@ const onRequestFactory = (i18nConfig) => async (req, reply) => {
     if (routeLocale.locale === i18nConfig.default.locale) {
         const cookies = cookie.parse(req.headers.cookie || '');
         if (cookies.lang) { //TODO: clarify cookie name
-            locale = Intl.getCanonicalLocale(cookies.lang, i18nConfig.supported.locale) ?? locale;
+            locale = Intl.getCanonicalLocale(cookies.lang, i18nConfig.supported.locale) || locale;
         }
 
         //TODO: add auth token based detection https://collab.namecheap.net/pages/viewpage.action?spaceKey=NA&title=How+to+Detect+Language+and+Culture
