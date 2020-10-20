@@ -8,7 +8,6 @@ const processUrl = (trailingSlash, url) => {
     const doesReqUrlEndWithTrailingSlash = url[url.length - 1] === '/';
 
     switch (trailingSlash) {
-        case routerHasTo.doNothing: break;
         case routerHasTo.redirectToBaseUrl: {
             if (!doesReqUrlEndWithTrailingSlash) {
                 break;
@@ -21,6 +20,7 @@ const processUrl = (trailingSlash, url) => {
             }
             return url.concat('/');
         }
+        case routerHasTo.doNothing:
         default: break;
     }
 

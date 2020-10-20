@@ -6,7 +6,7 @@ import {
 
 export async function up(knex: Knex): Promise<void> {
     return knex.schema.table('settings', table => {
-        table.string('default', 50).notNullable().defaultTo(JSON.stringify(''));
+        table.text('default');
         table.enum('scope', [Scope.Ilc, Scope.Registry]).notNullable().defaultTo('registry');
         table.boolean('secret').notNullable().defaultTo(false);
         table.json('meta').notNullable().defaultTo(JSON.stringify({}));

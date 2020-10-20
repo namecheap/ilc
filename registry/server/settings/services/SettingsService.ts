@@ -41,9 +41,14 @@ export class SettingsService {
 
     private async getVal(key: SettingKeys): Promise<any> {
         const [setting] = await db.select().from('settings').where('key', key);
+
+        if (setting === undefined) {
+            return;
+        }
+
         const value = JSON.parse(setting.value);
 
-        if (setting.value !== '') {
+        if (value !== '') {
             return value;
         }
 
@@ -52,8 +57,6 @@ export class SettingsService {
         if (defaultValue !== '') {
             return defaultValue;
         }
-
-        return JSON.parse(setting.value);
     }
 }
 
