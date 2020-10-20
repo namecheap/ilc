@@ -151,7 +151,7 @@ export default class ClientRouter {
         const {specialRole} = this.#router.match(pathname);
 
         if (specialRole === null) {
-            this.#singleSpa.navigateToUrl(processHref(this.#registryConf, href));
+            this.#singleSpa.navigateToUrl(processHref(this.#registryConf.settings.trailingSlash, href));
             event.preventDefault();
         }
     };

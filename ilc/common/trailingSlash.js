@@ -4,8 +4,7 @@ const routerHasTo = {
     redirectToBaseUrlWithTrailingSlash: 'redirectToBaseUrlWithTrailingSlash',
 };
 
-const processUrl = (registryConfig, url) => {
-    const trailingSlash = registryConfig.settings.trailingSlash;
+const processUrl = (trailingSlash, url) => {
     const doesReqUrlEndWithTrailingSlash = url[url.length - 1] === '/';
 
     switch (trailingSlash) {

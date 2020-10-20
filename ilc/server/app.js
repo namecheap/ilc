@@ -29,7 +29,7 @@ module.exports = () => {
     app.all('*', async (req, res) => {
         const url = req.raw.url;
         const registryConfig = await registryService.getConfig();
-        const processedUrl = processUrl(registryConfig.data, url);
+        const processedUrl = processUrl(registryConfig.data.settings.trailingSlash, url);
 
         if (processedUrl !== url) {
             res.redirect(processedUrl);
