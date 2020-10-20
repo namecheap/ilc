@@ -131,6 +131,6 @@ describe('is active factory', () => {
         await clock.runAllAsync();
 
         chai.expect(triggerAppChange.calledOnce).to.be.true;
-        chai.expect(handlePageTransaction.calledThrice).to.be.true;
+        chai.expect(handlePageTransaction.secondCall.calledWithExactly(slotName, slotWillBe.default)).to.be.true;
     });
 });
