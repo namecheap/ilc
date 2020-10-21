@@ -137,6 +137,12 @@ export default class ClientRouter {
                 },
             });
         }
+
+        const processedUrl = this.#urlProcessor.process(this.#currentUrl);
+        if (this.#currentUrl !== processedUrl) {
+            console.info(`ILC: Redirecting to "${processedUrl}"...`);
+            this.#location.replace(processedUrl);
+        }
     };
 
     #onClickLink = (event) => {
@@ -153,7 +159,8 @@ export default class ClientRouter {
         const {specialRole} = this.#router.match(pathname);
 
         if (specialRole === null) {
-            this.#singleSpa.navigateToUrl(this.#urlProcessor.process(href));
+            const processedUrl = this.#urlProcessor.process(href);
+            this.#singleSpa.navigateToUrl(processedUrl);
             event.preventDefault();
         }
     };

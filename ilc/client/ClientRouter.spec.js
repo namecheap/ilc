@@ -396,6 +396,31 @@ describe('client router', () => {
                 addEventListener.restore();
             }
         });
+
+        it('should redirect to a processed URL when it does not equal with current URL', () => {
+            const config = {
+                ...registryConfig,
+                settings: {
+                    ...registryConfig.settings,
+                    trailingSlash: UrlProcessor.routerHasTo.redirectToBaseUrl,
+                },
+            };
+
+            const location = {
+                pathname: config.routes[1].route,
+                search: '?hi=there',
+            };
+
+            router = new ClientRouter(config, {}, singleSpa, location);
+
+            location.pathname = config.routes[5].route;
+            location.search = '?see=you';
+            location.replace = sinon.spy();
+
+            window.dispatchEvent(singleSpaBeforeRoutingEvent);
+
+            chai.expect(location.replace.calledOnceWithExactly(location.pathname.slice(0, -1) + location.search)).to.be.true;
+        });
     });
 
     describe('should listen to anchors click events when client router was initialized', () => {
@@ -457,62 +482,6 @@ describe('client router', () => {
             document.getElementById(anchor.id).dispatchEvent(clickEvent);
 
             chai.expect(singleSpa.navigateToUrl.calledOnceWithExactly(anchor.href)).to.be.true;
-            chai.expect(clickEvent.defaultPrevented).to.be.true;
-        });
-
-        it('should handle click events on anchors and navigate to a registered micro front-end page URL with trailing slash', () => {
-            router = new ClientRouter({
-                ...registryConfig,
-                settings: {
-                    ...registryConfig.settings,
-                    trailingSlash: UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash,
-                },
-            }, {}, singleSpa);
-
-            const anchor = {
-                id: 'click-me',
-                href: registryConfig.routes[2].route,
-            };
-
-            anchor.ref = html`
-                <a id="${anchor.id}" href="${anchor.href}">
-                    Hi there! I am anchor tag and I have href attribute.
-                    So I should forward you to registered micro front-end page.
-                </a>
-            `;
-
-            document.body.appendChild(anchor.ref);
-            document.getElementById(anchor.id).dispatchEvent(clickEvent);
-
-            chai.expect(singleSpa.navigateToUrl.calledOnceWithExactly(anchor.href.concat('/'))).to.be.true;
-            chai.expect(clickEvent.defaultPrevented).to.be.true;
-        });
-
-        it('should handle click events on anchors and navigate to a registered micro front-end page URL without trailing slash', () => {
-            router = new ClientRouter({
-                ...registryConfig,
-                settings: {
-                    ...registryConfig.settings,
-                    trailingSlash: UrlProcessor.routerHasTo.redirectToBaseUrl,
-                },
-            }, {}, singleSpa);
-
-            const anchor = {
-                id: 'click-me',
-                href: registryConfig.routes[5].route,
-            };
-
-            anchor.ref = html`
-                <a id="${anchor.id}" href="${anchor.href}">
-                    Hi there! I am anchor tag and I have href attribute.
-                    So I should forward you to registered micro front-end page.
-                </a>
-            `;
-
-            document.body.appendChild(anchor.ref);
-            document.getElementById(anchor.id).dispatchEvent(clickEvent);
-
-            chai.expect(singleSpa.navigateToUrl.calledOnceWithExactly(anchor.href.slice(0, -1))).to.be.true;
             chai.expect(clickEvent.defaultPrevented).to.be.true;
         });
 
