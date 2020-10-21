@@ -21,7 +21,7 @@ export function transformGet(setting) {
     }
 
     if (setting.value === undefined) {
-        setting.value = setting.default;
+        setting.value = null;
     }
 }
 

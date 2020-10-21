@@ -77,10 +77,10 @@ router.get('/', async (req, res) => {
         return acc;
     }, {});
 
-    data.settings = preProcessResponse(settings).reduce((acc: {[key: string]: any}, setting: Setting) => ({
-        ...acc,
-        [setting.key]: setting.value,
-    }), {});
+    data.settings = preProcessResponse(settings).reduce((acc: {[key: string]: any}, setting: Setting) => {
+        _.set(acc, setting.key, setting.value);
+        return acc;
+    }, {});
 
     return res.send(data);
 });
