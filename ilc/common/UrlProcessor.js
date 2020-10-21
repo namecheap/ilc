@@ -13,7 +13,6 @@ class UrlProcessor {
     }
 
     process(url) {
-        console.log(this.#trailingSlash)
         switch (this.#trailingSlash) {
             case UrlProcessor.routerHasTo.redirectToBaseUrl:
             case UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash: {

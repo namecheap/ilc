@@ -73,7 +73,6 @@ const PostList = props => {
                     <Datagrid rowClick="edit" optimized>
                         <TextField source="key" />
                         <SourceValueField source="value" />
-                        <SourceValueField source="default" />
                         <TextField source="scope" />
                         <BooleanField source="secret" />
                         <ListActionsToolbar>

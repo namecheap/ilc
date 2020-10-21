@@ -16,12 +16,12 @@ export function transformGet(setting) {
         }));
     }
 
-    if (setting.value === undefined) {
-        setting.value = null;
-    }
-
     if (setting.default === undefined) {
         setting.default = null;
+    }
+
+    if (setting.value === undefined) {
+        setting.value = setting.default;
     }
 }
 
