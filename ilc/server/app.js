@@ -4,7 +4,7 @@ const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const registryService = require('./registry/factory');
 const errorHandlingService = require('./errorHandler/factory');
-const processUrl = require('../common/trailingSlash');
+const UrlProcessor = require('../common/UrlProcessor');
 
 module.exports = () => {
     const app = fastify(Object.assign({
@@ -29,7 +29,7 @@ module.exports = () => {
     app.all('*', async (req, res) => {
         const url = req.raw.url;
         const registryConfig = await registryService.getConfig();
-        const processedUrl = processUrl(registryConfig.data.settings.trailingSlash, url);
+        const processedUrl = new UrlProcessor(registryConfig.data.settings.trailingSlash).process(url);
 
         if (processedUrl !== url) {
             res.redirect(processedUrl);

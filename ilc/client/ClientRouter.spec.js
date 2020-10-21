@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import html from 'nanohtml';
 
-import {routerHasTo} from '../common/trailingSlash';
+import UrlProcessor from '../common/UrlProcessor';
 import ClientRouter from './ClientRouter';
 
 describe('client router', () => {
@@ -157,7 +157,7 @@ describe('client router', () => {
     };
 
     const settings = {
-        trailingSlash: routerHasTo.doNothing,
+        trailingSlash: UrlProcessor.routerHasTo.doNothing,
     };
 
     const registryConfig = {
@@ -465,7 +465,7 @@ describe('client router', () => {
                 ...registryConfig,
                 settings: {
                     ...registryConfig.settings,
-                    trailingSlash: routerHasTo.redirectToBaseUrlWithTrailingSlash,
+                    trailingSlash: UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash,
                 },
             }, {}, singleSpa);
 
@@ -493,7 +493,7 @@ describe('client router', () => {
                 ...registryConfig,
                 settings: {
                     ...registryConfig.settings,
-                    trailingSlash: routerHasTo.redirectToBaseUrl,
+                    trailingSlash: UrlProcessor.routerHasTo.redirectToBaseUrl,
                 },
             }, {}, singleSpa);
 
