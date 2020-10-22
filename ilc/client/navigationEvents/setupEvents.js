@@ -3,9 +3,11 @@ function fireRoutingEvent() {
 }
 
 function patchedUpdateState(updateState) {
-    return function () {
+    return function (state, title, url, ...rest) {
         const urlBefore = window.location.href;
-        const result = updateState.apply(this, arguments);
+        const urlProcessor = require('../getIlcUrlProcessor')();
+        const urlAfterProcessing = url && urlProcessor ? urlProcessor.process(url) : url;
+        const result = updateState.call(this, state, title, urlAfterProcessing, ...rest);
         const urlAfter = window.location.href;
 
         if (urlBefore !== urlAfter) {

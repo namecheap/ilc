@@ -2,7 +2,6 @@ import chai from 'chai';
 import sinon from 'sinon';
 import html from 'nanohtml';
 
-import UrlProcessor from '../common/UrlProcessor';
 import ClientRouter from './ClientRouter';
 
 describe('client router', () => {
@@ -10,6 +9,9 @@ describe('client router', () => {
         navigateToUrl: () => {},
         triggerAppChange: () => {},
         getMountedApps: () => [],
+    };
+    const urlProcessor = {
+        process: (url) => url,
     };
     const apps = {
         '@portal/hero': {
@@ -133,17 +135,6 @@ describe('client router', () => {
                 },
             },
         },
-        {
-            routeId: 'opponentRouteWithTrailingSlashAtTheEnd',
-            route: '/opponent-with-trailing-slash-at-the-end/',
-            next: false,
-            slots: {
-                opponent: {
-                    appName: apps['@portal/opponent'].name,
-                    props: {},
-                },
-            },
-        },
     ];
 
     const specialRoutes = {
@@ -156,15 +147,10 @@ describe('client router', () => {
         },
     };
 
-    const settings = {
-        trailingSlash: UrlProcessor.routerHasTo.doNothing,
-    };
-
     const registryConfig = {
         apps,
         routes,
         specialRoutes,
-        settings,
     };
 
     let router;
@@ -218,7 +204,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, singleSpa, urlProcessor, location);
 
             chai.expect(router.getCurrentRoute()).to.be.eql(expectedRoute);
             chai.expect(router.getPrevRoute()).to.be.eql(expectedRoute);
@@ -276,7 +262,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, location, logger);
+            router = new ClientRouter(registryConfig, {}, singleSpa, urlProcessor, location, logger);
 
             chai.expect(mainRef.getElementsByTagName('base')).to.be.empty;
 
@@ -321,7 +307,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, singleSpa, urlProcessor, location);
 
             location.pathname = registryConfig.routes[2].route;
             location.search = '?see=you';
@@ -362,7 +348,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, singleSpa, urlProcessor, location);
 
             window.dispatchEvent(singleSpaBeforeRoutingEvent);
 
@@ -379,7 +365,7 @@ describe('client router', () => {
                     search: '?hi=there',
                 };
 
-                router = new ClientRouter(registryConfig, {}, singleSpa, location);
+                router = new ClientRouter(registryConfig, {}, singleSpa, urlProcessor, location);
 
                 const [eventName, eventListener] = addEventListener.getCall(0).args;
 
@@ -396,41 +382,19 @@ describe('client router', () => {
                 addEventListener.restore();
             }
         });
-
-        it('should redirect to a processed URL when it does not equal with current URL', () => {
-            const config = {
-                ...registryConfig,
-                settings: {
-                    ...registryConfig.settings,
-                    trailingSlash: UrlProcessor.routerHasTo.redirectToBaseUrl,
-                },
-            };
-
-            const location = {
-                pathname: config.routes[1].route,
-                search: '?hi=there',
-            };
-
-            router = new ClientRouter(config, {}, singleSpa, location);
-
-            location.pathname = config.routes[5].route;
-            location.search = '?see=you';
-            location.replace = sinon.spy();
-
-            window.dispatchEvent(singleSpaBeforeRoutingEvent);
-
-            chai.expect(location.replace.calledOnceWithExactly(location.pathname.slice(0, -1) + location.search)).to.be.true;
-        });
     });
 
     describe('should listen to anchors click events when client router was initialized', () => {
         let clickEvent;
+        let urlProcessorProcess;
 
         const singleSpa = {
             navigateToUrl: sinon.spy(),
         };
 
         beforeEach(() => {
+            urlProcessorProcess = sinon.spy(urlProcessor, 'process');
+            router = new ClientRouter(registryConfig, {}, singleSpa, urlProcessor);
             clickEvent = new Event('click', {
                 bubbles: true,
                 cancelable: true,
@@ -438,6 +402,7 @@ describe('client router', () => {
         });
 
         afterEach(() => {
+            urlProcessorProcess.restore();
             singleSpa.navigateToUrl.resetHistory();
         });
 
@@ -447,8 +412,6 @@ describe('client router', () => {
                 href: registryConfig.routes[2].route,
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa);
-
             anchor.ref = html`
                 <a id="${anchor.id}" href="${anchor.href}">
                     Hi there! I am anchor tag and I have href attribute.
@@ -461,6 +424,7 @@ describe('client router', () => {
 
             chai.expect(singleSpa.navigateToUrl.calledOnceWithExactly(anchor.href)).to.be.true;
             chai.expect(clickEvent.defaultPrevented).to.be.true;
+            chai.expect(urlProcessorProcess.calledOnceWithExactly(anchor.href)).to.be.true;
         });
 
         it('should handle click events on "http(s)://domain" anchors if we have "/" route', () => {
@@ -469,8 +433,6 @@ describe('client router', () => {
                 href: location.origin,
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa);
-
             anchor.ref = html`
                 <a id="${anchor.id}" href="${anchor.href}">
                     Hi there! I am anchor tag and I have href attribute.
@@ -483,11 +445,10 @@ describe('client router', () => {
 
             chai.expect(singleSpa.navigateToUrl.calledOnceWithExactly(anchor.href)).to.be.true;
             chai.expect(clickEvent.defaultPrevented).to.be.true;
+            chai.expect(urlProcessorProcess.calledOnceWithExactly(anchor.href)).to.be.true;
         });
 
         it('should NOT handle click events on anchors when anchors do not have href attribute', () => {
-            router = new ClientRouter(registryConfig, {}, singleSpa);
-
             const anchor = {
                 id: 'click-me',
             };
@@ -504,11 +465,10 @@ describe('client router', () => {
 
             chai.expect(singleSpa.navigateToUrl.called).to.be.false;
             chai.expect(clickEvent.defaultPrevented).to.be.false;
+            chai.expect(urlProcessorProcess.called).to.be.false;
         });
 
         it('should NOT handle click events on anchors when these events were already default prevented', () => {
-            router = new ClientRouter(registryConfig, {}, singleSpa);
-
             const anchor = {
                 id: 'click-me',
                 href: registryConfig.routes[2].route,
@@ -529,11 +489,10 @@ describe('client router', () => {
             document.getElementById(anchor.id).dispatchEvent(clickEvent);
 
             chai.expect(singleSpa.navigateToUrl.called).to.be.false;
+            chai.expect(urlProcessorProcess.called).to.be.false;
         });
 
         it('should NOT handle click events on anchors when anchors are not going to a registered micro front-end page', () => {
-            router = new ClientRouter(registryConfig, {}, singleSpa);
-
             const anchor = {
                 id: 'click-me',
                 href: '/undefined',
@@ -554,12 +513,13 @@ describe('client router', () => {
 
             chai.expect(singleSpa.navigateToUrl.called).to.be.false;
             chai.expect(clickEvent.defaultPrevented).to.be.false;
+            chai.expect(urlProcessorProcess.called).to.be.false;
         });
     });
 
     describe('while getting route props', () => {
         beforeEach(() => {
-            router = new ClientRouter(registryConfig, {}, singleSpa);
+            router = new ClientRouter(registryConfig, {}, singleSpa, urlProcessor);
         });
 
         it('should throw an error when an app is not defined', () => {

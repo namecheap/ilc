@@ -7,6 +7,7 @@ import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragm
 import isActiveFactory from './client/isActiveFactory';
 import initIlcConfig from './client/initIlcConfig';
 import initIlcState from './client/initIlcState';
+import getIlcUrlProcessor from './client/getIlcUrlProcessor';
 import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import {getSlotElement} from './client/utils';
@@ -20,7 +21,8 @@ if (System === undefined) {
 
 const registryConf = initIlcConfig();
 const state = initIlcState();
-const router = new Router(registryConf, state, singleSpa);
+const urlProcessor = getIlcUrlProcessor(registryConf.settings.trailingSlash);
+const router = new Router(registryConf, state, singleSpa, urlProcessor);
 const asyncBootUp = new AsyncBootUp();
 
 // Here we expose window.ILC.define also as window.define to ensure that regular AMD/UMD bundles work correctly by default

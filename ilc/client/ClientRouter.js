@@ -2,7 +2,6 @@ import deepmerge from 'deepmerge';
 
 import * as Router from '../common/router/Router';
 import * as errors from '../common/router/errors';
-import UrlProcessor from '../common/UrlProcessor';
 
 export default class ClientRouter {
     errors = errors;
@@ -20,13 +19,20 @@ export default class ClientRouter {
     #windowEventHandlers = {};
     #forceSpecialRoute = null;
 
-    constructor(registryConf, state, singleSpa, location = window.location, logger = window.console) {
+    constructor(
+        registryConf,
+        state,
+        singleSpa,
+        urlProcessor,
+        location = window.location,
+        logger = window.console
+    ) {
         this.#singleSpa = singleSpa;
         this.#location = location;
         this.#logger = logger;
         this.#registryConf = registryConf;
         this.#router = new Router(registryConf);
-        this.#urlProcessor = new UrlProcessor(this.#registryConf.settings.trailingSlash);
+        this.#urlProcessor = urlProcessor;
         this.#currentUrl = this.#getCurrUrl();
 
         this.#setInitialRoutes(state);
@@ -136,12 +142,6 @@ export default class ClientRouter {
                     currentTemplate: this.#currentRoute.template
                 },
             });
-        }
-
-        const processedUrl = this.#urlProcessor.process(this.#currentUrl);
-        if (this.#currentUrl !== processedUrl) {
-            console.info(`ILC: Redirecting to "${processedUrl}"...`);
-            this.#location.replace(processedUrl);
         }
     };
 
