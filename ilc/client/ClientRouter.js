@@ -17,11 +17,20 @@ export default class ClientRouter {
     #currentRoute;
     #windowEventHandlers = {};
     #forceSpecialRoute = null;
+    #unlocalizeUrl;
 
-    constructor(registryConf, state, singleSpa, location = window.location, logger = window.console) {
+    constructor(
+        registryConf,
+        state,
+        singleSpa,
+        unlocalizeUrl = (v) => v,
+        location = window.location,
+        logger = window.console
+    ) {
         this.#singleSpa = singleSpa;
         this.#location = location;
         this.#logger = logger;
+        this.#unlocalizeUrl = unlocalizeUrl;
         this.#registryConf = registryConf;
         this.#router = new Router(registryConf);
         this.#currentUrl = this.#getCurrUrl();
@@ -106,7 +115,7 @@ export default class ClientRouter {
         this.#prevRoute = this.#currentRoute;
 
         const newUrl = this.#getCurrUrl();
-        if (this.#forceSpecialRoute !== null && this.#forceSpecialRoute.url === newUrl) {
+        if (this.#forceSpecialRoute !== null && this.#forceSpecialRoute.url === this.#getCurrUrl(true)) {
             this.#currentRoute = this.#router.matchSpecial(newUrl, this.#forceSpecialRoute.id);
         } else if (this.#forceSpecialRoute !== null) {
             // Reset variable if it was set & now we go to different route
@@ -118,7 +127,7 @@ export default class ClientRouter {
         // only hash will be changed so router.match will return error, since <base> tag has already been removed.
         // so in this cases we shouldn't regenerate currentRoute
         if (this.#currentUrl !== newUrl) {
-            this.#currentRoute = this.#router.match(this.#location.pathname + this.#location.search);
+            this.#currentRoute = this.#router.match(this.#getCurrUrl());
             this.#currentUrl = newUrl;
         }
 
@@ -166,9 +175,17 @@ export default class ClientRouter {
         }
 
         console.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
-        this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl()};
+        this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl(true)};
         this.#singleSpa.triggerAppChange(); //This call would immediately invoke "single-spa:before-routing-event" and start apps mount/unmount process
     };
 
-    #getCurrUrl = () => this.#location.pathname + this.#location.search;
+    #getCurrUrl = (withLocale = false) => {
+        const url = this.#location.pathname + this.#location.search;
+
+        if (withLocale) {
+            return url;
+        }
+
+        return this.#unlocalizeUrl(url);
+    }
 }

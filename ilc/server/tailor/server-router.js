@@ -16,14 +16,14 @@ module.exports = class ServerRouter {
         this.#logger = logger;
     }
 
-    getTemplateInfo(registryConfig, request) {
+    getTemplateInfo(registryConfig, url, ilcState = {}) {
         const router = new Router(registryConfig);
 
         let route;
-        if (request.ilcState && request.ilcState.forceSpecialRoute) {
-            route = router.matchSpecial(request.url, request.ilcState.forceSpecialRoute);
+        if (ilcState.forceSpecialRoute) {
+            route = router.matchSpecial(url, ilcState.forceSpecialRoute);
         } else {
-            route = router.match(request.url);
+            route = router.match(url);
         }
 
         const page = this.#generatePageTpl(route, registryConfig.apps);
@@ -61,7 +61,7 @@ module.exports = class ServerRouter {
             const reqProps = {
                 basePath: route.basePath,
                 reqUrl: route.reqUrl,
-                fragmentName, //TODO: to be removed
+                fragmentName,
             };
 
             url.searchParams.append('routerProps', Buffer.from(JSON.stringify(reqProps)).toString('base64'));

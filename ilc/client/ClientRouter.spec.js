@@ -201,7 +201,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, singleSpa, undefined, location);
 
             chai.expect(router.getCurrentRoute()).to.be.eql(expectedRoute);
             chai.expect(router.getPrevRoute()).to.be.eql(expectedRoute);
@@ -259,7 +259,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, location, logger);
+            router = new ClientRouter(registryConfig, {}, singleSpa, undefined, location, logger);
 
             chai.expect(mainRef.getElementsByTagName('base')).to.be.empty;
 
@@ -304,7 +304,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, singleSpa, undefined, location);
 
             location.pathname = registryConfig.routes[2].route;
             location.search = '?see=you';
@@ -345,7 +345,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, singleSpa, undefined, location);
 
             window.dispatchEvent(singleSpaBeforeRoutingEvent);
 
@@ -362,7 +362,7 @@ describe('client router', () => {
                     search: '?hi=there',
                 };
 
-                router = new ClientRouter(registryConfig, {}, singleSpa, location);
+                router = new ClientRouter(registryConfig, {}, singleSpa, undefined, location);
 
                 const [eventName, eventListener] = addEventListener.getCall(0).args;
 

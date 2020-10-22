@@ -1,5 +1,5 @@
 import {triggerAppChange} from './navigationEvents';
-import handlePageTransaction, {slotWillBe} from './handlePageTransaction';
+import transactionManager, {slotWillBe} from './TransactionManager';
 
 export const createFactory = (triggerAppChange, handlePageTransaction, slotWillBe) => (router, appName, slotName) => {
     let reload = false;
@@ -37,14 +37,19 @@ export const createFactory = (triggerAppChange, handlePageTransaction, slotWillB
             }
         }
 
-        if (window.ilcConfig && window.ilcConfig.tmplSpinner) {
-            handlePageTransaction(slotName, willBe);
-        }
-
+        handlePageTransaction(slotName, willBe);
         reload = false;
 
         return isActive;
     };
 };
 
-export default createFactory(triggerAppChange, handlePageTransaction, slotWillBe);
+let defaultInstance = null;
+export default function (...args) {
+    if (defaultInstance === null) {
+        const tm = transactionManager();
+        defaultInstance = createFactory(triggerAppChange, tm.handlePageTransaction.bind(tm), slotWillBe);
+    }
+
+    return defaultInstance(...args);
+};

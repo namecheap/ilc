@@ -15,7 +15,9 @@ export async function seed(knex: Knex): Promise<any> {
                 src: 'http://localhost:8235/',
                 timeout: 1000,
             }),
-            props: '{}',
+            props: JSON.stringify({
+                publicPath: 'http://localhost:8235/'
+            }),
             kind: 'essential',
         }, {
             name: '@portal/people',

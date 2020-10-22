@@ -5,12 +5,14 @@ import Router from './client/ClientRouter';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import {fragmentErrorHandlerFactory, crashIlc} from './client/errorHandler/fragmentErrorHandlerFactory';
 import isActiveFactory from './client/isActiveFactory';
-import initIlcConfig from './client/initIlcConfig';
+import getIlcConfig from './client/ilcConfig';
 import initIlcState from './client/initIlcState';
 import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
 import {getSlotElement} from './client/utils';
 import AsyncBootUp from './client/AsyncBootUp';
+import IlcAppSdk from 'ilc-sdk/app';
+import I18n from './client/i18n';
 
 const System = window.System;
 if (System === undefined) {
@@ -18,9 +20,11 @@ if (System === undefined) {
     throw new Error('ILC: can\'t find SystemJS on a page, crashing everything');
 }
 
-const registryConf = initIlcConfig();
+const registryConf = getIlcConfig();
 const state = initIlcState();
-const router = new Router(registryConf, state, singleSpa);
+
+const i18n = registryConf.settings.i18n ? new I18n(registryConf.settings.i18n, singleSpa) : null;
+const router = new Router(registryConf, state, singleSpa, i18n ? i18n.unlocalizeUrl : undefined);
 const asyncBootUp = new AsyncBootUp();
 
 // Here we expose window.ILC.define also as window.define to ensure that regular AMD/UMD bundles work correctly by default
@@ -28,12 +32,16 @@ const asyncBootUp = new AsyncBootUp();
 if (!registryConf.settings.amdDefineCompatibilityMode) {
     window.define = window.ILC.define;
 }
+window.ILC.getAppSdkAdapter = appId => ({appId, intl: i18n ? i18n.getAdapter() : null});
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
         const appName = slots[slotName].appName;
 
         const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
+
+        const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(fragmentName));
+        const onUnmount = async () => appSdk.unmount();
 
         singleSpa.registerApplication(
             fragmentName,
@@ -57,8 +65,23 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                     }));
                 }
 
-                return Promise.all(waitTill)
-                    .then(v => v[0].mainSpa !== undefined ? v[0].mainSpa(appConf.props || {}) : v[0]);
+                return Promise.all(waitTill).then(([spaBundle]) => {
+                    const spaCallbacks = spaBundle.mainSpa !== undefined ? spaBundle.mainSpa(appConf.props || {}) : spaBundle;
+
+                    let unmount = spaCallbacks.unmount;
+                    if (Array.isArray(unmount)) {
+                        unmount.unshift(onUnmount)
+                    } else {
+                        unmount = [onUnmount, unmount];
+                    }
+
+                    return {
+                        bootstrap: spaCallbacks.bootstrap,
+                        mount: spaCallbacks.mount,
+                        unmount,
+                        unload: spaCallbacks.unload,
+                    };
+                });
             },
             isActiveFactory(router, appName, slotName),
             {
@@ -66,11 +89,15 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
                 getCurrentBasePath: () => router.getCurrentRoute().basePath,
                 appId: fragmentName, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
-                errorHandler: fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName)
+                errorHandler: fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName),
+                appSdk,
             }
         );
     });
 });
+
+//TODO: to be removed
+window.__IlcAppSdk = i18n ? new IlcAppSdk({appId: 'tst', intl: i18n.getAdapter()}) : null;
 
 setupErrorHandlers(registryConf, router.getCurrentRoute);
 setupPerformanceMonitoring(router.getCurrentRoute);
