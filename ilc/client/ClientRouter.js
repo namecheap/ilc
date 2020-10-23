@@ -13,7 +13,6 @@ export default class ClientRouter {
     #registryConf;
     /** @type Object<Router> */
     #router;
-    #urlProcessor;
     #prevRoute;
     #currentRoute;
     #windowEventHandlers = {};
@@ -23,7 +22,6 @@ export default class ClientRouter {
         registryConf,
         state,
         singleSpa,
-        urlProcessor,
         location = window.location,
         logger = window.console
     ) {
@@ -32,7 +30,6 @@ export default class ClientRouter {
         this.#logger = logger;
         this.#registryConf = registryConf;
         this.#router = new Router(registryConf);
-        this.#urlProcessor = urlProcessor;
         this.#currentUrl = this.#getCurrUrl();
 
         this.#setInitialRoutes(state);
@@ -159,8 +156,7 @@ export default class ClientRouter {
         const {specialRole} = this.#router.match(pathname);
 
         if (specialRole === null) {
-            const processedUrl = this.#urlProcessor.process(href);
-            this.#singleSpa.navigateToUrl(processedUrl);
+            this.#singleSpa.navigateToUrl(href);
             event.preventDefault();
         }
     };
