@@ -21,7 +21,7 @@ if (System === undefined) {
 
 const registryConf = initIlcConfig();
 const state = initIlcState();
-const urlProcessor = getIlcUrlProcessor(registryConf.settings.trailingSlash);
+const urlProcessor = getIlcUrlProcessor();
 const router = new Router(registryConf, state, singleSpa, urlProcessor);
 const asyncBootUp = new AsyncBootUp();
 
