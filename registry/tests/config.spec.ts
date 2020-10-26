@@ -1,5 +1,7 @@
-import {request, expect, requestWithAuth} from './common';
 import _ from 'lodash';
+
+import {SettingKeys, TrailingSlashValues} from '../server/settings/interfaces';
+import {request, expect, requestWithAuth} from './common';
 
 const example = {
     apps: Object.freeze({
@@ -73,6 +75,10 @@ describe('Tests /api/v1/config', () => {
             );
 
             expect(response.body.templates).to.include(example.templates.name);
+            expect(response.body.settings).to.deep.equal({
+                [SettingKeys.TrailingSlash]: TrailingSlashValues.DoNothing,
+                [SettingKeys.AmdDefineCompatibilityMode]: false,
+            });
 
             await request.delete('/api/v1/route/' + responseRoute.body.id).expect(204);
             await request.delete('/api/v1/template/' + example.templates.name).expect(204);

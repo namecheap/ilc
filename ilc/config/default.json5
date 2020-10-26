@@ -13,5 +13,4 @@
         customClientJsWrapper: null,
     },
     overrideConfigTrustedOrigins: null,
-    amdDefineCompatibilityMode: false, //TODO: should be moved to registry, see also docs/umd_bundles_compatibility.md
 }

@@ -6,7 +6,7 @@ module.exports = class Registry {
     #logger;
     #cacheHeated = {
         config: false,
-        template: false
+        template: false,
     };
 
     /**
@@ -41,9 +41,6 @@ module.exports = class Registry {
             this.getConfig(),
             this.getTemplate('500'),
         ]);
-
-        this.#cacheHeated.config = true;
-        this.#cacheHeated.template = true;
 
         this.#logger.info('Registry preheated successfully!');
     }

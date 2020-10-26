@@ -4,6 +4,7 @@ const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const registryService = require('./registry/factory');
 const errorHandlingService = require('./errorHandler/factory');
+const UrlProcessor = require('../common/UrlProcessor');
 
 module.exports = () => {
     const app = fastify(Object.assign({
@@ -19,14 +20,23 @@ module.exports = () => {
 
     app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
         const data = await registryService.getTemplate(req.params.templateName);
-        return res.status(200).send(data.data.content);
+        res.status(200).send(data.data.content);
     });
 
     // Route to test 500 page appearance
     app.get('/_ilc/500', async () => { throw new Error('500 page test error') });
 
-    app.all('*', (req, res) => {
-        req.headers['x-request-uri'] = req.raw.url; //TODO: to be removed & replaced with routerProps
+    app.all('*', async (req, res) => {
+        const url = req.raw.url;
+        const registryConfig = await registryService.getConfig();
+        const processedUrl = new UrlProcessor(registryConfig.data.settings.trailingSlash).process(url);
+
+        if (processedUrl !== url) {
+            res.redirect(processedUrl);
+            return;
+        }
+
+        req.headers['x-request-uri'] = url; //TODO: to be removed & replaced with routerProps
         req.raw.ilcState = {};
         tailor.requestHandler(req.raw, res.res);
     });

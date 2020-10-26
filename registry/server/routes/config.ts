@@ -1,11 +1,14 @@
 import _ from 'lodash';
 import express from 'express';
+
 import knex from '../db';
+import {Setting, Scope} from '../settings/interfaces';
+import preProcessResponse from '../settings/services/preProcessResponse';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-    const [apps, templates, routes, sharedProps] = await Promise.all([
+    const [apps, templates, routes, sharedProps, settings] = await Promise.all([
         knex.select().from('apps'),
         knex.select('name').from('templates'),
         knex.select()
@@ -13,6 +16,7 @@ router.get('/', async (req, res) => {
             .from('routes')
             .join('route_slots', 'route_slots.routeId', 'routes.id'),
         knex.select().from('shared_props'),
+        knex.select().from('settings').where('scope', Scope.Ilc),
     ]);
 
     const data = {
@@ -20,6 +24,7 @@ router.get('/', async (req, res) => {
         templates: [] as string[],
         routes: [] as any[],
         specialRoutes: {},
+        settings: {},
     };
 
     data.apps = apps.reduce((acc, v) => {
@@ -69,6 +74,11 @@ router.get('/', async (req, res) => {
 
     data.specialRoutes = _.reduce(_.filter(routesTmp, v => !!v.specialRole), (acc: any, v) => {
         acc[v.specialRole] = _.omit(v, ['specialRole']);
+        return acc;
+    }, {});
+
+    data.settings = preProcessResponse(settings).reduce((acc: {[key: string]: any}, setting: Setting) => {
+        _.set(acc, setting.key, setting.value);
         return acc;
     }, {});
 

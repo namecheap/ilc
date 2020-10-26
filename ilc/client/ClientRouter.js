@@ -18,7 +18,13 @@ export default class ClientRouter {
     #windowEventHandlers = {};
     #forceSpecialRoute = null;
 
-    constructor(registryConf, state, singleSpa, location = window.location, logger = window.console) {
+    constructor(
+        registryConf,
+        state,
+        singleSpa,
+        location = window.location,
+        logger = window.console
+    ) {
         this.#singleSpa = singleSpa;
         this.#location = location;
         this.#logger = logger;

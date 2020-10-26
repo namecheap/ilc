@@ -131,7 +131,7 @@ describe('client router', () => {
                     appName: apps['@portal/hero'].name,
                 },
             },
-        }
+        },
     ];
 
     const specialRoutes = {

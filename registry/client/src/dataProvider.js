@@ -5,6 +5,7 @@ import * as sharedProps from './sharedProps/dataTransform';
 import * as apps from './apps/dataTransform';
 import * as templates from './templates/dataTransform';
 import * as appRoutes from './appRoutes/dataTransform';
+import * as settings from './settings/dataTransform';
 
 import httpClient from './httpClient';
 
@@ -13,7 +14,6 @@ const dataProvider = simpleRestProvider('/api/v1', httpClient);
 const myDataProvider = {
     ...dataProvider,
     getList: (resource, params) => {
-
         return dataProvider.getList(resource, params).then(v => {
             v.data.forEach(v => transformGetter(resource, v));
             return v;
@@ -79,6 +79,9 @@ function transformGetter(resource, data) {
         case 'route':
             appRoutes.transformGet(data);
             break;
+        case 'settings':
+            settings.transformGet(data);
+            break;
         default:
     }
 }
@@ -96,6 +99,9 @@ function transformSetter(resource, data) {
             break;
         case 'route':
             appRoutes.transformSet(data);
+            break;
+        case 'settings':
+            settings.transformSet(data);
             break;
         default:
     }
