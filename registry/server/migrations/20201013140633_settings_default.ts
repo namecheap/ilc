@@ -28,8 +28,8 @@ export async function up(knex: Knex): Promise<any> {
             type: SettingTypes.Enum,
             choices: [
                 TrailingSlashValues.DoNothing,
-                TrailingSlashValues.RedirectToBaseUrl,
-                TrailingSlashValues.RedirectToBaseUrlWithTrailingSlash,
+                TrailingSlashValues.redirectToNonTrailingSlash,
+                TrailingSlashValues.redirectToTrailingSlash,
             ],
         },
     }, {

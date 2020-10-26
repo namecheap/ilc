@@ -15,8 +15,8 @@ export const enum SettingKeys {
 
 export const enum TrailingSlashValues {
     DoNothing = 'doNothing',
-    RedirectToBaseUrl = 'redirectToBaseUrl',
-    RedirectToBaseUrlWithTrailingSlash = 'redirectToBaseUrlWithTrailingSlash',
+    redirectToNonTrailingSlash = 'redirectToNonTrailingSlash',
+    redirectToTrailingSlash = 'redirectToTrailingSlash',
 };
 
 export const enum Scope {
@@ -65,8 +65,8 @@ const valueSchema = Joi.alternatives().conditional('key', {
             is: Joi.valid(SettingKeys.TrailingSlash),
             then: Joi.string().valid(
                 TrailingSlashValues.DoNothing,
-                TrailingSlashValues.RedirectToBaseUrl,
-                TrailingSlashValues.RedirectToBaseUrlWithTrailingSlash,
+                TrailingSlashValues.redirectToNonTrailingSlash,
+                TrailingSlashValues.redirectToTrailingSlash,
             ).required(),
         },
         {

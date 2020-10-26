@@ -22,8 +22,8 @@ describe(url, () => {
                     type: SettingTypes.Enum,
                     choices: [
                         TrailingSlashValues.DoNothing,
-                        TrailingSlashValues.RedirectToBaseUrl,
-                        TrailingSlashValues.RedirectToBaseUrlWithTrailingSlash,
+                        TrailingSlashValues.redirectToNonTrailingSlash,
+                        TrailingSlashValues.redirectToTrailingSlash,
                     ],
                 },
             });
@@ -139,8 +139,8 @@ describe(url, () => {
                     type: SettingTypes.Enum,
                     choices: [
                         TrailingSlashValues.DoNothing,
-                        TrailingSlashValues.RedirectToBaseUrl,
-                        TrailingSlashValues.RedirectToBaseUrlWithTrailingSlash,
+                        TrailingSlashValues.redirectToNonTrailingSlash,
+                        TrailingSlashValues.redirectToTrailingSlash,
                     ],
                 },
             });
@@ -282,7 +282,7 @@ describe(url, () => {
                 const response = await request.put(urlJoin(url, SettingKeys.TrailingSlash)).send({
                     key: SettingKeys.TrailingSlash,
                     value: 'something',
-                }).expect(422, '"value" must be one of [doNothing, redirectToBaseUrl, redirectToBaseUrlWithTrailingSlash]');
+                }).expect(422, '"value" must be one of [doNothing, redirectToNonTrailingSlash, redirectToTrailingSlash]');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {

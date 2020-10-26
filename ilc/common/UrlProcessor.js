@@ -1,8 +1,8 @@
 class UrlProcessor {
     static routerHasTo = {
         doNothing: 'doNothing',
-        redirectToBaseUrl: 'redirectToBaseUrl',
-        redirectToBaseUrlWithTrailingSlash: 'redirectToBaseUrlWithTrailingSlash',
+        redirectToNonTrailingSlash: 'redirectToNonTrailingSlash',
+        redirectToTrailingSlash: 'redirectToTrailingSlash',
     };
 
     #fakeBaseInCasesWhereUrlIsRelative = 'http://hack';
@@ -14,8 +14,8 @@ class UrlProcessor {
 
     process(url) {
         switch (this.#trailingSlash) {
-            case UrlProcessor.routerHasTo.redirectToBaseUrl:
-            case UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash: {
+            case UrlProcessor.routerHasTo.redirectToNonTrailingSlash:
+            case UrlProcessor.routerHasTo.redirectToTrailingSlash: {
                 return this.#processUrlTrailingSlash(url);
             }
             case UrlProcessor.routerHasTo.doNothing:
@@ -30,7 +30,7 @@ class UrlProcessor {
         const doesUrlPathnameEndWithTrailingSlash = parsedUrl.pathname[parsedUrl.pathname.length - 1] === '/';
 
         switch (this.#trailingSlash) {
-            case UrlProcessor.routerHasTo.redirectToBaseUrl: {
+            case UrlProcessor.routerHasTo.redirectToNonTrailingSlash: {
                 if (doesUrlPathnameEndWithTrailingSlash) {
                     parsedUrl.pathname = parsedUrl.pathname.slice(0, -1);
                     break;
@@ -38,7 +38,7 @@ class UrlProcessor {
                     return url;
                 }
             }
-            case UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash: {
+            case UrlProcessor.routerHasTo.redirectToTrailingSlash: {
                 if (!doesUrlPathnameEndWithTrailingSlash) {
                     parsedUrl.pathname = parsedUrl.pathname.concat('/');
                     break;

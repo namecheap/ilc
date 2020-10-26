@@ -53,37 +53,37 @@ describe('UrlProcessor', () => {
     describe('when a router should redirect to a base URL', () => {
         describe('should return an provided URL if it is without trailing slash at the end', () => {
             it('when the original provided URL does not have origin', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrl).process(urlWithoutOrigin)).to.be.equal(urlWithoutOrigin);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToNonTrailingSlash).process(urlWithoutOrigin)).to.be.equal(urlWithoutOrigin);
             });
 
             it('when the original provided URL has a query', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrl).process(urlWithQuery)).to.be.equal(urlWithQuery);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToNonTrailingSlash).process(urlWithQuery)).to.be.equal(urlWithQuery);
             });
 
             it('when the original provided URL has a hash', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrl).process(urlWithHash)).to.be.equal(urlWithHash);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToNonTrailingSlash).process(urlWithHash)).to.be.equal(urlWithHash);
             });
 
             it('when the original provided URL has a hash and a query', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrl).process(urlWithQueryAndHash)).to.be.equal(urlWithQueryAndHash);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToNonTrailingSlash).process(urlWithQueryAndHash)).to.be.equal(urlWithQueryAndHash);
             });
         });
 
         describe('should return an URL without trailing slash at the end', () => {
             it('when the original provided URL does not have origin', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrl).process(urlWithoutOriginWithTrailingSlashAtTheEnd)).to.be.equal(urlWithoutOrigin);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToNonTrailingSlash).process(urlWithoutOriginWithTrailingSlashAtTheEnd)).to.be.equal(urlWithoutOrigin);
             });
 
             it('when the original provided URL has a query', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrl).process(urlWithQueryAndTrailingSlashAtTheEnd)).to.be.equal(urlWithQuery);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToNonTrailingSlash).process(urlWithQueryAndTrailingSlashAtTheEnd)).to.be.equal(urlWithQuery);
             });
 
             it('when the original provided URL has a hash', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrl).process(urlWithHashAndTrailingSlashAtTheEnd)).to.be.equal(urlWithHash);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToNonTrailingSlash).process(urlWithHashAndTrailingSlashAtTheEnd)).to.be.equal(urlWithHash);
             });
 
             it('when the original provided URL has a hash and a query', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrl).process(urlWithQueryAndHashAndTrailingSlashAtTheEnd)).to.be.equal(urlWithQueryAndHash);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToNonTrailingSlash).process(urlWithQueryAndHashAndTrailingSlashAtTheEnd)).to.be.equal(urlWithQueryAndHash);
             });
         });
     });
@@ -91,37 +91,37 @@ describe('UrlProcessor', () => {
     describe('when a router should redirect to an URL with trailing slash', () => {
         describe('should return an provided URL if it is with trailing slash at the end', () => {
             it('when the original provided URL does not have origin', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash).process(urlWithoutOriginWithTrailingSlashAtTheEnd)).to.be.equal(urlWithoutOriginWithTrailingSlashAtTheEnd);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(urlWithoutOriginWithTrailingSlashAtTheEnd)).to.be.equal(urlWithoutOriginWithTrailingSlashAtTheEnd);
             });
 
             it('when the original provided URL has a query', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash).process(urlWithQueryAndTrailingSlashAtTheEnd)).to.be.equal(urlWithQueryAndTrailingSlashAtTheEnd);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(urlWithQueryAndTrailingSlashAtTheEnd)).to.be.equal(urlWithQueryAndTrailingSlashAtTheEnd);
             });
 
             it('when the original provided URL has a hash', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash).process(urlWithHashAndTrailingSlashAtTheEnd)).to.be.equal(urlWithHashAndTrailingSlashAtTheEnd);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(urlWithHashAndTrailingSlashAtTheEnd)).to.be.equal(urlWithHashAndTrailingSlashAtTheEnd);
             });
 
             it('when the original provided URL has a hash and a query', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash).process(urlWithQueryAndHashAndTrailingSlashAtTheEnd)).to.be.equal(urlWithQueryAndHashAndTrailingSlashAtTheEnd);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(urlWithQueryAndHashAndTrailingSlashAtTheEnd)).to.be.equal(urlWithQueryAndHashAndTrailingSlashAtTheEnd);
             });
         });
 
         describe('should return an URL with trailing slash at the end', () => {
             it('when the original provided URL does not have origin', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash).process(urlWithoutOrigin)).to.be.equal(urlWithoutOriginWithTrailingSlashAtTheEnd);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(urlWithoutOrigin)).to.be.equal(urlWithoutOriginWithTrailingSlashAtTheEnd);
             });
 
             it('when the original provided URL has a query', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash).process(urlWithQuery)).to.be.equal(urlWithQueryAndTrailingSlashAtTheEnd);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(urlWithQuery)).to.be.equal(urlWithQueryAndTrailingSlashAtTheEnd);
             });
 
             it('when the original provided URL has a hash', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash).process(urlWithHash)).to.be.equal(urlWithHashAndTrailingSlashAtTheEnd);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(urlWithHash)).to.be.equal(urlWithHashAndTrailingSlashAtTheEnd);
             });
 
             it('when the original provided URL has a hash and a query', () => {
-                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToBaseUrlWithTrailingSlash).process(urlWithQueryAndHash)).to.be.equal(urlWithQueryAndHashAndTrailingSlashAtTheEnd);
+                chai.expect(new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(urlWithQueryAndHash)).to.be.equal(urlWithQueryAndHashAndTrailingSlashAtTheEnd);
             });
         });
     });
