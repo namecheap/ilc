@@ -9,7 +9,7 @@ export async function up(knex: Knex): Promise<void> {
         table.text('default');
         table.enum('scope', [Scope.Ilc, Scope.Registry]).notNullable().defaultTo('registry');
         table.boolean('secret').notNullable().defaultTo(false);
-        table.json('meta').notNullable();
+        table.json('meta');
     });
 };
 
