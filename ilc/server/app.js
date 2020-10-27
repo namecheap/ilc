@@ -5,6 +5,7 @@ const serveStatic = require('./serveStatic');
 const registryServiceImport = require('./registry/factory');
 const errorHandlingService = require('./errorHandler/factory');
 const i18n = require('./i18n');
+const UrlProcessor = require('../common/UrlProcessor');
 
 module.exports = (registryService = registryServiceImport) => {
     const app = fastify(Object.assign({
@@ -31,15 +32,24 @@ module.exports = (registryService = registryServiceImport) => {
 
     app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
         const data = await registryService.getTemplate(req.params.templateName);
-        return res.status(200).send(data.data.content);
+        res.status(200).send(data.data.content);
     });
 
     // Route to test 500 page appearance
     app.get('/_ilc/500', async () => { throw new Error('500 page test error') });
 
-    app.all('*', (req, res) => {
+    app.all('*', async (req, res) => {
+        const url = req.raw.url;
+        const registryConfig = await registryService.getConfig();
+        const processedUrl = new UrlProcessor(registryConfig.data.settings.trailingSlash).process(url);
+
+        if (processedUrl !== url) {
+            res.redirect(processedUrl);
+            return;
+        }
+
         req.headers['x-request-host'] = req.hostname;
-        req.headers['x-request-uri'] = req.raw.url;
+        req.headers['x-request-uri'] = url;
         tailor.requestHandler(req.raw, res.res);
     });
 

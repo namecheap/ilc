@@ -42,6 +42,10 @@ function getRegistryMock() {
                         next: false,
                         template: 'master'
                     }
+                },
+                settings: {
+                    trailingSlash: 'doNothing',
+                    amdDefineCompatibilityMode: false,
                 }
             }})
     }

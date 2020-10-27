@@ -1,18 +1,7 @@
 import db from '../../db';
-import {SettingKeys, Setting} from '../interfaces';
+import {SettingKeys} from '../interfaces';
 
 export class SettingsService {
-    private defaultVals: { [key in SettingKeys]: any; } = {
-        [SettingKeys.BaseUrl]: 'http://localhost:4001/',
-        [SettingKeys.AuthOpenIdEnabled]: false,
-        [SettingKeys.AuthOpenIdDiscoveryUrl]: '',
-        [SettingKeys.AuthOpenIdClientId]: '',
-        [SettingKeys.AuthOpenIdClientSecret]: '',
-        [SettingKeys.AuthOpenIdResponseMode]: 'query',
-        [SettingKeys.AuthOpenIdIdentifierClaimName]: 'unique_name',
-        [SettingKeys.AuthOpenIdRequestedScopes]: 'openid',
-    };
-
     private changesTracking: any = {};
 
     //TODO: implement cache
@@ -20,7 +9,7 @@ export class SettingsService {
 
     constructor() {}
 
-    async get(key: SettingKeys, callerId: string|null = null): Promise<any> {
+    async get(key: SettingKeys, callerId: string | null = null): Promise<any> {
         const value = await this.getVal(key);
 
         if (callerId) {
@@ -51,20 +40,24 @@ export class SettingsService {
     }
 
     private async getVal(key: SettingKeys): Promise<any> {
-        const [res] = await db.select().from<Setting>('settings').where('key', key);
+        const [setting] = await db.select().from('settings').where('key', key);
 
-        let value;
-        if (!res) {
-            value = this.defaultVals[key];
-        } else {
-            value = JSON.parse(res.value);
+        if (setting === undefined) {
+            return;
         }
 
-        return value;
+        const value = JSON.parse(setting.value);
+
+        if (value !== '') {
+            return value;
+        }
+
+        const defaultValue = JSON.parse(setting.default);
+
+        if (defaultValue !== '') {
+            return defaultValue;
+        }
     }
 }
-
-// const a = new SettingsService();
-// a.get(SettingKeys.AuthOpenIdClientId)
 
 export default new SettingsService();

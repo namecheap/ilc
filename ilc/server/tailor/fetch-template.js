@@ -21,10 +21,9 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
     parseTemplate
 ) => {
     const registryConfig = await registryService.getConfig();
-    registryConfig.data.settings = { //TODO: this object should be fetched from registry
-        amdDefineCompatibilityMode: config.get('amdDefineCompatibilityMode'),
+    Object.assign(registryConfig.data.settings, { //TODO: this object should be fetched from registry
         globalSpinner: config.get('globalSpinner'),
-    };
+    });
     if (config.get('i18n.enabled') === true) { //TODO: this data should be fetched from registry
         Object.assign(registryConfig.data.settings, {
             i18n: { default: config.get('i18n.default'), supported: config.get('i18n.supported') }
