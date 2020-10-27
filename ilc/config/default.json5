@@ -24,6 +24,4 @@
             currency: ['USD', 'UAH']
         },
     },
-    //TODO: should be moved to registry
-    globalSpinner: true, //Possible values: false, true, string with custom markup
 }

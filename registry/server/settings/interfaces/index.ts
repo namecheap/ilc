@@ -11,6 +11,8 @@ export const enum SettingKeys {
     AuthOpenIdIdentifierClaimName = 'auth.openid.idClaimName',
     AuthOpenIdRequestedScopes = 'auth.openid.requestedScopes',
     AmdDefineCompatibilityMode = 'amdDefineCompatibilityMode',
+    GlobalSpinnerEnabled = 'globalSpinner.enabled',
+    GlobalSpinnerCustomHtml = 'globalSpinner.customHTML',
 };
 
 export const enum TrailingSlashValues {
@@ -56,7 +58,9 @@ export const keySchema = Joi.string().min(1).max(50).valid(
     SettingKeys.AuthOpenIdDiscoveryUrl,
     SettingKeys.AuthOpenIdClientSecret,
     SettingKeys.AuthOpenIdClientId,
-    SettingKeys.AmdDefineCompatibilityMode
+    SettingKeys.AmdDefineCompatibilityMode,
+    SettingKeys.GlobalSpinnerEnabled,
+    SettingKeys.GlobalSpinnerCustomHtml,
 );
 
 const valueSchema = Joi.alternatives().conditional('key', {
@@ -70,7 +74,7 @@ const valueSchema = Joi.alternatives().conditional('key', {
             ).required(),
         },
         {
-            is: Joi.valid(SettingKeys.AmdDefineCompatibilityMode, SettingKeys.AuthOpenIdEnabled),
+            is: Joi.valid(SettingKeys.AmdDefineCompatibilityMode, SettingKeys.AuthOpenIdEnabled, SettingKeys.GlobalSpinnerEnabled),
             then: Joi.boolean().strict().sensitive().required(),
         },
         {
