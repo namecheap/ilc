@@ -70,8 +70,8 @@ export async function up(knex: Knex): Promise<any> {
         },
     }, {
         key: SettingKeys.AuthOpenIdClientSecret,
-        value: '',
-        default: '',
+        value: 'secret',
+        default: 'secret',
         scope: Scope.Registry,
         secret: true,
         meta: {
