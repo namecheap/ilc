@@ -26,6 +26,6 @@ export async function up(knex: Knex): Promise<any> {
 
 
 export async function down(knex: Knex): Promise<any> {
-    await knex('settings').whereIn('key', ['globalSpinner.enabled', 'globalSpinner.customHTML']).delete();
+    await knex('settings').whereIn('key', [SettingKeys.GlobalSpinnerEnabled, SettingKeys.GlobalSpinnerCustomHtml]).delete();
 }
 
