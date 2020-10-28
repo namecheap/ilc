@@ -15,7 +15,7 @@ describe(url, () => {
                 acc[v.key] = v.value;
                 return acc;
             }, {});
-            chai.expect(returnedKVs['auth.openid.clientSecret']).to.be.undefined;
+            chai.expect(returnedKVs[SettingKeys.AuthOpenIdClientSecret]).to.be.undefined;
 
             chai.expect(response.body).to.deep.include({
                 key: SettingKeys.TrailingSlash,

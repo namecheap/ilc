@@ -19,10 +19,8 @@ export class TransactionManager {
     #hiddenSlots = [];
     #transactionBlockers = [];
 
-    constructor(registrySettings = {globalSpinner: {enabled: true, customHTML: ''}}) {
-        this.#spinnerConfig = !registrySettings.globalSpinner.customHTML || registrySettings.globalSpinner.enabled === false
-            ? registrySettings.globalSpinner.enabled
-            : registrySettings.globalSpinner.customHTML;
+    constructor(spinnerConfig = {enabled: true, customHTML: ''}) {
+        this.#spinnerConfig = spinnerConfig;
 
         scrollRestorer.start({ autoRestore: false, captureScrollDebounce: 150 }); //TODO: add cleanup
 
@@ -32,7 +30,7 @@ export class TransactionManager {
     }
 
     handleAsyncAction(promise) {
-        if (this.#spinnerConfig === false) {
+        if (this.#spinnerConfig.enabled === false) {
             return;
         }
 
@@ -44,7 +42,7 @@ export class TransactionManager {
     }
 
     handlePageTransaction(slotName, willBe) {
-        if (this.#spinnerConfig === false) {
+        if (this.#spinnerConfig.enabled === false) {
             return;
         }
 
@@ -136,19 +134,19 @@ export class TransactionManager {
     };
 
     #runGlobalSpinner = () => {
-        if (this.#spinnerConfig === false || this.#spinnerTimeout) {
+        if (this.#spinnerConfig.enabled === false || this.#spinnerTimeout) {
             return;
         }
 
         this.#spinnerTimeout = setTimeout(() => {
-            if (this.#spinnerConfig === true) {
+            if (!this.#spinnerConfig.customHTML) {
                 this.#globalSpinner = document.createElement('dialog');
                 this.#globalSpinner.innerHTML = 'loading....';
                 document.body.appendChild(this.#globalSpinner);
                 this.#globalSpinner.showModal();
             } else {
                 this.#globalSpinner = document.createElement('div');
-                this.#globalSpinner.innerHTML = this.#spinnerConfig;
+                this.#globalSpinner.innerHTML = this.#spinnerConfig.customHTML;
                 document.body.appendChild(this.#globalSpinner);
             }
         }, 200);
