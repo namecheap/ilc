@@ -15,24 +15,20 @@ const TEMPLATE_NOT_FOUND = 1;
  * @param {Object<ServerRouter>} router
  * @param {ConfigsInjector} configsInjector
  * @param {Object} newrelic
+ * @param {Registry} registryService
  */
 module.exports = (templatesPath, router, configsInjector, newrelic, registryService) => async (
     request,
     parseTemplate
 ) => {
-    const registryConfig = await registryService.getConfig();
-    if (config.get('i18n.enabled') === true) { //TODO: this data should be fetched from registry
-        Object.assign(registryConfig.data.settings, {
-            i18n: { default: config.get('i18n.default'), supported: config.get('i18n.supported') }
-        })
-    }
+    let registryConfig = (await registryService.getConfig()).data;
     const overrideConfig = parseOverrideConfig(request.headers.cookie, config.get('overrideConfigTrustedOrigins'));
     if (overrideConfig) {
-        registryConfig.data = mergeConfigs(registryConfig.data, overrideConfig);
+        registryConfig = mergeConfigs(registryConfig, overrideConfig);
     }
 
-    const reqUrl = unlocalizeUrl(config.get('i18n'), request.url);
-    const {route, page} = router.getTemplateInfo(registryConfig.data, reqUrl, request.ilcState);
+    const reqUrl = unlocalizeUrl(registryConfig.settings.i18n, request.url);
+    const {route, page} = router.getTemplateInfo(registryConfig, reqUrl, request.ilcState);
     // Here we add contextual information about current route to the request
     // For now we use it only in "process-fragment-response.js" to check if we're already processing special route
     request.ilcRoute = route;
@@ -47,7 +43,7 @@ module.exports = (templatesPath, router, configsInjector, newrelic, registryServ
         newrelic.setTransactionName(routeName);
     }
 
-    let baseTemplate = configsInjector.inject(request, registryConfig.data, template.data, route.slots);
+    let baseTemplate = configsInjector.inject(request, registryConfig, template.data, route.slots);
     baseTemplate = baseTemplate.replace(/<ilc-slot\s+id="(.+)"\s*\/?>/gm, function (match, id) {
         return `<!-- Region "${id}" START -->\n` +
             `<div id="${id}"><slot name="${id}"></slot></div>\n` +

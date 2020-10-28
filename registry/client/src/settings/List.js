@@ -8,6 +8,7 @@ import {
     SimpleList,
     SelectField,
     TextField,
+    FunctionField,
 } from 'react-admin';
 
 import {types} from './dataTransform';
@@ -47,6 +48,9 @@ const SourceValueField = (props) => {
         }
         case types.password: {
             return secret;
+        }
+        case types.stringArray: {
+            return (<FunctionField {...props} render={v => v[props.source].join(', ')} />);
         }
         default: {
             return (<TextField {...props} />);

@@ -78,10 +78,22 @@ describe('Tests /api/v1/config', () => {
             expect(response.body.settings).to.deep.equal({
                 [SettingKeys.TrailingSlash]: TrailingSlashValues.DoNothing,
                 [SettingKeys.AmdDefineCompatibilityMode]: false,
-                'globalSpinner': {
-                    'enabled': true
+                globalSpinner: {
+                    enabled: true
+                },
+                i18n: {
+                    default: {
+                        currency: 'USD',
+                        locale: 'en-US',
+                    },
+                    enabled: false,
+                    supported: {
+                        currency: ['USD', 'UAH'],
+                        locale: ['en-US', 'ua-UA']
+                    }
                 }
-            });
+
+        });
 
             await request.delete('/api/v1/route/' + responseRoute.body.id).expect(204);
             await request.delete('/api/v1/template/' + example.templates.name).expect(204);

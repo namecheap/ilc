@@ -2,6 +2,8 @@ import React from 'react';
 import {
     Edit,
     SimpleForm,
+    ArrayInput,
+    SimpleFormIterator,
     TextInput,
     RadioButtonGroupInput,
     BooleanInput,
@@ -28,7 +30,7 @@ const MyToolbar = (props) => {
 const Input = (props) => {
     switch(props.record.meta.type) {
         case types.url: {
-            return (<TextInput source="value" validate={validators.url} />);
+            return (<TextInput source="value" fullWidth={true} validate={validators.url} />);
         }
         case types.enum: {
             return (<RadioButtonGroupInput row={false} source="value" choices={props.record.meta.choices} />);
@@ -37,10 +39,13 @@ const Input = (props) => {
             return (<BooleanInput source="value" />);
         }
         case types.password: {
-            return (<PasswordInput source="value" />);
+            return (<PasswordInput source="value" fullWidth={true} />);
+        }
+        case types.stringArray: {
+            return (<ArrayInput source="value"><SimpleFormIterator><TextInput fullWidth={true} /></SimpleFormIterator></ArrayInput>);
         }
         default: {
-            return (<TextInput source="value" />);
+            return (<TextInput source="value" fullWidth={true} />);
         }
     }
 };
