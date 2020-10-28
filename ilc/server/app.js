@@ -12,10 +12,13 @@ module.exports = (registryService = registryServiceImport) => {
         trustProxy: false, //TODO: should be configurable via Registry
     }, require('./logger/fastify')));
 
-    const i18nOnRequest = i18n.onRequestFactory(config.get('i18n')); //TODO: config should be fetched from registry
+
     app.addHook('onRequest', async (req, reply) => {
         req.raw.ilcState = {};
-        return i18nOnRequest(req, reply);
+        const registryConfig = await registryService.getConfig();
+        const i18nOnRequest = i18n.onRequestFactory(registryConfig.data.settings.i18n);
+
+        await i18nOnRequest(req, reply);
     });
 
     const tailor = tailorFactory(
@@ -50,6 +53,8 @@ module.exports = (registryService = registryServiceImport) => {
 
         req.headers['x-request-host'] = req.hostname;
         req.headers['x-request-uri'] = url;
+
+        res.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
         tailor.requestHandler(req.raw, res.res);
     });
 
