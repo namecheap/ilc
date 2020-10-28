@@ -46,6 +46,17 @@ function getRegistryMock() {
                 settings: {
                     trailingSlash: 'doNothing',
                     amdDefineCompatibilityMode: false,
+                    i18n: {
+                        enabled: true,
+                        default: {
+                            currency: 'USD',
+                            locale: 'en-US',
+                        },
+                        supported: {
+                            currency: ['USD', 'UAH'],
+                            locale: ['en-US', 'ua-UA']
+                        }
+                    },
                 }
             }})
     }
