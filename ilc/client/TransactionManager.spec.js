@@ -75,7 +75,8 @@ describe('TransactionManager', () => {
         window.location.hash = locationHash;
 
         const transactionManager = new TransactionManager({
-            globalSpinner: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`
+            enabled: true,
+            customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`
         });
         handlePageTransaction = transactionManager.handlePageTransaction.bind(transactionManager);
 

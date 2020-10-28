@@ -11,7 +11,7 @@ export const slotWillBe = {
 };
 
 export class TransactionManager {
-    #registrySettings;
+    #spinnerConfig;
     #globalSpinner;
     #spinnerTimeout;
 
@@ -19,10 +19,8 @@ export class TransactionManager {
     #hiddenSlots = [];
     #transactionBlockers = [];
 
-    constructor(registrySettings = {}) {
-        this.#registrySettings = Object.assign({
-            globalSpinner: true
-        }, registrySettings);
+    constructor(spinnerConfig = {enabled: true, customHTML: ''}) {
+        this.#spinnerConfig = spinnerConfig;
 
         scrollRestorer.start({ autoRestore: false, captureScrollDebounce: 150 }); //TODO: add cleanup
 
@@ -32,7 +30,7 @@ export class TransactionManager {
     }
 
     handleAsyncAction(promise) {
-        if (this.#registrySettings.globalSpinner === false) {
+        if (this.#spinnerConfig.enabled === false) {
             return;
         }
 
@@ -44,7 +42,7 @@ export class TransactionManager {
     }
 
     handlePageTransaction(slotName, willBe) {
-        if (this.#registrySettings.globalSpinner === false) {
+        if (this.#spinnerConfig.enabled === false) {
             return;
         }
 
@@ -136,20 +134,19 @@ export class TransactionManager {
     };
 
     #runGlobalSpinner = () => {
-        const registrySettings = this.#registrySettings;
-        if (registrySettings.globalSpinner === false || this.#spinnerTimeout) {
+        if (this.#spinnerConfig.enabled === false || this.#spinnerTimeout) {
             return;
         }
 
         this.#spinnerTimeout = setTimeout(() => {
-            if (registrySettings.globalSpinner === true) {
+            if (!this.#spinnerConfig.customHTML) {
                 this.#globalSpinner = document.createElement('dialog');
                 this.#globalSpinner.innerHTML = 'loading....';
                 document.body.appendChild(this.#globalSpinner);
                 this.#globalSpinner.showModal();
             } else {
                 this.#globalSpinner = document.createElement('div');
-                this.#globalSpinner.innerHTML = registrySettings.globalSpinner;
+                this.#globalSpinner.innerHTML = this.#spinnerConfig.customHTML;
                 document.body.appendChild(this.#globalSpinner);
             }
         }, 200);
