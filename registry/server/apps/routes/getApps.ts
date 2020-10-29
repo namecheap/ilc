@@ -7,7 +7,7 @@ import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 
 const getApps = async (req: Request, res: Response): Promise<void> => {
-    let filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
+    const filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
 
     const query = db.select().from('apps');
     if (filters.id || filters.name) {
