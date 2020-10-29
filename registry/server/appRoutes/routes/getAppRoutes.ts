@@ -9,7 +9,7 @@ import {
 } from '../services/prepareAppRoute';
 
 const getAppRoutes = async (req: Request, res: Response) => {
-    let filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
+    const filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
 
     const query = db
         .select('routes.id as routeId', 'routes.*')

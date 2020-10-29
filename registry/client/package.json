@@ -41,7 +41,7 @@
         "js-cookie": "^2.2.1",
         "jsoneditor": "^8.6.4",
         "jsoneditor-react": "^3.0.0",
-        "ra-data-simple-rest": "^3.3.2",
+        "ra-data-simple-rest": "^3.9.3",
         "react": "^16.9.0",
         "react-admin": "^3.9.5",
         "react-dom": "^16.9.0"
