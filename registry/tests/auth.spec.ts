@@ -72,6 +72,9 @@ describe('Authentication / Authorization', () => {
         const agent = supertestAgent(getApp());
 
         it('should authenticate with correct creds', async () => {
+            const expectedCookie = JSON.stringify({ authEntityId: 1, identifier: 'root', role: 'admin' });
+            const cookieRegex = new RegExp(`ilc:userInfo=${encodeURIComponent(expectedCookie)}; Path=/`);
+
             await agent.post('/auth/local')
                 .set('Content-Type', 'application/json')
                 .send({
@@ -81,7 +84,7 @@ describe('Authentication / Authorization', () => {
                 })
                 .expect(200)
                 .expect('set-cookie', /connect\.sid=.+; Path=\/; HttpOnly/)
-                .expect('set-cookie', /ilc:userInfo=%7B%22authEntityId%22%3A1%2C%22identifier%22%3A%22root%22%2C%22role%22%3A%22admin%22%7D; Path=\//);
+                .expect('set-cookie', cookieRegex);
         });
 
         it('should respect session cookie', async () => {
