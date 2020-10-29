@@ -8,6 +8,7 @@ import {
     SimpleList,
     SelectField,
     TextField,
+    Pagination,
 } from 'react-admin';
 
 import {types} from './dataTransform';
@@ -28,8 +29,6 @@ const ListActionsToolbar = ({children, ...props}) => {
         </div>
     );
 };
-
-const Pagination = () => (<div />);
 
 const SourceValueField = (props) => {
     const secret = '********';
@@ -61,7 +60,7 @@ const PostList = props => {
             {...props}
             exporter={false}
             bulkActionButtons={false}
-            pagination={<Pagination />}
+            pagination={<Pagination perPage={25}/>}
         >
             {isSmall
                 ? (
