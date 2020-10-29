@@ -19,6 +19,18 @@ const myDataProvider = {
             return v;
         });
     },
+    getMany: (resource, params) => {
+        return dataProvider.getMany(resource, params).then(v => {
+            v.data.forEach(v => transformGetter(resource, v));
+            return v;
+        });
+    },
+    getManyReference: (resource, params) => {
+        return dataProvider.getManyReference(resource, params).then(v => {
+            v.data.forEach(v => transformGetter(resource, v));
+            return v;
+        });
+    },
     getOne: (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
