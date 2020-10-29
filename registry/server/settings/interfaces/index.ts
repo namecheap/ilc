@@ -9,6 +9,7 @@ export const enum SettingKeys {
     AuthOpenIdClientSecret = 'auth.openid.clientSecret',
     AuthOpenIdResponseMode = 'auth.openid.responseMode',
     AuthOpenIdIdentifierClaimName = 'auth.openid.idClaimName',
+    AuthOpenIdUniqueIdentifierClaimName = 'auth.openid.uidClaimName',
     AuthOpenIdRequestedScopes = 'auth.openid.requestedScopes',
     AmdDefineCompatibilityMode = 'amdDefineCompatibilityMode',
 };
@@ -51,12 +52,13 @@ export const keySchema = Joi.string().min(1).max(50).valid(
     SettingKeys.BaseUrl,
     SettingKeys.AuthOpenIdResponseMode,
     SettingKeys.AuthOpenIdRequestedScopes,
+    SettingKeys.AuthOpenIdUniqueIdentifierClaimName,
     SettingKeys.AuthOpenIdIdentifierClaimName,
     SettingKeys.AuthOpenIdEnabled,
     SettingKeys.AuthOpenIdDiscoveryUrl,
     SettingKeys.AuthOpenIdClientSecret,
     SettingKeys.AuthOpenIdClientId,
-    SettingKeys.AmdDefineCompatibilityMode
+    SettingKeys.AmdDefineCompatibilityMode,
 );
 
 const valueSchema = Joi.alternatives().conditional('key', {

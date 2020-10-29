@@ -11,7 +11,7 @@ describe(url, () => {
         it('should return settings and exclude values from secret records', async () => {
             const response = await request.get('/api/v1/settings').expect(200);
 
-            chai.expect(response.body).to.have.length(10);
+            chai.expect(response.body).to.have.length(11);
             chai.expect(response.body).to.deep.include({
                 key: SettingKeys.TrailingSlash,
                 value: TrailingSlashValues.DoNothing,

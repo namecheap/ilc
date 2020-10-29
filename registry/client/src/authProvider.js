@@ -38,4 +38,8 @@ export default {
         const userInfo = Cookies.getJSON('ilc:userInfo');
         return userInfo ? Promise.resolve(userInfo.role) : Promise.reject();
     },
+    getIdentity: () => {
+        const userInfo = Cookies.getJSON('ilc:userInfo');
+        return { id: userInfo.identifier, fullName: userInfo.identifier };
+    }
 };
