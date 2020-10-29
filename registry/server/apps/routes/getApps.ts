@@ -7,10 +7,17 @@ import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 
 const getApps = async (req: Request, res: Response): Promise<void> => {
-    const apps = await db.select().from('apps');
+    let filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
 
-    res.setHeader('Content-Range', apps.length); //Stub for future pagination capabilities
-    res.status(200).send(preProcessResponse(apps));
+    const query = db.select().from('apps');
+    if (filters.id || filters.name) {
+        query.whereIn('name', [...filters.id || filters.name]);
+    }
+
+    const apps = await query.range(req.query.range as string | undefined);
+
+    res.setHeader('Content-Range', apps.pagination.total); //Stub for future pagination capabilities
+    res.status(200).send(preProcessResponse(apps.data));
 };
 
 export default [getApps];
