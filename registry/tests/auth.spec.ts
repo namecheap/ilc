@@ -1,15 +1,17 @@
+import fs from 'fs';
+import assert from 'assert';
+import querystring from 'querystring';
 import tk from 'timekeeper';
 import express, {NextFunction, Request, Response} from 'express';
 import bodyParser from 'body-parser';
 import sinon from 'sinon';
 import supertest, {agent as supertestAgent} from 'supertest';
-import settingsService, {SettingsService} from '../server/settings/services/SettingsService';
+import settingsService from '../server/settings/services/SettingsService';
 
 import db from '../server/db';
 import auth from '../server/auth';
 import {SettingKeys} from "../server/settings/interfaces";
 import nock from "nock";
-import fs from 'fs';
 
 const getApp = () => {
     const app = express();
@@ -79,7 +81,7 @@ describe('Authentication / Authorization', () => {
                 })
                 .expect(200)
                 .expect('set-cookie', /connect\.sid=.+; Path=\/; HttpOnly/)
-                .expect('set-cookie', /ilc:userInfo=%7B%22identifier%22%3A%22root%22%2C%22role%22%3A%22admin%22%7D; Path=\//);
+                .expect('set-cookie', /ilc:userInfo=%7B%22authEntityId%22%3A1%2C%22identifier%22%3A%22root%22%2C%22role%22%3A%22admin%22%7D; Path=\//);
         });
 
         it('should respect session cookie', async () => {
@@ -138,8 +140,10 @@ describe('Authentication / Authorization', () => {
         });
 
         describe('Authentication', () => {
+            let getStub: sinon.SinonStub<[SettingKeys, (string | null | undefined)?], Promise<any>>;
+
             beforeEach(() => {
-                const getStub = sinon.stub(settingsService, 'get');
+                getStub = sinon.stub(settingsService, 'get');
 
                 getStub.withArgs(SettingKeys.BaseUrl).returns(Promise.resolve('http://localhost:4000/'));
                 getStub.withArgs(SettingKeys.AuthOpenIdEnabled).returns(Promise.resolve(true));
@@ -190,7 +194,48 @@ describe('Authentication / Authorization', () => {
                     await agent.get(`/auth/openid/return?code=AAAAAAAAAAAAAAAAAAAAAA.7UjvqJE02Ag0ALN4QpjqgYZze6I.cStoX13h4k_jZPkfxNvFYEK8Vh4Vr1bAomKpI72xC457l5qyppB4pVq9YNyx-DFx6n9c7eWL4S36g-pa1dXd-KvwI32CjaadHDwfBogpGnBXX12_ytUsU8XIG0oRJrAix7MEDtHf1B_0W2DTO6cAJz8FUOTAh_VQ4QOETxnm458tHFu6iZvN5InmIVr5WILzFBhDnpaJEZzLgmKeYW5voCaoGa2gacPb7J5PJ0RBqP01JCi-K6XtIuO3JZNDikE9RlW2u5nKeaaojn6eRZKGu88NLywvjBXSzoMw5VfR9bH-RyaKe01QVtefeiY6ROGXNtdxw0i2K2a-YoG6SH49xA&state=${sessionState}`)
                         .expect(302)
                         .expect('Location', '/')
-                        .expect('set-cookie', `ilc:userInfo=%7B%22identifier%22%3A%22${encodeURIComponent(userIdentifier)}%22%2C%22role%22%3A%22admin%22%7D; Path=/`);
+                        .expect((res) => {
+                            let setCookie = res.header['set-cookie'];
+                            assert.ok(Array.isArray(setCookie));
+                            assert.ok(setCookie[0]);
+
+                            const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
+                            const userInfo = JSON.parse(parts['ilc:userInfo']);
+
+                            assert.strictEqual(userInfo.identifier, userIdentifier);
+                            assert.strictEqual(userInfo.role, 'admin');
+                        });
+
+                    await agent.get('/protected')
+                        .expect(200, 'ok');
+
+                    await agent.get('/auth/logout')
+                        .expect(302);
+                });
+
+                it('should authenticate against OpenID server & perform impersonation', async () => {
+                    getStub.withArgs(SettingKeys.AuthOpenIdUniqueIdentifierClaimName).returns(Promise.resolve('upn'));
+
+                    const res = await agent.get('/auth/openid')
+                        .expect(302)
+                        .expect('Location', new RegExp('https://adfs\\.service\\.namecheap\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$'));
+
+                    const sessionState = (res.header['location'] as string).match(/&state=(.+)/)![1];
+
+                    await agent.get(`/auth/openid/return?code=AAAAAAAAAAAAAAAAAAAAAA.7UjvqJE02Ag0ALN4QpjqgYZze6I.cStoX13h4k_jZPkfxNvFYEK8Vh4Vr1bAomKpI72xC457l5qyppB4pVq9YNyx-DFx6n9c7eWL4S36g-pa1dXd-KvwI32CjaadHDwfBogpGnBXX12_ytUsU8XIG0oRJrAix7MEDtHf1B_0W2DTO6cAJz8FUOTAh_VQ4QOETxnm458tHFu6iZvN5InmIVr5WILzFBhDnpaJEZzLgmKeYW5voCaoGa2gacPb7J5PJ0RBqP01JCi-K6XtIuO3JZNDikE9RlW2u5nKeaaojn6eRZKGu88NLywvjBXSzoMw5VfR9bH-RyaKe01QVtefeiY6ROGXNtdxw0i2K2a-YoG6SH49xA&state=${sessionState}`)
+                        .expect(302)
+                        .expect('Location', '/')
+                        .expect((res) => {
+                            let setCookie = res.header['set-cookie'];
+                            assert.ok(Array.isArray(setCookie));
+                            assert.ok(setCookie[0]);
+
+                            const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
+                            const userInfo = JSON.parse(parts['ilc:userInfo']);
+
+                            assert.strictEqual(userInfo.identifier, 'vladlenf@corp.namecheap.net');
+                            assert.strictEqual(userInfo.role, 'admin');
+                        });
 
                     await agent.get('/protected')
                         .expect(200, 'ok');
