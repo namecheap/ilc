@@ -45,9 +45,6 @@ const LoginPage = props => {
                 />
             ) : (
                 <div>
-                    {availMethods.includes('local') && (
-                        <LoginForm/>
-                    )}
                     {availMethods.includes('openid') && (
                         <CardActions>
                             <Button
@@ -55,10 +52,14 @@ const LoginPage = props => {
                                 color="secondary"
                                 href="/auth/openid"
                                 className={classes.button}
+                                onClick={() => setLoading(true)}
                             >
                                 Login with OpenID
                             </Button>
                         </CardActions>
+                    )}
+                    {availMethods.includes('local') && (
+                        <LoginForm/>
                     )}
                 </div>
 
