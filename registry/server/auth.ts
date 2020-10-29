@@ -258,8 +258,6 @@ async function getEntityWithCreds(provider: string, identifier: string, secret: 
         }
     }
 
-    delete user.secret;
-
     return {
         authEntityId: user.id,
         identifier: user.identifier,
