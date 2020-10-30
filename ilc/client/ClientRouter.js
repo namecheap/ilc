@@ -156,7 +156,7 @@ export default class ClientRouter {
         }
 
         const pathname = href.replace(this.#location.origin, '');
-        const {specialRole} = this.#router.match(pathname);
+        const {specialRole} = this.#router.match(this.#unlocalizeUrl(pathname));
 
         if (specialRole === null) {
             this.#singleSpa.navigateToUrl(href);
