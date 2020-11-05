@@ -23,7 +23,11 @@ const validateRequestBeforeCreateApp = validateRequestFactory([{
 const createApp = async (req: Request, res: Response): Promise<void> => {
     const app = req.body;
 
-    await db('apps').insert(stringifyJSON(['dependencies', 'props', 'ssr', 'configSelector'], app));
+    await db.versioning(req.user, {type: 'apps', id: app.name}, async (trx) => {
+        await db('apps')
+            .insert(stringifyJSON(['dependencies', 'props', 'ssr', 'configSelector'], app))
+            .transacting(trx);
+    });
 
     const [savedApp] = await db.select().from<App>('apps').where('name', app.name);
 

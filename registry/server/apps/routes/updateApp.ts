@@ -44,7 +44,12 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
         return;
     }
 
-    await db('apps').where({ name: appName }).update(stringifyJSON(['dependencies', 'props', 'ssr', 'configSelector'], app));
+    await db.versioning(req.user, {type: 'apps', id: appName}, async (trx) => {
+        await db('apps')
+            .where({ name: appName })
+            .update(stringifyJSON(['dependencies', 'props', 'ssr', 'configSelector'], app))
+            .transacting(trx);
+    });
 
     const [updatedApp] = await db.select().from<App>('apps').where('name', appName);
 

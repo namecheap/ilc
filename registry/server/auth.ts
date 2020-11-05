@@ -12,6 +12,12 @@ import {SettingsService} from "./settings/services/SettingsService";
 import {SettingKeys} from "./settings/interfaces";
 import urljoin from 'url-join';
 
+export interface User {
+    authEntityId: number;
+    identifier: string;
+    role: string;
+}
+
 export default (app: Express, settingsService: SettingsService, config: any): RequestHandler => {
     const SessionKnex = sessionKnex(session);
     const sessionConfig = Object.assign({
@@ -241,7 +247,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
     };
 }
 
-async function getEntityWithCreds(provider: string, identifier: string, secret: string|null):Promise<object|null> {
+async function getEntityWithCreds(provider: string, identifier: string, secret: string|null):Promise<User|null> {
     const user = await db.select().from('auth_entities')
         .first('identifier', 'id', 'role', 'secret')
         .where({

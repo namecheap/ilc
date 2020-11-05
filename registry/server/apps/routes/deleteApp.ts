@@ -25,7 +25,10 @@ const validateRequestBeforeDeleteApp = validateRequestFactory([{
 const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
     const appName = req.params.name;
 
-    const count = await db('apps').where('name', appName).delete();
+    let count;
+    await db.versioning(req.user, {type: 'apps', id: appName}, async (trx) => {
+        count = await db('apps').where('name', appName).delete().transacting(trx);
+    });
 
     if (count) {
         res.status(204).send();
