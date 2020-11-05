@@ -10,7 +10,7 @@ interface EntityConf {
     related: RelatedEntities[],
 }
 
-const entitiesConf: Record<string, EntityConf> = {
+const versioningConf: Record<string, EntityConf> = {
     apps: {
         idColumn: 'name',
         related: [],
@@ -21,4 +21,4 @@ const entitiesConf: Record<string, EntityConf> = {
     }
 };
 
-export default entitiesConf;
+export default versioningConf;
