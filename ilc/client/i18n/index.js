@@ -1,4 +1,4 @@
-import {Intl as IlcIntl} from 'ilc-sdk/dist/app';
+import {Intl as IlcIntl} from 'ilc-sdk/app';
 import transactionManagerFactory from '../TransactionManager';
 import {triggerAppChange} from '../navigationEvents';
 import {iterablePromise} from '../utils';
