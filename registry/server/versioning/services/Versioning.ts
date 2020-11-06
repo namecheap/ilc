@@ -51,8 +51,8 @@ export class Versioning {
             const logRecord: interfaces.VersionRowData = {
                 entity_type: conf.type,
                 entity_id: conf.id as string,
-                data: JSON.stringify(currentData),
-                data_after: JSON.stringify(newData),
+                data: currentData === null ? null : JSON.stringify(currentData),
+                data_after: newData === null ? null : JSON.stringify(newData),
                 created_by: (user as User).identifier,
                 created_at: Math.floor(new Date().getTime() / 1000),
             };

@@ -13,8 +13,8 @@ const getVersions = async (req: Request, res: Response): Promise<void> => {
     if (filters.id) {
         query.whereIn('name', [...filters.id]);
     }
-    if (filters.entity_type || filters.entity_id) {
-        query.where(_.pick(filters, ['entity_type', 'entity_id']));
+    if (filters.entity_type || filters.entity_id || filters.created_by) {
+        query.where(_.pick(filters, ['entity_type', 'entity_id', 'created_by']));
     }
 
     const dbRes = await query.range(req.query.range as string | undefined);
