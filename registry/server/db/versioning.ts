@@ -4,7 +4,7 @@ import type {Transaction} from 'knex';
 import versioningService, {OperationConf} from '../versioning/services/Versioning';
 
 interface VersionedKnex extends Knex {
-    versioning(user: any, conf: OperationConf, callback: (transaction: Transaction) => Promise<void>): void;
+    versioning(user: any, conf: OperationConf, callback: (transaction: Transaction) => Promise<void|number>): void;
 }
 
 export default function (knex: Knex|any): VersionedKnex {

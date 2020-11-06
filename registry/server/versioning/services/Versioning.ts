@@ -5,7 +5,7 @@ import _ from "lodash";
 
 export interface OperationConf {
     type: string;
-    id: string|number;
+    id?: string|number;
 }
 
 export class Versioning {
@@ -19,7 +19,7 @@ export class Versioning {
         this.db = db;
     }
 
-    public logOperation = async (user: User, conf: OperationConf, callback: (transaction: Transaction) => Promise<void>) => {
+    public logOperation = async (user: User, conf: OperationConf, callback: (transaction: Transaction) => Promise<void|number>) => {
         if (this.config[conf.type] === undefined) {
             throw new Error(`Attempt to log changes to unknown entity: "${conf.type}"`);
         }
@@ -28,8 +28,17 @@ export class Versioning {
         }
 
         await this.db.transaction(async (trx: Transaction) => {
-            const currentData = await this.getDataSnapshot(trx, conf);
-            const res = await callback(trx);
+            let currentData = null;
+            if (conf.id) {
+                currentData = await this.getDataSnapshot(trx, conf);
+            }
+
+            const newRecordId = await callback(trx);
+            if (conf.id === undefined && newRecordId === undefined) {
+                throw new Error(`Unable to identify record ID. Received ids: "${conf.id}" & "${newRecordId}"`);
+            } else if (conf.id === undefined) {
+                conf.id = newRecordId as number;
+            }
             const newData = await this.getDataSnapshot(trx, conf);
 
             const logRecord = {
@@ -42,14 +51,15 @@ export class Versioning {
             };
 
             await this.db!('versioning').insert(logRecord).transacting(trx);
-
-            return res;
         });
     }
 
     private async getDataSnapshot(trx: Transaction, conf: OperationConf) {
         if (!this.db) {
             throw new Error(`Attempt to log operation before DB initialization!`);
+        }
+        if (!conf.id) {
+            throw new Error(`Attempt to log operation without passing an ID! Passed ID: "${conf.id}"`);
         }
 
         const entityConf = this.config[conf.type];

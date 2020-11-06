@@ -27,7 +27,9 @@ const createAppRoute = async (req: Request, res: Response) => {
         ...appRoute
     } = req.body;
 
-    const savedAppRouteId = await db.transaction(async (transaction) => {
+    let savedAppRouteId: number|null = null;
+
+    await db.versioning(req.user, {type: 'routes'}, async (transaction) => {
         const [appRouteId] = await db('routes').insert(appRoute).transacting(transaction);
 
         await db.batchInsert('route_slots', _.compose(
