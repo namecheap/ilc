@@ -2,13 +2,12 @@ import versioningConfig from '../config';
 import Knex, {Transaction} from 'knex';
 import {User} from "../../auth";
 import _ from 'lodash';
-import * as errors from '../errors';
 import db from "../../db";
 
-export interface OperationConf {
-    type: string;
-    id?: string|number;
-}
+import * as errors from '../errors';
+import * as interfaces from '../interfaces';
+
+export * from '../interfaces';
 
 export class Versioning {
     private db?: Knex;
@@ -27,7 +26,7 @@ export class Versioning {
      * @param callback
      * @returns - Id of the version record
      */
-    public logOperation = async (user: Express.User|User, conf: OperationConf, callback: (transaction: Transaction) => Promise<void|number>) => {
+    public logOperation = async (user: Express.User|User, conf: interfaces.OperationConf, callback: (transaction: Transaction) => Promise<void|number>) => {
         if (this.config[conf.type] === undefined) {
             throw new Error(`Attempt to log changes to unknown entity: "${conf.type}"`);
         }
@@ -49,9 +48,9 @@ export class Versioning {
             }
             const newData = await this.getDataSnapshot(trx, conf);
 
-            const logRecord = {
+            const logRecord: interfaces.VersionRowData = {
                 entity_type: conf.type,
-                entity_id: conf.id,
+                entity_id: conf.id as string,
                 data: JSON.stringify(currentData),
                 data_after: JSON.stringify(newData),
                 created_by: (user as User).identifier,
@@ -64,17 +63,17 @@ export class Versioning {
     }
 
     public async revertOperation(user: Express.User, versionId: number) {
-        let versionRow = await db('versioning').first('*').where('id', versionId);
-        if (!versionRow) {
+        let dbRes = await db('versioning').first('*').where('id', versionId);
+        if (!dbRes) {
             throw new errors.NonExistingVersionError();
         }
-        versionRow = this.parseVersionData(versionRow);
+        const versionRow = this.parseVersionData(dbRes);
 
         await this.checkRevertability(versionRow);
 
         const entityConf = this.config[versionRow.entity_type];
 
-        return await this.logOperation(user, {type: versionRow.entity_type, id: versionRow.entity_id}, async (trx) => {
+        return await this.logOperation(user, {type: versionRow.entity_type as interfaces.EntityTypes, id: versionRow.entity_id}, async (trx) => {
             if (versionRow.data === null) { // We have creation operation, so we delete records to revert it
                 for (const relation of entityConf.related) {
                     await this.db!(relation.type).where(relation.key, versionRow.entity_id).delete().transacting(trx);
@@ -101,7 +100,7 @@ export class Versioning {
         });
     }
 
-    private async getDataSnapshot(trx: Transaction, conf: OperationConf) {
+    private async getDataSnapshot(trx: Transaction, conf: interfaces.OperationConf) {
         if (!this.db) {
             throw new Error(`Attempt to log operation before DB initialization!`);
         }
@@ -143,11 +142,12 @@ export class Versioning {
             throw new Error(`Attempt to perform operation before DB initialization!`);
         }
 
-        let lastVersionRow = await this.db('versioning')
-            .first('*')
-            .where(_.pick(versionRow, ['entity_type', 'entity_id']))
-            .orderBy('id', 'desc');
-        lastVersionRow = this.parseVersionData(lastVersionRow);
+        let lastVersionRow = this.parseVersionData(
+            await this.db('versioning')
+                .first('*')
+                .where(_.pick(versionRow, ['entity_type', 'entity_id']))
+                .orderBy('id', 'desc')
+        ) as interfaces.VersionRowParsed;
 
         if (lastVersionRow.id === versionRow.id) {
             return;
@@ -160,7 +160,7 @@ export class Versioning {
         }
     }
 
-    private parseVersionData(versionRow: any) {
+    private parseVersionData(versionRow: interfaces.VersionRow): interfaces.VersionRowParsed {
         versionRow.data = versionRow.data === null ? null : JSON.parse(versionRow.data);
         versionRow.data_after = versionRow.data_after === null ? null : JSON.parse(versionRow.data_after);
 
