@@ -19,6 +19,12 @@ export class Versioning {
         this.db = db;
     }
 
+    /**
+     * @param user
+     * @param conf
+     * @param callback
+     * @returns - Id of the version record
+     */
     public logOperation = async (user: User, conf: OperationConf, callback: (transaction: Transaction) => Promise<void|number>) => {
         if (this.config[conf.type] === undefined) {
             throw new Error(`Attempt to log changes to unknown entity: "${conf.type}"`);
@@ -27,7 +33,7 @@ export class Versioning {
             throw new Error(`Attempt to log operation before DB initialization!`);
         }
 
-        await this.db.transaction(async (trx: Transaction) => {
+        return await this.db.transaction(async (trx: Transaction) => {
             let currentData = null;
             if (conf.id) {
                 currentData = await this.getDataSnapshot(trx, conf);
@@ -50,7 +56,8 @@ export class Versioning {
                 created_at: Math.floor(new Date().getTime() / 1000),
             };
 
-            await this.db!('versioning').insert(logRecord).transacting(trx);
+            const [versionID] = await this.db!('versioning').insert(logRecord).transacting(trx);
+            return versionID;
         });
     }
 
