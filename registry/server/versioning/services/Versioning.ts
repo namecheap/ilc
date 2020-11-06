@@ -75,10 +75,7 @@ export class Versioning {
                 .where(relation.key, conf.id)
                 .transacting(trx);
 
-            res.related = dbRes.reduce((acc, v) => {
-                acc[relation.type] = _.omit(v, [relation.key, relation.idColumn]);
-                return acc;
-            }, {})
+            res.related[relation.type] = dbRes.map(v => _.omit(v, [relation.key, relation.idColumn]));
         }
 
         return res;
