@@ -15,7 +15,6 @@ const isJSON = (str) => {
 };
 
 const parse = (value) => {
-    console.log(value);
     if (_.isString(value) && isJSON(value)) {
         return JSON.parse(value);
     }
