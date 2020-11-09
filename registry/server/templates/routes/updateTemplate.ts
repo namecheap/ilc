@@ -39,7 +39,9 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
         return;
     }
 
-    await db('templates').where({ name: templateName }).update(template);
+    await db.versioning(req.user, {type: 'templates', id: templateName}, async (trx) => {
+        await db('templates').where({ name: templateName }).update(template).transacting(trx);
+    });
 
     const [updatedTemplate] = await db.select().from<Template>('templates').where('name', templateName);
 

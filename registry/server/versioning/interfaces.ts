@@ -5,6 +5,7 @@ export enum EntityTypes {
     auth_entities = 'auth_entities',
     settings = 'settings',
     shared_props = 'shared_props',
+    templates = 'templates',
 }
 
 export interface OperationConf {

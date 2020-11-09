@@ -27,7 +27,10 @@ const deleteTemplate = async (req: Request<DeleteTemplateRequestParams>, res: Re
         name: templateName,
     } = req.params;
 
-    const count = await db('templates').where('name', templateName).delete();
+    let count;
+    await db.versioning(req.user, {type: 'templates', id: templateName}, async (trx) => {
+        count = await db('templates').where('name', templateName).delete().transacting(trx);
+    });
 
     if (count) {
         res.status(204).send();

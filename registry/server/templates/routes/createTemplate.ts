@@ -18,7 +18,9 @@ const validateRequestBeforeCreateTemplate = validateRequestFactory([{
 const createTemplate = async (req: Request, res: Response): Promise<void> => {
     const template = req.body;
 
-    await db('templates').insert(template);
+    await db.versioning(req.user, {type: 'templates', id: template.name}, async (trx) => {
+        await db('templates').insert(template).transacting(trx);
+    });
 
     const [savedTemplate] = await db.select().from<Template>('templates').where('name', template.name);
 
