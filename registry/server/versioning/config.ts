@@ -1,3 +1,4 @@
+import {EntityTypes} from './interfaces';
 
 interface RelatedEntities {
     type: string;
@@ -10,17 +11,21 @@ interface EntityConf {
     related: RelatedEntities[],
 }
 
-const versioningConf: Record<string, EntityConf> = {
-    apps: {
+const versioningConf: Record<EntityTypes | keyof typeof EntityTypes, EntityConf> = {
+    [EntityTypes.apps]: {
         idColumn: 'name',
         related: [],
     },
-    routes: {
+    [EntityTypes.routes]: {
         idColumn: 'id',
         related: [{ type: 'route_slots', idColumn: 'id', key: 'routeId' }],
     },
-    auth_entities: {
+    [EntityTypes.auth_entities]: {
         idColumn: 'id',
+        related: [],
+    },
+    [EntityTypes.settings]: {
+        idColumn: 'key',
         related: [],
     },
 };

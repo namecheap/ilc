@@ -6,6 +6,7 @@ import db from "../../db";
 
 import * as errors from '../errors';
 import * as interfaces from '../interfaces';
+import {EntityTypes} from "../interfaces";
 
 export * from '../interfaces';
 
@@ -71,7 +72,10 @@ export class Versioning {
 
         await this.checkRevertability(versionRow);
 
-        const entityConf = this.config[versionRow.entity_type];
+        const entityConf = this.config[versionRow.entity_type as EntityTypes];
+        if (entityConf === undefined) {
+            throw new Error(`Attempt to revert operation for unknown entity type: "${versionRow.entity_type}"`);
+        }
 
         return await this.logOperation(user, {type: versionRow.entity_type as interfaces.EntityTypes, id: versionRow.entity_id}, async (trx) => {
             if (versionRow.data === null) { // We have creation operation, so we delete records to revert it
