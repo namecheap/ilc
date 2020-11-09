@@ -18,7 +18,11 @@ const versioningConf: Record<string, EntityConf> = {
     routes: {
         idColumn: 'id',
         related: [{ type: 'route_slots', idColumn: 'id', key: 'routeId' }],
-    }
+    },
+    auth_entities: {
+        idColumn: 'id',
+        related: [],
+    },
 };
 
 export default versioningConf;

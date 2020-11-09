@@ -2,6 +2,7 @@
 export enum EntityTypes {
     apps = 'apps',
     routes = 'routes',
+    auth_entities = 'auth_entities',
 }
 
 export interface OperationConf {

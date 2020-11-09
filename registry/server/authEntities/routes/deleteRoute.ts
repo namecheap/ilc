@@ -20,7 +20,10 @@ const validateRequest = validateRequestFactory([{
 }]);
 
 const deleteRecord = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const count = await db('auth_entities').where('id', req.params.id).delete();
+    let count;
+    await db.versioning(req.user, {type: 'auth_entities', id: req.params.id}, async (trx) => {
+        count = await db('auth_entities').where('id', req.params.id).delete().transacting(trx);
+    });
 
     if (count) {
         res.status(204).send();
