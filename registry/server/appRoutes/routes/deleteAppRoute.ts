@@ -28,7 +28,7 @@ const deleteAppRoute = async (req: Request<DeleteAppRouteRequestParams>, res: Re
     let count;
     await db.versioning(req.user, {type: 'routes', id: appRouteId}, async (transaction) => {
         await db('route_slots').where('routeId', appRouteId).delete().transacting(transaction);
-        await db('routes').where('id', appRouteId).delete().transacting(transaction);
+        count = await db('routes').where('id', appRouteId).delete().transacting(transaction);
     });
 
     if (count) {

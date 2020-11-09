@@ -54,7 +54,7 @@ export class Versioning {
                 entity_id: conf.id as string,
                 data: currentData === null ? null : JSON.stringify(currentData),
                 data_after: newData === null ? null : JSON.stringify(newData),
-                created_by: (user as User).identifier,
+                created_by: user ? (user as User).identifier : 'unauthenticated',
                 created_at: Math.floor(new Date().getTime() / 1000),
             };
 
