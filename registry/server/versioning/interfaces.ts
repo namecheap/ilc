@@ -4,6 +4,7 @@ export enum EntityTypes {
     routes = 'routes',
     auth_entities = 'auth_entities',
     settings = 'settings',
+    shared_props = 'shared_props',
 }
 
 export interface OperationConf {

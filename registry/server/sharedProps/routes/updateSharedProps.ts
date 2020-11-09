@@ -41,7 +41,13 @@ const updateSharedProps = async (req: Request<RequestParams>, res: Response): Pr
         return;
     }
 
-    await db('shared_props').where({ name: sharedPropsName }).update(stringifyJSON(['props'], sharedProps));
+    await db.versioning(req.user, {type: 'shared_props', id: sharedPropsName}, async (trx) => {
+        await db('shared_props')
+            .where({ name: sharedPropsName })
+            .update(stringifyJSON(['props'], sharedProps))
+            .transacting(trx);
+    });
+
     const [updatedSharedProps] = await db.select().from<SharedProps>('shared_props').where('name', sharedPropsName);
 
     res.status(200).send(preProcessResponse(updatedSharedProps));

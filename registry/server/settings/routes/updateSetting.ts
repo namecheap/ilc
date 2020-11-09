@@ -40,7 +40,7 @@ const updateSetting = async (req: Request<RequestParams>, res: Response): Promis
             .update('value', JSON.stringify(req.body.value))
             .transacting(trx);
     });
-    
+
     const [updated] = await db.select().from('settings').where('key', settingKey);
     res.status(200).send(preProcessResponse(updated));
 };

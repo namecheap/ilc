@@ -21,7 +21,10 @@ const validateRequest = validateRequestFactory([{
 }]);
 
 const deleteSharedProps = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const count = await db('shared_props').where('name', req.params.name).delete();
+    let count;
+    await db.versioning(req.user, {type: 'shared_props', id: req.params.name}, async (trx) => {
+        count = await db('shared_props').where('name', req.params.name).delete().transacting(trx);
+    });
 
     if (count) {
         res.status(204).send();
