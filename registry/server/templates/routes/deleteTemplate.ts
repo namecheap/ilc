@@ -4,6 +4,7 @@ import {
 } from 'express';
 import Joi from 'joi';
 import _ from 'lodash/fp';
+import * as httpErrors from '../../errorHandler/httpErrors';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -27,16 +28,14 @@ const deleteTemplate = async (req: Request<DeleteTemplateRequestParams>, res: Re
         name: templateName,
     } = req.params;
 
-    let count;
     await db.versioning(req.user, {type: 'templates', id: templateName}, async (trx) => {
-        count = await db('templates').where('name', templateName).delete().transacting(trx);
+        const count = await db('templates').where('name', templateName).delete().transacting(trx);
+        if (!count) {
+            throw new httpErrors.NotFoundError();
+        }
     });
 
-    if (count) {
-        res.status(204).send();
-    } else {
-        res.status(404).send('Not found');
-    }
+    res.status(204).send();
 };
 
 export default [validateRequestBeforeDeleteTemplate, deleteTemplate];

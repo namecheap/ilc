@@ -3,7 +3,7 @@ import type {Transaction} from 'knex';
 
 import versioningService, {OperationConf} from '../versioning/services/Versioning';
 
-interface VersionedKnex extends Knex {
+export interface VersionedKnex extends Knex {
     versioning(user: any, conf: OperationConf, callback: (transaction: Transaction) => Promise<void|number>): Promise<number>;
 }
 

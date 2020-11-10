@@ -2,7 +2,6 @@ import versioningConfig from '../config';
 import Knex, {Transaction} from 'knex';
 import {User} from "../../auth";
 import _ from 'lodash';
-import db from "../../db";
 
 import * as errors from '../errors';
 import * as interfaces from '../interfaces';
@@ -49,6 +48,10 @@ export class Versioning {
             }
             const newData = await this.getDataSnapshot(trx, conf);
 
+            if (newData === null && currentData === null) {
+                throw new errors.VersioningError({m: `Unable to determine changeset for entity type "${conf.type}" & ID "${conf.id}"`});
+            }
+
             const logRecord: interfaces.VersionRowData = {
                 entity_type: conf.type,
                 entity_id: conf.id as string,
@@ -64,7 +67,7 @@ export class Versioning {
     }
 
     public async revertOperation(user: Express.User, versionId: number) {
-        let dbRes = await db('versioning').first('*').where('id', versionId);
+        let dbRes = await this.db!('versioning').first('*').where('id', versionId);
         if (!dbRes) {
             throw new errors.NonExistingVersionError();
         }

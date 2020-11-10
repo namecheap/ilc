@@ -33,6 +33,11 @@ if (client === 'mysql') {
 
 rangeExtender(knex);
 
-const knexInstance = knex(knexConf);
+export {VersionedKnex} from './versioning';
 
-export default addVersioning(knexInstance);
+export function dbFactory(conf: knex.Config) {
+    const knexInstance = knex(conf);
+    return addVersioning(knexInstance);
+}
+
+export default dbFactory(knexConf);
