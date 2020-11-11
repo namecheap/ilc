@@ -8,7 +8,6 @@ import {
     SimpleList,
     SelectField,
     TextField,
-    Pagination,
 } from 'react-admin';
 
 import {types} from './dataTransform';
@@ -60,7 +59,7 @@ const PostList = props => {
             {...props}
             exporter={false}
             bulkActionButtons={false}
-            pagination={<Pagination perPage={25}/>}
+            perPage={25}
         >
             {isSmall
                 ? (

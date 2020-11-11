@@ -66,6 +66,7 @@ const PostList = props => {
             bulkActionButtons={<ListBulkActions />}
             exporter={false}
             filters={<ListFilter />}
+            perPage={25}
         >
             {isSmall ? (
                 <SimpleList
