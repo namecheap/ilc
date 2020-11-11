@@ -171,7 +171,7 @@ export class Versioning {
         versionRow.data = versionRow.data === null ? null : JSON.parse(versionRow.data);
         versionRow.data_after = versionRow.data_after === null ? null : JSON.parse(versionRow.data_after);
 
-        return versionRow;
+        return versionRow as interfaces.VersionRowParsed;
     }
 
 }

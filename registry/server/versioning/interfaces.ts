@@ -13,19 +13,23 @@ export interface OperationConf {
     id?: string|number;
 }
 
-export interface VersionRowData {
+interface VersionRowBase {
     entity_type: string;
     entity_id: string;
-    data: string|null;
-    data_after: string|null;
     created_by: string;
     created_at: number;
+}
+
+export interface VersionRowData extends VersionRowBase {
+    data: string|null;
+    data_after: string|null;
 }
 export interface VersionRow extends VersionRowData {
     id: string;
 }
 
-export interface VersionRowParsed extends VersionRow {
-    data: any|null;
-    data_after: any|null;
+export interface VersionRowParsed extends VersionRowBase {
+    id: string;
+    data: {data: object, related: Record<string, object[]>}|null;
+    data_after: {data: object, related: Record<string, object[]>}|null;
 }
