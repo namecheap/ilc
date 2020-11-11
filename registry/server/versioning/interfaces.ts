@@ -17,7 +17,7 @@ interface VersionRowBase {
     entity_type: string;
     entity_id: string;
     created_by: string;
-    created_at: number;
+    created_at: string;
 }
 
 export interface VersionRowData extends VersionRowBase {

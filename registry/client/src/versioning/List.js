@@ -122,7 +122,7 @@ const PostList = props => {
                 <TextField sortable={false} source="entity_id" />
                 <FunctionField label="Operation" render={record => record.data && record.data_after ? 'UPDATE' : record.data ? 'DELETE' : 'CREATE'} />
                 <TextField sortable={false} source="created_by" />
-                <FunctionField label="Created At" render={record => new Date(record.created_at * 1000).toLocaleString()} />
+                <FunctionField label="Created At" render={record => new Date(record.created_at).toLocaleString()} />
                 <ListActionsToolbar>
                     <RevertButton />
                 </ListActionsToolbar>
