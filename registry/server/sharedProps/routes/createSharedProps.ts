@@ -18,7 +18,10 @@ const validateRequest = validateRequestFactory([{
 const createSharedProps = async (req: Request, res: Response): Promise<void> => {
     const sharedProps = req.body;
 
-    await db('shared_props').insert(stringifyJSON(['props'], sharedProps));
+    await db.versioning(req.user, {type: 'shared_props', id: sharedProps.name}, async (trx) => {
+        await db('shared_props').insert(stringifyJSON(['props'], sharedProps)).transacting(trx);
+    });
+
     const [savedSharedProps] = await db.select().from<SharedProps>('shared_props').where('name', sharedProps.name);
 
     res.status(200).send(preProcessResponse(savedSharedProps));

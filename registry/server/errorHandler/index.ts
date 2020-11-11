@@ -1,9 +1,15 @@
 import uuidv4 from 'uuid/v4';
 import {Request, Response, NextFunction} from 'express';
+import * as httpErrors from './httpErrors';
 
 import noticeError from './noticeError';
 
 async function errorHandler(error: Error, req: Request, res: Response, next: NextFunction): Promise<void> {
+    if (error instanceof httpErrors.HttpError) {
+        res.status(404).send('Not found');
+        return;
+    }
+
     const errorId = uuidv4();
 
     noticeError(error, {

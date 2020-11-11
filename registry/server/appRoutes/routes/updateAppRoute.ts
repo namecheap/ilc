@@ -50,7 +50,7 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
         return;
     }
 
-    await db.transaction(async (transaction) => {
+    await db.versioning(req.user, {type: 'routes', id: appRouteId}, async (transaction) => {
         await db('routes').where('id', appRouteId).update(appRoute).transacting(transaction);
 
         if (!_.isEmpty(appRouteSlots)) {

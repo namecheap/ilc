@@ -13,6 +13,7 @@ import templates from './templates';
 import appRoutes from './appRoutes';
 import authEntities from './authEntities';
 import settings from './settings';
+import versioning from './versioning';
 
 render(
     <Admin
@@ -29,6 +30,7 @@ render(
             <Resource name="route" {...appRoutes} />,
             <Resource name="auth_entities" {...authEntities} />,
             <Resource name="settings" {...settings} />,
+            <Resource name="versioning" {...versioning} />,
         ]}
     </Admin>,
     document.getElementById('root')

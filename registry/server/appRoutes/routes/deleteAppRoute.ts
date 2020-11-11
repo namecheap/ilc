@@ -4,6 +4,7 @@ import {
 } from 'express';
 import Joi from 'joi';
 import _ from 'lodash/fp';
+import * as httpErrors from '../../errorHandler/httpErrors';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -25,16 +26,15 @@ const validateRequestBeforeDeleteAppRoute = validateRequestFactory([{
 const deleteAppRoute = async (req: Request<DeleteAppRouteRequestParams>, res: Response) => {
     const appRouteId = req.params.id;
 
-    const count = await db.transaction(async (transaction) => {
+    await db.versioning(req.user, {type: 'routes', id: appRouteId}, async (transaction) => {
         await db('route_slots').where('routeId', appRouteId).delete().transacting(transaction);
-        return await db('routes').where('id', appRouteId).delete().transacting(transaction);
+        const count = await db('routes').where('id', appRouteId).delete().transacting(transaction);
+        if (!count) {
+            throw new httpErrors.NotFoundError()
+        }
     });
 
-    if (count) {
-        res.status(204).send();
-    } else {
-        res.status(404).send('Not found');
-    }
+    res.status(204).send();
 };
 
 export default [validateRequestBeforeDeleteAppRoute, deleteAppRoute];

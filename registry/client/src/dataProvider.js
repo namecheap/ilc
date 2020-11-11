@@ -6,10 +6,16 @@ import * as apps from './apps/dataTransform';
 import * as templates from './templates/dataTransform';
 import * as appRoutes from './appRoutes/dataTransform';
 import * as settings from './settings/dataTransform';
+import * as authEntities from './authEntities/dataTransform';
 
 import httpClient from './httpClient';
 
 const dataProvider = simpleRestProvider('/api/v1', httpClient);
+
+export const setOperations = Object.freeze({
+    create: 'create',
+    update: 'update',
+});
 
 const myDataProvider = {
     ...dataProvider,
@@ -42,7 +48,7 @@ const myDataProvider = {
     update: (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
-        transformSetter(resource, params.data);
+        transformSetter(resource, params.data, setOperations.update);
         delete params.data.name;
 
         return dataProvider.update(resource, params).then(v => {
@@ -54,7 +60,7 @@ const myDataProvider = {
         transformSetter(resource, params.data);
 
         return dataProvider.create(resource, params).then(v => {
-            transformGetter(resource, v.data);
+            transformGetter(resource, v.data, setOperations.create);
             return v;
         });
     },
@@ -94,26 +100,32 @@ function transformGetter(resource, data) {
         case 'settings':
             settings.transformGet(data);
             break;
+        case 'auth_entities':
+            authEntities.transformGet(data);
+            break;
         default:
     }
 }
 
-function transformSetter(resource, data) {
+function transformSetter(resource, data, operation) {
     switch (resource) {
         case 'app':
-            apps.transformSet(data);
+            apps.transformSet(data, operation);
             break;
         case 'shared_props':
-            sharedProps.transformSet(data);
+            sharedProps.transformSet(data, operation);
             break;
         case 'template':
-            templates.transformSet(data);
+            templates.transformSet(data, operation);
             break;
         case 'route':
-            appRoutes.transformSet(data);
+            appRoutes.transformSet(data, operation);
             break;
         case 'settings':
-            settings.transformSet(data);
+            settings.transformSet(data, operation);
+            break;
+        case 'auth_entities':
+            authEntities.transformSet(data, operation);
             break;
         default:
     }

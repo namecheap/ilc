@@ -32,8 +32,16 @@ const validateRequest = validateRequestFactory([
 ]);
 
 const updateSetting = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    await db('settings').where('key', req.params.key).update('value', JSON.stringify(req.body.value));
-    const [updated] = await db.select().from('settings').where('key', req.params.key);
+    const settingKey = req.params.key;
+
+    await db.versioning(req.user, {type: 'settings', id: settingKey}, async (trx) => {
+        await db('settings')
+            .where('key', settingKey)
+            .update('value', JSON.stringify(req.body.value))
+            .transacting(trx);
+    });
+
+    const [updated] = await db.select().from('settings').where('key', settingKey);
     res.status(200).send(preProcessResponse(updated));
 };
 

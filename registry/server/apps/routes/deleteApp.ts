@@ -4,6 +4,7 @@ import {
 } from 'express';
 import Joi from 'joi';
 import _ from 'lodash/fp';
+import * as httpErrors from '../../errorHandler/httpErrors';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -25,13 +26,14 @@ const validateRequestBeforeDeleteApp = validateRequestFactory([{
 const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
     const appName = req.params.name;
 
-    const count = await db('apps').where('name', appName).delete();
+    await db.versioning(req.user, {type: 'apps', id: appName}, async (trx) => {
+        const count = await db('apps').where('name', appName).delete().transacting(trx);
+        if (!count) {
+            throw new httpErrors.NotFoundError()
+        }
+    });
 
-    if (count) {
-        res.status(204).send();
-    } else {
-        res.status(404).send('Not found');
-    }
+    res.status(204).send();
 };
 
 export default [validateRequestBeforeDeleteApp, deleteApp];
