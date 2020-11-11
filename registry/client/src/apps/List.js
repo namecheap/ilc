@@ -8,7 +8,6 @@ import {
     SimpleList,
     TextField,
     ChipField,
-    Pagination,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
 const PostListBulkActions = memo(props => (
@@ -41,7 +40,7 @@ const PostList = props => {
             {...props}
             bulkActionButtons={<PostListBulkActions />}
             exporter={false}
-            pagination={<Pagination perPage={25}/>}
+            perPage={25}
         >
             {isSmall ? (
                 <SimpleList
