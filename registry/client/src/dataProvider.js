@@ -12,6 +12,11 @@ import httpClient from './httpClient';
 
 const dataProvider = simpleRestProvider('/api/v1', httpClient);
 
+export const setOperations = Object.freeze({
+    create: 'create',
+    update: 'update',
+});
+
 const myDataProvider = {
     ...dataProvider,
     getList: (resource, params) => {
@@ -43,7 +48,7 @@ const myDataProvider = {
     update: (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
-        transformSetter(resource, params.data, 'update');
+        transformSetter(resource, params.data, setOperations.update);
         delete params.data.name;
 
         return dataProvider.update(resource, params).then(v => {
@@ -55,7 +60,7 @@ const myDataProvider = {
         transformSetter(resource, params.data);
 
         return dataProvider.create(resource, params).then(v => {
-            transformGetter(resource, v.data, 'create');
+            transformGetter(resource, v.data, setOperations.create);
             return v;
         });
     },
