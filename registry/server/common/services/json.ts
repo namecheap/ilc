@@ -34,7 +34,7 @@ export const stringifyJSON = _.curry((
     data: any,
 ) => _.reduce(
     (stringifiedData: any, path: string) => _.cond([
-        [_.has(path), () => _.set(path, JSON.stringify(_.get(path, data)), stringifiedData)],
+        [_.has(path), () => _.set(path, _.get(path, data) !== null ? JSON.stringify(_.get(path, data)) : null, stringifiedData)],
         [_.stubTrue, () => stringifiedData],
     ])(data),
     data,

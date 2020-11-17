@@ -2,7 +2,6 @@ import {
     Request,
     Response,
 } from 'express';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -13,7 +12,7 @@ import * as bcrypt from 'bcrypt';
 
 const validateRequest = validateRequestFactory([{
     schema: createSchema,
-    selector: _.get('body'),
+    selector: 'body',
 }]);
 
 const createSharedProps = async (req: Request, res: Response): Promise<void> => {

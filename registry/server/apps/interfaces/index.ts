@@ -1,4 +1,8 @@
-import Joi from 'joi';
+import JoiDefault from 'joi';
+
+const Joi = JoiDefault.defaults(schema => {
+    return schema.empty(null)
+});
 
 export default interface App {
     name: string,
@@ -14,16 +18,16 @@ export default interface App {
 export const appNameSchema = Joi.string().trim().min(1);
 
 const commonApp = {
-    spaBundle: Joi.string().trim().uri(),
-    cssBundle: Joi.string().trim().uri(),
-    assetsDiscoveryUrl: Joi.string().trim().uri(),
+    spaBundle: Joi.string().trim().uri().default(null),
+    cssBundle: Joi.string().trim().uri().default(null),
+    assetsDiscoveryUrl: Joi.string().trim().uri().default(null),
     dependencies: Joi.object().default({}),
     props: Joi.object().default({}),
-    configSelector: Joi.array().items(Joi.string()),
+    configSelector: Joi.array().items(Joi.string()).default([]),
     ssr: Joi.object({
-        src: Joi.string().trim().uri().required(),
-        timeout: Joi.number().required(),
-    }),
+        src: Joi.string().trim().uri(),
+        timeout: Joi.number(),
+    }).and('src', 'timeout').empty({}).default(null),
     kind: Joi.string().valid('primary', 'essential', 'regular'),
 };
 

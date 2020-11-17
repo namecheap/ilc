@@ -3,7 +3,6 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -17,7 +16,7 @@ const validateRequest = validateRequestFactory([{
     schema: Joi.object({
         id: Joi.number()
     }),
-    selector: _.get('params'),
+    selector: 'params',
 }]);
 
 const deleteRecord = async (req: Request<RequestParams>, res: Response): Promise<void> => {

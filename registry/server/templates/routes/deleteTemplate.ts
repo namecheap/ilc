@@ -3,7 +3,6 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
 import * as httpErrors from '../../errorHandler/httpErrors';
 
 import db from '../../db';
@@ -20,7 +19,7 @@ const validateRequestBeforeDeleteTemplate = validateRequestFactory([{
     schema: Joi.object({
         name: templateNameSchema.required(),
     }),
-    selector: _.get('params'),
+    selector: 'params',
 }]);
 
 const deleteTemplate = async (req: Request<DeleteTemplateRequestParams>, res: Response): Promise<void> => {

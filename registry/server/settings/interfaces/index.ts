@@ -80,10 +80,10 @@ const valueSchema = Joi.alternatives().conditional('key', {
             then: Joi.string().uri({
                 scheme: [/https?/],
                 allowRelative: false,
-            }).empty(''),
+            }).allow(''),
         }
     ],
-    otherwise: Joi.string().empty(''),
+    otherwise: Joi.string().allow(''),
 });
 
 export const partialSettingSchema = Joi.object({

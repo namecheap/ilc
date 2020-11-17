@@ -3,7 +3,6 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import Template, {
@@ -19,7 +18,7 @@ const validateRequestBeforeGetTemplate = validateRequestFactory([{
     schema: Joi.object({
         name: templateNameSchema.required(),
     }),
-    selector: _.get('params'),
+    selector: 'params',
 }]);
 
 const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response): Promise<void> => {
