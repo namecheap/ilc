@@ -90,54 +90,6 @@ describe('merge configs', () => {
                 },
             },
         },
-        {
-            routeId: 'beforeOfThisRouteShouldBeNewOne',
-            route: '/before-of-this-route-should-be-new-one',
-            next: false,
-            slots: {
-                const: {
-                    appName: apps['@portal/const'].name,
-                    props: {
-                        constSlotFirstProp: 'constSlotFirstProp',
-                        constSlotSecondProp: {
-                            firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
-                        },
-                    },
-                },
-            },
-        },
-        {
-            routeId: 'shouldBeChangedByRouteProperty',
-            route: '/should-be-changed-by-route-property',
-            next: false,
-            slots: {
-                const: {
-                    appName: apps['@portal/const'].name,
-                    props: {
-                        constSlotFirstProp: 'constSlotFirstProp',
-                        constSlotSecondProp: {
-                            firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
-                        },
-                    },
-                },
-            },
-        },
-        {
-            routeId: 'shouldBeChangedAndMovedBeforeOfAnotherRoute',
-            route: '/should-be-changed-and-moved-before-of-another-route',
-            next: false,
-            slots: {
-                const: {
-                    appName: apps['@portal/const'].name,
-                    props: {
-                        constSlotFirstProp: 'constSlotFirstProp',
-                        constSlotSecondProp: {
-                            firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
-                        },
-                    },
-                },
-            },
-        },
     ];
 
     const specialRoutes = {
@@ -233,42 +185,6 @@ describe('merge configs', () => {
                     },
                 },
             },
-            {
-                route: '/new-one',
-                next: false,
-                beforeOf: '/before-of-this-route-should-be-new-one',
-                slots: {
-                    const: {
-                        appName: apps['@portal/const'].name,
-                        props: {
-                            constSlotFirstProp: 'constSlotFirstProp',
-                            constSlotSecondProp: {
-                                firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
-                            },
-                        },
-                    },
-                },
-            },
-            {
-                route: '/should-be-changed-by-route-property',
-                next: true,
-                slots: {
-                    new: {
-                        appName: apps['@portal/const'].name,
-                    },
-                },
-            },
-            {
-                routeId: 'shouldBeChangedAndMovedBeforeOfAnotherRoute',
-                route: '/should-be-changed-and-moved-before-of-another-route',
-                beforeOf: '/before-of-this-route-should-be-new-one',
-                next: false,
-                slots: {
-                    new: {
-                        appName: apps['@portal/const'].name,
-                    },
-                },
-            },
         ];
 
         const mergedRoute = {
@@ -282,47 +198,6 @@ describe('merge configs', () => {
                         willChangeSlotFirstProp: "willChangeSlotFirstProp",
                         willChangeSlotSecondProp: {
                             firstPropOfWillChangeRouteSlotSecondProp: 'changedFirstPropOfWillChangeRouteSlotSecondProp',
-                        },
-                    },
-                },
-                new: {
-                    appName: apps['@portal/const'].name,
-                },
-            },
-        };
-
-        const mergedRouteByRouteProperty = {
-            routeId: 'shouldBeChangedByRouteProperty',
-            route: '/should-be-changed-by-route-property',
-            next: true,
-            slots: {
-                const: {
-                    appName: apps['@portal/const'].name,
-                    props: {
-                        constSlotFirstProp: 'constSlotFirstProp',
-                        constSlotSecondProp: {
-                            firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
-                        },
-                    },
-                },
-                new: {
-                    appName: apps['@portal/const'].name,
-                },
-            }
-        };
-
-        const mergedAndMovedRoute = {
-            routeId: 'shouldBeChangedAndMovedBeforeOfAnotherRoute',
-            route: '/should-be-changed-and-moved-before-of-another-route',
-            beforeOf: '/before-of-this-route-should-be-new-one',
-            next: false,
-            slots: {
-                const: {
-                    appName: apps['@portal/const'].name,
-                    props: {
-                        constSlotFirstProp: 'constSlotFirstProp',
-                        constSlotSecondProp: {
-                            firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
                         },
                     },
                 },
@@ -379,8 +254,8 @@ describe('merge configs', () => {
                 routes: overrideRoutes,
             };
 
-            const [newRoute, , newRouteBeforeOfSomeRoute] = overrideConfig.routes;
-            const [commonRoute, constRoute, , routeThatShouldBeAfterNewOne] = registryConfig.routes;
+            const [newRoute] = overrideConfig.routes;
+            const [commonRoute, constRoute] = registryConfig.routes;
 
             const mergedConfig = {
                 ...registryConfig,
@@ -388,10 +263,6 @@ describe('merge configs', () => {
                     commonRoute,
                     constRoute,
                     mergedRoute,
-                    newRouteBeforeOfSomeRoute,
-                    mergedAndMovedRoute,
-                    routeThatShouldBeAfterNewOne,
-                    mergedRouteByRouteProperty,
                     newRoute,
                 ],
             };
@@ -405,8 +276,8 @@ describe('merge configs', () => {
                 routes: overrideRoutes,
             };
 
-            const [newRoute, , newRouteBeforeOfSomeRoute] = overrideConfig.routes;
-            const [commonRoute, constRoute, , routeThatShouldBeAfterNewOne] = registryConfig.routes;
+            const [newRoute] = overrideConfig.routes;
+            const [commonRoute, constRoute] = registryConfig.routes;
 
             const mergedConfig = {
                 ...registryConfig,
@@ -419,15 +290,185 @@ describe('merge configs', () => {
                     commonRoute,
                     constRoute,
                     mergedRoute,
-                    newRouteBeforeOfSomeRoute,
-                    mergedAndMovedRoute,
-                    routeThatShouldBeAfterNewOne,
-                    mergedRouteByRouteProperty,
                     newRoute,
                 ],
             };
 
             chai.expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
+        });
+
+        it('should override route by `route` property', () => {
+            const registryConfigWithRouteThatShouldBeChanged = {
+                ...registryConfig,
+                routes: [...registryConfig.routes, {
+                    routeId: 'shouldBeChangedByRouteProperty',
+                    route: '/should-be-changed-by-route-property',
+                    next: false,
+                    slots: {
+                        const: {
+                            appName: apps['@portal/const'].name,
+                            props: {
+                                constSlotFirstProp: 'constSlotFirstProp',
+                                constSlotSecondProp: {
+                                    firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
+                                },
+                            },
+                        },
+                    },
+                }],
+            };
+
+            const overrideConfig = {
+                routes: [{
+                    route: '/should-be-changed-by-route-property',
+                    next: true,
+                    slots: {
+                        new: {
+                            appName: apps['@portal/const'].name,
+                        },
+                    },
+                }],
+            };
+
+            chai.expect(mergeConfigs(registryConfigWithRouteThatShouldBeChanged, overrideConfig)).to.be.eql({
+                ...registryConfig,
+                routes: [...registryConfig.routes, {
+                    routeId: 'shouldBeChangedByRouteProperty',
+                    route: '/should-be-changed-by-route-property',
+                    next: true,
+                    slots: {
+                        const: {
+                            appName: apps['@portal/const'].name,
+                            props: {
+                                constSlotFirstProp: 'constSlotFirstProp',
+                                constSlotSecondProp: {
+                                    firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
+                                },
+                            },
+                        },
+                        new: {
+                            appName: apps['@portal/const'].name,
+                        },
+                    }
+                }],
+            });
+        });
+
+        it('should put a new route before of another route', () => {
+            const newRoute = {
+                route: '/new-one',
+                next: false,
+                beforeOf: '/before-of-this-route-should-be-new-one',
+                slots: {
+                    const: {
+                        appName: apps['@portal/const'].name,
+                        props: {
+                            constSlotFirstProp: 'constSlotFirstProp',
+                            constSlotSecondProp: {
+                                firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
+                            },
+                        },
+                    },
+                },
+            };
+
+            const beforeOfThisRouteShouldBeNewOne = {
+                routeId: 'beforeOfThisRouteShouldBeNewOne',
+                route: '/before-of-this-route-should-be-new-one',
+                next: false,
+                slots: {
+                    const: {
+                        appName: apps['@portal/const'].name,
+                        props: {
+                            constSlotFirstProp: 'constSlotFirstProp',
+                            constSlotSecondProp: {
+                                firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
+                            },
+                        },
+                    },
+                },
+            };
+
+            const registryConfigWithExtraRouteToTest = {
+                ...registryConfig,
+                routes: [...registryConfig.routes, beforeOfThisRouteShouldBeNewOne],
+            };
+
+            const overrideConfig = {
+                routes: [newRoute],
+            };
+
+            chai.expect(mergeConfigs(registryConfigWithExtraRouteToTest, overrideConfig)).to.be.eql({
+                ...registryConfig,
+                routes: [...registryConfig.routes, newRoute, beforeOfThisRouteShouldBeNewOne],
+            });
+        });
+
+        it('should override a route and move it before of another route', () => {
+            const beforeOfThisRouteShouldBeNewOne = {
+                routeId: 'beforeOfThisRouteShouldBeNewOne',
+                route: '/before-of-this-route-should-be-new-one',
+                next: false,
+                slots: {},
+            };
+
+            const registryConfigWithExtraRouteToTest = {
+                ...registryConfig,
+                routes: [...registryConfig.routes, beforeOfThisRouteShouldBeNewOne, {
+                    routeId: 'shouldBeChangedAndMovedBeforeOfAnotherRoute',
+                    route: '/should-be-changed-and-moved-before-of-another-route',
+                    next: false,
+                    slots: {
+                        const: {
+                            appName: apps['@portal/const'].name,
+                            props: {
+                                constSlotFirstProp: 'constSlotFirstProp',
+                                constSlotSecondProp: {
+                                    firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
+                                },
+                            },
+                        },
+                    },
+                }],
+            };
+
+            const overrideConfig = {
+                routes: [{
+                    routeId: 'shouldBeChangedAndMovedBeforeOfAnotherRoute',
+                    route: '/should-be-changed-and-moved-before-of-another-route',
+                    beforeOf: '/before-of-this-route-should-be-new-one',
+                    next: false,
+                    slots: {
+                        new: {
+                            appName: apps['@portal/const'].name,
+                        },
+                    },
+                }],
+            };
+
+            chai.expect(mergeConfigs(registryConfigWithExtraRouteToTest, overrideConfig)).to.be.eql({
+                ...registryConfig,
+                routes: [...registryConfig.routes, {
+                    routeId: 'shouldBeChangedAndMovedBeforeOfAnotherRoute',
+                    route: '/should-be-changed-and-moved-before-of-another-route',
+                    beforeOf: '/before-of-this-route-should-be-new-one',
+                    next: false,
+                    slots: {
+                        const: {
+                            appName: apps['@portal/const'].name,
+                            props: {
+                                constSlotFirstProp: 'constSlotFirstProp',
+                                constSlotSecondProp: {
+                                    firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
+                                },
+                            },
+                        },
+                        new: {
+                            appName: apps['@portal/const'].name,
+                        },
+                    },
+                }, beforeOfThisRouteShouldBeNewOne],
+            });
         });
     });
 });
