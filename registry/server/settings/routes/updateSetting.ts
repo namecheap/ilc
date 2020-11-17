@@ -3,7 +3,6 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
 
 import {
     SettingKeys,
@@ -23,11 +22,11 @@ const validateRequest = validateRequestFactory([
         schema: Joi.object({
             key: keySchema.required(),
         }),
-        selector: _.get('params'),
+        selector: 'params',
     },
     {
         schema: partialSettingSchema,
-        selector: _.get('body')
+        selector: 'body'
     },
 ]);
 

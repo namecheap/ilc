@@ -2,7 +2,6 @@ import {
     Request,
     Response,
 } from 'express';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -17,7 +16,7 @@ import App, {
 
 const validateRequestBeforeCreateApp = validateRequestFactory([{
     schema: appSchema,
-    selector: _.get('body'),
+    selector: 'body',
 }]);
 
 const createApp = async (req: Request, res: Response): Promise<void> => {

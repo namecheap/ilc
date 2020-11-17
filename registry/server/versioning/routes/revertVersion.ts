@@ -3,10 +3,8 @@ import {
     Response,
 } from 'express';
 
-import db from '../../db';
 import versioning from "../services/Versioning";
 
-import versioningConfig from '../config';
 import * as errors from '../errors';
 
 type RequestParams = {

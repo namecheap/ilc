@@ -18,7 +18,7 @@ import {
 
 const validateRequestBeforeCreateAppRoute = validateRequestFactory([{
     schema: appRouteSchema,
-    selector: _.get('body'),
+    selector: 'body',
 }]);
 
 const createAppRoute = async (req: Request, res: Response) => {

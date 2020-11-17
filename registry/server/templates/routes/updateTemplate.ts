@@ -3,7 +3,6 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -21,11 +20,11 @@ const validateRequestBeforeUpdateTemplate = validateRequestFactory([
         schema: Joi.object({
             name: templateNameSchema.required(),
         }),
-        selector: _.get('params'),
+        selector: 'params',
     },
     {
         schema: partialTemplateSchema,
-        selector: _.get('body'),
+        selector: 'body',
     },
 ]);
 

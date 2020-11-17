@@ -2,7 +2,6 @@ import {
     Request,
     Response,
 } from 'express';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -12,7 +11,7 @@ import Template, {
 
 const validateRequestBeforeCreateTemplate = validateRequestFactory([{
     schema: templateSchema,
-    selector: _.get('body'),
+    selector: 'body',
 }]);
 
 const createTemplate = async (req: Request, res: Response): Promise<void> => {

@@ -20,7 +20,7 @@ const validateRequestBeforeGetTemplateRendered = validateRequestFactory([{
     schema: Joi.object({
         name: templateNameSchema.required(),
     }),
-    selector: _.get('params'),
+    selector: 'params',
 }]);
 
 async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams>, res: Response): Promise<void> {

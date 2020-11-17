@@ -29,11 +29,11 @@ const validateRequestBeforeUpdateAppRoute = validateRequestFactory([
         schema: Joi.object({
             id: appRouteIdSchema.required(),
         }),
-        selector: _.get('params'),
+        selector: 'params',
     },
     {
         schema: partialAppRouteSchema,
-        selector: _.get('body')
+        selector: 'body'
     },
 ]);
 

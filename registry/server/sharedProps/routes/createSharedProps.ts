@@ -2,7 +2,6 @@ import {
     Request,
     Response,
 } from 'express';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -12,7 +11,7 @@ import SharedProps, { sharedPropsSchema } from '../interfaces';
 
 const validateRequest = validateRequestFactory([{
     schema: sharedPropsSchema,
-    selector: _.get('body'),
+    selector: 'body',
 }]);
 
 const createSharedProps = async (req: Request, res: Response): Promise<void> => {

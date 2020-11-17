@@ -3,7 +3,6 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
 import * as httpErrors from '../../errorHandler/httpErrors';
 
 import db from '../../db';
@@ -20,7 +19,7 @@ const validateRequestBeforeDeleteApp = validateRequestFactory([{
     schema: Joi.object({
         name: appNameSchema.required(),
     }),
-    selector: _.get('params'),
+    selector: 'params',
 }]);
 
 const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {

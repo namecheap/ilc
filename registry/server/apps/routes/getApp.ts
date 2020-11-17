@@ -20,7 +20,7 @@ const validateRequestBeforeGetApp = validateRequestFactory([{
     schema: Joi.object({
         name: appNameSchema.required(),
     }),
-    selector: _.get('params'),
+    selector: 'params',
 }]);
 
 const getApp = async (req: Request<GetAppRequestParams>, res: Response): Promise<void> => {
