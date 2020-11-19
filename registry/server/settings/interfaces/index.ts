@@ -9,6 +9,7 @@ export enum SettingKeys {
     AuthOpenIdClientSecret = 'auth.openid.clientSecret',
     AuthOpenIdResponseMode = 'auth.openid.responseMode',
     AuthOpenIdIdentifierClaimName = 'auth.openid.idClaimName',
+    AuthOpenIdUniqueIdentifierClaimName = 'auth.openid.uidClaimName',
     AuthOpenIdRequestedScopes = 'auth.openid.requestedScopes',
     AmdDefineCompatibilityMode = 'amdDefineCompatibilityMode',
     GlobalSpinnerEnabled = 'globalSpinner.enabled',
@@ -87,10 +88,10 @@ const valueSchema = Joi.alternatives().conditional('key', {
             then: Joi.string().uri({
                 scheme: [/https?/],
                 allowRelative: false,
-            }).empty(''),
+            }).allow(''),
         }
     ],
-    otherwise: Joi.string().empty(''),
+    otherwise: Joi.string().allow(''),
 });
 
 export const partialSettingSchema = Joi.object({

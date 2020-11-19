@@ -2,7 +2,6 @@ import {
     Request,
     Response,
 } from 'express';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import Template from '../interfaces';

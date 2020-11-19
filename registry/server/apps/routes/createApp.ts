@@ -2,7 +2,6 @@ import {
     Request,
     Response,
 } from 'express';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -17,13 +16,17 @@ import App, {
 
 const validateRequestBeforeCreateApp = validateRequestFactory([{
     schema: appSchema,
-    selector: _.get('body'),
+    selector: 'body',
 }]);
 
 const createApp = async (req: Request, res: Response): Promise<void> => {
     const app = req.body;
 
-    await db('apps').insert(stringifyJSON(['dependencies', 'props', 'ssr', 'configSelector'], app));
+    await db.versioning(req.user, {type: 'apps', id: app.name}, async (trx) => {
+        await db('apps')
+            .insert(stringifyJSON(['dependencies', 'props', 'ssr', 'configSelector'], app))
+            .transacting(trx);
+    });
 
     const [savedApp] = await db.select().from<App>('apps').where('name', app.name);
 

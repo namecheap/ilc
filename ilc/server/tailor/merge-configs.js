@@ -14,13 +14,33 @@ module.exports = (original, override) => {
 
     if (override.routes) {
         override.routes.forEach(overrideRoute => {
-            const originalRoute = cloned.routes.find(route => route.routeId === overrideRoute.routeId);
+            let indexOfOverrideRoute;
+            const beforeOf = overrideRoute.beforeOf;
+
+            const originalRoute = cloned.routes.find((route) => {
+                if (overrideRoute.routeId) {
+                    return route.routeId === overrideRoute.routeId;
+                } else  {
+                    return route.route === overrideRoute.route;
+                }
+            });
 
             if (originalRoute) {
-                const index = cloned.routes.indexOf(originalRoute);
-                cloned.routes[index] = deepmerge(originalRoute, overrideRoute);
+                indexOfOverrideRoute = cloned.routes.indexOf(originalRoute);
+                cloned.routes[indexOfOverrideRoute] = deepmerge(originalRoute, overrideRoute);
             } else {
                 cloned.routes.push(overrideRoute);
+                indexOfOverrideRoute = cloned.routes.length - 1;
+            }
+
+            if (beforeOf) {
+                const [routeThatShouldBeMoved] = cloned.routes.splice(indexOfOverrideRoute, 1);
+                const beforeRouteIndex = cloned.routes.findIndex((route) => beforeOf === route.route || beforeOf === route.routeId);
+                cloned.routes = [
+                    ...cloned.routes.slice(0, beforeRouteIndex),
+                    routeThatShouldBeMoved,
+                    ...cloned.routes.slice(beforeRouteIndex)
+                ];
             }
         });
     }

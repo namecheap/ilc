@@ -30,8 +30,6 @@ const ListActionsToolbar = ({children, ...props}) => {
     );
 };
 
-const Pagination = () => (<div />);
-
 const SourceValueField = (props) => {
     const secret = '********';
 
@@ -65,7 +63,7 @@ const PostList = props => {
             {...props}
             exporter={false}
             bulkActionButtons={false}
-            pagination={<Pagination />}
+            perPage={25}
         >
             {isSmall
                 ? (

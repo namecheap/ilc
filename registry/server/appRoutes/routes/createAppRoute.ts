@@ -18,7 +18,7 @@ import {
 
 const validateRequestBeforeCreateAppRoute = validateRequestFactory([{
     schema: appRouteSchema,
-    selector: _.get('body'),
+    selector: 'body',
 }]);
 
 const createAppRoute = async (req: Request, res: Response) => {
@@ -27,25 +27,27 @@ const createAppRoute = async (req: Request, res: Response) => {
         ...appRoute
     } = req.body;
 
-    const savedAppRouteId = await db.transaction(async (transaction) => {
-        const [appRouteId] = await db('routes').insert(appRoute).transacting(transaction);
+    let savedAppRouteId: number;
+
+    await db.versioning(req.user, {type: 'routes'}, async (transaction) => {
+        [savedAppRouteId] = await db('routes').insert(appRoute).transacting(transaction);
 
         await db.batchInsert('route_slots', _.compose(
             _.map((appRouteSlotName) => _.compose(
                 stringifyJSON(['props']),
-                _.assign({ name: appRouteSlotName, routeId: appRouteId }),
+                _.assign({ name: appRouteSlotName, routeId: savedAppRouteId }),
                 _.get(appRouteSlotName)
             )(appRouteSlots)),
             _.keys,
         )(appRouteSlots)).transacting(transaction);
 
-        return appRouteId;
+        return savedAppRouteId;
     });
 
     const savedAppRoute = await db
         .select('routes.id as routeId', 'route_slots.id as routeSlotId', 'routes.*', 'route_slots.*')
         .from('routes')
-        .where('routeId', savedAppRouteId)
+        .where('routeId', savedAppRouteId!)
         .join('route_slots', {
             'route_slots.routeId': 'routes.id'
         });

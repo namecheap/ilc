@@ -7,8 +7,8 @@ By default, ILC exposes `window.define` variable - which forces all UMD bundles 
 While this approach is convenient for the new projects - it may break things on the legacy ones. 
 As without ILC and System.js running you expect content of the UMD bundle to be registered as window variable.
 
-In order to fix the issue - you need to run ILC Docker container with the following environment variable in place:
-`AMD_DEFINE_COMPATIBILITY_MODE=true`.
+In order to fix the issue - you need to enable the following flag on Registry Settings page:
+`amdDefineCompatibilityMode=true`.
 
 This will remove `window.define` variable so all your libs should instead use `window.ILC.define`.
 

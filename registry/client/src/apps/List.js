@@ -33,8 +33,6 @@ const ListActionsToolbar = ({ children, ...props }) => {
     );
 };
 
-const Pagination = () => (<div/>);
-
 const PostList = props => {
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
     return (
@@ -42,7 +40,7 @@ const PostList = props => {
             {...props}
             bulkActionButtons={<PostListBulkActions />}
             exporter={false}
-            pagination={<Pagination/>}
+            perPage={25}
         >
             {isSmall ? (
                 <SimpleList

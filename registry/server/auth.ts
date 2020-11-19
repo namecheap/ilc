@@ -12,6 +12,12 @@ import {SettingsService} from "./settings/services/SettingsService";
 import {SettingKeys} from "./settings/interfaces";
 import urljoin from 'url-join';
 
+export interface User {
+    authEntityId: number;
+    identifier: string;
+    role: string;
+}
+
 export default (app: Express, settingsService: SettingsService, config: any): RequestHandler => {
     const SessionKnex = sessionKnex(session);
     const sessionConfig = Object.assign({
@@ -96,6 +102,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
             SettingKeys.BaseUrl,
             SettingKeys.AuthOpenIdResponseMode,
             SettingKeys.AuthOpenIdIdentifierClaimName,
+            SettingKeys.AuthOpenIdUniqueIdentifierClaimName,
             SettingKeys.AuthOpenIdRequestedScopes,
         ];
         if (await settingsService.hasChanged(callerId, keysToWatch)) {
@@ -128,6 +135,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
 
                         const claims = tokenSet.claims();
                         const idClaimName = await settingsService.get(SettingKeys.AuthOpenIdIdentifierClaimName, callerId);
+                        const uidClaimName = await settingsService.get(SettingKeys.AuthOpenIdUniqueIdentifierClaimName, callerId);
 
                         let identifiers: string[] = claims[idClaimName] as any;
                         if (!identifiers) {
@@ -146,6 +154,9 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
 
                         if (!user) {
                             return done(null, false, { message: `Can\'t find presented identifiers "${identifiers.toString()}" in auth entities list` });
+                        }
+                        if (uidClaimName && claims[uidClaimName]) {
+                            user.identifier = claims[uidClaimName];
                         }
 
                         return done(null, user);
@@ -204,7 +215,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
     app.get('/auth/logout', (req, res, next) => {
         req.logout();
         res.clearCookie('ilc:userInfo');
-        
+
         if (req.session) {
             req.session.regenerate((err) => {
                 if (err) {
@@ -236,9 +247,9 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
     };
 }
 
-async function getEntityWithCreds(provider: string, identifier: string, secret: string|null):Promise<object|null> {
+async function getEntityWithCreds(provider: string, identifier: string, secret: string|null):Promise<User|null> {
     const user = await db.select().from('auth_entities')
-        .first('identifier', 'role', 'secret')
+        .first('identifier', 'id', 'role', 'secret')
         .where({
             provider,
             identifier
@@ -253,7 +264,9 @@ async function getEntityWithCreds(provider: string, identifier: string, secret: 
         }
     }
 
-    delete user.secret;
-
-    return user;
+    return {
+        authEntityId: user.id,
+        identifier: user.identifier,
+        role: user.role,
+    };
 }

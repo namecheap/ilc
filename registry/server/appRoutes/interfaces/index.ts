@@ -1,4 +1,4 @@
-import Joi from 'joi';
+import JoiDefault from 'joi';
 
 import {
     templateNameSchema,
@@ -6,6 +6,11 @@ import {
 import {
     appNameSchema,
 } from '../../apps/interfaces';
+
+const Joi = JoiDefault.defaults(schema => {
+    return schema.empty(null)
+});
+
 export default interface AppRoute {
     id: number,
     specialRole: string,

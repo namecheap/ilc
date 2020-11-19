@@ -3,7 +3,6 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -22,7 +21,7 @@ const validateRequestBeforeGetAppRoute = validateRequestFactory([{
     schema: Joi.object({
         id: appRouteIdSchema,
     }),
-    selector: _.get('params'),
+    selector: 'params',
 }]);
 
 const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response) => {

@@ -2,7 +2,6 @@ import {
     Request,
     Response,
 } from 'express';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -13,7 +12,7 @@ import * as bcrypt from 'bcrypt';
 
 const validateRequest = validateRequestFactory([{
     schema: createSchema,
-    selector: _.get('body'),
+    selector: 'body',
 }]);
 
 const createSharedProps = async (req: Request, res: Response): Promise<void> => {
@@ -23,8 +22,13 @@ const createSharedProps = async (req: Request, res: Response): Promise<void> => 
         input.secret = await bcrypt.hash(input.secret, await bcrypt.genSalt());
     }
 
-    const [recordId] = await db('auth_entities').insert(req.body);
-    const [savedRecord] = await db.select().from<AuthEntity>('auth_entities').where('id', recordId);
+    let recordId: number;
+    await db.versioning(req.user, {type: 'auth_entities'}, async (trx) => {
+        [recordId] = await db('auth_entities').insert(req.body).transacting(trx);
+        return recordId;
+    });
+
+    const [savedRecord] = await db.select().from<AuthEntity>('auth_entities').where('id', recordId!);
 
     delete savedRecord.secret;
     res.status(200).send(preProcessResponse(savedRecord));

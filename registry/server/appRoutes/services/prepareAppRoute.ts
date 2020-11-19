@@ -2,19 +2,25 @@ import _ from 'lodash/fp';
 
 import preProcessResponse from '../../common/services/preProcessResponse';
 
+const prepareRouteToRespond = (appRoute: any) => {
+    return preProcessResponse({
+        id: appRoute.routeId,
+        route: appRoute.route,
+        next: Boolean(appRoute.next),
+        specialRole: appRoute.specialRole,
+        templateName: appRoute.templateName,
+        orderPos: appRoute.orderPos,
+    });
+}
+
 const prepareRoutesWithSlotsToRespond = _.compose(
     _.toArray,
     _.reduce((appRoutes: any, appRoute: any) => {
         const {
             routeId,
-            route,
-            next,
-            templateName,
-            specialRole,
             name,
             appName,
             props,
-            orderPos,
             kind,
         } = appRoute;
 
@@ -30,19 +36,12 @@ const prepareRoutesWithSlotsToRespond = _.compose(
             slots[name] = preProcessResponse(nextAppRouteSlot);
         }
 
-        const nextAppRoute = {
-            id: routeId,
-            route,
-            next: Boolean(next),
-            specialRole,
-            templateName,
-            orderPos,
-            slots
-        };
-
         return {
             ...appRoutes,
-            [routeId]: preProcessResponse(nextAppRoute)
+            [routeId]: {
+                ...prepareRouteToRespond(appRoute),
+                slots
+            }
         };
     }, {}),
 );
@@ -52,6 +51,5 @@ export const prepareAppRouteToRespond = _.compose(
     prepareRoutesWithSlotsToRespond,
 );
 
-export const prepareAppRoutesToRespond = _.compose(
-    prepareRoutesWithSlotsToRespond,
-);
+export const prepareAppRoutesToRespond = (v: any[]) => v.map(row => prepareRouteToRespond(row))
+

@@ -3,7 +3,6 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -22,11 +21,11 @@ const validateRequest = validateRequestFactory([
         schema: Joi.object({
             id: Joi.number().required(),
         }),
-        selector: _.get('params'),
+        selector: 'params',
     },
     {
         schema: updateSchema,
-        selector: _.get('body')
+        selector: 'body'
     },
 ]);
 
@@ -44,7 +43,10 @@ const updateSharedProps = async (req: Request<RequestParams>, res: Response): Pr
         input.secret = await bcrypt.hash(input.secret, await bcrypt.genSalt());
     }
 
-    await db('auth_entities').where({ id: recordId }).update(input);
+    await db.versioning(req.user, {type: 'auth_entities', id: recordId}, async (trx) => {
+        await db('auth_entities').where({ id: recordId }).update(input).transacting(trx);
+    });
+
     const [updatedRecord] = await db.select().from<AuthEntity>('auth_entities').where('id', recordId);
 
     delete updatedRecord.secret;

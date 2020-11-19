@@ -67,7 +67,7 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     {id: 'primary', name: 'Primary'},
                     {id: 'essential', name: 'Essential'},
                     {id: 'regular', name: 'Regular'},
-                ]} />
+                ]} validate={validators.required} />
                 <ReferenceArrayInput reference="shared_props" source="configSelector" label="Shared props selector">
                     <AutocompleteArrayInput />
                 </ReferenceArrayInput>

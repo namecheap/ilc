@@ -3,18 +3,18 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
+import _fp from 'lodash/fp';
+import _ from 'lodash';
 
-const preProcessErrorResponse = _.compose<Array<Joi.ValidationError>, Array<Joi.ValidationErrorItem>, Array<string | undefined>, string>(
-    _.join('\n'),
-    _.map(_.get('message')),
-    _.get('details'),
+const preProcessErrorResponse = _fp.compose<Array<Joi.ValidationError>, Array<Joi.ValidationErrorItem>, Array<string | undefined>, string>(
+    _fp.join('\n'),
+    _fp.map(_fp.get('message')),
+    _fp.get('details'),
 );
 
-type SelectDataToValidate = (req: Request) => any;
 interface ValidationConfig {
     schema: Joi.Schema,
-    selector: SelectDataToValidate,
+    selector: string,
 }
 
 const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
@@ -24,8 +24,11 @@ const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
 ) => {
     try {
         await Promise.all(_.map(
-            async ({schema, selector}) => schema.validateAsync(selector(req), {abortEarly: false}),
-            validationConfig
+            validationConfig,
+            async ({schema, selector}) => {
+                const validObj = await schema.validateAsync(_.get(req, selector), {abortEarly: false});
+                _.set(req, selector, validObj);
+            }
         ));
         next();
     } catch (e) {

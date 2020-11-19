@@ -9,6 +9,7 @@ export async function seed(knex: Knex): Promise<any> {
             await knex('routes').transacting(trx).truncate();
             await knex('apps').transacting(trx).truncate();
             await knex('templates').transacting(trx).truncate();
+            await knex('shared_props').transacting(trx).truncate();
         } finally {
             isMySQL(knex) && await knex.schema.raw('SET FOREIGN_KEY_CHECKS = 1;').transacting(trx);
         }

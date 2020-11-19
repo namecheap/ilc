@@ -3,7 +3,6 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -26,11 +25,11 @@ const validateRequestBeforeUpdateApp = validateRequestFactory([
         schema: Joi.object({
             name: appNameSchema.required(),
         }),
-        selector: _.get('params'),
+        selector: 'params',
     },
     {
         schema: partialAppSchema,
-        selector: _.get('body')
+        selector: 'body'
     },
 ]);
 
@@ -44,7 +43,12 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
         return;
     }
 
-    await db('apps').where({ name: appName }).update(stringifyJSON(['dependencies', 'props', 'ssr', 'configSelector'], app));
+    await db.versioning(req.user, {type: 'apps', id: appName}, async (trx) => {
+        await db('apps')
+            .where({ name: appName })
+            .update(stringifyJSON(['dependencies', 'props', 'ssr', 'configSelector'], app))
+            .transacting(trx);
+    });
 
     const [updatedApp] = await db.select().from<App>('apps').where('name', appName);
 

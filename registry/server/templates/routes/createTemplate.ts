@@ -2,7 +2,6 @@ import {
     Request,
     Response,
 } from 'express';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -12,13 +11,15 @@ import Template, {
 
 const validateRequestBeforeCreateTemplate = validateRequestFactory([{
     schema: templateSchema,
-    selector: _.get('body'),
+    selector: 'body',
 }]);
 
 const createTemplate = async (req: Request, res: Response): Promise<void> => {
     const template = req.body;
 
-    await db('templates').insert(template);
+    await db.versioning(req.user, {type: 'templates', id: template.name}, async (trx) => {
+        await db('templates').insert(template).transacting(trx);
+    });
 
     const [savedTemplate] = await db.select().from<Template>('templates').where('name', template.name);
 

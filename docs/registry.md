@@ -20,11 +20,7 @@ Default credentials can be changed via "Auth entities" page through UI (or via A
 
 ### OpenID Configuration
 
-Currently it's only possible to configure OpenID auth method by manually editing values in `settings`
-DB table. 
-
-Available options list can be [checked here](../registry/server/settings/interfaces/index.ts#L4).
-While the default values are [located here](../registry/server/settings/services/SettingsService.ts#L5).
+See `auth.openid.*` keys at "Settings" page in Registry to configure OpenID.
 
 Sample configuration (_note that values are JSON encoded_):
 
