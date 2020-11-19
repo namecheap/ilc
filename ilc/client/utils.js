@@ -30,3 +30,21 @@ export function getAppSpaCallbacks(appBundle, props = {}) {
         return appBundle;
     }
 }
+
+export function prependSpaCallback(spaCallbacks, type, callback) {
+    const res = {
+        bootstrap: spaCallbacks.bootstrap,
+        mount: spaCallbacks.mount,
+        unmount: spaCallbacks.unmount,
+        unload: spaCallbacks.unload,
+    };
+
+    let orig = spaCallbacks[type];
+    if (Array.isArray(orig)) {
+        res[type] = [callback].concat(orig);
+    } else {
+        res[type] = [callback, orig];
+    }
+
+    return res;
+}

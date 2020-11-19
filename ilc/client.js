@@ -9,7 +9,7 @@ import getIlcConfig from './client/ilcConfig';
 import initIlcState from './client/initIlcState';
 import setupPerformanceMonitoring from './client/performance';
 import selectSlotsToRegister from './client/selectSlotsToRegister';
-import {getSlotElement, getAppSpaCallbacks} from './client/utils';
+import {getSlotElement, getAppSpaCallbacks, prependSpaCallback} from './client/utils';
 import AsyncBootUp from './client/AsyncBootUp';
 import IlcAppSdk from 'ilc-sdk/app';
 import I18n from './client/i18n';
@@ -68,19 +68,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 return Promise.all(waitTill).then(([spaBundle]) => {
                     const spaCallbacks = getAppSpaCallbacks(spaBundle, appConf.props);
 
-                    let unmount = spaCallbacks.unmount;
-                    if (Array.isArray(unmount)) {
-                        unmount.unshift(onUnmount)
-                    } else {
-                        unmount = [onUnmount, unmount];
-                    }
-
-                    return {
-                        bootstrap: spaCallbacks.bootstrap,
-                        mount: spaCallbacks.mount,
-                        unmount,
-                        unload: spaCallbacks.unload,
-                    };
+                    return prependSpaCallback(spaCallbacks, 'unmount', onUnmount);
                 });
             },
             isActiveFactory(router, appName, slotName),
