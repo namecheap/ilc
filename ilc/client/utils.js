@@ -20,3 +20,13 @@ export function iterablePromise(iterable) {
         return resolvedIterable;
     });
 }
+
+export function getAppSpaCallbacks(appBundle, props = {}) {
+    const mainSpa = appBundle.mainSpa || appBundle.default && appBundle.default.mainSpa;
+
+    if (mainSpa !== undefined) {
+        return mainSpa(props);
+    } else {
+        return appBundle;
+    }
+}
