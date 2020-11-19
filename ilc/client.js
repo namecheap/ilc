@@ -84,9 +84,6 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
     });
 });
 
-//TODO: to be removed
-window.__IlcAppSdk = i18n ? new IlcAppSdk({appId: 'tst', intl: i18n.getAdapter()}) : null;
-
 setupErrorHandlers(registryConf, router.getCurrentRoute);
 setupPerformanceMonitoring(router.getCurrentRoute);
 
