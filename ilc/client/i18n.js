@@ -1,8 +1,8 @@
 import {Intl as IlcIntl} from 'ilc-sdk/app';
-import transactionManagerFactory from '../TransactionManager';
-import {triggerAppChange} from '../navigationEvents';
-import {iterablePromise} from '../utils';
-import i18nCookie from '../../common/i18nCookie';
+import transactionManagerFactory from './TransactionManager';
+import {triggerAppChange} from './navigationEvents';
+import {iterablePromise} from './utils';
+import i18nCookie from '../common/i18nCookie';
 import Cookies from 'js-cookie';
 
 export default class I18n {
