@@ -33,6 +33,7 @@
     "hyperid": "^2.0.5",
     "ilc-sdk": "^2.0.0-alpha.8",
     "is-url": "^1.2.4",
+    "js-cookie": "^2.2.1",
     "lodash": "^4.17.19",
     "newrelic": "^6.11.0",
     "pino": "^6.5.0",

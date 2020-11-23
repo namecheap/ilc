@@ -2,6 +2,8 @@ import {Intl as IlcIntl} from 'ilc-sdk/app';
 import transactionManagerFactory from '../TransactionManager';
 import {triggerAppChange} from '../navigationEvents';
 import {iterablePromise} from '../utils';
+import i18nCookie from '../../common/i18nCookie';
+import Cookies from 'js-cookie';
 
 export default class I18n {
     #transactionManager;
@@ -10,7 +12,6 @@ export default class I18n {
     #singleSpa;
     #rollbackInProgress = false;
     #triggerAppChange;
-    #currentCurrency = 'USD'; //TODO: to be changes in future
 
     constructor(
         config,
@@ -50,13 +51,12 @@ export default class I18n {
         if (conf.currency && !this.#config.supported.currency.includes(conf.currency)) {
             throw new Error('Invalid currency passed');
         }
+        conf = Object.assign(this.#get(), conf); //We need to fill the missing properties with curr values
 
         const url = window.location.href.replace(window.location.origin, '');
         const newLocaleUrl = IlcIntl.localizeUrl(this.#config, url, conf);
 
-        if (conf.currency) {
-            this.#currentCurrency = conf.currency;
-        }
+        this.#set(conf);
 
         if (url !== newLocaleUrl) {
             this.#singleSpa.navigateToUrl(newLocaleUrl);
@@ -68,15 +68,16 @@ export default class I18n {
     #onBeforeAppsMount = () => {
         const prevConfig = this.#prevConfig;
         const currLocale = IlcIntl.parseUrl(this.#config, window.location.pathname).locale;
+        const currConfig = Object.assign(this.#get(), {locale: currLocale});
         if (
-            this.#prevConfig.locale === currLocale &&
-            this.#get().currency === this.#prevConfig.currency
+            currConfig.locale === prevConfig.locale &&
+            currConfig.currency === prevConfig.currency
         ) {
             return;
         }
 
-        document.documentElement.lang = currLocale;
-        this.#prevConfig = this.#get();
+        this.#set(currConfig);
+        this.#prevConfig = currConfig;
 
         const promises = [];
         const onAllResourcesReady = () => iterablePromise(promises).then(() => this.#rollbackInProgress = false);
@@ -102,5 +103,10 @@ export default class I18n {
         return afterAllResReady;
     };
 
-    #get = () => ({locale: document.documentElement.lang, currency: this.#currentCurrency});
+    #get = () => i18nCookie.decode(Cookies.get(i18nCookie.name));
+
+    #set = conf => {
+        document.documentElement.lang = conf.locale;
+        Cookies.set(i18nCookie.name, i18nCookie.encode(conf), i18nCookie.getOpts());
+    }
 }
