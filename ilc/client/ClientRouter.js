@@ -22,8 +22,8 @@ export default class ClientRouter {
     constructor(
         registryConf,
         state,
-        singleSpa,
         unlocalizeUrl = (v) => v,
+        singleSpa,
         location = window.location,
         logger = window.console
     ) {

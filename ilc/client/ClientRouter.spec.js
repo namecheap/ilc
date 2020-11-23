@@ -201,7 +201,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, undefined, location);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
 
             chai.expect(router.getCurrentRoute()).to.be.eql(expectedRoute);
             chai.expect(router.getPrevRoute()).to.be.eql(expectedRoute);
@@ -259,7 +259,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, undefined, location, logger);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location, logger);
 
             chai.expect(mainRef.getElementsByTagName('base')).to.be.empty;
 
@@ -304,7 +304,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, undefined, location);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
 
             location.pathname = registryConfig.routes[2].route;
             location.search = '?see=you';
@@ -345,7 +345,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, singleSpa, undefined, location);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
 
             window.dispatchEvent(singleSpaBeforeRoutingEvent);
 
@@ -362,7 +362,7 @@ describe('client router', () => {
                     search: '?hi=there',
                 };
 
-                router = new ClientRouter(registryConfig, {}, singleSpa, undefined, location);
+                router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
 
                 const [eventName, eventListener] = addEventListener.getCall(0).args;
 
@@ -389,7 +389,7 @@ describe('client router', () => {
         };
 
         beforeEach(() => {
-            router = new ClientRouter(registryConfig, {}, singleSpa);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa);
             clickEvent = new Event('click', {
                 bubbles: true,
                 cancelable: true,
@@ -508,7 +508,7 @@ describe('client router', () => {
 
     describe('while getting route props', () => {
         beforeEach(() => {
-            router = new ClientRouter(registryConfig, {}, singleSpa);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa);
         });
 
         it('should throw an error when an app is not defined', () => {
