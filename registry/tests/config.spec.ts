@@ -90,7 +90,8 @@ describe('Tests /api/v1/config', () => {
                     supported: {
                         currency: ['USD', 'UAH'],
                         locale: ['en-US', 'ua-UA']
-                    }
+                    },
+                    routingStrategy: 'prefix_except_default',
                 }
 
         });
