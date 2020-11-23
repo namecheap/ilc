@@ -19,12 +19,19 @@ export enum SettingKeys {
     I18nDefaultCurrency = 'i18n.default.currency',
     I18nSupportedLocales = 'i18n.supported.locale',
     I18nSupportedCurrencies = 'i18n.supported.currency',
+    I18nRoutingStrategy = 'i18n.routingStrategy',
 }
 
 export const enum TrailingSlashValues {
     DoNothing = 'doNothing',
     redirectToNonTrailingSlash = 'redirectToNonTrailingSlash',
     redirectToTrailingSlash = 'redirectToTrailingSlash',
+}
+
+export enum RoutingStrategyValues {
+    PrefixExceptDefault = 'prefix_except_default',
+    Prefix = 'prefix',
+    //TODO: add in future: "host"
 }
 
 export const enum Scope {
@@ -66,6 +73,10 @@ const valueSchema = Joi.alternatives().conditional('key', {
                 TrailingSlashValues.redirectToNonTrailingSlash,
                 TrailingSlashValues.redirectToTrailingSlash,
             ).required(),
+        },
+        {
+            is: Joi.valid(SettingKeys.I18nRoutingStrategy),
+            then: Joi.string().valid(...Object.values(RoutingStrategyValues)).required(),
         },
         {
             is: Joi.valid(

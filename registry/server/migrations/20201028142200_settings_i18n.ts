@@ -1,5 +1,5 @@
 import * as Knex from "knex";
-import {SettingKeys} from "../settings/interfaces";
+import {RoutingStrategyValues, Scope, SettingKeys, SettingTypes} from "../settings/interfaces";
 
 
 export async function up(knex: Knex): Promise<any> {
@@ -7,47 +7,57 @@ export async function up(knex: Knex): Promise<any> {
         key: SettingKeys.I18nEnabled,
         value: JSON.stringify(false),
         default: JSON.stringify(false),
-        scope: 'ilc',
+        scope: Scope.Ilc,
         secret: 0,
         meta: JSON.stringify({
-            type: 'boolean'
+            type: SettingTypes.Boolean
         })
     },{
         key: SettingKeys.I18nDefaultLocale,
         value: JSON.stringify('en-US'),
         default: JSON.stringify('en-US'),
-        scope: 'ilc',
+        scope: Scope.Ilc,
         secret: 0,
         meta: JSON.stringify({
-            type: 'string'
+            type: SettingTypes.String
         })
     },{
         key: SettingKeys.I18nDefaultCurrency,
         value: JSON.stringify('USD'),
         default: JSON.stringify('USD'),
-        scope: 'ilc',
+        scope: Scope.Ilc,
         secret: 0,
         meta: JSON.stringify({
-            type: 'string'
+            type: SettingTypes.String
         })
     },{
         key: SettingKeys.I18nSupportedLocales,
         value: JSON.stringify(['en-US', 'ua-UA']),
         default: JSON.stringify(['en-US', 'ua-UA']),
-        scope: 'ilc',
+        scope: Scope.Ilc,
         secret: 0,
         meta: JSON.stringify({
-            type: 'string[]'
+            type: SettingTypes.StringArray
         })
     },{
         key: SettingKeys.I18nSupportedCurrencies,
         value: JSON.stringify(['USD', 'UAH']),
         default: JSON.stringify(['USD', 'UAH']),
-        scope: 'ilc',
+        scope: Scope.Ilc,
         secret: 0,
         meta: JSON.stringify({
-            type: 'string[]'
+            type: SettingTypes.StringArray
         })
+    },{
+        key: SettingKeys.I18nRoutingStrategy,
+        value: RoutingStrategyValues.PrefixExceptDefault,
+        default: RoutingStrategyValues.PrefixExceptDefault,
+        scope: Scope.Ilc,
+        secret: 0,
+        meta: JSON.stringify({
+            type: SettingTypes.Enum,
+            choices: Object.values(RoutingStrategyValues),
+        }),
     }]);
 }
 
@@ -59,6 +69,7 @@ export async function down(knex: Knex): Promise<any> {
         SettingKeys.I18nDefaultCurrency,
         SettingKeys.I18nSupportedLocales,
         SettingKeys.I18nSupportedCurrencies,
+        SettingKeys.I18nRoutingStrategy,
     ]).delete();
 }
 

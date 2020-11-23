@@ -1,5 +1,6 @@
 const Cookie = require('cookie');
 const Intl = require('ilc-sdk/app').Intl;
+const {intlSchema} = require('ilc-sdk/dist/server/IlcProtocol'); //"Private" import
 const cookieEncoder = require('../common/i18nCookie');
 
 const onRequestFactory = (i18nConfig) => async (req, reply) => {
@@ -34,9 +35,10 @@ const onRequestFactory = (i18nConfig) => async (req, reply) => {
     req.raw.ilcState.locale = currI18nConf.locale;
 
     // Passing i18n data down to fragments
-    req.headers['x-request-intl'] =
-        `${currI18nConf.locale}:${i18nConfig.default.locale}:${i18nConfig.supported.locale.join(',')};` +
-        `${currI18nConf.currency}:${i18nConfig.default.currency}:${i18nConfig.supported.currency.join(',')};`;
+    req.headers['x-request-intl'] = intlSchema.toBuffer({
+        ...i18nConfig,
+        current: currI18nConf,
+    }).toString('base64');
 
     if (i18nCookie !== cookieEncoder.encode(currI18nConf)) {
         reply.res.setHeader('Set-Cookie', Cookie.serialize(
