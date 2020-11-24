@@ -80,15 +80,22 @@ export default class I18n {
         this.#prevConfig = currConfig;
 
         const promises = [];
-        const onAllResourcesReady = () => iterablePromise(promises).then(() => this.#rollbackInProgress = false);
+        const onAllAppsReady = () => iterablePromise(promises).then(() => this.#rollbackInProgress = false);
         const detail = Object.assign(this.#get(), {
-            addPendingResources: promise => promises.push(promise),
-            onAllResourcesReady: onAllResourcesReady,
+            addPendingResources: async (promisesList) => {
+                promises.push(...promisesList);
+
+                const values = await Promise.all(promisesList);
+                await onAllAppsReady();
+
+                return values;
+            },
+            onAllAppsReady: onAllAppsReady,
         });
 
         window.dispatchEvent(new CustomEvent('ilc:intl-update', {detail}));
 
-        const afterAllResReady = onAllResourcesReady().catch(err => {
+        const afterAllResReady = onAllAppsReady().catch(err => {
             console.warn(`ILC: error happened during change of the i18n configuration. See error details below. Rolling back...`);
             console.error(err);
             if (this.#rollbackInProgress === false) {
