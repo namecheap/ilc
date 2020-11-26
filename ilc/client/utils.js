@@ -48,3 +48,20 @@ export function prependSpaCallback(spaCallbacks, type, callback) {
 
     return res;
 }
+
+export function appIdToNameAndSlot(appId) {
+    const [appNameWithoutPrefix, slotName] = appId.split('__at__');
+
+    // Case for shared libraries
+    if (appNameWithoutPrefix === undefined || slotName === undefined) {
+        return {
+            appName: appId,
+            slotName: 'none',
+        };
+    }
+
+    return {
+        appName: `@portal/${appNameWithoutPrefix}`,
+        slotName,
+    };
+}
