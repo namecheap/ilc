@@ -1,9 +1,11 @@
 import {Intl as IlcIntl} from 'ilc-sdk/app';
+import Cookies from 'js-cookie';
+
 import transactionManagerFactory from './TransactionManager';
 import {triggerAppChange} from './navigationEvents';
-import {iterablePromise} from './utils';
+import {appIdToNameAndSlot} from './utils';
 import i18nCookie from '../common/i18nCookie';
-import Cookies from 'js-cookie';
+import dispatchSynchronizedEvent from "./dispatchSynchronizedEvent";
 
 export default class I18n {
     #transactionManager;
@@ -12,15 +14,18 @@ export default class I18n {
     #singleSpa;
     #rollbackInProgress = false;
     #triggerAppChange;
+    #appErrorHandlerFactory;
 
     constructor(
         config,
         singleSpa,
+        appErrorHandlerFactory,
         triggerAppsChange = triggerAppChange,
         transactionManager = transactionManagerFactory()
     ) {
         this.#config = config;
         this.#singleSpa = singleSpa;
+        this.#appErrorHandlerFactory = appErrorHandlerFactory;
         this.#triggerAppChange = triggerAppsChange;
         this.#transactionManager = transactionManager;
         this.#prevConfig = this.#get();
@@ -79,35 +84,17 @@ export default class I18n {
         this.#set(currConfig);
         this.#prevConfig = currConfig;
 
-        const promises = [];
-        const onAllAppsReady = () => iterablePromise(promises).then(() => this.#rollbackInProgress = false);
-        const detail = Object.assign(this.#get(), {
-            addPendingResources: async (promisesList) => {
-                promises.push(...promisesList);
-
-                const values = await Promise.all(promisesList);
-                await onAllAppsReady();
-
-                return values;
-            },
-            onAllAppsReady: onAllAppsReady,
-        });
-
-        window.dispatchEvent(new CustomEvent('ilc:intl-update', {detail}));
-
-        const afterAllResReady = onAllAppsReady().catch(err => {
-            console.warn(`ILC: error happened during change of the i18n configuration. See error details below. Rolling back...`);
-            console.error(err);
-            if (this.#rollbackInProgress === false) {
-                this.#rollbackInProgress = true;
-                this.#setIntl(prevConfig);
-            } else {
-                console.error(`ILC: error happened during i18n configuration change rollback... See error details above.`)
+        const changeFlow = dispatchSynchronizedEvent(
+            'ilc:intl-update',
+            this.#get(),
+            (actorId, ...args) => {
+                const {appName, slotName} = appIdToNameAndSlot(actorId);
+                const errorHandler = this.#appErrorHandlerFactory(appName, slotName);
+                errorHandler(...args);
             }
-        });
-        this.#transactionManager.handleAsyncAction(afterAllResReady);
+        );
 
-        return afterAllResReady;
+        this.#transactionManager.handleAsyncAction(changeFlow);
     };
 
     #get = () => i18nCookie.decode(Cookies.get(i18nCookie.name));

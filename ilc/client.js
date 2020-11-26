@@ -23,7 +23,13 @@ if (System === undefined) {
 const registryConf = getIlcConfig();
 const state = initIlcState();
 
-const i18n = registryConf.settings.i18n.enabled ? new I18n(registryConf.settings.i18n, singleSpa) : null;
+const appErrorHandlerFactory = (appName, slotName) => {
+    return fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName);
+};
+
+const i18n = registryConf.settings.i18n.enabled
+    ? new I18n(registryConf.settings.i18n, singleSpa, appErrorHandlerFactory)
+    : null;
 const router = new Router(registryConf, state, i18n ? i18n.unlocalizeUrl : undefined, singleSpa);
 const asyncBootUp = new AsyncBootUp();
 
@@ -32,7 +38,10 @@ const asyncBootUp = new AsyncBootUp();
 if (!registryConf.settings.amdDefineCompatibilityMode) {
     window.define = window.ILC.define;
 }
-window.ILC.getAppSdkAdapter = appId => ({appId, intl: i18n ? i18n.getAdapter() : null});
+window.ILC.getAppSdkAdapter = appId => ({
+    appId,
+    intl: i18n ? i18n.getAdapter() : null
+});
 
 selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']]).forEach((slots) => {
     Object.keys(slots).forEach((slotName) => {
@@ -77,7 +86,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
                 getCurrentBasePath: () => router.getCurrentRoute().basePath,
                 appId: fragmentName, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
-                errorHandler: fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName),
+                errorHandler: appErrorHandlerFactory(appName, slotName),
                 appSdk,
             }
         );
