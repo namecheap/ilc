@@ -15,10 +15,10 @@ const onRequestFactory = (i18nConfig) => async (req, reply) => {
         const decodedCookie = cookieEncoder.decode(i18nCookie);
         currI18nConf.locale = Intl.getCanonicalLocale(decodedCookie.locale, i18nConfig.supported.locale) || currI18nConf.locale;
         currI18nConf.currency = i18nConfig.supported.currency.includes(decodedCookie.currency) ? decodedCookie.currency : currI18nConf.currency;
-    } else {
-        //TODO: add ability to "init" i18n configuration not from default values, but rather by use of the IP, "accept-language", etc..
-        // Interface: async (req: http.IncomingMessage): {locale?: string, currency?: string}
     }
+
+    //TODO: add ability to "init" i18n configuration not from default values, but rather by use of the IP, "accept-language", etc..
+    // Interface: async (req: http.IncomingMessage, currI18nConf): {locale?: string, currency?: string}
 
     const routeLocale = Intl.parseUrl(i18nConfig, req.raw.url);
     if (routeLocale.locale !== i18nConfig.default.locale) { // URL can override locale only if it's not-default one
