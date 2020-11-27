@@ -2,12 +2,14 @@ const config = require('config');
 const fastify = require('fastify');
 const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
-const registryServiceImport = require('./registry/factory');
 const errorHandlingService = require('./errorHandler/factory');
 const i18n = require('./i18n');
 const UrlProcessor = require('../common/UrlProcessor');
 
-module.exports = (registryService = registryServiceImport) => {
+/**
+ * @param {Registry} registryService
+ */
+module.exports = (registryService) => {
     const app = fastify(Object.assign({
         trustProxy: false, //TODO: should be configurable via Registry
     }, require('./logger/fastify')));
