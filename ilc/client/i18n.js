@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 import transactionManagerFactory from './TransactionManager';
 import {triggerAppChange} from './navigationEvents';
-import {appIdToNameAndSlot} from './utils';
+import {appIdToNameAndSlot} from '../common/utils';
 import i18nCookie from '../common/i18nCookie';
 import dispatchSynchronizedEvent from "./dispatchSynchronizedEvent";
 

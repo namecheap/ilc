@@ -4,7 +4,7 @@ import * as uuidv4 from 'uuid/v4';
 import { fragmentErrorHandlerFactory } from './fragmentErrorHandlerFactory';
 import registryService from '../registry/factory';
 import noticeError from './noticeError';
-import {appIdToNameAndSlot} from "../utils";
+import {appIdToNameAndSlot} from "../../common/utils";
 
 const System = window.System;
 

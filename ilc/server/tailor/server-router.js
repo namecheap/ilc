@@ -3,6 +3,7 @@ const deepmerge = require('deepmerge');
 
 const errors = require('../../common/router/errors');
 const Router = require('../../common/router/Router');
+const {makeAppId} = require('../../common/utils');
 
 module.exports = class ServerRouter {
     errors = errors;
@@ -55,7 +56,7 @@ module.exports = class ServerRouter {
             }
 
             const url = new URL(ssrOpts.src);
-            const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
+            const fragmentName = makeAppId(appName, slotName);
             const fragmentKind = slotData.kind || appInfo.kind;
 
             const reqProps = {

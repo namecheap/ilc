@@ -13,6 +13,7 @@ import {getSlotElement, getAppSpaCallbacks, prependSpaCallback} from './client/u
 import AsyncBootUp from './client/AsyncBootUp';
 import IlcAppSdk from 'ilc-sdk/app';
 import I18n from './client/i18n';
+import {makeAppId} from './common/utils';
 
 const System = window.System;
 if (System === undefined) {
@@ -47,13 +48,13 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
     Object.keys(slots).forEach((slotName) => {
         const appName = slots[slotName].appName;
 
-        const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
+        const appId = makeAppId(appName, slotName);
 
-        const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(fragmentName));
+        const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId));
         const onUnmount = async () => appSdk.unmount();
 
         singleSpa.registerApplication(
-            fragmentName,
+            appId,
             async () => {
                 const appConf = registryConf.apps[appName];
 
@@ -85,7 +86,7 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                 domElementGetter: () => getSlotElement(slotName),
                 getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
                 getCurrentBasePath: () => router.getCurrentRoute().basePath,
-                appId: fragmentName, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
+                appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
                 errorHandler: appErrorHandlerFactory(appName, slotName),
                 appSdk,
             }
