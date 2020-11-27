@@ -6,6 +6,7 @@ const _ = require('lodash');
 const i18n = require('./i18n');
 const createApp = require('./app');
 const helpers = require('../tests/helpers');
+const {intlSchema} = require('ilc-sdk/dist/server/IlcProtocol'); //"Private" import
 
 const i18nConfig = Object.freeze({
     enabled: true,
@@ -14,6 +15,21 @@ const i18nConfig = Object.freeze({
         locale: ['en-US', 'ua-UA'],
         currency: ['USD', 'UAH']
     },
+    routingStrategy: 'prefix_except_default',
+});
+
+const getApp = () => createApp(helpers.getRegistryMock({
+    settings: { i18n: i18nConfig }
+}));
+
+const decodeIntlHeader = headerValue =>
+    JSON.parse(JSON.stringify(intlSchema.fromBuffer(Buffer.from(headerValue, 'base64'), undefined, true)));
+
+const expectedHeader = (currentOverride = i18nConfig.default) => ({
+    current: currentOverride,
+    default: i18nConfig.default,
+    supported: i18nConfig.supported,
+    routingStrategy: i18nConfig.routingStrategy,
 });
 
 nock('http://apps.test')
@@ -34,7 +50,7 @@ describe('i18n', () => {
 
     describe('E2E tests', () => {
         it('default locale: should correctly render & pass to the fragments locale info', async () => {
-            const app = createApp(helpers.getRegistryMock());
+            const app = getApp();
 
             const response = await app.inject({ method: 'GET', url: '/all' });
 
@@ -43,13 +59,13 @@ describe('i18n', () => {
 
             const fragmentResps = helpers.getFragmentResponses(response.body);
             _.each(fragmentResps, v => {
-                chai.expect(v.headers['x-request-intl']).to.eq('en-US:en-US:en-US,ua-UA;USD:USD:USD,UAH;');
+                chai.expect(decodeIntlHeader(v.headers['x-request-intl'])).to.eql(expectedHeader());
                 chai.expect(helpers.getRouterProps(v.url).reqUrl).to.eq('/all');
             });
         });
 
         it('ua: should correctly render & pass to the fragments locale info', async () => {
-            const app = createApp(helpers.getRegistryMock());
+            const app = getApp();
 
             const response = await app.inject({ method: 'GET', url: '/ua/all' });
 
@@ -58,7 +74,8 @@ describe('i18n', () => {
 
             const fragmentResps = helpers.getFragmentResponses(response.body);
             _.each(fragmentResps, v => {
-                chai.expect(v.headers['x-request-intl']).to.eq('ua-UA:en-US:en-US,ua-UA;USD:USD:USD,UAH;');
+                chai.expect(decodeIntlHeader(v.headers['x-request-intl']))
+                    .to.eql(expectedHeader({locale: 'ua-UA', currency: 'USD'}));
                 chai.expect(helpers.getRouterProps(v.url).reqUrl).to.eq('/all');
             });
         });
@@ -89,14 +106,17 @@ describe('i18n', () => {
                 sinon.assert.calledWith(reply.redirect, '/ua/test');
             });
 
-            it('ua, Forwards locale to apps', async () => {
+            it('ua, Forwards locale to apps & sets intl cookie', async () => {
                 const req = getReqMock('/ua/test');
 
                 await onRequest(req, reply);
 
                 chai.expect(req.raw.url).to.be.eql('/ua/test');
                 chai.expect(req.raw.ilcState.locale).to.be.eql('ua-UA');
-                chai.expect(req.headers['x-request-intl']).to.be.eql('ua-UA:en-US:en-US,ua-UA;USD:USD:USD,UAH;');
+                chai.expect(decodeIntlHeader(req.headers['x-request-intl']))
+                    .to.eql(expectedHeader({locale: 'ua-UA', currency: 'USD'}));
+
+                sinon.assert.calledWith(reply.res.setHeader, 'Set-Cookie', sinon.match('ilc-i18n=ua-UA%3AUSD; Path=/;'));
             });
 
             it('bd-SM, ignores invalid locale and fallback to the default one', async () => {
@@ -106,7 +126,8 @@ describe('i18n', () => {
 
                 chai.expect(req.raw.url).to.be.eql('/bd-SM/test');
                 chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
-                chai.expect(req.headers['x-request-intl']).to.be.eql('en-US:en-US:en-US,ua-UA;USD:USD:USD,UAH;');
+                chai.expect(decodeIntlHeader(req.headers['x-request-intl']))
+                    .to.eql(expectedHeader());
             });
 
             describe('handles default locale with redirect', () => {
@@ -139,7 +160,7 @@ describe('i18n', () => {
 
         describe('Detect locale from cookie', () => {
             it('ua-UA, detects locale & performs redirect to localized URL', async () => {
-                const req = getReqMock('/test', 'lang=ua-UA;');
+                const req = getReqMock('/test', 'ilc-i18n=ua-UA:UAH;');
 
                 await onRequest(req, reply);
 
@@ -147,24 +168,22 @@ describe('i18n', () => {
             });
 
             it('handles default locale correctly, without redirect', async () => {
-                const req = getReqMock('/test', 'lang=en-US;');
+                const req = getReqMock('/test', 'ilc-i18n=en-US:USD;');
 
                 await onRequest(req, reply);
 
                 sinon.assert.notCalled(reply.redirect);
                 chai.expect(req.raw.url).to.be.eql('/test');
                 chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
-                chai.expect(req.headers['x-request-intl']).to.be.eql('en-US:en-US:en-US,ua-UA;USD:USD:USD,UAH;');
             });
 
             it('bd-SM, ignores invalid locale and fallback to the default one', async () => {
-                const req = getReqMock('/test', 'lang=bd-SM;');
+                const req = getReqMock('/test', 'ilc-i18n=bd-SM:BLH;');
 
                 await onRequest(req, reply);
 
                 chai.expect(req.raw.url).to.be.eql('/test');
                 chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
-                chai.expect(req.headers['x-request-intl']).to.be.eql('en-US:en-US:en-US,ua-UA;USD:USD:USD,UAH;');
             });
         });
     });
@@ -180,5 +199,6 @@ function getReqMock(url = '/test', cookieString = '') {
 function getReplyMock() {
     return {
         redirect: sinon.stub(),
+        res: { setHeader: sinon.stub() }
     }
 }

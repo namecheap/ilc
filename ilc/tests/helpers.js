@@ -1,7 +1,9 @@
-function getRegistryMock() {
+const _ = require('lodash');
+
+function getRegistryMock(overrideConfig = {}) {
     return {
         getTemplate: () => ({data: {content: `<!DOCTYPE html><html lang="en-US"><head></head><body><ilc-slot id="primary"/>\n<ilc-slot id="regular"/></body></html>`}}),
-        getConfig: () => ({data: {
+        getConfig: () => ({data: _.merge({
                 apps: {
                     '@portal/primary': {
                         spaBundle: 'http://localhost/index.js',
@@ -55,10 +57,11 @@ function getRegistryMock() {
                         supported: {
                             currency: ['USD', 'UAH'],
                             locale: ['en-US', 'ua-UA']
-                        }
+                        },
+                        routingStrategy: 'prefix_except_default',
                     },
                 }
-            }})
+            }, overrideConfig)})
     }
 }
 

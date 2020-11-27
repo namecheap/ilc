@@ -8,13 +8,13 @@ import i18nCookie from '../common/i18nCookie';
 import dispatchSynchronizedEvent from "./dispatchSynchronizedEvent";
 
 export default class I18n {
-    #transactionManager;
     #config;
-    #prevConfig;
     #singleSpa;
-    #rollbackInProgress = false;
-    #triggerAppChange;
     #appErrorHandlerFactory;
+    #triggerAppChange;
+    #transactionManager;
+
+    #prevConfig;
 
     constructor(
         config,
@@ -28,6 +28,7 @@ export default class I18n {
         this.#appErrorHandlerFactory = appErrorHandlerFactory;
         this.#triggerAppChange = triggerAppsChange;
         this.#transactionManager = transactionManager;
+
         this.#prevConfig = this.#get();
 
         window.addEventListener('single-spa:before-mount-routing-event', this.#onBeforeAppsMount);
