@@ -1,4 +1,4 @@
-import './client/navigationEvents';
+import {triggerAppChange} from './client/navigationEvents';
 import * as singleSpa from 'single-spa';
 
 import Router from './client/ClientRouter';
@@ -29,7 +29,7 @@ const appErrorHandlerFactory = (appName, slotName) => {
 };
 
 const i18n = registryConf.settings.i18n.enabled
-    ? new I18n(registryConf.settings.i18n, singleSpa, appErrorHandlerFactory)
+    ? new I18n(registryConf.settings.i18n, {...singleSpa, triggerAppChange}, appErrorHandlerFactory)
     : null;
 const router = new Router(registryConf, state, i18n ? i18n.unlocalizeUrl : undefined, singleSpa);
 const asyncBootUp = new AsyncBootUp();
