@@ -18,12 +18,12 @@ export default class I18n {
         config,
         singleSpa,
         appErrorHandlerFactory,
-        transactionManager = transactionManagerFactory()
+        transactionManager = undefined
     ) {
         this.#config = config;
         this.#singleSpa = singleSpa;
         this.#appErrorHandlerFactory = appErrorHandlerFactory;
-        this.#transactionManager = transactionManager;
+        this.#transactionManager = transactionManager || transactionManagerFactory();
 
         this.#prevConfig = this.#get();
 
