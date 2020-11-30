@@ -174,7 +174,8 @@ let defaultInstance = null;
  */
 export default function defaultFactory() {
     if (defaultInstance === null) {
-        defaultInstance = new TransactionManager(getIlcConfig().settings);
+        const ilcSettings = getIlcConfig().settings;
+        defaultInstance = new TransactionManager(ilcSettings && ilcSettings.globalSpinner);
     }
 
     return defaultInstance;
