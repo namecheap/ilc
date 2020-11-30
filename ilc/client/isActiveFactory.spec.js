@@ -1,7 +1,7 @@
 import chai from 'chai';
 import sinon from 'sinon';
 
-import {slotWillBe} from './handlePageTransaction';
+import {slotWillBe} from './TransactionManager';
 import {createFactory} from './isActiveFactory';
 
 describe('is active factory', () => {
@@ -35,23 +35,12 @@ describe('is active factory', () => {
         },
     };
 
-    const setIlcConfig = () => {
-        window.ilcConfig = {
-            tmplSpinner: '<div id="spinner" class="ilc-spinner">Hello! I am Spinner</div>',
-        };
-    };
-    const removeIlcConfig = () => {
-        delete window.ilcConfig;
-    };
-
     let isActive;
     let clock;
 
     beforeEach(() => {
         const isActiveFactory = createFactory(triggerAppChange, handlePageTransaction, slotWillBe);
         isActive = isActiveFactory(router, appName, slotName);
-
-        setIlcConfig();
 
         clock = sinon.useFakeTimers();
     });
@@ -64,8 +53,6 @@ describe('is active factory', () => {
 
         handlePageTransaction.resetHistory();
         triggerAppChange.resetHistory();
-
-        removeIlcConfig();
 
         clock.restore();
     });
@@ -137,8 +124,6 @@ describe('is active factory', () => {
         chai.expect(triggerAppChange.calledOnce).to.be.true;
         chai.expect(handlePageTransaction.secondCall.calledWithExactly(slotName, slotWillBe.default)).to.be.true;
 
-        removeIlcConfig();
-
         chai.expect(isActive()).to.be.true;
 
         dispatchSingleSpaAppChangeEvent();
@@ -146,6 +131,6 @@ describe('is active factory', () => {
         await clock.runAllAsync();
 
         chai.expect(triggerAppChange.calledOnce).to.be.true;
-        chai.expect(handlePageTransaction.calledTwice).to.be.true;
+        chai.expect(handlePageTransaction.secondCall.calledWithExactly(slotName, slotWillBe.default)).to.be.true;
     });
 });

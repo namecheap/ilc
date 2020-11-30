@@ -2,12 +2,14 @@ import chai from 'chai';
 import sinon from 'sinon';
 import html from 'nanohtml';
 
-import handlePageTransaction, {
+import {
     slotWillBe,
-} from './handlePageTransaction';
+    TransactionManager
+} from './TransactionManager';
 
-describe('handle page transaction', () => {
+describe('TransactionManager', () => {
     const locationHash = 'i-am-location-hash';
+
 
     const slots = {
         id: 'slots',
@@ -67,12 +69,16 @@ describe('handle page transaction', () => {
     };
 
     let clock;
+    let handlePageTransaction;
 
     beforeEach(() => {
         window.location.hash = locationHash;
-        window.ilcConfig = {
-            tmplSpinner: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
-        };
+
+        const transactionManager = new TransactionManager({
+            enabled: true,
+            customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`
+        });
+        handlePageTransaction = transactionManager.handlePageTransaction.bind(transactionManager);
 
         slots.resetRef();
         applications.body.resetRef();
@@ -287,7 +293,7 @@ describe('handle page transaction', () => {
         await clock.runAllAsync();
 
         chai.expect(spinner.getRef()).to.be.not.null;
-        
+
         document.getElementById(newBodyApplicationWithoutContent.id).innerText = 'Hello! I am contentful text, so now spinner will be removed';
         await clock.runAllAsync();
 

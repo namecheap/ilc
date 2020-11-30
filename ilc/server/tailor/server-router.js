@@ -3,6 +3,7 @@ const deepmerge = require('deepmerge');
 
 const errors = require('../../common/router/errors');
 const Router = require('../../common/router/Router');
+const {makeAppId} = require('../../common/utils');
 
 module.exports = class ServerRouter {
     errors = errors;
@@ -16,14 +17,14 @@ module.exports = class ServerRouter {
         this.#logger = logger;
     }
 
-    getTemplateInfo(registryConfig, request) {
+    getTemplateInfo(registryConfig, url, ilcState = {}) {
         const router = new Router(registryConfig);
 
         let route;
-        if (request.ilcState && request.ilcState.forceSpecialRoute) {
-            route = router.matchSpecial(request.url, request.ilcState.forceSpecialRoute);
+        if (ilcState.forceSpecialRoute) {
+            route = router.matchSpecial(url, ilcState.forceSpecialRoute);
         } else {
-            route = router.match(request.url);
+            route = router.match(url);
         }
 
         const page = this.#generatePageTpl(route, registryConfig.apps);
@@ -55,13 +56,13 @@ module.exports = class ServerRouter {
             }
 
             const url = new URL(ssrOpts.src);
-            const fragmentName = `${appName.replace('@portal/', '')}__at__${slotName}`;
+            const fragmentName = makeAppId(appName, slotName);
             const fragmentKind = slotData.kind || appInfo.kind;
 
             const reqProps = {
                 basePath: route.basePath,
                 reqUrl: route.reqUrl,
-                fragmentName, //TODO: to be removed
+                fragmentName,
             };
 
             url.searchParams.append('routerProps', Buffer.from(JSON.stringify(reqProps)).toString('base64'));

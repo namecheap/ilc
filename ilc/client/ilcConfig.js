@@ -1,10 +1,16 @@
+let registryConf = null;
+
 export default function () {
+    if (registryConf !== null) {
+        return registryConf;
+    }
+
     const confScript = document.querySelector('script[type="ilc-config"]');
     if (confScript === null) {
         throw new Error('Can\'t find single-spa config');
     }
 
-    const registryConf = JSON.parse(confScript.innerHTML);
+    registryConf = JSON.parse(confScript.innerHTML);
 
     document.head.appendChild(getSystemjsImportmap(registryConf.apps));
 

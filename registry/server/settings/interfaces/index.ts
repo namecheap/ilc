@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-export const enum SettingKeys {
+export enum SettingKeys {
     BaseUrl = 'baseUrl',
     TrailingSlash = 'trailingSlash',
     AuthOpenIdEnabled = 'auth.openid.enabled',
@@ -12,28 +12,43 @@ export const enum SettingKeys {
     AuthOpenIdUniqueIdentifierClaimName = 'auth.openid.uidClaimName',
     AuthOpenIdRequestedScopes = 'auth.openid.requestedScopes',
     AmdDefineCompatibilityMode = 'amdDefineCompatibilityMode',
-};
+    GlobalSpinnerEnabled = 'globalSpinner.enabled',
+    GlobalSpinnerCustomHtml = 'globalSpinner.customHTML',
+    I18nEnabled = 'i18n.enabled',
+    I18nDefaultLocale = 'i18n.default.locale',
+    I18nDefaultCurrency = 'i18n.default.currency',
+    I18nSupportedLocales = 'i18n.supported.locale',
+    I18nSupportedCurrencies = 'i18n.supported.currency',
+    I18nRoutingStrategy = 'i18n.routingStrategy',
+}
 
 export const enum TrailingSlashValues {
     DoNothing = 'doNothing',
     redirectToNonTrailingSlash = 'redirectToNonTrailingSlash',
     redirectToTrailingSlash = 'redirectToTrailingSlash',
-};
+}
+
+export enum RoutingStrategyValues {
+    PrefixExceptDefault = 'prefix_except_default',
+    Prefix = 'prefix',
+    //TODO: add in future: "host"
+}
 
 export const enum Scope {
     Ilc = 'ilc',
     Registry = 'registry',
-};
+}
 
 export const enum SettingTypes {
     Boolean = 'boolean',
     Url = 'url',
     String = 'string',
+    StringArray = 'string[]',
     Enum = 'enum',
     Password = 'password',
-};
+}
 
-type SettingValue = string | boolean | TrailingSlashValues;
+type SettingValue = string | boolean | TrailingSlashValues | string[];
 
 export interface Setting {
     key: SettingKeys,
@@ -45,21 +60,9 @@ export interface Setting {
         type: SettingTypes,
         choices?: any[],
     },
-};
+}
 
-export const keySchema = Joi.string().min(1).max(50).valid(
-    SettingKeys.TrailingSlash,
-    SettingKeys.BaseUrl,
-    SettingKeys.AuthOpenIdResponseMode,
-    SettingKeys.AuthOpenIdRequestedScopes,
-    SettingKeys.AuthOpenIdUniqueIdentifierClaimName,
-    SettingKeys.AuthOpenIdIdentifierClaimName,
-    SettingKeys.AuthOpenIdEnabled,
-    SettingKeys.AuthOpenIdDiscoveryUrl,
-    SettingKeys.AuthOpenIdClientSecret,
-    SettingKeys.AuthOpenIdClientId,
-    SettingKeys.AmdDefineCompatibilityMode,
-);
+export const keySchema = Joi.string().min(1).max(50).valid(...Object.values(SettingKeys));
 
 const valueSchema = Joi.alternatives().conditional('key', {
     switch: [
@@ -72,8 +75,24 @@ const valueSchema = Joi.alternatives().conditional('key', {
             ).required(),
         },
         {
-            is: Joi.valid(SettingKeys.AmdDefineCompatibilityMode, SettingKeys.AuthOpenIdEnabled),
+            is: Joi.valid(SettingKeys.I18nRoutingStrategy),
+            then: Joi.string().valid(...Object.values(RoutingStrategyValues)).required(),
+        },
+        {
+            is: Joi.valid(
+                SettingKeys.AmdDefineCompatibilityMode,
+                SettingKeys.AuthOpenIdEnabled,
+                SettingKeys.GlobalSpinnerEnabled,
+                SettingKeys.I18nEnabled
+            ),
             then: Joi.boolean().strict().sensitive().required(),
+        },
+        {
+            is: Joi.valid(
+                SettingKeys.I18nSupportedCurrencies,
+                SettingKeys.I18nSupportedLocales,
+            ),
+            then: Joi.array().items(Joi.string()),
         },
         {
             is: Joi.valid(SettingKeys.BaseUrl, SettingKeys.AuthOpenIdDiscoveryUrl),

@@ -7,3 +7,31 @@ export function getSlotElement(slotName) {
 
     return appContainer || slot;
 }
+
+export function getAppSpaCallbacks(appBundle, props = {}) {
+    const mainSpa = appBundle.mainSpa || appBundle.default && appBundle.default.mainSpa;
+
+    if (mainSpa !== undefined) {
+        return mainSpa(props);
+    } else {
+        return appBundle;
+    }
+}
+
+export function prependSpaCallback(spaCallbacks, type, callback) {
+    const res = {
+        bootstrap: spaCallbacks.bootstrap,
+        mount: spaCallbacks.mount,
+        unmount: spaCallbacks.unmount,
+        unload: spaCallbacks.unload,
+    };
+
+    let orig = spaCallbacks[type];
+    if (Array.isArray(orig)) {
+        res[type] = [callback].concat(orig);
+    } else {
+        res[type] = [callback, orig];
+    }
+
+    return res;
+}

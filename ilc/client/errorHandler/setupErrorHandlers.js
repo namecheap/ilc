@@ -4,13 +4,13 @@ import * as uuidv4 from 'uuid/v4';
 import { fragmentErrorHandlerFactory } from './fragmentErrorHandlerFactory';
 import registryService from '../registry/factory';
 import noticeError from './noticeError';
+import {appIdToNameAndSlot} from "../../common/utils";
 
 const System = window.System;
 
 export default function (registryConf, getCurrentPath) {
     singleSpa.addErrorHandler((error) => {
-        const [appNameWithoutPrefix, slotName] = error.appOrParcelName.split('__at__');
-        const appName = `@portal/${appNameWithoutPrefix}`;
+        const {appName, slotName} = appIdToNameAndSlot(error.appOrParcelName);
         const fragmentErrorHandler = fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName);
 
         fragmentErrorHandler(error);

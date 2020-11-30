@@ -4,6 +4,7 @@ const nock = require('nock');
 const stdoutInterceptor = require("test-console").stdout;
 const config = require('config');
 const localStorage = require('../../common/localStorage');
+const helpers = require('../../tests/helpers');
 
 const createApp = require('../app');
 
@@ -25,7 +26,7 @@ describe('error handler', () => {
     let stdoutInspect;
 
     before(async () => {
-        app = createApp();
+        app = createApp(helpers.getRegistryMock());
         await app.ready();
         server = supertest(app.server);
     });

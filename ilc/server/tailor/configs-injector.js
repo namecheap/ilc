@@ -18,11 +18,16 @@ module.exports = class ConfigsInjector {
         let document = template.content;
 
         if (
-            typeof document !== 'string' ||
-            document.indexOf('</head>') === -1 || document.indexOf('<head>') === -1 ||
-            document.indexOf('</body>') === -1 || document.indexOf('<body>') === -1
+            typeof document !== 'string' || !document.includes('<html') ||
+            !document.includes('</head>') || !document.includes('<head>') ||
+            !document.includes('</body>') || !document.includes('<body>')
         ) {
             throw new Error(`Can't inject ILC configs into invalid document.`);
+        }
+
+        if (request.ilcState && request.ilcState.locale) {
+            document = document.replace('<html', `<html lang="${request.ilcState.locale}"`);
+            delete request.ilcState.locale; // We don't need it at client side
         }
 
         const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);

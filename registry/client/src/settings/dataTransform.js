@@ -2,6 +2,7 @@ export const types = {
     url: 'url',
     boolean: 'boolean',
     string: 'string',
+    stringArray: 'string[]',
     enum: 'enum',
     password: 'password',
 };

@@ -1,4 +1,4 @@
-const getIlcConfig = require('./initIlcConfig').default;
+const getIlcConfig = require('./ilcConfig').default;
 const UrlProcessor = require('../common/UrlProcessor');
 
 let urlProcessor;

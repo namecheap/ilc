@@ -41,11 +41,10 @@ describe('server router', () => {
             ],
             specialRoutes,
         };
-        const request = {url: '/no-app'};
 
         const router = new ServerRouter(logger);
 
-        chai.expect(() => router.getTemplateInfo(registryConfig, request)).to.throw('Can\'t find info about app.');
+        chai.expect(() => router.getTemplateInfo(registryConfig, '/no-app')).to.throw('Can\'t find info about app.');
     });
 
     it('should throw an error when an application does not have a specified source of fragment', () => {
@@ -84,11 +83,10 @@ describe('server router', () => {
             ],
             specialRoutes,
         };
-        const request = {url: '/no-ssr-src'};
 
         const router = new ServerRouter(logger);
 
-        chai.expect(() => router.getTemplateInfo(registryConfig, request)).to.throw('No url specified for fragment!');
+        chai.expect(() => router.getTemplateInfo(registryConfig, '/no-ssr-src')).to.throw('No url specified for fragment!');
     });
 
     it('should get template info', () => {
@@ -317,7 +315,7 @@ describe('server router', () => {
 
         const router = new ServerRouter(logger);
 
-        chai.expect(router.getTemplateInfo(registryConfig, request)).to.be.eql({
+        chai.expect(router.getTemplateInfo(registryConfig, request.url)).to.be.eql({
             route: expectedRoute,
             page: expectedPage,
         });
@@ -450,7 +448,7 @@ describe('server router', () => {
 
         const router = new ServerRouter(logger);
 
-        chai.expect(router.getTemplateInfo(registryConfig, request)).to.be.eql({
+        chai.expect(router.getTemplateInfo(registryConfig, request.url, request.ilcState)).to.be.eql({
             route: expectedRoute,
             page: expectedPage,
         });
