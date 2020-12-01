@@ -2,13 +2,10 @@ import {expect} from 'chai';
 import sinon from 'sinon';
 
 import I18n from './i18n';
-import Cookies from "js-cookie";
+import Cookies from 'js-cookie';
 import i18nCookie from "../common/i18nCookie";
 
-
-
-describe.only('I18n', () => {
-
+describe('I18n', () => {
     const intlChangeEvent = sinon.spy();
     window.addEventListener('ilc:intl-update', intlChangeEvent);
 

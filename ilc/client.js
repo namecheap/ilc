@@ -1,4 +1,4 @@
-import {triggerAppChange} from './client/navigationEvents';
+import './client/navigationEvents/setupEvents';
 import * as singleSpa from 'single-spa';
 
 import Router from './client/ClientRouter';
@@ -14,6 +14,7 @@ import AsyncBootUp from './client/AsyncBootUp';
 import IlcAppSdk from 'ilc-sdk/app';
 import I18n from './client/i18n';
 import {makeAppId} from './common/utils';
+import {triggerAppChange} from './client/navigationEvents';
 
 const System = window.System;
 if (System === undefined) {

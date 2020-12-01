@@ -1,4 +1,3 @@
-import './setupEvents';
 import { triggerAppChange as spaTriggerAppChange } from 'single-spa';
 
 export function triggerAppChange() {

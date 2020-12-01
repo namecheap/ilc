@@ -40,8 +40,8 @@ module.exports = function (config) {
             'karma-sourcemap-loader',
         ],
         files: [
-            'client/**/*.js',
-            'common/**/*.js',
+            'client/**/*.spec.js',
+            'common/**/*.spec.js',
             'systemjs/**/*.spec.js',
             {
                 pattern: 'systemjs/spec/fixtures/**/*.js',
