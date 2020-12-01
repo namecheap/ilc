@@ -25,6 +25,7 @@ See more information about the [lifecycle functions here](https://single-spa.js.
 * `getCurrentBasePath(): string` - returns same value as `basePath` param in `routerProps` query parameter
 * `errorHandler(error, errorInfo = {}): void` - app MUST use it to propagate all unhandled errors
 * `appId` - Unique application ID, if same app will be rendered twice on a page - it will get different IDs
+* `appSdk` - Isomorphic API that can be used during SSR & CSR. [Documentation](https://namecheap.github.io/ilc-sdk/classes/_app_index_.ilcappsdk.html)
 
 
 ### Init code during app bundle loading
