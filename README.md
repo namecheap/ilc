@@ -42,6 +42,7 @@ Bringing microservices to the frontend requires a layout service that composes a
 * 🗄 **Built-in registry** - add new apps, pages or change configs and templates in few clicks. [More info here](./docs/registry.md).
 * ⚡️ **Built for speed** - server side part of the system adds just ~17ms of latency
 * 👨‍💻 **Develop right at production** - [Doc](./docs/develop_at_production.md)
+* 🌐 **Internationalization support** - it is ready to serve your clients from any country. [Doc](./docs/i18n.md)
 * 💲 **Baked by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with community
 
 ## 🚀 Quick start

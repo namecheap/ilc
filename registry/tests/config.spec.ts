@@ -86,7 +86,7 @@ describe('Tests /api/v1/config', () => {
                         currency: 'USD',
                         locale: 'en-US',
                     },
-                    enabled: false,
+                    enabled: true,
                     supported: {
                         currency: ['USD', 'UAH'],
                         locale: ['en-US', 'ua-UA']

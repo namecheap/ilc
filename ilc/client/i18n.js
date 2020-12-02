@@ -2,7 +2,6 @@ import {Intl as IlcIntl} from 'ilc-sdk/app';
 import Cookies from 'js-cookie';
 
 import transactionManagerFactory from './TransactionManager';
-import {triggerAppChange} from './navigationEvents';
 import {appIdToNameAndSlot} from '../common/utils';
 import i18nCookie from '../common/i18nCookie';
 import dispatchSynchronizedEvent from "./dispatchSynchronizedEvent";
@@ -11,7 +10,6 @@ export default class I18n {
     #config;
     #singleSpa;
     #appErrorHandlerFactory;
-    #triggerAppChange;
     #transactionManager;
 
     #prevConfig;
@@ -20,14 +18,12 @@ export default class I18n {
         config,
         singleSpa,
         appErrorHandlerFactory,
-        triggerAppsChange = triggerAppChange,
-        transactionManager = transactionManagerFactory()
+        transactionManager = undefined
     ) {
         this.#config = config;
         this.#singleSpa = singleSpa;
         this.#appErrorHandlerFactory = appErrorHandlerFactory;
-        this.#triggerAppChange = triggerAppsChange;
-        this.#transactionManager = transactionManager;
+        this.#transactionManager = transactionManager || transactionManagerFactory();
 
         this.#prevConfig = this.#get();
 
@@ -42,6 +38,13 @@ export default class I18n {
             get: () => this.#get(),
             config: this.#config,
         };
+    }
+
+    /**
+     * Used only for tests
+     */
+    destroy() {
+        window.removeEventListener('single-spa:before-mount-routing-event', this.#onBeforeAppsMount);
     }
 
     /**
@@ -67,7 +70,7 @@ export default class I18n {
         if (url !== newLocaleUrl) {
             this.#singleSpa.navigateToUrl(newLocaleUrl);
         } else {
-            this.#triggerAppChange();
+            this.#singleSpa.triggerAppChange();
         }
     };
 
