@@ -155,7 +155,7 @@ export default class ClientRouter {
             return;
         }
 
-        const pathname = href.replace(this.#location.origin, '');
+        const pathname = href.replace(this.#location.origin, '') || '/';
         const {specialRole} = this.#router.match(this.#unlocalizeUrl(pathname));
 
         if (specialRole === null) {
