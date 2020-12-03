@@ -1,4 +1,4 @@
-import * as Knex from "knex";
+import * as Knex from 'knex';
 
 const publicHost = process.env.PUBLIC_HOST || 'localhost';
 
@@ -16,7 +16,7 @@ export async function seed(knex: Knex): Promise<any> {
                 timeout: 1000,
             }),
             props: JSON.stringify({
-                publicPath: 'http://localhost:8235/'
+                publicPath: `http://${publicHost}:8235/`
             }),
             kind: 'essential',
         }, {
