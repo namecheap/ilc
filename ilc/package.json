@@ -31,7 +31,7 @@
     "fastify": "^2.15.2",
     "http-headers": "^3.0.2",
     "hyperid": "^2.0.5",
-    "ilc-sdk": "^2.0.1",
+    "ilc-sdk": "^2.1.0",
     "is-url": "^1.2.4",
     "js-cookie": "^2.2.1",
     "lodash": "^4.17.19",
