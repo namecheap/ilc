@@ -146,6 +146,17 @@ export default class ClientRouter {
     };
 
     #onClickLink = (event) => {
+        const {
+            metaKey, // command / windows meta key - opens new tab (Chrome@87 / Safari@14 / Firefox@83)
+            altKey, // option / alt - downloads page(Chrome@87 / Safari@14), do nothing (Firefox@83)
+            ctrlKey, // control / ctrl - opens context menu. it works in spite of preventing default behaviour (Chrome@87 / Safari@14 / Firefox@83), but it's good to ignore ILC handling in this case too
+            shiftKey, // shift - opens new window (Chrome@87 / Firefox@83), add to "read latter"(Safari@14)
+        } = event;
+        
+        if (metaKey || altKey || ctrlKey || shiftKey) {
+            return;
+        }
+
         const anchor = event.target.tagName === 'A'
             ? event.target
             : event.target.closest('a');
