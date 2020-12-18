@@ -51,8 +51,14 @@ module.exports = class ServerRouter {
             }
 
             const ssrOpts = deepmerge({}, appInfo.ssr);
+
             if (typeof ssrOpts.src !== 'string') {
                 throw new this.errors.RouterError({message: 'No url specified for fragment!', data: {appInfo}});
+            }
+
+            if (typeof ssrOpts.ignoreInvalidSsl === 'boolean') {
+                ssrOpts['ignore-invalid-ssl'] = ssrOpts.ignoreInvalidSsl;
+                delete ssrOpts.ignoreInvalidSsl;
             }
 
             const url = new URL(ssrOpts.src);

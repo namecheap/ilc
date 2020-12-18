@@ -1,21 +1,25 @@
 import { expect } from 'chai';
 const parseOverrideConfig = require('./parse-override-config');
 
+const assignIgnoreInvalidSsl = (ssr, protocol = 'http:') => protocol === 'https:'
+    ? Object.assign({}, ssr, {ignoreInvalidSsl: true})
+    : ssr;
+
 const getExampleObject = (ip = '10.1.150.223', protocol = 'http:') => (
     {
         apps: {
             '@portal/one': {
                 spaBundle: `${protocol}//${ip}:2273/api/fragment/uilandingpages/app.js`,
-                ssr: {
+                ssr: assignIgnoreInvalidSsl({
                     src: `${protocol}//${ip}/api/fragment/uilandingpages/`
-                }
+                }, protocol)
             },
             '@portal/two': {
                 spaBundle: `${protocol}//${ip}:2222/example.js`,
-                ssr: {
+                ssr: assignIgnoreInvalidSsl({
                     src: `${protocol}//${ip}/`,
                     timeout: 1000,
-                },
+                }, protocol),
                 kind: 'primary',
             },
         },

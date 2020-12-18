@@ -45,6 +45,17 @@ module.exports = (cookie, trustedOrigins) => {
                 const parsedTrustedOrigin = typeof trustedOrigins === 'string' && trustedOrigins.split(',').map(n=>n.trim());
                 sanitizeSpoofedLinks(overrideConfig.apps, parsedTrustedOrigin);
             }
+
+            if (overrideConfig.apps !== undefined) {
+                for (let appName in overrideConfig.apps) {
+                    const ssr = overrideConfig.apps[appName].ssr;
+
+                    if (ssr !== undefined && ssr.src !== undefined && ssr.src.startsWith('https:')) {
+                        overrideConfig.apps[appName].ssr.ignoreInvalidSsl = true;
+                    }
+                }
+            }
+
             return overrideConfig;
         }
     } catch (e) {}
