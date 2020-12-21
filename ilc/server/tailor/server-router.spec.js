@@ -446,7 +446,7 @@ describe('server router', () => {
         })).toString('base64'));
 
         const expectedPage =
-            `<fragment id="${registryConfig.apps['apps'].name}" slot="apps" timeout="${registryConfig.apps.apps.ssr.timeout}" src="${expectedAppsUrl.toString()}" ignore-invalid-ssl="false" primary="true"></fragment>`;
+            `<fragment id="${registryConfig.apps['apps'].name}" slot="apps" timeout="${registryConfig.apps.apps.ssr.timeout}" src="${expectedAppsUrl.toString()}" primary="true"></fragment>`;
 
         const router = new ServerRouter(logger);
 

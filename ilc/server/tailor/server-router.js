@@ -56,10 +56,11 @@ module.exports = class ServerRouter {
                 throw new this.errors.RouterError({message: 'No url specified for fragment!', data: {appInfo}});
             }
 
-            if (typeof ssrOpts.ignoreInvalidSsl === 'boolean') {
-                ssrOpts['ignore-invalid-ssl'] = ssrOpts.ignoreInvalidSsl;
-                delete ssrOpts.ignoreInvalidSsl;
+            if (ssrOpts.ignoreInvalidSsl === true) {
+                ssrOpts['ignore-invalid-ssl'] = true;
             }
+
+            delete ssrOpts.ignoreInvalidSsl;
 
             const url = new URL(ssrOpts.src);
             const fragmentName = makeAppId(appName, slotName);
