@@ -99,6 +99,32 @@ describe('overrideConfig', () => {
         });
     });
 
+    describe('ignoring invalid SSL certificates while SSR', () => {
+        it('should add ignoring invalid SSL certificates when an app SSR source has HTTPS protocol', async () => {
+            const exampleCookies = getExampleCookies('10.1.150.223', 'https:');
+            const config = parseOverrideConfig(exampleCookies);
+
+            expect(config.apps['@portal/one'].ssr.ignoreInvalidSsl).to.be.true;
+            expect(config.apps['@portal/two'].ssr.ignoreInvalidSsl).to.be.true;
+        });
+
+        it('should not add ignoring invalid SSL certificates when an app SSR source has HTTP protocol', async () => {
+            const exampleCookies = getExampleCookies('10.1.150.223', 'http:');
+            const config = parseOverrideConfig(exampleCookies);
+
+            expect(config.apps['@portal/one'].ssr.ignoreInvalidSsl).to.be.undefined;
+            expect(config.apps['@portal/two'].ssr.ignoreInvalidSsl).to.be.undefined;
+        });
+
+        it('should not add ignoring invalid SSL certificates when an app SSR source has no protocol', async () => {
+            const exampleCookies = getExampleCookies('10.1.150.223', '');
+            const config = parseOverrideConfig(exampleCookies);
+
+            expect(config.apps['@portal/one'].ssr.ignoreInvalidSsl).to.be.undefined;
+            expect(config.apps['@portal/two'].ssr.ignoreInvalidSsl).to.be.undefined;
+        });
+    });
+
     describe('not sanitized', () => {
         it('should not sanitize valid private ip with http', async () => {
             const exampleCookies = getExampleCookies('10.1.150.223', 'http:');
