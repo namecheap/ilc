@@ -167,6 +167,7 @@ describe('server router', () => {
                 ssr: {
                     timeout: 4000,
                     src: 'https://somewhere.com/apps?prop=value',
+                    ignoreInvalidSsl: true,
                 },
             },
             '@portal/news': {
@@ -311,7 +312,7 @@ describe('server router', () => {
             `<fragment id="${registryConfig.apps['@portal/navbar'].name}" slot="navbar" timeout="${registryConfig.apps['@portal/navbar'].ssr.timeout}" src="${expectedNavbarUrl.toString()}"></fragment>` +
             `<fragment id="${registryConfig.apps['@portal/footer'].name}" slot="footer" timeout="${registryConfig.apps['@portal/footer'].ssr.timeout}" src="${expectedFooterUrl.toString()}" primary="true"></fragment>` +
             `<fragment id="${registryConfig.apps['contact'].name}" slot="contact" timeout="${registryConfig.apps.contact.ssr.timeout}" src="${expectedContactUrl.toString()}"></fragment>` +
-            `<fragment id="${registryConfig.apps['apps'].name}" slot="apps" timeout="${registryConfig.apps.apps.ssr.timeout}" src="${expectedAppsUrl.toString()}"></fragment>`;
+            `<fragment id="${registryConfig.apps['apps'].name}" slot="apps" timeout="${registryConfig.apps.apps.ssr.timeout}" src="${expectedAppsUrl.toString()}" ignore-invalid-ssl="true"></fragment>`;
 
         const router = new ServerRouter(logger);
 
@@ -371,6 +372,7 @@ describe('server router', () => {
                 ssr: {
                     timeout: 4000,
                     src: 'https://somewhere.com/apps?prop=value',
+                    ignoreInvalidSsl: false,
                 },
             },
         };

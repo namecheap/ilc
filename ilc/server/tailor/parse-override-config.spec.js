@@ -1,21 +1,36 @@
 import { expect } from 'chai';
 const parseOverrideConfig = require('./parse-override-config');
 
+const assignIgnoreInvalidSsl = (ssr, protocol = 'http:') => protocol === 'https:'
+    ? Object.assign({}, ssr, {ignoreInvalidSsl: true})
+    : ssr;
+
 const getExampleObject = (ip = '10.1.150.223', protocol = 'http:') => (
     {
         apps: {
             '@portal/one': {
                 spaBundle: `${protocol}//${ip}:2273/api/fragment/uilandingpages/app.js`,
-                ssr: {
+                ssr: assignIgnoreInvalidSsl({
                     src: `${protocol}//${ip}/api/fragment/uilandingpages/`
-                }
+                }, protocol)
             },
             '@portal/two': {
                 spaBundle: `${protocol}//${ip}:2222/example.js`,
-                ssr: {
+                ssr: assignIgnoreInvalidSsl({
                     src: `${protocol}//${ip}/`,
                     timeout: 1000,
+                }, protocol),
+                kind: 'primary',
+            },
+            '@portal/three': {
+                spaBundle: `${protocol}//${ip}:3333/example.js`,
+                ssr: {
+                    timeout: 1000,
                 },
+                kind: 'primary',
+            },
+            '@portal/four': {
+                spaBundle: `${protocol}//${ip}:4444/example.js`,
                 kind: 'primary',
             },
         },
@@ -47,6 +62,15 @@ const getSanitizedObject = () => (
                 },
                 kind: 'primary',
             },
+            '@portal/three': {
+                ssr: {
+                    timeout: 1000,
+                },
+                kind: 'primary',
+            },
+            '@portal/four': {
+                kind: 'primary',
+            },
         },
         routes: [
             {
@@ -65,7 +89,48 @@ const getSanitizedObject = () => (
 );
 
 const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:') => {
-    const value = encodeURIComponent(JSON.stringify(getExampleObject(ip, protocol)));
+    const value = encodeURIComponent(JSON.stringify({
+        apps: {
+            '@portal/one': {
+                spaBundle: `${protocol}//${ip}:2273/api/fragment/uilandingpages/app.js`,
+                ssr: {
+                    src: `${protocol}//${ip}/api/fragment/uilandingpages/`
+                },
+            },
+            '@portal/two': {
+                spaBundle: `${protocol}//${ip}:2222/example.js`,
+                ssr: {
+                    src: `${protocol}//${ip}/`,
+                    timeout: 1000,
+                },
+                kind: 'primary',
+            },
+            '@portal/three': {
+                spaBundle: `${protocol}//${ip}:3333/example.js`,
+                ssr: {
+                    timeout: 1000,
+                },
+                kind: 'primary',
+            },
+            '@portal/four': {
+                spaBundle: `${protocol}//${ip}:4444/example.js`,
+                kind: 'primary',
+            },
+        },
+        routes: [
+            {
+                routeId: 104,
+                route: '/domains/',
+                next: false,
+                slots: {
+                    body: {
+                        appName: '@portal/two',
+                        kind: null,
+                    },
+                },
+            },
+        ],
+    }));
 
     return `foo=bar; ILC-overrideConfig=${value}; foo2=bar2`;
 };
@@ -92,6 +157,38 @@ describe('overrideConfig', () => {
             const incorrectExample = getExampleCookies().replace('overrideConfig=', 'overrideConfig=123');
 
             expect(parseOverrideConfig(incorrectExample)).to.equal(undefined);
+        });
+    });
+
+    describe('ignoring invalid SSL certificates while SSR', () => {
+        it('should add ignoring invalid SSL certificates when an app SSR source has HTTPS protocol', async () => {
+            const exampleCookies = getExampleCookies('10.1.150.223', 'https:');
+            const config = parseOverrideConfig(exampleCookies);
+
+            expect(config.apps['@portal/one'].ssr.ignoreInvalidSsl).to.be.true;
+            expect(config.apps['@portal/two'].ssr.ignoreInvalidSsl).to.be.true;
+            expect(config.apps['@portal/three'].ssr.ignoreInvalidSsl).to.be.undefined;
+            expect(config.apps['@portal/four'].ssr).to.be.undefined;
+        });
+
+        it('should not add ignoring invalid SSL certificates when an app SSR source has HTTP protocol', async () => {
+            const exampleCookies = getExampleCookies('10.1.150.223', 'http:');
+            const config = parseOverrideConfig(exampleCookies);
+
+            expect(config.apps['@portal/one'].ssr.ignoreInvalidSsl).to.be.undefined;
+            expect(config.apps['@portal/two'].ssr.ignoreInvalidSsl).to.be.undefined;
+            expect(config.apps['@portal/three'].ssr.ignoreInvalidSsl).to.be.undefined;
+            expect(config.apps['@portal/four'].ssr).to.be.undefined;
+        });
+
+        it('should not add ignoring invalid SSL certificates when an app SSR source has no protocol', async () => {
+            const exampleCookies = getExampleCookies('10.1.150.223', '');
+            const config = parseOverrideConfig(exampleCookies);
+
+            expect(config.apps['@portal/one'].ssr.ignoreInvalidSsl).to.be.undefined;
+            expect(config.apps['@portal/two'].ssr.ignoreInvalidSsl).to.be.undefined;
+            expect(config.apps['@portal/three'].ssr.ignoreInvalidSsl).to.be.undefined;
+            expect(config.apps['@portal/four'].ssr).to.be.undefined;
         });
     });
 

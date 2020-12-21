@@ -45,6 +45,22 @@ module.exports = (cookie, trustedOrigins) => {
                 const parsedTrustedOrigin = typeof trustedOrigins === 'string' && trustedOrigins.split(',').map(n=>n.trim());
                 sanitizeSpoofedLinks(overrideConfig.apps, parsedTrustedOrigin);
             }
+
+            /**
+             * The following logic needs to ignore invalid SSL certificates for sources that use HTTPS protocol
+             * It ignores certificates only when a developer uses LDE to work with ILC on production environment
+             * Due to TailorX can not fetch necessary fragment information for SSR from local environment
+             */
+            if (overrideConfig.apps !== undefined) {
+                for (let appName in overrideConfig.apps) {
+                    const ssr = overrideConfig.apps[appName].ssr;
+
+                    if (ssr !== undefined && ssr.src !== undefined && ssr.src.startsWith('https:')) {
+                        overrideConfig.apps[appName].ssr.ignoreInvalidSsl = true;
+                    }
+                }
+            }
+
             return overrideConfig;
         }
     } catch (e) {}
