@@ -5,6 +5,7 @@ const fg = require('fast-glob');
 
 const TYPES = {
     reporting: 'reporting',
+    i18nParamsDetection: 'i18nParamsDetection',
 };
 
 module.exports = class PluginManager {
@@ -16,6 +17,10 @@ module.exports = class PluginManager {
 
     getReportingPlugin() {
         return this.#plugins[TYPES.reporting] || null;
+    }
+
+    getI18nParamsDetectionPlugin() {
+        return this.#plugins[TYPES.i18nParamsDetection] || null;
     }
 
     //TODO: here we should be using common logger, however for it to work properly we need PluginManager...
