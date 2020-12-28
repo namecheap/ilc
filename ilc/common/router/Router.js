@@ -98,14 +98,18 @@ module.exports = class Router {
 
             if (v.route === '*') {
                 routeExp = new RegExp(`(.*)`);
+            } else if (v.route === '/') {
+                routeExp = new RegExp(`^(/)$`);
             } else if (v.route.match(/\/\*$/) !== null) {
                 const basePath = route.substring(0, route.length - 3);
 
                 routeExp = new RegExp(`^(${basePath})/?.*`);
             } else {
-                const basePath = v.route[v.route.length - 1] === '/'
-                    ? route.substring(0, route.length - 1)
-                    : route;
+                let basePath = route;
+
+                if (v.route[v.route.length - 1] === '/') {
+                    basePath = route.substring(0, route.length - 1);
+                };
 
                 routeExp = new RegExp(`^(${basePath})/?$`);
             }

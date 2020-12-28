@@ -217,6 +217,44 @@ describe('router', () => {
                 });
             });
 
+            it('should return a matched route when a requested url is `/`', () => {
+                const routeThatEqualsTrailingSlash = Object.freeze({
+                    routeId: 'homeRoute',
+                    route: '/',
+                    next: false,
+                    template: 'homeTemplate',
+                    slots: {
+                        home: {
+                            appName: 'home',
+                            props: {
+                                firstHomeSlotProp: 'firstHomeSlotProp',
+                                secondHomeSlotProp: 'secondHomeSlotProp',
+                            },
+                            kind: 'primary',
+                        },
+                    },
+                });
+                const registryConfigThatHasRouteThatEqualsTrailingSlash = Object.freeze({
+                    ...registryConfig,
+                    routes: [
+                        routeThatEqualsTrailingSlash,
+                        ...registryConfig.routes,
+                    ],
+                });
+                const router = new Router(registryConfigThatHasRouteThatEqualsTrailingSlash);
+                const reqUrl = '/';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    routeId: 'homeRoute',
+                    route: '/',
+                    basePath: '/',
+                    reqUrl,
+                    template: 'homeTemplate',
+                    specialRole: null,
+                    slots: routeThatEqualsTrailingSlash.slots,
+                });
+            });
+
             it('should return 404 route when a router does not match a route by a requested url that has something after `/`', () => {
                 const router = new Router(registryConfigWithRouteThatHasTrailingSlashAtTheEnd);
                 const reqUrl = '/launchpad/something';
