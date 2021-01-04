@@ -69,11 +69,11 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
     }));
 
     // This can be used to keep a smaller payload
-    passport.serializeUser(function(user, done) {
+    passport.serializeUser(function(user: Express.User, done) {
         done(null, user);
     });
 
-    passport.deserializeUser(function(user, done) {
+    passport.deserializeUser(function(user: Express.User, done) {
         done(null, user);
     });
 
