@@ -3,7 +3,7 @@ const chai = require('chai');
 const Router = require('./Router');
 
 describe('router', () => {
-    const registryConfig = {
+    const registryConfig = Object.freeze({
         routes: [
             {
                 routeId: 'commonRoute',
@@ -93,7 +93,7 @@ describe('router', () => {
                 },
             },
         },
-    };
+    });
 
     describe('.match()', function () {
         it('should throw an error when 404 special route does not exist', () => {
@@ -158,6 +158,118 @@ describe('router', () => {
                 slots: {
                     ...registryConfig.specialRoutes['404'].slots,
                 },
+            });
+        });
+
+        describe('when a route has `/` at the end', () => {
+            const routeThatHasTrailingSlashAtTheEnd = Object.freeze({
+                routeId: 'launchpadRoute',
+                route: '/launchpad/',
+                next: false,
+                template: 'launchpadTemplate',
+                slots: {
+                    launchpad: {
+                        appName: 'launchpad',
+                        props: {
+                            firstHeroSlotProp: 'firstLaunchpadSlotProp',
+                            secondHeroSlotProp: 'secondLaunchpadSlotProp',
+                        },
+                        kind: 'primary',
+                    },
+                },
+            });
+
+            const registryConfigWithRouteThatHasTrailingSlashAtTheEnd = Object.freeze({
+                ...registryConfig,
+                routes: [
+                    routeThatHasTrailingSlashAtTheEnd,
+                    ...registryConfig.routes
+                ],
+            });
+
+            it('should return a matched route by a request url that does not have `/` at the end', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAtTheEnd);
+                const reqUrlThatDoesNotHaveTrailingSlashAtTheEnd = '/launchpad';
+
+                chai.expect(router.match(reqUrlThatDoesNotHaveTrailingSlashAtTheEnd)).to.be.eql({
+                    routeId: 'launchpadRoute',
+                    route: '/launchpad/',
+                    basePath: '/launchpad',
+                    reqUrl: reqUrlThatDoesNotHaveTrailingSlashAtTheEnd,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeThatHasTrailingSlashAtTheEnd.slots,
+                });
+            });
+
+            it('should return a matched route by a request url that has `/` at the end', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAtTheEnd);
+                const reqUrlThatHasTrailingSlashAtTheEnd = '/launchpad/';
+
+                chai.expect(router.match(reqUrlThatHasTrailingSlashAtTheEnd)).to.be.eql({
+                    routeId: 'launchpadRoute',
+                    route: '/launchpad/',
+                    basePath: '/launchpad',
+                    reqUrl: reqUrlThatHasTrailingSlashAtTheEnd,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeThatHasTrailingSlashAtTheEnd.slots,
+                });
+            });
+
+            it('should return a matched route when a requested url is `/`', () => {
+                const routeThatEqualsTrailingSlash = Object.freeze({
+                    routeId: 'homeRoute',
+                    route: '/',
+                    next: false,
+                    template: 'homeTemplate',
+                    slots: {
+                        home: {
+                            appName: 'home',
+                            props: {
+                                firstHomeSlotProp: 'firstHomeSlotProp',
+                                secondHomeSlotProp: 'secondHomeSlotProp',
+                            },
+                            kind: 'primary',
+                        },
+                    },
+                });
+                const registryConfigThatHasRouteThatEqualsTrailingSlash = Object.freeze({
+                    ...registryConfig,
+                    routes: [
+                        routeThatEqualsTrailingSlash,
+                        ...registryConfig.routes,
+                    ],
+                });
+                const router = new Router(registryConfigThatHasRouteThatEqualsTrailingSlash);
+                const reqUrl = '/';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    routeId: 'homeRoute',
+                    route: '/',
+                    basePath: '/',
+                    reqUrl,
+                    template: 'homeTemplate',
+                    specialRole: null,
+                    slots: routeThatEqualsTrailingSlash.slots,
+                });
+            });
+
+            it('should return 404 route when a router does not match a route by a requested url that has something after `/`', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAtTheEnd);
+                const reqUrl = '/launchpad/something';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    routeId: 'errorsRoute',
+                    route: '/404',
+                    basePath: '/',
+                    reqUrl,
+                    template: 'errorsTemplate',
+                    specialRole: 404,
+                    slots: {
+                        ...registryConfigWithRouteThatHasTrailingSlashAtTheEnd.specialRoutes['404'].slots,
+                    },
+                });
             });
         });
     });
