@@ -26,7 +26,7 @@ describe('error handler', () => {
     let stdoutInspect;
 
     before(async () => {
-        app = createApp(helpers.getRegistryMock());
+        app = createApp(helpers.getRegistryMock(), helpers.getPluginManagerMock());
         await app.ready();
         server = supertest(app.server);
     });
