@@ -9,16 +9,17 @@ const UrlProcessor = require('../common/UrlProcessor');
 /**
  * @param {Registry} registryService
  */
-module.exports = (registryService) => {
+module.exports = (registryService, pluginManager) => {
     const app = fastify(Object.assign({
         trustProxy: false, //TODO: should be configurable via Registry
     }, require('./logger/fastify')));
 
+    const i18nParamsDetectionPlugin = pluginManager.getI18nParamsDetectionPlugin();
 
     app.addHook('onRequest', async (req, reply) => {
         req.raw.ilcState = {};
         const registryConfig = await registryService.getConfig();
-        const i18nOnRequest = i18n.onRequestFactory(registryConfig.data.settings.i18n);
+        const i18nOnRequest = i18n.onRequestFactory(registryConfig.data.settings.i18n, i18nParamsDetectionPlugin);
 
         await i18nOnRequest(req, reply);
     });

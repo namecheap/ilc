@@ -4,8 +4,9 @@ process.env.NODE_CONFIG_DIR = path.resolve(__dirname, '../config');
 require('newrelic');
 
 const registryService = require('./registry/factory');
+const pluginManager = require('./pluginManager/factory');
 
 const runServer = require('./server');
 const createApp = require('./app');
 
-runServer(createApp(registryService));
+runServer(createApp(registryService, pluginManager));
