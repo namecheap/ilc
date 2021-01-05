@@ -81,8 +81,16 @@ function getFragmentResponses(responseBody) {
     return res;
 }
 
+function getPluginManagerMock() {
+    return {
+        getReportingPlugin: () => null,
+        getI18nParamsDetectionPlugin: () => null,
+    };
+}
+
 module.exports = {
     getRegistryMock,
     getRouterProps,
     getFragmentResponses,
+    getPluginManagerMock,
 }

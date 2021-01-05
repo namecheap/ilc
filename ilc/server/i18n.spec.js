@@ -51,7 +51,7 @@ nock('http://apps.test')
         })
     });
 
-describe.only('i18n', () => {
+describe('i18n', () => {
     afterEach(() => {
         i18nParamsDetectionPlugin.detectI18nConfig.reset();
         pluginManager.getI18nParamsDetectionPlugin.reset();

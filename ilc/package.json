@@ -5,6 +5,7 @@
   "main": "server/index.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha",
+    "test:ci": "npm run test -- --forbid-only",
     "test:watch": "npm run test -- --watch",
     "test:coverage": "cross-env NODE_ENV=test nyc mocha",
     "test:client": "npm run build:systemjs && cross-env NODE_ENV=test karma start",
