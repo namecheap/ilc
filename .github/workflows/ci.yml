@@ -24,7 +24,7 @@ jobs:
         DOCKER_BUILDKIT=1 docker build . --tag ilc:tmp
 
     - name: Run sever side tests
-      run: docker run ilc:tmp npm run test
+      run: docker run ilc:tmp npm run test:ci
 
     - name: Run server side tests coverage
       run: docker run --volume /artifacts/ilc/.test_output/server:/temporary ilc:tmp bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
