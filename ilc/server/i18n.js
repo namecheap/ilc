@@ -2,10 +2,9 @@ const Cookie = require('cookie');
 const Intl = require('ilc-sdk/app').Intl;
 const {intlSchema} = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
 
-const pluginManager = require('./pluginManager/factory');
 const cookieEncoder = require('../common/i18nCookie');
 
-const onRequestFactory = (i18nConfig) => async (req, reply) => {
+const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, reply) => {
     if (!i18nConfig.enabled || req.raw.url === '/ping' || req.raw.url.startsWith('/_ilc/')) {
         return; // Excluding system routes
     }
@@ -19,13 +18,16 @@ const onRequestFactory = (i18nConfig) => async (req, reply) => {
         currI18nConf.currency = i18nConfig.supported.currency.includes(decodedCookie.currency) ? decodedCookie.currency : currI18nConf.currency;
     }
 
-    const i18nParamsDetection = pluginManager.getI18nParamsDetectionPlugin();
-    if (i18nParamsDetection !== null) {
-        currI18nConf = await i18nParamsDetection.detectI18nConfig(req.raw, {
-            parseUrl: (url) => Intl.parseUrl(i18nConfig, url),
-            localizeUrl: (url, {locale}) => Intl.localizeUrl(i18nConfig, url, {locale}),
-            getCanonicalLocale: (locale) => Intl.getCanonicalLocale(locale, i18nConfig.supported.locale),
-        }, currI18nConf);
+    if (i18nParamsDetectionPlugin) {
+        currI18nConf = await i18nParamsDetectionPlugin.detectI18nConfig(
+            req.raw,
+            {
+                parseUrl: (url) => Intl.parseUrl(i18nConfig, url),
+                localizeUrl: (url, {locale}) => Intl.localizeUrl(i18nConfig, url, {locale}),
+                getCanonicalLocale: (locale) => Intl.getCanonicalLocale(locale, i18nConfig.supported.locale),
+            },
+            currI18nConf
+        );
     } else if (!i18nCookie) {
         const routeLocale = Intl.parseUrl(i18nConfig, req.raw.url);
         if (routeLocale.locale !== i18nConfig.default.locale) { // URL can override locale only if it's not-default one
@@ -74,4 +76,4 @@ function unlocalizeUrl(i18nConfig, url) {
 module.exports = {
     onRequestFactory,
     unlocalizeUrl,
-}
+};
