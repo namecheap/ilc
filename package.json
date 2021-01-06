@@ -1,21 +1,29 @@
 {
-  "name": "ilc",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "install-all": "node install_all.js",
-    "start": "node start_all.js",
-    "start:no-apps": "node start_all.js --no-apps",
-    "build": "npm run build:ilc && npm run build:registry",
-    "build:ilc": "cd ./ilc/ && npm run build",
-    "build:registry": "cd ./registry/ && npm run build",
-    "postinstall": "npm run install-all"
-  },
-  "author": "Vladlen Fedosov",
-  "license": "Apache-2.0",
-  "dependencies": {},
-  "devDependencies": {
-    "concurrently": "^5.0.0"
-  }
+    "name": "ilc",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/namecheap/ilc.git"
+    },
+    "scripts": {
+        "install-all": "node install_all.js",
+        "start": "node start_all.js",
+        "start:no-apps": "node start_all.js --no-apps",
+        "build": "npm run build:ilc && npm run build:registry",
+        "build:ilc": "cd ./ilc/ && npm run build",
+        "build:registry": "cd ./registry/ && npm run build",
+        "postinstall": "npm run install-all"
+    },
+    "author": "Vladlen Fedosov",
+    "license": "Apache-2.0",
+    "engines": {
+        "node": ">= 14.0.0",
+        "npm": ">= 6.0.0"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "concurrently": "^5.0.0"
+    }
 }

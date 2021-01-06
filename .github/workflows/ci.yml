@@ -81,10 +81,10 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Use Node.js 12
+      - name: Use Node.js 14
         uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 14
 
       - name: Install Chrome deps
         run: sudo apt-get update && sudo apt-get install -y libgbm-dev
