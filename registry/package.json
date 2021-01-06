@@ -55,7 +55,7 @@
     },
     "dependencies": {
         "@namecheap/error-extender": "^1.2.0",
-        "axios": "^0.19.0",
+        "axios": "^0.21.1",
         "bcrypt": "^5.0.0",
         "body-parser": "^1.19.0",
         "config": "^3.2.3",
@@ -73,7 +73,7 @@
         "passport-local": "^1.0.0",
         "serve-static": "^1.14.1",
         "source-map-support": "^0.5.19",
-        "sqlite3": "^4.2.0",
+        "sqlite3": "^5.0.0",
         "url-join": "^4.0.1",
         "uuid": "^3.4.0"
     }
