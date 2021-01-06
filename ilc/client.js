@@ -58,6 +58,9 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
             appId,
             async () => {
                 const appConf = registryConf.apps[appName];
+                if (appConf.wrappedWith) {
+                    //TODO: add wrapper handler
+                }
 
                 System.import(appConf.spaBundle); // Speculative preload of the JS bundle
 
