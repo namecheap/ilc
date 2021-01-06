@@ -62,8 +62,12 @@ selectSlotsToRegister([...registryConf.routes, registryConf.specialRoutes['404']
                     //TODO: add wrapper handler
                 }
 
-                System.import(appConf.spaBundle); // Speculative preload of the JS bundle
+                // Speculative preload of the JS bundle. We don't do it for CSS here as we already did it with preload links
+                System.import(appConf.spaBundle);
 
+                //TODO: we need to handle config overrides for wrappers. Basically since server can respond with wrapper response itself
+                // or with app response (and mixed one is impossible)
+                // we only need somehow to detect which response we actually received & apply overrides accordingly
                 const overrides = await asyncBootUp.waitForSlot(slotName);
                 const spaBundle = overrides.spaBundle ? overrides.spaBundle : appConf.spaBundle;
                 const cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
