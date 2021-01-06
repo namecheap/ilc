@@ -1,4 +1,3 @@
-import nock from 'nock';
 import _ from 'lodash';
 import { request, requestWithAuth, expect } from './common';
 

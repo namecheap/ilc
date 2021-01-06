@@ -25,7 +25,12 @@ const example = {
                 props: { ncTestProp: 1 },
                 kind: 'regular',
             },
-        }
+        },
+        meta: {
+            first: null,
+            second: 3000,
+            third: 'value',
+        },
     }),
     templates: Object.freeze({
         name: 'ncTestTemplateName',
@@ -60,7 +65,7 @@ describe('Tests /api/v1/config', () => {
 
             expect(response.body.routes).to.deep.include({
                 routeId: responseRoute.body.id,
-                ..._.pick(example.appRoutes, ['route', 'next', 'slots'])
+                ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta'])
             });
 
             expect(response.body.apps[example.apps.name])

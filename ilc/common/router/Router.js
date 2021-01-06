@@ -76,6 +76,7 @@ module.exports = class Router {
             routeId: specialRoute.routeId,
             slots: specialRoute.slots,
             template: specialRoute.template,
+            meta: specialRoute.meta,
         });
 
 

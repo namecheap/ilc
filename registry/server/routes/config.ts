@@ -56,18 +56,24 @@ router.get('/', async (req, res) => {
             v.next = !!v.next;
             v.template = v.templateName;
 
-            tmpRoute = Object.assign(
-                {slots: {}},
-                _.omitBy(_.pick(v, ['routeId', 'route', 'next', 'template', 'specialRole']), _.isNull)
-            );
+            tmpRoute = Object.assign({
+                slots: {},
+                meta: {},
+            }, _.omitBy(_.pick(v, ['routeId', 'route', 'next', 'template', 'specialRole']), _.isNull));
             routesTmp.push(tmpRoute);
         }
 
-        tmpRoute.slots[v.name] = {
-            appName: v.appName,
-            props: v.props !== null ? JSON.parse(v.props) : {},
-            kind: v.kind,
-        };
+        if (v.name !== null) {
+            tmpRoute.slots[v.name] = {
+                appName: v.appName,
+                props: v.props !== null ? JSON.parse(v.props) : {},
+                kind: v.kind,
+            };
+        }
+
+        if (v.meta !== null) {
+            tmpRoute.meta = JSON.parse(v.meta);
+        }
     });
 
     data.routes = routesTmp.filter((route: any) => !route.specialRole);
