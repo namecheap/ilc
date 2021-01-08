@@ -16,6 +16,7 @@ describe('server router', () => {
             next: false,
             template: 'errorsTemplate',
             slots: {},
+            meta: {},
         },
     };
 
@@ -36,6 +37,9 @@ describe('server router', () => {
                         noAppSlot: {
                             appName: 'noApp',
                         },
+                    },
+                    meta: {
+                        noAppRouteMetaProp: 'noAppRouteMetaProp',
                     },
                 },
             ],
@@ -78,6 +82,9 @@ describe('server router', () => {
                         noSsrSrc: {
                             appName: 'noSsrSrc',
                         },
+                    },
+                    meta: {
+                        noSsrSrcRouteMetaProp: 'noSsrSrcRouteMetaProp',
                     },
                 },
             ],
@@ -210,6 +217,10 @@ describe('server router', () => {
                         kind: 'primary',
                     },
                 },
+                meta: {
+                    firstCommonRouteMetaProp: 'firstCommonRouteMetaProp',
+                    secondCommonRouteMetaProp: 'secondCommonRouteMetaProp',
+                },
             },
             {
                 routeId: 'heroRoute',
@@ -229,6 +240,11 @@ describe('server router', () => {
                         },
                     },
                 },
+                meta: {
+                    firstHeroRouteMetaProp: 'firstHeroRouteMetaProp',
+                    secondHeroRouteMetaProp: 'secondHeroRouteMetaProp',
+                    thirdHeroRouteMetaProp: 'thirdHeroRouteMetaProp',
+                },
             },
             {
                 routeId: 'appsRoute',
@@ -239,6 +255,9 @@ describe('server router', () => {
                         appName: apps['apps'].name,
                     },
                 },
+                meta: {
+                    firstAppsRouteMetaProp: 'firstAppsRouteMetaProp',
+                },
             },
             {
                 routeId: 'newsRoute',
@@ -248,6 +267,9 @@ describe('server router', () => {
                     news: {
                         appName: apps['@portal/news'].name,
                     },
+                },
+                meta: {
+                    firstNewsRouteMetaProp: 'firstNewsRouteMetaProp',
                 },
             },
         ];
@@ -271,6 +293,11 @@ describe('server router', () => {
                 ...registryConfig.routes[0].slots,
                 ...registryConfig.routes[1].slots,
                 ...registryConfig.routes[2].slots,
+            },
+            meta: {
+                ...registryConfig.routes[0].meta,
+                ...registryConfig.routes[1].meta,
+                ...registryConfig.routes[2].meta,
             },
         };
 
@@ -397,6 +424,7 @@ describe('server router', () => {
                         kind: 'primary',
                     },
                 },
+                meta: {},
             },
             {
                 routeId: 'appsRoute',
@@ -407,6 +435,7 @@ describe('server router', () => {
                         appName: apps['apps'].name,
                     },
                 },
+                meta: {},
             },
         ];
 
@@ -436,6 +465,7 @@ describe('server router', () => {
             template: currSpecialRoutes['404'].template,
             specialRole: 404,
             slots: currSpecialRoutes['404'].slots,
+            meta: currSpecialRoutes['404'].meta,
         };
 
         const expectedAppsUrl = new URL(registryConfig.apps.apps.ssr.src);

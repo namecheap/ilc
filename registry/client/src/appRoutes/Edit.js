@@ -46,10 +46,11 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     ]}
                 </FormDataConsumer>
                 <ReferenceInput reference="template"
-                                     source="templateName"
-                                     label="Template name">
+                                source="templateName"
+                                label="Template name">
                     <SelectInput resettable validate={[requiredSpecial]} optionText="name" />
                 </ReferenceInput>
+                <JsonField source="meta" label="Metadata" />
             </FormTab>
             <FormTab label="Slots">
                 <ArrayInput source="slots">

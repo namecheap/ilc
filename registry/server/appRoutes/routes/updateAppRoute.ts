@@ -9,6 +9,7 @@ import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import {
     prepareAppRouteToRespond,
+    prepareAppRouteToSave,
 } from '../services/prepareAppRoute';
 import {
     stringifyJSON,
@@ -51,7 +52,7 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
     }
 
     await db.versioning(req.user, {type: 'routes', id: appRouteId}, async (transaction) => {
-        await db('routes').where('id', appRouteId).update(appRoute).transacting(transaction);
+        await db('routes').where('id', appRouteId).update(prepareAppRouteToSave(appRoute)).transacting(transaction);
 
         if (!_.isEmpty(appRouteSlots)) {
             await db('route_slots').where('routeId', appRouteId).delete().transacting(transaction);
