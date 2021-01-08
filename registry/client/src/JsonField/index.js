@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+import React, {
+    useState,
+    useCallback,
+    useRef,
+} from "react";
 
 import {
     FieldTitle,
@@ -10,6 +14,8 @@ import {JsonEditor} from "jsoneditor-react";
 
 import ace from "brace";
 import 'brace/mode/json';
+
+const style = {height: '400px'};
 
 export default ({
    label,
@@ -26,29 +32,20 @@ export default ({
         ...rest,
     });
 
-    const [oldJson, setOldJson] = useState({});
-    const [jsonEditorRef, setJsonEditorRef] = useState(null);
+    const jsonEditorRef = useRef(null);
+    const setJsonEditorRef = useCallback((node) => {
+        if (node) {
+            jsonEditorRef.current = node.jsonEditor;
+        } else {
+            jsonEditorRef.current = null;
+        }
+    });
     const [autoHeight, setAutoHeight] = useState(false);
 
     let jsonVal = {};
     try {
         jsonVal = JSON.parse(value)
     } catch (e) {}
-
-    if (JSON.stringify(oldJson) !== JSON.stringify(jsonVal) && jsonEditorRef) {
-        setOldJson(jsonVal);
-        jsonEditorRef.set(jsonVal);
-    }
-
-    const style = {height: '400px'};
-
-    const setRef = instance => {
-        if (instance) {
-            setJsonEditorRef(instance.jsonEditor);
-        } else {
-            setJsonEditorRef(null);
-        }
-    };
 
     return (
         <div>
@@ -62,15 +59,15 @@ export default ({
             </Typography>
 
             <JsonEditor
-                ref={setRef}
+                ref={setJsonEditorRef}
                 style={style}
                 mode="code"
                 value={jsonVal}
                 ace={ace}
                 onChange={value => { // Here we receive only valid values
                     inputOnChange(JSON.stringify(value));
-                    if (jsonEditorRef && !autoHeight) {
-                        jsonEditorRef.aceEditor.setOptions({
+                    if (jsonEditorRef.current && !autoHeight) {
+                        jsonEditorRef.current.aceEditor.setOptions({
                             maxLines: 10000
                         });
                         setAutoHeight(true)
