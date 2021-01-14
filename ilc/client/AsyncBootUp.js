@@ -56,6 +56,7 @@ export default class AsyncBootUp {
 
             res.spaBundle = conf.spaBundle;
             res.cssBundle = conf.cssBundle;
+            res.wrapperPropsOverride = conf.wrapperPropsOverride;
 
             if (conf.dependencies) {
                 for (let id in conf.dependencies) {

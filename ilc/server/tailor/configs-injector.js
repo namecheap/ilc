@@ -14,7 +14,8 @@ module.exports = class ConfigsInjector {
         this.#nrCustomClientJsWrapper = nrCustomClientJsWrapper;
     }
 
-    inject(request, registryConfig, template, slots) {
+    inject(request, template, slots) {
+        const registryConfig = request.registryConfig;
         let document = template.content;
 
         if (

@@ -3,29 +3,29 @@
 const _ = require('lodash');
 const newrelic = require('newrelic');
 
-const logger = require('../logger');
 const Tailor = require('tailorx');
 const fetchTemplate = require('./fetch-template');
-const Router = require('./server-router');
 const filterHeaders = require('./filter-headers');
 const errorHandlingService = require('../errorHandler/factory');
 const errorHandlerSetup = require('./error-handler');
 const fragmentHooks = require('./fragment-hooks');
 const ConfigsInjector = require('./configs-injector');
 const processFragmentResponse = require('./process-fragment-response');
+const requestFragment = require('./request-fragment');
 
 module.exports = function (registryService, cdnUrl, nrCustomClientJsWrapper = null) {
-    const router = new Router(logger);
     const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper);
 
     const tailor = new Tailor({
+        fetchContext: async function (request) {
+            return request.router.getFragmentsContext();
+        },
         fetchTemplate: fetchTemplate(
-            __dirname + '/templates',
-            router,
             configsInjector,
             newrelic,
             registryService
         ),
+        requestFragment: requestFragment(filterHeaders, processFragmentResponse),
         processFragmentResponse,
         systemScripts: '',
         filterHeaders,

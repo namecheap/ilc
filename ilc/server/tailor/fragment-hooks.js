@@ -1,5 +1,7 @@
 'use strict';
 
+const _ = require('lodash');
+
 const parseLinkHeader = require('tailorx/lib/parse-link-header');
 
 function insertStart(stream, attributes, headers, index) {
@@ -10,7 +12,7 @@ function insertStart(stream, attributes, headers, index) {
     const refs = parseLinkHeader(headers.link);
     const { async: isAsync, id } = attributes;
 
-    const bundleVersionOverrides = {};
+    const bundleVersionOverrides = _.pick(attributes, ['wrapperPropsOverride']);
 
     refs.forEach(ref => {
         if (ref.rel === 'stylesheet') {
@@ -20,7 +22,7 @@ function insertStart(stream, attributes, headers, index) {
                     ? `<!-- Async fragments are not fully implemented yet: ${ref.uri} -->`
                     : id
                         ?
-                            '<script>(function(url, id){' + 
+                            '<script>(function(url, id){' +
                                 `const link = document.head.querySelector('link[data-fragment-id="' + id + '"]');` +
                                 'if (link && link.href !== url) {' +
                                     `link.href = url;` +

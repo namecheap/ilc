@@ -1,5 +1,4 @@
 const _ = require('lodash');
-const deepmerge = require('deepmerge');
 
 const errors = require('../../common/router/errors');
 const Router = require('../../common/router/Router');
@@ -9,49 +8,42 @@ module.exports = class ServerRouter {
     errors = errors;
 
     #logger;
+    #request;
+    #registryConfig;
+    #url;
+    #router = null;
 
     /**
      * @param logger - console compatible logger
      */
-    constructor(logger) {
+    constructor(logger, request, url) {
         this.#logger = logger;
+        this.#request = request;
+        this.#registryConfig = request.registryConfig;
+        this.#url = url;
     }
 
-    getTemplateInfo(registryConfig, url, ilcState = {}) {
-        const router = new Router(registryConfig);
+    getFragmentsTpl() {
+        const route = this.getRoute();
 
-        let route;
-        if (ilcState.forceSpecialRoute) {
-            route = router.matchSpecial(url, ilcState.forceSpecialRoute);
-        } else {
-            route = router.match(url);
-        }
+        const page = _.reduce(this.#getSsrSlotsList(route.slots, this.#registryConfig.apps), (res, row) => {
+            return res + `<fragment id="${row.appId}" slot="${row.name}"></fragment>`;
+        }, '');
+        console.log(page);
 
-        const page = this.#generatePageTpl(route, registryConfig.apps);
-
-        return {
-            route,
-            page,
-        };
+        return page;
     }
 
-    #generatePageTpl = (route, apps) => {
+    getFragmentsContext() { //TODO: proper err handling for this
+        const route = this.getRoute();
+        const apps = this.#registryConfig.apps;
         let primarySlotDetected = false;
 
-        return _.reduce(route.slots, (res, slotData, slotName) => {
-            const appName = slotData.appName;
-            const appInfo = apps[appName];
+        const tmp = _.reduce(this.#getSsrSlotsList(route.slots, apps), (res, row) => {
+            const appId = row.appId;
+            const appInfo = row.appInfo;
 
-            if (appInfo === undefined) {
-                throw new this.errors.RouterError({message: 'Can\'t find info about app.', data: {appName}});
-            }
-
-            if (appInfo.ssr === undefined) {
-                return res;
-            }
-
-            const ssrOpts = deepmerge({}, appInfo.ssr);
-
+            const ssrOpts = _.pick(row.appInfo.ssr, ['src', 'timeout', 'ignoreInvalidSsl']);
             if (typeof ssrOpts.src !== 'string') {
                 throw new this.errors.RouterError({message: 'No url specified for fragment!', data: {appInfo}});
             }
@@ -59,44 +51,87 @@ module.exports = class ServerRouter {
             if (ssrOpts.ignoreInvalidSsl === true) {
                 ssrOpts['ignore-invalid-ssl'] = true;
             }
-
             delete ssrOpts.ignoreInvalidSsl;
 
-            const url = new URL(ssrOpts.src);
-            const fragmentName = makeAppId(appName, slotName);
-            const fragmentKind = slotData.kind || appInfo.kind;
-
-            const reqProps = {
-                basePath: route.basePath,
-                reqUrl: route.reqUrl,
-                fragmentName,
-            };
-
-            url.searchParams.append('routerProps', Buffer.from(JSON.stringify(reqProps)).toString('base64'));
-
-            if (slotData.props !== undefined || appInfo.props !== undefined) {
-                const appProps = _.merge({}, appInfo.props, slotData.props);
-                url.searchParams.append('appProps', Buffer.from(JSON.stringify(appProps)).toString('base64'));
-            }
-
+            const fragmentKind = row.kind || appInfo.kind;
             if (fragmentKind === 'primary' && primarySlotDetected === false) {
                 ssrOpts.primary = true;
                 primarySlotDetected = true;
             } else {
                 if (fragmentKind === 'primary') {
                     this.#logger.warn(
-                        `More then one primary slot "${slotName}" found for "${reqProps.reqUrl}".\n` +
+                        `More then one primary slot "${row.name}" found for "${reqProps.reqUrl}".\n` +
                         'Make it regular to avoid unexpected behaviour.'
                     );
                 }
-                delete ssrOpts.primary;
             }
 
-            ssrOpts.src = url.toString();
+            ssrOpts.appProps = _.merge({}, appInfo.props, row.props);
+            ssrOpts.wrapperConf = row.wrapperConf;
 
-            return res + `<fragment id="${appName}" slot="${slotName}" ${
-                _.map(ssrOpts, (v, k) => `${k}="${v}"`).join(' ')
-            }></fragment>`;
-        }, '');
-    };
+
+            res[appId] = ssrOpts;
+
+            return res;
+        }, {});
+
+        console.log(tmp);
+        return tmp;
+    }
+
+    getRoute() {
+        if (this.#router === null) {
+            this.#router = new Router(this.#registryConfig);
+        }
+
+        const ilcState = this.#getIlcState();
+
+        if (ilcState.forceSpecialRoute) {
+            return this.#router.matchSpecial(this.#url, ilcState.forceSpecialRoute);
+        } else {
+            return this.#router.match(this.#url);
+        }
+    }
+
+    #getSsrSlotsList = (routeSlots, apps) => _.reduce(routeSlots, (res, slotData, slotName) => {
+        let appName = slotData.appName;
+        const appId = makeAppId(appName, slotName);
+        const appInfo = apps[appName];
+
+        if (appInfo === undefined) {
+            throw new this.errors.RouterError({message: 'Can\'t find info about app.', data: {appName}});
+        }
+        if (appInfo.ssr === undefined) {
+            return res;
+        }
+
+        let wrapperConf = null;
+        if (appInfo.wrappedWith) {
+            const wrapper = apps[appInfo.wrappedWith];
+
+            if (wrapper.ssr === undefined) {
+                // If wrapper doesn't support SSR - it will be disabled for all wrapped apps
+                return res;
+            }
+
+            wrapperConf = {
+                appId: makeAppId(appInfo.wrappedWith, slotName),
+                name: appInfo.wrappedWith,
+                ...wrapper.ssr,
+                props: wrapper.props,
+            }
+        }
+
+        res.push({
+            name: slotName,
+            ...slotData,
+            appId,
+            appInfo,
+            wrapperConf,
+        });
+
+        return res;
+    }, []);
+
+    #getIlcState = () => this.#request.ilcState;
 };

@@ -56,7 +56,7 @@ module.exports = class Registry {
         res.data.apps['@portal/wrapper1'] = {
             spaBundle: 'http://0.0.0.0:8234/client-entry.js',
             //cssBundle: 'http://localhost:8239/dist/common.277f5696f6ae7ecdbe2d.css',
-            //ssr: { src: 'http://localhost:8239/news/?fragment=1', timeout: 5000 },
+            ssr: { src: 'http://localhost:8234/fragment', timeout: 5000 },
             props: {},
             kind: 'wrapper'
         };

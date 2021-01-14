@@ -10,10 +10,12 @@ const errors = require('./errors');
  * @param {String} context.fragmentUrl - URL that was requested on fragment
  */
 module.exports = (response, context) => {
+    const currRoute = context.request.router.getRoute();
+
     if (
         context.fragmentAttributes.primary &&
         response.statusCode === 404 &&
-        parseInt(context.request.ilcRoute.specialRole) !== 404 &&
+        parseInt(currRoute.specialRole) !== 404 &&
         response.headers['x-ilc-override'] !== 'error-page-content'
     ) {
         throw new errors.Fragment404Response();

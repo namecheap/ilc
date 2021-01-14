@@ -14,6 +14,8 @@ import AsyncBootUp from './client/AsyncBootUp';
 import IlcAppSdk from 'ilc-sdk/app';
 import I18n from './client/i18n';
 import {triggerAppChange} from './client/navigationEvents';
+import wrapApp from "./client/wrapApp";
+import {makeAppId} from './common/utils';
 
 const System = window.System;
 if (System === undefined) {
@@ -56,24 +58,38 @@ composeAppSlotPairsToRegister(registryConf).forEach(pair => {
         appId,
         async () => { //TODO: move fn to separate file
             const appConf = registryConf.apps[appName];
+            let wrapperConf = null;
             if (appConf.wrappedWith) {
-                //TODO: add wrapper handler
+                wrapperConf = {
+                    ...registryConf.apps[appConf.wrappedWith],
+                    appId: makeAppId(appConf.wrappedWith, slotName),
+                }
             }
 
             // Speculative preload of the JS bundle. We don't do it for CSS here as we already did it with preload links
             System.import(appConf.spaBundle);
+            if (wrapperConf !== null) {
+                System.import(wrapperConf.spaBundle);
+            }
 
-            //TODO: we need to handle config overrides for wrappers. Basically since server can respond with wrapper response itself
-            // or with app response (and mixed one is impossible)
-            // we only need somehow to detect which response we actually received & apply overrides accordingly
             const overrides = await asyncBootUp.waitForSlot(slotName);
-            const spaBundle = overrides.spaBundle ? overrides.spaBundle : appConf.spaBundle;
-            const cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
+            // App wrapper was rendered at SSR instead of app
+            if (wrapperConf !== null && overrides.wrapperPropsOverride === undefined) {
+                wrapperConf.spaBundle = overrides.spaBundle ? overrides.spaBundle : wrapperConf.spaBundle;
+                wrapperConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : wrapperConf.cssBundle;
+            } else {
+                appConf.spaBundle = overrides.spaBundle ? overrides.spaBundle : appConf.spaBundle;
+                appConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
+            }
 
-            const waitTill = [System.import(spaBundle)];
+            const waitTill = [System.import(appConf.spaBundle)];
+            if (wrapperConf !== null) {
+                waitTill.push(System.import(wrapperConf.spaBundle));
+            }
 
-            if (cssBundle !== undefined) {
-                waitTill.push(System.import(cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
+            //TODO: add cssBundle handler for wrapper
+            if (appConf.cssBundle !== undefined) {
+                waitTill.push(System.import(appConf.cssBundle).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
                     //TODO: error handling should be improved, need to submit PR with typed errors
                     if (typeof err.message !== 'string' || err.message.indexOf('has already been loaded using another way') === -1) {
                         throw err;
@@ -81,8 +97,12 @@ composeAppSlotPairsToRegister(registryConf).forEach(pair => {
                 }));
             }
 
-            return Promise.all(waitTill).then(([spaBundle]) => {
-                const spaCallbacks = getAppSpaCallbacks(spaBundle, appConf.props);
+            return Promise.all(waitTill).then(([spaBundle, wrapperBundle]) => {
+                let spaCallbacks = getAppSpaCallbacks(spaBundle, appConf.props);
+                if (wrapperConf !== null) {
+                    const wrapperSpaCallbacks = getAppSpaCallbacks(wrapperBundle, wrapperConf.props);
+                    spaCallbacks = wrapApp(spaCallbacks, wrapperSpaCallbacks, wrapperConf, overrides.wrapperPropsOverride);
+                }
 
                 return prependSpaCallback(spaCallbacks, 'unmount', onUnmount);
             });
