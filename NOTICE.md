@@ -7,11 +7,11 @@ which can be obtained at:
 
 -------------------------------------------------------------------------------
 
-This product contains a modified version of Zalando's "Tailor", 
+This product contains a modified version of Sam Stephenson's "Prototype JavaScript Framework", 
 which can be obtained at:
   * LICENSE:
-    * [MIT](https://github.com/zalando/tailor/blob/master/LICENSE)
+    * [Custom](https://github.com/prototypejs/prototype/blob/5fddd3ef8c93d8419fb45b7f8c6fddeb9f591150/LICENSE)
   * HOMEPAGE:
-    * https://github.com/zalando/tailor
+    * https://github.com/prototypejs/prototype
 
 -------------------------------------------------------------------------------
