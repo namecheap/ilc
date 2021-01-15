@@ -36,7 +36,7 @@ module.exports = class PluginManager {
 
         for (let pluginPath of entries) {
             const manifest = require(pluginPath);
-            const pSource = require(path.resolve(entries[0], '..', manifest.main));
+            const pSource = require(path.resolve(pluginPath, '..', manifest.main));
 
             if (!Object.keys(TYPES).includes(pSource.type)) {
                 console.warn(`Plugin installed at path "${pluginPath}" of type "${pSource.type}" was ignored as ` +
