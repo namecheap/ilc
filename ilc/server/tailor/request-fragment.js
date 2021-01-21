@@ -66,8 +66,9 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                     resolve(
                         processFragmentResponse(response, {
                             request,
-                            reqUrl,
-                            fragmentAttributes: attributes
+                            fragmentUrl: reqUrl,
+                            fragmentAttributes: attributes,
+                            isWrapper: true,
                         })
                     );
                 } catch (e) {
@@ -90,8 +91,8 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                     resolve(
                         processFragmentResponse(response, {
                             request,
-                            reqUrl,
-                            fragmentAttributes: attributes
+                            fragmentUrl: reqUrl,
+                            fragmentAttributes: attributes,
                         })
                     );
                 } catch (e) {
