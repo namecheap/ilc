@@ -51,7 +51,6 @@ module.exports = function setup(tailor, errorHandlingService) {
 
     //General Tailor & primary fragment errors
     tailor.on('error', handleError);
-    tailor.on('context:error', handleError); //FIXME: we likely have incorrect error handling here
     //Non-primary fragment errors
     tailor.on('fragment:error', handleFragmentError);
     //Non-primary fragment warnings

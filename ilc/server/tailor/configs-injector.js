@@ -155,7 +155,7 @@ module.exports = class ConfigsInjector {
     #getSPAConfig = (registryConfig) => {
         const apps = _.mapValues(
             registryConfig.apps,
-    v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind', 'wrappedWith'])
+            v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind', 'wrappedWith'])
         );
         const spaConfig = JSON.stringify(_.omit({...registryConfig, apps}, ['templates']));
 
