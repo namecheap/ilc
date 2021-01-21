@@ -14,7 +14,7 @@ import AsyncBootUp from './client/AsyncBootUp';
 import IlcAppSdk from 'ilc-sdk/app';
 import I18n from './client/i18n';
 import {triggerAppChange} from './client/navigationEvents';
-import WrapApp from "./client/WrapApp";
+import WrapApp from './client/WrapApp';
 import {makeAppId} from './common/utils';
 
 const System = window.System;

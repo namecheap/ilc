@@ -1,4 +1,6 @@
 import {flattenFnArray} from './utils';
+import transactionManager, {slotWillBe} from './TransactionManager';
+import {appIdToNameAndSlot} from '../common/utils';
 
 const APP_STATES = {
     loaded: 0,
@@ -11,12 +13,14 @@ export default class WrapApp {
     #wrapperConf;
     #appRenderedAtSsr = false;
     #appExtraProps = {};
+    #transactionManager;
 
     #appState = 0;
     #wrapperState = 0;
 
     constructor(wrapperConf, ssrOverrideProps) {
         this.#wrapperConf = wrapperConf;
+        this.#transactionManager = transactionManager();
 
         if (ssrOverrideProps) {
             this.#appExtraProps = ssrOverrideProps;
@@ -81,6 +85,9 @@ export default class WrapApp {
 
     #renderAppFactory = (props, appCallbacks, wrapperCallbacks) => async (extraProps = {}) => {
         this.#appExtraProps = extraProps;
+
+        const {slotName} = appIdToNameAndSlot(props.appId);
+        this.#transactionManager.handlePageTransaction(slotName, slotWillBe.rerendered);
 
         await wrapperCallbacks.unmount(props);
 
