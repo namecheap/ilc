@@ -14,7 +14,7 @@ import AsyncBootUp from './client/AsyncBootUp';
 import IlcAppSdk from 'ilc-sdk/app';
 import I18n from './client/i18n';
 import {triggerAppChange} from './client/navigationEvents';
-import wrapApp from "./client/wrapApp";
+import WrapApp from "./client/WrapApp";
 import {makeAppId} from './common/utils';
 
 const System = window.System;
@@ -101,7 +101,10 @@ composeAppSlotPairsToRegister(registryConf).forEach(pair => {
                 let spaCallbacks = getAppSpaCallbacks(spaBundle, appConf.props);
                 if (wrapperConf !== null) {
                     const wrapperSpaCallbacks = getAppSpaCallbacks(wrapperBundle, wrapperConf.props);
-                    spaCallbacks = wrapApp(spaCallbacks, wrapperSpaCallbacks, wrapperConf, overrides.wrapperPropsOverride);
+
+                    const wrapper = new WrapApp(wrapperConf, overrides.wrapperPropsOverride);
+
+                    spaCallbacks = wrapper.wrapWith(spaCallbacks, wrapperSpaCallbacks);
                 }
 
                 return prependSpaCallback(spaCallbacks, 'unmount', onUnmount);
