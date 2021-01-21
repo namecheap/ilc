@@ -4,6 +4,7 @@ const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const errorHandlingService = require('./errorHandler/factory');
 const i18n = require('./i18n');
+const GuardManager = require('./GuardManager');
 const UrlProcessor = require('../common/UrlProcessor');
 const logger = require('./logger');
 const ServerRouter = require('./tailor/server-router');
@@ -19,6 +20,7 @@ module.exports = (registryService, pluginManager) => {
     }, require('./logger/fastify')));
 
     const i18nParamsDetectionPlugin = pluginManager.getI18nParamsDetectionPlugin();
+    const guardManager = new GuardManager(pluginManager);
 
     app.addHook('onRequest', async (req, reply) => {
         req.raw.ilcState = {};
@@ -49,8 +51,9 @@ module.exports = (registryService, pluginManager) => {
     app.get('/_ilc/500', async () => { throw new Error('500 page test error') });
 
     app.all('*', async (req, res) => {
-        const url = req.raw.url;
         let registryConfig = (await registryService.getConfig()).data;
+
+        const url = req.raw.url;
         const processedUrl = new UrlProcessor(registryConfig.settings.trailingSlash).process(url);
 
         if (processedUrl !== url) {
@@ -67,6 +70,10 @@ module.exports = (registryService, pluginManager) => {
         const unlocalizedUrl = i18n.unlocalizeUrl(registryConfig.settings.i18n, url);
         req.raw.registryConfig = registryConfig;
         req.raw.router = new ServerRouter(logger, req.raw, unlocalizedUrl);
+
+        if (!(await guardManager.hasAccessTo(req, res))) {
+            return;
+        }
 
         res.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
         tailor.requestHandler(req.raw, res.res);

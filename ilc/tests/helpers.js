@@ -85,6 +85,7 @@ function getPluginManagerMock() {
     return {
         getReportingPlugin: () => null,
         getI18nParamsDetectionPlugin: () => null,
+        getTransitionHooksPlugin: () => null,
     };
 }
 

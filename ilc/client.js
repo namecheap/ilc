@@ -1,4 +1,4 @@
-import './client/navigationEvents/setupEvents';
+import {addNavigationHook} from './client/navigationEvents/setupEvents';
 import * as singleSpa from 'single-spa';
 
 import Router from './client/ClientRouter';
@@ -8,7 +8,10 @@ import getIlcConfig from './client/ilcConfig';
 import initIlcState from './client/initIlcState';
 import setupPerformanceMonitoring from './client/performance';
 import I18n from './client/i18n';
+import UrlProcessor from './common/UrlProcessor';
+import PluginManager from './common/PluginManager';
 import {triggerAppChange} from './client/navigationEvents';
+import GuardManager from './client/GuardManager';
 
 import registerSpaApps from './client/registerSpaApps';
 
@@ -19,16 +22,30 @@ const appErrorHandlerFactory = (appName, slotName) => {
     return fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName);
 };
 
+const pluginManager = new PluginManager(require.context('./node_modules', true, /ilc-plugin-.*\/dist\/browser\.js$/));
 const i18n = registryConf.settings.i18n.enabled
     ? new I18n(registryConf.settings.i18n, {...singleSpa, triggerAppChange}, appErrorHandlerFactory)
     : null;
 const router = new Router(registryConf, state, i18n ? i18n.unlocalizeUrl : undefined, singleSpa);
+const guardManager = new GuardManager(router, pluginManager);
+const urlProcessor = new UrlProcessor(registryConf.settings.trailingSlash);
+
+addNavigationHook((state) => {
+    if (state.nextUrl) {
+        return {
+            ...state,
+            navigationShouldBeCanceled: !guardManager.hasAccessTo(state.nextUrl),
+            nextUrl: urlProcessor.process(state.nextUrl),
+        };
+    }
+});
 
 // Here we expose window.ILC.define also as window.define to ensure that regular AMD/UMD bundles work correctly by default
 // See docs/umd_bundles_compatibility.md
 if (!registryConf.settings.amdDefineCompatibilityMode) {
     window.define = window.ILC.define;
 }
+
 window.ILC.getAppSdkAdapter = appId => ({
     appId,
     intl: i18n ? i18n.getAdapter() : null

@@ -2,7 +2,6 @@ import chai from 'chai';
 import localStorage from './localStorage';
 
 describe('localStorage', () => {
-
     afterEach(() => {
         localStorage.clear();
     });
@@ -39,7 +38,7 @@ describe('localStorage', () => {
     it('should remove item', async () => {
         localStorage.setItem('b', '2');
         chai.expect(localStorage.getItem('b')).to.equal('2');
-        
+
         localStorage.removeItem('b');
         chai.expect(localStorage.getItem('b')).to.equal(null);
         chai.expect(localStorage.length).to.equal(0);

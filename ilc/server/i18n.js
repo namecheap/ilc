@@ -57,10 +57,9 @@ const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, 
             cookieEncoder.getOpts()
         ));
     }
-}
+};
 
 /**
- *
  * @param i18nConfig
  * @param {string} url
  * @return {string}

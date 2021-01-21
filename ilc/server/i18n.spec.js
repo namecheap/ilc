@@ -23,7 +23,7 @@ const i18nParamsDetectionPlugin = Object.freeze({
 });
 
 const pluginManager = Object.freeze({
-    getReportingPlugin: sinon.stub(),
+    ...helpers.getPluginManagerMock(),
     getI18nParamsDetectionPlugin: sinon.stub(),
 });
 
@@ -53,12 +53,6 @@ describe('i18n', () => {
     afterEach(() => {
         i18nParamsDetectionPlugin.detectI18nConfig.reset();
         pluginManager.getI18nParamsDetectionPlugin.reset();
-        pluginManager.getReportingPlugin.reset();
-    });
-
-    after(() => {
-        nock.cleanAll();
-        nock.restore();
     });
 
     describe('E2E tests', () => {
@@ -101,7 +95,6 @@ describe('i18n', () => {
 
         describe('i18n behaviour with i18n params detection plugin', () => {
             beforeEach(() => {
-                pluginManager.getReportingPlugin.returns(null);
                 pluginManager.getI18nParamsDetectionPlugin.withArgs().onFirstCall().returns(i18nParamsDetectionPlugin);
             });
 

@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 import transactionManagerFactory from './TransactionManager';
 import {appIdToNameAndSlot} from '../common/utils';
 import i18nCookie from '../common/i18nCookie';
-import dispatchSynchronizedEvent from "./dispatchSynchronizedEvent";
+import dispatchSynchronizedEvent from './dispatchSynchronizedEvent';
 
 export default class I18n {
     #config;
