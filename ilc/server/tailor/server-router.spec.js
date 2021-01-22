@@ -10,17 +10,6 @@ describe('server router', () => {
         warn: sinon.spy(),
     };
 
-    const specialRoutes = {
-        '404': {
-            routeId: 'errorsRoute',
-            route: '/404',
-            next: false,
-            template: 'errorsTemplate',
-            slots: {},
-            meta: {},
-        },
-    };
-
     afterEach(() => {
         logger.warn.resetHistory();
     });
