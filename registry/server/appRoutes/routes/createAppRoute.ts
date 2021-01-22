@@ -11,6 +11,7 @@ import {
 } from '../../common/services/json';
 import {
     prepareAppRouteToRespond,
+    prepareAppRouteToSave,
 } from '../services/prepareAppRoute';
 import {
     appRouteSchema,
@@ -30,7 +31,7 @@ const createAppRoute = async (req: Request, res: Response) => {
     let savedAppRouteId: number;
 
     await db.versioning(req.user, {type: 'routes'}, async (transaction) => {
-        [savedAppRouteId] = await db('routes').insert(appRoute).transacting(transaction);
+        [savedAppRouteId] = await db('routes').insert(prepareAppRouteToSave(appRoute)).transacting(transaction);
 
         await db.batchInsert('route_slots', _.compose(
             _.map((appRouteSlotName) => _.compose(

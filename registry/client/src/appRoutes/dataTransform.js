@@ -7,6 +7,10 @@ export function transformGet(data) {
             key
         }));
     }
+
+    if (data.meta) {
+        data.meta = JSON.stringify(data.meta);
+    }
 }
 
 export function transformSet(data) {
@@ -25,5 +29,11 @@ export function transformSet(data) {
 
             return acc;
         }, {});
+    }
+
+    if (data.meta) {
+        data.meta = JSON.parse(data.meta);
+    } else {
+        delete data.meta;
     }
 }

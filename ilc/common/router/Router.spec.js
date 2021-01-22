@@ -28,6 +28,10 @@ describe('router', () => {
                         kind: 'regular',
                     },
                 },
+                meta: {
+                    firstCommonRouteMetaProp: 'firstCommonRouteMetaProp',
+                    secondCommonRouteMetaProp: 'secondCommonRouteMetaProp',
+                },
             },
             {
                 routeId: 'heroRoute',
@@ -44,6 +48,10 @@ describe('router', () => {
                         kind: 'essential',
                     },
                 },
+                meta: {
+                    firstHeroRouteMetaProp: 'firstHeroRouteMetaProp',
+                    secondHeroRouteMetaProp: 'secondHeroRouteMetaProp',
+                },
             },
             {
                 routeId: 'appsRoute',
@@ -59,6 +67,10 @@ describe('router', () => {
                         kind: 'primary',
                     },
                 },
+                meta: {
+                    firstAppsRouteMetaProp: 'firstAppsRouteMetaProp',
+                    secondAppsRouteMetaProp: 'secondAppsRouteMetaProp',
+                },
             },
             {
                 routeId: 'newsRoute',
@@ -73,6 +85,10 @@ describe('router', () => {
                         },
                         kind: 'primary',
                     },
+                },
+                meta: {
+                    firstNewsRouteMetaProp: 'firstNewsRouteMetaProp',
+                    secondNewsRouteMetaProp: 'secondNewsRouteMetaProp',
                 },
             },
         ],
@@ -90,6 +106,11 @@ describe('router', () => {
                     footer: {
                         appName: 'footer',
                     },
+                },
+                meta: {
+                    firstErrorsRouteMetaProp: 'firstErrorsRouteMetaProp',
+                    secondErrorsRouteMetaProp: 'secondErrorsRouteMetaProp',
+                    thirdErrorsRouteMetaProp: 'thirdErrorsRouteMetaProp',
                 },
             },
         },
@@ -141,6 +162,11 @@ describe('router', () => {
                     ...registryConfig.routes[1].slots,
                     ...registryConfig.routes[2].slots,
                 },
+                meta: {
+                    ...registryConfig.routes[0].meta,
+                    ...registryConfig.routes[1].meta,
+                    ...registryConfig.routes[2].meta,
+                },
             });
         });
 
@@ -157,6 +183,9 @@ describe('router', () => {
                 specialRole: 404,
                 slots: {
                     ...registryConfig.specialRoutes['404'].slots,
+                },
+                meta: {
+                    ...registryConfig.specialRoutes['404'].meta,
                 },
             });
         });
@@ -269,6 +298,9 @@ describe('router', () => {
                     slots: {
                         ...registryConfigWithRouteThatHasTrailingSlashAtTheEnd.specialRoutes['404'].slots,
                     },
+                    meta: {
+                        ...registryConfigWithRouteThatHasTrailingSlashAtTheEnd.specialRoutes['404'].meta,
+                    },
                 });
             });
         });
@@ -288,6 +320,9 @@ describe('router', () => {
                 specialRole: 404,
                 slots: {
                     ...registryConfig.specialRoutes['404'].slots,
+                },
+                meta: {
+                    ...registryConfig.specialRoutes['404'].meta,
                 },
             });
         });
@@ -312,6 +347,9 @@ describe('router', () => {
                             navbar: {
                                 appName: 'navbar',
                             },
+                        },
+                        meta: {
+                            firstErrorsRouteMetaProp: 'firstErrorsRouteMetaProp',
                         },
                     },
                 },

@@ -16,4 +16,4 @@ export const url = (value) => {
     } catch (error) {
         return 'Should be a valid URL';
     }
-}
+};

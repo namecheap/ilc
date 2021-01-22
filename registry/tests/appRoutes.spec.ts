@@ -35,8 +35,9 @@ example = {
                 kind: 'regular',
             },
         },
+        meta: {},
     }),
-    updated: {
+    updated: Object.freeze({
         orderPos: 133,
         route: '/ncTestRouteUpdated/*',
         templateName: example.template.correct.name,
@@ -47,7 +48,28 @@ example = {
                 kind: 'primary',
             },
         },
-    },
+        meta: {},
+    }),
+};
+
+example = {
+    ...example,
+    correctWithMetadata: Object.freeze({
+        ...example.correct,
+        meta: {
+            first: 'value',
+            second: null,
+            third: false,
+            forth: 3000,
+        },
+    }),
+    updatedWithMetadata: Object.freeze({
+        ...example.updated,
+        meta: {
+            second: 'value',
+            forth: 5000,
+        },
+    }),
 };
 
 const createTemplate = async () => {
@@ -199,6 +221,30 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should successfully create record with metadata', async () => {
+            let response = await request.post(example.url).send(example.correctWithMetadata).expect(200);
+
+            expect(response.body).to.have.property('id');
+            const id = response.body.id;
+
+            try {
+                const expectedRoute = {
+                    id,
+                    slots: example.correctWithMetadata.slots,
+                    meta: example.correctWithMetadata.meta,
+                    ..._.omitBy(_.omit(example.correctWithMetadata, ['slots', 'meta']), _.isNil)
+                };
+
+                expect(response.body).deep.equal(expectedRoute);
+
+                response = await request.get(example.url + id).expect(200);
+
+                expect(response.body).deep.equal(expectedRoute);
+            } finally {
+                await request.delete(example.url + id);
+            }
+        });
+
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
                 await requestWithAuth.post(example.url).send(example.correct)
@@ -236,11 +282,14 @@ describe(`Tests ${example.url}`, () => {
                 let response = await request.post(example.url).send(example.correct).expect(200);
                 id = response.body.id;
 
-                response = await request.get(example.url)
-                    .expect(200);
+                response = await request.get(example.url).expect(200);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
-                const expectedRoute = { id, ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil) };
+                const expectedRoute = {
+                    id,
+                    ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
+                    meta: example.correct.meta,
+                };
                 expect(response.body).to.deep.include(expectedRoute);
             } finally {
                 id && await request.delete(example.url + id).expect(204);
@@ -392,6 +441,19 @@ describe(`Tests ${example.url}`, () => {
                     .expect(200);
 
                 expect(response.body).deep.equal({ ...example.updated, id });
+            } finally {
+                await request.delete(example.url + id).expect(204);
+            }
+        });
+
+        it('should successfully update record with metadata', async () => {
+            let response = await request.post(example.url).send(example.correctWithMetadata).expect(200);
+            const id = response.body.id;
+
+            try {
+                response = await request.put(example.url + id).send(example.updatedWithMetadata).expect(200);
+
+                expect(response.body).deep.equal({ ...example.updatedWithMetadata, id });
             } finally {
                 await request.delete(example.url + id).expect(204);
             }
