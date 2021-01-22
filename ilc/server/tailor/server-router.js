@@ -7,14 +7,19 @@ const {makeAppId} = require('../../common/utils');
 module.exports = class ServerRouter {
     errors = errors;
 
+    /** @type Console */
     #logger;
+    /** @type http.IncomingMessage */
     #request;
     #registryConfig;
+    /** @type string */
     #url;
     #router = null;
 
     /**
-     * @param logger - console compatible logger
+     * @param {Console} logger - console compatible logger
+     * @param {http.IncomingMessage} request - console compatible logger
+     * @param {string} url - console compatible logger
      */
     constructor(logger, request, url) {
         this.#logger = logger;
@@ -31,7 +36,7 @@ module.exports = class ServerRouter {
         }, '');
     }
 
-    getFragmentsContext() { //TODO: proper err handling for this
+    getFragmentsContext() {
         const route = this.getRoute();
         const apps = this.#registryConfig.apps;
         let primarySlotDetected = false;
@@ -41,7 +46,7 @@ module.exports = class ServerRouter {
             const appInfo = row.appInfo;
 
             const ssrOpts = _.pick(row.appInfo.ssr, ['src', 'timeout', 'ignoreInvalidSsl']);
-            if (typeof ssrOpts.src !== 'string') {
+            if (!ssrOpts.src || typeof ssrOpts.src !== 'string') {
                 throw new this.errors.RouterError({message: 'No url specified for fragment!', data: {appInfo}});
             }
 
@@ -57,7 +62,7 @@ module.exports = class ServerRouter {
             } else {
                 if (fragmentKind === 'primary') {
                     this.#logger.warn(
-                        `More then one primary slot "${row.name}" found for "${reqProps.reqUrl}".\n` +
+                        `More then one primary slot "${row.name}" found for "${this.#url}".\n` +
                         'Make it regular to avoid unexpected behaviour.'
                     );
                 }
@@ -127,5 +132,5 @@ module.exports = class ServerRouter {
         return res;
     }, []);
 
-    #getIlcState = () => this.#request.ilcState;
+    #getIlcState = () => this.#request.ilcState || {};
 };
