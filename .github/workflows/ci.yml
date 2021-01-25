@@ -104,7 +104,7 @@ jobs:
         run: npm run build
 
       - name: Run E2E tests
-        run: cd e2e && npm run start:verbose
+        run: cd e2e && npm start
 
   push_images:
     needs: [build_ilc, build_registry, e2e_tests]
