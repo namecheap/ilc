@@ -112,6 +112,7 @@ describe('async boot up', () => {
         chai.expect(readySlotOverrides).to.be.eql({
             spaBundle: null,
             cssBundle: null,
+            wrapperPropsOverride: null,
         });
 
         chai.expect(overrideImportMap.called).to.be.false;
@@ -146,6 +147,7 @@ describe('async boot up', () => {
             footer: {
                 spaBundle: 'here/footer-spa-bundle.js',
                 cssBundle: 'here/footer-css-bundle.css',
+                wrapperPropsOverride: {tst: 1},
                 dependencies: {},
             }
         };
@@ -209,14 +211,17 @@ describe('async boot up', () => {
         chai.expect(navbarSlotOverrides).to.be.eql({
             spaBundle: null,
             cssBundle: null,
+            wrapperPropsOverride: null,
         });
         chai.expect(bodySlotOverrides).to.be.eql({
             spaBundle: config.body.spaBundle,
             cssBundle: config.body.cssBundle,
+            wrapperPropsOverride: null,
         });
         chai.expect(footerSlotOverrides).to.be.eql({
             spaBundle: config.footer.spaBundle,
             cssBundle: config.footer.cssBundle,
+            wrapperPropsOverride: config.footer.wrapperPropsOverride,
         });
 
         chai.expect(overrideImportMap.calledTwice).to.be.true;
@@ -294,6 +299,7 @@ describe('async boot up', () => {
         chai.expect(footerSlotOverrides).to.be.eql({
             spaBundle: null,
             cssBundle: null,
+            wrapperPropsOverride: null,
         });
 
         chai.expect(overrideImportMap.called).to.be.false;

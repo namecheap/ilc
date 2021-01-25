@@ -74,7 +74,7 @@ composeAppSlotPairsToRegister(registryConf).forEach(pair => {
 
             const overrides = await asyncBootUp.waitForSlot(slotName);
             // App wrapper was rendered at SSR instead of app
-            if (wrapperConf !== null && overrides.wrapperPropsOverride === undefined) {
+            if (wrapperConf !== null && overrides.wrapperPropsOverride === null) {
                 wrapperConf.spaBundle = overrides.spaBundle ? overrides.spaBundle : wrapperConf.spaBundle;
                 wrapperConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : wrapperConf.cssBundle;
             } else {
