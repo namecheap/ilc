@@ -86,6 +86,7 @@ module.exports = class ConfigsInjector {
         return _.filter(styleRefs, (styleRef, index, styleRefs) => styleRefs.indexOf(styleRef) === index);
     };
 
+    //TODO: add App Wrappers support
     #getRouteAssets = (apps, slots) => {
         const appsDependencies = _.reduce(apps, (dependencies, appInfo) => _.assign(dependencies, appInfo.dependencies), {});
 
