@@ -268,7 +268,7 @@ describe(`Tests ${example.url}`, () => {
                 '"props" must be of type object\n' +
                 '"configSelector" must be an array\n' +
                 '"ssr" must be of type object\n' +
-                '"kind" must be one of [primary, essential, regular]'
+                '"kind" must be one of [primary, essential, regular, wrapper]'
             );
             expect(response.body).deep.equal({});
 
