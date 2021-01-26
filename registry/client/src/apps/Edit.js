@@ -13,6 +13,7 @@ import {
     NumberInput,
     TextField,
     ReferenceArrayInput,
+    ReferenceInput,
     AutocompleteArrayInput,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
@@ -67,10 +68,18 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     {id: 'primary', name: 'Primary'},
                     {id: 'essential', name: 'Essential'},
                     {id: 'regular', name: 'Regular'},
+                    {id: 'wrapper', name: 'Wrapper'},
                 ]} validate={validators.required} />
                 <ReferenceArrayInput reference="shared_props" source="configSelector" label="Shared props selector">
                     <AutocompleteArrayInput />
                 </ReferenceArrayInput>
+                <FormDataConsumer>
+                    {({ formData, ...rest }) => formData.kind !== 'wrapper' &&
+                        <ReferenceInput reference="app" source="wrappedWith" label="Wrapped with" filter={{kind: 'wrapper'}} allowEmpty {...rest}>
+                            <SelectInput optionText="name" />
+                        </ReferenceInput>
+                    }
+                </FormDataConsumer>
             </FormTab>
             <FormTab label="Assets">
                 <FormDataConsumer>

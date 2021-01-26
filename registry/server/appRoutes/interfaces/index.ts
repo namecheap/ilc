@@ -6,6 +6,8 @@ import {
 import {
     appNameSchema,
 } from '../../apps/interfaces';
+import db from "../../db";
+import {getJoiErr} from "../../util/helpers";
 
 const Joi = JoiDefault.defaults(schema => {
     return schema.empty(null)
@@ -32,7 +34,14 @@ export default interface AppRouteSlot {
 
 const commonAppRouteSlot = {
     name: Joi.string().trim().min(1).max(255),
-    appName: appNameSchema,
+    appName: appNameSchema.external(async value => {
+        const wrapperApp = await db('apps').first('kind').where({ name: value });
+        if (!wrapperApp || wrapperApp.kind === 'wrapper') {
+            throw getJoiErr('appName', 'It\'s forbidden to use wrappers in routes.');
+        }
+
+        return value;
+    }),
     props: Joi.object().default({}),
     kind: Joi.string().valid('primary', 'essential', 'regular', null),
 };

@@ -30,6 +30,12 @@ const requiredSpecial = (value, allValues, props) => {
     return required()(value, allValues);
 };
 
+const allowedAppKinds = [
+    { id: 'primary', name: 'Primary' },
+    { id: 'essential', name: 'Essential' },
+    { id: 'regular', name: 'Regular' },
+];
+
 const InputForm = ({mode = 'edit', ...props}) => {
     return (
         <TabbedForm {...props}>
@@ -57,15 +63,12 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     <SimpleFormIterator>
                         <TextInput source="key" label="Slot name" validate={[required()]} fullWidth />
                         <ReferenceInput reference="app"
+                                        filter={{kind: allowedAppKinds.map(v => v.id)}}
                                         source="appName"
                                         label="App name">
                             <AutocompleteInput optionValue="name" validate={[required()]} />
                         </ReferenceInput>
-                        <SelectInput resettable source="kind" label="App type" choices={[
-                            { id: 'primary', name: 'Primary' },
-                            { id: 'essential', name: 'Essential' },
-                            { id: 'regular', name: 'Regular' },
-                        ]} />
+                        <SelectInput resettable source="kind" label="App type" choices={allowedAppKinds} />
                         <JsonField source="props" label="Properties that will be passed to application at current route"/>
                     </SimpleFormIterator>
                 </ArrayInput>
