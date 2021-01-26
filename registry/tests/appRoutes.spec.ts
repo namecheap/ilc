@@ -17,6 +17,14 @@ let example = <any>{
             kind: 'primary',
         },
     },
+    appWrapper: {
+        url: '/api/v1/app/',
+        correct: {
+            name: '@portal/testWrapper',
+            spaBundle: 'http://localhost:1234/ncTestAppName.js',
+            kind: 'wrapper',
+        },
+    },
 };
 
 example = {
@@ -84,28 +92,30 @@ const createTemplate = async () => {
     expect(response.body).deep.equal(example.template.correct);
 };
 
-const createApp = async () => {
-    let response = await request.post(example.app.url)
-    .send(example.app.correct)
+const createApp = async (app: typeof example.app) => {
+    let response = await request.post(app.url)
+    .send(app.correct)
     .expect(200);
 
-    expect(response.body).deep.equal(example.app.correct);
+    expect(response.body).deep.equal(app.correct);
 
-    response = await request.get(example.app.url + encodeURIComponent(example.app.correct.name))
+    response = await request.get(app.url + encodeURIComponent(app.correct.name))
     .expect(200);
 
-    expect(response.body).deep.equal(example.app.correct);
+    expect(response.body).deep.equal(app.correct);
 };
 
 describe(`Tests ${example.url}`, () => {
     before(async () => {
         await createTemplate();
-        await createApp();
+        await createApp(example.app);
+        await createApp(example.appWrapper);
     });
 
     after(async () => {
         await request.delete(example.template.url + example.template.correct.name).expect(204);
         await request.delete(example.app.url + encodeURIComponent(example.app.correct.name)).expect(204);
+        await request.delete(example.appWrapper.url + encodeURIComponent(example.appWrapper.correct.name)).expect(204);
     });
 
     describe('Create', () => {
@@ -173,18 +183,31 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not create record with non-existing slots/appName', async () => {
+            const appName = '@portal/ncTestNonExistingAppName';
             const response = await request.post(example.url)
             .send({
                 ...example.correct,
                 slots: {
-                    ncTestRouteSlotNavbar: {
-                        appName: '@portal/ncTestNonExistingAppName',
-                    },
+                    ncTestRouteSlotNavbar: { appName },
                 }
             })
-            .expect(500);
+            .expect(422);
 
-            expect(response.text).to.include('Internal server error occurred.');
+            expect(response.text).to.include(`Non-existing app name "${appName}" specified.`);
+        });
+
+        it('should not create record with slot pointing to the app of a kind "wrapper"', async () => {
+            const appName = example.appWrapper.correct.name;
+            const response = await request.post(example.url)
+                .send({
+                    ...example.correct,
+                    slots: {
+                        ncTestRouteSlotNavbar: { appName },
+                    }
+                })
+                .expect(422);
+
+            expect(response.text).to.include(`It's forbidden to use wrappers in routes.`);
         });
 
         it('should not create record without required slots/appName', async () => {
@@ -393,19 +416,19 @@ describe(`Tests ${example.url}`, () => {
             let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
+            const appName = '@portal/ncTestNonExistingAppName';
+
             try {
                 response = await request.put(example.url + id)
                     .send({
                         ...example.correct,
                         slots: {
-                            ncTestRouteSlotNavbar: {
-                                appName: '@portal/ncTestNonExistingAppName',
-                            },
+                            ncTestRouteSlotNavbar: { appName },
                         }
                     })
-                    .expect(500);
+                    .expect(422);
 
-                expect(response.text).to.include('Internal server error occurred.');
+                expect(response.text).to.include(`Non-existing app name "${appName}" specified.`);
             } finally {
                 await request.delete(example.url + id).expect(204);
             }
