@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const deepmerge = require('deepmerge');
 
 const errors = require('../../common/router/errors');
 const Router = require('../../common/router/Router');
@@ -68,7 +69,7 @@ module.exports = class ServerRouter {
                 }
             }
 
-            ssrOpts.appProps = _.merge({}, appInfo.props, row.props);
+            ssrOpts.appProps = deepmerge(appInfo.props || {}, row.props || {});
             ssrOpts.wrapperConf = row.wrapperConf;
 
 
