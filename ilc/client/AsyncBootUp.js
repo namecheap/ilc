@@ -25,6 +25,7 @@ export default class AsyncBootUp {
         const res = {
             spaBundle: null,
             cssBundle: null,
+            wrapperPropsOverride: null,
         };
 
         if (this.#afterRoutingEvent) {
@@ -55,7 +56,12 @@ export default class AsyncBootUp {
             const conf = JSON.parse(overridesEl.innerHTML);
 
             res.spaBundle = conf.spaBundle;
-            res.cssBundle = conf.cssBundle;
+            if (conf.cssBundle) {
+                res.cssBundle = conf.cssBundle;
+            }
+            if (conf.wrapperPropsOverride) {
+                res.wrapperPropsOverride = conf.wrapperPropsOverride;
+            }
 
             if (conf.dependencies) {
                 for (let id in conf.dependencies) {

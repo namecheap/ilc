@@ -1,5 +1,6 @@
 import chai from 'chai';
-import selectSlotsToRegister from './selectSlotsToRegister';
+import { getRegistryMock } from '../tests/helpers';
+import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
 
 describe('select slots to register', () => {
     it('should select slots without any duplicated apps of slots from provided routes', () => {
@@ -104,53 +105,44 @@ describe('select slots to register', () => {
             'routeExp': {},
         }];
 
-        chai.expect(selectSlotsToRegister(routes)).to.be.eql([
+        const registryConf = getRegistryMock().getConfig().data;
+        registryConf.routes = routes;
+
+        chai.expect(composeAppSlotPairsToRegister(registryConf)).to.be.eql([
             {
-                'navbar': {
-                    'appName': '@portal/navbar',
-                    'props': {},
-                    'kind': null,
-                },
-                'footer': {
-                    'appName': '@portal/footer',
-                    'props': {},
-                    'kind': null,
-                },
+                appId: 'navbar__at__navbar',
+                appName: '@portal/navbar',
+                slotName: 'navbar'
             },
             {
-                'body': {
-                    'appName': '@portal/news',
-                    'props': {},
-                    'kind': null,
-                },
-                'banner': {
-                    'appName': '@portal/banner',
-                    'props': {},
-                    'kind': null,
-                },
+                appId: 'footer__at__footer',
+                appName: '@portal/footer',
+                slotName: 'footer'
             },
             {
-                'body': {
-                    'appName': '@portal/people',
-                    'props': {},
-                    'kind': null,
-                },
+                appId: 'news__at__body',
+                appName: '@portal/news',
+                slotName: 'body'
             },
             {
-                'body': {
-                    'appName': '@portal/planets',
-                    'props': {},
-                    'kind': null,
-                },
+                appId: 'banner__at__banner',
+                appName: '@portal/banner',
+                slotName: 'banner'
             },
             {
-                'body': {
-                    'appName': '@portal/system',
-                    'props': {
-                        '_statusCode': '404',
-                    },
-                    'kind': null,
-                },
+                appId: 'people__at__body',
+                appName: '@portal/people',
+                slotName: 'body'
+            },
+            {
+                appId: 'planets__at__body',
+                appName: '@portal/planets',
+                slotName: 'body'
+            },
+            {
+                appId: 'system__at__body',
+                appName: '@portal/system',
+                slotName: 'body'
             }
         ]);
     });

@@ -1,6 +1,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const _ = require('lodash');
+const {getRegistryMock} = require('../../tests/helpers');
 
 const ServerRouter = require('./server-router.js');
 
@@ -9,24 +10,12 @@ describe('server router', () => {
         warn: sinon.spy(),
     };
 
-    const specialRoutes = {
-        '404': {
-            routeId: 'errorsRoute',
-            route: '/404',
-            next: false,
-            template: 'errorsTemplate',
-            slots: {},
-            meta: {},
-        },
-    };
-
     afterEach(() => {
         logger.warn.resetHistory();
     });
 
     it('should throw an error when a router can not find information about an application', () => {
-        const registryConfig = {
-            apps: {},
+        const registryConfig = getRegistryMock({
             routes: [
                 {
                     routeId: 'noAppRoute',
@@ -43,57 +32,54 @@ describe('server router', () => {
                     },
                 },
             ],
-            specialRoutes,
-        };
+        }).getConfig().data;
+        const request = {registryConfig, ilcState: {}};
 
-        const router = new ServerRouter(logger);
+        const router = new ServerRouter(logger, request, '/no-app');
 
-        chai.expect(() => router.getTemplateInfo(registryConfig, '/no-app')).to.throw('Can\'t find info about app.');
+        chai.expect(() => router.getFragmentsTpl()).to.throw('Can\'t find info about app.');
+        chai.expect(() => router.getFragmentsContext()).to.throw('Can\'t find info about app.');
     });
 
-    it('should throw an error when an application does not have a specified source of fragment', () => {
-        const registryConfig = {
-            apps: {
-                'noSsrSrc': {
-                    spaBundle: 'https://somewhere.com/noSsrSrcSpaBundle.js',
-                    cssBundle: 'https://somewhere.com/noSsrSrcCssBundle.css',
-                    dependencies: {
-                        navbarFirstDependency: 'https://somewhere.com/noSsrSrcFirstDependency.js',
-                        navbarSecondDependency: 'https://somewhere.com/noSsrSrcSecondDependency.js',
+    describe('.getFragmentsContext()', () => {
+        it('should throw an error when an application does not have a specified source of fragment', () => {
+            const registryConfig = getRegistryMock({
+                apps: {
+                    '@portal/primary': {
+                        ssr: {src: null}
                     },
-                    props: {
-                        noSsrSrcFirstProp: 'noSsrSrcFirstProp',
-                        noSsrSrcSecondProp: 'noSsrSrcSecondProp',
-                    },
-                    kind: 'primary',
-                    name: '@portal/noSsrSrc',
-                    ssr: {
-                        timeout: 1000,
-                    },
-                },
-            },
-            routes: [
-                {
-                    routeId: 'noSsrSrc',
-                    route: '/no-ssr-src',
-                    next: false,
-                    template: 'noSsrSrcTemplate',
-                    slots: {
-                        noSsrSrc: {
-                            appName: 'noSsrSrc',
-                        },
-                    },
-                    meta: {
-                        noSsrSrcRouteMetaProp: 'noSsrSrcRouteMetaProp',
-                    },
-                },
-            ],
-            specialRoutes,
-        };
+                }
+            }).getConfig().data;
 
-        const router = new ServerRouter(logger);
+            const request = {registryConfig, ilcState: {}};
 
-        chai.expect(() => router.getTemplateInfo(registryConfig, '/no-ssr-src')).to.throw('No url specified for fragment!');
+            const router = new ServerRouter(logger, request, '/all');
+
+            chai.expect(() => router.getFragmentsContext()).to.throw('No url specified for fragment!');
+        });
+
+        it('should warn if we have more then 1 primary slot on the page and ignore others', () => {
+            const registryConfig = getRegistryMock({
+                apps: {
+                    '@portal/regular': {
+                        kind: 'primary'
+                    },
+                }
+            }).getConfig().data;
+
+            const request = {registryConfig, ilcState: {}};
+
+            const router = new ServerRouter(logger, request, '/all');
+
+            const context = router.getFragmentsContext();
+
+            chai.expect(context.primary__at__primary.primary).to.be.true;
+            chai.expect(context.regular__at__regular.primary).to.be.undefined;
+            chai.expect(logger.warn.calledOnceWithExactly(
+                `More then one primary slot "regular" found for "/all".\n` +
+                'Make it regular to avoid unexpected behaviour.'
+            )).to.be.true;
+        });
     });
 
     it('should get template info', () => {
@@ -110,7 +96,6 @@ describe('server router', () => {
                     navbarSecondProp: 'navbarSecondProp',
                 },
                 kind: 'primary',
-                name: '@portal/navbar',
                 ssr: {
                     timeout: 1000,
                     src: 'https://somewhere.com/navbar?prop=value',
@@ -124,7 +109,6 @@ describe('server router', () => {
                     footerSecondDependency: 'https://somewhere.com/footerSecondDependency.js',
                 },
                 kind: 'regular',
-                name: '@portal/footer',
                 ssr: {
                     timeout: 2000,
                     src: 'https://somewhere.com/footer?prop=value',
@@ -142,7 +126,6 @@ describe('server router', () => {
                     heroSecondProp: 'heroSecondProp',
                 },
                 kind: 'essential',
-                name: '@portal/hero',
             },
             'contact': {
                 spaBundle: 'https://somewhere.com/contactSpaBundle.js',
@@ -156,7 +139,6 @@ describe('server router', () => {
                     contactSecondProp: 'contactSecondProp',
                 },
                 kind: 'regular',
-                name: 'contact',
                 ssr: {
                     timeout: 4000,
                     src: 'https://somewhere.com/contact',
@@ -170,12 +152,12 @@ describe('server router', () => {
                     appsSecondDependency: 'https://somewhere.com/appsSecondDependency.js',
                 },
                 kind: 'primary',
-                name: 'apps',
                 ssr: {
                     timeout: 4000,
                     src: 'https://somewhere.com/apps?prop=value',
                     ignoreInvalidSsl: true,
                 },
+                wrappedWith: '@portal/news',
             },
             '@portal/news': {
                 spaBundle: 'https://somewhere.com/newsSpaBundle.js',
@@ -189,7 +171,6 @@ describe('server router', () => {
                     newsSecondProp: 'newsSecondProp',
                 },
                 kind: 'essential',
-                name: '@portal/news',
                 ssr: {
                     timeout: 5000,
                     src: 'https://somewhere.com/news?prop=value',
@@ -205,11 +186,11 @@ describe('server router', () => {
                 template: 'commonTemplate',
                 slots: {
                     navbar: {
-                        appName: apps['@portal/navbar'].name,
+                        appName: '@portal/navbar',
                         kind: 'regular',
                     },
                     footer: {
-                        appName: apps['@portal/footer'].name,
+                        appName: '@portal/footer',
                         props: {
                             firstFooterSlotProp: 'firstFooterSlotProp',
                             secondFooterSlotProp: 'secondFooterSlotProp',
@@ -229,10 +210,10 @@ describe('server router', () => {
                 template: 'heroTemplate',
                 slots: {
                     hero: {
-                        appName: apps['@portal/hero'].name,
+                        appName: '@portal/hero',
                     },
                     contact: {
-                        appName: apps['contact'].name,
+                        appName: 'contact',
                         props: {
                             contactFirstProp: 'changedContactFirstProp',
                             firstContactSlotProp: 'firstContactSlotProp',
@@ -252,12 +233,12 @@ describe('server router', () => {
                 next: false,
                 slots: {
                     apps: {
-                        appName: apps['apps'].name,
+                        appName: 'apps',
                     },
                 },
                 meta: {
                     firstAppsRouteMetaProp: 'firstAppsRouteMetaProp',
-                },
+                }
             },
             {
                 routeId: 'newsRoute',
@@ -265,7 +246,7 @@ describe('server router', () => {
                 next: false,
                 slots: {
                     news: {
-                        appName: apps['@portal/news'].name,
+                        appName: '@portal/news',
                     },
                 },
                 meta: {
@@ -274,15 +255,16 @@ describe('server router', () => {
             },
         ];
 
-        const registryConfig = {
+        const registryConfig = getRegistryMock({
             apps,
             routes,
-            specialRoutes,
-        };
+        }).getConfig().data;
 
-        const request = {url: '/hero/apps?prop=value'};
+        const request = {url: '/hero/apps?prop=value', registryConfig};
 
-        const expectedRoute = {
+        const router = new ServerRouter(logger, request, request.url);
+
+        chai.expect(router.getRoute()).to.be.eql({
             routeId: 'appsRoute',
             route: '/hero/apps',
             basePath: '/hero/apps',
@@ -290,103 +272,66 @@ describe('server router', () => {
             template: 'heroTemplate',
             specialRole: null,
             slots: {
-                ...registryConfig.routes[0].slots,
-                ...registryConfig.routes[1].slots,
-                ...registryConfig.routes[2].slots,
+                ...routes[0].slots,
+                ...routes[1].slots,
+                ...routes[2].slots,
             },
             meta: {
-                ...registryConfig.routes[0].meta,
-                ...registryConfig.routes[1].meta,
-                ...registryConfig.routes[2].meta,
+                ...routes[0].meta,
+                ...routes[1].meta,
+                ...routes[2].meta,
             },
-        };
-
-        const expectedNavbarUrl = new URL(registryConfig.apps['@portal/navbar'].ssr.src);
-        expectedNavbarUrl.searchParams.append('routerProps', Buffer.from(JSON.stringify({
-            basePath: expectedRoute.basePath,
-            reqUrl: expectedRoute.reqUrl,
-            fragmentName: 'navbar__at__navbar',
-        })).toString('base64'));
-        expectedNavbarUrl.searchParams.append('appProps', Buffer.from(JSON.stringify(registryConfig.apps['@portal/navbar'].props)).toString('base64'));
-
-        const expectedFooterUrl = new URL(registryConfig.apps['@portal/footer'].ssr.src);
-        expectedFooterUrl.searchParams.append('routerProps', Buffer.from(JSON.stringify({
-            basePath: expectedRoute.basePath,
-            reqUrl: expectedRoute.reqUrl,
-            fragmentName: 'footer__at__footer',
-        })).toString('base64'));
-        expectedFooterUrl.searchParams.append('appProps', Buffer.from(JSON.stringify(registryConfig.routes[0].slots.footer.props)).toString('base64'));
-
-        const expectedContactUrl = new URL(registryConfig.apps.contact.ssr.src);
-        expectedContactUrl.searchParams.append('routerProps', Buffer.from(JSON.stringify({
-            basePath: expectedRoute.basePath,
-            reqUrl: expectedRoute.reqUrl,
-            fragmentName: 'contact__at__contact',
-        })).toString('base64'));
-        expectedContactUrl.searchParams.append('appProps', Buffer.from(JSON.stringify({
-            ...registryConfig.apps.contact.props,
-            ...registryConfig.routes[1].slots.contact.props,
-        })).toString('base64'));
-
-        const expectedAppsUrl = new URL(registryConfig.apps.apps.ssr.src);
-        expectedAppsUrl.searchParams.append('routerProps', Buffer.from(JSON.stringify({
-            basePath: expectedRoute.basePath,
-            reqUrl: expectedRoute.reqUrl,
-            fragmentName: 'apps__at__apps',
-        })).toString('base64'));
-
-        const expectedPage =
-            `<fragment id="${registryConfig.apps['@portal/navbar'].name}" slot="navbar" timeout="${registryConfig.apps['@portal/navbar'].ssr.timeout}" src="${expectedNavbarUrl.toString()}"></fragment>` +
-            `<fragment id="${registryConfig.apps['@portal/footer'].name}" slot="footer" timeout="${registryConfig.apps['@portal/footer'].ssr.timeout}" src="${expectedFooterUrl.toString()}" primary="true"></fragment>` +
-            `<fragment id="${registryConfig.apps['contact'].name}" slot="contact" timeout="${registryConfig.apps.contact.ssr.timeout}" src="${expectedContactUrl.toString()}"></fragment>` +
-            `<fragment id="${registryConfig.apps['apps'].name}" slot="apps" timeout="${registryConfig.apps.apps.ssr.timeout}" src="${expectedAppsUrl.toString()}" ignore-invalid-ssl="true"></fragment>`;
-
-        const router = new ServerRouter(logger);
-
-        chai.expect(router.getTemplateInfo(registryConfig, request.url)).to.be.eql({
-            route: expectedRoute,
-            page: expectedPage,
         });
-        chai.expect(logger.warn.calledOnceWithExactly(
-            `More then one primary slot "apps" found for "${expectedRoute.reqUrl}".\n` +
-            'Make it regular to avoid unexpected behaviour.'
-        )).to.be.true;
+
+        chai.expect(router.getFragmentsTpl()).to.be.eql(
+            `<fragment id="navbar__at__navbar" slot="navbar"></fragment>` +
+            `<fragment id="footer__at__footer" slot="footer"></fragment>` +
+            `<fragment id="contact__at__contact" slot="contact"></fragment>` +
+            `<fragment id="apps__at__apps" slot="apps"></fragment>`
+        );
+
+        chai.expect(router.getFragmentsContext()).to.eql({
+            navbar__at__navbar: {
+                ...apps["@portal/navbar"].ssr,
+                appProps: {
+                    ...apps["@portal/navbar"].props,
+                    ...routes[0].slots.navbar.props,
+                },
+                wrapperConf: null
+            },
+            footer__at__footer: {
+                ...apps["@portal/footer"].ssr,
+                primary: true,
+                appProps: {
+                    ...routes[0].slots.footer.props,
+                },
+                wrapperConf: null
+            },
+            contact__at__contact: {
+                ...apps.contact.ssr,
+                appProps: {
+                    ...apps.contact.props,
+                    ...routes[1].slots.contact.props,
+                },
+                wrapperConf: null
+            },
+            apps__at__apps: {
+                src: apps.apps.ssr.src,
+                timeout: apps.apps.ssr.timeout,
+                'ignore-invalid-ssl': true,
+                appProps: {},
+                wrapperConf: {
+                    appId: 'news__at__apps',
+                    name: '@portal/news',
+                    ...apps["@portal/news"].ssr,
+                    props: apps["@portal/news"].props
+                }
+            }
+        });
     });
 
     it('should get template info when special route is enforced', () => {
         const apps = {
-            '@portal/navbar': {
-                spaBundle: 'https://somewhere.com/navbarSpaBundle.js',
-                cssBundle: 'https://somewhere.com/navbarCssBundle.css',
-                dependencies: {
-                    navbarFirstDependency: 'https://somewhere.com/navbarFirstDependency.js',
-                    navbarSecondDependency: 'https://somewhere.com/navbarSecondDependency.js',
-                },
-                props: {
-                    navbarFirstProp: 'navbarFirstProp',
-                    navbarSecondProp: 'navbarSecondProp',
-                },
-                kind: 'primary',
-                name: '@portal/navbar',
-                ssr: {
-                    timeout: 1000,
-                    src: 'https://somewhere.com/navbar?prop=value',
-                },
-            },
-            '@portal/footer': {
-                spaBundle: 'https://somewhere.com/footerSpaBundle.js',
-                cssBundle: 'https://somewhere.com/footerCssBundle.css',
-                dependencies: {
-                    footerFirstDependency: 'https://somewhere.com/footerFirstDependency.js',
-                    footerSecondDependency: 'https://somewhere.com/footerSecondDependency.js',
-                },
-                kind: 'regular',
-                name: '@portal/footer',
-                ssr: {
-                    timeout: 2000,
-                    src: 'https://somewhere.com/footer?prop=value',
-                },
-            },
             'apps': {
                 spaBundle: 'https://somewhere.com/appsSpaBundle.js',
                 cssBundle: 'https://somewhere.com/appsCssBundle.css',
@@ -395,94 +340,54 @@ describe('server router', () => {
                     appsSecondDependency: 'https://somewhere.com/appsSecondDependency.js',
                 },
                 kind: 'primary',
-                name: 'apps',
                 ssr: {
                     timeout: 4000,
-                    src: 'https://somewhere.com/apps?prop=value',
-                    ignoreInvalidSsl: false,
+                    src: 'https://somewhere.com/apps?prop=value'
                 },
             },
         };
 
-        const routes = [
-            {
-                routeId: 'commonRoute',
-                route: '*',
-                next: true,
-                template: 'commonTemplate',
-                slots: {
-                    navbar: {
-                        appName: apps['@portal/navbar'].name,
-                        kind: 'regular',
-                    },
-                    footer: {
-                        appName: apps['@portal/footer'].name,
-                        props: {
-                            firstFooterSlotProp: 'firstFooterSlotProp',
-                            secondFooterSlotProp: 'secondFooterSlotProp',
-                        },
-                        kind: 'primary',
-                    },
-                },
-                meta: {},
-            },
-            {
-                routeId: 'appsRoute',
-                route: '/hero/apps',
-                next: false,
-                slots: {
-                    apps: {
-                        appName: apps['apps'].name,
-                    },
-                },
-                meta: {},
-            },
-        ];
-
-        const currSpecialRoutes = _.cloneDeep(specialRoutes);
-        currSpecialRoutes['404'].slots = {
-            apps: {
-                appName: apps['apps'].name,
-            },
-        };
-
-        const registryConfig = {
+        const registryConfig = getRegistryMock({
             apps,
-            routes,
-            specialRoutes: currSpecialRoutes,
-        };
+            specialRoutes: {
+                '404': {
+                    slots: {
+                        apps: {
+                            appName: 'apps',
+                        },
+                    }
+                }
+            },
+        }).getConfig().data;
 
         const request = {
             ilcState: {forceSpecialRoute: 404},
-            url: '/hero/apps?prop=value'
+            url: '/all?prop=value',
+            registryConfig
         };
 
-        const expectedRoute = {
-            routeId: currSpecialRoutes['404'].routeId,
-            route: currSpecialRoutes['404'].route,
+        const router = new ServerRouter(logger, request, request.url);
+
+        chai.expect(router.getRoute()).to.be.eql({
+            routeId: registryConfig.specialRoutes['404'].routeId,
+            route: registryConfig.specialRoutes['404'].route,
             basePath: '/',
             reqUrl: request.url,
-            template: currSpecialRoutes['404'].template,
+            template: registryConfig.specialRoutes['404'].template,
             specialRole: 404,
-            slots: currSpecialRoutes['404'].slots,
-            meta: currSpecialRoutes['404'].meta,
-        };
-
-        const expectedAppsUrl = new URL(registryConfig.apps.apps.ssr.src);
-        expectedAppsUrl.searchParams.append('routerProps', Buffer.from(JSON.stringify({
-            basePath: expectedRoute.basePath,
-            reqUrl: expectedRoute.reqUrl,
-            fragmentName: 'apps__at__apps',
-        })).toString('base64'));
-
-        const expectedPage =
-            `<fragment id="${registryConfig.apps['apps'].name}" slot="apps" timeout="${registryConfig.apps.apps.ssr.timeout}" src="${expectedAppsUrl.toString()}" primary="true"></fragment>`;
-
-        const router = new ServerRouter(logger);
-
-        chai.expect(router.getTemplateInfo(registryConfig, request.url, request.ilcState)).to.be.eql({
-            route: expectedRoute,
-            page: expectedPage,
+            slots: registryConfig.specialRoutes['404'].slots,
+            meta: registryConfig.specialRoutes['404'].meta,
+        });
+        chai.expect(router.getFragmentsTpl()).to.be.eql(
+            `<fragment id="apps__at__apps" slot="apps"></fragment>`
+        );
+        chai.expect(router.getFragmentsContext()).to.eql({
+            apps__at__apps: {
+                ...apps.apps.ssr,
+                primary: true,
+                appProps: {},
+                wrapperConf: null
+            }
         });
     });
 });

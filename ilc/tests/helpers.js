@@ -1,9 +1,9 @@
-const _ = require('lodash');
+const deepmerge = require('deepmerge');
 
 function getRegistryMock(overrideConfig = {}) {
     return {
         getTemplate: () => ({data: {content: `<!DOCTYPE html><html lang="en-US"><head></head><body><ilc-slot id="primary"/>\n<ilc-slot id="regular"/></body></html>`}}),
-        getConfig: () => ({data: _.merge({
+        getConfig: () => ({data: deepmerge({
                 apps: {
                     '@portal/primary': {
                         spaBundle: 'http://localhost/index.js',
@@ -31,7 +31,7 @@ function getRegistryMock(overrideConfig = {}) {
                         slots: {
                             primary: { appName: '@portal/primary' },
                         },
-                        routeId: 1,
+                        routeId: 2,
                         route: '/primary',
                         template: 'master'
                     },
@@ -39,7 +39,7 @@ function getRegistryMock(overrideConfig = {}) {
                 specialRoutes: {
                     '404': {
                         slots: {},
-                        routeId: 2,
+                        routeId: 3,
                         route: '',
                         next: false,
                         template: 'master'

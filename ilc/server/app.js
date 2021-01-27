@@ -5,6 +5,10 @@ const serveStatic = require('./serveStatic');
 const errorHandlingService = require('./errorHandler/factory');
 const i18n = require('./i18n');
 const UrlProcessor = require('../common/UrlProcessor');
+const logger = require('./logger');
+const ServerRouter = require('./tailor/server-router');
+const mergeConfigs = require('./tailor/merge-configs');
+const parseOverrideConfig = require('./tailor/parse-override-config');
 
 /**
  * @param {Registry} registryService
@@ -46,8 +50,8 @@ module.exports = (registryService, pluginManager) => {
 
     app.all('*', async (req, res) => {
         const url = req.raw.url;
-        const registryConfig = await registryService.getConfig();
-        const processedUrl = new UrlProcessor(registryConfig.data.settings.trailingSlash).process(url);
+        let registryConfig = (await registryService.getConfig()).data;
+        const processedUrl = new UrlProcessor(registryConfig.settings.trailingSlash).process(url);
 
         if (processedUrl !== url) {
             res.redirect(processedUrl);
@@ -56,6 +60,13 @@ module.exports = (registryService, pluginManager) => {
 
         req.headers['x-request-host'] = req.hostname;
         req.headers['x-request-uri'] = url;
+
+        //TODO: move overrideConfigTrustedOrigins to Registry config
+        registryConfig = mergeConfigs(registryConfig, parseOverrideConfig(req.headers.cookie, config.get('overrideConfigTrustedOrigins')));
+
+        const unlocalizedUrl = i18n.unlocalizeUrl(registryConfig.settings.i18n, url);
+        req.raw.registryConfig = registryConfig;
+        req.raw.router = new ServerRouter(logger, req.raw, unlocalizedUrl);
 
         res.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
         tailor.requestHandler(req.raw, res.res);

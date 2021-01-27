@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
         }
 
         v = _.omitBy(v, v => v === null || (typeof v === 'object' && Object.keys(v).length === 0));
-        acc[v.name] = _.omit(v, ['name', 'configSelector']);
+        acc[v.name] = _.pick(v, ['kind', 'ssr', 'dependencies', 'props', 'spaBundle', 'cssBundle']);
 
         return acc;
     }, {});

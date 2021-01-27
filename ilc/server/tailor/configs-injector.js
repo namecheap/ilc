@@ -14,7 +14,8 @@ module.exports = class ConfigsInjector {
         this.#nrCustomClientJsWrapper = nrCustomClientJsWrapper;
     }
 
-    inject(request, registryConfig, template, slots) {
+    inject(request, template, slots) {
+        const registryConfig = request.registryConfig;
         let document = template.content;
 
         if (
@@ -85,6 +86,7 @@ module.exports = class ConfigsInjector {
         return _.filter(styleRefs, (styleRef, index, styleRefs) => styleRefs.indexOf(styleRef) === index);
     };
 
+    //TODO: add App Wrappers support
     #getRouteAssets = (apps, slots) => {
         const appsDependencies = _.reduce(apps, (dependencies, appInfo) => _.assign(dependencies, appInfo.dependencies), {});
 
@@ -152,7 +154,10 @@ module.exports = class ConfigsInjector {
     #getPolyfillUrl = () => this.#cdnUrl === null ? '/_ilc/polyfill.min.js' : urljoin(this.#cdnUrl, '/polyfill.min.js');
 
     #getSPAConfig = (registryConfig) => {
-        const apps = _.mapValues(registryConfig.apps, v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind']));
+        const apps = _.mapValues(
+            registryConfig.apps,
+            v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind', 'wrappedWith'])
+        );
         const spaConfig = JSON.stringify(_.omit({...registryConfig, apps}, ['templates']));
 
         return `<script type="ilc-config">${spaConfig}</script>`;

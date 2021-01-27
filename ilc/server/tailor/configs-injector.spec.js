@@ -1,6 +1,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
-const _ = require('lodash/fp');
+const _ = require('lodash');
+const _fp = require('lodash/fp');
 
 const ConfigsInjector = require('./configs-injector');
 
@@ -177,6 +178,7 @@ describe('configs injector', () => {
                         secondAppFirstSsrProp: 'secondAppFirstSsrProp',
                         secondAppSecondSsrProp: 'secondAppSecondSsrProp',
                     },
+                    wrappedWith: 'firstApp',
                 },
             },
         };
@@ -201,7 +203,7 @@ describe('configs injector', () => {
         };
 
         const getSpaConfig = () => {
-            const pickApp = _.pick(['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind']);
+            const pickApp = _fp.pick(['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind', 'wrappedWith']);
 
             return JSON.stringify({
                 apps: {
@@ -221,7 +223,7 @@ describe('configs injector', () => {
 
             const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper);
 
-            const request = {ilcState: {test: 1}};
+            const request = {ilcState: {test: 1}, registryConfig};
 
             const firstTemplateStyleRef = 'https://somewhere.com/firstTemplateStyleRef.css';
             const secondTemplateStyleRef = 'https://somewhere.com/secondTemplateStyleRef.css';
@@ -245,7 +247,7 @@ describe('configs injector', () => {
                     '</html>',
             };
 
-            chai.expect(configsInjector.inject(request, registryConfig, template, slots)).to.be.eql(
+            chai.expect(configsInjector.inject(request, template, slots)).to.be.eql(
                 '<html>' +
                     '<head>' +
                         '<title>Configs Injector`s test</title>' +
@@ -282,8 +284,8 @@ describe('configs injector', () => {
                     '</body>' +
                 '</html>'
             );
-            chai.expect(request).to.be.eql({
-                ilcState: request.ilcState,
+            chai.expect(_.pick(request, ['ilcState', 'styleRefs'])).to.be.eql({
+                ilcState: {test: 1},
                 styleRefs: [
                     registryConfig.apps.firstApp.cssBundle,
                     registryConfig.apps.secondApp.cssBundle,
@@ -299,7 +301,7 @@ describe('configs injector', () => {
 
             const configsInjector = new ConfigsInjector(newrelic);
 
-            const request = {};
+            const request = {registryConfig};
 
             const template = {
                 styleRefs: [],
@@ -321,7 +323,7 @@ describe('configs injector', () => {
                     '</html>',
             };
 
-            chai.expect(configsInjector.inject(request, registryConfig, template, slots)).to.be.eql(
+            chai.expect(configsInjector.inject(request, template, slots)).to.be.eql(
                 '<html>' +
                     '<head>' +
                         '<!-- TailorX: Ignore during parsing START -->' +
@@ -361,12 +363,10 @@ describe('configs injector', () => {
                     '</body>' +
                 '</html>'
             );
-            chai.expect(request).to.be.eql({
-                styleRefs: [
-                    registryConfig.apps.firstApp.cssBundle,
-                    registryConfig.apps.secondApp.cssBundle,
-                ],
-            });
+            chai.expect(request.styleRefs).to.be.eql([
+                registryConfig.apps.firstApp.cssBundle,
+                registryConfig.apps.secondApp.cssBundle,
+            ]);
         });
     });
 });

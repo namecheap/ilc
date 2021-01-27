@@ -27,9 +27,7 @@ const pluginManager = Object.freeze({
     getI18nParamsDetectionPlugin: sinon.stub(),
 });
 
-const getApp = () => createApp(helpers.getRegistryMock({
-    settings: {i18n: i18nConfig}
-}), pluginManager);
+const getApp = () => createApp(helpers.getRegistryMock(), pluginManager);
 
 const decodeIntlHeader = headerValue =>
     JSON.parse(JSON.stringify(intlSchema.fromBuffer(Buffer.from(headerValue, 'base64'), undefined, true)));

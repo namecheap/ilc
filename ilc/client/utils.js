@@ -35,3 +35,30 @@ export function prependSpaCallback(spaCallbacks, type, callback) {
 
     return res;
 }
+
+export function flattenFnArray(appOrParcel, lifecycle) {
+    let fns = appOrParcel[lifecycle] || [];
+    fns = Array.isArray(fns) ? fns : [fns];
+    if (fns.length === 0) {
+        fns = [() => Promise.resolve()];
+    }
+
+    return function (props) {
+        return fns.reduce((resultPromise, fn, index) => {
+            return resultPromise.then(() => {
+                const thisPromise = fn(props);
+                return smellsLikeAPromise(thisPromise)
+                    ? thisPromise
+                    : Promise.reject(`The lifecycle function ${lifecycle} at array index ${index} did not return a promise`);
+            });
+        }, Promise.resolve());
+    };
+}
+
+export function smellsLikeAPromise(promise) {
+    return (
+        promise &&
+        typeof promise.then === "function" &&
+        typeof promise.catch === "function"
+    );
+}
