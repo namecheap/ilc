@@ -28,6 +28,7 @@ To use this feature you need to have ILC Registry configured in the following wa
 
 Essentially App Wrapper is a regular ILC application which receives extra property which allows to render target application 
 with optional extra props when needed. Look at the [demo wrapper for reference implementation](https://github.com/namecheap/ilc-demo-apps/tree/master/apps/wrapper).
+To see it in action [go to our demo website](http://demo.microfrontends.online/wrapper/). 
 
 ### Client side API
 
