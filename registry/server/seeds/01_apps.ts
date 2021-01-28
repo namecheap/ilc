@@ -54,7 +54,6 @@ export async function seed(knex: Knex): Promise<any> {
                 publicPath: `http://${publicHost}:8239/dist/`
             }),
             kind: 'primary',
-            wrappedWith: '@portal/wrapper',
         }, {
             name: '@portal/system',
             spaBundle: `http://${publicHost}:8240/index.js`,
@@ -65,6 +64,17 @@ export async function seed(knex: Knex): Promise<any> {
             dependencies: '{}',
             props: '{}',
             kind: 'primary',
+        }, {
+            name: '@portal/systemWithWrapper',
+            spaBundle: `http://${publicHost}:8240/index.js`,
+            ssr: JSON.stringify({
+                src: "http://127.0.0.1:8240/fragment",
+                timeout: 1000,
+            }),
+            dependencies: '{}',
+            props: '{}',
+            kind: 'primary',
+            wrappedWith: '@portal/wrapper',
         }, {
             name: '@portal/fetchWithCache',
             spaBundle: `http://${publicHost}:8238/fetchWithCache.js`,
