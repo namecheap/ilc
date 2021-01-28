@@ -4,7 +4,7 @@ export async function up(knex: Knex): Promise<void> {
     if (isMySQL(knex)) {
         return knex.raw("ALTER TABLE `apps` " +
             "MODIFY COLUMN `kind` " +
-            "enum('primary', 'essential','essential','wrapper') " +
+            "enum('primary', 'essential','regular','wrapper') " +
             "NOT NULL DEFAULT 'regular';");
     } else {
         await alterSqliteTable(knex, 'apps', `
@@ -28,7 +28,7 @@ export async function down(knex: Knex): Promise<void> {
     if (isMySQL(knex)) {
         return knex.raw("ALTER TABLE `apps` " +
             "MODIFY COLUMN `kind` " +
-            "enum('primary', 'essential','essential') " +
+            "enum('primary', 'essential','regular') " +
             "NOT NULL DEFAULT 'regular';");
     } else {
         await alterSqliteTable(knex,'apps', `

@@ -33,7 +33,7 @@ services:
     ports:
       - "80:8233"
       - "8233:8233"
-      - "8235-8240:8235-8240" # Ports from "demo-apps" container
+      - "8234-8240:8234-8240" # Ports from "demo-apps" container
     environment:
       NODE_ENV: production
       REGISTRY_ADDR: "http://registry:4001"
