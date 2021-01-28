@@ -3,7 +3,7 @@ import * as Knex from 'knex';
 const publicHost = process.env.PUBLIC_HOST || 'localhost';
 
 export async function seed(knex: Knex): Promise<any> {
-    return knex("apps").insert([
+    await knex('apps').insert([
         {
             name: '@portal/navbar',
             spaBundle: `http://${publicHost}:8235/navbar.js`,
@@ -74,7 +74,6 @@ export async function seed(knex: Knex): Promise<any> {
             dependencies: '{}',
             props: '{}',
             kind: 'primary',
-            wrappedWith: '@portal/wrapper',
         }, {
             name: '@portal/fetchWithCache',
             spaBundle: `http://${publicHost}:8238/fetchWithCache.js`,
@@ -93,4 +92,8 @@ export async function seed(knex: Knex): Promise<any> {
             kind: 'wrapper',
         },
     ]);
+
+    await knex('apps')
+        .where('name', '@portal/systemWithWrapper')
+        .update({ wrappedWith: '@portal/wrapper' });
 }
