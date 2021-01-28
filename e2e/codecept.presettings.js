@@ -11,6 +11,7 @@ const appPorts = {
     fetchWithCache: 8238,
     news: 8239,
     system: 8240,
+    wrapper: 8234,
 };
 
 const resources = [
@@ -22,6 +23,7 @@ const resources = [
     `http-get://127.0.0.1:${appPorts.fetchWithCache}`,
     `http-get://127.0.0.1:${appPorts.ilc}/ping`,
     `http-get://127.0.0.1:${appPorts.registry}/ping`,
+    `http-get://127.0.0.1:${appPorts.wrapper}/client-entry.js`,
 ];
 
 let childProcess;

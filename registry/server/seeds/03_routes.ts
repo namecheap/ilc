@@ -30,6 +30,16 @@ export async function seed(knex: Knex): Promise<any> {
             route: '',
             next: false,
             templateName: 'master',
-        },
+        }, {
+            id: 8,
+            orderPos: 3,
+            route: '/',
+            next: false,
+        }, {
+            id: 9,
+            orderPos: 40,
+            route: '/wrapper/',
+            next: false,
+        }
     ]);
 }

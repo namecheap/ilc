@@ -32,7 +32,13 @@ const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
         ));
         next();
     } catch (e) {
-        res.status(422).send(preProcessErrorResponse(e));
+        res.status(422);
+        if (e instanceof Joi.ValidationError) {
+            res.send(preProcessErrorResponse(e));
+        } else {
+            console.error(e);
+            res.send('Unexpected validation error');
+        }
     }
 };
 

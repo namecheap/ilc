@@ -27,6 +27,20 @@ export async function seed(knex: Knex): Promise<any> {
             name: 'body',
             appName: '@portal/system',
             props: JSON.stringify({ _statusCode: '404' }),
+        }, {
+            routeId: 8, // /
+            name: 'body',
+            appName: '@portal/system',
+            props: JSON.stringify({
+                page: 'home'
+            }),
+        }, {
+            routeId: 9, // /wrapper/
+            name: 'body',
+            appName: '@portal/systemWithWrapper',
+            props: JSON.stringify({
+                page: 'wrapped'
+            }),
         },
     ]);
 }

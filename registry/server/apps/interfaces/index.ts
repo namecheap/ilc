@@ -1,4 +1,6 @@
 import JoiDefault from 'joi';
+import db from "../../db";
+import {getJoiErr} from "../../util/helpers";
 
 const Joi = JoiDefault.defaults(schema => {
     return schema.empty(null)
@@ -13,6 +15,7 @@ export default interface App {
     props?: string, // JSON({ [propName: string]: any })
     configSelector?: string,
     ssr: string, // JSON({ src: string, timeout: number })
+    wrappedWith?: string,
 };
 
 export const appNameSchema = Joi.string().trim().min(1);
@@ -28,7 +31,23 @@ const commonApp = {
         src: Joi.string().trim().uri(),
         timeout: Joi.number(),
     }).and('src', 'timeout').empty({}).default(null),
-    kind: Joi.string().valid('primary', 'essential', 'regular'),
+    kind: Joi.string().valid('primary', 'essential', 'regular', 'wrapper'),
+    wrappedWith: Joi.when('kind', {
+        is: 'wrapper',
+        then: Joi.any().custom(() => null),
+        otherwise: Joi.string().trim().default(null).external(async (value) => {
+            if (value === null) {
+                return null;
+            }
+
+            const wrapperApp = await db('apps').first('kind').where({ name: value });
+            if (!wrapperApp || wrapperApp.kind !== 'wrapper') {
+                throw getJoiErr('wrappedWith', 'Specified wrapper app is not a wrapper.');
+            }
+
+            return value;
+        }),
+    }),
 };
 
 export const partialAppSchema = Joi.object({
