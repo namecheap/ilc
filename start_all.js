@@ -20,7 +20,7 @@ if (!noWatch) {
     commands.push({ command: 'cd ./registry/client && npm run build:watch', name: 'registry:ui' });
 }
 if (runWithApps) {
-    commands.push({ command: 'docker run --rm -p 8234-8240:8234-8240 namecheap/ilc-demo-apps:feature_app_wrappers', name: 'demo-apps' });
+    commands.push({ command: 'docker run --rm -p 8234-8240:8234-8240 namecheap/ilc-demo-apps', name: 'demo-apps' });
 }
 
 concurrently(commands, {

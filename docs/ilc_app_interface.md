@@ -5,7 +5,7 @@ to talk to apps (micro frontends).
 
 ## Server side interface
 
-Please see [ilc-server-sdk](https://github.com/namecheap/ilc-server-sdk) library to figure out how to integrate server side
+Please see [ilc-sdk](https://github.com/namecheap/ilc-sdk) library to figure out how to integrate server side
 of your isomorphic micro frontend with ILC.
 
 > **Note:** keep in mind that Server side interface integration is necessary only for isomorphic micro frontend. However
@@ -26,6 +26,8 @@ See more information about the [lifecycle functions here](https://single-spa.js.
 * `errorHandler(error, errorInfo = {}): void` - app MUST use it to propagate all unhandled errors
 * `appId` - Unique application ID, if same app will be rendered twice on a page - it will get different IDs
 * `appSdk` - Isomorphic API that can be used during SSR & CSR. [Documentation](https://namecheap.github.io/ilc-sdk/classes/_app_index_.ilcappsdk.html)
+* `renderApp(props?: ExtraAppProps) => Promise<void>` - (passed only for [App Wrappers](app_wrappers.md)) allows to perform rendering of the target app. 
+   Returns promise which resolves after target app mount.
 
 
 ### Init code during app bundle loading
