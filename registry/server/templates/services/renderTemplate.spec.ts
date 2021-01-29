@@ -112,99 +112,6 @@ describe('renderTemplate', () => {
                     src: `${includesHost}/get/include/4`,
                 }
             },
-            {
-                api: {
-                    route: '/get/include/5',
-                    delay: 0,
-                    response: {
-                        status: 200,
-                        data: `
-                            <div id="include-id-5">
-                                This include does not have a source
-                                but have an id
-                                and a specified link header which is a stylesheet
-                            </div>
-                        `,
-                        headers: {
-                            'X-Powered-By': 'JS',
-                            'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
-                        },
-                    }
-                },
-                attributes: {
-                    id: 'include-id-5',
-                    timeout: 100,
-                },
-            },
-            {
-                api: {
-                    route: '/get/include/6',
-                    delay: 0,
-                    response: {
-                        status: 200,
-                        data: `
-                            <div id="include-id-6">
-                                This include does not have an id
-                                but have a source
-                                and a specified link header which is a stylesheet
-                            </div>
-                        `,
-                        headers: {
-                            'X-Powered-By': 'JS',
-                            'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
-                        },
-                    }
-                },
-                attributes: {
-                    src: `${includesHost}/get/include/6`,
-                    timeout: 100,
-                },
-            },
-            {
-                api: {
-                    route: '/get/include/7',
-                    delay: 0,
-                    response: {
-                        status: 200,
-                        data: `
-                            <div id="include-id-7">
-                                This include does not have all necessary attributes
-                                but has a specified header link which is a stylesheet
-                            </div>
-                        `,
-                        headers: {
-                            'X-Powered-By': 'JS',
-                            'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
-                        },
-                    }
-                },
-                attributes: {
-                    timeout: 100,
-                },
-            },
-            {
-                api: {
-                    route: '/get/include/8',
-                    delay: 0,
-                    response: {
-                        status: 500,
-                        data: `The server threw an error when we are trying to get data from API`,
-                        headers: {
-                            'X-Powered-By': 'JS',
-                            'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
-                        },
-                    }
-                },
-                attributes: {
-                    id: 'include-id-8',
-                    src: `${includesHost}/get/include/8`,
-                    timeout: 100,
-                },
-            },
         ];
 
         includes.forEach(({
@@ -240,18 +147,7 @@ describe('renderTemplate', () => {
                 <include id="${includes[3].attributes.id}"
                     src="${includes[3].attributes.src}"/>
                 <div id="div-id-1" class="class-name-2">Something...</div>
-                <include id="${includes[4].attributes.id}" timeout="${includes[4].attributes.timeout}"/>
                 <div id="div-id-2" data-id="data-id-2" />
-                <include
-                    src="${includes[5].attributes.src}"
-                        timeout="${includes[5].attributes.timeout}"
-                />
-                <include timeout="${includes[6].attributes.timeout}" />
-                <include
-                            id="${includes[7].attributes.id}"
-                        src="${includes[7].attributes.src}"
-                    timeout="${includes[7].attributes.timeout}"
-                />
                 <include without any attributes values />
             </body>
             </html>
@@ -297,22 +193,70 @@ describe('renderTemplate', () => {
                     `\n<!-- Template include "${includes[3].attributes.id}" END -->`
                 }
                 <div id="div-id-1" class="class-name-2">Something...</div>
-                <include id="${includes[4].attributes.id}" timeout="${includes[4].attributes.timeout}"/>
                 <div id="div-id-2" data-id="data-id-2" />
-                <include
-                    src="${includes[5].attributes.src}"
-                        timeout="${includes[5].attributes.timeout}"
-                />
-                <include timeout="${includes[6].attributes.timeout}" />
-                <include
-                            id="${includes[7].attributes.id}"
-                        src="${includes[7].attributes.src}"
-                    timeout="${includes[7].attributes.timeout}"
-                />
                 <include without any attributes values />
             </body>
             </html>
         `);
+    });
+
+    it('should throw an error when fails to fetch include', async () => {
+        const scope = nock(includesHost);
+
+        const includes = [
+            {
+                api: {
+                    route: '/get/include/1?tst=a&lol=b',
+                    delay: 0,
+                    response: {
+                        status: 500,
+                        data: ``,
+                        headers: {},
+                    },
+                },
+                attributes: {
+                    id: 'include-id-1',
+                    src: `${includesHost}/get/include/1?tst=a&lol=b`,
+                    timeout: 100,
+                },
+            },
+        ];
+
+        includes.forEach(({
+                              api: {
+                                  route,
+                                  delay,
+                                  response: {
+                                      status,
+                                      data,
+                                      headers,
+                                  },
+                              },
+                          }) => scope.get(route).delay(delay).reply(status, data, headers));
+
+        const template = `
+            <html>
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width,initial-scale=1"/>
+                <include    id="${includes[0].attributes.id}"   src="${includes[0].attributes.src}"    timeout="${includes[0].attributes.timeout}" />
+            </head>
+            <body>
+            </body>
+            </html>
+        `;
+
+        let catchedError;
+        try {
+            await renderTemplate(template);
+        } catch (error) {
+            catchedError = error;
+        }
+
+        chai.expect(catchedError.message).to.be.equal(
+            `Failed to fetch include with ID "${includes[0].attributes.id}" due to: `
+                + `Request failed with status code ${includes[0].api.response.status}`
+        );
     });
 
     it('should return a rendered template with has all necessary attributes but without link header ', async () => {
@@ -364,7 +308,7 @@ describe('renderTemplate', () => {
         }`);
     });
 
-    it('should throw an error when a template has dublicate includes sources or ids', async () => {
+    it('should throw an error when a template has duplicate includes sources or ids', async () => {
         let catchedError;
 
         const includes = [

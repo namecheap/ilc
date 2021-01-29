@@ -5,12 +5,14 @@ import {
 import Joi from 'joi';
 import _ from 'lodash/fp';
 
+import noticeError from '../../errorHandler/noticeError';
 import db from '../../db';
 import Template, {
     templateNameSchema,
 } from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
 import renderTemplate from '../services/renderTemplate';
+import errors from '../errors';
 
 type GetTemplateRenderedRequestParams = {
     name: string
@@ -32,10 +34,23 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
 
     if (!template) {
         res.status(404).send('Not found');
-    } else {
+        return;
+    }
+
+    try {
         const renderedTemplate = await renderTemplate(template.content);
         res.status(200).send(_.assign(template, renderedTemplate));
+    } catch (e) {
+        if (e instanceof errors.FetchIncludeError) {
+            res.status(503).send(e.message);
+            noticeError(e, {
+                context: 'Error during fetch of the rendered template',
+            });
+            return;
+        } else {
+            throw e;
+        }
     }
-};
+}
 
 export default [validateRequestBeforeGetTemplateRendered, getRenderedTemplate];

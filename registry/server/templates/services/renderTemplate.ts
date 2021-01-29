@@ -1,8 +1,7 @@
 import axios from 'axios';
-import uuidv4 from 'uuid/v4';
 
 import parseLinkHeader from './parseLinkHeader';
-import noticeError from '../../errorHandler/noticeError';
+import errors from '../errors';
 
 interface IncludeAttributes {
     id: string,
@@ -101,13 +100,13 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
     }
 
     return Promise.all(includes.map(async (include: string) => {
-        try {
-            const {
-                src,
-                timeout = 10000,
-                id,
-            } = includesAttributes[include];
+        const {
+            src,
+            timeout = 10000,
+            id,
+        } = includesAttributes[include];
 
+        try {
             if (!id || !src) {
                 throw new Error(`Necessary attribute src or id was not provided by ${include}!`);
             }
@@ -132,16 +131,14 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
                 data: wrapWithComments(id, data),
                 styleRefs,
             };
-        } catch (error) {
-            noticeError(error, {
-                type: 'FETCH_INCLUDE_ERROR',
-                errorId: uuidv4(),
-            });
-
-            return {
-                data: include,
-                styleRefs: [],
-            };
+        } catch (e) {
+            throw new errors.FetchIncludeError({
+                message: `Failed to fetch include with ID "${id}" due to: ${e.message}`,
+                cause: e,
+                data: {
+                    include,
+                }
+            })
         }
     }));
 }
