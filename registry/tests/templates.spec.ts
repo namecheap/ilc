@@ -145,7 +145,6 @@ describe(`Tests ${example.url}`, () => {
                     </html>
                 `
             };
-            await request.post(example.url).send(template).expect(200);
 
             includes.forEach(({
                 api: {
@@ -157,7 +156,9 @@ describe(`Tests ${example.url}`, () => {
                         headers,
                     },
                 },
-            }) => scope.log(console.log).get(route).delay(delay).reply(status, data, headers));
+            }) => scope.log(console.log).persist().get(route).delay(delay).reply(status, data, headers));
+
+            await request.post(example.url).send(template).expect(200);
 
             const response = await requestWithAuth.get(example.url + template.name + '/rendered').expect(200);
 
