@@ -33,5 +33,11 @@ module.exports = (response, context) => {
         );
     }
 
+    // Here we force 404 response for primary app handling 404 special route as that route should always return 404 HTTP status code
+    // Regardless of the actual app response code
+    if (context.fragmentAttributes.primary && parseInt(currRoute.specialRole) === 404) {
+        response.statusCode = 404;
+    }
+
     return response;
 };
