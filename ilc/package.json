@@ -59,6 +59,7 @@
     "babel-loader": "^8.1.0",
     "babel-plugin-transform-async-to-promises": "^0.8.15",
     "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "karma": "^5.1.1",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.1.0",

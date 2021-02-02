@@ -1,4 +1,7 @@
-import {addNavigationHook} from './client/navigationEvents/setupEvents';
+import {
+    setNavigationErrorHandler,
+    addNavigationHook,
+} from './client/navigationEvents/setupEvents';
 import * as singleSpa from 'single-spa';
 
 import Router from './client/ClientRouter';
@@ -48,7 +51,7 @@ window.ILC.getAppSdkAdapter = appId => ({
 });
 
 registerSpaApps(registryConf, router, appErrorHandlerFactory);
-setupErrorHandlers(registryConf, router.getCurrentRoute);
+setupErrorHandlers(registryConf, router.getCurrentRoute, setNavigationErrorHandler);
 setupPerformanceMonitoring(router.getCurrentRoute);
 
 singleSpa.setBootstrapMaxTime(5000, false);

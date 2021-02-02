@@ -1,9 +1,13 @@
 const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
 const sinon = require('sinon');
+
+chai.use(chaiAsPromised);
 
 const nock = require('nock');
 const createApp = require('./app');
 const helpers = require('../tests/helpers');
+const errors = require('../common/guard/errors');
 const actionTypes = require('../common/guard/actionTypes');
 const GuardManager = require('./GuardManager');
 
@@ -36,8 +40,8 @@ describe('GuardManager', () => {
             const newLocation = '/should/be/this/location';
             const hooks = [
                 sinon.stub().resolves({type: actionTypes.continue}),
-                sinon.stub().resolves({type: actionTypes.stopNavigation}),
                 sinon.stub().resolves({type: actionTypes.redirect, newLocation}),
+                sinon.stub().resolves({type: actionTypes.continue}),
             ];
 
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
@@ -60,7 +64,7 @@ describe('GuardManager', () => {
 
             const hooks = [
                 sinon.stub().resolves({type: actionTypes.continue}),
-                sinon.stub().resolves({type: actionTypes.stopNavigation}),
+                sinon.stub().resolves({type: actionTypes.continue}),
             ];
 
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
@@ -93,30 +97,30 @@ describe('GuardManager', () => {
             it('if transition hooks plugin does not exist', async () => {
                 pluginManager.getTransitionHooksPlugin.returns(null);
 
-                const hasAccess = await new GuardManager(pluginManager).redirectTo(req);
+                const redirectTo = await new GuardManager(pluginManager).redirectTo(req);
 
-                chai.expect(hasAccess).to.be.null;
+                chai.expect(redirectTo).to.be.null;
             });
 
             it('if transition hooks are non existent', async () => {
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns([]);
 
-                const hasAccess = await new GuardManager(pluginManager).redirectTo(req);
+                const redirectTo = await new GuardManager(pluginManager).redirectTo(req);
 
-                chai.expect(hasAccess).to.be.null;
+                chai.expect(redirectTo).to.be.null;
             });
 
             it(`if none of hooks resolves with "${actionTypes.redirect}" action type`, async () => {
                 const hooks = [
                     sinon.stub().resolves({type: actionTypes.continue}),
-                    sinon.stub().resolves({type: actionTypes.stopNavigation}),
+                    sinon.stub().resolves({type: actionTypes.continue}),
                 ];
 
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-                const hasAccess = await new GuardManager(pluginManager).redirectTo(req);
+                const redirectTo = await new GuardManager(pluginManager).redirectTo(req);
 
                 for (const hook of hooks) {
                     chai.expect(hook.calledOnceWith({
@@ -125,33 +129,69 @@ describe('GuardManager', () => {
                     })).to.be.true;
                 }
 
-                chai.expect(hasAccess).to.be.null;
+                chai.expect(redirectTo).to.be.null;
             });
         });
 
         describe('should not have access to a provided URL', () => {
-            it(`if some of hooks resolves with "${actionTypes.redirect}" action type`, async () => {
-                const newLocation = '/should/be/this/location';
+            it(`if some of hooks rejects with an error`, async () => {
+                const error = new Error('Hi there! I am an error. So server should redirect to 500 error page.');
                 const hooks = [
                     sinon.stub().resolves({type: actionTypes.continue}),
-                    sinon.stub().resolves({type: actionTypes.stopNavigation}),
+                    sinon.stub().rejects(error),
                     sinon.stub().resolves({type: actionTypes.continue}),
-                    sinon.stub().resolves({type: actionTypes.redirect, newLocation}),
+                    sinon.stub().resolves({type: actionTypes.continue}),
                 ];
 
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-                const hasAccess = await new GuardManager(pluginManager).redirectTo(req);
+                await chai.expect(new GuardManager(pluginManager).redirectTo(req)).to.eventually.be.rejected.then((rejectedError) => {
+                    chai.expect(rejectedError).to.be.instanceOf(errors.GuardTransitionHookError);
+                    chai.expect(rejectedError.data).to.be.eql({
+                        hookIndex: 1,
+                    });
+                    chai.expect(rejectedError.cause).to.be.eql(error);
+                });
 
-                for (const hook of hooks) {
+                for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(hook.calledOnceWith({
                         route,
                         req: req,
                     })).to.be.true;
                 }
 
-                chai.expect(hasAccess).to.eql(newLocation);
+                for (const hook of [hooks[2], hooks[3]]) {
+                    chai.expect(hook.called).to.be.false;
+                }
+            });
+
+            it(`if some of hooks resolves with "${actionTypes.redirect}" action type`, async () => {
+                const newLocation = '/should/be/this/location';
+                const hooks = [
+                    sinon.stub().resolves({type: actionTypes.continue}),
+                    sinon.stub().resolves({type: actionTypes.redirect, newLocation}),
+                    sinon.stub().resolves({type: actionTypes.continue}),
+                    sinon.stub().resolves({type: actionTypes.continue}),
+                ];
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns(hooks);
+
+                const redirectTo = await new GuardManager(pluginManager).redirectTo(req);
+
+                for (const hook of [hooks[0], hooks[1]]) {
+                    chai.expect(hook.calledOnceWith({
+                        route,
+                        req: req,
+                    })).to.be.true;
+                }
+
+                for (const hook of [hooks[2], hooks[3]]) {
+                    chai.expect(hook.called).to.be.false;
+                }
+
+                chai.expect(redirectTo).to.eql(newLocation);
             });
         });
     });

@@ -1,4 +1,5 @@
 let hooks = [];
+let errorHandler = null;
 let currUrl = window.location.href;
 
 const capturedEventListeners = {
@@ -81,17 +82,50 @@ export function removeNavigationHook(fn) {
     }
 }
 
+export function setNavigationErrorHandler(fn) {
+    if (typeof fn !== 'function') {
+        throw new Error(`Provided error handler "${fn}" is not a function! Please check that you provided a function while calling "setErrorHandler()".`);
+    }
+
+    if (typeof errorHandler === 'function') {
+        console.warn(`Error handler has been set already! Please check that you set navigation error handler only once.`);
+        return;
+    }
+
+    errorHandler = fn;
+}
+
+export function unsetNavigationErrorHandler() {
+    errorHandler = null;
+}
+
 function callNavigationHooks(url) {
+    // TODO: Update the following logic in the way of Express middleware (next(url | null))
     let state = {
         navigationShouldBeCanceled: false,
         nextUrl: url,
     };
 
     for (const hook of hooks) {
-        const nextState = hook(state);
+        const hookIndex = hooks.indexOf(hook);
 
-        if (typeof nextState === 'object') {
-            state = Object.assign({}, state, nextState);
+        try {
+            const nextState = hook(state);
+
+            if (typeof nextState === 'object') {
+                state = Object.assign({}, state, nextState);
+            }
+        } catch (error) {
+            if (typeof errorHandler === 'function') {
+                errorHandler(error, {
+                    hookIndex,
+                });
+            } else {
+                console.error(`The following error has occurred while executing "${hookIndex}" transition hook:`, error);
+            }
+
+            state.navigationShouldBeCanceled = true;
+            return state;
         }
     }
 

@@ -1,3 +1,4 @@
+import errors from '../common/guard/errors';
 import actionTypes from '../common/guard/actionTypes';
 
 export default class GuardManager {
@@ -22,27 +23,39 @@ export default class GuardManager {
             return true;
         }
 
-        for (const hook of this.#transitionHooksPlugin.getTransitionHooks()) {
-            let action;
+        const hooks = this.#transitionHooksPlugin.getTransitionHooks();
 
+        if (hooks.length === 0) {
+            return true;
+        }
+
+        for (const hook of hooks) {
             try {
-                action = hook({
+                const action = hook({
                     route: {...route, url},
                     navigate: this.#router.navigateToUrl,
                 });
+
+                if (action.type === actionTypes.stopNavigation) {
+                    return false;
+                }
+
+                if (action.type === actionTypes.redirect) {
+                    // Need to add redirect callback to queued tasks
+                    // because it should be executed after micro tasks that can be added after the end of this method
+                    setTimeout(() => this.#router.navigateToUrl(action.newLocation));
+                    return false;
+                }
             } catch (error) {
-                this.#errorHandler(error);
-                return false;
-            }
-
-            if (action.type === actionTypes.stopNavigation) {
-                return false;
-            }
-
-            if (action.type === actionTypes.redirect) {
-                // Need to add redirect callback to queued tasks
-                // because it should be executed after micro tasks that can be added after the end of this method
-                setTimeout(() => this.#router.navigateToUrl(action.newLocation));
+                const hookIndex = hooks.indexOf(hook);
+                this.#errorHandler(new errors.GuardTransitionHookError({
+                    message: `An error has occurred while executing "${hookIndex}" transition hook for the following URL: "${url}".`,
+                    data: {
+                        hookIndex,
+                        url,
+                    },
+                    cause: error,
+                }));
                 return false;
             }
         }

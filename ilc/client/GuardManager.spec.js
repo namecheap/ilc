@@ -1,6 +1,7 @@
 import chai from 'chai';
 import sinon from 'sinon';
 
+import errors from '../common/guard/errors';
 import actionTypes from '../common/guard/actionTypes';
 import GuardManager from './GuardManager';
 
@@ -95,7 +96,14 @@ describe('GuardManager', () => {
             const guardManager = new GuardManager(router, pluginManager, errorHandler);
 
             chai.expect(guardManager.hasAccessTo(url)).to.be.false;
-            chai.expect(errorHandler.calledOnceWithExactly(error));
+            chai.expect(errorHandler.calledOnce).to.be.true;
+            chai.expect(errorHandler.getCall(0).args[0]).to.have.property('cause', error);
+            chai.expect(errorHandler.getCall(0).args[0]).to.be.instanceOf(errors.GuardTransitionHookError);
+            chai.expect(errorHandler.getCall(0).args[0].data).to.be.eql({
+                hookIndex: 1,
+                url,
+            });
+            chai.expect(errorHandler.getCall(0).args[0].cause).to.be.eql(error);
 
             for (const hook of [hooks[0], hooks[1]]) {
                 chai.expect(hook.calledOnceWith({route: {...route, url}, navigate: router.navigateToUrl})).to.be.true;
