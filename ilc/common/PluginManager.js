@@ -33,18 +33,23 @@ module.exports = class PluginManager {
             const plugin = module.default || module;
 
             if (!Object.keys(PLUGIN_TYPES).includes(plugin.type)) {
-                console.warn(`Plugin installed at path "${pluginPath}" of type "${plugin.type}" was ignored as it declares unsupported type.`);
+                console.warn(`ILC: Plugin installed at path "${pluginPath}" of type "${plugin.type}" was ignored as it declares unsupported type.`);
                 return;
             }
 
             if (this.#plugins[plugin.type] !== undefined) {
-                console.warn(`Plugin installed at path "${pluginPath}" of type "${plugin.type}" was ignored as it duplicates the existing one.`);
+                console.warn(`ILC: Plugin installed at path "${pluginPath}" of type "${plugin.type}" was ignored as it duplicates the existing one.`);
                 return;
             }
 
-            console.info(`Enabling plugin "${pluginPath}" of type "${plugin.type}"...`);
+            console.info(`ILC: Enabling plugin "${pluginPath}" of type "${plugin.type}"...`);
             this.#plugins[plugin.type] = plugin;
         });
+
+
+        if (Object.keys(this.#plugins).length === 0) {
+            console.info(`ILC: No plugins were detected`);
+        }
     }
 };
 module.exports.PLUGIN_TYPES = PLUGIN_TYPES;
