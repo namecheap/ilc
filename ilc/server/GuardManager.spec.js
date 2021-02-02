@@ -88,32 +88,23 @@ describe('GuardManager', () => {
                 getRoute: () => route,
             },
         });
-        const res = Object.freeze({
-            redirect: sinon.spy(),
-        });
-
-        afterEach(() => {
-            res.redirect.resetHistory();
-        });
 
         describe('should have access to a provided URL', () => {
             it('if transition hooks plugin does not exist', async () => {
                 pluginManager.getTransitionHooksPlugin.returns(null);
 
-                const hasAccess = await new GuardManager(pluginManager).hasAccessTo(req, res);
+                const hasAccess = await new GuardManager(pluginManager).redirectTo(req);
 
-                chai.expect(res.redirect.called).to.be.false;
-                chai.expect(hasAccess).to.be.true;
+                chai.expect(hasAccess).to.be.null;
             });
 
             it('if transition hooks are non existent', async () => {
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns([]);
 
-                const hasAccess = await new GuardManager(pluginManager).hasAccessTo(req, res);
+                const hasAccess = await new GuardManager(pluginManager).redirectTo(req);
 
-                chai.expect(res.redirect.called).to.be.false;
-                chai.expect(hasAccess).to.be.true;
+                chai.expect(hasAccess).to.be.null;
             });
 
             it(`if none of hooks resolves with "${actionTypes.redirect}" action type`, async () => {
@@ -125,7 +116,7 @@ describe('GuardManager', () => {
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-                const hasAccess = await new GuardManager(pluginManager).hasAccessTo(req, res);
+                const hasAccess = await new GuardManager(pluginManager).redirectTo(req);
 
                 for (const hook of hooks) {
                     chai.expect(hook.calledOnceWith({
@@ -134,8 +125,7 @@ describe('GuardManager', () => {
                     })).to.be.true;
                 }
 
-                chai.expect(res.redirect.called).to.be.false;
-                chai.expect(hasAccess).to.be.true;
+                chai.expect(hasAccess).to.be.null;
             });
         });
 
@@ -152,7 +142,7 @@ describe('GuardManager', () => {
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-                const hasAccess = await new GuardManager(pluginManager).hasAccessTo(req, res);
+                const hasAccess = await new GuardManager(pluginManager).redirectTo(req);
 
                 for (const hook of hooks) {
                     chai.expect(hook.calledOnceWith({
@@ -161,8 +151,7 @@ describe('GuardManager', () => {
                     })).to.be.true;
                 }
 
-                chai.expect(res.redirect.calledOnceWithExactly(newLocation)).to.be.true;
-                chai.expect(hasAccess).to.be.false;
+                chai.expect(hasAccess).to.eql(newLocation);
             });
         });
     });

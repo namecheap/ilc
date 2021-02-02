@@ -7,16 +7,16 @@ class GuardManager {
         this.#transitionHooksPlugin = pluginManager.getTransitionHooksPlugin();
     }
 
-    async hasAccessTo(req, res) {
+    async redirectTo(req) {
         if (this.#transitionHooksPlugin === null) {
-            return true;
+            return null;
         }
 
         const route = req.router.getRoute();
         const hooks = this.#transitionHooksPlugin.getTransitionHooks();
 
         if (hooks.length === 0) {
-            return true;
+            return null;
         }
 
         const actions = await Promise.all(hooks.map((hook) => hook({
@@ -26,12 +26,11 @@ class GuardManager {
 
         for (const action of actions) {
             if (action.type === actionTypes.redirect && action.newLocation) {
-                res.redirect(action.newLocation);
-                return false;
+                return action.newLocation;
             }
         }
 
-        return true;
+        return null;
     }
 }
 
