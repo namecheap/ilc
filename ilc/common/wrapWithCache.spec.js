@@ -140,7 +140,9 @@ describe('wrapWithCache', () => {
             await wrapedFn(...fnArgs);
             await wrapedFn(...fnArgs);
 
-            chai.expect(logger.error.calledWith(fnError)).to.be.true;
+            chai.expect(logger.error.calledOnce).to.be.true;
+            chai.expect(logger.error.getCall(0).args[0]).to.be.instanceof(Error);
+            chai.expect(logger.error.getCall(0).args[0].message).to.eq('Error during cache update function execution')
             chai.expect(fn.calledOnce).to.be.true;
         });
     });

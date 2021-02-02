@@ -1,3 +1,8 @@
+const extendError = require('@namecheap/error-extender');
+
+const errors = {};
+errors.WrapWithCacheError = extendError('WrapWithCacheError');
+
 const wrapWithCache = (localStorage, logger, createHash = hashFn) => (fn, cacheParams = {}) => {
     const {
         cacheForSeconds = 60,
@@ -35,9 +40,11 @@ const wrapWithCache = (localStorage, logger, createHash = hashFn) => (fn, cacheP
                 } else {
                     // Here no one waiting for this promise anymore, thrown error would cause
                     // unhandled promise rejection
-                    //TODO: add better error reporting
-                    logger.error('Error during cache update function execution');
-                    logger.error(err);
+                    const error = new errors.WrapWithCacheError({
+                        message: 'Error during cache update function execution',
+                        cause: err
+                    });
+                    logger.error(error);
                 }
             });
 
