@@ -31,15 +31,10 @@ const router = new Router(registryConf, state, i18n ? i18n.unlocalizeUrl : undef
 const guardManager = new GuardManager(router, pluginManager, internalErrorHandler);
 const urlProcessor = new UrlProcessor(registryConf.settings.trailingSlash);
 
-addNavigationHook((state) => {
-    if (state.nextUrl) {
-        return {
-            ...state,
-            navigationShouldBeCanceled: !guardManager.hasAccessTo(state.nextUrl),
-            nextUrl: urlProcessor.process(state.nextUrl),
-        };
-    }
-});
+addNavigationHook((state) => ({
+    navigationShouldBeCanceled: !guardManager.hasAccessTo(state.nextUrl),
+    nextUrl: urlProcessor.process(state.nextUrl),
+}));
 
 // Here we expose window.ILC.define also as window.define to ensure that regular AMD/UMD bundles work correctly by default
 // See docs/umd_bundles_compatibility.md

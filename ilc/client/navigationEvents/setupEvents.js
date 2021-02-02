@@ -100,17 +100,18 @@ function callNavigationHooks(url) {
 
 function patchedUpdateState(updateState) {
     return function (state, title, url, ...rest) {
-        const {
-            navigationShouldBeCanceled,
-            nextUrl,
-        } = callNavigationHooks(url);
+        if (url) {
+            const hooksRes = callNavigationHooks(url);
 
-        if (navigationShouldBeCanceled) {
-            return;
+            if (hooksRes.navigationShouldBeCanceled) {
+                return;
+            }
+
+            url = hooksRes.nextUrl;
         }
 
         const oldUrl = window.location.href;
-        const result = updateState.call(this, state, title, nextUrl, ...rest);
+        const result = updateState.call(this, state, title, url, ...rest);
         const newUrl = window.location.href;
 
         if (oldUrl !== newUrl) {
