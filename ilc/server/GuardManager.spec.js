@@ -83,10 +83,8 @@ describe('GuardManager', () => {
             route: '/route',
         });
         const req = Object.freeze({
-            raw: {
-                router: {
-                    getRoute: () => route,
-                },
+            router: {
+                getRoute: () => route,
             },
         });
         const res = Object.freeze({
@@ -131,7 +129,7 @@ describe('GuardManager', () => {
                 for (const hook of hooks) {
                     chai.expect(hook.calledOnceWith({
                         route,
-                        req: req.raw,
+                        req,
                     })).to.be.true;
                 }
 
@@ -158,7 +156,7 @@ describe('GuardManager', () => {
                 for (const hook of hooks) {
                     chai.expect(hook.calledOnceWith({
                         route,
-                        req: req.raw,
+                        req: req,
                     })).to.be.true;
                 }
 

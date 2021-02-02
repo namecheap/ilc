@@ -8,32 +8,30 @@ class GuardManager {
     }
 
     async hasAccessTo(req, res) {
-        let hasAccess = true;
-
         if (this.#transitionHooksPlugin === null) {
-            return hasAccess;
+            return true;
         }
 
-        const route = req.raw.router.getRoute();
+        const route = req.router.getRoute();
         const hooks = this.#transitionHooksPlugin.getTransitionHooks();
 
         if (hooks.length === 0) {
-            return hasAccess;
+            return true;
         }
 
         const actions = await Promise.all(hooks.map((hook) => hook({
             route,
-            req: req.raw,
+            req,
         })));
 
         for (const action of actions) {
             if (action.type === actionTypes.redirect && action.newLocation) {
                 res.redirect(action.newLocation);
-                return (hasAccess = false);
+                return false;
             }
         }
 
-        return hasAccess;
+        return true;
     }
 }
 

@@ -12,16 +12,14 @@ export default class GuardManager {
     }
 
     hasAccessTo(url) {
-        let hasAccess = true;
-
         if (this.#transitionHooksPlugin === null) {
-            return hasAccess;
+            return true;
         }
 
         const route = this.#router.match(url);
 
         if (route.specialRole !== null) {
-            return hasAccess;
+            return true;
         }
 
         for (const hook of this.#transitionHooksPlugin.getTransitionHooks()) {
@@ -34,24 +32,22 @@ export default class GuardManager {
                 });
             } catch (error) {
                 this.#errorHandler(error);
-                hasAccess = false;
-                break;
+                return false;
             }
 
             if (action.type === actionTypes.stopNavigation) {
-                hasAccess = false;
-                break;
+                return false;
             }
 
             if (action.type === actionTypes.redirect) {
                 // Need to add redirect callback to queued tasks
                 // because it should be executed after micro tasks that can be added after the end of this method
                 setTimeout(() => this.#router.navigateToUrl(action.newLocation));
-                hasAccess = false;
-                break;
+                return false;
             }
         }
 
-        return hasAccess;
+        // If none of the hooks returned "redirect" or "stop-navigation" action
+        return true;
     }
 };
