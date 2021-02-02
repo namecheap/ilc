@@ -39,17 +39,15 @@ const expectedHeader = (currentOverride = i18nConfig.default) => ({
     routingStrategy: i18nConfig.routingStrategy,
 });
 
-nock('http://apps.test')
-    .persist(true)
-    .get(/.?/)
-    .reply(200, function (uri) {
-        return JSON.stringify({
-            url: uri,
-            headers: this.req.headers,
-        })
+describe('i18n', () => {
+    before(() => {
+        helpers.setupMockServersForApps();
     });
 
-describe('i18n', () => {
+    after(() => {
+        nock.cleanAll();
+    });
+
     afterEach(() => {
         i18nParamsDetectionPlugin.detectI18nConfig.reset();
         pluginManager.getI18nParamsDetectionPlugin.reset();

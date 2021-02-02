@@ -22,11 +22,12 @@ describe('GuardManager', () => {
     });
 
     describe('e2e tests', () => {
-        nock('http://apps.test').persist(true).get(/.?/).reply(200, function (url) {
-            return JSON.stringify({
-                url,
-                headers: this.req.headers,
-            })
+        before(() => {
+            helpers.setupMockServersForApps();
+        });
+
+        after(() => {
+            nock.cleanAll();
         });
 
         it(`should redirect when some of hooks resolves with "${actionTypes.redirect}" action type`, async () => {
