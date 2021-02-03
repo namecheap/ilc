@@ -14,6 +14,7 @@ describe('GuardManager', () => {
         meta: {
             protected: true,
         },
+        reqUrl: '/some/url',
     });
 
     const errorHandler = sinon.stub();
@@ -86,7 +87,7 @@ describe('GuardManager', () => {
             chai.expect(guardManager.hasAccessTo(url)).to.be.true;
 
             for (const hook of hooks) {
-                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url}, navigate: router.navigateToUrl})).to.be.true;
+                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url: route.reqUrl}, navigate: router.navigateToUrl})).to.be.true;
             }
         });
     });
@@ -119,7 +120,7 @@ describe('GuardManager', () => {
             chai.expect(errorHandler.getCall(0).args[0].cause).to.be.eql(error);
 
             for (const hook of [hooks[0], hooks[1]]) {
-                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url}, navigate: router.navigateToUrl})).to.be.true;
+                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url: route.reqUrl}, navigate: router.navigateToUrl})).to.be.true;
             }
 
             for (const hook of [hooks[2], hooks[3]]) {
@@ -146,7 +147,7 @@ describe('GuardManager', () => {
             chai.expect(logger.log.calledOnceWith(`ILC: Stopped navigation due to the Route Guard with index #${1}`)).to.be.true;
 
             for (const hook of [hooks[0], hooks[1]]) {
-                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url}, navigate: router.navigateToUrl})).to.be.true;
+                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url: route.reqUrl}, navigate: router.navigateToUrl})).to.be.true;
             }
 
             for (const hook of [hooks[2], hooks[3]]) {
@@ -173,7 +174,7 @@ describe('GuardManager', () => {
             chai.expect(router.navigateToUrl.called).to.be.false;
 
             for (const hook of [hooks[0], hooks[1]]) {
-                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url}, navigate: router.navigateToUrl})).to.be.true;
+                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url: route.reqUrl}, navigate: router.navigateToUrl})).to.be.true;
             }
 
             for (const hook of [hooks[2], hooks[3]]) {
@@ -182,7 +183,7 @@ describe('GuardManager', () => {
 
             await clock.runAllAsync();
 
-            chai.expect(logger.log.calledWithExactly(`ILC: Redirect from "${window.location.href}" to "${url}" due to the Route Guard with index #${1}`)).to.be.true;
+            chai.expect(logger.log.calledWithExactly(`ILC: Redirect from "${route.reqUrl}" to "${url}" due to the Route Guard with index #${1}`)).to.be.true;
             chai.expect(router.navigateToUrl.calledWithExactly(url)).to.be.true;
         });
     });

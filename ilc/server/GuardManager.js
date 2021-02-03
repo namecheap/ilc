@@ -28,7 +28,10 @@ class GuardManager {
         for (const hook of hooks) {
             try {
                 const action = await hook({
-                    route: {meta: route.meta},
+                    route: {
+                        meta: route.meta,
+                        url: route.reqUrl,
+                    },
                     req,
                 });
 

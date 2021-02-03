@@ -30,7 +30,7 @@ const pluginManager = new PluginManager(require.context('./node_modules', true, 
 const i18n = registryConf.settings.i18n.enabled
     ? new I18n(registryConf.settings.i18n, {...singleSpa, triggerAppChange}, appErrorHandlerFactory)
     : null;
-const router = new Router(registryConf, state, i18n ? i18n.unlocalizeUrl : undefined, singleSpa);
+const router = new Router(registryConf, state, i18n ? i18n : undefined, singleSpa);
 const guardManager = new GuardManager(router, pluginManager, internalErrorHandler);
 const urlProcessor = new UrlProcessor(registryConf.settings.trailingSlash);
 

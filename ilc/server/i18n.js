@@ -72,7 +72,16 @@ function unlocalizeUrl(i18nConfig, url) {
     return Intl.parseUrl(i18nConfig, url).cleanUrl;
 }
 
+function localizeUrl(i18nConfig, url, configOverride) {
+    if (!i18nConfig.enabled) {
+        return url;
+    }
+
+    return Intl.localizeUrl(i18nConfig, url, configOverride);
+}
+
 module.exports = {
     onRequestFactory,
     unlocalizeUrl,
+    localizeUrl,
 };

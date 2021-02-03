@@ -89,6 +89,7 @@ describe('GuardManager', () => {
             meta: {
                 protected: true,
             },
+            reqUrl: '/some/unlocalized/and/processed/url',
         });
         const req = Object.freeze({
             router: {
@@ -144,7 +145,7 @@ describe('GuardManager', () => {
 
                 for (const hook of hooks) {
                     chai.expect(hook.calledOnceWith({
-                        route: {meta: route.meta},
+                        route: {meta: route.meta, url: route.reqUrl},
                         req,
                     })).to.be.true;
                 }
@@ -176,7 +177,7 @@ describe('GuardManager', () => {
 
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(hook.calledOnceWith({
-                        route: {meta: route.meta},
+                        route: {meta: route.meta, url: route.reqUrl},
                         req: req,
                     })).to.be.true;
                 }
@@ -202,7 +203,7 @@ describe('GuardManager', () => {
 
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(hook.calledOnceWith({
-                        route: {meta: route.meta},
+                        route: {meta: route.meta, url: route.reqUrl},
                         req: req,
                     })).to.be.true;
                 }

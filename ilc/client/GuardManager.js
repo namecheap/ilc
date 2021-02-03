@@ -6,14 +6,12 @@ export default class GuardManager {
     #transitionHooksPlugin;
     #errorHandler;
     #logger;
-    #location;
 
-    constructor(router, pluginManager, errorHandler, logger = window.console, location = window.location) {
+    constructor(router, pluginManager, errorHandler, logger = window.console) {
         this.#router = router;
         this.#transitionHooksPlugin = pluginManager.getTransitionHooksPlugin();
         this.#errorHandler = errorHandler;
         this.#logger = logger;
-        this.#location = location;
     }
 
     hasAccessTo(url) {
@@ -36,7 +34,10 @@ export default class GuardManager {
         for (const hook of hooks) {
             try {
                 const action = hook({
-                    route: {meta: route.meta, url},
+                    route: {
+                        meta: route.meta,
+                        url: route.reqUrl,
+                    },
                     navigate: this.#router.navigateToUrl,
                 });
 
@@ -49,7 +50,7 @@ export default class GuardManager {
                     // Need to add redirect callback to queued tasks
                     // because it should be executed after micro tasks that can be added after the end of this method
                     setTimeout(() => {
-                        this.#logger.log(`ILC: Redirect from "${this.#location.href}" to "${action.newLocation}" due to the Route Guard with index #${hooks.indexOf(hook)}`);
+                        this.#logger.log(`ILC: Redirect from "${route.reqUrl}" to "${action.newLocation}" due to the Route Guard with index #${hooks.indexOf(hook)}`);
                         this.#router.navigateToUrl(action.newLocation);
                     });
                     return false;

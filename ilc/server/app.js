@@ -24,8 +24,8 @@ module.exports = (registryService, pluginManager) => {
 
     app.addHook('onRequest', async (req, reply) => {
         req.raw.ilcState = {};
-        const registryConfig = await registryService.getConfig();
-        const i18nOnRequest = i18n.onRequestFactory(registryConfig.data.settings.i18n, i18nParamsDetectionPlugin);
+        const registryConfig = (await registryService.getConfig()).data;
+        const i18nOnRequest = i18n.onRequestFactory(registryConfig.settings.i18n, i18nParamsDetectionPlugin);
 
         await i18nOnRequest(req, reply);
     });
@@ -54,7 +54,8 @@ module.exports = (registryService, pluginManager) => {
         let registryConfig = (await registryService.getConfig()).data;
 
         const url = req.raw.url;
-        const processedUrl = new UrlProcessor(registryConfig.settings.trailingSlash).process(url);
+        const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
+        const processedUrl = urlProcessor.process(url);
 
         if (processedUrl !== url) {
             res.redirect(processedUrl);
@@ -73,7 +74,9 @@ module.exports = (registryService, pluginManager) => {
 
         const redirectTo = await guardManager.redirectTo(req.raw);
         if (redirectTo) {
-            res.redirect(redirectTo);
+            res.redirect(urlProcessor.process(i18n.localizeUrl(registryConfig.settings.i18n, redirectTo, {
+                locale: req.raw.ilcState.locale,
+            })));
             return;
         }
 

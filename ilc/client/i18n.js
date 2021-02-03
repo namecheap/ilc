@@ -31,6 +31,7 @@ export default class I18n {
     }
 
     unlocalizeUrl = v => IlcIntl.parseUrl(this.#config, v).cleanUrl;
+    localizeUrl = (url) => IlcIntl.localizeUrl(this.#config, url, this.#get());
 
     getAdapter() {
         return {
