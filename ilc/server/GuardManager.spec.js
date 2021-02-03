@@ -85,7 +85,10 @@ describe('GuardManager', () => {
     describe('unit tests', () => {
         const route = Object.freeze({
             id: 'routeId',
-            route: '/route',
+            specialRole: null,
+            meta: {
+                protected: true,
+            },
         });
         const req = Object.freeze({
             router: {
@@ -111,6 +114,23 @@ describe('GuardManager', () => {
                 chai.expect(redirectTo).to.be.null;
             });
 
+            it('if the route has special role', async () => {
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns([]);
+
+                const route = Object.freeze({
+                    specialRole: 404,
+                });
+                const req = Object.freeze({
+                    router: {
+                        getRoute: () => route,
+                    },
+                });
+                const redirectTo = await new GuardManager(pluginManager).redirectTo(req);
+
+                chai.expect(redirectTo).to.be.null;
+            });
+
             it(`if none of hooks resolves with "${actionTypes.redirect}" action type`, async () => {
                 const hooks = [
                     sinon.stub().resolves({type: actionTypes.continue}),
@@ -124,7 +144,7 @@ describe('GuardManager', () => {
 
                 for (const hook of hooks) {
                     chai.expect(hook.calledOnceWith({
-                        route,
+                        route: {meta: route.meta},
                         req,
                     })).to.be.true;
                 }
@@ -156,7 +176,7 @@ describe('GuardManager', () => {
 
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(hook.calledOnceWith({
-                        route,
+                        route: {meta: route.meta},
                         req: req,
                     })).to.be.true;
                 }
@@ -182,7 +202,7 @@ describe('GuardManager', () => {
 
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(hook.calledOnceWith({
-                        route,
+                        route: {meta: route.meta},
                         req: req,
                     })).to.be.true;
                 }

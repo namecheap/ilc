@@ -14,6 +14,11 @@ class GuardManager {
         }
 
         const route = req.router.getRoute();
+
+        if (route.specialRole !== null) {
+            return null;
+        }
+
         const hooks = this.#transitionHooksPlugin.getTransitionHooks();
 
         if (hooks.length === 0) {
@@ -23,7 +28,7 @@ class GuardManager {
         for (const hook of hooks) {
             try {
                 const action = await hook({
-                    route,
+                    route: {meta: route.meta},
                     req,
                 });
 

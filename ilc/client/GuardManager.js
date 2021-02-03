@@ -32,7 +32,7 @@ export default class GuardManager {
         for (const hook of hooks) {
             try {
                 const action = hook({
-                    route: {...route, url},
+                    route: {meta: route.meta, url},
                     navigate: this.#router.navigateToUrl,
                 });
 

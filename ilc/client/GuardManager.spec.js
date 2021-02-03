@@ -8,6 +8,14 @@ import GuardManager from './GuardManager';
 describe('GuardManager', () => {
     let clock;
 
+    const route = Object.freeze({
+        routeId: 1,
+        specialRole: null,
+        meta: {
+            protected: true,
+        },
+    });
+
     const errorHandler = sinon.stub();
 
     const router = Object.freeze({
@@ -54,7 +62,6 @@ describe('GuardManager', () => {
         });
 
         it(`if none of hooks returns "${actionTypes.stopNavigation}" or "${actionTypes.redirect}" action types`, () => {
-            const route = {routeId: 1, specialRole: null};
             const url = '/every/hook/does/not/return/stop/navigation';
             const hooks = [
                 sinon.stub().returns({type: actionTypes.continue}),
@@ -72,7 +79,7 @@ describe('GuardManager', () => {
             chai.expect(guardManager.hasAccessTo(url)).to.be.true;
 
             for (const hook of hooks) {
-                chai.expect(hook.calledOnceWith({route: {...route, url}, navigate: router.navigateToUrl})).to.be.true;
+                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url}, navigate: router.navigateToUrl})).to.be.true;
             }
         });
     });
@@ -80,7 +87,6 @@ describe('GuardManager', () => {
     describe('should not have access to a provided URL', () => {
         it(`if some of hooks throws an error`, () => {
             const error = new Error('Hi there! I am an error. So, should be shown 500 error page in this case');
-            const route = {routeId: 2, specialRole: null};
             const url = '/some/hook/returns/stop/navigation';
             const hooks = [
                 sinon.stub().returns({type: actionTypes.continue}),
@@ -106,7 +112,7 @@ describe('GuardManager', () => {
             chai.expect(errorHandler.getCall(0).args[0].cause).to.be.eql(error);
 
             for (const hook of [hooks[0], hooks[1]]) {
-                chai.expect(hook.calledOnceWith({route: {...route, url}, navigate: router.navigateToUrl})).to.be.true;
+                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url}, navigate: router.navigateToUrl})).to.be.true;
             }
 
             for (const hook of [hooks[2], hooks[3]]) {
@@ -115,7 +121,6 @@ describe('GuardManager', () => {
         });
 
         it(`if some of hooks returns "${actionTypes.stopNavigation}" action type`, () => {
-            const route = {routeId: 2, specialRole: null};
             const url = '/some/hook/returns/stop/navigation';
             const hooks = [
                 sinon.stub().returns({type: actionTypes.continue}),
@@ -133,7 +138,7 @@ describe('GuardManager', () => {
             chai.expect(guardManager.hasAccessTo(url)).to.be.false;
 
             for (const hook of [hooks[0], hooks[1]]) {
-                chai.expect(hook.calledOnceWith({route: {...route, url}, navigate: router.navigateToUrl})).to.be.true;
+                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url}, navigate: router.navigateToUrl})).to.be.true;
             }
 
             for (const hook of [hooks[2], hooks[3]]) {
@@ -142,7 +147,6 @@ describe('GuardManager', () => {
         });
 
         it(`if some of hooks returns "${actionTypes.redirect}" action type`, async () => {
-            const route = {routeId: 3, specialRole: null};
             const url = '/some/hook/returns/redirect/navigation';
             const hooks = [
                 sinon.stub().returns({type: actionTypes.continue}),
@@ -161,7 +165,7 @@ describe('GuardManager', () => {
             chai.expect(router.navigateToUrl.called).to.be.false;
 
             for (const hook of [hooks[0], hooks[1]]) {
-                chai.expect(hook.calledOnceWith({route: {...route, url}, navigate: router.navigateToUrl})).to.be.true;
+                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url}, navigate: router.navigateToUrl})).to.be.true;
             }
 
             for (const hook of [hooks[2], hooks[3]]) {
