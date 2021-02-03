@@ -43,6 +43,7 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                 reqUrl,
                 {...filterHeaders(attributes, request), ...requiredHeaders},
                 wrapperConf.timeout,
+                attributes.ignoreInvalidSsl,
             );
 
             fragmentRequest.on('response', response => {
@@ -84,6 +85,7 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                 reqUrl,
                 {...filterHeaders(attributes, request), ...requiredHeaders},
                 attributes.timeout,
+                attributes.ignoreInvalidSsl,
             );
 
             fragmentRequest.on('response', response => {
@@ -123,7 +125,7 @@ function makeFragmentUrl(route, baseUrl, appId, props) {
     return url.toString();
 }
 
-function makeRequest(reqUrl, headers, timeout) {
+function makeRequest(reqUrl, headers, timeout, ignoreInvalidSsl = false) {
     const options = {
         headers,
         timeout,
@@ -135,7 +137,7 @@ function makeRequest(reqUrl, headers, timeout) {
     const protocol = hasHttpsProtocol ? https : http;
     options.agent = hasHttpsProtocol ? kaAgentHttps : kaAgent;
 
-    if (hasHttpsProtocol && fragmentAttributes.ignoreInvalidSsl) {
+    if (hasHttpsProtocol && ignoreInvalidSsl) {
         options.rejectUnauthorized = false;
     }
 
