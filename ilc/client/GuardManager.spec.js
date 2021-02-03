@@ -31,23 +31,30 @@ describe('GuardManager', () => {
         getTransitionHooks: sinon.stub(),
     });
 
+    const logger = {
+        log: sinon.spy(),
+    };
+
     beforeEach(() => {
         clock = sinon.useFakeTimers();
     });
 
     afterEach(() => {
         clock.restore();
+
         errorHandler.reset();
         router.match.reset();
         pluginManager.getTransitionHooksPlugin.reset();
         transitionHooksPlugin.getTransitionHooks.reset();
+
+        logger.log.resetHistory();
     });
 
     describe('should have access to a provided URL', () => {
         it('if transition hooks plugin does not exist', () => {
             pluginManager.getTransitionHooksPlugin.returns(null);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler);
+            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
 
             chai.expect(guardManager.hasAccessTo('/transition/hooks/plugin/does/not/exist')).to.be.true;
         });
@@ -56,7 +63,7 @@ describe('GuardManager', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             router.match.returns({specialRole: 404});
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler);
+            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
 
             chai.expect(guardManager.hasAccessTo('/router/does/not/have/route')).to.be.true;
         });
@@ -74,7 +81,7 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler);
+            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
 
             chai.expect(guardManager.hasAccessTo(url)).to.be.true;
 
@@ -99,7 +106,7 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler);
+            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
 
             chai.expect(guardManager.hasAccessTo(url)).to.be.false;
             chai.expect(errorHandler.calledOnce).to.be.true;
@@ -133,9 +140,10 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler);
+            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
 
             chai.expect(guardManager.hasAccessTo(url)).to.be.false;
+            chai.expect(logger.log.calledOnceWith(`ILC: Stopped navigation due to the Route Guard with index #${1}`)).to.be.true;
 
             for (const hook of [hooks[0], hooks[1]]) {
                 chai.expect(hook.calledOnceWith({route: {meta: route.meta, url}, navigate: router.navigateToUrl})).to.be.true;
@@ -159,7 +167,7 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler);
+            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
 
             chai.expect(guardManager.hasAccessTo(url)).to.be.false;
             chai.expect(router.navigateToUrl.called).to.be.false;
@@ -174,6 +182,7 @@ describe('GuardManager', () => {
 
             await clock.runAllAsync();
 
+            chai.expect(logger.log.calledWithExactly(`ILC: Redirect from "${window.location.href}" to "${url}" due to the Route Guard with index #${1}`)).to.be.true;
             chai.expect(router.navigateToUrl.calledWithExactly(url)).to.be.true;
         });
     });

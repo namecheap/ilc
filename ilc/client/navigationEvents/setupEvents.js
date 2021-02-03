@@ -69,7 +69,7 @@ export function addNavigationHook(fn) {
     }
 
     if (hooks.includes(fn)) {
-        console.warn(`Provided hook "${fn}" is already existed! Please provide only a unique hook to "addNavigationHook()".`);
+        console.warn(`ILC: Provided hook "${fn}" is already existed! Please provide only a unique hook to "addNavigationHook()".`);
         return;
     }
 
@@ -88,7 +88,7 @@ export function setNavigationErrorHandler(fn) {
     }
 
     if (typeof errorHandler === 'function') {
-        console.warn(`Error handler has been set already! Please check that you set navigation error handler only once.`);
+        console.warn(`ILC: Navigation error handler has been set already! Please check that you set navigation error handler only once.`);
         return;
     }
 
@@ -121,7 +121,7 @@ function callNavigationHooks(url) {
                     hookIndex,
                 });
             } else {
-                console.error(`The following error has occurred while executing "${hookIndex}" transition hook:`, error);
+                console.error(`ILC: The following error has occurred while executing the transition hook with index #${hookIndex}:`, error);
             }
 
             state.navigationShouldBeCanceled = true;

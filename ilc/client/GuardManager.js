@@ -5,11 +5,15 @@ export default class GuardManager {
     #router;
     #transitionHooksPlugin;
     #errorHandler;
+    #logger;
+    #location;
 
-    constructor(router, pluginManager, errorHandler) {
+    constructor(router, pluginManager, errorHandler, logger = window.console, location = window.location) {
         this.#router = router;
         this.#transitionHooksPlugin = pluginManager.getTransitionHooksPlugin();
         this.#errorHandler = errorHandler;
+        this.#logger = logger;
+        this.#location = location;
     }
 
     hasAccessTo(url) {
@@ -37,17 +41,22 @@ export default class GuardManager {
                 });
 
                 if (action.type === actionTypes.stopNavigation) {
+                    this.#logger.log(`ILC: Stopped navigation due to the Route Guard with index #${hooks.indexOf(hook)}`);
                     return false;
                 }
 
                 if (action.type === actionTypes.redirect) {
                     // Need to add redirect callback to queued tasks
                     // because it should be executed after micro tasks that can be added after the end of this method
-                    setTimeout(() => this.#router.navigateToUrl(action.newLocation));
+                    setTimeout(() => {
+                        this.#logger.log(`ILC: Redirect from "${this.#location.href}" to "${action.newLocation}" due to the Route Guard with index #${hooks.indexOf(hook)}`);
+                        this.#router.navigateToUrl(action.newLocation);
+                    });
                     return false;
                 }
             } catch (error) {
                 const hookIndex = hooks.indexOf(hook);
+
                 this.#errorHandler(new errors.GuardTransitionHookError({
                     message: `An error has occurred while executing "${hookIndex}" transition hook for the following URL: "${url}".`,
                     data: {
