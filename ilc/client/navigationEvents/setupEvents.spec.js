@@ -174,6 +174,23 @@ describe('setupEvents', () => {
             });
         }
 
+        function shouldProvideUrlAsStringToHooksWhenLocationWasProvidedAsUrlArgument(methodName) {
+            it(`should provide an URL as a string to navigation hooks when "window.location" was provided as "url" argument to "${methodName}" method`, async () => {
+                const hook = sinon.spy();
+
+                try {
+                    addNavigationHook(hook);
+
+                    window.history[methodName](null, undefined, window.location);
+                    await clock.runAllAsync();
+
+                    chai.expect(hook.calledOnceWithExactly(window.location.pathname));
+                } finally {
+                    removeNavigationHook(hook);
+                }
+            });
+        }
+
         shouldNotChangeLocationUrlByHistoryMethod('pushState');
         shouldNotChangeLocationUrlByHistoryMethod('replaceState');
 
@@ -182,6 +199,9 @@ describe('setupEvents', () => {
 
         shouldNotChangeLocationUrlByHistoryMethodWhenSomeOfHooksThrowsAnError('pushState');
         shouldNotChangeLocationUrlByHistoryMethodWhenSomeOfHooksThrowsAnError('replaceState');
+
+        shouldProvideUrlAsStringToHooksWhenLocationWasProvidedAsUrlArgument('pushState');
+        shouldProvideUrlAsStringToHooksWhenLocationWasProvidedAsUrlArgument('replaceState');
     });
 
     // TODO: Cover the case when history.back() or history.forward() can be dispatched with e2e tests because of async work of these methods

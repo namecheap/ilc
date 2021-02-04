@@ -134,6 +134,17 @@ function callNavigationHooks(url) {
 
 function patchedUpdateState(updateState) {
     return function (state, title, url, ...rest) {
+        /**
+         * Need to check "url" argument because dependencies as "@mapbox/scroll-restorer" provides "window.location" when using History API
+         * This parameter should be a string or undefined due to the documentation
+         *
+         * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API}
+         * @see {@link https://github.com/mapbox/scroll-restorer/blob/main/index.js#L65}
+         */
+        if (typeof url !== 'string' && window.location === url) {
+            url = url.pathname;
+        }
+
         if (url) {
             const hooksRes = callNavigationHooks(url);
 
