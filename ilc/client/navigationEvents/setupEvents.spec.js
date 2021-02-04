@@ -46,25 +46,24 @@ describe('setupEvents', () => {
                     sinon.stub().returns(null),
                     sinon.stub().returns(undefined),
                 ];
+                const prevHref = window.location.href;
 
                 try {
-                    const prevHref = window.location.href;
-
                     for (const hook of hooks) {
                         addNavigationHook(hook);
                     }
 
                     window.history[methodName](null, undefined, '/some/url');
                     await clock.runAllAsync();
-
-                    chai.expect(popstateEventHandler.called).to.be.false;
-                    chai.expect(beforeRoutingEventHandler.called).to.be.false;
-                    chai.expect(window.location.href).to.be.eql(prevHref);
                 } finally {
                     for (const hook of hooks) {
                         removeNavigationHook(hook);
                     }
                 }
+
+                chai.expect(popstateEventHandler.called).to.be.false;
+                chai.expect(beforeRoutingEventHandler.called).to.be.false;
+                chai.expect(window.location.href).to.be.eql(prevHref);
             });
         }
 
@@ -86,15 +85,15 @@ describe('setupEvents', () => {
 
                     window.history[methodName](null, undefined, '/some/url');
                     await clock.runAllAsync();
-
-                    chai.expect(popstateEventHandler.called).to.be.true;
-                    chai.expect(beforeRoutingEventHandler.called).to.be.true;
-                    chai.expect(new URL(window.location.href).pathname).to.be.eql(nextUrl);
                 } finally {
                     for (const hook of hooks) {
                         removeNavigationHook(hook);
                     }
                 }
+
+                chai.expect(popstateEventHandler.called).to.be.true;
+                chai.expect(beforeRoutingEventHandler.called).to.be.true;
+                chai.expect(new URL(window.location.href).pathname).to.be.eql(nextUrl);
             });
         }
 
@@ -111,10 +110,9 @@ describe('setupEvents', () => {
                 ];
                 const errorHandler = sinon.spy();
                 const anotherErrorHandler = sinon.spy();
+                const prevHref = window.location.href;
 
                 try {
-                    const prevHref = window.location.href;
-
                     for (const hook of hooks) {
                         addNavigationHook(hook);
                     }
@@ -124,14 +122,6 @@ describe('setupEvents', () => {
 
                     window.history[methodName](null, undefined, '/some/url');
                     await clock.runAllAsync();
-
-                    chai.expect(popstateEventHandler.called).to.be.false;
-                    chai.expect(beforeRoutingEventHandler.called).to.be.false;
-                    chai.expect(window.location.href).to.be.eql(prevHref);
-                    chai.expect(errorHandler.calledOnceWithExactly(error, {
-                        hookIndex: 1,
-                    })).to.be.true;
-                    chai.expect(anotherErrorHandler.called).to.be.false;
                 } finally {
                     for (const hook of hooks) {
                         removeNavigationHook(hook);
@@ -139,6 +129,14 @@ describe('setupEvents', () => {
 
                     unsetNavigationErrorHandler();
                 }
+
+                chai.expect(popstateEventHandler.called).to.be.false;
+                chai.expect(beforeRoutingEventHandler.called).to.be.false;
+                chai.expect(window.location.href).to.be.eql(prevHref);
+                chai.expect(errorHandler.calledOnceWithExactly(error, {
+                    hookIndex: 1,
+                })).to.be.true;
+                chai.expect(anotherErrorHandler.called).to.be.false;
             });
 
             it(`should not change location URL by "${methodName}" when some of hooks throws an error and a custom error handler has not been set yet`, async () => {
@@ -152,25 +150,24 @@ describe('setupEvents', () => {
                     sinon.stub().returns(null),
                     sinon.stub().returns(undefined),
                 ];
+                const prevHref = window.location.href;
 
                 try {
-                    const prevHref = window.location.href;
-
                     for (const hook of hooks) {
                         addNavigationHook(hook);
                     }
 
                     window.history[methodName](null, undefined, '/some/url');
                     await clock.runAllAsync();
-
-                    chai.expect(popstateEventHandler.called).to.be.false;
-                    chai.expect(beforeRoutingEventHandler.called).to.be.false;
-                    chai.expect(window.location.href).to.be.eql(prevHref);
                 } finally {
                     for (const hook of hooks) {
                         removeNavigationHook(hook);
                     }
                 }
+
+                chai.expect(popstateEventHandler.called).to.be.false;
+                chai.expect(beforeRoutingEventHandler.called).to.be.false;
+                chai.expect(window.location.href).to.be.eql(prevHref);
             });
         }
 
@@ -180,14 +177,13 @@ describe('setupEvents', () => {
 
                 try {
                     addNavigationHook(hook);
-
                     window.history[methodName](null, undefined, window.location);
                     await clock.runAllAsync();
-
-                    chai.expect(hook.calledOnceWithExactly(window.location.pathname));
                 } finally {
                     removeNavigationHook(hook);
                 }
+
+                chai.expect(hook.calledOnceWithExactly(window.location.pathname)).to.be.true;
             });
         }
 
