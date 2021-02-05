@@ -27,6 +27,11 @@ export class TransactionManager {
         window.addEventListener('ilc:crash', () => { //TODO: add cleanup
             this.#removeGlobalSpinner();
         });
+        window.addEventListener('single-spa:routing-event', () => { //TODO: add cleanup
+            if (this.#transactionBlockers.length === 0) {
+                this.#onAllSlotsLoaded();
+            }
+        });
     }
 
     handleAsyncAction(promise) {
