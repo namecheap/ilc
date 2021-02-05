@@ -141,8 +141,8 @@ function patchedUpdateState(updateState) {
          * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API}
          * @see {@link https://github.com/mapbox/scroll-restorer/blob/main/index.js#L65}
          */
-        if (typeof url !== 'string' && window.location === url) {
-            url = url.pathname;
+        if (typeof url === 'object' && url.pathname) {
+            url = url.pathname + url.search + url.hash;
         }
 
         if (url) {
@@ -172,7 +172,7 @@ function handlePopState(event) {
     const nextUrl = (currUrl = window.location.href);
 
     if (!event.singleSpa && callNavigationHooks(nextUrl).navigationShouldBeCanceled) {
-        window.history.replaceState(null, undefined, prevUrl);
+        window.history.replaceState(window.history.state, undefined, prevUrl);
         return;
     }
 

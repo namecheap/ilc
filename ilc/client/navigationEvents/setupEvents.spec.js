@@ -172,18 +172,23 @@ describe('setupEvents', () => {
         }
 
         function shouldProvideUrlAsStringToHooksWhenLocationWasProvidedAsUrlArgument(methodName) {
-            it(`should provide an URL as a string to navigation hooks when "window.location" was provided as "url" argument to "${methodName}" method`, async () => {
+            it(`should provide an URL as a string to navigation hooks when an object was provided as "url" argument to "${methodName}" method`, async () => {
                 const hook = sinon.spy();
+                const url = {
+                    pathname: '/some/url',
+                    search: '?search=true',
+                    hash: '#hash'
+                };
 
                 try {
                     addNavigationHook(hook);
-                    window.history[methodName](null, undefined, window.location);
+                    window.history[methodName](null, undefined, url);
                     await clock.runAllAsync();
                 } finally {
                     removeNavigationHook(hook);
                 }
 
-                chai.expect(hook.calledOnceWithExactly(window.location.pathname)).to.be.true;
+                chai.expect(hook.calledOnceWithExactly(url.pathname + url.search + url.hash)).to.be.true;
             });
         }
 
