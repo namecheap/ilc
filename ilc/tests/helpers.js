@@ -1,4 +1,5 @@
 const deepmerge = require('deepmerge');
+const nock = require('nock');
 
 function getRegistryMock(overrideConfig = {}) {
     return {
@@ -85,7 +86,20 @@ function getPluginManagerMock() {
     return {
         getReportingPlugin: () => null,
         getI18nParamsDetectionPlugin: () => null,
+        getTransitionHooksPlugin: () => null,
     };
+}
+
+function setupMockServersForApps() {
+    nock('http://apps.test')
+        .persist(true)
+        .get(/.?/)
+        .reply(200, function (uri) {
+            return JSON.stringify({
+                url: uri,
+                headers: this.req.headers,
+            })
+        });
 }
 
 module.exports = {
@@ -93,4 +107,5 @@ module.exports = {
     getRouterProps,
     getFragmentResponses,
     getPluginManagerMock,
+    setupMockServersForApps,
 }

@@ -1,8 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
-const pluginManager = require('../pluginManager/factory');
-
+const pluginManager = require('../pluginManager');
 
 let fastifyConf = pluginManager.getReportingPlugin();
 if (fastifyConf === null) {

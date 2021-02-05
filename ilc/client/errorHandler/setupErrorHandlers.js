@@ -1,14 +1,23 @@
 import * as singleSpa from 'single-spa';
 import * as uuidv4 from 'uuid/v4';
 
-import { fragmentErrorHandlerFactory } from './fragmentErrorHandlerFactory';
+import fragmentErrorHandlerFactory from './fragmentErrorHandlerFactory';
 import registryService from '../registry/factory';
 import noticeError from './noticeError';
-import {appIdToNameAndSlot} from "../../common/utils";
+import {appIdToNameAndSlot} from '../../common/utils';
+import internalErrorHandler from './internalErrorHandler';
+import navigationErrors from '../navigationEvents/errors';
 
 const System = window.System;
 
-export default function (registryConf, getCurrentPath) {
+export default function (registryConf, getCurrentPath, setNavigationErrorHandler) {
+    setNavigationErrorHandler((error, errorInfo = {}) => {
+        internalErrorHandler(new navigationErrors.NavigationError({
+            data: errorInfo,
+            cause: error,
+        }));
+    });
+
     singleSpa.addErrorHandler((error) => {
         const {appName, slotName} = appIdToNameAndSlot(error.appOrParcelName);
         const fragmentErrorHandler = fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName);

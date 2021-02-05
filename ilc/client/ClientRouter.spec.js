@@ -521,4 +521,54 @@ describe('client router', () => {
             chai.expect(router.getPrevRouteProps.bind(router, '@portal/hero', 'undefined')).to.throw('Can not find info about the slot');
         });
     });
+
+    describe('when i18n was provided', () => {
+        const singleSpa = {
+            navigateToUrl: sinon.spy(),
+        };
+
+        const i18n = {
+            unlocalizeUrl: sinon.stub().callsFake((url) => url),
+            localizeUrl: sinon.stub().callsFake((url) => url),
+        };
+
+        let router;
+
+        beforeEach(() => {
+            i18n.unlocalizeUrl.callsFake((url) => url);
+            i18n.localizeUrl.callsFake((url) => url);
+
+            router = new ClientRouter(registryConfig, {}, i18n, singleSpa);
+        });
+
+        afterEach(() => {
+            i18n.unlocalizeUrl.reset();
+            i18n.localizeUrl.reset();
+
+            singleSpa.navigateToUrl.resetHistory();
+        });
+
+        it('should unlocalize an URL before matching a route', () => {
+            const localizedUrl = '/ua/hero';
+            const unlocalizedUrl = '/hero';
+
+            i18n.unlocalizeUrl.withArgs(localizedUrl).returns(unlocalizedUrl);
+
+            const route = router.match(window.location.origin + localizedUrl);
+
+            chai.expect(i18n.unlocalizeUrl.calledWithExactly(localizedUrl))
+            chai.expect(route.reqUrl).to.be.eql(unlocalizedUrl);
+        });
+
+        it('should localize an URL before navigate', () => {
+            const localizedUrl = window.location.origin + '/ua/opponent';
+            const unlocalizedUrl = window.location.origin + '/opponent';
+
+            i18n.localizeUrl.withArgs(unlocalizedUrl).returns(localizedUrl);
+
+            router.navigateToUrl(unlocalizedUrl);
+
+            chai.expect(singleSpa.navigateToUrl.calledWithExactly(localizedUrl));
+        });
+    });
 });

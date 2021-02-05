@@ -57,6 +57,16 @@ describe('I18n', () => {
         });
     });
 
+    describe('localizeUrl', () => {
+        it('should localize an URL without locale correctly', () => {
+            expect(defaultIntl.localizeUrl(window.location.origin + '/some/url')).to.equal(window.location.origin + '/ua/some/url');
+        });
+
+        it('should localize an URL with locale correctly', () => {
+            expect(defaultIntl.localizeUrl(window.location.origin + '/ua/some/url')).to.equal(window.location.origin + '/ua/some/url');
+        });
+    });
+
     describe('adapter.get', () => {
         it('returns default locale', () => {
             const adapter = defaultIntl.getAdapter();

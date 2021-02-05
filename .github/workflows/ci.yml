@@ -40,7 +40,10 @@ jobs:
         DOCKER_BUILDKIT=1 docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=ilc:tmp
 
     - name: Run client side tests
-      run: docker run --volume /artifacts/ilc/.test_output/client:/temporary ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /temporary"
+      run: |
+        echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+        sudo sysctl -p
+        docker run --volume /artifacts/ilc/.test_output/client:/temporary ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /temporary"
 
     - uses: actions/upload-artifact@v2
       with:

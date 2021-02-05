@@ -15,8 +15,7 @@ export default function () {
     document.head.appendChild(getSystemjsImportmap(registryConf.apps));
 
     return registryConf;
-}
-
+};
 
 function getSystemjsImportmap(apps) {
     const res = {};

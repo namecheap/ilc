@@ -4,6 +4,7 @@ const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const errorHandlingService = require('./errorHandler/factory');
 const i18n = require('./i18n');
+const GuardManager = require('./GuardManager');
 const UrlProcessor = require('../common/UrlProcessor');
 const logger = require('./logger');
 const ServerRouter = require('./tailor/server-router');
@@ -19,11 +20,12 @@ module.exports = (registryService, pluginManager) => {
     }, require('./logger/fastify')));
 
     const i18nParamsDetectionPlugin = pluginManager.getI18nParamsDetectionPlugin();
+    const guardManager = new GuardManager(pluginManager);
 
     app.addHook('onRequest', async (req, reply) => {
         req.raw.ilcState = {};
-        const registryConfig = await registryService.getConfig();
-        const i18nOnRequest = i18n.onRequestFactory(registryConfig.data.settings.i18n, i18nParamsDetectionPlugin);
+        const registryConfig = (await registryService.getConfig()).data;
+        const i18nOnRequest = i18n.onRequestFactory(registryConfig.settings.i18n, i18nParamsDetectionPlugin);
 
         await i18nOnRequest(req, reply);
     });
@@ -49,9 +51,11 @@ module.exports = (registryService, pluginManager) => {
     app.get('/_ilc/500', async () => { throw new Error('500 page test error') });
 
     app.all('*', async (req, res) => {
-        const url = req.raw.url;
         let registryConfig = (await registryService.getConfig()).data;
-        const processedUrl = new UrlProcessor(registryConfig.settings.trailingSlash).process(url);
+
+        const url = req.raw.url;
+        const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
+        const processedUrl = urlProcessor.process(url);
 
         if (processedUrl !== url) {
             res.redirect(processedUrl);
@@ -67,6 +71,14 @@ module.exports = (registryService, pluginManager) => {
         const unlocalizedUrl = i18n.unlocalizeUrl(registryConfig.settings.i18n, url);
         req.raw.registryConfig = registryConfig;
         req.raw.router = new ServerRouter(logger, req.raw, unlocalizedUrl);
+
+        const redirectTo = await guardManager.redirectTo(req.raw);
+        if (redirectTo) {
+            res.redirect(urlProcessor.process(i18n.localizeUrl(registryConfig.settings.i18n, redirectTo, {
+                locale: req.raw.ilcState.locale,
+            })));
+            return;
+        }
 
         res.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
         tailor.requestHandler(req.raw, res.res);

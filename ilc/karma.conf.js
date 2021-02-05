@@ -98,6 +98,7 @@ module.exports = function (config) {
         },
         webpack: {
             ...webpackConfig,
+            devtool: false
         },
         webpackMiddleware: {
             noInfo: true

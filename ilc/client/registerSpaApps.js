@@ -7,7 +7,7 @@ import {getAppSpaCallbacks, getSlotElement, prependSpaCallback} from './utils';
 import WrapApp from './WrapApp';
 import isActiveFactory from './isActiveFactory';
 import AsyncBootUp from './AsyncBootUp';
-import {crashIlc} from "./errorHandler/fragmentErrorHandlerFactory";
+import crashIlc from './errorHandler/crashIlc';
 
 let System;
 

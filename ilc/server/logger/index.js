@@ -1,7 +1,7 @@
 'use strict';
 
 const {PassThrough} = require('stream');
-const pluginManager = require('../pluginManager/factory');
+const pluginManager = require('../pluginManager');
 const pino = require('pino');
 
 let logger = pluginManager.getReportingPlugin();
