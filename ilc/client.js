@@ -49,6 +49,7 @@ window.ILC.getAppSdkAdapter = appId => ({
     appId,
     intl: i18n ? i18n.getAdapter() : null
 });
+window.ILC.navigate = router.navigateToUrl.bind(router);
 
 registerSpaApps(registryConf, router, appErrorHandlerFactory);
 setupErrorHandlers(registryConf, router.getCurrentRoute, setNavigationErrorHandler);
