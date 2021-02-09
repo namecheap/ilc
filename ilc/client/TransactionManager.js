@@ -183,7 +183,7 @@ export class TransactionManager {
         }
     };
 
-    #onRouteChange = () => { //TODO: add cleanup
+    #onRouteChange = () => {
         if (this.#transactionBlockers.length === 0) {
             this.#onAllSlotsLoaded();
         }
