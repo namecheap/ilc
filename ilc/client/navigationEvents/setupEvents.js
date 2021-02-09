@@ -157,6 +157,7 @@ function patchedUpdateState(updateState) {
         const newUrl = window.location.href;
 
         if (oldUrl !== newUrl) {
+            currUrl = newUrl;
             fireRoutingEvent();
         }
 

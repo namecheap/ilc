@@ -187,4 +187,5 @@ describe('setupEvents', () => {
     });
 
     // TODO: Cover the case when history.back() or history.forward() can be dispatched with e2e tests because of async work of these methods
+    // TODO: Cover the case when a user goes to a page with help of the link and goes back from it with the help of the back button with e2e tests
 });
