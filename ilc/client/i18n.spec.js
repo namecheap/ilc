@@ -3,7 +3,7 @@ import sinon from 'sinon';
 
 import I18n from './i18n';
 import Cookies from 'js-cookie';
-import i18nCookie from "../common/i18nCookie";
+import i18nCookie from '../common/i18nCookie';
 
 describe('I18n', () => {
     const intlChangeEvent = sinon.spy();
@@ -58,6 +58,10 @@ describe('I18n', () => {
     });
 
     describe('localizeUrl', () => {
+        beforeEach(() => {
+            Cookies.set(i18nCookie.name, i18nCookie.encode({...defaultConfig.default, locale: 'ua-UA'}), i18nCookie.getOpts());
+        });
+
         it('should localize an URL without locale correctly', () => {
             expect(defaultIntl.localizeUrl(window.location.origin + '/some/url')).to.equal(window.location.origin + '/ua/some/url');
         });

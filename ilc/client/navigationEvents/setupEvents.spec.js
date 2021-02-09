@@ -37,14 +37,8 @@ describe('setupEvents', () => {
         function shouldNotChangeLocationUrlByHistoryMethod(methodName) {
             it(`should not change location URL by "${methodName}" when navigation is canceled`, async () => {
                 const hooks = [
-                    sinon.stub().returns({
-                        navigationShouldBeCanceled: true,
-                    }),
-                    sinon.stub().returns({
-                        nextUrl: '/should/not/change/location/url',
-                    }),
                     sinon.stub().returns(null),
-                    sinon.stub().returns(undefined),
+                    sinon.stub().returns('/should/not/change/location/url'),
                 ];
                 const prevHref = window.location.href;
 
@@ -69,13 +63,11 @@ describe('setupEvents', () => {
 
         function shouldChangeLocationUrlByHistoryMethod(methodName) {
             it(`should change location URL by "${methodName}" when navigation is not canceled`, async () => {
-                const nextUrl = '/should/change/location/url';
+                const nextUrl = window.location.origin + '/should/change/location/url';
                 const hooks = [
-                    sinon.stub().returns({
-                        nextUrl,
-                    }),
-                    sinon.stub().returns(null),
-                    sinon.stub().returns(undefined),
+                    sinon.stub().returns('/should/not/be/this/url'),
+                    sinon.stub().returns('/should/not/be/this/url/either'),
+                    sinon.stub().returns(nextUrl),
                 ];
 
                 try {
@@ -93,7 +85,7 @@ describe('setupEvents', () => {
 
                 chai.expect(popstateEventHandler.called).to.be.true;
                 chai.expect(beforeRoutingEventHandler.called).to.be.true;
-                chai.expect(new URL(window.location.href).pathname).to.be.eql(nextUrl);
+                chai.expect(window.location.href).to.be.eql(nextUrl);
             });
         }
 
@@ -101,12 +93,8 @@ describe('setupEvents', () => {
             it(`should not change location URL by "${methodName}" when some of hooks throws an error and a custom error handler has set already`, async () => {
                 const error = new Error('Hi there! I am an error. So it should be shown 500 error page.');
                 const hooks = [
-                    sinon.stub().returns({
-                        nextUrl: '/should/not/change/location/url',
-                    }),
+                    sinon.stub().returns('/should/not/change/location/url'),
                     sinon.stub().throws(error),
-                    sinon.stub().returns(null),
-                    sinon.stub().returns(undefined),
                 ];
                 const errorHandler = sinon.spy();
                 const anotherErrorHandler = sinon.spy();
@@ -143,12 +131,8 @@ describe('setupEvents', () => {
                 const nextUrl = '/should/not/change/location/url';
                 const error = new Error('Hi there! I am an error. So it should be shown 500 error page.');
                 const hooks = [
-                    sinon.stub().returns({
-                        nextUrl,
-                    }),
+                    sinon.stub().returns(nextUrl),
                     sinon.stub().throws(error),
-                    sinon.stub().returns(null),
-                    sinon.stub().returns(undefined),
                 ];
                 const prevHref = window.location.href;
 
@@ -174,21 +158,17 @@ describe('setupEvents', () => {
         function shouldProvideUrlAsStringToHooksWhenLocationWasProvidedAsUrlArgument(methodName) {
             it(`should provide an URL as a string to navigation hooks when an object was provided as "url" argument to "${methodName}" method`, async () => {
                 const hook = sinon.spy();
-                const url = {
-                    pathname: '/some/url',
-                    search: '?search=true',
-                    hash: '#hash'
-                };
+                const url = new URL('/some/url?search=true#hash', window.location.origin);
 
                 try {
                     addNavigationHook(hook);
-                    window.history[methodName](null, undefined, url);
+                    window.history[methodName](null, undefined, url.href);
                     await clock.runAllAsync();
                 } finally {
                     removeNavigationHook(hook);
                 }
 
-                chai.expect(hook.calledOnceWithExactly(url.pathname + url.search + url.hash)).to.be.true;
+                chai.expect(hook.calledOnceWithExactly(url.href)).to.be.true;
             });
         }
 
