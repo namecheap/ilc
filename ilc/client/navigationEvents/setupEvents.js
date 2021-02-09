@@ -125,6 +125,14 @@ function callNavigationHooks(url) {
     return url;
 }
 
+function transformUrlToRelative(url) {
+    if (typeof url === 'string') {
+        url = new URL(url, window.location.origin);
+    }
+
+    return url.pathname + url.search + url.hash;
+}
+
 function patchedUpdateState(updateState) {
     return function (state, title, url, ...rest) {
         /**
@@ -134,13 +142,9 @@ function patchedUpdateState(updateState) {
          * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API}
          * @see {@link https://github.com/mapbox/scroll-restorer/blob/main/index.js#L65}
          */
-        if (typeof url === 'object' && url.href) {
-            url = url.href;
-        }
+        url = transformUrlToRelative(url);
 
-        const oldUrl = window.location.href;
-
-        if (oldUrl !== new URL(url, window.location.origin).href) {
+        if (url !== transformUrlToRelative(window.location)) {
             url = callNavigationHooks(url);
 
             if (url === null) {
@@ -148,6 +152,7 @@ function patchedUpdateState(updateState) {
             }
         }
 
+        const oldUrl = window.location.href;
         const result = updateState.call(this, state, title, url, ...rest);
         const newUrl = window.location.href;
 
