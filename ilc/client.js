@@ -34,10 +34,8 @@ const router = new Router(registryConf, state, i18n ? i18n : undefined, singleSp
 const guardManager = new GuardManager(router, pluginManager, internalErrorHandler);
 const urlProcessor = new UrlProcessor(registryConf.settings.trailingSlash);
 
-addNavigationHook((state) => ({
-    navigationShouldBeCanceled: !guardManager.hasAccessTo(state.nextUrl),
-    nextUrl: urlProcessor.process(state.nextUrl),
-}));
+addNavigationHook((url) => guardManager.hasAccessTo(url) ? url : null);
+addNavigationHook((url) => urlProcessor.process(url));
 
 // Here we expose window.ILC.define also as window.define to ensure that regular AMD/UMD bundles work correctly by default
 // See docs/umd_bundles_compatibility.md

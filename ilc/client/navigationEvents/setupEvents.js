@@ -100,36 +100,37 @@ export function unsetNavigationErrorHandler() {
 }
 
 function callNavigationHooks(url) {
-    // TODO: Update the following logic in the way of Express middleware (next(url | null))
-    let state = {
-        navigationShouldBeCanceled: false,
-        nextUrl: url,
-    };
-
     for (const hook of hooks) {
-        const hookIndex = hooks.indexOf(hook);
-
         try {
-            const nextState = hook(state);
+            url = hook(url);
 
-            if (typeof nextState === 'object') {
-                state = Object.assign({}, state, nextState);
+            if (url === null) {
+                return null;
             }
         } catch (error) {
-            if (typeof errorHandler === 'function') {
+            const hookIndex = hooks.indexOf(hook);
+
+            if (errorHandler === null) {
+                console.error(`ILC: The following error has occurred while executing the transition hook with index #${hookIndex}:`, error);
+            } else {
                 errorHandler(error, {
                     hookIndex,
                 });
-            } else {
-                console.error(`ILC: The following error has occurred while executing the transition hook with index #${hookIndex}:`, error);
             }
 
-            state.navigationShouldBeCanceled = true;
-            return state;
+            return null;
         }
     }
 
-    return state;
+    return url;
+}
+
+function transformUrlToRelative(url) {
+    if (typeof url === 'string') {
+        url = new URL(url, window.location.origin);
+    }
+
+    return url.pathname + url.search + url.hash;
 }
 
 function patchedUpdateState(updateState) {
@@ -141,18 +142,14 @@ function patchedUpdateState(updateState) {
          * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/History_API}
          * @see {@link https://github.com/mapbox/scroll-restorer/blob/main/index.js#L65}
          */
-        if (typeof url === 'object' && url.pathname) {
-            url = url.pathname + url.search + url.hash;
-        }
+        url = transformUrlToRelative(url);
 
-        if (url) {
-            const hooksRes = callNavigationHooks(url);
+        if (url !== transformUrlToRelative(window.location)) {
+            url = callNavigationHooks(url);
 
-            if (hooksRes.navigationShouldBeCanceled) {
+            if (url === null) {
                 return;
             }
-
-            url = hooksRes.nextUrl;
         }
 
         const oldUrl = window.location.href;
@@ -171,7 +168,7 @@ function handlePopState(event) {
     const prevUrl = currUrl;
     const nextUrl = (currUrl = window.location.href);
 
-    if (!event.singleSpa && callNavigationHooks(nextUrl).navigationShouldBeCanceled) {
+    if (!event.singleSpa && prevUrl !== nextUrl && callNavigationHooks(nextUrl) === null) {
         window.history.replaceState(window.history.state, undefined, prevUrl);
         return;
     }
