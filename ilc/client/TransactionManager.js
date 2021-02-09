@@ -18,20 +18,11 @@ export class TransactionManager {
     #fakeSlots = [];
     #hiddenSlots = [];
     #transactionBlockers = [];
+    #windowEventHandlers = {};
 
     constructor(spinnerConfig = {enabled: true, customHTML: ''}) {
         this.#spinnerConfig = spinnerConfig;
-
-        scrollRestorer.start({ autoRestore: false, captureScrollDebounce: 150 }); //TODO: add cleanup
-
-        window.addEventListener('ilc:crash', () => { //TODO: add cleanup
-            this.#removeGlobalSpinner();
-        });
-        window.addEventListener('single-spa:routing-event', () => { //TODO: add cleanup
-            if (this.#transactionBlockers.length === 0) {
-                this.#onAllSlotsLoaded();
-            }
-        });
+        this.#addEventListeners();
     }
 
     handleAsyncAction(promise) {
@@ -171,7 +162,32 @@ export class TransactionManager {
     #removeTransactionBlocker = (blocker) => {
         this.#transactionBlockers.splice(this.#transactionBlockers.indexOf(blocker), 1);
         !this.#transactionBlockers.length && this.#onAllSlotsLoaded();
-    }
+    };
+
+    #addEventListeners = () => {
+        scrollRestorer.start({ autoRestore: false, captureScrollDebounce: 150 });
+
+        this.#windowEventHandlers['ilc:crash'] = this.#removeGlobalSpinner;
+        this.#windowEventHandlers['single-spa:routing-event'] = this.#onRouteChange;
+
+        for (const eventName in this.#windowEventHandlers) {
+            window.addEventListener(eventName, this.#windowEventHandlers[eventName]);
+        }
+    };
+
+    removeEventListeners = () => {
+        scrollRestorer.end();
+
+        for (const eventName in this.#windowEventHandlers) {
+            window.removeEventListener(eventName, this.#windowEventHandlers[eventName]);
+        }
+    };
+
+    #onRouteChange = () => {
+        if (this.#transactionBlockers.length === 0) {
+            this.#onAllSlotsLoaded();
+        }
+    };
 }
 
 let defaultInstance = null;

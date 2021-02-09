@@ -532,8 +532,6 @@ describe('client router', () => {
             localizeUrl: sinon.stub().callsFake((url) => url),
         };
 
-        let router;
-
         beforeEach(() => {
             i18n.unlocalizeUrl.callsFake((url) => url);
             i18n.localizeUrl.callsFake((url) => url);

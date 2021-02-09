@@ -77,6 +77,9 @@ module.exports = function (config) {
             'mocha',
             'coverage',
         ],
+        mochaReporter: {
+            showDiff: true,
+        },
         coverageReporter: {
             dir: path.join(__dirname, '.karma_output', 'coverage'),
             subdir: (browser) => browser.toLowerCase().split(/[\s/-]/)[0],

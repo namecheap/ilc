@@ -10,7 +10,6 @@ import {
 describe('TransactionManager', () => {
     const locationHash = 'i-am-location-hash';
 
-
     const slots = {
         id: 'slots',
         appendSlots: () => document.body.appendChild(slots.ref),
@@ -70,6 +69,7 @@ describe('TransactionManager', () => {
 
     let clock;
     let handlePageTransaction;
+    let removePageTransactionListeners;
 
     beforeEach(() => {
         window.location.hash = locationHash;
@@ -79,6 +79,7 @@ describe('TransactionManager', () => {
             customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`
         });
         handlePageTransaction = transactionManager.handlePageTransaction.bind(transactionManager);
+        removePageTransactionListeners = transactionManager.removeEventListeners.bind(transactionManager);
 
         slots.resetRef();
         applications.body.resetRef();
@@ -95,15 +96,16 @@ describe('TransactionManager', () => {
     afterEach(() => {
         slots.removeSlots();
         clock.restore();
+        removePageTransactionListeners();
     });
 
-    it('should throw an error when a slot name is not provided', async () => {
+    it('should throw an error when a slot name is not provided', () => {
         chai.expect(() => handlePageTransaction()).to.throw(
             'A slot name was not provided!'
         );
     });
 
-    it('should throw an error when a slot action does not match any possible option to handle', async () => {
+    it('should throw an error when a slot action does not match any possible option to handle', () => {
         chai.expect(() => handlePageTransaction(slots.body.id, 'undefined')).to.throw(
             `The slot action 'undefined' did not match any possible values!`
         );
