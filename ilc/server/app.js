@@ -6,7 +6,6 @@ const errorHandlingService = require('./errorHandler/factory');
 const i18n = require('./i18n');
 const GuardManager = require('./GuardManager');
 const UrlProcessor = require('../common/UrlProcessor');
-const logger = require('./logger');
 const ServerRouter = require('./tailor/server-router');
 const mergeConfigs = require('./tailor/merge-configs');
 const parseOverrideConfig = require('./tailor/parse-override-config');
@@ -70,9 +69,10 @@ module.exports = (registryService, pluginManager) => {
 
         const unlocalizedUrl = i18n.unlocalizeUrl(registryConfig.settings.i18n, url);
         req.raw.registryConfig = registryConfig;
-        req.raw.router = new ServerRouter(logger, req.raw, unlocalizedUrl);
+        req.raw.router = new ServerRouter(req.log, req.raw, unlocalizedUrl);
 
-        const redirectTo = await guardManager.redirectTo(req.raw);
+        const redirectTo = await guardManager.redirectTo(req.log, req.raw);
+
         if (redirectTo) {
             res.redirect(urlProcessor.process(i18n.localizeUrl(registryConfig.settings.i18n, redirectTo, {
                 locale: req.raw.ilcState.locale,

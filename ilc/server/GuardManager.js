@@ -8,7 +8,7 @@ class GuardManager {
         this.#transitionHooksPlugin = pluginManager.getTransitionHooksPlugin();
     }
 
-    async redirectTo(req) {
+    async redirectTo(log, req) {
         if (this.#transitionHooksPlugin === null) {
             return null;
         }
@@ -32,6 +32,7 @@ class GuardManager {
                         meta: route.meta,
                         url: route.reqUrl,
                     },
+                    log,
                     req,
                 });
 
