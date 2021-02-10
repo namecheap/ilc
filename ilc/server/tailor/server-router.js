@@ -18,9 +18,9 @@ module.exports = class ServerRouter {
     #router = null;
 
     /**
-     * @param {Console} logger - console compatible logger
-     * @param {http.IncomingMessage} request - console compatible logger
-     * @param {string} url - console compatible logger
+     * @param {Console} logger
+     * @param {http.IncomingMessage} request
+     * @param {string} url
      */
     constructor(logger, request, url) {
         this.#logger = logger;
