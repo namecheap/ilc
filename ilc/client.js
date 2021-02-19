@@ -2,7 +2,12 @@ import {
     setNavigationErrorHandler,
     addNavigationHook,
 } from './client/navigationEvents/setupEvents';
+
 import * as singleSpa from 'single-spa';
+
+import {
+    PluginManager,
+} from 'ilc-plugins-sdk/browser';
 
 import Router from './client/ClientRouter';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
@@ -13,7 +18,6 @@ import initIlcState from './client/initIlcState';
 import setupPerformanceMonitoring from './client/performance';
 import I18n from './client/i18n';
 import UrlProcessor from './common/UrlProcessor';
-import PluginManager from './common/PluginManager';
 import {triggerAppChange} from './client/navigationEvents';
 import GuardManager from './client/GuardManager';
 

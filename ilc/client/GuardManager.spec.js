@@ -52,14 +52,6 @@ describe('GuardManager', () => {
     });
 
     describe('should have access to a provided URL', () => {
-        it('if transition hooks plugin does not exist', () => {
-            pluginManager.getTransitionHooksPlugin.returns(null);
-
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
-
-            chai.expect(guardManager.hasAccessTo('/transition/hooks/plugin/does/not/exist')).to.be.true;
-        });
-
         it('if router does not have a route that matches a provided URL', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             router.match.returns({specialRole: 404});

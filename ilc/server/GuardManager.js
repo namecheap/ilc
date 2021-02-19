@@ -9,10 +9,6 @@ class GuardManager {
     }
 
     async redirectTo(log, req) {
-        if (this.#transitionHooksPlugin === null) {
-            return null;
-        }
-
         const route = req.router.getRoute();
 
         if (route.specialRole !== null) {
