@@ -64,8 +64,7 @@ module.exports = (registryService, pluginManager) => {
         req.headers['x-request-host'] = req.hostname;
         req.headers['x-request-uri'] = url;
 
-        //TODO: move overrideConfigTrustedOrigins to Registry config
-        registryConfig = mergeConfigs(registryConfig, parseOverrideConfig(req.headers.cookie, config.get('overrideConfigTrustedOrigins')));
+        registryConfig = mergeConfigs(registryConfig, parseOverrideConfig(req.headers.cookie, registryConfig.settings.overrideConfigTrustedOrigins));
 
         const unlocalizedUrl = i18n.unlocalizeUrl(registryConfig.settings.i18n, url);
         req.raw.registryConfig = registryConfig;
