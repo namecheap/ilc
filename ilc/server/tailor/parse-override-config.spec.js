@@ -363,5 +363,14 @@ describe('overrideConfig', () => {
                 expect(parseOverrideConfig(exampleCookies, trustedExamples.toString())).deep.equal(expectedResult);
             });
         });
+
+        it('should not sanitize trusted url w/ subdomain', async () => {
+            const domain = 'bar.foo.com';
+            const trustedExamples = ['*.foo.com'];
+
+            const exampleCookies = getExampleCookies(domain, '');
+            const expectedResult = getExampleObject(domain, '');
+            expect(parseOverrideConfig(exampleCookies, trustedExamples.toString())).deep.equal(expectedResult);
+        });
     });
 });

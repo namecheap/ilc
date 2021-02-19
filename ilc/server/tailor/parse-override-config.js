@@ -21,9 +21,29 @@ const isTrustedOrigin = (link, trustedOrigins) => {
     trustedOrigins.push('localhost');
 
     const linkWoProtocol = link.trim().replace(/(^\w+:|^)\/\//, '');
-    return trustedOrigins.some(trustedOrigin =>
-        linkWoProtocol.startsWith(trustedOrigin + ':') || linkWoProtocol.startsWith(trustedOrigin + '/')
-    );
+
+    return trustedOrigins.some(trustedOrigin => {
+        const isTrustedLink = linkWoProtocol.startsWith(trustedOrigin + '/');
+        if (isTrustedLink) {
+            return true;
+        }
+
+        const isTrustedLinkWithPort = linkWoProtocol.startsWith(trustedOrigin + ':');
+        if (isTrustedLinkWithPort) {
+            return true;
+        }
+
+        const hostname = linkWoProtocol.replace(/(:|\/).*$/, '');
+        const levelsOfLink = hostname.split('.');
+        const isTrustedLinkWithSubdomain = trustedOrigin.split('.').every((levelDomain, index) =>
+            levelDomain === '*' || levelDomain === levelsOfLink[index]
+        );
+        if (isTrustedLinkWithSubdomain) {
+            return true;
+        }
+
+        return false;
+    });
 };
 
 const sanitizeSpoofedLinks = (obj, trustedOrigins) => {
