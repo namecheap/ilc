@@ -72,7 +72,6 @@
     "raw-loader": "^3.1.0",
     "sinon": "^8.1.1",
     "supertest": "^4.0.2",
-    "test-console": "^1.1.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-middleware": "^3.7.2",
