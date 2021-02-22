@@ -1,9 +1,5 @@
 'use strict';
 
-const mergeConfigs = require('./merge-configs');
-const parseOverrideConfig = require('./parse-override-config');
-const config = require('config');
-
 const TEMPLATE_ERROR = 0;
 const TEMPLATE_NOT_FOUND = 1;
 

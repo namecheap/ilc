@@ -20,6 +20,7 @@ export enum SettingKeys {
     I18nSupportedLocales = 'i18n.supported.locale',
     I18nSupportedCurrencies = 'i18n.supported.currency',
     I18nRoutingStrategy = 'i18n.routingStrategy',
+    OverrideConfigTrustedOrigins = 'overrideConfigTrustedOrigins',
 }
 
 export const enum TrailingSlashValues {
