@@ -41,6 +41,7 @@ exports.config = {
         peoplePage: path.join(__dirname, 'spec', 'pages', 'people.ts'),
         newsPage: path.join(__dirname, 'spec', 'pages', 'news.ts'),
         planetsPage: path.join(__dirname, 'spec', 'pages', 'planets.ts'),
+        hooksPage: path.join(__dirname, 'spec', 'pages', 'hooks.ts'),
     },
     tests: './spec/**/*.spec.e2e.ts',
     name: 'ilc',

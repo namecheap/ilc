@@ -41,6 +41,20 @@ export async function seed(knex: Knex): Promise<any> {
             props: JSON.stringify({
                 page: 'wrapped'
             }),
-        },
+        }, {
+            routeId: 10, // /hooks/
+            name: 'body',
+            appName: '@portal/system',
+            props: JSON.stringify({
+                page: 'hooks'
+            }),
+        }, {
+            routeId: 11, // /hooks/protected/
+            name: 'body',
+            appName: '@portal/system',
+            props: JSON.stringify({
+                page: 'protected'
+            }),
+        }
     ]);
 }
