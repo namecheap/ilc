@@ -123,7 +123,7 @@ export async function up(knex: Knex): Promise<any> {
                     ...toUpdate
                 }).transacting(transaction);
             } else {
-                await knex('settings').where('key', setting.key).update(toUpdate);
+                await knex('settings').where('key', setting.key).update(toUpdate).transacting(transaction);
             }
         }));
     });
