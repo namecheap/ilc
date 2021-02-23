@@ -15,10 +15,13 @@ export async function seed(knex: Knex): Promise<any> {
             key: SettingKeys.OverrideConfigTrustedOrigins,
             value: overrideConfigTrustedOrigins,
         });
-    }
+    } else {
+        const [setting] = await knex('settings').select('default').where('key', SettingKeys.OverrideConfigTrustedOrigins);
 
-    if (settings.length === 0) {
-        return;
+        settings.push({
+            key: SettingKeys.OverrideConfigTrustedOrigins,
+            value: JSON.parse(setting.default),
+        });
     }
 
     return knex.transaction(async (transaction) => {
