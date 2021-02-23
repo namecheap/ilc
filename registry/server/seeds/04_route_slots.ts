@@ -53,7 +53,7 @@ export async function seed(knex: Knex): Promise<any> {
             name: 'body',
             appName: '@portal/system',
             props: JSON.stringify({
-                page: 'protected'
+                page: 'hooks-protected'
             }),
         }
     ]);
