@@ -40,6 +40,19 @@ export async function seed(knex: Knex): Promise<any> {
             orderPos: 40,
             route: '/wrapper/',
             next: false,
+        }, {
+            id: 10,
+            orderPos: 50,
+            route: '/hooks/',
+            next: false,
+        }, {
+            id: 11,
+            orderPos: 60,
+            route: '/hooks/protected/',
+            next: false,
+            meta: JSON.stringify({
+                protected: true,
+            }),
         }
     ]);
 }
