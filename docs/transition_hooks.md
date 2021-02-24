@@ -1,8 +1,8 @@
-# ILC route guards
+# ILC transition hooks
 
 ILC provides an opportunity to check a route before navigate to it and the only thing that you need to do to handle it is to create ILC transition hooks plugin with the help of [ILC plugins SDK](https://github.com/namecheap/ilc-plugins-sdk) to cover any cases that depend on access to any routes.
 
-![ILC route guards](./assets/route_guards.gif)
+![ILC transition hooks](./assets/transition_hooks.gif)
 
 ## ILC transition hooks plugin
 
