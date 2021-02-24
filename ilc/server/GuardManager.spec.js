@@ -106,14 +106,6 @@ describe('GuardManager', () => {
         });
 
         describe('should have access to a provided URL', () => {
-            it('if transition hooks plugin does not exist', async () => {
-                pluginManager.getTransitionHooksPlugin.returns(null);
-
-                const redirectTo = await new GuardManager(pluginManager).redirectTo(log, req);
-
-                chai.expect(redirectTo).to.be.null;
-            });
-
             it('if transition hooks are non existent', async () => {
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns([]);

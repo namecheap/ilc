@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const WrapperPlugin = require('wrapper-webpack-plugin');
+const {ResolveIlcDefaultPluginsWebpackPlugin} = require('ilc-plugins-sdk/webpack');
 
 module.exports = {
     entry: path.resolve(__dirname, '../client.js'),
@@ -27,7 +28,10 @@ module.exports = {
         ],
         alias: {
             'single-spa': require.resolve('single-spa/lib/umd/single-spa.min.js'),
-        }
+        },
+        plugins: [
+            new ResolveIlcDefaultPluginsWebpackPlugin(),
+        ]
     },
     plugins: [
         new WrapperPlugin({
@@ -39,4 +43,3 @@ module.exports = {
     devtool: 'source-map',
     externals: [],
 };
-

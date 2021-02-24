@@ -15,10 +15,6 @@ export default class GuardManager {
     }
 
     hasAccessTo(url) {
-        if (this.#transitionHooksPlugin === null) {
-            return true;
-        }
-
         const route = this.#router.match(url);
 
         if (route.specialRole !== null) {

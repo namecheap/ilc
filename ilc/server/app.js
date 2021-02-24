@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const config = require('config');
 const fastify = require('fastify');
 const tailorFactory = require('./tailor/factory');
@@ -14,17 +15,17 @@ const parseOverrideConfig = require('./tailor/parse-override-config');
  * @param {Registry} registryService
  */
 module.exports = (registryService, pluginManager) => {
-    const app = fastify(Object.assign({
-        trustProxy: false, //TODO: should be configurable via Registry
-    }, require('./logger/fastify')));
-
-    const i18nParamsDetectionPlugin = pluginManager.getI18nParamsDetectionPlugin();
     const guardManager = new GuardManager(pluginManager);
+
+    const app = fastify(Object.assign(
+        {trustProxy: false}, // TODO: should be configurable via Registry,
+        _.omit(_.pick(pluginManager.getReportingPlugin(), ['logger', 'requestIdLogLabel', 'genReqId']), _.isEmpty),
+    ));
 
     app.addHook('onRequest', async (req, reply) => {
         req.raw.ilcState = {};
         const registryConfig = (await registryService.getConfig()).data;
-        const i18nOnRequest = i18n.onRequestFactory(registryConfig.settings.i18n, i18nParamsDetectionPlugin);
+        const i18nOnRequest = i18n.onRequestFactory(registryConfig.settings.i18n, pluginManager.getI18nParamsDetectionPlugin());
 
         await i18nOnRequest(req, reply);
     });

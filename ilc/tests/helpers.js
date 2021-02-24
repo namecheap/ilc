@@ -84,9 +84,17 @@ function getFragmentResponses(responseBody) {
 
 function getPluginManagerMock() {
     return {
-        getReportingPlugin: () => null,
-        getI18nParamsDetectionPlugin: () => null,
-        getTransitionHooksPlugin: () => null,
+        getReportingPlugin: () => ({
+            type: 'reporting',
+        }),
+        getI18nParamsDetectionPlugin: () => ({
+            type: 'i18nParamsDetection',
+            detectI18nConfig: (req, Intl, I18nConfig, I18nCookie) => I18nConfig,
+        }),
+        getTransitionHooksPlugin: () => ({
+            type: 'transitionHooks',
+            getTransitionHooks: () => [],
+        }),
     };
 }
 

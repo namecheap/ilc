@@ -3,8 +3,8 @@
 const path = require('path');
 const fg = require('fast-glob');
 
-function context(id) {
-    return require(id);
+function context(pluginPath) {
+    return require(pluginPath);
 }
 
 context.keys = function () {
@@ -19,4 +19,4 @@ context.keys = function () {
     return pluginPaths.map((pluginPath) => path.resolve(pluginPath, '..', require(pluginPath).main));
 };
 
-module.exports = new (require('../common/PluginManager'))(context);
+module.exports = new (require('ilc-plugins-sdk').PluginManager)(context);
