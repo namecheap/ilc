@@ -31,17 +31,19 @@ router.get('/', async (req, res) => {
         v.ssr = JSON.parse(v.ssr);
         v.dependencies = JSON.parse(v.dependencies);
         v.props = JSON.parse(v.props);
+        v.ssrProps = JSON.parse(v.ssrProps);
         if (sharedProps.length && v.configSelector !== null) {
             JSON.parse(v.configSelector).forEach((configSelectorName: string) => {
                 const commonConfig = sharedProps.find(n => n.name === configSelectorName);
                 if (commonConfig) {
                     v.props = _.merge({}, JSON.parse(commonConfig.props), v.props);
+                    v.ssrProps = _.merge({}, JSON.parse(commonConfig.ssrProps), v.ssrProps);
                 }
             });
         }
 
         v = _.omitBy(v, v => v === null || (typeof v === 'object' && Object.keys(v).length === 0));
-        acc[v.name] = _.pick(v, ['kind', 'ssr', 'dependencies', 'props', 'spaBundle', 'cssBundle', 'wrappedWith']);
+        acc[v.name] = _.pick(v, ['kind', 'ssr', 'dependencies', 'props', 'ssrProps', 'spaBundle', 'cssBundle', 'wrappedWith']);
 
         return acc;
     }, {});

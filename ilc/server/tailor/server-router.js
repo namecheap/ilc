@@ -69,7 +69,11 @@ module.exports = class ServerRouter {
                 }
             }
 
-            ssrOpts.appProps = deepmerge(appInfo.props || {}, row.props || {});
+            ssrOpts.appProps = deepmerge.all([
+                appInfo.props || {},
+                appInfo.ssrProps || {},
+                row.props || {}
+                ]);
             ssrOpts.wrapperConf = row.wrapperConf;
 
             res[appId] = ssrOpts;
