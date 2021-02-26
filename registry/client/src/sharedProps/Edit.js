@@ -5,7 +5,7 @@ import {
     SimpleForm,
     TextInput,
     required,
-    TextField,
+    TextField, FormTab,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import JsonField from '../JsonField/index';
 
@@ -19,7 +19,8 @@ const InputForm = ({mode = 'edit', ...props}) => {
             {mode === 'edit'
                 ? <TextField source="name" />
                 : <TextInput source="name" fullWidth validate={required()} />}
-            <JsonField source="props"/>
+            <JsonField source="props" label="Properties that will be passed to applications"/>
+            <JsonField source="ssrProps" label="Properties that will be added to main props at SSR request, allow to override certain values" />
         </SimpleForm>
     );
 };
