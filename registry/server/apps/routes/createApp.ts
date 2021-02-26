@@ -24,7 +24,7 @@ const createApp = async (req: Request, res: Response): Promise<void> => {
 
     await db.versioning(req.user, {type: 'apps', id: app.name}, async (trx) => {
         await db('apps')
-            .insert(stringifyJSON(['dependencies', 'props', 'ssr', 'configSelector'], app))
+            .insert(stringifyJSON(['dependencies', 'props', 'ssrProps', 'ssr', 'configSelector'], app))
             .transacting(trx);
     });
 

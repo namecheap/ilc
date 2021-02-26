@@ -7,6 +7,9 @@ const example = {
         name: 'ncTestSharedPropsName',
         props: {
             ncTestSharedPropsPropName: 'ncTestSharedPropsPropValue',
+        },
+        ssrProps: {
+            testSsrOnly: 'value'
         }
     }),
     updated: Object.freeze({
@@ -31,11 +34,11 @@ describe(`Tests ${example.url}`, () => {
                 props: 456
             };
 
-            let response = await request.post(example.url)
+            await request.post(example.url)
             .send(incorrect)
             .expect(422, '"props" must be of type object\n"name" must be a string');
 
-            response = await request.get(example.url + incorrect.name)
+            await request.get(example.url + incorrect.name)
             .expect(404, 'Not found');
         });
 
