@@ -9,11 +9,17 @@ export function transformGet(app) {
     if (app.props) {
         app.props = JSON.stringify(app.props);
     }
+    if (app.ssrProps) {
+        app.ssrProps = JSON.stringify(app.ssrProps);
+    }
 }
 
 export function transformSet(app) {
-    if (app.props) {
+    if (app.props && typeof data.props === 'string') {
         app.props = JSON.parse(app.props);
+    }
+    if (app.ssrProps && typeof data.ssrProps === 'string') {
+        app.ssrProps = JSON.parse(app.ssrProps);
     }
     if (app.dependencies) {
         app.dependencies = app.dependencies.reduce((acc, v) => {

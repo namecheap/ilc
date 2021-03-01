@@ -39,7 +39,7 @@ describe('Versioning Unit', () => {
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.entity_id).to.equal(entityId);
             expect(changeData.data).to.be.null;
-            expect(changeData.data_after).to.equal('{"data":{"props":"{\\"a\\":1}"},"related":{}}');
+            expect(changeData.data_after).to.equal('{"data":{"props":"{\\"a\\":1}","ssrProps":null},"related":{}}');
             expect(changeData.created_by).to.equal(testUser.identifier);
         });
 

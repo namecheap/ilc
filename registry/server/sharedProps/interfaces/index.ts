@@ -8,7 +8,8 @@ export default interface SharedProps {
 export const sharedPropsNameSchema = Joi.string().min(1).max(50);
 
 const commonSharedProps = {
-    props: Joi.object(),
+    props: Joi.object().default({}),
+    ssrProps: Joi.object().default({}),
 };
 
 export const partialSharedPropsSchema = Joi.object({

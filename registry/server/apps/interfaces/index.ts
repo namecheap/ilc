@@ -13,6 +13,7 @@ export default interface App {
     assetsDiscoveryUrl?: string,
     dependencies?: string, // JSON({ [packageName: string]: string })
     props?: string, // JSON({ [propName: string]: any })
+    ssrProps?: string, // JSON({ [propName: string]: any })
     configSelector?: string,
     ssr: string, // JSON({ src: string, timeout: number })
     wrappedWith?: string,
@@ -26,6 +27,7 @@ const commonApp = {
     assetsDiscoveryUrl: Joi.string().trim().uri().default(null),
     dependencies: Joi.object().default({}),
     props: Joi.object().default({}),
+    ssrProps: Joi.object().default({}),
     configSelector: Joi.array().items(Joi.string()).default([]),
     ssr: Joi.object({
         src: Joi.string().trim().uri(),

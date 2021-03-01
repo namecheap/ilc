@@ -109,6 +109,7 @@ const InputForm = ({mode = 'edit', ...props}) => {
             </FormTab>
             <FormTab label="Props">
                 <JsonField source="props" label="Properties that will be passed to application" />
+                <JsonField source="ssrProps" label="Properties that will be added to main props at SSR request, allow to override certain values" />
             </FormTab>
         </TabbedForm>
     );
