@@ -5,7 +5,7 @@ import {
     SimpleForm,
     TextInput,
     required,
-    TextField, FormTab,
+    TextField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import JsonField from '../JsonField/index';
 

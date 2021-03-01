@@ -9,7 +9,6 @@ export function transformGet(data) {
 }
 
 export function transformSet(data) {
-    console.log(data)
     if (data.props && typeof data.props === 'string') {
         data.props = JSON.parse(data.props);
     }
