@@ -15,10 +15,10 @@ export function transformGet(app) {
 }
 
 export function transformSet(app) {
-    if (app.props && typeof data.props === 'string') {
+    if (app.props && typeof app.props === 'string') {
         app.props = JSON.parse(app.props);
     }
-    if (app.ssrProps && typeof data.ssrProps === 'string') {
+    if (app.ssrProps && typeof app.ssrProps === 'string') {
         app.ssrProps = JSON.parse(app.ssrProps);
     }
     if (app.dependencies) {

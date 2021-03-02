@@ -7,7 +7,10 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
 
 module.exports = {
-    devtool: 'cheap-module-source-map',
+    devtool: 'source-map',
+    output: {
+        devtoolNamespace: 'ilcRegistry'
+    },
     module: {
         rules: [
             {
