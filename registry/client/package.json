@@ -7,7 +7,7 @@
     "scripts": {
         "start": "webpack-dev-server --progress --color --hot --watch --mode development",
         "build": "NODE_ENV=production webpack-cli --mode production --color --hide-modules true",
-        "build:watch": "NODE_ENV=developemnt webpack-cli --color --hide-modules true --watch --mode development"
+        "build:watch": "NODE_ENV=development webpack-cli --color --hide-modules true --watch --mode development"
     },
     "devDependencies": {
         "@babel/cli": "^7.12.10",
