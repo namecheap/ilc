@@ -19,25 +19,25 @@ export const setOperations = Object.freeze({
 
 const myDataProvider = {
     ...dataProvider,
-    getList: (resource, params) => {
+    getList: async (resource, params) => {
         return dataProvider.getList(resource, params).then(v => {
             v.data.forEach(v => transformGetter(resource, v));
             return v;
         });
     },
-    getMany: (resource, params) => {
+    getMany: async (resource, params) => {
         return dataProvider.getMany(resource, params).then(v => {
             v.data.forEach(v => transformGetter(resource, v));
             return v;
         });
     },
-    getManyReference: (resource, params) => {
+    getManyReference: async (resource, params) => {
         return dataProvider.getManyReference(resource, params).then(v => {
             v.data.forEach(v => transformGetter(resource, v));
             return v;
         });
     },
-    getOne: (resource, params) => {
+    getOne: async (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
         return dataProvider.getOne(resource, params).then(v => {
@@ -45,7 +45,7 @@ const myDataProvider = {
             return v;
         });
     },
-    update: (resource, params) => {
+    update: async (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
         transformSetter(resource, params.data, setOperations.update);
@@ -56,7 +56,7 @@ const myDataProvider = {
             return v;
         });
     },
-    create: (resource, params) => {
+    create: async (resource, params) => {
         transformSetter(resource, params.data);
 
         return dataProvider.create(resource, params).then(v => {
@@ -64,13 +64,13 @@ const myDataProvider = {
             return v;
         });
     },
-    delete: (resource, params) => {
+    delete: async (resource, params) => {
         params.id = encodeURIComponent(params.id);
 
         return dataProvider.delete(resource, params)
             .then(() => ({data: {id: params.id}}));
     },
-    deleteMany: (resource, params) => {
+    deleteMany: async (resource, params) => {
         params.ids = params.ids.map(v => encodeURIComponent(v));
 
         return Promise.all(
