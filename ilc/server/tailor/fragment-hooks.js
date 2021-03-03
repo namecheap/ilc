@@ -5,40 +5,38 @@ const _ = require('lodash');
 const parseLinkHeader = require('tailorx/lib/parse-link-header');
 
 function insertStart(stream, attributes, headers, index) {
-    if (!headers.link) {
-        return;
-    }
-
-    const refs = parseLinkHeader(headers.link);
-    const { async: isAsync, id } = attributes;
-
     const bundleVersionOverrides = _.pick(attributes, ['wrapperPropsOverride']);
 
-    refs.forEach(ref => {
-        if (ref.rel === 'stylesheet') {
-            bundleVersionOverrides.cssBundle = ref.uri;
-            stream.write(
-                isAsync
-                    ? `<!-- Async fragments are not fully implemented yet: ${ref.uri} -->`
-                    : id
+    if (headers.link) {
+        const refs = parseLinkHeader(headers.link);
+        const { async: isAsync, id } = attributes;
+
+        refs.forEach(ref => {
+            if (ref.rel === 'stylesheet') {
+                bundleVersionOverrides.cssBundle = ref.uri;
+                stream.write(
+                    isAsync
+                        ? `<!-- Async fragments are not fully implemented yet: ${ref.uri} -->`
+                        : id
                         ?
-                            '<script>(function(url, id){' +
-                                `const link = document.head.querySelector('link[data-fragment-id="' + id + '"]');` +
-                                'if (link && link.href !== url) {' +
-                                    `link.href = url;` +
-                                '}' +
-                            `})("${ref.uri}", "${id}");</script>`
+                        '<script>(function(url, id){' +
+                        `const link = document.head.querySelector('link[data-fragment-id="' + id + '"]');` +
+                        'if (link && link.href !== url) {' +
+                        `link.href = url;` +
+                        '}' +
+                        `})("${ref.uri}", "${id}");</script>`
                         : ''
-            );
-        } else if (ref.rel === 'fragment-script') {
-            bundleVersionOverrides.spaBundle = ref.uri;
-        } else if (ref.rel === 'fragment-dependency' && ref.params.name) {
-            if (bundleVersionOverrides.dependencies === undefined) {
-                bundleVersionOverrides.dependencies = {};
+                );
+            } else if (ref.rel === 'fragment-script') {
+                bundleVersionOverrides.spaBundle = ref.uri;
+            } else if (ref.rel === 'fragment-dependency' && ref.params.name) {
+                if (bundleVersionOverrides.dependencies === undefined) {
+                    bundleVersionOverrides.dependencies = {};
+                }
+                bundleVersionOverrides.dependencies[ref.params.name] = ref.uri;
             }
-            bundleVersionOverrides.dependencies[ref.params.name] = ref.uri;
-        }
-    });
+        });
+    }
 
     if (Object.keys(bundleVersionOverrides).length > 0) {
         stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
