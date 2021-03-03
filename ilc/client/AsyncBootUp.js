@@ -23,6 +23,7 @@ export default class AsyncBootUp {
 
     async waitForSlot(slotName) {
         const res = {
+            spaBundle: null,
             cssBundle: null,
             wrapperPropsOverride: null,
         };
@@ -56,6 +57,7 @@ export default class AsyncBootUp {
 
             if (conf.spaBundle) {
                 System.overrideImportMap(conf.appName, conf.spaBundle);
+                res.spaBundle = conf.spaBundle;
             }
             if (conf.cssBundle) {
                 res.cssBundle = conf.cssBundle;

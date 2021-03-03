@@ -137,6 +137,7 @@ describe('async boot up', () => {
 
         const config = {
             body: {
+                appName: '@portal/body',
                 spaBundle: 'here/body-spa-bundle.js',
                 cssBundle: 'here/body-css-bundle.css',
                 dependencies: {
@@ -145,6 +146,7 @@ describe('async boot up', () => {
                 },
             },
             footer: {
+                appName: '@portal/footer',
                 spaBundle: 'here/footer-spa-bundle.js',
                 cssBundle: 'here/footer-css-bundle.css',
                 wrapperPropsOverride: {tst: 1},
@@ -224,9 +226,11 @@ describe('async boot up', () => {
             wrapperPropsOverride: config.footer.wrapperPropsOverride,
         });
 
-        chai.expect(overrideImportMap.calledTwice).to.be.true;
-        chai.expect(overrideImportMap.getCall(0).args).to.be.eql(['bodyDependency', config.body.dependencies['bodyDependency']]);
-        chai.expect(overrideImportMap.getCall(1).args).to.be.eql(['bodyThirdPartyDependency', config.body.dependencies['bodyThirdPartyDependency']]);
+        sinon.assert.callCount(overrideImportMap, 4);
+        chai.expect(overrideImportMap.getCall(0).args).to.be.eql([config.body.appName, config.body.spaBundle]);
+        chai.expect(overrideImportMap.getCall(1).args).to.be.eql(['bodyDependency', config.body.dependencies['bodyDependency']]);
+        chai.expect(overrideImportMap.getCall(2).args).to.be.eql(['bodyThirdPartyDependency', config.body.dependencies['bodyThirdPartyDependency']]);
+        chai.expect(overrideImportMap.getCall(3).args).to.be.eql([config.footer.appName, config.footer.spaBundle]);
 
         chai.expect(logger.info.getCall(0).args).to.be.eql([
             `ILC: Registering app @${
