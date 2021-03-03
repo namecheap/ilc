@@ -55,7 +55,9 @@ export default class AsyncBootUp {
         if (overridesEl) {
             const conf = JSON.parse(overridesEl.innerHTML);
 
-            res.spaBundle = conf.spaBundle;
+            if (conf.spaBundle) {
+                res.spaBundle = conf.spaBundle;
+            }
             if (conf.cssBundle) {
                 res.cssBundle = conf.cssBundle;
             }
