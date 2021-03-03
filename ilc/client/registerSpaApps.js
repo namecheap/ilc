@@ -49,16 +49,14 @@ export default function (registryConf, router, appErrorHandlerFactory) {
                 const overrides = await asyncBootUp.waitForSlot(slotName);
                 // App wrapper was rendered at SSR instead of app
                 if (wrapperConf !== null && overrides.wrapperPropsOverride === null) {
-                    wrapperConf.spaBundle = overrides.spaBundle ? overrides.spaBundle : wrapperConf.spaBundle;
                     wrapperConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : wrapperConf.cssBundle;
                 } else {
-                    appConf.spaBundle = overrides.spaBundle ? overrides.spaBundle : appConf.spaBundle;
                     appConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
                 }
 
-                const waitTill = [System.import(appConf.spaBundle)];
+                const waitTill = [System.import(appName)];
                 if (wrapperConf !== null) {
-                    waitTill.push(System.import(wrapperConf.spaBundle));
+                    waitTill.push(System.import(appConf.wrappedWith));
                 }
 
                 if (appConf.cssBundle !== undefined) {
