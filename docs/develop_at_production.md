@@ -54,7 +54,7 @@ The fact that you can override ILC config for particular browser using cookies i
 [website defacement](https://en.wikipedia.org/wiki/Website_defacement) attack with the help of [XSS](https://owasp.org/www-community/attacks/xss/).
 To mitigate this risk ILC by default will restrict all domains and all real IPs (only [private IPv4 addresses](https://en.wikipedia.org/wiki/Private_network) are allowed) specified for all links in configuration. 
 
-However you can allow additional origins by setting environment variable `OVERRIDE_CONFIG_TRUSTED_ORIGINS`
+However you can allow additional origins via property "overrideConfigTrustedOrigins", on "Settings" page of ILC Registry.
 - **default** - any origin is disallowed, except for [private IPv4 addresses](https://en.wikipedia.org/wiki/Private_network)
 - `all` - trust any origins
 - `foo.com, bar.com` - trust only foo.com and bar.com (recommended)
@@ -120,4 +120,3 @@ document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`
 ```
 - since you probably run your MS locally via http and if your production site uses https so you will have problems with mixed content when you try to send request to http from https, so the simplest way to resolve it - just turn off checking in your browser. Details [link](https://docs.adobe.com/content/help/en/target/using/experiences/vec/troubleshoot-composer/mixed-content.html).
 - if you exclude some libs e.g. via ["externals"](https://github.com/namecheap/ilc/blob/e1ea372f822fc95790e73743c5ad7ddf31e3c892/devFragments/people/webpack.config.js#L95) property of webpack config - comment it during developing at production.
-
