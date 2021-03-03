@@ -34,11 +34,7 @@ function getSystemjsImportmap(apps) {
         }
 
         const app = apps[appName];
-
-        // We don't want wrapper apps to be exposed in SystemJS and support Parcels exposure now
-        if (app.kind !== 'wrapper') {
-            deps[appName] = app.spaBundle;
-        }
+        deps[appName] = app.spaBundle;
 
         if (app.dependencies !== undefined) {
             Object.assign(deps, app.dependencies);
