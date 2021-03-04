@@ -2,23 +2,26 @@
  * SystemJS module info extension
  */
 (function () {
+    const System = window.System;
     const systemJSPrototype = System.constructor.prototype;
-    const resourcesMap = {};
-
-    const existingResolve = systemJSPrototype.resolve;
-    systemJSPrototype.resolve = function (id, parentUrl) {
-        try {
-            return existingResolve.call(this, id, parentUrl);
-        } catch (e) { // We override only dependencies that weren't declared previously
-            if (resourcesMap[id]) {
-                return resourcesMap[id];
-            }
-
-            throw e;
-        }
-    };
 
     systemJSPrototype.overrideImportMap = function (id, url) {
-        resourcesMap[id] = url;
+        let oldUrl;
+        try {
+            oldUrl = systemJSPrototype.resolve(id);
+        } catch {}
+
+        if (oldUrl && oldUrl === url) {
+            return;
+        } else if (oldUrl) {
+            System.delete(oldUrl);
+        }
+
+        const script = document.createElement('script');
+        script.type = 'systemjs-importmap';
+        script.text = JSON.stringify({imports: {[id]: url}});
+        document.head.append(script);
+
+        System.prepareImport(true);
     }
 })();

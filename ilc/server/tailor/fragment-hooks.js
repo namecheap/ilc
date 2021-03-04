@@ -1,8 +1,9 @@
 'use strict';
 
 const _ = require('lodash');
-
 const parseLinkHeader = require('tailorx/lib/parse-link-header');
+
+const { appIdToNameAndSlot } = require('../../common/utils');
 
 function insertStart(stream, attributes, headers, index) {
     const bundleVersionOverrides = _.pick(attributes, ['wrapperPropsOverride']);
@@ -39,6 +40,12 @@ function insertStart(stream, attributes, headers, index) {
     }
 
     if (Object.keys(bundleVersionOverrides).length > 0) {
+        if (bundleVersionOverrides.spaBundle) {
+            // We need appName at client side to properly perform override System.js import map
+            // See client side code in AsyncBootUp.js
+            bundleVersionOverrides.appName = appIdToNameAndSlot(attributes.id).appName;
+        }
+
         stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
     }
 }

@@ -34,6 +34,7 @@ function getSystemjsImportmap(apps) {
         }
 
         const app = apps[appName];
+        deps[appName] = app.spaBundle;
 
         if (app.dependencies !== undefined) {
             Object.assign(deps, app.dependencies);
