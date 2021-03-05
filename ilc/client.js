@@ -20,6 +20,8 @@ import I18n from './client/i18n';
 import UrlProcessor from './common/UrlProcessor';
 import {triggerAppChange} from './client/navigationEvents';
 import GuardManager from './client/GuardManager';
+import importParcelFactory from './client/importParcelFactory';
+import BundleLoader from './client/BundleLoader';
 
 import registerSpaApps from './client/registerSpaApps';
 
@@ -37,6 +39,7 @@ const i18n = registryConf.settings.i18n.enabled
 const router = new Router(registryConf, state, i18n ? i18n : undefined, singleSpa);
 const guardManager = new GuardManager(router, pluginManager, internalErrorHandler);
 const urlProcessor = new UrlProcessor(registryConf.settings.trailingSlash);
+const bundleLoader = new BundleLoader(registryConf);
 
 addNavigationHook((url) => guardManager.hasAccessTo(url) ? url : null);
 addNavigationHook((url) => urlProcessor.process(url));
@@ -52,8 +55,10 @@ window.ILC.getAppSdkAdapter = appId => ({
     intl: i18n ? i18n.getAdapter() : null
 });
 window.ILC.navigate = router.navigateToUrl.bind(router);
+window.ILC.mountRootParcel = singleSpa.mountRootParcel;
+window.ILC.importParcelFromApp = importParcelFactory(registryConf, bundleLoader);
 
-registerSpaApps(registryConf, router, appErrorHandlerFactory);
+registerSpaApps(registryConf, router, appErrorHandlerFactory, bundleLoader);
 setupErrorHandlers(registryConf, router.getCurrentRoute, setNavigationErrorHandler);
 setupPerformanceMonitoring(router.getCurrentRoute);
 

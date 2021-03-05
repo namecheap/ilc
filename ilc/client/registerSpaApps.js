@@ -3,7 +3,7 @@ import * as singleSpa from 'single-spa';
 
 import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
 import {makeAppId} from '../common/utils';
-import {getAppSpaCallbacks, getSlotElement, prependSpaCallback} from './utils';
+import {getSlotElement, prependSpaCallback} from './utils';
 import WrapApp from './WrapApp';
 import isActiveFactory from './isActiveFactory';
 import AsyncBootUp from './AsyncBootUp';
@@ -11,7 +11,7 @@ import crashIlc from './errorHandler/crashIlc';
 
 let System;
 
-export default function (registryConf, router, appErrorHandlerFactory) {
+export default function (registryConf, router, appErrorHandlerFactory, bundleLoader) {
     System = window.System;
     if (System === undefined) {
         crashIlc();
@@ -54,9 +54,9 @@ export default function (registryConf, router, appErrorHandlerFactory) {
                     appConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
                 }
 
-                const waitTill = [System.import(appName)];
+                const waitTill = [bundleLoader.loadApp(appName)];
                 if (wrapperConf !== null) {
-                    waitTill.push(System.import(appConf.wrappedWith));
+                    waitTill.push(bundleLoader.loadApp(appConf.wrappedWith));
                 }
 
                 if (appConf.cssBundle !== undefined) {
@@ -66,11 +66,8 @@ export default function (registryConf, router, appErrorHandlerFactory) {
                     waitTill.push(importCssBundle(wrapperConf.cssBundle));
                 }
 
-                return Promise.all(waitTill).then(([spaBundle, wrapperBundle]) => {
-                    let spaCallbacks = getAppSpaCallbacks(spaBundle, appConf.props);
+                return Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {
                     if (wrapperConf !== null) {
-                        const wrapperSpaCallbacks = getAppSpaCallbacks(wrapperBundle, wrapperConf.props);
-
                         const wrapper = new WrapApp(wrapperConf, overrides.wrapperPropsOverride);
 
                         spaCallbacks = wrapper.wrapWith(spaCallbacks, wrapperSpaCallbacks);
