@@ -57,6 +57,8 @@ window.ILC.getAppSdkAdapter = appId => ({
 window.ILC.navigate = router.navigateToUrl.bind(router);
 window.ILC.mountRootParcel = singleSpa.mountRootParcel;
 window.ILC.importParcelFromApp = importParcelFactory(registryConf, bundleLoader);
+// TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
+// TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
 
 registerSpaApps(registryConf, router, appErrorHandlerFactory, bundleLoader);
 setupErrorHandlers(registryConf, router.getCurrentRoute, setNavigationErrorHandler);
