@@ -7,17 +7,8 @@ import {getSlotElement, prependSpaCallback} from './utils';
 import WrapApp from './WrapApp';
 import isActiveFactory from './isActiveFactory';
 import AsyncBootUp from './AsyncBootUp';
-import crashIlc from './errorHandler/crashIlc';
-
-let System;
 
 export default function (registryConf, router, appErrorHandlerFactory, bundleLoader) {
-    System = window.System;
-    if (System === undefined) {
-        crashIlc();
-        throw new Error('ILC: can\'t find SystemJS on a page, crashing everything');
-    }
-
     const asyncBootUp = new AsyncBootUp();
 
     composeAppSlotPairsToRegister(registryConf).forEach(pair => {
@@ -41,10 +32,7 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                 }
 
                 // Speculative preload of the JS bundle. We don't do it for CSS here as we already did it with preload links
-                System.import(appConf.spaBundle);
-                if (wrapperConf !== null) {
-                    System.import(wrapperConf.spaBundle);
-                }
+                bundleLoader.preloadApp(appName);
 
                 const overrides = await asyncBootUp.waitForSlot(slotName);
                 // App wrapper was rendered at SSR instead of app
@@ -60,10 +48,10 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                 }
 
                 if (appConf.cssBundle !== undefined) {
-                    waitTill.push(importCssBundle(appConf.cssBundle));
+                    waitTill.push(bundleLoader.loadCss(appConf.cssBundle));
                 }
                 if (wrapperConf !== null && wrapperConf.cssBundle !== undefined) {
-                    waitTill.push(importCssBundle(wrapperConf.cssBundle));
+                    waitTill.push(bundleLoader.loadCss(wrapperConf.cssBundle));
                 }
 
                 return Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {
@@ -86,14 +74,5 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                 appSdk,
             }
         );
-    });
-}
-
-function importCssBundle(url) {
-    return System.import(url).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
-        //TODO: error handling should be improved, need to submit PR with typed errors
-        if (typeof err.message !== 'string' || err.message.indexOf('has already been loaded using another way') === -1) {
-            throw err;
-        }
     });
 }
