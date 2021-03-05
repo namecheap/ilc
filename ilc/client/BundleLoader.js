@@ -20,6 +20,7 @@ export default class BundleLoader {
     }
 
     #getAppSpaCallbacks = (appBundle, props = {}) => {
+        // We do this to make sure that mainSpa function will be called only once
         if (this.#cache.has(appBundle)) {
             return this.#cache.get(appBundle);
         }
