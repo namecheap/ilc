@@ -1,3 +1,4 @@
+import debug from 'debug';
 import {flattenFnArray} from './utils';
 import {Intl as IlcIntl} from 'ilc-sdk/app';
 
@@ -5,11 +6,13 @@ export default class ParcelApi {
     #registryConf;
     #bundleLoader;
     #getAppSdkAdapter;
+    #debug;
 
     constructor(registryConf, bundleLoader, getAppSdkAdapter) {
         this.#registryConf = registryConf;
         this.#bundleLoader = bundleLoader;
         this.#getAppSdkAdapter = getAppSdkAdapter;
+        this.#debug = debug('ILC:ParcelApi');
     }
 
     importParcelFromApp = async (appName, parcelName) => {
@@ -42,24 +45,29 @@ export default class ParcelApi {
             }
 
 
-            return {
+            const resultingProps = {
+                ...props,
                 parcelSdk: {
                     parcelId: props.name,
                     registryProps: app.props,
                     intl: intlInstances[props.name] || intlForUnmount,
                 },
             };
+
+            this.#debug(`${lifecycleType.toUpperCase()} for parcel "${parcelName}" from app "${appName}" with: `, resultingProps);
+
+            return resultingProps;
         });
     };
 
-    #propsInjector = (callbacks, extraPropsCb) => {
+    #propsInjector = (callbacks, modifyPropsCb) => {
         for (let lifecycle in callbacks) {
             if (!callbacks.hasOwnProperty(lifecycle)) {
                 continue;
             }
 
             const callback = flattenFnArray(callbacks, lifecycle);
-            callbacks[lifecycle] = (props) => callback({...props, ...extraPropsCb(props, lifecycle)});
+            callbacks[lifecycle] = (props) => callback(modifyPropsCb(props, lifecycle));
         }
 
         return callbacks;
