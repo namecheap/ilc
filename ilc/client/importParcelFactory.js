@@ -1,7 +1,5 @@
 import {flattenFnArray} from './utils';
 import {Intl as IlcIntl} from 'ilc-sdk/app';
-// TODO: make correct export from ilc-sdk
-import defaultIntlAdapter from 'ilc-sdk/dist/app/defaultIntlAdapter';
 
 export default (registryConf, bundleLoader) => async (appName, parcelName) => {
     const app = registryConf.apps[appName];
@@ -28,7 +26,7 @@ export default (registryConf, bundleLoader) => async (appName, parcelName) => {
             }
             delete intlInstances[props.name];
         } else if (!intlInstances[props.name]) {
-            const adapter = window.ILC.getAppSdkAdapter(props.name) || defaultIntlAdapter;
+            const adapter = window.ILC.getAppSdkAdapter(props.name);
             intlInstances[props.name] = new IlcIntl(props.name, adapter.intl);
         }
 

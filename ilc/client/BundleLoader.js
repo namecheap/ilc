@@ -1,19 +1,14 @@
 import crashIlc from './errorHandler/crashIlc';
 
-const System = window.System;
-
-export default class BundleLoader {
+export class BundleLoader {
 
     #cache = new WeakMap();
-    #registry;
+    #registryApps;
+    #systemJs;
 
-    constructor(registryConf) {
-        this.#registry = registryConf;
-
-        if (System === undefined) {
-            crashIlc();
-            throw new Error('ILC: can\'t find SystemJS on a page, crashing everything');
-        }
+    constructor(registryConf, systemJs) {
+        this.#registryApps = registryConf.apps;
+        this.#systemJs = systemJs;
     }
 
     /**
@@ -26,7 +21,7 @@ export default class BundleLoader {
     preloadApp(appName) {
         const app = this.#getApp(appName);
 
-        System.import(app.spaBundle).catch(() => {});
+        this.#systemJs.import(app.spaBundle).catch(() => {});
 
         if (app.wrappedWith) {
             this.preloadApp(app.wrappedWith);
@@ -36,12 +31,12 @@ export default class BundleLoader {
     loadApp(appName) {
         const app = this.#getApp(appName);
 
-        return System.import(appName)
+        return this.#systemJs.import(appName)
             .then(appBundle => this.#getAppSpaCallbacks(appBundle, app.props))
     }
 
     loadCss(url) {
-        return System.import(url).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
+        return this.#systemJs.import(url).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
             //TODO: error handling should be improved, need to submit PR with typed errors
             if (typeof err.message !== 'string' || err.message.indexOf('has already been loaded using another way') === -1) {
                 throw err;
@@ -50,7 +45,7 @@ export default class BundleLoader {
     }
 
     #getApp = (appName) => {
-        const app = this.#registry.apps[appName];
+        const app = this.#registryApps[appName];
         if (!app) {
             throw new Error(`Unable to find requested app "${appName}" in Registry`);
         }
@@ -75,3 +70,13 @@ export default class BundleLoader {
         }
     }
 }
+
+export default (registryConf) => {
+    const System = window.System;
+    if (System === undefined) {
+        crashIlc();
+        throw new Error('ILC: can\'t find SystemJS on a page, crashing everything');
+    }
+
+    return new BundleLoader(registryConf, System)
+};
