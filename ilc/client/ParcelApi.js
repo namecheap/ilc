@@ -61,15 +61,16 @@ export default class ParcelApi {
     };
 
     #propsInjector = (callbacks, modifyPropsCb) => {
+        const resCallbacks = {};
         for (let lifecycle in callbacks) {
             if (!callbacks.hasOwnProperty(lifecycle)) {
                 continue;
             }
 
             const callback = flattenFnArray(callbacks, lifecycle);
-            callbacks[lifecycle] = (props) => callback(modifyPropsCb(props, lifecycle));
+            resCallbacks[lifecycle] = (props) => callback(modifyPropsCb(props, lifecycle));
         }
 
-        return callbacks;
+        return resCallbacks;
     }
 }
