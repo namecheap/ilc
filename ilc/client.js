@@ -20,6 +20,8 @@ import I18n from './client/i18n';
 import UrlProcessor from './common/UrlProcessor';
 import {triggerAppChange} from './client/navigationEvents';
 import GuardManager from './client/GuardManager';
+import ParcelApi from './client/ParcelApi';
+import bundleLoaderFactory from './client/BundleLoader';
 
 import registerSpaApps from './client/registerSpaApps';
 
@@ -37,6 +39,7 @@ const i18n = registryConf.settings.i18n.enabled
 const router = new Router(registryConf, state, i18n ? i18n : undefined, singleSpa);
 const guardManager = new GuardManager(router, pluginManager, internalErrorHandler);
 const urlProcessor = new UrlProcessor(registryConf.settings.trailingSlash);
+const bundleLoader = bundleLoaderFactory(registryConf);
 
 addNavigationHook((url) => guardManager.hasAccessTo(url) ? url : null);
 addNavigationHook((url) => urlProcessor.process(url));
@@ -53,7 +56,13 @@ window.ILC.getAppSdkAdapter = appId => ({
 });
 window.ILC.navigate = router.navigateToUrl.bind(router);
 
-registerSpaApps(registryConf, router, appErrorHandlerFactory);
+const parcelApi = new ParcelApi(registryConf, bundleLoader, window.ILC.getAppSdkAdapter);
+window.ILC.mountRootParcel = singleSpa.mountRootParcel;
+window.ILC.importParcelFromApp = parcelApi.importParcelFromApp;
+// TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
+// TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
+
+registerSpaApps(registryConf, router, appErrorHandlerFactory, bundleLoader);
 setupErrorHandlers(registryConf, router.getCurrentRoute, setNavigationErrorHandler);
 setupPerformanceMonitoring(router.getCurrentRoute);
 
