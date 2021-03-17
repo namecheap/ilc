@@ -101,7 +101,12 @@ export default class ClientRouter {
             window.addEventListener(key, this.#windowEventHandlers[key]);
         }
 
-        document.addEventListener('click', this.#onClickLink);
+        // It's important to attach "click" listener to window as React apps attach their own to "document"
+        // So if ours is also at the document - it will be likely executed first. Which breaks "defaultPrevented" detection
+        // From React doc:
+        //    React doesn’t actually attach event handlers to the nodes themselves.
+        //    When React starts up, it starts listening for all events at the top level using a single event listener.
+        window.addEventListener('click', this.#onClickLink);
     };
 
     removeEventListeners() {
@@ -114,7 +119,7 @@ export default class ClientRouter {
         }
         this.#windowEventHandlers = {};
 
-        document.removeEventListener('click', this.#onClickLink);
+        window.removeEventListener('click', this.#onClickLink);
     }
 
     #onSingleSpaRoutingEvents = () => {
