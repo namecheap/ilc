@@ -33,3 +33,8 @@ In order to run tests:
     * Verbose mode: `npm run start:verbose`
     * Verbose mode with Browser UI visible: `npm run start:verbose:ui`
 
+## Debug mode
+
+ILC uses [debug](https://www.npmjs.com/package/debug) package at client side to produce
+verbose logs for debug purposes. 
+To enable it, execute `localStorage.debug = 'ILC:*'` in the browser console.
