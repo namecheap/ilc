@@ -1,4 +1,5 @@
 import deepmerge from 'deepmerge';
+import debug from 'debug';
 
 import Router from '../common/router/Router';
 import * as errors from '../common/router/errors';
@@ -18,6 +19,7 @@ export default class ClientRouter {
     #windowEventHandlers = {};
     #forceSpecialRoute = null;
     #i18n;
+    #debug;
 
     constructor(
         registryConf,
@@ -37,6 +39,7 @@ export default class ClientRouter {
         this.#registryConf = registryConf;
         this.#router = new Router(registryConf);
         this.#currentUrl = this.#getCurrUrl();
+        this.#debug = debug('ILC:ClientRouter');
 
         this.#setInitialRoutes(state);
         this.#addEventListeners();
@@ -180,6 +183,7 @@ export default class ClientRouter {
         const {specialRole} = this.match(href);
 
         if (specialRole === null) {
+            this.#debug(`Calling singleSpa.navigateToUrl("${href}")`);
             this.#singleSpa.navigateToUrl(href);
             event.preventDefault();
         }
