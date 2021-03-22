@@ -58,7 +58,7 @@ export class Versioning {
                 data: currentData === null ? null : JSON.stringify(currentData),
                 data_after: newData === null ? null : JSON.stringify(newData),
                 created_by: user ? (user as User).identifier : 'unauthenticated',
-                created_at: new Date().toISOString(),
+                created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
             };
 
             const [versionID] = await this.db!('versioning').insert(logRecord).transacting(trx);
