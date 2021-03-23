@@ -32,7 +32,7 @@ const appErrorHandlerFactory = (appName, slotName) => {
     return fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName);
 };
 
-const pluginManager = new PluginManager(require.context('./node_modules', true, /ilc-plugin-.*\/browser\.js$/));
+const pluginManager = new PluginManager(require.context('./node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/));
 const i18n = registryConf.settings.i18n.enabled
     ? new I18n(registryConf.settings.i18n, {...singleSpa, triggerAppChange}, appErrorHandlerFactory)
     : null;
