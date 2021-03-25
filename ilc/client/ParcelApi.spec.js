@@ -16,7 +16,7 @@ const fnCallbacks = {
 
 describe('ParcelApi', () => {
     const bundleLoader = {
-        loadApp: sinon.stub(),
+        loadAppWithCss: sinon.stub(),
     };
     const getAppSdkAdapter = () => ({intl: null});
     let registry;
@@ -36,7 +36,7 @@ describe('ParcelApi', () => {
     })
 
     afterEach(() => {
-        bundleLoader.loadApp.reset();
+        bundleLoader.loadAppWithCss.reset();
     });
 
     it('loads parcel from bundle and injects props to lifecycle functions', async () => {
@@ -45,7 +45,7 @@ describe('ParcelApi', () => {
         const parcelName = '@portal/primary';
         const parcelId = 'parcel0';
 
-        bundleLoader.loadApp.resolves({parcels: {[parcelName]: fnCallbacks}});
+        bundleLoader.loadAppWithCss.resolves({parcels: {[parcelName]: fnCallbacks}});
         const callbacks = await parcelApi.importParcelFromApp(appName, parcelName);
 
         for (const lifecycle of Object.keys(fnCallbacks)) {
@@ -56,7 +56,7 @@ describe('ParcelApi', () => {
             });
         }
 
-        sinon.assert.calledWith(bundleLoader.loadApp, appName);
+        sinon.assert.calledWith(bundleLoader.loadAppWithCss, appName);
     });
 
     it('correctly handles case when same parcel was used twice and they receive different props', async () => {
@@ -64,7 +64,7 @@ describe('ParcelApi', () => {
         const appName = '@portal/primary';
         const parcelName = '@portal/primary';
 
-        bundleLoader.loadApp.resolves({parcels: {[parcelName]: fnCallbacks}});
+        bundleLoader.loadAppWithCss.resolves({parcels: {[parcelName]: fnCallbacks}});
         const callbacks = await parcelApi.importParcelFromApp(appName, parcelName);
 
         for (const parcelId of ['parcel0', 'parcel1']) {
@@ -88,7 +88,7 @@ describe('ParcelApi', () => {
     it('throw an error when asked to load app doesn\'t contains parcels', async () => {
         const parcelApi = new ParcelApi(registry, bundleLoader, getAppSdkAdapter);
 
-        bundleLoader.loadApp.resolves({});
+        bundleLoader.loadAppWithCss.resolves({});
 
         expect(parcelApi.importParcelFromApp('@portal/primary', 'na'))
             .to.eventually.be.rejectedWith(/doesn't export requested parcel/);

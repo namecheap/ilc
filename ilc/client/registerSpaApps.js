@@ -42,16 +42,9 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                     appConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
                 }
 
-                const waitTill = [bundleLoader.loadApp(appName)];
+                const waitTill = [bundleLoader.loadAppWithCss(appName)];
                 if (wrapperConf !== null) {
-                    waitTill.push(bundleLoader.loadApp(appConf.wrappedWith));
-                }
-
-                if (appConf.cssBundle !== undefined) {
-                    waitTill.push(bundleLoader.loadCss(appConf.cssBundle));
-                }
-                if (wrapperConf !== null && wrapperConf.cssBundle !== undefined) {
-                    waitTill.push(bundleLoader.loadCss(wrapperConf.cssBundle));
+                    waitTill.push(bundleLoader.loadAppWithCss(appConf.wrappedWith));
                 }
 
                 return Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {

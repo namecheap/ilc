@@ -21,7 +21,7 @@ export default class ParcelApi {
             throw new Error(`Unable to find requested app "${appName}" in Registry`);
         }
 
-        const appBundle = await this.#bundleLoader.loadApp(appName);
+        const appBundle = await this.#bundleLoader.loadAppWithCss(appName);
 
         if (!appBundle.parcels || !appBundle.parcels[parcelName]) {
             throw new Error(`Looks like application "${appName}" doesn't export requested parcel: ${parcelName}`);
