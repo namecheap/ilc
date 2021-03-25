@@ -29,6 +29,11 @@ describe('BundleLoader', () => {
                     spaBundle: 'http://localhost/withWrapper.js',
                     wrappedWith: '@portal/primary'
                 },
+                '@portal/appWithCss': {
+                    spaBundle: 'http://localhost/index.js',
+                    cssBundle: 'http://localhost/index.css',
+                    kind: 'primary',
+                },
             }
         }).getConfig().data;
     })
@@ -142,6 +147,33 @@ describe('BundleLoader', () => {
 
             SystemJs.import.rejects(new Error('other err'));
             expect(loader.loadCss(cssUrl)).to.eventually.be.rejected;
+        });
+    });
+
+    describe('loadAppWithCss()', () => {
+        it('loads app without CSS bundle', async () => {
+            const loader = new BundleLoader(registry, SystemJs);
+            const appName = '@portal/primary';
+
+            SystemJs.import.resolves(fnCallbacks);
+
+            const callbacks = await loader.loadAppWithCss(appName);
+            expect(callbacks).to.equal(fnCallbacks);
+
+            sinon.assert.calledWith(SystemJs.import, appName);
+        });
+
+        it('loads app with CSS bundle', async () => {
+            const loader = new BundleLoader(registry, SystemJs);
+            const appName = '@portal/appWithCss';
+
+            SystemJs.import.resolves(fnCallbacks);
+
+            const callbacks = await loader.loadAppWithCss(appName);
+            expect(callbacks).to.equal(fnCallbacks);
+
+            sinon.assert.calledWith(SystemJs.import, appName);
+            sinon.assert.calledWith(SystemJs.import, registry.apps[appName].cssBundle);
         });
     });
 

@@ -35,6 +35,17 @@ export class BundleLoader {
             .then(appBundle => this.#getAppSpaCallbacks(appBundle, app.props))
     }
 
+    loadAppWithCss(appName) {
+        const app = this.#getApp(appName);
+        const waitTill = [this.loadApp(appName)];
+
+        if (app.cssBundle) {
+            waitTill.push(this.loadCss(app.cssBundle));
+        }
+
+        return Promise.all(waitTill).then(values => values[0]);
+    }
+
     loadCss(url) {
         return this.#systemJs.import(url).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
             //TODO: error handling should be improved, need to submit PR with typed errors
