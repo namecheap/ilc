@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
         routes: [] as any[],
         specialRoutes: {},
         settings: {},
-        supportedDomains: {},
+        routerDomains: {},
     };
 
     data.apps = apps.reduce((acc, v) => {
@@ -91,7 +91,7 @@ router.get('/', async (req, res) => {
         return acc;
     }, {});
 
-    data.supportedDomains = [
+    data.routerDomains = [
         {
             id: 1,
             value: 'spacemail.com',

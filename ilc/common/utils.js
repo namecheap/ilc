@@ -1,3 +1,5 @@
+const deepmerge = require('deepmerge');
+
 function appIdToNameAndSlot(appId) {
     const [appNameWithoutPrefix, slotName] = appId.split('__at__');
 
@@ -19,7 +21,12 @@ function makeAppId(appName, slotName) {
     return `${appName.replace('@portal/', '')}__at__${slotName}`;
 }
 
+function clone(source) {
+    return deepmerge({}, source);
+}
+
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
+    clone,
 }

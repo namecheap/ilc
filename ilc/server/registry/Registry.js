@@ -1,5 +1,6 @@
 const axios = require('axios');
 const urljoin = require('url-join');
+const { clone } = require('../../common/utils');
 
 const extendError = require('@namecheap/error-extender');
 
@@ -27,9 +28,16 @@ module.exports = class Registry {
         this.#address = address;
         this.#logger = logger;
 
-        this.getConfig = wrapFetchWithCache(this.#getConfig, {
+        const getConfigMemo = wrapFetchWithCache(this.#getConfig, {
             cacheForSeconds: 5,
         });
+
+        this.getConfig = async (options) => {
+            const res = await getConfigMemo();
+            res.data = this.#filterConfig(res.data, options?.filter);
+            return res;
+        };
+
         this.getTemplate = wrapFetchWithCache(this.#getTemplate, {
             cacheForSeconds: 30,
         });
@@ -50,18 +58,13 @@ module.exports = class Registry {
         this.#logger.info('Registry preheated successfully!');
     }
 
-    #getConfig = async (options) => {
+    #getConfig = async () => {
         this.#logger.debug('Calling get config registry endpoint...');
 
         const tplUrl = urljoin(this.#address, 'api/v1/config');
         let res;
         try {
             res = await axios.get(tplUrl, { responseType: 'json' });
-
-            const { domain } = options?.filter || {};
-            if (domain) {
-                res.data = this.#filterConfigByDomain(res.data, domain);
-            }
         } catch (e) {
             throw new errors.RegistryError({
                 message: `Error while requesting config from registry`,
@@ -101,20 +104,28 @@ module.exports = class Registry {
 
     /**
      * Returns new object with routes list for current domain
-     * and without "supportedDomains" data and property "domainId" inside every "route"
      */
-    #filterConfigByDomain = (config, domain) => {
-        const { supportedDomains, ...configWithoutSupportedDomains } = config;
+    #filterConfig = (config, filter) => {
+        if (!filter || !Object.keys(filter).length) {
+            return config;
+        }
 
-        const currentDomainId = supportedDomains.find(n => n.value === domain)?.id;
-        configWithoutSupportedDomains.routes = configWithoutSupportedDomains.routes.reduce((acc, route) => {
-            if (currentDomainId === route.domainId) {
-                const { domainId, ...routeData } = route;
-                acc.push(routeData);
-            }
-            return acc;
-        }, []);
+        const clonedConfig = clone(config);
+        const { domain } = filter;
 
-        return configWithoutSupportedDomains;
+        if (domain) {
+            const currentDomainId = clonedConfig.routerDomains.find(n => n.value === domain)?.id;
+            clonedConfig.routes = clonedConfig.routes.reduce((acc, route) => {
+                if (currentDomainId === route.domainId) {
+                    const { domainId, ...routeData } = route;
+                    acc.push(routeData);
+                }
+                return acc;
+            }, []);
+
+            delete clonedConfig.routerDomains;
+        }
+
+        return clonedConfig;
     };
 };
