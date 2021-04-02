@@ -113,6 +113,8 @@ module.exports = class Registry {
         if (domain) {
             const currentDomainId = clonedConfig.routerDomains.find(n => n.value === domain)?.id;
             clonedConfig.routes = clonedConfig.routes.reduce((acc, route) => {
+                // if current domain name exits in routerDomains then we use routes only for this domain
+                // otherwise (when currentDomainId === undefined) we use routes which don't have specified domain name
                 if (currentDomainId === route.domainId) {
                     const { domainId, ...routeData } = route;
                     acc.push(routeData);
