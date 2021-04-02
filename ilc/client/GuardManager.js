@@ -16,13 +16,14 @@ export default class GuardManager {
 
     hasAccessTo(url) {
         const route = this.#router.match(url);
+        // This code is executed before the router change, so current = previous
+        const prevRoute = this.#router.getCurrentRoute();
 
         if (route.specialRole !== null) {
             return true;
         }
 
         const hooks = this.#transitionHooksPlugin.getTransitionHooks();
-
         if (hooks.length === 0) {
             return true;
         }
@@ -33,6 +34,10 @@ export default class GuardManager {
                     route: {
                         meta: route.meta,
                         url: route.reqUrl,
+                    },
+                    prevRoute: {
+                        meta: prevRoute.meta,
+                        url: prevRoute.reqUrl,
                     },
                     navigate: this.#router.navigateToUrl,
                 });

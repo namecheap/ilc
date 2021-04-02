@@ -16,10 +16,19 @@ describe('GuardManager', () => {
         },
         reqUrl: '/some/url',
     });
+    const prevRoute = Object.freeze({
+        routeId: 2,
+        specialRole: null,
+        meta: {
+            protected: true,
+        },
+        reqUrl: '/other/url',
+    });
 
-    const errorHandler = sinon.stub();
+    const errorHandler = sinon.spy(err => console.error(err));
 
     const router = Object.freeze({
+        getCurrentRoute: sinon.stub(),
         match: sinon.stub(),
         navigateToUrl: sinon.spy(),
     });
@@ -38,13 +47,17 @@ describe('GuardManager', () => {
 
     beforeEach(() => {
         clock = sinon.useFakeTimers();
+
+        pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+        router.getCurrentRoute.returns(prevRoute);
     });
 
     afterEach(() => {
         clock.restore();
 
-        errorHandler.reset();
+        errorHandler.resetHistory();
         router.match.reset();
+        router.getCurrentRoute.reset();
         pluginManager.getTransitionHooksPlugin.reset();
         transitionHooksPlugin.getTransitionHooks.reset();
 
@@ -53,7 +66,10 @@ describe('GuardManager', () => {
 
     describe('should have access to a provided URL', () => {
         it('if router does not have a route that matches a provided URL', () => {
-            pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+            const hooks = [
+                sinon.stub().returns({type: actionTypes.stopNavigation}),
+            ];
+            transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns({specialRole: 404});
 
             const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
@@ -70,7 +86,6 @@ describe('GuardManager', () => {
                 sinon.stub().returns({type: undefined}),
             ];
 
-            pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
@@ -79,7 +94,11 @@ describe('GuardManager', () => {
             chai.expect(guardManager.hasAccessTo(url)).to.be.true;
 
             for (const hook of hooks) {
-                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url: route.reqUrl}, navigate: router.navigateToUrl})).to.be.true;
+                sinon.assert.calledOnceWithExactly(hook, {
+                    route: {meta: route.meta, url: route.reqUrl},
+                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl},
+                    navigate: router.navigateToUrl
+                });
             }
         });
     });
@@ -95,14 +114,13 @@ describe('GuardManager', () => {
                 sinon.stub().returns({type: 0}),
             ];
 
-            pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
             const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
 
             chai.expect(guardManager.hasAccessTo(url)).to.be.false;
-            chai.expect(errorHandler.calledOnce).to.be.true;
+            sinon.assert.calledOnce(errorHandler);
             chai.expect(errorHandler.getCall(0).args[0]).to.have.property('cause', error);
             chai.expect(errorHandler.getCall(0).args[0]).to.be.instanceOf(errors.GuardTransitionHookError);
             chai.expect(errorHandler.getCall(0).args[0].data).to.be.eql({
@@ -112,11 +130,15 @@ describe('GuardManager', () => {
             chai.expect(errorHandler.getCall(0).args[0].cause).to.be.eql(error);
 
             for (const hook of [hooks[0], hooks[1]]) {
-                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url: route.reqUrl}, navigate: router.navigateToUrl})).to.be.true;
+                sinon.assert.calledOnceWithExactly(hook, {
+                    route: {meta: route.meta, url: route.reqUrl},
+                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl},
+                    navigate: router.navigateToUrl
+                });
             }
 
             for (const hook of [hooks[2], hooks[3]]) {
-                chai.expect(hook.called).to.be.false;
+                sinon.assert.notCalled(hook);
             }
         });
 
@@ -129,21 +151,24 @@ describe('GuardManager', () => {
                 sinon.stub().returns({type: 0}),
             ];
 
-            pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
             const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
 
             chai.expect(guardManager.hasAccessTo(url)).to.be.false;
-            chai.expect(logger.log.calledOnceWith(`ILC: Stopped navigation due to the Route Guard with index #${1}`)).to.be.true;
+            sinon.assert.calledOnceWithExactly(logger.log, `ILC: Stopped navigation due to the Route Guard with index #${1}`);
 
             for (const hook of [hooks[0], hooks[1]]) {
-                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url: route.reqUrl}, navigate: router.navigateToUrl})).to.be.true;
+                sinon.assert.calledOnceWithExactly(hook, {
+                    route: {meta: route.meta, url: route.reqUrl},
+                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl},
+                    navigate: router.navigateToUrl
+                });
             }
 
             for (const hook of [hooks[2], hooks[3]]) {
-                chai.expect(hook.called).to.be.false;
+                sinon.assert.notCalled(hook);
             }
         });
 
@@ -156,27 +181,30 @@ describe('GuardManager', () => {
                 sinon.stub().returns({type: 1}),
             ];
 
-            pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
             const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
 
             chai.expect(guardManager.hasAccessTo(url)).to.be.false;
-            chai.expect(router.navigateToUrl.called).to.be.false;
+            sinon.assert.notCalled(router.navigateToUrl);
 
             for (const hook of [hooks[0], hooks[1]]) {
-                chai.expect(hook.calledOnceWith({route: {meta: route.meta, url: route.reqUrl}, navigate: router.navigateToUrl})).to.be.true;
+                sinon.assert.calledOnceWithExactly(hook, {
+                    route: {meta: route.meta, url: route.reqUrl},
+                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl},
+                    navigate: router.navigateToUrl
+                });
             }
 
             for (const hook of [hooks[2], hooks[3]]) {
-                chai.expect(hook.called).to.be.false;
+                sinon.assert.notCalled(hook);
             }
 
             await clock.runAllAsync();
 
-            chai.expect(logger.log.calledWithExactly(`ILC: Redirect from "${route.reqUrl}" to "${url}" due to the Route Guard with index #${1}`)).to.be.true;
-            chai.expect(router.navigateToUrl.calledWithExactly(url)).to.be.true;
+            sinon.assert.calledWithExactly(logger.log, `ILC: Redirect from "${route.reqUrl}" to "${url}" due to the Route Guard with index #${1}`);
+            sinon.assert.calledWithExactly(router.navigateToUrl, url);
         });
     });
 });
