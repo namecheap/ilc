@@ -50,13 +50,18 @@ module.exports = class Registry {
         this.#logger.info('Registry preheated successfully!');
     }
 
-    #getConfig = async () => {
+    #getConfig = async (options) => {
         this.#logger.debug('Calling get config registry endpoint...');
 
         const tplUrl = urljoin(this.#address, 'api/v1/config');
         let res;
         try {
             res = await axios.get(tplUrl, { responseType: 'json' });
+
+            const { domain } = options?.filter || {};
+            if (domain) {
+                res.data = this.#filterConfigByDomain(res.data, domain);
+            }
         } catch (e) {
             throw new errors.RegistryError({
                 message: `Error while requesting config from registry`,
@@ -92,5 +97,24 @@ module.exports = class Registry {
         this.#cacheHeated.template = true;
 
         return res.data;
+    };
+
+    /**
+     * Returns new object with routes list for current domain
+     * and without "supportedDomains" data and property "domainId" inside every "route"
+     */
+    #filterConfigByDomain = (config, domain) => {
+        const { supportedDomains, ...configWithoutSupportedDomains } = config;
+
+        const currentDomainId = supportedDomains.find(n => n.value === domain)?.id;
+        configWithoutSupportedDomains.routes = configWithoutSupportedDomains.routes.reduce((acc, route) => {
+            if (currentDomainId === route.domainId) {
+                const { domainId, ...routeData } = route;
+                acc.push(routeData);
+            }
+            return acc;
+        }, []);
+
+        return configWithoutSupportedDomains;
     };
 };

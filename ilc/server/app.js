@@ -51,7 +51,8 @@ module.exports = (registryService, pluginManager) => {
     app.get('/_ilc/500', async () => { throw new Error('500 page test error') });
 
     app.all('*', async (req, res) => {
-        let registryConfig = (await registryService.getConfig()).data;
+        const currentDomain = req.hostname;
+        let registryConfig = (await registryService.getConfig({ filter: { domain: currentDomain } })).data;
 
         const url = req.raw.url;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);

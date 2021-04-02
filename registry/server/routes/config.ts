@@ -25,6 +25,7 @@ router.get('/', async (req, res) => {
         routes: [] as any[],
         specialRoutes: {},
         settings: {},
+        supportedDomains: {},
     };
 
     data.apps = apps.reduce((acc, v) => {
@@ -89,6 +90,25 @@ router.get('/', async (req, res) => {
         _.set(acc, setting.key, setting.value);
         return acc;
     }, {});
+
+    data.supportedDomains = [
+        {
+            id: 1,
+            value: 'spacemail.com',
+        },
+        {
+            id: 2,
+            value: 'admin.com',
+        },
+    ];
+
+    data.routes.forEach(route => {
+        if (route.meta['spacemail.com']) {
+            route.domainId = 1;
+        } else if (route.meta['admin.com']) {
+            route.domainId = 2;
+        }
+    });
 
     return res.send(data);
 });
