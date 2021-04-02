@@ -102,9 +102,6 @@ module.exports = class Registry {
         return res.data;
     };
 
-    /**
-     * Returns new object with routes list for current domain
-     */
     #filterConfig = (config, filter) => {
         if (!filter || !Object.keys(filter).length) {
             return config;
