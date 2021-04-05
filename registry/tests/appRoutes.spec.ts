@@ -17,6 +17,12 @@ let example = <any>{
             kind: 'primary',
         },
     },
+    routerDomain: {
+        url: '/api/v1/router_domains/',
+        correct: Object.freeze({
+            domainName: 'testDomainName',
+        }),
+    },
     appWrapper: {
         url: '/api/v1/app/',
         correct: {
@@ -44,6 +50,7 @@ example = {
             },
         },
         meta: {},
+        domainId: null,
     }),
     updated: Object.freeze({
         orderPos: 133,
@@ -105,6 +112,23 @@ const createApp = async (app: typeof example.app) => {
     expect(response.body).deep.equal(app.correct);
 };
 
+const createRouterDomain = async (routerDomain: typeof example.routerDomain) => {
+    let response = await request.post(routerDomain.url)
+        .send(routerDomain.correct)
+        .expect(200)
+
+    const { id } = response.body;
+
+    expect(response.body).deep.equal({ id, ...routerDomain.correct });
+
+    response = await request.get(routerDomain.url + id)
+        .expect(200);
+
+    expect(response.body).deep.equal({ id, ...routerDomain.correct });
+
+    return id;
+};
+
 describe(`Tests ${example.url}`, () => {
     before(async () => {
         await createTemplate();
@@ -141,6 +165,7 @@ describe(`Tests ${example.url}`, () => {
                 route: 123,
                 next: 456,
                 templateName: 789,
+                domainId: 'ncTestRouteIncorrectDomainId',
                 slots: 'ncTestRouteIncorrectSlots'
             })
             .expect(
@@ -150,7 +175,8 @@ describe(`Tests ${example.url}`, () => {
                 '"route" must be a string\n' +
                 '"next" must be a boolean\n' +
                 '"templateName" must be a string\n' +
-                '"slots" must be of type object'
+                '"slots" must be of type object\n' +
+                '"domainId" must be a number'
             );
 
             expect(response.body).deep.equal({});
@@ -179,6 +205,16 @@ describe(`Tests ${example.url}`, () => {
             })
             .expect(500);
 
+            expect(response.text).to.include('Internal server error occurred.');
+        });
+
+        it('should not create record with non-existing domainId', async () => {
+            const response = await request.post(example.url)
+                .send({
+                    ...example.correct,
+                    domainId: 1111111,
+                })
+                .expect(500);
             expect(response.text).to.include('Internal server error occurred.');
         });
 
@@ -241,6 +277,35 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
                 await request.delete(example.url + id);
+            }
+        });
+
+        it('should create record with existed domainId', async () => {
+            const domainId = await createRouterDomain(example.routerDomain);
+
+            const exampleWithExistedDomainId = {
+                ...example.correct,
+                domainId,
+            };
+
+            let response = await request.post(example.url)
+                .send(exampleWithExistedDomainId)
+            .expect(200);
+
+            expect(response.body).to.have.property('id');
+            const id = response.body.id;
+
+            try {
+                const expectedRoute = { id, ..._.omitBy(exampleWithExistedDomainId, _.isNil) };
+                expect(response.body).deep.equal(expectedRoute);
+
+                response = await request.get(example.url + id)
+                    .expect(200);
+
+                expect(response.body).deep.equal(expectedRoute);
+            } finally {
+                await request.delete(example.url + id);
+                await request.delete(example.routerDomain.url + domainId).expect(204);
             }
         });
 
@@ -339,7 +404,7 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).deep.equal({});
         });
 
-        it('should not update record with incorrect type of field: specialRole', async () => {
+        it('should not update record with incorrect type of fields', async () => {
             let response = await request.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
@@ -352,7 +417,8 @@ describe(`Tests ${example.url}`, () => {
                         route: 123,
                         next: 456,
                         templateName: 789,
-                        slots: 'ncTestRouteIncorrectSlots'
+                        slots: 'ncTestRouteIncorrectSlots',
+                        domainId: 'ncTestRouteIncorrectDomainId',
                     })
                     .expect(
                         422,
@@ -361,7 +427,8 @@ describe(`Tests ${example.url}`, () => {
                         '"route" must be a string\n' +
                         '"next" must be a boolean\n' +
                         '"templateName" must be a string\n' +
-                        '"slots" must be of type object'
+                        '"slots" must be of type object\n' +
+                        '"domainId" must be a number'
                     );
 
                 expect(response.body).deep.equal({});
@@ -409,6 +476,26 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.text).to.include('Internal server error occurred.');
             } finally {
                 await request.delete(example.url + id).expect(204);
+            }
+        });
+
+        it('should not update record with non-existing domainId', async () => {
+            const domainId = await createRouterDomain(example.routerDomain);
+            let response = await request.post(example.url).send({ ...example.correct, domainId }).expect(200);
+            const id = response.body.id;
+
+            try {
+                response = await request.put(example.url + id)
+                    .send({
+                        ...example.correct,
+                        domainId: 1111111,
+                    })
+                    .expect(500);
+
+                expect(response.text).to.include('Internal server error occurred.');
+            } finally {
+                await request.delete(example.url + id);
+                await request.delete(example.routerDomain.url + domainId).expect(204);
             }
         });
 
@@ -466,6 +553,32 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal({ ...example.updated, id });
             } finally {
                 await request.delete(example.url + id).expect(204);
+            }
+        });
+
+        it('should successfully update record with existed domainId', async () => {
+            const domainId1 = await createRouterDomain(example.routerDomain);
+            const domainId2 = await createRouterDomain(example.routerDomain);
+            let response = await request.post(example.url).send({ ...example.correct, domainId: domainId1 }).expect(200);
+            const { id } = response.body;
+
+            try {
+                response = await request.put(example.url + id)
+                    .send({
+                        ...example.updated,
+                        domainId: domainId2,
+                    })
+                    .expect(200);
+
+                expect(response.body).deep.equal({
+                    ...example.updated,
+                    id,
+                    domainId: domainId2,
+                });
+            } finally {
+                await request.delete(example.url + id);
+                await request.delete(example.routerDomain.url + domainId1).expect(204);
+                await request.delete(example.routerDomain.url + domainId2).expect(204);
             }
         });
 

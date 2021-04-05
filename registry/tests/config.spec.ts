@@ -42,6 +42,9 @@ const example = {
             ncTestSharedPropsPropName: 'ncTestSharedPropsPropValue',
         }
     }),
+    routerDomains: Object.freeze({
+        domainName: 'domainNameCorrect',
+    }),
 };
 
 describe('Tests /api/v1/config', () => {
@@ -51,60 +54,66 @@ describe('Tests /api/v1/config', () => {
             await request.post('/api/v1/template/').send(example.templates).expect(200);
             const responseRoute = await request.post('/api/v1/route/').send(example.appRoutes).expect(200);
             await request.post('/api/v1/shared_props/').send(example.sharedProps).expect(200);
+            const responseRouterDomains = await request.post('/api/v1/router_domains/').send(example.routerDomains).expect(200);
 
-            const response = await request.get('/api/v1/config')
-            .expect(200);
+            try {
+                const response = await request.get('/api/v1/config')
+                .expect(200);
 
-            expect(response.text).to.be.a('string');
-            expect(response.body).to.be.an('object');
+                expect(response.text).to.be.a('string');
+                expect(response.body).to.be.an('object');
 
-            expect(response.body.apps).to.be.an('object');
-            expect(response.body.templates).to.be.an('array');
-            expect(response.body.routes).to.be.an('array');
-            expect(response.body.specialRoutes).to.be.an('object');
+                expect(response.body.apps).to.be.an('object');
+                expect(response.body.templates).to.be.an('array');
+                expect(response.body.routes).to.be.an('array');
+                expect(response.body.specialRoutes).to.be.an('object');
+                expect(response.body.routerDomains).to.be.an('array');
 
-            expect(response.body.routes).to.deep.include({
-                routeId: responseRoute.body.id,
-                ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta'])
-            });
+                expect(response.body.routes).to.deep.include({
+                    routeId: responseRoute.body.id,
+                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta'])
+                });
 
-            expect(response.body.apps[example.apps.name])
-            .deep.equal(
-                _.omit(
-                    {
-                        ...example.apps,
-                        props: example.sharedProps.props
+                expect(response.body.apps[example.apps.name])
+                .deep.equal(
+                    _.omit(
+                        {
+                            ...example.apps,
+                            props: example.sharedProps.props
+                        },
+                        ['name', 'configSelector']
+                    )
+                );
+
+                expect(response.body.templates).to.include(example.templates.name);
+                expect(response.body.settings).to.deep.equal({
+                    [SettingKeys.TrailingSlash]: TrailingSlashValues.DoNothing,
+                    [SettingKeys.AmdDefineCompatibilityMode]: false,
+                    globalSpinner: {
+                        enabled: true
                     },
-                    ['name', 'configSelector']
-                )
-            );
+                    i18n: {
+                        default: {
+                            currency: 'USD',
+                            locale: 'en-US',
+                        },
+                        enabled: true,
+                        supported: {
+                            currency: ['USD', 'UAH'],
+                            locale: ['en-US', 'ua-UA']
+                        },
+                        routingStrategy: 'prefix_except_default',
+                    }
+                });
 
-            expect(response.body.templates).to.include(example.templates.name);
-            expect(response.body.settings).to.deep.equal({
-                [SettingKeys.TrailingSlash]: TrailingSlashValues.DoNothing,
-                [SettingKeys.AmdDefineCompatibilityMode]: false,
-                globalSpinner: {
-                    enabled: true
-                },
-                i18n: {
-                    default: {
-                        currency: 'USD',
-                        locale: 'en-US',
-                    },
-                    enabled: true,
-                    supported: {
-                        currency: ['USD', 'UAH'],
-                        locale: ['en-US', 'ua-UA']
-                    },
-                    routingStrategy: 'prefix_except_default',
-                }
-
-        });
-
-            await request.delete('/api/v1/route/' + responseRoute.body.id).expect(204);
-            await request.delete('/api/v1/template/' + example.templates.name).expect(204);
-            await request.delete('/api/v1/app/' + encodeURIComponent(example.apps.name)).expect(204);
-            await request.delete('/api/v1/shared_props/' + example.sharedProps.name).expect(204);
+                expect(response.body.routerDomains).to.deep.include({ id: responseRouterDomains.body.id, ...example.routerDomains});
+            } finally {
+                await request.delete('/api/v1/route/' + responseRoute.body.id).expect(204);
+                await request.delete('/api/v1/template/' + example.templates.name).expect(204);
+                await request.delete('/api/v1/app/' + encodeURIComponent(example.apps.name)).expect(204);
+                await request.delete('/api/v1/shared_props/' + example.sharedProps.name).expect(204);
+                await request.delete('/api/v1/router_domains/' + responseRouterDomains.body.id).expect(204);
+            }
         })
     });
 

@@ -19,7 +19,7 @@ describe('Versioning Unit', () => {
         versionSevice = new Versioning(versioningConfig);
         versionSevice.setDb(db);
 
-        await db.migrate.latest({directory: path.join(__dirname, '../server/migrations')});
+        await db.migrate.latest({ directory: path.join(__dirname, '../server/migrations') });
     });
 
     beforeEach(async () => {
@@ -62,7 +62,7 @@ describe('Versioning Unit', () => {
         it('Should log entity creation with relations & auto increment ID', async () => {
             const entityType = 'routes';
             const entityRelationType = 'route_slots';
-            const entityData = {specialRole: null, orderPos: 999, route: '/tst', next: 0, templateName: null, meta: JSON.stringify({first: 'value'})};
+            const entityData = { specialRole: null, orderPos: 999, route: '/tst', next: 0, templateName: null, meta: JSON.stringify({ first: 'value' }), domainId: null };
             const entityRelationData = {
                 name: 'tst',
                 appName: '@portal/navbar',

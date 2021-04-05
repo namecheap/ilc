@@ -21,12 +21,12 @@ function makeAppId(appName, slotName) {
     return `${appName.replace('@portal/', '')}__at__${slotName}`;
 }
 
-function clone(source) {
+function cloneDeep(source) {
     return deepmerge({}, source);
 }
 
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
-    clone,
+    cloneDeep,
 }

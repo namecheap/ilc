@@ -1,6 +1,6 @@
 const axios = require('axios');
 const urljoin = require('url-join');
-const { clone } = require('../../common/utils');
+const { cloneDeep } = require('../../common/utils');
 
 const extendError = require('@namecheap/error-extender');
 
@@ -107,7 +107,7 @@ module.exports = class Registry {
             return config;
         }
 
-        const clonedConfig = clone(config);
+        const clonedConfig = cloneDeep(config);
         const { domain } = filter;
 
         if (domain) {
