@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+const LZUTF8 = require('lzutf8');
 const parseOverrideConfig = require('./parse-override-config');
 
 const assignIgnoreInvalidSsl = (ssr, protocol = 'http:') => protocol === 'https:'
@@ -88,8 +89,8 @@ const getSanitizedObject = () => (
     }
 );
 
-const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:') => {
-    const value = encodeURIComponent(JSON.stringify({
+const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:', useCompression = false) => {
+    const value = JSON.stringify({
         apps: {
             '@portal/one': {
                 spaBundle: `${protocol}//${ip}:2273/api/fragment/uilandingpages/app.js`,
@@ -130,33 +131,40 @@ const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:') => {
                 },
             },
         ],
-    }));
+    });
 
-    return `foo=bar; ILC-overrideConfig=${value}; foo2=bar2`;
+    let encodedValue;
+    if (useCompression) {
+        encodedValue = 'LZUTF8:' + LZUTF8.encodeBase64(LZUTF8.compress(value));
+    } else {
+        encodedValue = encodeURIComponent(value);
+    }
+
+    return `foo=bar; ILC-overrideConfig=${encodedValue}; foo2=bar2`;
 };
 
 
 describe('overrideConfig', () => {
 
-    describe('return undefined', () => {
-        it('should return undefined if type non string', async () => {
+    describe('return null', () => {
+        it('should return null if type non string', async () => {
             const incorrectExamples = [{},[], 123, null, undefined];
 
             incorrectExamples.forEach(incorrectExample => {
-                expect(parseOverrideConfig(incorrectExample)).to.equal(undefined);
+                expect(parseOverrideConfig(incorrectExample)).to.equal(null);
             });
         });
 
-        it('should return undefined if string doesn\'t contain cookie name', async () => {
+        it('should return null if string doesn\'t contain cookie name', async () => {
             const incorrectExample = '123';
 
-            expect(parseOverrideConfig(incorrectExample)).to.equal(undefined);
+            expect(parseOverrideConfig(incorrectExample)).to.equal(null);
         });
 
-        it('should return undefined if cookie can\'t be parsed with JSON', async () => {
+        it('should return null if cookie can\'t be parsed with JSON', async () => {
             const incorrectExample = getExampleCookies().replace('overrideConfig=', 'overrideConfig=123');
 
-            expect(parseOverrideConfig(incorrectExample)).to.equal(undefined);
+            expect(parseOverrideConfig(incorrectExample)).to.equal(null);
         });
     });
 
@@ -251,6 +259,12 @@ describe('overrideConfig', () => {
                 }
             }
         });
+
+        it('should work with lzutf8 cookie', () => {
+            const exampleCookies = getExampleCookies('10.1.150.223', 'http:', true);
+
+            expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject('10.1.150.223', 'http:'));
+        })
     });
 
     describe('sanitized', () => {
