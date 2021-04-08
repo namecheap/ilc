@@ -13,27 +13,9 @@ const Joi = JoiDefault.defaults(schema => {
     return schema.empty(null)
 });
 
-// now it's useless
-// export default interface AppRoute {
-//     id: number,
-//     specialRole: string,
-//     orderPos: number,
-//     route: string,
-//     next: boolean,
-//     templateName: string,
-//     domainId: number | null,
-// }
-
 interface AppRouteSlotProps {
     [propName: string]: any,
 }
-
-// now it's useless
-// export default interface AppRouteSlot {
-//     name: string,
-//     appName: string,
-//     props: AppRouteSlotProps
-// };
 
 const commonAppRouteSlot = {
     name: Joi.string().trim().min(1).max(255),

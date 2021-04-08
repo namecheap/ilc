@@ -34,16 +34,18 @@ describe(`Tests ${example.url}`, () => {
                 .send(example.correct)
                 .expect(200)
 
-            const id = responseCreation.body.id;
+            const { id } = responseCreation.body;
 
-            expect(responseCreation.body).deep.equal({ id, ...example.correct });
+            try {
+                expect(responseCreation.body).deep.equal({ id, ...example.correct });
 
-            const responseFetching = await request.get(example.url + id)
-                .expect(200);
+                const responseFetching = await request.get(example.url + id)
+                    .expect(200);
 
-            expect(responseFetching.body).deep.equal({ id, ...example.correct });
-
-            await request.delete(example.url + id).expect(204, '');
+                expect(responseFetching.body).deep.equal({ id, ...example.correct });
+            } finally {
+                await request.delete(example.url + id).expect(204, '');
+            }
         });
 
         describe('Authentication / Authorization', () => {
@@ -67,33 +69,74 @@ describe(`Tests ${example.url}`, () => {
 
             const { id } = responseCreation.body;
 
-            const responseFetching = await request.get(example.url + id)
-                .expect(200);
+            try {
+                const responseFetching = await request.get(example.url + id).expect(200);
 
-            expect(responseFetching.body).deep.equal({ id, ...example.correct, });
-
-            await request.delete(example.url + id).expect(204, '');
+                expect(responseFetching.body).deep.equal({ id, ...example.correct, });
+            } finally {
+                await request.delete(example.url + id).expect(204, '');
+            }
         });
 
         it('should successfully return all existed records', async () => {
             const responseCreation1 = await request.post(example.url).send(example.correct).expect(200);
             const responseCreation2 = await request.post(example.url).send(example.updated).expect(200);
 
-            const responseFetchingAll = await request.get(example.url)
-                .expect(200);
+            try {
+                const responseFetchingAll = await request.get(example.url)
+                    .expect(200);
 
-            expect(responseFetchingAll.body).to.be.an('array').that.is.not.empty;
-            expect(responseFetchingAll.body).to.deep.include({
-                id: responseCreation1.body.id,
-                ...example.correct,
-            });
-            expect(responseFetchingAll.body).to.deep.include({
-                id: responseCreation2.body.id,
-                ...example.updated,
-            });
+                expect(responseFetchingAll.body).to.be.an('array').that.is.not.empty;
+                expect(responseFetchingAll.body).to.deep.include({
+                    id: responseCreation1.body.id,
+                    ...example.correct,
+                });
+                expect(responseFetchingAll.body).to.deep.include({
+                    id: responseCreation2.body.id,
+                    ...example.updated,
+                });
+            } finally {
+                await request.delete(example.url + responseCreation1.body.id).expect(204, '');
+                await request.delete(example.url + responseCreation2.body.id).expect(204, '');
+            }
+        });
+        it('should successfully return paginated list', async () => {
+            const rangeStart = (await request.get(example.url)).body.pagination.total;
 
-            await request.delete(example.url + responseCreation1.body.id).expect(204, '');
-            await request.delete(example.url + responseCreation2.body.id).expect(204, '');
+            const routerDomainsList: { id?: number; domainName: string; }[] = [...Array(5)].map((n, i) => ({
+                domainName: `domainNameCorrect${i}`,
+            }));
+
+            const promises = routerDomainsList.map((n, i) => request.post(example.url).send({
+                domainName: `domainNameCorrect${i}`,
+            }));
+
+            try {
+                const responses = await Promise.all(promises);
+
+                responses.forEach((response, i) => {
+                    routerDomainsList[i].id = response.body.id;
+                });
+
+                const responseFetching01 = await request.get(`${example.url}?range=${encodeURIComponent(`[${rangeStart + 0},${rangeStart + 1}]`)}`);
+                const responseFetching24 = await request.get(`${example.url}?range=${encodeURIComponent(`[${rangeStart + 2},${rangeStart + 4}]`)}`);
+                const responseFetching13 = await request.get(`${example.url}?range=${encodeURIComponent(`[${rangeStart + 1},${rangeStart + 3}]`)}`);
+
+                expect(
+                    responseFetching01.body.pagination.total === responseFetching24.body.pagination.total &&
+                    responseFetching24.body.pagination.total === responseFetching13.body.pagination.total
+                ).to.be.true;
+
+                expect(responseFetching01.body.data).to.be.an('array').with.lengthOf(2);
+                expect(responseFetching24.body.data).to.be.an('array').with.lengthOf(3);
+                expect(responseFetching13.body.data).to.be.an('array').with.lengthOf(3);
+
+                expect(responseFetching01.body.data).to.deep.eq(routerDomainsList.slice(0, 1 + 1)); // "+1" since value "to" in "range" is used like "<=" instead of "<"
+                expect(responseFetching24.body.data).to.deep.eq(routerDomainsList.slice(2, 4 + 1));
+                expect(responseFetching13.body.data).to.deep.eq(routerDomainsList.slice(1, 3 + 1));
+            } finally {
+                await Promise.all(routerDomainsList.map(item => request.delete(example.url + item.id)));
+            }
         });
 
         describe('Authentication / Authorization', () => {
@@ -121,26 +164,30 @@ describe(`Tests ${example.url}`, () => {
                 domainName: 123,
             };
 
-            await request.put(example.url + response.body.id)
-                .send(incorrect)
-                .expect(422, '"domainName" must be a string');
-
-            await request.delete(example.url + response.body.id).expect(204, '');
+            try {
+                await request.put(example.url + response.body.id)
+                    .send(incorrect)
+                    .expect(422, '"domainName" must be a string');
+            } finally {
+                await request.delete(example.url + response.body.id).expect(204, '');
+            }
         });
 
         it('should successfully update record', async () => {
             const responseCreation = await request.post(example.url).send(example.correct).expect(200);
 
-            const responseUpdating = await request.put(example.url + responseCreation.body.id)
-                .send(example.updated)
-                .expect(200);
+            try {
+                const responseUpdating = await request.put(example.url + responseCreation.body.id)
+                    .send(example.updated)
+                    .expect(200);
 
-            expect(responseUpdating.body).deep.equal({
-                id: responseCreation.body.id,
-                ...example.updated,
-            });
-
-            await request.delete(example.url + responseCreation.body.id).expect(204, '');
+                expect(responseUpdating.body).deep.equal({
+                    id: responseCreation.body.id,
+                    ...example.updated,
+                });
+            } finally {
+                await request.delete(example.url + responseCreation.body.id).expect(204, '');
+            }
         });
 
         describe('Authentication / Authorization', () => {
@@ -172,26 +219,26 @@ describe(`Tests ${example.url}`, () => {
                 })
                 .expect(200);
 
-            const responseRoute = await request.post('/api/v1/route/')
-                .send({
-                    specialRole: undefined,
-                    orderPos: 122,
-                    route: '/ncTestRoute/*',
-                    next: false,
-                    templateName: null,
-                    slots: {
-                        ncTestRouteSlotName: {
-                            appName,
-                            props: { ncTestProp: 1 },
-                            kind: 'regular',
-                        },
-                    },
-                    meta: {},
-                    domainId,
-                })
-                .expect(200);
-
             try {
+                const responseRoute = await request.post('/api/v1/route/')
+                    .send({
+                        specialRole: undefined,
+                        orderPos: 122,
+                        route: '/ncTestRoute/*',
+                        next: false,
+                        templateName: null,
+                        slots: {
+                            ncTestRouteSlotName: {
+                                appName,
+                                props: { ncTestProp: 1 },
+                                kind: 'regular',
+                            },
+                        },
+                        meta: {},
+                        domainId,
+                    })
+                    .expect(200);
+
                 const response = await request.delete(example.url + domainId)
                     .expect(500);
                 expect(response.text).to.include('Internal server error occurred.');
