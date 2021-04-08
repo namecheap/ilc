@@ -86,12 +86,12 @@ describe(`Tests ${example.url}`, () => {
                 const responseFetchingAll = await request.get(example.url)
                     .expect(200);
 
-                expect(responseFetchingAll.body).to.be.an('array').that.is.not.empty;
-                expect(responseFetchingAll.body).to.deep.include({
+                expect(responseFetchingAll.body.data).to.be.an('array').that.is.not.empty;
+                expect(responseFetchingAll.body.data).to.deep.include({
                     id: responseCreation1.body.id,
                     ...example.correct,
                 });
-                expect(responseFetchingAll.body).to.deep.include({
+                expect(responseFetchingAll.body.data).to.deep.include({
                     id: responseCreation2.body.id,
                     ...example.updated,
                 });
