@@ -1,5 +1,6 @@
 const axios = require('axios');
 const urljoin = require('url-join');
+const { clone } = require('../../common/utils');
 
 const extendError = require('@namecheap/error-extender');
 
@@ -27,9 +28,16 @@ module.exports = class Registry {
         this.#address = address;
         this.#logger = logger;
 
-        this.getConfig = wrapFetchWithCache(this.#getConfig, {
+        const getConfigMemo = wrapFetchWithCache(this.#getConfig, {
             cacheForSeconds: 5,
         });
+
+        this.getConfig = async (options) => {
+            const res = await getConfigMemo();
+            res.data = this.#filterConfig(res.data, options?.filter);
+            return res;
+        };
+
         this.getTemplate = wrapFetchWithCache(this.#getTemplate, {
             cacheForSeconds: 30,
         });
@@ -92,5 +100,31 @@ module.exports = class Registry {
         this.#cacheHeated.template = true;
 
         return res.data;
+    };
+
+    #filterConfig = (config, filter) => {
+        if (!filter || !Object.keys(filter).length) {
+            return config;
+        }
+
+        const clonedConfig = clone(config);
+        const { domain } = filter;
+
+        if (domain) {
+            const currentDomainId = clonedConfig.routerDomains.find(n => n.value === domain)?.id;
+            clonedConfig.routes = clonedConfig.routes.reduce((acc, route) => {
+                // if current domain name exits in routerDomains then we use routes only for this domain
+                // otherwise (when currentDomainId === undefined) we use routes which don't have specified domain name
+                if (currentDomainId === route.domainId) {
+                    const { domainId, ...routeData } = route;
+                    acc.push(routeData);
+                }
+                return acc;
+            }, []);
+
+            delete clonedConfig.routerDomains;
+        }
+
+        return clonedConfig;
     };
 };
