@@ -8,7 +8,7 @@ import preProcessResponse from '../settings/services/preProcessResponse';
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-    const [apps, templates, routes, sharedProps, settings] = await Promise.all([
+    const [apps, templates, routes, sharedProps, settings, routerDomains] = await Promise.all([
         knex.select().from('apps'),
         knex.select('name').from('templates'),
         knex.select()
@@ -17,6 +17,7 @@ router.get('/', async (req, res) => {
             .join('route_slots', 'route_slots.routeId', 'routes.id'),
         knex.select().from('shared_props'),
         knex.select().from('settings').where('scope', Scope.Ilc),
+        knex.select().from('router_domains'),
     ]);
 
     const data = {
@@ -25,7 +26,6 @@ router.get('/', async (req, res) => {
         routes: [] as any[],
         specialRoutes: {},
         settings: {},
-        routerDomains: {},
     };
 
     data.apps = apps.reduce((acc, v) => {
@@ -52,6 +52,7 @@ router.get('/', async (req, res) => {
     data.templates = templates.map(({name}) => name);
 
     const routesTmp: Array<any> = [];
+
     routes.forEach(v => {
         let tmpRoute = routesTmp.find(({ routeId }) => routeId === v.routeId);
 
@@ -59,10 +60,13 @@ router.get('/', async (req, res) => {
             v.next = !!v.next;
             v.template = v.templateName;
 
+            v.domain = v.domainId === null ? null : routerDomains.find(({ id }) => id === v.domainId).domainName;
+            delete v.domainId;
+
             tmpRoute = Object.assign({
                 slots: {},
                 meta: {},
-            }, _.omitBy(_.pick(v, ['routeId', 'route', 'next', 'template', 'specialRole']), _.isNull));
+            }, _.omitBy(_.pick(v, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain']), _.isNull));
             routesTmp.push(tmpRoute);
         }
 
@@ -90,25 +94,6 @@ router.get('/', async (req, res) => {
         _.set(acc, setting.key, setting.value);
         return acc;
     }, {});
-
-    data.routerDomains = [
-        {
-            id: 1,
-            value: 'spacemail.com',
-        },
-        {
-            id: 2,
-            value: 'admin.com',
-        },
-    ];
-
-    data.routes.forEach(route => {
-        if (route.meta['spacemail.com']) {
-            route.domainId = 1;
-        } else if (route.meta['admin.com']) {
-            route.domainId = 2;
-        }
-    });
 
     return res.send(data);
 });

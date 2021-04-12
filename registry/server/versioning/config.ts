@@ -36,6 +36,10 @@ const versioningConf: Record<EntityTypes | keyof typeof EntityTypes, EntityConf>
         idColumn: 'name',
         related: [],
     },
+    [EntityTypes.router_domains]: {
+        idColumn: 'id',
+        related: [],
+    },
 };
 
 export default versioningConf;

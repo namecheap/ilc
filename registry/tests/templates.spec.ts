@@ -52,18 +52,20 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully create record', async () => {
-            let response = await request.post(example.url)
-                .send(example.correct)
-                .expect(200)
+            try {
+                let response = await request.post(example.url)
+                    .send(example.correct)
+                    .expect(200)
 
-            expect(response.body).deep.equal(example.correct);
+                expect(response.body).deep.equal(example.correct);
 
-            response = await request.get(example.url + example.correct.name)
-                .expect(200);
+                response = await request.get(example.url + example.correct.name)
+                    .expect(200);
 
-            expect(response.body).deep.equal(example.correct);
-
-            await request.delete(example.url + example.correct.name).expect(204);
+                expect(response.body).deep.equal(example.correct);
+            } finally {
+                await request.delete(example.url + example.correct.name);
+            }
         });
 
         describe('Authentication / Authorization', () => {
@@ -85,14 +87,16 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully return record w/o authentication', async () => {
-            await request.post(example.url).send(example.correct).expect(200);
+            try {
+                await request.post(example.url).send(example.correct).expect(200);
 
-            const response = await requestWithAuth.get(example.url + example.correct.name)
-                .expect(200);
+                const response = await requestWithAuth.get(example.url + example.correct.name)
+                    .expect(200);
 
-            expect(response.body).deep.equal(example.correct);
-
-            await request.delete(example.url + example.correct.name).expect(204);
+                expect(response.body).deep.equal(example.correct);
+            } finally {
+                await request.delete(example.url + example.correct.name);
+            }
         });
 
         it('should return a rendered template w/o authentication', async () => {
@@ -158,25 +162,23 @@ describe(`Tests ${example.url}`, () => {
                 },
             }) => scope.log(console.log).persist().get(route).delay(delay).reply(status, data, headers));
 
-            await request.post(example.url).send(template).expect(200);
+            try {
+                await request.post(example.url).send(template).expect(200);
 
-            const response = await requestWithAuth.get(example.url + template.name + '/rendered').expect(200);
+                const response = await requestWithAuth.get(example.url + template.name + '/rendered').expect(200);
 
-            await request.delete(example.url + template.name).expect(204);
-
-            expect(response.body).to.eql({
-                styleRefs: ['https://my.awesome.server/my-awesome-stylesheet.css'],
-                name: template.name,
-                content: `
+                expect(response.body).to.eql({
+                    styleRefs: ['https://my.awesome.server/my-awesome-stylesheet.css'],
+                    name: template.name,
+                    content: `
                     <html>
                     <head>
                         <meta charset="utf-8" />
                         <meta name="viewport" content="width=device-width,initial-scale=1"/>
-                        ${
-                            `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
-                            '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
-                            includes[0].api.response.data +
-                            `\n<!-- Template include "${includes[0].attributes.id}" END -->`
+                        ${`<!-- Template include "${includes[0].attributes.id}" START -->\n` +
+                        '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
+                        includes[0].api.response.data +
+                        `\n<!-- Template include "${includes[0].attributes.id}" END -->`
                         }
                         <script>window.console.log('Something...')</script>
                     </head>
@@ -187,7 +189,10 @@ describe(`Tests ${example.url}`, () => {
                     </body>
                     </html>
                 `
-            });
+                });
+            } finally {
+                await request.delete(example.url + template.name);
+            }
         });
 
         it('should return 404 while requesting a non-existent rendered template', async () => {
@@ -200,20 +205,22 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully return all existed records', async () => {
-            await request.post(example.url).send(example.correct).expect(200);
+            try {
+                await request.post(example.url).send(example.correct).expect(200);
 
-            const response = await request.get(example.url)
-                .expect(200);
+                const response = await request.get(example.url)
+                    .expect(200);
 
-            expect(response.body).to.be.an('array').that.is.not.empty;
-            expect(response.body).to.deep.include(example.correct);
-
-            await request.delete(example.url + example.correct.name).expect(204);
+                expect(response.body).to.be.an('array').that.is.not.empty;
+                expect(response.body).to.deep.include(example.correct);
+            } finally {
+                await request.delete(example.url + example.correct.name);
+            }
         });
     });
 
     describe('Update', () => {
-        it('should not update any record if record doesnt exist', async () => {
+        it('should not update any record if record doesn\'t exist', async () => {
             const incorrect = { name: 123 };
             const response = await request.put(example.url + incorrect.name)
                 .expect(404, 'Not found');
@@ -222,43 +229,49 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not update record if forbidden "name" is passed', async () => {
-            await request.post(example.url).send(example.correct).expect(200);
+            try {
+                await request.post(example.url).send(example.correct).expect(200);
 
-            const response = await request.put(example.url + example.correct.name)
-                .send(example.updated)
-                .expect(422, '"name" is not allowed');
+                const response = await request.put(example.url + example.correct.name)
+                    .send(example.updated)
+                    .expect(422, '"name" is not allowed');
 
-            expect(response.body).deep.equal({});
-
-            await request.delete(example.url + example.correct.name).expect(204);
+                expect(response.body).deep.equal({});
+            } finally {
+                await request.delete(example.url + example.correct.name);
+            }
         });
 
         it('should not update record with incorrect type of field: content', async () => {
-            await request.post(example.url).send(example.correct).expect(200);
+            try {
+                await request.post(example.url).send(example.correct).expect(200);
 
-            const incorrect = {
-                name: 123,
-                content: 456
-            };
+                const incorrect = {
+                    name: 123,
+                    content: 456
+                };
 
-            const response = await request.put(example.url + example.correct.name)
-                .send(_.omit(incorrect, 'name'))
-                .expect(422, '"content" must be a string');
-            expect(response.body).deep.equal({});
-
-            await request.delete(example.url + example.correct.name).expect(204);
+                const response = await request.put(example.url + example.correct.name)
+                    .send(_.omit(incorrect, 'name'))
+                    .expect(422, '"content" must be a string');
+                expect(response.body).deep.equal({});
+            } finally {
+                await request.delete(example.url + example.correct.name);
+            }
         });
 
         it('should successfully update record', async () => {
-            await request.post(example.url).send(example.correct).expect(200);
+            try {
+                await request.post(example.url).send(example.correct).expect(200);
 
-            const response = await request.put(example.url + example.correct.name)
-                .send(_.omit(example.updated, 'name'))
-                .expect(200);
+                const response = await request.put(example.url + example.correct.name)
+                    .send(_.omit(example.updated, 'name'))
+                    .expect(200);
 
-            expect(response.body).deep.equal(example.updated);
-
-            await request.delete(example.url + example.correct.name).expect(204);
+                expect(response.body).deep.equal(example.updated);
+            } finally {
+                await request.delete(example.url + example.correct.name);
+            }
         });
 
         describe('Authentication / Authorization', () => {
@@ -271,7 +284,7 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Delete', () => {
-        it('should not delete any record if record doesnt exist', async () => {
+        it('should not delete any record if record doesn\'t exist', async () => {
             const incorrect = { name: 123 };
             const response = await request.delete(example.url + incorrect.name)
                 .expect(404, 'Not found');

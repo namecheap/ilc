@@ -42,69 +42,97 @@ const example = {
             ncTestSharedPropsPropName: 'ncTestSharedPropsPropValue',
         }
     }),
+    routerDomains: Object.freeze({
+        domainName: 'domainNameCorrect',
+    }),
 };
 
 describe('Tests /api/v1/config', () => {
     describe('Read', () => {
         it('should successfully return config', async () => {
-            await request.post('/api/v1/app/').send(example.apps).expect(200);
-            await request.post('/api/v1/template/').send(example.templates).expect(200);
-            const responseRoute = await request.post('/api/v1/route/').send(example.appRoutes).expect(200);
-            await request.post('/api/v1/shared_props/').send(example.sharedProps).expect(200);
+            let routeId, routerDomainsId, routeIdWithDomain;
 
-            const response = await request.get('/api/v1/config')
-            .expect(200);
+            try {
+                const responseRouterDomains = await request.post('/api/v1/router_domains/').send(example.routerDomains).expect(200);
+                routerDomainsId = responseRouterDomains.body.id;
 
-            expect(response.text).to.be.a('string');
-            expect(response.body).to.be.an('object');
+                await request.post('/api/v1/app/').send(example.apps).expect(200);
+                await request.post('/api/v1/template/').send(example.templates).expect(200);
 
-            expect(response.body.apps).to.be.an('object');
-            expect(response.body.templates).to.be.an('array');
-            expect(response.body.routes).to.be.an('array');
-            expect(response.body.specialRoutes).to.be.an('object');
+                const responseRoute = await request.post('/api/v1/route/').send(example.appRoutes).expect(200);
+                routeId = responseRoute.body.id;
 
-            expect(response.body.routes).to.deep.include({
-                routeId: responseRoute.body.id,
-                ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta'])
-            });
+                const responseRouteWithDomain = await request.post('/api/v1/route/').send({
+                    ...example.appRoutes,
+                    orderPos: 123,
+                    domainId: routerDomainsId,
+                }).expect(200);
+                routeIdWithDomain = responseRouteWithDomain.body.id;
 
-            expect(response.body.apps[example.apps.name])
-            .deep.equal(
-                _.omit(
-                    {
-                        ...example.apps,
-                        props: example.sharedProps.props
+                await request.post('/api/v1/shared_props/').send(example.sharedProps).expect(200);
+
+                const response = await request.get('/api/v1/config')
+                .expect(200);
+
+                expect(response.text).to.be.a('string');
+                expect(response.body).to.be.an('object');
+
+                expect(response.body.apps).to.be.an('object');
+                expect(response.body.templates).to.be.an('array');
+                expect(response.body.routes).to.be.an('array');
+                expect(response.body.specialRoutes).to.be.an('object');
+                expect(response.body.routerDomains).to.be.undefined;
+
+                expect(response.body.routes).to.deep.include({
+                    routeId,
+                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
+                });
+
+                expect(response.body.routes).to.deep.include({
+                    routeId: routeIdWithDomain,
+                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
+                    domain: example.routerDomains.domainName,
+                });
+
+                expect(response.body.apps[example.apps.name])
+                .deep.equal(
+                    _.omit(
+                        {
+                            ...example.apps,
+                            props: example.sharedProps.props
+                        },
+                        ['name', 'configSelector']
+                    )
+                );
+
+                expect(response.body.templates).to.include(example.templates.name);
+                expect(response.body.settings).to.deep.equal({
+                    [SettingKeys.TrailingSlash]: TrailingSlashValues.DoNothing,
+                    [SettingKeys.AmdDefineCompatibilityMode]: false,
+                    globalSpinner: {
+                        enabled: true
                     },
-                    ['name', 'configSelector']
-                )
-            );
-
-            expect(response.body.templates).to.include(example.templates.name);
-            expect(response.body.settings).to.deep.equal({
-                [SettingKeys.TrailingSlash]: TrailingSlashValues.DoNothing,
-                [SettingKeys.AmdDefineCompatibilityMode]: false,
-                globalSpinner: {
-                    enabled: true
-                },
-                i18n: {
-                    default: {
-                        currency: 'USD',
-                        locale: 'en-US',
-                    },
-                    enabled: true,
-                    supported: {
-                        currency: ['USD', 'UAH'],
-                        locale: ['en-US', 'ua-UA']
-                    },
-                    routingStrategy: 'prefix_except_default',
-                }
-
-        });
-
-            await request.delete('/api/v1/route/' + responseRoute.body.id).expect(204);
-            await request.delete('/api/v1/template/' + example.templates.name).expect(204);
-            await request.delete('/api/v1/app/' + encodeURIComponent(example.apps.name)).expect(204);
-            await request.delete('/api/v1/shared_props/' + example.sharedProps.name).expect(204);
+                    i18n: {
+                        default: {
+                            currency: 'USD',
+                            locale: 'en-US',
+                        },
+                        enabled: true,
+                        supported: {
+                            currency: ['USD', 'UAH'],
+                            locale: ['en-US', 'ua-UA']
+                        },
+                        routingStrategy: 'prefix_except_default',
+                    }
+                });
+            } finally {
+                routeId && await request.delete('/api/v1/route/' + routeId);
+                routeIdWithDomain && await request.delete('/api/v1/route/' + routeIdWithDomain);
+                await request.delete('/api/v1/template/' + example.templates.name);
+                await request.delete('/api/v1/app/' + encodeURIComponent(example.apps.name));
+                await request.delete('/api/v1/shared_props/' + example.sharedProps.name);
+                routerDomainsId && await request.delete('/api/v1/router_domains/' + routerDomainsId);
+            }
         })
     });
 
