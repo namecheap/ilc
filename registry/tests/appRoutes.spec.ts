@@ -87,59 +87,23 @@ example = {
     }),
 };
 
-const createTemplate = async () => {
-    let response = await request.post(example.template.url)
-    .send(example.template.correct)
-    .expect(200);
-
-    expect(response.body).deep.equal(example.template.correct);
-
-    response = await request.get(example.template.url + example.template.correct.name)
-    .expect(200);
-    expect(response.body).deep.equal(example.template.correct);
-};
-
-const createApp = async (app: typeof example.app) => {
-    let response = await request.post(app.url)
-    .send(app.correct)
-    .expect(200);
-
-    expect(response.body).deep.equal(app.correct);
-
-    response = await request.get(app.url + encodeURIComponent(app.correct.name))
-    .expect(200);
-
-    expect(response.body).deep.equal(app.correct);
-};
-
 const createRouterDomain = async (routerDomain: typeof example.routerDomain) => {
-    let response = await request.post(routerDomain.url)
-        .send(routerDomain.correct)
-        .expect(200)
+    const response = await request.post(routerDomain.url).send(routerDomain.correct);
 
-    const { id } = response.body;
-
-    expect(response.body).deep.equal({ id, ...routerDomain.correct });
-
-    response = await request.get(routerDomain.url + id)
-        .expect(200);
-
-    expect(response.body).deep.equal({ id, ...routerDomain.correct });
-
-    return id;
+    return response.body.id;
 };
 
 describe(`Tests ${example.url}`, () => {
     before(async () => {
-        await createTemplate();
-        await createApp(example.app);
-        await createApp(example.appWrapper);
+        await request.post(example.template.url).send(example.template.correct);
+        await request.post(example.app.url).send(example.app.correct);
+        await request.post(example.appWrapper.url).send(example.appWrapper.correct);
     });
 
     after(async () => {
-        await request.delete(example.template.url + example.template.correct.name).expect(204);
-        await request.delete(example.app.url + encodeURIComponent(example.app.correct.name)).expect(204);
-        await request.delete(example.appWrapper.url + encodeURIComponent(example.appWrapper.correct.name)).expect(204);
+        await request.delete(example.template.url + example.template.correct.name);
+        await request.delete(example.app.url + encodeURIComponent(example.app.correct.name));
+        await request.delete(example.appWrapper.url + encodeURIComponent(example.appWrapper.correct.name));
     });
 
     describe('Create', () => {
@@ -183,17 +147,19 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not create record with the same orderPos', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const id = response.body.id;
+            let routeId;
 
             try {
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
                 response = await request.post(example.url)
                     .send(example.correct)
                     .expect(500);
 
                 expect(response.text).to.include('Internal server error occurred.');
             } finally {
-                await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
             }
         });
 
@@ -215,6 +181,7 @@ describe(`Tests ${example.url}`, () => {
                     domainId: 1111111,
                 })
                 .expect(500);
+
             expect(response.text).to.include('Internal server error occurred.');
         });
 
@@ -260,63 +227,72 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully create record', async () => {
-            let response = await request.post(example.url)
-            .send(example.correct)
-            .expect(200);
-
-            const { id } = response.body;
+            let routeId;
 
             try {
-                const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
+                let response = await request.post(example.url)
+                    .send(example.correct)
+                    .expect(200);
+
+                routeId = response.body.id;
+
+                const expectedRoute = {
+                    id: routeId,
+                    ..._.omitBy(example.correct, _.isNil),
+                };
                 expect(response.body).deep.equal(expectedRoute);
 
-                response = await request.get(example.url + id)
+                response = await request.get(example.url + routeId)
                     .expect(200);
 
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
             }
         });
 
         it('should create record with existed domainId', async () => {
-            const domainId = await createRouterDomain(example.routerDomain);
-
-            const exampleWithExistedDomainId = {
-                ...example.correct,
-                domainId,
-            };
+            let domainId, routeId;
 
             try {
+                domainId = await createRouterDomain(example.routerDomain);
+
+                const exampleWithExistedDomainId = {
+                    ...example.correct,
+                    domainId,
+                };
+
                 let response = await request.post(example.url)
                     .send(exampleWithExistedDomainId)
                 .expect(200);
 
-                const { id } = response.body;
+                routeId = response.body.id;
 
-                try {
-                    const expectedRoute = { id, ..._.omitBy(exampleWithExistedDomainId, _.isNil) };
-                    expect(response.body).deep.equal(expectedRoute);
+                const expectedRoute = {
+                    id: routeId,
+                    ..._.omitBy(exampleWithExistedDomainId, _.isNil),
+                };
+                expect(response.body).deep.equal(expectedRoute);
 
-                    response = await request.get(example.url + id)
-                        .expect(200);
+                response = await request.get(example.url + routeId)
+                    .expect(200);
 
-                    expect(response.body).deep.equal(expectedRoute);
-                } finally {
-                    await request.delete(example.url + id).expect(204);
-                }
+                expect(response.body).deep.equal(expectedRoute);
             } finally {
-                await request.delete(example.routerDomain.url + domainId).expect(204);
+                routeId && await request.delete(example.url + routeId);
+                domainId && await request.delete(example.routerDomain.url + domainId);
             }
         });
 
         it('should successfully create record with metadata', async () => {
-            let response = await request.post(example.url).send(example.correctWithMetadata).expect(200);
-            const { id } = response.body;
+            let routeId;
 
             try {
+                let response = await request.post(example.url).send(example.correctWithMetadata).expect(200);
+                routeId = response.body.id;
+
                 const expectedRoute = {
-                    id,
+                    id: routeId,
                     slots: example.correctWithMetadata.slots,
                     meta: example.correctWithMetadata.meta,
                     ..._.omitBy(_.omit(example.correctWithMetadata, ['slots', 'meta']), _.isNil)
@@ -324,11 +300,11 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(expectedRoute);
 
-                response = await request.get(example.url + id).expect(200);
+                response = await request.get(example.url + routeId).expect(200);
 
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
             }
         });
 
@@ -349,37 +325,75 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully return record', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const id = response.body.id;
+            let routeId;
 
             try {
-                response = await request.get(example.url + id)
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
+                response = await request.get(example.url + routeId)
                     .expect(200);
 
-                const expectedRoute = { id, ..._.omitBy(example.correct, _.isNil) };
+                const expectedRoute = {
+                    id: routeId,
+                    ..._.omitBy(example.correct, _.isNil),
+                };
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
             }
         });
 
         it('should successfully return all existed records', async () => {
-            let id;
+            let routeId;
             try {
                 let response = await request.post(example.url).send(example.correct).expect(200);
-                id = response.body.id;
+                routeId = response.body.id;
 
                 response = await request.get(example.url).expect(200);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
                 const expectedRoute = {
-                    id,
+                    id: routeId,
                     ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
                     meta: example.correct.meta,
                 };
                 expect(response.body).to.deep.include(expectedRoute);
             } finally {
-                id && await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
+            }
+        });
+
+        it('should successfully return all existed records with filter: domainId', async () => {
+            let domainId, routeId;
+            try {
+                domainId = await createRouterDomain(example.routerDomain);
+
+                const exampleWithExistedDomainId = {
+                    ...example.correct,
+                    domainId,
+                };
+
+                let response = await request.post(example.url)
+                    .send(exampleWithExistedDomainId)
+                    .expect(200);
+
+                routeId = response.body.id;
+
+                const queryFilter = encodeURIComponent(JSON.stringify({ domainId }));
+                response = await request.get(`${example.url}?filter=${queryFilter}`).expect(200);
+
+                expect(response.body).to.be.an('array').with.lengthOf(1);
+                const expectedRoute = {
+                    id: routeId,
+                    ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
+                    domainId,
+                };
+
+                expect(response.body).to.deep.include(expectedRoute);
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+                domainId && await request.delete(example.routerDomain.url + domainId);
             }
         });
 
@@ -395,7 +409,7 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Update', () => {
-        it('should not update any record if record doesnt exist', async () => {
+        it('should not update any record if record doesn\'t exist', async () => {
             const response = await request.put(example.url + 123123123123123123)
             .send(example.correct)
             .expect(404, 'Not found');
@@ -404,11 +418,13 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not update record with incorrect type of fields', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const id = response.body.id;
+            let routeId;
 
             try {
-                response = await request.put(example.url + id)
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
+                response = await request.put(example.url + routeId)
                     .send({
                         ...example.correct,
                         specialRole: 'ncTestRouteIncorrectSpecialRole',
@@ -432,40 +448,43 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
             }
         });
 
         it('should not update record with the same orderPos', async () => {
-            let id1, id2;
+            let routeId1, routeId2;
+
             try {
                 let response = await request.post(example.url)
                     .send({ ...example.correct, orderPos: 100000, })
                     .expect(200);
-                id1 = response.body.id;
+                routeId1 = response.body.id;
 
                 response = await request.post(example.url)
                     .send({ ...example.correct, orderPos: 200000, })
                     .expect(200);
-                id2 = response.body.id;
+                routeId2 = response.body.id;
 
-                response = await request.put(example.url + id1)
+                response = await request.put(example.url + routeId1)
                     .send({ ...example.correct, orderPos: 200000, })
                     .expect(500);
 
                 expect(response.text).to.include('Internal server error occurred.');
             } finally {
-                id1 && await request.delete(example.url + id1).expect(204);
-                id2 && await request.delete(example.url + id2).expect(204);
+                routeId1 && await request.delete(example.url + routeId1);
+                routeId2 && await request.delete(example.url + routeId2);
             }
         });
 
         it('should not update record with non-existing templateName', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const id = response.body.id;
+            let routeId;
 
             try {
-                response = await request.put(example.url + id)
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
+                response = await request.put(example.url + routeId)
                     .send({
                         ...example.correct,
                         templateName: 'ncTestNonExistingTemplateName',
@@ -474,42 +493,43 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.text).to.include('Internal server error occurred.');
             } finally {
-                await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
             }
         });
 
         it('should not update record with non-existing domainId', async () => {
-            const domainId = await createRouterDomain(example.routerDomain);
+            let domainId, routeId;
 
             try {
+                domainId = await createRouterDomain(example.routerDomain);
+
                 let response = await request.post(example.url).send({ ...example.correct, domainId }).expect(200);
-                const id = response.body.id;
+                routeId = response.body.id;
 
-                try {
-                    response = await request.put(example.url + id)
-                        .send({
-                            ...example.correct,
-                            domainId: 1111111,
-                        })
-                        .expect(500);
+                response = await request.put(example.url + routeId)
+                    .send({
+                        ...example.correct,
+                        domainId: 1111111,
+                    })
+                    .expect(500);
 
-                    expect(response.text).to.include('Internal server error occurred.');
-                } finally {
-                    await request.delete(example.url + id).expect(204);
-                }
+                expect(response.text).to.include('Internal server error occurred.');
             } finally {
-                await request.delete(example.routerDomain.url + domainId).expect(204);
+                routeId && await request.delete(example.url + routeId);
+                domainId && await request.delete(example.routerDomain.url + domainId);
             }
         });
 
         it('should not update record with non-existing slots/appName', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const id = response.body.id;
-
-            const appName = '@portal/ncTestNonExistingAppName';
+            let routeId;
 
             try {
-                response = await request.put(example.url + id)
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
+                const appName = '@portal/ncTestNonExistingAppName';
+
+                response = await request.put(example.url + routeId)
                     .send({
                         ...example.correct,
                         slots: {
@@ -520,16 +540,18 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.text).to.include(`Non-existing app name "${appName}" specified.`);
             } finally {
-                await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
             }
         });
 
         it('should not update record without required slots/appName', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const id = response.body.id;
+            let routeId;
 
             try {
-                response = await request.put(example.url + id)
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
+                response = await request.put(example.url + routeId)
                     .send({
                         ...example.correct,
                         slots: {
@@ -540,65 +562,74 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(422, '"slots.ncTestRouteSlotNavbar.appName" is required');
             } finally {
-                await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
             }
         });
 
         it('should successfully update record', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const id = response.body.id;
+            let routeId;
 
             try {
-                response = await request.put(example.url + id)
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
+                response = await request.put(example.url + routeId)
                     .send(example.updated)
                     .expect(200);
 
-                expect(response.body).deep.equal({ ...example.updated, id });
+                expect(response.body).deep.equal({
+                    ...example.updated,
+                    id: routeId,
+                });
             } finally {
-                await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
             }
         });
 
         it('should successfully update record with existed domainId', async () => {
-            const domainId1 = await createRouterDomain(example.routerDomain);
-            const domainId2 = await createRouterDomain(example.routerDomain);
+            let domainId1, domainId2, routeId;
 
             try {
+                domainId1 = await createRouterDomain(example.routerDomain);
+                domainId2 = await createRouterDomain(example.routerDomain);
+
                 let response = await request.post(example.url).send({ ...example.correct, domainId: domainId1 }).expect(200);
-                const { id } = response.body;
+                routeId = response.body.id;
 
-                try {
-                    response = await request.put(example.url + id)
-                        .send({
-                            ...example.updated,
-                            domainId: domainId2,
-                        })
-                        .expect(200);
-
-                    expect(response.body).deep.equal({
+                response = await request.put(example.url + routeId)
+                    .send({
                         ...example.updated,
-                        id,
                         domainId: domainId2,
-                    });
-                } finally {
-                    await request.delete(example.url + id).expect(204);
-                }
+                    })
+                    .expect(200);
+
+                expect(response.body).deep.equal({
+                    ...example.updated,
+                    id: routeId,
+                    domainId: domainId2,
+                });
             } finally {
-                await request.delete(example.routerDomain.url + domainId1).expect(204);
-                await request.delete(example.routerDomain.url + domainId2).expect(204);
+                routeId && await request.delete(example.url + routeId);
+                domainId1 && await request.delete(example.routerDomain.url + domainId1);
+                domainId2 && await request.delete(example.routerDomain.url + domainId2);
             }
         });
 
         it('should successfully update record with metadata', async () => {
-            let response = await request.post(example.url).send(example.correctWithMetadata).expect(200);
-            const id = response.body.id;
+            let routeId;
 
             try {
-                response = await request.put(example.url + id).send(example.updatedWithMetadata).expect(200);
+                let response = await request.post(example.url).send(example.correctWithMetadata).expect(200);
+                routeId = response.body.id;
 
-                expect(response.body).deep.equal({ ...example.updatedWithMetadata, id });
+                response = await request.put(example.url + routeId).send(example.updatedWithMetadata).expect(200);
+
+                expect(response.body).deep.equal({
+                    ...example.updatedWithMetadata,
+                    id: routeId,
+                });
             } finally {
-                await request.delete(example.url + id).expect(204);
+                routeId && await request.delete(example.url + routeId);
             }
         });
 
@@ -612,7 +643,7 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Delete', () => {
-        it('should not delete any record if record doesnt exist', async () => {
+        it('should not delete any record if record doesn\'t exist', async () => {
             const response = await request.delete(example.url + 123123123123123123)
             .expect(404, 'Not found');
 

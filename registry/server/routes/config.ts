@@ -26,7 +26,6 @@ router.get('/', async (req, res) => {
         routes: [] as any[],
         specialRoutes: {},
         settings: {},
-        routerDomains,
     };
 
     data.apps = apps.reduce((acc, v) => {
@@ -53,6 +52,7 @@ router.get('/', async (req, res) => {
     data.templates = templates.map(({name}) => name);
 
     const routesTmp: Array<any> = [];
+
     routes.forEach(v => {
         let tmpRoute = routesTmp.find(({ routeId }) => routeId === v.routeId);
 
@@ -60,10 +60,13 @@ router.get('/', async (req, res) => {
             v.next = !!v.next;
             v.template = v.templateName;
 
+            v.domain = v.domainId === null ? null : routerDomains.find(({ id }) => id === v.domainId).domainName;
+            delete v.domainId;
+
             tmpRoute = Object.assign({
                 slots: {},
                 meta: {},
-            }, _.omitBy(_.pick(v, ['routeId', 'route', 'next', 'template', 'specialRole']), _.isNull));
+            }, _.omitBy(_.pick(v, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain']), _.isNull));
             routesTmp.push(tmpRoute);
         }
 

@@ -50,13 +50,27 @@ const example = {
 describe('Tests /api/v1/config', () => {
     describe('Read', () => {
         it('should successfully return config', async () => {
-            await request.post('/api/v1/app/').send(example.apps).expect(200);
-            await request.post('/api/v1/template/').send(example.templates).expect(200);
-            const responseRoute = await request.post('/api/v1/route/').send(example.appRoutes).expect(200);
-            await request.post('/api/v1/shared_props/').send(example.sharedProps).expect(200);
-            const responseRouterDomains = await request.post('/api/v1/router_domains/').send(example.routerDomains).expect(200);
+            let routeId, routerDomainsId, routeIdWithDomain;
 
             try {
+                const responseRouterDomains = await request.post('/api/v1/router_domains/').send(example.routerDomains).expect(200);
+                routerDomainsId = responseRouterDomains.body.id;
+
+                await request.post('/api/v1/app/').send(example.apps).expect(200);
+                await request.post('/api/v1/template/').send(example.templates).expect(200);
+
+                const responseRoute = await request.post('/api/v1/route/').send(example.appRoutes).expect(200);
+                routeId = responseRoute.body.id;
+
+                const responseRouteWithDomain = await request.post('/api/v1/route/').send({
+                    ...example.appRoutes,
+                    orderPos: 123,
+                    domainId: routerDomainsId,
+                }).expect(200);
+                routeIdWithDomain = responseRouteWithDomain.body.id;
+
+                await request.post('/api/v1/shared_props/').send(example.sharedProps).expect(200);
+
                 const response = await request.get('/api/v1/config')
                 .expect(200);
 
@@ -67,11 +81,17 @@ describe('Tests /api/v1/config', () => {
                 expect(response.body.templates).to.be.an('array');
                 expect(response.body.routes).to.be.an('array');
                 expect(response.body.specialRoutes).to.be.an('object');
-                expect(response.body.routerDomains).to.be.an('array');
+                expect(response.body.routerDomains).to.be.undefined;
 
                 expect(response.body.routes).to.deep.include({
-                    routeId: responseRoute.body.id,
-                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta'])
+                    routeId,
+                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
+                });
+
+                expect(response.body.routes).to.deep.include({
+                    routeId: routeIdWithDomain,
+                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
+                    domain: example.routerDomains.domainName,
                 });
 
                 expect(response.body.apps[example.apps.name])
@@ -105,14 +125,13 @@ describe('Tests /api/v1/config', () => {
                         routingStrategy: 'prefix_except_default',
                     }
                 });
-
-                expect(response.body.routerDomains).to.deep.include({ id: responseRouterDomains.body.id, ...example.routerDomains});
             } finally {
-                await request.delete('/api/v1/route/' + responseRoute.body.id).expect(204);
-                await request.delete('/api/v1/template/' + example.templates.name).expect(204);
-                await request.delete('/api/v1/app/' + encodeURIComponent(example.apps.name)).expect(204);
-                await request.delete('/api/v1/shared_props/' + example.sharedProps.name).expect(204);
-                await request.delete('/api/v1/router_domains/' + responseRouterDomains.body.id).expect(204);
+                routeId && await request.delete('/api/v1/route/' + routeId);
+                routeIdWithDomain && await request.delete('/api/v1/route/' + routeIdWithDomain);
+                await request.delete('/api/v1/template/' + example.templates.name);
+                await request.delete('/api/v1/app/' + encodeURIComponent(example.apps.name));
+                await request.delete('/api/v1/shared_props/' + example.sharedProps.name);
+                routerDomainsId && await request.delete('/api/v1/router_domains/' + routerDomainsId);
             }
         })
     });
