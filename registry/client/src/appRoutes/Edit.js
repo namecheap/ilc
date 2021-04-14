@@ -57,6 +57,11 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     <SelectInput resettable validate={[requiredSpecial]} optionText="name" />
                 </ReferenceInput>
                 <JsonField source="meta" label="Metadata" />
+                <ReferenceInput reference="router_domains"
+                    source="domainId"
+                    label="Domain">
+                    <SelectInput resettable optionText="domainName" />
+                </ReferenceInput>
             </FormTab>
             <FormTab label="Slots">
                 <ArrayInput source="slots">
