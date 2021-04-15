@@ -51,6 +51,7 @@ const PostList = props => {
                 <Datagrid rowClick="edit" optimized>
                     <TextField source="id" sortable={false} />
                     <TextField source="domainName" sortable={false} />
+                    <TextField source="template500" sortable={false} emptyText="-" />
                     <ListActionsToolbar>
                         <EditButton />
                     </ListActionsToolbar>

@@ -292,6 +292,38 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).deep.equal({});
         });
 
+        it('should successfully delete record if doesn\'t have any reference from foreign (routerDomains -> template500) to current primary key', async () => {
+            let routerDomainsId;
+
+            try {
+                await request.post(example.url).send(example.correct).expect(200);
+
+                const responseRouterDomains = await request.post('/api/v1/router_domains/')
+                    .send({
+                        domainName: 'domainNameCorrect',
+                        template500: example.correct.name,
+                    })
+                    .expect(200)
+
+                routerDomainsId = responseRouterDomains.body.id;
+
+                const response = await request.delete(example.url + example.correct.name)
+                    .expect(500);
+                expect(response.text).to.include('Internal server error occurred.');
+
+                await request.delete('/api/v1/router_domains/' + routerDomainsId);
+
+                await request.delete(example.url + example.correct.name)
+                    .expect(204, '');
+
+                await request.get(example.url + example.correct.name)
+                    .expect(404, 'Not found');
+            } finally {
+                routerDomainsId && await request.delete('/api/v1/router_domains/' + routerDomainsId);
+                await request.delete(example.url + example.correct.name)
+            }
+        });
+
         it('should successfully delete record', async () => {
             await request.post(example.url).send(example.correct).expect(200);
 

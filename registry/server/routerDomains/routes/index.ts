@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 
 import getRouterDomains from './getRouterDomains';
 import getAllRouterDomains from './getAllRouterDomains';
@@ -6,12 +6,14 @@ import updateRouterDomains from './updateRouterDomains';
 import createRouterDomains from './createRouterDomains';
 import deleteRouterDomains from './deleteRouterDomains';
 
-const routerDomainsRouter = express.Router();
+export default (authMw: RequestHandler) => {
+    const routerDomainsRouter = express.Router();
 
-routerDomainsRouter.get('/', ...getAllRouterDomains);
-routerDomainsRouter.post('/', ...createRouterDomains);
-routerDomainsRouter.get('/:id', ...getRouterDomains);
-routerDomainsRouter.put('/:id', ...updateRouterDomains);
-routerDomainsRouter.delete('/:id', ...deleteRouterDomains);
+    routerDomainsRouter.get('/', ...getAllRouterDomains);
+    routerDomainsRouter.post('/', authMw, ...createRouterDomains);
+    routerDomainsRouter.get('/:id', authMw, ...getRouterDomains);
+    routerDomainsRouter.put('/:id', authMw, ...updateRouterDomains);
+    routerDomainsRouter.delete('/:id', authMw, ...deleteRouterDomains);
 
-export default routerDomainsRouter;
+    return routerDomainsRouter;
+};

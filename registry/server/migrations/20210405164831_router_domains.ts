@@ -5,6 +5,7 @@ export async function up(knex: Knex): Promise<any> {
     return knex.schema.createTable('router_domains', table => {
         table.increments('id');
         table.string('domainName', 255).notNullable();
+        table.string('template500', 50).nullable().references('templates.name')
     });
 }
 

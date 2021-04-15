@@ -1,18 +1,24 @@
 import Joi from 'joi';
+import { templateNameSchema } from '../../templates/interfaces';
 
 export default interface RouterDomains {
     id: number,
     domainName: string,
+    template500?: string,
 };
 
 export const routerDomainIdSchema = Joi.string().trim().required();
 
-const routerDomainNameSchema = Joi.string().trim().min(1);
+const commonRouterDomainsSchema = {
+    domainName: Joi.string().trim().min(1),
+    template500: templateNameSchema.allow(null),
+};
 
 export const partialRouterDomainsSchema = Joi.object({
-    domainName: routerDomainNameSchema,
+    ...commonRouterDomainsSchema,
 });
 
 export const routerDomainsSchema = Joi.object({
-    domainName: routerDomainNameSchema.required(),
+    ...commonRouterDomainsSchema,
+    domainName: commonRouterDomainsSchema.domainName.required(),
 });
