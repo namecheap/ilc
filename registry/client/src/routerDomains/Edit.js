@@ -6,6 +6,8 @@ import {
     TextInput,
     required,
     TextField,
+    ReferenceInput,
+    SelectInput,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
 const Title = ({ record }) => {
@@ -19,7 +21,12 @@ const InputForm = ({ mode = 'edit', ...props }) => {
                 ? <TextField source="id" />
                 : null}
 
-            <TextInput source="domainName" fullWidth validate={required()} />
+            <TextInput source="domainName" fullWidth validate={required()}  />
+            <ReferenceInput reference="template"
+                source="template500"
+                label="Template of 500 error">
+                <SelectInput resettable optionText="name" helperText="Default template name is '500'" />
+            </ReferenceInput>
         </SimpleForm>
     );
 };
