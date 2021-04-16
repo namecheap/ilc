@@ -4,6 +4,9 @@ export async function up(knex: Knex): Promise<any> {
     if (isMySQL(knex)) {
         return knex.schema.table('routes', table => {
             table.integer('domainId', 10).unsigned().nullable().references('router_domains.id');
+
+            table.dropUnique(['specialRole'], 'routes_specialrole_unique');
+            table.unique(['specialRole', 'domainId'], 'routes_specialrole_and_domainId_unique');
         });
     } else {
         return Promise.resolve()
@@ -16,13 +19,14 @@ export async function up(knex: Knex): Promise<any> {
             }))
             .then(() => knex.schema.createTable('routes', table => {
                 table.increments('id');
-                table.enum('specialRole', ['404']).nullable().unique('routes_specialrole_unique');
+                table.enum('specialRole', ['404']).nullable();
                 table.integer('orderPos', 10).notNullable().unique('routes_orderpos_unique');
                 table.string('route', 255).notNullable();
                 table.boolean('next').notNullable().defaultTo(false);
                 table.string('templateName', 50).nullable().references('templates.name');
                 table.text('meta');
                 table.integer('domainId', 10).unsigned().nullable().references('router_domains.id');
+                table.unique(['specialRole', 'domainId'], 'routes_specialrole_and_domainId_unique');
             }))
             .then(() => knex('old_routes').select())
             .then((rows) => rows.length ? knex('routes').insert(rows) : [])
@@ -44,6 +48,9 @@ export async function up(knex: Knex): Promise<any> {
 export async function down(knex: Knex): Promise<any> {
     if (isMySQL(knex)) {
         return knex.schema.table('routes', table => {
+            table.dropUnique(['specialRole', 'domainId'], 'routes_specialrole_and_domainId_unique');
+            table.unique(['specialRole'], 'routes_specialrole_unique');
+
             table.dropColumn('domainId');
         });
     } else {

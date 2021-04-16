@@ -80,7 +80,7 @@ describe('Tests /api/v1/config', () => {
                 expect(response.body.apps).to.be.an('object');
                 expect(response.body.templates).to.be.an('array');
                 expect(response.body.routes).to.be.an('array');
-                expect(response.body.specialRoutes).to.be.an('object');
+                expect(response.body.specialRoutes).to.be.an('array');
                 expect(response.body.routerDomains).to.be.undefined;
 
                 expect(response.body.routes).to.deep.include({
