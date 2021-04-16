@@ -7,6 +7,7 @@ import * as templates from './templates/dataTransform';
 import * as appRoutes from './appRoutes/dataTransform';
 import * as settings from './settings/dataTransform';
 import * as authEntities from './authEntities/dataTransform';
+import * as routerDomains from './routerDomains/dataTransform';
 
 import httpClient from './httpClient';
 
@@ -103,6 +104,9 @@ function transformGetter(resource, data) {
         case 'auth_entities':
             authEntities.transformGet(data);
             break;
+        case 'router_domains':
+            routerDomains.transformGet(data);
+            break;
         default:
     }
 }
@@ -126,6 +130,9 @@ function transformSetter(resource, data, operation) {
             break;
         case 'auth_entities':
             authEntities.transformSet(data, operation);
+            break;
+        case 'router_domains':
+            routerDomains.transformSet(data, operation);
             break;
         default:
     }

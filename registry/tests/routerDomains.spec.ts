@@ -104,12 +104,12 @@ describe(`Tests ${example.url}`, () => {
                 const responseFetchingAll = await request.get(example.url)
                     .expect(200);
 
-                expect(responseFetchingAll.body.data).to.be.an('array').that.is.not.empty;
-                expect(responseFetchingAll.body.data).to.deep.include({
+                expect(responseFetchingAll.body).to.be.an('array').that.is.not.empty;
+                expect(responseFetchingAll.body).to.deep.include({
                     id: routerDomainsId1,
                     ...example.correct,
                 });
-                expect(responseFetchingAll.body.data).to.deep.include({
+                expect(responseFetchingAll.body).to.deep.include({
                     id: routerDomainsId2,
                     ...example.updated,
                 });
@@ -119,7 +119,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
         it('should successfully return paginated list', async () => {
-            const rangeStart = (await request.get(example.url)).body.pagination.total;
+            const rangeStart = (await request.get(example.url)).body.length;
 
             const routerDomainsList: { id?: number; domainName: string; }[] = [...Array(5)].map((n, i) => ({
                 domainName: `domainNameCorrect${i}`,
@@ -141,17 +141,17 @@ describe(`Tests ${example.url}`, () => {
                 const responseFetching13 = await request.get(`${example.url}?range=${encodeURIComponent(`[${rangeStart + 1},${rangeStart + 3}]`)}`);
 
                 expect(
-                    responseFetching01.body.pagination.total === responseFetching24.body.pagination.total &&
-                    responseFetching24.body.pagination.total === responseFetching13.body.pagination.total
+                    responseFetching01.header['content-range'] === responseFetching24.header['content-range'] &&
+                    responseFetching24.header['content-range'] === responseFetching13.header['content-range']
                 ).to.be.true;
 
-                expect(responseFetching01.body.data).to.be.an('array').with.lengthOf(2);
-                expect(responseFetching24.body.data).to.be.an('array').with.lengthOf(3);
-                expect(responseFetching13.body.data).to.be.an('array').with.lengthOf(3);
+                expect(responseFetching01.body).to.be.an('array').with.lengthOf(2);
+                expect(responseFetching24.body).to.be.an('array').with.lengthOf(3);
+                expect(responseFetching13.body).to.be.an('array').with.lengthOf(3);
 
-                expect(responseFetching01.body.data).to.deep.eq(routerDomainsList.slice(0, 1 + 1)); // "+1" since value "to" in "range" is used like "<=" instead of "<"
-                expect(responseFetching24.body.data).to.deep.eq(routerDomainsList.slice(2, 4 + 1));
-                expect(responseFetching13.body.data).to.deep.eq(routerDomainsList.slice(1, 3 + 1));
+                expect(responseFetching01.body).to.deep.eq(routerDomainsList.slice(0, 1 + 1)); // "+1" since value "to" in "range" is used like "<=" instead of "<"
+                expect(responseFetching24.body).to.deep.eq(routerDomainsList.slice(2, 4 + 1));
+                expect(responseFetching13.body).to.deep.eq(routerDomainsList.slice(1, 3 + 1));
             } finally {
                 await Promise.all(routerDomainsList.map(item => request.delete(example.url + item.id)));
             }

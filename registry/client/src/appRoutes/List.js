@@ -10,6 +10,8 @@ import {
     BooleanField,
     Filter,
     BooleanInput,
+    ReferenceInput,
+    SelectInput,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
 const ListBulkActions = memo(props => (
@@ -18,15 +20,24 @@ const ListBulkActions = memo(props => (
     </Fragment>
 ));
 
+const useStyles = makeStyles({
+    toolbar: {
+        alignItems: 'center',
+        display: 'flex',
+        marginTop: -1,
+        marginBottom: -1,
+    },
+    filters: {
+        alignItems: 'center',
+        marginTop: '0',
+    },
+    filtersSpecial: {
+        marginBottom: '-6px',
+    },
+});
+
 const ListActionsToolbar = ({ children, ...props }) => {
-    const classes = makeStyles({
-        toolbar: {
-            alignItems: 'center',
-            display: 'flex',
-            marginTop: -1,
-            marginBottom: -1,
-        },
-    });
+    const classes = useStyles();
 
     return (
         <div className={classes.toolbar}>
@@ -35,13 +46,24 @@ const ListActionsToolbar = ({ children, ...props }) => {
     );
 };
 
-const ListFilter = (props) => (
-    <Filter {...props}>
-        <BooleanInput label="Show special" source="showSpecial" alwaysOn />
-    </Filter>
-);
+const ListFilter = (props) => {
+    const classes = useStyles();
+
+    return (
+        <Filter {...props} className={classes.filters}>
+            <BooleanInput label="Show special" source="showSpecial" alwaysOn className={classes.filtersSpecial} />
+            <ReferenceInput reference="router_domains"
+                alwaysOn
+                source="domainId"
+                label="Domain">
+                <SelectInput resettable optionText="domainName" />
+            </ReferenceInput>
+        </Filter>
+    );
+};
 
 const ListGrid = (props) => {
+
     return (
         <Datagrid {...props} rowClick="edit" optimized>
             {!props.filterValues.showSpecial ? <TextField source="id" sortable={false} /> : null }
@@ -50,6 +72,7 @@ const ListGrid = (props) => {
             {!props.filterValues.showSpecial ? <BooleanField source="next" sortable={false} /> : null }
             {props.filterValues.showSpecial ? <TextField source="specialRole" sortable={false} /> : null }
             <TextField source="templateName" emptyText="-" sortable={false} />
+            <TextField source="domainId" label="Domain Id" sortable={false} emptyText="-" />
             <ListActionsToolbar>
                 <EditButton />
             </ListActionsToolbar>
