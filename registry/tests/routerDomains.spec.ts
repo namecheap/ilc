@@ -261,6 +261,14 @@ describe(`Tests ${example.url}`, () => {
                 routerDomainsId && await request.delete(example.url + routerDomainsId);
             }
         });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.put(example.url + 123)
+                    .send(example.updated)
+                    .expect(401);
+            });
+        });
     });
 
     describe('Delete', () => {
@@ -325,6 +333,13 @@ describe(`Tests ${example.url}`, () => {
 
             await request.delete(example.url + response.body.id)
                 .expect(204, '');
+        });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.delete(example.url + 123)
+                    .expect(401);
+            });
         });
     });
 });
