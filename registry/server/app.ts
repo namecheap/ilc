@@ -40,7 +40,7 @@ export default (withAuth: boolean = true) => {
     app.use('/api/v1/auth_entities', authMw, routes.authEntities);
     app.use('/api/v1/versioning', authMw, routes.versioning);
     app.use('/api/v1/settings', routes.settings(authMw));
-    app.use('/api/v1/router_domains', routes.routerDomains);
+    app.use('/api/v1/router_domains', routes.routerDomains(authMw));
 
     app.use(errorHandler);
 

@@ -106,6 +106,14 @@ describe(`Tests ${example.url}`, () => {
                 await request.delete('/api/v1/template/' + templateName);
             }
         });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.post(example.url)
+                    .send(example.correct)
+                    .expect(401);
+            });
+        });
     });
 
     describe('Read', () => {
@@ -198,6 +206,13 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 await Promise.all(routerDomainsList.map(item => request.delete(example.url + item.id)));
             }
+        });
+
+        describe('Authentication / Authorization', () => {
+            it('should deny access w/o authentication', async () => {
+                await requestWithAuth.get(example.url + 123)
+                    .expect(401);
+            });
         });
     });
 
