@@ -9,4 +9,4 @@ export const textErrorId = 'Error ID:';
 
 export const text404NotFound = '<h1>404 not found</h1>';
 export const text404NotFoundForLocalhostAsIPv4 = '<h1>404 not found on 127.0.0.1</h1>';
-export const text404NotFoundVue = '<div>404 not found component</div>';
+export const text404NotFoundVue = '404 not found component';

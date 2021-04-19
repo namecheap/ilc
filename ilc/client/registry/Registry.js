@@ -6,6 +6,7 @@ export default class Registry {
     constructor(wrapWithCache) {
         this.getTemplate = wrapWithCache(this.#getTemplate, {
             cacheForSeconds: 3600,
+            name: 'registry_getTemplate',
         });
     }
 

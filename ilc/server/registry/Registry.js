@@ -47,6 +47,7 @@ module.exports = class Registry {
 
         const getTemplateMemo = wrapFetchWithCache(this.#getTemplate, {
             cacheForSeconds: 30,
+            name: 'registry_getTemplate',
         });
 
         this.getTemplate = async (templateName, forDomain) => {
