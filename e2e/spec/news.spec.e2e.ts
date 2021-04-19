@@ -36,12 +36,3 @@ Scenario('should open an article page from a direct link', async (I, newsPage: n
     I.seeInCurrentUrl(lastNewsSourceLinkHref);
     I.closeOtherTabs();
 });
-
-Scenario('should open 500 error page when an error happens', async (I, newsPage: newsPage) => {
-    I.amOnPage(newsPage.url.main);
-    I.waitInUrl(newsPage.url.main, 10);
-    I.waitForElement(newsPage.generateError, 10);
-    I.click(newsPage.generateError);
-    I.waitForElement(newsPage.errorId);
-    I.seeInCurrentUrl(newsPage.url.main);
-});
