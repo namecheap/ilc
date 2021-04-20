@@ -13,6 +13,7 @@ module.exports = class Registry {
     #cacheHeated = {
         config: false,
         template: false,
+        routerDomains: false,
     };
 
     /**
@@ -30,6 +31,7 @@ module.exports = class Registry {
 
         const getConfigMemo = wrapFetchWithCache(this.#getConfig, {
             cacheForSeconds: 5,
+            name: 'registry_getConfig',
         });
 
         this.getConfig = async (options) => {
@@ -38,13 +40,28 @@ module.exports = class Registry {
             return res;
         };
 
-        this.getTemplate = wrapFetchWithCache(this.#getTemplate, {
+        this.getRouterDomains = wrapFetchWithCache(this.#getRouterDomains, {
+            cacheForSeconds: 30,
+            name: 'registry_routerDomains',
+        });
+
+        const getTemplateMemo = wrapFetchWithCache(this.#getTemplate, {
             cacheForSeconds: 30,
         });
+
+        this.getTemplate = async (templateName, forDomain) => {
+            if (templateName === '500' && forDomain) {
+                const routerDomains = await this.getRouterDomains();
+                const redefined500 = routerDomains.data.find(item => item.domainName === forDomain)?.template500;
+                templateName = redefined500 || templateName;
+            }
+
+            return await getTemplateMemo(templateName);
+        };
     }
 
     async preheat() {
-        if (this.#cacheHeated.template && this.#cacheHeated.config) {
+        if (this.#cacheHeated.template && this.#cacheHeated.config && this.#cacheHeated.routerDomains) {
             return;
         }
 
@@ -53,6 +70,7 @@ module.exports = class Registry {
         await Promise.all([
             this.getConfig(),
             this.getTemplate('500'),
+            this.getRouterDomains(),
         ]);
 
         this.#logger.info('Registry preheated successfully!');
@@ -99,6 +117,27 @@ module.exports = class Registry {
 
         this.#cacheHeated.template = true;
 
+        return res.data;
+    };
+
+    #getRouterDomains = async () => {
+        this.#logger.debug('Calling get routerDomains registry endpoint...');
+
+        const url = urljoin(this.#address, 'api/v1/router_domains');
+        let res;
+        try {
+            res = await axios.get(url, { responseType: 'json' });
+        } catch (e) {
+            throw new errors.RegistryError({
+                message: `Error while requesting routerDomains from registry`,
+                cause: e,
+                data: {
+                    requestedUrl: url
+                }
+            });
+        }
+
+        this.#cacheHeated.routerDomains = true;
         return res.data;
     };
 

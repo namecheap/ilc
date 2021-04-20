@@ -29,6 +29,17 @@ describe(`Tests ${example.url}`, () => {
                 .expect(422, '"domainName" must be a string');
         });
 
+        it('should not create record with non-existed template500', async () => {
+            const response = await request.post(example.url)
+                .send({
+                    ...example.correct,
+                    template500: 'nonExistedTemplate',
+                })
+                .expect(500);
+
+            expect(response.text).to.include('Internal server error occurred.');
+        });
+
         it('should successfully create record', async () => {
             let routerDomainsId;
 
@@ -53,6 +64,46 @@ describe(`Tests ${example.url}`, () => {
                 });
             } finally {
                 routerDomainsId && await request.delete(example.url + routerDomainsId);
+            }
+        });
+
+        it('should successfully create record with template for 500', async () => {
+            const templateName = 'testTemplate500';
+            let routerDomainsId;
+
+            const exampleWithTemplate500 = {
+                ...example.correct,
+                template500: templateName,
+            };
+
+            try {
+                await request.post('/api/v1/template/')
+                    .send({
+                        name: templateName,
+                        content: 'ncTestTemplateContent'
+                    });
+
+                const responseCreation = await request.post(example.url)
+                    .send(exampleWithTemplate500)
+                    .expect(200)
+
+                routerDomainsId = responseCreation.body.id;
+
+                expect(responseCreation.body).deep.equal({
+                    id: routerDomainsId,
+                    ...exampleWithTemplate500,
+                });
+
+                const responseFetching = await request.get(example.url + routerDomainsId)
+                    .expect(200);
+
+                expect(responseFetching.body).deep.equal({
+                    id: routerDomainsId,
+                    ...exampleWithTemplate500,
+                });
+            } finally {
+                routerDomainsId && await request.delete(example.url + routerDomainsId);
+                await request.delete('/api/v1/template/' + templateName);
             }
         });
 
@@ -159,9 +210,6 @@ describe(`Tests ${example.url}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth.get(example.url)
-                    .expect(401);
-
                 await requestWithAuth.get(example.url + 123)
                     .expect(401);
             });

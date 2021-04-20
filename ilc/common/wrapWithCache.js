@@ -6,13 +6,14 @@ errors.WrapWithCacheError = extendError('WrapWithCacheError');
 const wrapWithCache = (localStorage, logger, createHash = hashFn) => (fn, cacheParams = {}) => {
     const {
         cacheForSeconds = 60,
+        name = '', // "hash" of returned value is based only on arguments, so with the help "name" we can add prefix to hash
     } = cacheParams;
 
     const cacheResolutionPromise = {};
 
     return (...args) => {
         const now = Math.floor(Date.now() / 1000);
-        const hash = args.length > 0 ? createHash(JSON.stringify(args)) : '__null__';
+        const hash = `${name ? name + '__' : ''}${args.length > 0 ? createHash(JSON.stringify(args)) : '__null__'}`;
 
         if (localStorage.getItem(hash) === null || JSON.parse(localStorage.getItem(hash)).cachedAt < now - cacheForSeconds) {
             if (cacheResolutionPromise[hash] !== undefined) {

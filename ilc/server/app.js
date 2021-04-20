@@ -43,7 +43,8 @@ module.exports = (registryService, pluginManager) => {
     app.register(require('./ping'));
 
     app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
-        const data = await registryService.getTemplate(req.params.templateName);
+        const currentDomain = req.hostname;
+        const data = await registryService.getTemplate(req.params.templateName, currentDomain);
         res.status(200).send(data.data.content);
     });
 
