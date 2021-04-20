@@ -21,6 +21,7 @@ describe('wrapWithCache', () => {
     const now = Math.floor(Date.now() / 1000);
     const cacheParams = {
         cacheForSeconds: 3600,
+        name: 'testCacheName',
     };
     const prevCachedValue = {
         data: prevData,
@@ -30,13 +31,20 @@ describe('wrapWithCache', () => {
 
     beforeEach(() => {
         const wrapWithCacheStorage = wrapWithCache(localStorage, logger);
-        wrapedFn = wrapWithCacheStorage(fn);
+        wrapedFn = wrapWithCacheStorage(fn, { name: 'testCacheName' });
     });
 
     afterEach(() => {
         fn.reset();
         logger.error.reset();
         localStorage.clear();
+    });
+
+    it('should throw error if uses without "name"', async () => {
+        const wrapWithCacheStorage = wrapWithCache(localStorage, logger);
+        chai.expect(() => wrapWithCacheStorage(fn, { name: undefined })).to.throw(
+            'To wrap your function you should provide unique "name" to argument, to create hash-id of result of your function'
+        );
     });
 
     it('should return a value', async () => {
@@ -95,7 +103,7 @@ describe('wrapWithCache', () => {
         const wrapWithCacheStorage = wrapWithCache(localStorage, logger, createHash);
         wrapedFn = wrapWithCacheStorage(fn, cacheParams);
         fn.withArgs(...fnArgs).returns(Promise.resolve(newData));
-        createHash.withArgs(JSON.stringify(fnArgs)).returns(cachedValueKey);
+        createHash.withArgs(cacheParams.name + JSON.stringify(fnArgs)).returns(cachedValueKey);
         localStorage.setItem(cachedValueKey, JSON.stringify(prevCachedValue));
 
         const firstValue = await wrapedFn(...fnArgs);

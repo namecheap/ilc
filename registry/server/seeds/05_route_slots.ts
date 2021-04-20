@@ -55,6 +55,17 @@ export async function seed(knex: Knex): Promise<any> {
             props: JSON.stringify({
                 page: 'hooks-protected'
             }),
+        },
+        {
+            routeId: 12, // Special: 404 only for 127.0.0.1
+            name: 'navbar',
+            appName: '@portal/navbar',
+        },
+        {
+            routeId: 12, // Special: 404 only for 127.0.0.1
+            name: 'body',
+            appName: '@portal/system',
+            props: JSON.stringify({ _statusCode: '404', title: '404 not found on 127.0.0.1' }),
         }
     ]);
 }

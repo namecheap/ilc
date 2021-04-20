@@ -53,6 +53,15 @@ export async function seed(knex: Knex): Promise<any> {
             meta: JSON.stringify({
                 protected: true,
             }),
-        }
+        },
+        {
+            id: 12,
+            specialRole: '404',
+            orderPos: -10001,
+            route: '',
+            next: false,
+            templateName: 'master',
+            domainId: 1,
+        },
     ]);
 }

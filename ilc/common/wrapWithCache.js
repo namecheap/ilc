@@ -3,17 +3,21 @@ const extendError = require('@namecheap/error-extender');
 const errors = {};
 errors.WrapWithCacheError = extendError('WrapWithCacheError');
 
-const wrapWithCache = (localStorage, logger, createHash = hashFn) => (fn, cacheParams = {}) => {
+const wrapWithCache = (localStorage, logger, createHash = hashFn) => (fn, cacheParams) => {
     const {
         cacheForSeconds = 60,
-        name = '', // "hash" of returned value is based only on arguments, so with the help "name" we can add prefix to hash
+        name,
     } = cacheParams;
+
+    if (typeof name !== 'string' || name.length === 0) {
+        throw new Error('To wrap your function you should provide unique "name" to argument, to create hash-id of result of your function');
+    }
 
     const cacheResolutionPromise = {};
 
     return (...args) => {
         const now = Math.floor(Date.now() / 1000);
-        const hash = `${name ? name + '__' : ''}${args.length > 0 ? createHash(JSON.stringify(args)) : '__null__'}`;
+        const hash = createHash(name + JSON.stringify(args));
 
         if (localStorage.getItem(hash) === null || JSON.parse(localStorage.getItem(hash)).cachedAt < now - cacheForSeconds) {
             if (cacheResolutionPromise[hash] !== undefined) {

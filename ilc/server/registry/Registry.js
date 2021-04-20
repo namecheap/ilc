@@ -47,6 +47,7 @@ module.exports = class Registry {
 
         const getTemplateMemo = wrapFetchWithCache(this.#getTemplate, {
             cacheForSeconds: 30,
+            name: 'registry_getTemplate',
         });
 
         this.getTemplate = async (templateName, forDomain) => {
@@ -147,9 +148,8 @@ module.exports = class Registry {
         }
 
         const clonedConfig = cloneDeep(config);
-        const { domain } = filter;
 
-        if (domain) {
+        if (filter.domain) {
             const routesForCurrentDomain = [];
             const routesWithoutDomain = [];
 
@@ -158,13 +158,27 @@ module.exports = class Registry {
 
                 if (routeDomain === undefined) {
                     routesWithoutDomain.push(routeData);
-                } else if (routeDomain === domain) {
+                } else if (routeDomain === filter.domain) {
                     routesForCurrentDomain.push(routeData);
                 }
             });
 
             clonedConfig.routes = routesForCurrentDomain.length ? routesForCurrentDomain : routesWithoutDomain;
         }
+
+        const specialRoutesWithoutDomain = {};
+        const specialRoutesForCurrentDomain = {};
+        clonedConfig.specialRoutes.forEach((route) => {
+            const { domain: routeDomain, specialRole, ...routeData } = route; // remove properties "domain" and "specialRole" since it's unnecessary
+
+            if (routeDomain === undefined) {
+                specialRoutesWithoutDomain[specialRole] = routeData;
+            } else if (filter.domain && routeDomain === filter.domain) {
+                specialRoutesForCurrentDomain[specialRole] = routeData;
+            }
+        });
+
+        clonedConfig.specialRoutes = Object.keys(specialRoutesForCurrentDomain).length ? specialRoutesForCurrentDomain : specialRoutesWithoutDomain;
 
         return clonedConfig;
     };

@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
         apps: {},
         templates: [] as string[],
         routes: [] as any[],
-        specialRoutes: {},
+        specialRoutes: [] as any[],
         settings: {},
     };
 
@@ -51,27 +51,28 @@ router.get('/', async (req, res) => {
 
     data.templates = templates.map(({name}) => name);
 
-    const routesTmp: Array<any> = [];
-
     routes.forEach(v => {
-        let tmpRoute = routesTmp.find(({ routeId }) => routeId === v.routeId);
+        const currentRoutesList = v.specialRole ? data.specialRoutes : data.routes;
 
-        if (tmpRoute === undefined) {
+        let routeData = currentRoutesList.find(({ routeId }) => routeId === v.routeId);
+
+        if (routeData === undefined) {
             v.next = !!v.next;
             v.template = v.templateName;
 
             v.domain = v.domainId === null ? null : routerDomains.find(({ id }) => id === v.domainId).domainName;
             delete v.domainId;
 
-            tmpRoute = Object.assign({
+            routeData = Object.assign({
                 slots: {},
                 meta: {},
             }, _.omitBy(_.pick(v, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain']), _.isNull));
-            routesTmp.push(tmpRoute);
+
+            currentRoutesList.push(routeData);
         }
 
         if (v.name !== null) {
-            tmpRoute.slots[v.name] = {
+            routeData.slots[v.name] = {
                 appName: v.appName,
                 props: v.props !== null ? JSON.parse(v.props) : {},
                 kind: v.kind,
@@ -79,16 +80,9 @@ router.get('/', async (req, res) => {
         }
 
         if (v.meta !== null) {
-            tmpRoute.meta = JSON.parse(v.meta);
+            routeData.meta = JSON.parse(v.meta);
         }
     });
-
-    data.routes = routesTmp.filter((route: any) => !route.specialRole);
-
-    data.specialRoutes = _.reduce(_.filter(routesTmp, v => !!v.specialRole), (acc: any, v) => {
-        acc[v.specialRole] = _.omit(v, ['specialRole']);
-        return acc;
-    }, {});
 
     data.settings = preProcessResponse(settings).reduce((acc: {[key: string]: any}, setting: Setting) => {
         _.set(acc, setting.key, setting.value);
