@@ -2,7 +2,7 @@
 
 ILC has different categories of micro-frontends. It is up to you where and how you use each of them. However, here are some recommendations.
 
-| Topic       | Application                   | Parcel                                  | Global libraries (coming soon...)                 |
+| Topic       | Applications                  | [Parcels](./parcels.md)                 | Global libraries (coming soon...)                 |
 | ----------- | ----------------------------- | --------------------------------------- | ------------------------------------------------- |
 | SSR support | yes                           | no                                      | no                                                |
 | Routing     | has multiple routes           | has no routes                           | has no routes                                     |
@@ -23,32 +23,12 @@ Applications act as a main building blocks for the website and can be rendered a
 
 ### Parcels in Applications
 It's also important to mention that applications can export Parcels and so they can allow parts of their UI to be used in other apps.
-
-Export example (part of the entrypoint file): 
-```javascript
-export const parcels = {
-    person: singleSpaReact({
-        loadRootComponent: () => import('./person.parcel.js'),
-    })
-};
-```
-
-Use of the exported parcel (other app): 
-```javascript
-    import Parcel from 'single-spa-react/parcel';
-  
-    <Parcel
-        config={() => ILC.importParcelFromApp('@portal/myapp', 'person')}
-    />
-```
+See [Parcel documentation](./parcels.md) for more details.
 
 ## Parcels
 
 Parcels exist primarily to allow you to reuse pieces of UI across applications when those applications are written in multiple frameworks.
-Think of parcels as an ILC specific implementation of webcomponents.
-
-ILC Parcel use single-spa parcels under the hood with some sugar added. Please refer to the [single-spa documentation](https://single-spa.js.org/docs/parcels-overview) for 
-more details.
+Think of parcels as an ILC specific implementation of webcomponents. See [Parcel documentation](./parcels.md) for more details.
 
 ### Use case examples
 
