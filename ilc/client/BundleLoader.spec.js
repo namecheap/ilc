@@ -121,6 +121,18 @@ describe('BundleLoader', () => {
 
             sinon.assert.calledWith(SystemJs.import, appName);
         });
+
+        it('loads app and returns callbacks from default export', async () => {
+            const loader = new BundleLoader(registry, SystemJs);
+            const appName = '@portal/primary';
+
+            SystemJs.import.resolves({default: fnCallbacks});
+
+            const callbacks = await loader.loadApp(appName);
+            expect(callbacks).to.equal(fnCallbacks);
+
+            sinon.assert.calledWith(SystemJs.import, appName);
+        });
     });
 
     describe('loadCss()', () => {
