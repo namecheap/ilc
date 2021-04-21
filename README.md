@@ -44,7 +44,10 @@ Bringing microservices to the frontend requires a layout service that composes a
 * 👨‍💻 **Develop right at production** - [Doc](./docs/develop_at_production.md)
 * 🌐 **Internationalization support** - it is ready to serve your clients from any country.
 [Doc](./docs/i18n.md), [Demo with localized navbar](http://demo.microfrontends.online/ua/)
-* 📡 **Other advanced features** - [Plugins](https://github.com/namecheap/ilc-plugins-sdk), [App Wrappers](./docs/app_wrappers.md).
+* 📡 **Other advanced features:**
+    * [Different Micro-frontend Types](./docs/microfrontend-types.md)
+    * [Plugins](https://github.com/namecheap/ilc-plugins-sdk)
+    * [App Wrappers](./docs/app_wrappers.md)
 * 💲 **Baked by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with community
 
 ## 🚀 Quick start
@@ -76,16 +79,17 @@ And don't miss the **[Step-By-Step lessons about apps development with ILC](./do
 
 ## Further reading
 
+* [Micro-frontend Types](./docs/microfrontend-types.md)
 * [Step-By-Step lessons about apps development with ILC](./docs/stepbystep/)
 * [Installation guide](./docs/installation_guide.md)
-* [ILC to App interface](docs/ilc_app_interface.md)
+* [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html)
 * [ILC Registry](./docs/registry.md)
 * [Animation during reroute](./docs/animation_during_reroute.md)
 * [Global error handling](./docs/global_errors_handling.md)
 * [Demo applications used in quick start](https://github.com/namecheap/ilc-demo-apps)
 * [SDK for ILC plugins development](https://github.com/namecheap/ilc-plugins-sdk)
 * [Compatibility with legacy UMD bundles](./docs/umd_bundles_compatibility.md)
-* [Global API](./docs/global_api.md)
+* [Global API](https://namecheap.github.io/ilc-sdk/pages/Pages/global_api.html)
 * [ILC transition hooks](./docs/transition_hooks.md)
 
 ## 🔌 Adapters
