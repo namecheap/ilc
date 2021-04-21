@@ -7,6 +7,7 @@ import {
     List,
     SimpleList,
     TextField,
+    ReferenceField,
 } from 'react-admin';
 
 const PostListBulkActions = memo(props => (
@@ -51,7 +52,9 @@ const PostList = props => {
                 <Datagrid rowClick="edit" optimized>
                     <TextField source="id" sortable={false} />
                     <TextField source="domainName" sortable={false} />
-                    <TextField source="template500" sortable={false} emptyText="-" />
+                    <ReferenceField label="Template 500" source="template500" reference="template" emptyText="-" sortable={false}>
+                        <TextField source="name" />
+                    </ReferenceField>
                     <ListActionsToolbar>
                         <EditButton />
                     </ListActionsToolbar>

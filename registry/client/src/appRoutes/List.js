@@ -1,4 +1,4 @@
-import React, { Children, Fragment, cloneElement, memo } from 'react';
+import React, { Children, Fragment, cloneElement, memo, useState, useEffect } from 'react';
 import { useMediaQuery, makeStyles } from '@material-ui/core';
 import {
     BulkDeleteButton,
@@ -12,7 +12,10 @@ import {
     BooleanInput,
     ReferenceInput,
     SelectInput,
+    ReferenceField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
+
+import dataProvider from '../dataProvider';
 
 const ListBulkActions = memo(props => (
     <Fragment>
@@ -52,18 +55,23 @@ const ListFilter = (props) => {
     return (
         <Filter {...props} className={classes.filters}>
             <BooleanInput label="Show special" source="showSpecial" alwaysOn className={classes.filtersSpecial} />
-            <ReferenceInput reference="router_domains"
-                alwaysOn
-                source="domainId"
-                label="Domain">
-                <SelectInput resettable optionText="domainName" />
-            </ReferenceInput>
+            { 
+                props.routerDomain.length
+                ? <SelectInput 
+                    alwaysOn
+                    source="domainId"
+                    label="Domain"
+                    optionText="domainName"
+                    resettable
+                    choices={props.routerDomain}
+                    />
+                : null
+            }
         </Filter>
     );
 };
 
 const ListGrid = (props) => {
-
     return (
         <Datagrid {...props} rowClick="edit" optimized>
             {!props.filterValues.showSpecial ? <TextField source="id" sortable={false} /> : null }
@@ -71,8 +79,17 @@ const ListGrid = (props) => {
             {!props.filterValues.showSpecial ? <TextField source="route" sortable={false} /> : null }
             {!props.filterValues.showSpecial ? <BooleanField source="next" sortable={false} /> : null }
             {props.filterValues.showSpecial ? <TextField source="specialRole" sortable={false} /> : null }
-            <TextField source="templateName" emptyText="-" sortable={false} />
-            <TextField source="domainId" label="Domain Id" sortable={false} emptyText="-" />
+            <ReferenceField label="Template Name" source="templateName" reference="template" emptyText="-" sortable={false}>
+                <TextField source="name" />
+            </ReferenceField>
+            {
+                props.routerDomain.length
+                ? <ReferenceField label="Domain Name" source="domainId" reference="router_domains" emptyText="-" sortable={false}>
+                    <TextField source="domainName" />
+                </ReferenceField>
+                : null
+            }
+            
             <ListActionsToolbar>
                 <EditButton />
             </ListActionsToolbar>
@@ -83,12 +100,32 @@ const ListGrid = (props) => {
 
 const PostList = props => {
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
+
+    const [routerDomain, setRouterDomain] = useState([]);
+
+    useEffect(() => {
+        dataProvider.getList('router_domains', { pagination: false, sort: false, filter: false })
+            .then(({ data }) => {
+                if (!data.length) {
+                    return;
+                }
+
+                setRouterDomain([
+                    {
+                        id: 'null',
+                        domainName: 'Non-specified',
+                    },
+                    ...data,
+                ]);
+            });
+    }, []);
+
     return (
         <List
             {...props}
             bulkActionButtons={<ListBulkActions />}
             exporter={false}
-            filters={<ListFilter />}
+            filters={<ListFilter routerDomain={routerDomain} />}
             perPage={25}
         >
             {isSmall ? (
@@ -97,7 +134,7 @@ const PostList = props => {
                     secondaryText={record => `next: ${record.next ? 'true' : 'false'}; template: ${record.templateName || '-'}`}
                 />
             ) : (
-                <ListGrid />
+                <ListGrid routerDomain={routerDomain} />
             )}
         </List>
     );

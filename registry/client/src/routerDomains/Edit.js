@@ -24,8 +24,9 @@ const InputForm = ({ mode = 'edit', ...props }) => {
             <TextInput source="domainName" fullWidth validate={required()}  />
             <ReferenceInput reference="template"
                 source="template500"
-                label="Template of 500 error">
-                <SelectInput resettable optionText="name" helperText="Default template name is '500'" />
+                label="Template of 500 error"
+                validate={required()}>
+                <SelectInput resettable optionText="name" />
             </ReferenceInput>
         </SimpleForm>
     );

@@ -4,29 +4,44 @@ import { request, expect, requestWithAuth } from './common';
 const example = {
     url: '/api/v1/router_domains/',
     correct: Object.freeze({
-        domainName: 'domainNameCorrect',
+        domainName: 'domainNameCorrect.com',
+        template500: 'testTemplate500',
     }),
     updated: Object.freeze({
-        domainName: 'domainNameUpdated',
+        domainName: 'domainNameUpdated.com',
+        template500: 'testTemplate500',
     }),
 };
 
 describe(`Tests ${example.url}`, () => {
+    beforeEach(async () => {
+        await request.post('/api/v1/template/').send({
+            name: example.correct.template500,
+            content: 'ncTestTemplateContent'
+        });
+    })
+
+    afterEach(async () => {
+        await request.delete('/api/v1/template/' + example.correct.template500);
+    })
     describe('Create', () => {
         it('should not create record without a required fields', async () => {
             await request.post(example.url)
-                .send(_.omit(example.correct, ['domainName']))
-                .expect(422, '"domainName" is required');
+                .send(_.omit(example.correct, ['domainName', 'template500']))
+                .expect(422, '"domainName" is required\n' +
+                    '"template500" is required');
         });
 
         it('should not create record with incorrect type of fields', async () => {
             const incorrect = {
                 domainName: 123,
+                template500: 123,
             };
 
             await request.post(example.url)
                 .send(incorrect)
-                .expect(422, '"domainName" must be a string');
+                .expect(422, '"domainName" must be a string\n' +
+                    '"template500" must be a string');
         });
 
         it('should not create record with non-existed template500', async () => {
@@ -64,46 +79,6 @@ describe(`Tests ${example.url}`, () => {
                 });
             } finally {
                 routerDomainsId && await request.delete(example.url + routerDomainsId);
-            }
-        });
-
-        it('should successfully create record with template for 500', async () => {
-            const templateName = 'testTemplate500';
-            let routerDomainsId;
-
-            const exampleWithTemplate500 = {
-                ...example.correct,
-                template500: templateName,
-            };
-
-            try {
-                await request.post('/api/v1/template/')
-                    .send({
-                        name: templateName,
-                        content: 'ncTestTemplateContent'
-                    });
-
-                const responseCreation = await request.post(example.url)
-                    .send(exampleWithTemplate500)
-                    .expect(200)
-
-                routerDomainsId = responseCreation.body.id;
-
-                expect(responseCreation.body).deep.equal({
-                    id: routerDomainsId,
-                    ...exampleWithTemplate500,
-                });
-
-                const responseFetching = await request.get(example.url + routerDomainsId)
-                    .expect(200);
-
-                expect(responseFetching.body).deep.equal({
-                    id: routerDomainsId,
-                    ...exampleWithTemplate500,
-                });
-            } finally {
-                routerDomainsId && await request.delete(example.url + routerDomainsId);
-                await request.delete('/api/v1/template/' + templateName);
             }
         });
 
@@ -172,13 +147,12 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully return paginated list', async () => {
             const rangeStart = (await request.get(example.url)).body.length;
 
-            const routerDomainsList: { id?: number; domainName: string; }[] = [...Array(5)].map((n, i) => ({
-                domainName: `domainNameCorrect${i}`,
+            const routerDomainsList: { id?: number; domainName: string; template500: string }[] = [...Array(5)].map((n, i) => ({
+                ...example.correct,
+                domainName: `domainNameCorrect${i}.com`,
             }));
 
-            const promises = routerDomainsList.map((n, i) => request.post(example.url).send({
-                domainName: `domainNameCorrect${i}`,
-            }));
+            const promises = routerDomainsList.map(data => request.post(example.url).send(data));
 
             try {
                 const responses = await Promise.all(promises);
@@ -220,10 +194,11 @@ describe(`Tests ${example.url}`, () => {
         it('should not update any record if record doesn\'t exist', async () => {
             const nonExistingId = 123;
             await request.put(example.url + nonExistingId)
+                .send(example.updated)
                 .expect(404, 'Not found');
         });
 
-        it('should not update record with incorrect type of field: domainName', async () => {
+        it('should not update record with incorrect type of fields', async () => {
             let routerDomainsId;
 
             try {
@@ -232,11 +207,13 @@ describe(`Tests ${example.url}`, () => {
 
                 const incorrect = {
                     domainName: 123,
+                    template500: 456,
                 };
 
                 await request.put(example.url + routerDomainsId)
                     .send(incorrect)
-                    .expect(422, '"domainName" must be a string');
+                    .expect(422, '"domainName" must be a string\n' +
+                        '"template500" must be a string');
             } finally {
                 routerDomainsId && await request.delete(example.url + routerDomainsId);
             }
@@ -314,7 +291,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await request.delete(example.url + domainId)
                     .expect(500);
-                expect(response.text).to.include('Internal server error occurred.');
+                expect(response.text).to.include('FOREIGN KEY constraint failed');
 
                 await request.delete('/api/v1/route/' + responseRoute.body.id);
 

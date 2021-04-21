@@ -8,6 +8,7 @@ import {
     SimpleList,
     TextField,
     ChipField,
+    ReferenceField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
 const PostListBulkActions = memo(props => (
@@ -51,7 +52,9 @@ const PostList = props => {
                 <Datagrid rowClick="edit" optimized>
                     <TextField source="name" />
                     <TextField source="kind" />
-                    <ChipField source="configSelector" emptyText=""/>
+                    <ReferenceField source="configSelector" reference="shared_props" emptyText="-" sortable={false}>
+                        <ChipField source="name" />
+                    </ReferenceField>
                     <ListActionsToolbar>
                         <EditButton />
                     </ListActionsToolbar>

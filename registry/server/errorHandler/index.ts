@@ -10,6 +10,11 @@ async function errorHandler(error: Error, req: Request, res: Response, next: Nex
         return;
     }
 
+    if (error instanceof httpErrors.DBError) {
+        res.status(500).send(error.message);
+        return;
+    }
+
     const errorId = uuidv4();
 
     noticeError(error, {

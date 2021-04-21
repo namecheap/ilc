@@ -3,6 +3,7 @@ import _ from 'lodash';
 import {SettingKeys, TrailingSlashValues} from '../server/settings/interfaces';
 import {request, expect, requestWithAuth} from './common';
 
+const templateName = 'ncTestTemplateName';
 const example = {
     apps: Object.freeze({
         name: '@portal/ncTestAppName',
@@ -33,7 +34,7 @@ const example = {
         },
     }),
     templates: Object.freeze({
-        name: 'ncTestTemplateName',
+        name: templateName,
         content: 'ncTestTemplateContent'
     }),
     sharedProps: Object.freeze({
@@ -43,7 +44,8 @@ const example = {
         }
     }),
     routerDomains: Object.freeze({
-        domainName: 'domainNameCorrect',
+        domainName: 'domainNameCorrect.com',
+        template500: templateName,
     }),
 };
 
@@ -53,11 +55,11 @@ describe('Tests /api/v1/config', () => {
             let routeId, routerDomainsId, routeIdWithDomain;
 
             try {
+                await request.post('/api/v1/template/').send(example.templates).expect(200);
                 const responseRouterDomains = await request.post('/api/v1/router_domains/').send(example.routerDomains).expect(200);
                 routerDomainsId = responseRouterDomains.body.id;
 
                 await request.post('/api/v1/app/').send(example.apps).expect(200);
-                await request.post('/api/v1/template/').send(example.templates).expect(200);
 
                 const responseRoute = await request.post('/api/v1/route/').send(example.appRoutes).expect(200);
                 routeId = responseRoute.body.id;
@@ -128,10 +130,10 @@ describe('Tests /api/v1/config', () => {
             } finally {
                 routeId && await request.delete('/api/v1/route/' + routeId);
                 routeIdWithDomain && await request.delete('/api/v1/route/' + routeIdWithDomain);
+                routerDomainsId && await request.delete('/api/v1/router_domains/' + routerDomainsId);
                 await request.delete('/api/v1/template/' + example.templates.name);
                 await request.delete('/api/v1/app/' + encodeURIComponent(example.apps.name));
                 await request.delete('/api/v1/shared_props/' + example.sharedProps.name);
-                routerDomainsId && await request.delete('/api/v1/router_domains/' + routerDomainsId);
             }
         })
     });

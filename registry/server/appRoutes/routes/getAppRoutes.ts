@@ -23,6 +23,7 @@ const getAppRoutes = async (req: Request, res: Response) => {
     }
 
     if (filters.domainId !== undefined) {
+        filters.domainId = filters.domainId === 'null' ? null : filters.domainId;
         query.where('domainId', filters.domainId)
     }
 

@@ -20,7 +20,8 @@ let example = <any>{
     routerDomain: {
         url: '/api/v1/router_domains/',
         correct: Object.freeze({
-            domainName: 'testDomainName',
+            domainName: 'testDomainName.com',
+            template500: 'ncTestTemplateName',
         }),
     },
     appWrapper: {

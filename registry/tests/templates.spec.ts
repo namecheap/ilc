@@ -300,7 +300,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const responseRouterDomains = await request.post('/api/v1/router_domains/')
                     .send({
-                        domainName: 'domainNameCorrect',
+                        domainName: 'domainNameCorrect.com',
                         template500: example.correct.name,
                     })
                     .expect(200)
