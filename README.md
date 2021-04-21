@@ -45,7 +45,7 @@ Bringing microservices to the frontend requires a layout service that composes a
 * 🌐 **Internationalization support** - it is ready to serve your clients from any country.
 [Doc](./docs/i18n.md), [Demo with localized navbar](http://demo.microfrontends.online/ua/)
 * 📡 **Other advanced features:**
-    * [Different Micro-frontend Types](./docs/microfrontend-types.md)
+    * [Parcels](./docs/parcels.md)
     * [Plugins](https://github.com/namecheap/ilc-plugins-sdk)
     * [App Wrappers](./docs/app_wrappers.md)
 * 💲 **Baked by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with community
@@ -97,6 +97,7 @@ To conveniently connect various frameworks to ILC we rely on the [ecosystem of t
 provided adapters. However sometimes we need to extend original ones to deliver better integration with ILC.
 Here are the list of the adapters that were forked & modified:
 
+*  [React - ilc-adapter-react](https://github.com/namecheap/ilc-adapter-react)
 *  [Vue.js - ilc-adapter-vue](https://github.com/namecheap/ilc-adapter-vue)
 
 ## Notes
