@@ -72,11 +72,15 @@ export class BundleLoader {
 
         const mainSpa = appBundle.mainSpa || appBundle.default && appBundle.default.mainSpa;
 
-        if (mainSpa !== undefined) {
+        if (mainSpa !== undefined && typeof mainSpa === 'function') {
             const res = mainSpa(props);
             this.#cache.set(appBundle, res);
             return res;
         } else {
+            if (appBundle.default && typeof appBundle.default.mount === 'function') {
+                return appBundle.default;
+            }
+
             return appBundle;
         }
     }
