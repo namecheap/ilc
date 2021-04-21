@@ -15,7 +15,6 @@ import authEntities from './authEntities';
 import settings from './settings';
 import versioning from './versioning';
 import routerDomains from './routerDomains';
-import Dashboard from './components/Dashboard';
 
 render(
     <Admin
@@ -24,7 +23,6 @@ render(
         dataProvider={dataProvider}
         title="ILC Registry"
         layout={Layout}
-        dashboard={Dashboard}
     >
         {permissions => [
             <Resource name="app" {...apps} />,
