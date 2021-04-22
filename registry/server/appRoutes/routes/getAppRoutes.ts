@@ -22,6 +22,11 @@ const getAppRoutes = async (req: Request, res: Response) => {
         query.whereNull('routes.specialRole');
     }
 
+    if (filters.domainId !== undefined) {
+        filters.domainId = filters.domainId === 'null' ? null : filters.domainId;
+        query.where('domainId', filters.domainId)
+    }
+
     const appRoutes = await query.range(req.query.range as string | undefined);
 
     res.setHeader('Content-Range', appRoutes.pagination.total); //Stub for future pagination capabilities

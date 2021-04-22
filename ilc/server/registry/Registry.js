@@ -1,5 +1,6 @@
 const axios = require('axios');
 const urljoin = require('url-join');
+const { cloneDeep } = require('../../common/utils');
 
 const extendError = require('@namecheap/error-extender');
 
@@ -12,6 +13,7 @@ module.exports = class Registry {
     #cacheHeated = {
         config: false,
         template: false,
+        routerDomains: false,
     };
 
     /**
@@ -27,16 +29,40 @@ module.exports = class Registry {
         this.#address = address;
         this.#logger = logger;
 
-        this.getConfig = wrapFetchWithCache(this.#getConfig, {
+        const getConfigMemo = wrapFetchWithCache(this.#getConfig, {
             cacheForSeconds: 5,
+            name: 'registry_getConfig',
         });
-        this.getTemplate = wrapFetchWithCache(this.#getTemplate, {
+
+        this.getConfig = async (options) => {
+            const res = await getConfigMemo();
+            res.data = this.#filterConfig(res.data, options?.filter);
+            return res;
+        };
+
+        this.getRouterDomains = wrapFetchWithCache(this.#getRouterDomains, {
             cacheForSeconds: 30,
+            name: 'registry_routerDomains',
         });
+
+        const getTemplateMemo = wrapFetchWithCache(this.#getTemplate, {
+            cacheForSeconds: 30,
+            name: 'registry_getTemplate',
+        });
+
+        this.getTemplate = async (templateName, forDomain) => {
+            if (templateName === '500' && forDomain) {
+                const routerDomains = await this.getRouterDomains();
+                const redefined500 = routerDomains.data.find(item => item.domainName === forDomain)?.template500;
+                templateName = redefined500 || templateName;
+            }
+
+            return await getTemplateMemo(templateName);
+        };
     }
 
     async preheat() {
-        if (this.#cacheHeated.template && this.#cacheHeated.config) {
+        if (this.#cacheHeated.template && this.#cacheHeated.config && this.#cacheHeated.routerDomains) {
             return;
         }
 
@@ -45,6 +71,7 @@ module.exports = class Registry {
         await Promise.all([
             this.getConfig(),
             this.getTemplate('500'),
+            this.getRouterDomains(),
         ]);
 
         this.#logger.info('Registry preheated successfully!');
@@ -92,5 +119,67 @@ module.exports = class Registry {
         this.#cacheHeated.template = true;
 
         return res.data;
+    };
+
+    #getRouterDomains = async () => {
+        this.#logger.debug('Calling get routerDomains registry endpoint...');
+
+        const url = urljoin(this.#address, 'api/v1/router_domains');
+        let res;
+        try {
+            res = await axios.get(url, { responseType: 'json' });
+        } catch (e) {
+            throw new errors.RegistryError({
+                message: `Error while requesting routerDomains from registry`,
+                cause: e,
+                data: {
+                    requestedUrl: url
+                }
+            });
+        }
+
+        this.#cacheHeated.routerDomains = true;
+        return res.data;
+    };
+
+    #filterConfig = (config, filter) => {
+        if (!filter || !Object.keys(filter).length) {
+            return config;
+        }
+
+        const clonedConfig = cloneDeep(config);
+
+        if (filter.domain) {
+            const routesForCurrentDomain = [];
+            const routesWithoutDomain = [];
+
+            clonedConfig.routes.forEach((route) => {
+                const { domain: routeDomain, ...routeData } = route; // remove property "domain" since it's unnecessary
+
+                if (routeDomain === undefined) {
+                    routesWithoutDomain.push(routeData);
+                } else if (routeDomain === filter.domain) {
+                    routesForCurrentDomain.push(routeData);
+                }
+            });
+
+            clonedConfig.routes = routesForCurrentDomain.length ? routesForCurrentDomain : routesWithoutDomain;
+        }
+
+        const specialRoutesWithoutDomain = {};
+        const specialRoutesForCurrentDomain = {};
+        clonedConfig.specialRoutes.forEach((route) => {
+            const { domain: routeDomain, specialRole, ...routeData } = route; // remove properties "domain" and "specialRole" since it's unnecessary
+
+            if (routeDomain === undefined) {
+                specialRoutesWithoutDomain[specialRole] = routeData;
+            } else if (filter.domain && routeDomain === filter.domain) {
+                specialRoutesForCurrentDomain[specialRole] = routeData;
+            }
+        });
+
+        clonedConfig.specialRoutes = Object.keys(specialRoutesForCurrentDomain).length ? specialRoutesForCurrentDomain : specialRoutesWithoutDomain;
+
+        return clonedConfig;
     };
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Create,
     Edit,
@@ -17,6 +17,9 @@ import {
     FormDataConsumer,
 } from 'react-admin';
 import JsonField from "../JsonField"; // eslint-disable-line import/no-unresolved
+import Help from "../components/Help";
+import Localization from "../Localization";
+import dataProvider from '../dataProvider';
 
 const Title = ({ record }) => {
     return (<span>{record ? `Route #${record.id}` : ''}</span>);
@@ -37,6 +40,19 @@ const allowedAppKinds = [
 ];
 
 const InputForm = ({mode = 'edit', ...props}) => {
+    const [isMultiDomain, setIsMultiDomain] = useState(false);
+
+    useEffect(() => {
+        dataProvider.getList('router_domains', { pagination: false, sort: false, filter: false })
+            .then(({ data }) => {
+                if (!data.length) {
+                    return;
+                }
+
+                setIsMultiDomain(true);
+            });
+    }, []);
+
     return (
         <TabbedForm {...props}>
             <FormTab label="General">
@@ -56,6 +72,15 @@ const InputForm = ({mode = 'edit', ...props}) => {
                                 label="Template name">
                     <SelectInput resettable validate={[requiredSpecial]} optionText="name" />
                 </ReferenceInput>
+                { isMultiDomain
+                    ? <Help title={Localization.routes.domainHelp}>
+                        <ReferenceInput reference="router_domains"
+                            source="domainId"
+                            label="Domain">
+                            <SelectInput resettable optionText="domainName" />
+                        </ReferenceInput>
+                    </Help>
+                    : null}
                 <JsonField source="meta" label="Metadata" />
             </FormTab>
             <FormTab label="Slots">

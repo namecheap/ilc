@@ -17,5 +17,11 @@ export async function seed(knex: Knex): Promise<any> {
                 encoding: 'utf8',
             })
         },
+        {
+            name: '500ForLocalhostAsIPv4',
+            content: fs.readFileSync(path.join(__dirname, './data/templates/500ForLocalhostAsIPv4.html'), {
+                encoding: 'utf8',
+            })
+        },
     ]);
 }

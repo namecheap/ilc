@@ -43,7 +43,8 @@ module.exports = (registryService, pluginManager) => {
     app.register(require('./ping'));
 
     app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
-        const data = await registryService.getTemplate(req.params.templateName);
+        const currentDomain = req.hostname;
+        const data = await registryService.getTemplate(req.params.templateName, currentDomain);
         res.status(200).send(data.data.content);
     });
 
@@ -51,7 +52,8 @@ module.exports = (registryService, pluginManager) => {
     app.get('/_ilc/500', async () => { throw new Error('500 page test error') });
 
     app.all('*', async (req, res) => {
-        let registryConfig = (await registryService.getConfig()).data;
+        const currentDomain = req.hostname;
+        let registryConfig = (await registryService.getConfig({ filter: { domain: currentDomain } })).data;
 
         const url = req.raw.url;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);

@@ -43,22 +43,24 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully create record', async () => {
-            let response = await request.post(example.url)
-                .send(example.correct)
-                .expect(200);
-            const recId = response.body.id;
-
-            const expectedRes = _.omit(Object.assign({id: recId}, example.correct), ['secret']);
+            let authEntityId;
 
             try {
+                let response = await request.post(example.url)
+                    .send(example.correct)
+                    .expect(200);
+                authEntityId = response.body.id;
+
+                const expectedRes = _.omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
+
                 expect(response.body).deep.equal(expectedRes);
 
-                response = await request.get(example.url + recId)
+                response = await request.get(example.url + authEntityId)
                     .expect(200);
 
                 expect(response.body).deep.equal(expectedRes);
             } finally {
-                await request.delete(example.url + recId).expect(204, '');
+                authEntityId && await request.delete(example.url + authEntityId);
             }
         });
 
@@ -78,35 +80,39 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully return record', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const recId = response.body.id;
+            let authEntityId;
 
             try {
-                response = await request.get(example.url + recId)
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                authEntityId = response.body.id;
+
+                response = await request.get(example.url + authEntityId)
                     .expect(200);
 
-                const expectedRes = _.omit(Object.assign({id: recId}, example.correct), ['secret']);
+                const expectedRes = _.omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
 
                 expect(response.body).deep.equal(expectedRes);
             } finally {
-                await request.delete(example.url + recId).expect(204, '');
+                authEntityId && await request.delete(example.url + authEntityId);
             }
         });
 
         it('should successfully return all existed records', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const recId = response.body.id;
+            let authEntityId;
 
             try {
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                authEntityId = response.body.id;
+
                 response = await request.get(example.url)
                     .expect(200);
 
-                const expectedRes = _.omit(Object.assign({id: recId}, example.correct), ['secret']);
+                const expectedRes = _.omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
                 expect(response.body).to.deep.include(expectedRes);
             } finally {
-                await request.delete(example.url + recId).expect(204, '');
+                authEntityId && await request.delete(example.url + authEntityId);
             }
         });
 
@@ -122,24 +128,26 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Update', () => {
-        it('should not update any record if record doesnt exist', async () => {
+        it('should not update any record if record doesn\'t exist', async () => {
             await request.put(example.url + 123)
                 .expect(404, 'Not found');
         });
 
         it('should successfully update record', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
-            const recId = response.body.id;
+            let authEntityId;
 
             try {
-                response = await request.put(example.url + recId)
+                let response = await request.post(example.url).send(example.correct).expect(200);
+                authEntityId = response.body.id;
+
+                response = await request.put(example.url + authEntityId)
                     .send(example.updated)
                     .expect(200);
 
-                const expectedRes = _.omit(Object.assign({}, example.correct, {id: recId, role: example.updated.role}), ['secret']);
+                const expectedRes = _.omit(Object.assign({}, example.correct, { id: authEntityId, role: example.updated.role }), ['secret']);
                 expect(response.body).deep.equal(expectedRes);
             } finally {
-                await request.delete(example.url + recId).expect(204, '');
+                authEntityId && await request.delete(example.url + authEntityId);
             }
         });
 
@@ -153,7 +161,7 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Delete', () => {
-        it('should not delete any record if record doesnt exist', async () => {
+        it('should not delete any record if record doesn\'t exist', async () => {
             await request.delete(example.url + 123)
                 .expect(404, 'Not found');
         });

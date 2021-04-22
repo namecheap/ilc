@@ -29,6 +29,7 @@ describe('ErrorHandler', () => {
     });
 
     it('should show 500 error page with an error id', async () => {
+        nock(config.get('registry').address).get('/api/v1/router_domains').reply(200, []);
         nock(config.get('registry').address).get(`/api/v1/template/500/rendered`).reply(200, {
             content:
                 '<html>' +
@@ -59,6 +60,7 @@ describe('ErrorHandler', () => {
     });
 
     it('should send an error message when showing 500 error page throws an error', async () => {
+        nock(config.get('registry').address).get('/api/v1/router_domains').reply(200, []);
         const replyingError = new Error('Something awful happened.');
 
         nock(config.get('registry').address).get(`/api/v1/template/500/rendered`).replyWithError(replyingError.message);

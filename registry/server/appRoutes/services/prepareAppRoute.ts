@@ -11,6 +11,7 @@ const prepareRouteToRespond = (appRoute: any) => {
         specialRole: appRoute.specialRole,
         templateName: appRoute.templateName,
         orderPos: appRoute.orderPos,
+        domainId: appRoute.domainId,
     }), {
         meta: appRoute.meta ? JSON.parse(appRoute.meta) : {},
     });
@@ -25,7 +26,6 @@ const prepareRoutesWithSlotsToRespond = _.compose(
             appName,
             props,
             kind,
-            meta,
         } = appRoute;
 
         const prevSavedAppRouteSlots = _.has(routeId, appRoutes) && appRoutes[routeId].slots || {};

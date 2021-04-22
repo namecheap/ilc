@@ -106,18 +106,20 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully create record', async () => {
-            let response = await request.post(example.url)
-            .send(example.correct)
-            .expect(200);
+            try {
+                let response = await request.post(example.url)
+                    .send(example.correct)
+                    .expect(200);
 
-            expect(response.body).deep.equal(example.correct);
+                expect(response.body).deep.equal(example.correct);
 
-            response = await request.get(example.url + example.encodedName)
-            .expect(200);
+                response = await request.get(example.url + example.encodedName)
+                    .expect(200);
 
-            expect(response.body).deep.equal(example.correct);
-
-            await request.delete(example.url + example.encodedName).expect(204);
+                expect(response.body).deep.equal(example.correct);
+            } finally {
+                await request.delete(example.url + example.encodedName);
+            }
         });
 
         it('should not create a record when a manifest file can not be fetched', async () => {
@@ -132,7 +134,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await request.delete(example.url + example.encodedName).expect(404);
+                await request.delete(example.url + example.encodedName);
             }
         });
 
@@ -148,7 +150,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await request.delete(example.url + example.encodedName).expect(404);
+                await request.delete(example.url + example.encodedName);
             }
         });
 
@@ -163,7 +165,7 @@ describe(`Tests ${example.url}`, () => {
                     ...example.manifest,
                 });
             } finally {
-                await request.delete(example.url + example.encodedName).expect(204);
+                await request.delete(example.url + example.encodedName);
             }
         });
 
@@ -186,26 +188,30 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully return record', async () => {
-            await request.post(example.url).send(example.correct);
+            try {
+                await request.post(example.url).send(example.correct);
 
-            const response = await request.get(example.url + example.encodedName)
-            .expect(200);
+                const response = await request.get(example.url + example.encodedName)
+                    .expect(200);
 
-            expect(response.body).deep.equal(example.correct);
-
-            await request.delete(example.url + example.encodedName).expect(204);
+                expect(response.body).deep.equal(example.correct);
+            } finally {
+                await request.delete(example.url + example.encodedName);
+            }
         });
 
         it('should successfully return all existed records', async () => {
-            await request.post(example.url).send(example.correct).expect(200);
+            try {
+                await request.post(example.url).send(example.correct).expect(200);
 
-            const response = await request.get(example.url)
-            .expect(200);
+                const response = await request.get(example.url)
+                    .expect(200);
 
-            expect(response.body).to.be.an('array').that.is.not.empty;
-            expect(response.body).to.deep.include(example.correct);
-
-            await request.delete(example.url + example.encodedName).expect(204);
+                expect(response.body).to.be.an('array').that.is.not.empty;
+                expect(response.body).to.deep.include(example.correct);
+            } finally {
+                await request.delete(example.url + example.encodedName);
+            }
         });
 
         describe('Authentication / Authorization', () => {
@@ -220,7 +226,7 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Update', () => {
-        it('should not update any record if record doesnt exist', async () => {
+        it('should not update any record if record doesn\'t exist', async () => {
             const incorrect = { name: 123 };
             const response = await request.put(example.url + incorrect.name)
             .expect(404, 'Not found');
@@ -229,62 +235,68 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not update record if forbidden "name" is passed', async () => {
-            await request.post(example.url).send(example.correct).expect(200);
+            try {
+                await request.post(example.url).send(example.correct).expect(200);
 
-            const response = await request.put(example.url + example.encodedName)
-            .send(example.updated)
-            .expect(422, '"name" is not allowed');
+                const response = await request.put(example.url + example.encodedName)
+                    .send(example.updated)
+                    .expect(422, '"name" is not allowed');
 
-            expect(response.body).deep.equal({});
-
-            await request.delete(example.url + example.encodedName).expect(204);
+                expect(response.body).deep.equal({});
+            } finally {
+                await request.delete(example.url + example.encodedName);
+            }
         });
 
         it('should not update record with incorrect type of fields', async () => {
-            await request.post(example.url).send(example.correct).expect(200);
+            try {
+                await request.post(example.url).send(example.correct).expect(200);
 
-            const incorrect = {
-                spaBundle: 456,
-                cssBundle: 789,
-                configSelector: 654,
-                ssr: 456,
-                assetsDiscoveryUrl: 789,
-                dependencies: 456,
-                props: 789,
-                kind: 'origin',
-            };
+                const incorrect = {
+                    spaBundle: 456,
+                    cssBundle: 789,
+                    configSelector: 654,
+                    ssr: 456,
+                    assetsDiscoveryUrl: 789,
+                    dependencies: 456,
+                    props: 789,
+                    kind: 'origin',
+                };
 
-            const response = await request.put(example.url + example.encodedName)
-            .send({
-                ..._.omit(example.updated, 'name'),
-                ...incorrect,
-            })
-            .expect(
-                422,
-                '"spaBundle" must be a string\n' +
-                '"cssBundle" must be a string\n' +
-                '"assetsDiscoveryUrl" must be a string\n' +
-                '"dependencies" must be of type object\n' +
-                '"props" must be of type object\n' +
-                '"configSelector" must be an array\n' +
-                '"ssr" must be of type object\n' +
-                '"kind" must be one of [primary, essential, regular, wrapper]'
-            );
-            expect(response.body).deep.equal({});
-
-            await request.delete(example.url + example.encodedName).expect(204);
+                const response = await request.put(example.url + example.encodedName)
+                    .send({
+                        ..._.omit(example.updated, 'name'),
+                        ...incorrect,
+                    })
+                    .expect(
+                        422,
+                        '"spaBundle" must be a string\n' +
+                        '"cssBundle" must be a string\n' +
+                        '"assetsDiscoveryUrl" must be a string\n' +
+                        '"dependencies" must be of type object\n' +
+                        '"props" must be of type object\n' +
+                        '"configSelector" must be an array\n' +
+                        '"ssr" must be of type object\n' +
+                        '"kind" must be one of [primary, essential, regular, wrapper]'
+                    );
+                expect(response.body).deep.equal({});
+            } finally {
+                await request.delete(example.url + example.encodedName);
+            }
         });
 
         it('should successfully update record', async () => {
-            await request.post(example.url).send(example.correct).expect(200);
+            try {
+                await request.post(example.url).send(example.correct).expect(200);
 
-            const response = await request.put(example.url + example.encodedName)
-            .send(_.omit(example.updated, 'name'))
-            .expect(200);
+                const response = await request.put(example.url + example.encodedName)
+                    .send(_.omit(example.updated, 'name'))
+                    .expect(200);
 
-            expect(response.body).deep.equal(example.updated);
-
-            await request.delete(example.url + example.encodedName).expect(204);
+                expect(response.body).deep.equal(example.updated);
+            } finally {
+                await request.delete(example.url + example.encodedName);
+            }
         });
 
         describe('Authentication / Authorization', () => {
@@ -297,7 +309,7 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Delete', () => {
-        it('should not delete any record if record doesnt exist', async () => {
+        it('should not delete any record if record doesn\'t exist', async () => {
             const incorrect = { name: 123 };
             const response = await request.delete(example.url + encodeURIComponent(incorrect.name))
             .expect(404, 'Not found');
