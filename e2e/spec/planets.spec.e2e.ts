@@ -33,22 +33,18 @@ Scenario('should show planet`s details', async (I, planetsPage: planetsPage) => 
     I.click(planetsPage.lastPlanet);
     I.waitInUrl(lastPlanetHref, 30);
     I.dontSee('No planet selected', planetsPage.selectedPlanet);
+
     I.see(lastPlanetName, planetsPage.selectedPlanetName);
 
     I.seeElement(planetsPage.selectedPlanetTabAttributes);
     I.seeElement(planetsPage.selectedPlanetTabPeople);
-    I.seeElement(planetsPage.selectedPlanetTabTodo);
 
     const selectedPlanetTabAttributesHref = await I.grabAttributeFrom(planetsPage.selectedPlanetTabAttributes, 'href');
     const selectedPlanetTabPeopleHref = await I.grabAttributeFrom(planetsPage.selectedPlanetTabPeople, 'href');
-    const selectedPlanetTabTodoHref = await I.grabAttributeFrom(planetsPage.selectedPlanetTabTodo, 'href');
 
     I.click(planetsPage.selectedPlanetTabAttributes);
     I.waitInUrl(selectedPlanetTabAttributesHref, 30);
 
     I.click(planetsPage.selectedPlanetTabPeople);
     I.waitInUrl(selectedPlanetTabPeopleHref, 30);
-
-    I.click(planetsPage.selectedPlanetTabTodo);
-    I.waitInUrl(selectedPlanetTabTodoHref, 30);
 });
