@@ -24,9 +24,7 @@ const validateRequestBeforeGetAppRoute = validateRequestFactory([{
     selector: 'params',
 }]);
 
-const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response) => {
-    const appRouteId = req.params.id;
-
+export const retrieveAppRouteFromDB = async (appRouteId: number) => {
     const appRoutes = await db
         .select('routes.id as routeId', 'route_slots.id as routeSlotId', 'routes.*', 'route_slots.*')
         .from('routes')
@@ -35,14 +33,25 @@ const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response
             'route_slots.routeId': 'routes.id'
         });
 
-    if (appRoutes.length) {
-        const data = prepareAppRouteToRespond(appRoutes);
-        if (data.specialRole) {
-            data.specialRole = data.specialRole.toString();
-        }
-        if (data.templateName) {
-            data.templateName = data.templateName.toString();
-        }
+    if (!appRoutes.length) {
+        return;
+    }
+
+    const data = prepareAppRouteToRespond(appRoutes);
+    if (data.specialRole) {
+        data.specialRole = data.specialRole.toString();
+    }
+    if (data.templateName) {
+        data.templateName = data.templateName.toString();
+    }
+
+    return data;
+};
+
+const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response) => {
+    const data = await retrieveAppRouteFromDB(+req.params.id);
+
+    if (data) {
         res.status(200).send(data);
     } else {
         res.status(404).send('Not found');

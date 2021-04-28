@@ -7,7 +7,7 @@ const prepareRouteToRespond = (appRoute: any) => {
     return Object.assign(preProcessResponse({
         id: appRoute.routeId,
         route: appRoute.route,
-        next: Boolean(appRoute.next),
+        next: appRoute.next === null ? undefined : Boolean(appRoute.next),
         specialRole: appRoute.specialRole,
         templateName: appRoute.templateName,
         orderPos: appRoute.orderPos,

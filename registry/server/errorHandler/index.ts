@@ -10,7 +10,7 @@ async function errorHandler(error: Error, req: Request, res: Response, next: Nex
         return;
     }
 
-    if (error instanceof httpErrors.DBError) {
+    if (error instanceof httpErrors.DBError || error instanceof httpErrors.CustomError) {
         res.status(500).send(error.message);
         return;
     }

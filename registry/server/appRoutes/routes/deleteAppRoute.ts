@@ -22,8 +22,20 @@ const validateRequestBeforeDeleteAppRoute = validateRequestFactory([{
     selector: 'params',
 }]);
 
+let idDefault404: number | null = null;
+
 const deleteAppRoute = async (req: Request<DeleteAppRouteRequestParams>, res: Response) => {
+    if (idDefault404 === null) {
+        const [default404] = await db.select().from('routes').where({ 'specialRole': '404', domainId: null});
+
+        idDefault404 = default404?.id;
+    }
+
     const appRouteId = req.params.id;
+
+    if (idDefault404 === +appRouteId) {
+        throw new httpErrors.CustomError({ message: 'Default 404 error can\'t be deleted' });
+    }
 
     await db.versioning(req.user, {type: 'routes', id: appRouteId}, async (transaction) => {
         await db('route_slots').where('routeId', appRouteId).delete().transacting(transaction);

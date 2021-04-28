@@ -15,7 +15,7 @@ import {JsonEditor} from "jsoneditor-react";
 import ace from "brace";
 import 'brace/mode/json';
 
-const style = {height: '400px'};
+const style = {height: '300px'};
 
 export default ({
    label,
@@ -60,7 +60,7 @@ export default ({
 
             <JsonEditor
                 ref={setJsonEditorRef}
-                style={style}
+                htmlElementProps={{ style }}
                 mode="code"
                 value={jsonVal}
                 ace={ace}
