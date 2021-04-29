@@ -4,6 +4,7 @@ import express from 'express';
 import knex from '../db';
 import {Setting, Scope} from '../settings/interfaces';
 import preProcessResponse from '../settings/services/preProcessResponse';
+import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 
 const router = express.Router();
 
@@ -51,36 +52,38 @@ router.get('/', async (req, res) => {
 
     data.templates = templates.map(({name}) => name);
 
-    routes.forEach(v => {
-        const currentRoutesList = v.specialRole ? data.specialRoutes : data.routes;
+    routes.forEach(routeItem => {
+        routeItem = transformSpecialRoutesForConsumer(routeItem);
 
-        let routeData = currentRoutesList.find(({ routeId }) => routeId === v.routeId);
+        const currentRoutesList = routeItem.specialRole ? data.specialRoutes : data.routes;
+
+        let routeData = currentRoutesList.find(({ routeId }) => routeId === routeItem.routeId);
 
         if (routeData === undefined) {
-            v.next = !!v.next;
-            v.template = v.templateName;
+            routeItem.next = !!routeItem.next;
+            routeItem.template = routeItem.templateName;
 
-            v.domain = v.domainId === null ? null : routerDomains.find(({ id }) => id === v.domainId).domainName;
-            delete v.domainId;
+            routeItem.domain = routeItem.domainId === null ? null : routerDomains.find(({ id }) => id === routeItem.domainId).domainName;
+            delete routeItem.domainId;
 
             routeData = Object.assign({
                 slots: {},
                 meta: {},
-            }, _.omitBy(_.pick(v, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain']), _.isNull));
+            }, _.omitBy(_.pick(routeItem, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain']), _.isNull));
 
             currentRoutesList.push(routeData);
         }
 
-        if (v.name !== null) {
-            routeData.slots[v.name] = {
-                appName: v.appName,
-                props: v.props !== null ? JSON.parse(v.props) : {},
-                kind: v.kind,
+        if (routeItem.name !== null) {
+            routeData.slots[routeItem.name] = {
+                appName: routeItem.appName,
+                props: routeItem.props !== null ? JSON.parse(routeItem.props) : {},
+                kind: routeItem.kind,
             };
         }
 
-        if (v.meta !== null) {
-            routeData.meta = JSON.parse(v.meta);
+        if (routeItem.meta !== null) {
+            routeData.meta = JSON.parse(routeItem.meta);
         }
     });
 

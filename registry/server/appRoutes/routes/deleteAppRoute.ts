@@ -1,15 +1,11 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 import * as httpErrors from '../../errorHandler/httpErrors';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import {
-    appRouteIdSchema,
-} from '../interfaces';
+import { appRouteIdSchema } from '../interfaces';
+import { makeSpecialRoute } from '../services/transformSpecialRoutes';
 
 type DeleteAppRouteRequestParams = {
     id: string
@@ -26,7 +22,7 @@ let idDefault404: number | null = null;
 
 const deleteAppRoute = async (req: Request<DeleteAppRouteRequestParams>, res: Response) => {
     if (idDefault404 === null) {
-        const [default404] = await db.select().from('routes').where({ 'specialRole': '404', domainId: null});
+        const [default404] = await db.select().from('routes').where({ route: makeSpecialRoute('404'), domainId: null});
 
         idDefault404 = default404?.id;
     }

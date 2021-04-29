@@ -1,17 +1,11 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import {
-    prepareAppRouteToRespond,
-} from '../services/prepareAppRoute';
-import {
-    appRouteIdSchema,
-} from '../interfaces';
+import { prepareAppRouteToRespond } from '../services/prepareAppRoute';
+import { appRouteIdSchema } from '../interfaces';
+import { transformSpecialRoutesForConsumer } from '../services/transformSpecialRoutes';
 
 type GetAppRouteRequestParams = {
     id: string
@@ -37,10 +31,8 @@ export const retrieveAppRouteFromDB = async (appRouteId: number) => {
         return;
     }
 
-    const data = prepareAppRouteToRespond(appRoutes);
-    if (data.specialRole) {
-        data.specialRole = data.specialRole.toString();
-    }
+    let data = prepareAppRouteToRespond(appRoutes);
+    data = transformSpecialRoutesForConsumer(data);
     if (data.templateName) {
         data.templateName = data.templateName.toString();
     }

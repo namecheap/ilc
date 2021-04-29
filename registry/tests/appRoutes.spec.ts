@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import {request, expect, requestWithAuth} from './common';
 import db from '../server/db';
+import { makeSpecialRoute } from '../server/appRoutes/services/transformSpecialRoutes';
 
 let example = <any>{
     template: {
@@ -863,7 +864,13 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not delete default 404', async () => {
-            const [default404] = await db.select().from('routes').where({ 'specialRole': '404', domainId: null });
+            let [default404] = await db.select().from('routes').where({ route: makeSpecialRoute('404'), domainId: null });
+
+            if (!default404) {
+                const response = await request.post(example.url).send(example.correct404);
+
+                default404 = response.body;
+            }
 
             const idDefault404 = default404.id;
 
