@@ -1,25 +1,14 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import {
-    prepareAppRouteToRespond,
-    prepareAppRouteToSave,
-} from '../services/prepareAppRoute';
-import {
-    stringifyJSON,
-} from '../../common/services/json';
-import {
-    partialAppRouteSchema,
-} from '../interfaces';
-import {
-    appRouteIdSchema,
-} from '../interfaces';
+import { prepareAppRouteToRespond, prepareAppRouteToSave } from '../services/prepareAppRoute';
+import { stringifyJSON } from '../../common/services/json';
+import { partialAppRouteSchema } from '../interfaces';
+import { appRouteIdSchema } from '../interfaces';
+import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
 
 type UpdateAppRouteRequestParams = {
     id: string
@@ -41,9 +30,11 @@ const validateRequestBeforeUpdateAppRoute = validateRequestFactory([
 const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Response) => {
     const {
         slots: appRouteSlots,
-        ...appRoute
+        ...appRouteData
     } = req.body;
+
     const appRouteId = req.params.id;
+    const appRoute = transformSpecialRoutesForDB(appRouteData);
 
     const countToUpdate = await db('routes').where('id', appRouteId);
     if (!countToUpdate.length) {

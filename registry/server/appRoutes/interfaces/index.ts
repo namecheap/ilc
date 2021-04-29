@@ -45,7 +45,7 @@ const commonAppRoute = {
     specialRole: Joi.string().valid('404'),
     orderPos: Joi.number(),
     route: Joi.string().trim().max(255),
-    next: Joi.bool(),
+    next: Joi.bool().default(false),
     templateName: templateNameSchema.allow(null),
     slots: Joi.object().pattern(commonAppRouteSlot.name, appRouteSlotSchema),
     domainId: Joi.number().default(null),

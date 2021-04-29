@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import {request, expect, requestWithAuth} from './common';
 import db from '../server/db';
+import { makeSpecialRoute } from '../server/appRoutes/services/transformSpecialRoutes';
 
 let example = <any>{
     template: {
@@ -863,14 +864,30 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not delete default 404', async () => {
-            const [default404] = await db.select().from('routes').where({ 'specialRole': '404', domainId: null });
+            let temporaryCreatedDefault404Id;
+            try {
+                let [default404] = await db.select().from('routes').where({ route: makeSpecialRoute('404'), domainId: null });
 
-            const idDefault404 = default404.id;
+                if (!default404) {
+                    const response = await request.post(example.url).send(example.correct404);
 
-            const response = await request.delete(example.url + idDefault404)
-                .expect(500, 'Default 404 error can\'t be deleted');
+                    default404 = response.body;
 
-            expect(response.body).deep.equal({});
+                    if (response.body.id) {
+                        temporaryCreatedDefault404Id = response.body.id;
+                    }
+                }
+
+                const idDefault404 = default404.id;
+
+                const response = await request.delete(example.url + idDefault404)
+                    .expect(500, 'Default 404 error can\'t be deleted');
+
+                expect(response.body).deep.equal({});
+            } finally {
+                await db('route_slots').where('routeId', temporaryCreatedDefault404Id).delete();
+                await db('routes').where('id', temporaryCreatedDefault404Id).delete();
+            }
         });
 
         it('should successfully delete record', async () => {

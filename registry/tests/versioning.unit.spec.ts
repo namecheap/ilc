@@ -62,7 +62,7 @@ describe('Versioning Unit', () => {
         it('Should log entity creation with relations & auto increment ID', async () => {
             const entityType = 'routes';
             const entityRelationType = 'route_slots';
-            const entityData = { specialRole: null, orderPos: 999, route: '/tst', next: 0, templateName: null, meta: JSON.stringify({ first: 'value' }), domainId: null };
+            const entityData = { orderPos: 999, route: '/tst', next: 0, templateName: null, meta: JSON.stringify({ first: 'value' }), domainId: null };
             const entityRelationData = {
                 name: 'tst',
                 appName: '@portal/navbar',
