@@ -54,6 +54,7 @@ Bringing microservices to the frontend requires a layout service that composes a
 
 Check out [demo website available online](http://demo.microfrontends.online/) or go through the steps to spin it up locally:
 
+1. Get familiar with [Installation guide](./docs/installation_guide.md)
 1. Clone this repository
 1. Run `docker-compose up -d`
 1. _During first launch or shutdown only._ Run `docker-compose run registry npm run seed`
@@ -79,9 +80,9 @@ And don't miss the **[Step-By-Step lessons about apps development with ILC](./do
 
 ## Further reading
 
+* [Installation guide](./docs/installation_guide.md)
 * [Micro-frontend Types](./docs/microfrontend-types.md)
 * [Step-By-Step lessons about apps development with ILC](./docs/stepbystep/)
-* [Installation guide](./docs/installation_guide.md)
 * [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html)
 * [ILC Registry](./docs/registry.md)
 * [Animation during reroute](./docs/animation_during_reroute.md)
