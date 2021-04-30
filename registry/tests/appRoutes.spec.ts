@@ -885,8 +885,10 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await db('route_slots').where('routeId', temporaryCreatedDefault404Id).delete();
-                await db('routes').where('id', temporaryCreatedDefault404Id).delete();
+                if (temporaryCreatedDefault404Id) {
+                    await db('route_slots').where('routeId', temporaryCreatedDefault404Id).delete();
+                    await db('routes').where('id', temporaryCreatedDefault404Id).delete();
+                }
             }
         });
 

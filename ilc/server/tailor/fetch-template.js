@@ -24,7 +24,7 @@ module.exports = (configsInjector, newrelic, registryService) => async (
         throw new Error('Can\'t match route base template to config map');
     }
 
-    const routeName = currRoute.route?.replace(/^\/(.+)/, '$1');
+    const routeName = currRoute.route?.replace(/^\/(.+)/, '$1') || `special:${currRoute.specialRole}`;
     if (routeName) {
         newrelic.setTransactionName(routeName);
     }
