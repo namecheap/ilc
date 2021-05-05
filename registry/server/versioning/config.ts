@@ -9,6 +9,7 @@ interface RelatedEntities {
 interface EntityConf {
     idColumn: string;
     related: RelatedEntities[],
+    omitColumns?: string[],
 }
 
 const versioningConf: Record<EntityTypes | keyof typeof EntityTypes, EntityConf> = {
@@ -19,6 +20,7 @@ const versioningConf: Record<EntityTypes | keyof typeof EntityTypes, EntityConf>
     [EntityTypes.routes]: {
         idColumn: 'id',
         related: [{ type: 'route_slots', idColumn: 'id', key: 'routeId' }],
+        omitColumns: ['domainIdIdxble'],
     },
     [EntityTypes.auth_entities]: {
         idColumn: 'id',

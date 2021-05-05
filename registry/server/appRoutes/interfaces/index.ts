@@ -13,10 +13,6 @@ const Joi = JoiDefault.defaults(schema => {
     return schema.empty(null)
 });
 
-interface AppRouteSlotProps {
-    [propName: string]: any,
-}
-
 const commonAppRouteSlot = {
     name: Joi.string().trim().min(1).max(255),
     appName: appNameSchema.external(async value => {
@@ -61,7 +57,32 @@ const conditionSpecialRole = { is: Joi.exist(), then: Joi.forbidden(), otherwise
 export const appRouteSchema = Joi.object({
     ...commonAppRoute,
     slots: commonAppRoute.slots.required(),
-    orderPos: commonAppRoute.orderPos.when('specialRole', conditionSpecialRole),
+    orderPos: commonAppRoute.orderPos.when('specialRole', {
+        is: Joi.exist(),
+        then: Joi.forbidden(),
+        otherwise: Joi.optional().default(null),
+    }),
     route: commonAppRoute.route.when('specialRole', conditionSpecialRole),
-    next: commonAppRoute.next.when('specialRole', conditionSpecialRole),
+    next: commonAppRoute.next.when('specialRole', {
+        is: Joi.exist(),
+        then: Joi.forbidden(),
+    }),
+}).external(async value => {
+    if (value.orderPos === null) {
+        const lastRoute = await db('routes')
+            .first('orderPos')
+            .where(function () {
+                this.where({domainId: value.domainId});
+                this.whereNotNull('orderPos');
+            })
+            .orderBy('orderPos', 'desc');
+
+        if (lastRoute) {
+            value.orderPos = parseInt(lastRoute.orderPos) + 10;
+        } else {
+            value.orderPos = 10;
+        }
+    }
+
+    return value;
 });

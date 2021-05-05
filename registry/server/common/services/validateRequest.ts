@@ -3,14 +3,8 @@ import {
     Response,
 } from 'express';
 import Joi from 'joi';
-import _fp from 'lodash/fp';
 import _ from 'lodash';
-
-const preProcessErrorResponse = _fp.compose<Array<Joi.ValidationError>, Array<Joi.ValidationErrorItem>, Array<string | undefined>, string>(
-    _fp.join('\n'),
-    _fp.map(_fp.get('message')),
-    _fp.get('details'),
-);
+import {joiErrorToResponse} from '../../util/helpers';
 
 interface ValidationConfig {
     schema: Joi.Schema,
@@ -34,7 +28,7 @@ const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
     } catch (e) {
         res.status(422);
         if (e instanceof Joi.ValidationError) {
-            res.send(preProcessErrorResponse(e));
+            res.send(joiErrorToResponse(e));
         } else {
             console.error(e);
             res.send('Unexpected validation error');

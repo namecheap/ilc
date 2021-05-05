@@ -14,7 +14,9 @@ const testUser = Object.freeze({
 describe('Versioning Unit', () => {
     let db: VersionedKnex;
     let versionSevice: Versioning;
-    before(async () => {
+    before(async function() {
+        this.timeout(10 * 1000);
+
         db = dbFactory();
         versionSevice = new Versioning(versioningConfig);
         versionSevice.setDb(db);
@@ -22,7 +24,9 @@ describe('Versioning Unit', () => {
         await db.migrate.latest({ directory: path.join(__dirname, '../server/migrations') });
     });
 
-    beforeEach(async () => {
+    beforeEach(async function() {
+        this.timeout(10 * 1000);
+
         await db.seed.run({directory: path.join(__dirname, '../server/seeds')});
     })
 

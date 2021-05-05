@@ -74,11 +74,11 @@ const InputForm = ({mode = 'edit', ...props}) => {
                 {isSpecial
                     ? <SelectInput resettable source="specialRole" label="Special role" validate={[required()]} choices={allowedSpecialRoles} />
                     : [
-                        <NumberInput source="orderPos" validate={[required()]} />,
                         <TextInput source="route" fullWidth validate={[required()]} />,
+                        <NumberInput source="orderPos" label="Order position of the route" helperText="Leave blank to place route at the bottom of the list" />,
                         <BooleanInput source="next" defaultValue={false} />
                     ]}
-                
+
                 <ReferenceInput reference="template"
                                 source="templateName"
                                 label="Template name">
