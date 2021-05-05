@@ -1,5 +1,7 @@
 import _ from 'lodash';
 import {request, expect, requestWithAuth} from './common';
+import db from '../server/db';
+import { makeSpecialRoute } from '../server/appRoutes/services/transformSpecialRoutes';
 
 let example = <any>{
     template: {
@@ -66,6 +68,19 @@ example = {
         },
         meta: {},
     }),
+    correct404: Object.freeze({
+        specialRole: '404',
+        templateName: example.template.correct.name,
+        slots: {
+            ncTestRouteSlotName: {
+                appName: example.app.correct.name,
+                props: { ncTestProp: 1 },
+                kind: 'regular',
+            },
+        },
+        meta: {},
+        domainId: null,
+    }),
 };
 
 example = {
@@ -108,123 +123,286 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Create', () => {
-        it('should not create record without required fields', async () => {
-            const response = await request.post(example.url)
-            .send(_.omit(example.correct, ['orderPos', 'route', 'slots']))
-            .expect(
-                422,
-                '"orderPos" is required\n' +
-                '"route" is required\n' +
-                '"slots" is required'
-            );
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not create record with incorrect type of fields', async () => {
-            const response = await request.post(example.url)
-            .send({
-                ...example.correct,
-                specialRole: 'ncTestRouteIncorrectSpecialRole',
-                orderPos: 'ncTestRouteIncorrectOrderPos',
-                route: 123,
-                next: 456,
-                templateName: 789,
-                domainId: 'ncTestRouteIncorrectDomainId',
-                slots: 'ncTestRouteIncorrectSlots'
-            })
-            .expect(
-                422,
-                '"specialRole" must be [404]\n' +
-                '"orderPos" must be a number\n' +
-                '"route" must be a string\n' +
-                '"next" must be a boolean\n' +
-                '"templateName" must be a string\n' +
-                '"slots" must be of type object\n' +
-                '"domainId" must be a number'
-            );
-
-            expect(response.body).deep.equal({});
-        });
-
-        it('should not create record with the same orderPos', async () => {
+        it('should not create simple record due to required fields', async () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url).send(example.correct).expect(200);
-                routeId = response.body.id;
+                const response = await request.post(example.url)
+                    .send(_.omit(example.correct, ['orderPos', 'route', 'slots', 'next']));
 
-                response = await request.post(example.url)
-                    .send(example.correct)
-                    .expect(500);
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
 
-                expect(response.text).to.include('Internal server error occurred.');
+                expect(response.status).equal(422);
+                expect(response.text).equal(
+                    '"orderPos" is required\n' +
+                    '"route" is required\n' +
+                    '"next" is required\n' +
+                    '"slots" is required'
+                );
+                expect(response.body).deep.equal({});
             } finally {
                 routeId && await request.delete(example.url + routeId);
             }
         });
 
-        it('should not create record with non-existing templateName', async () => {
-            const response = await request.post(example.url)
-            .send({
-                ...example.correct,
-                templateName: 'ncTestNonExistingTemplateName',
-            })
-            .expect(500);
+        it('should not create special record due to required and forbidden fields', async () => {
+            let routeId;
 
-            expect(response.text).to.include('Internal server error occurred.');
+            try {
+                const response = await request.post(example.url)
+                    .send({
+                        ..._.omit(example.correct404, ['slots']),
+                        orderPos: 122,
+                        route: '/ncTestRoute/*',
+                        next: false,
+                    });
+
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(422);
+                expect(response.text).equal(
+                    '"orderPos" is not allowed\n' +
+                    '"route" is not allowed\n' +
+                    '"next" is not allowed\n' +
+                    '"slots" is required'
+                );
+                expect(response.body).deep.equal({});
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+            }
         });
 
-        it('should not create record with non-existing domainId', async () => {
-            const response = await request.post(example.url)
+        it('should not create simple record with incorrect type of fields', async () => {
+            let routeId;
+
+            try {
+                const response = await request.post(example.url)
                 .send({
                     ...example.correct,
-                    domainId: 1111111,
-                })
-                .expect(500);
+                    orderPos: 'ncTestRouteIncorrectOrderPos',
+                    route: 123,
+                    next: 456,
+                    templateName: 789,
+                    domainId: 'ncTestRouteIncorrectDomainId',
+                    slots: 'ncTestRouteIncorrectSlots'
+                });
 
-            expect(response.text).to.include('Internal server error occurred.');
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(422);
+                expect(response.text).equal(
+                    '"orderPos" must be a number\n' +
+                    '"route" must be a string\n' +
+                    '"next" must be a boolean\n' +
+                    '"templateName" must be a string\n' +
+                    '"slots" must be of type object\n' +
+                    '"domainId" must be a number'
+                );
+                expect(response.body).deep.equal({});
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+            }
+        });
+
+        it('should not create special record with incorrect type of fields', async () => {
+            let routeId;
+
+            try {
+                const response = await request.post(example.url)
+                    .send({
+                        ...example.correct404,
+                        specialRole: 'ncTestRouteIncorrectSpecialRole',
+                        templateName: 789,
+                        domainId: 'ncTestRouteIncorrectDomainId',
+                        slots: 'ncTestRouteIncorrectSlots'
+                    });
+
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(422);
+                expect(response.text).equal(
+                    '"specialRole" must be [404]\n' +
+                    '"templateName" must be a string\n' +
+                    '"slots" must be of type object\n' +
+                    '"domainId" must be a number'
+                );
+                expect(response.body).deep.equal({});
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+            }
+        });
+
+        it('should not create record with the same orderPos', async () => {
+            let routeId1, routeId2;
+
+            try {
+                let response1 = await request.post(example.url).send(example.correct).expect(200);
+                routeId1 = response1.body.id;
+
+                const response2 = await request.post(example.url)
+                    .send(example.correct);
+
+                if (response2.body.id) {
+                    routeId2 = response2.body.id;
+                }
+
+                expect(response2.status).equal(500);
+                expect(response2.text).to.include('UNIQUE constraint failed: routes.orderPos');
+            } finally {
+                routeId1 && await request.delete(example.url + routeId1);
+                routeId2 && await request.delete(example.url + routeId2);
+            }
+        });
+
+        it('should not create simple record with non-existing templateName', async () => {
+            let routeId;
+
+            try {
+                const response = await request.post(example.url)
+                .send({
+                    ...example.correct,
+                    templateName: 'ncTestNonExistingTemplateName',
+                });
+
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(500);
+                expect(response.text).to.include('FOREIGN KEY constraint failed');
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+            }
+        });
+
+        it('should not create simple record with non-existing domainId', async () => {
+            let routeId;
+
+            try {
+                const response = await request.post(example.url)
+                    .send({
+                        ...example.correct,
+                        domainId: 1111111,
+                    });
+
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(500);
+                expect(response.text).to.include('FOREIGN KEY constraint failed');
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+            }
         });
 
         it('should not create record with non-existing slots/appName', async () => {
-            const appName = '@portal/ncTestNonExistingAppName';
-            const response = await request.post(example.url)
-            .send({
-                ...example.correct,
-                slots: {
-                    ncTestRouteSlotNavbar: { appName },
-                }
-            })
-            .expect(422);
+            let routeId;
 
-            expect(response.text).to.include(`Non-existing app name "${appName}" specified.`);
-        });
-
-        it('should not create record with slot pointing to the app of a kind "wrapper"', async () => {
-            const appName = example.appWrapper.correct.name;
-            const response = await request.post(example.url)
+            try {
+                const appName = '@portal/ncTestNonExistingAppName';
+                const response = await request.post(example.url)
                 .send({
                     ...example.correct,
                     slots: {
                         ncTestRouteSlotNavbar: { appName },
                     }
-                })
-                .expect(422);
+                });
 
-            expect(response.text).to.include(`It's forbidden to use wrappers in routes.`);
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(422);
+                expect(response.text).to.include(`Non-existing app name "${appName}" specified.`);
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+            }
+        });
+
+        it('should not create record with slot pointing to the app of a kind "wrapper"', async () => {
+            let routeId;
+
+            try {
+                const appName = example.appWrapper.correct.name;
+                const response = await request.post(example.url)
+                    .send({
+                        ...example.correct,
+                        slots: {
+                            ncTestRouteSlotNavbar: { appName },
+                        }
+                    });
+
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(422);
+                expect(response.text).to.include(`It's forbidden to use wrappers in routes.`);
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+            }
         });
 
         it('should not create record without required slots/appName', async () => {
-            await request.post(example.url)
-            .send({
-                ...example.correct,
-                slots: {
-                    ncTestRouteSlotNavbar: {
-                        appName: undefined,
-                    },
+            let routeId;
+
+            try {
+                const response = await request.post(example.url)
+                .send({
+                    ...example.correct,
+                    slots: {
+                        ncTestRouteSlotNavbar: {
+                            appName: undefined,
+                        },
+                    }
+                });
+
+                if (response.body.id) {
+                    routeId = response.body.id;
                 }
-            })
-            .expect(422, '"slots.ncTestRouteSlotNavbar.appName" is required');
+
+                expect(response.status).equal(422);
+                expect(response.text).to.include(`"slots.ncTestRouteSlotNavbar.appName" is required`);
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+            }
+        });
+
+        it('should not create special record with the same domainId and specialRole', async () => {
+            let domainId, routeId1, routeId2;
+
+            try {
+                domainId = await createRouterDomain(example.routerDomain);
+
+                const exampleWithExistedDomainId = {
+                    ...example.correct404,
+                    domainId,
+                };
+
+                const response1 = await request.post(example.url).send(exampleWithExistedDomainId);
+                routeId1 = response1.body.id;
+
+                const response2 = await request.post(example.url).send(exampleWithExistedDomainId);
+                if (response2.body.id) {
+                    routeId2 = response2.body.id;
+                }
+
+                expect(response2.status).equal(500);
+                expect(response2.text).to.include(`SpecialRole "404" for provided DomainId "${domainId}" already exists`);
+            } finally {
+                routeId1 && await request.delete(example.url + routeId1);
+                routeId2 && await request.delete(example.url + routeId2);
+                domainId && await request.delete(example.routerDomain.url + domainId);
+            }
         });
 
         it('should successfully create record', async () => {
@@ -273,6 +451,40 @@ describe(`Tests ${example.url}`, () => {
                     id: routeId,
                     ..._.omitBy(exampleWithExistedDomainId, _.isNil),
                 };
+                expect(response.body).deep.equal(expectedRoute);
+
+                response = await request.get(example.url + routeId)
+                    .expect(200);
+
+                expect(response.body).deep.equal(expectedRoute);
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+                domainId && await request.delete(example.routerDomain.url + domainId);
+            }
+        });
+
+        it('should create special record with existed domainId', async () => {
+            let domainId, routeId;
+
+            try {
+                domainId = await createRouterDomain(example.routerDomain);
+
+                const exampleWithExistedDomainId = {
+                    ...example.correct404,
+                    domainId,
+                };
+
+                let response = await request.post(example.url)
+                    .send(exampleWithExistedDomainId)
+                    .expect(200);
+
+                routeId = response.body.id;
+
+                const expectedRoute = {
+                    id: routeId,
+                    ..._.omitBy(exampleWithExistedDomainId, _.isNil),
+                };
+
                 expect(response.body).deep.equal(expectedRoute);
 
                 response = await request.get(example.url + routeId)
@@ -649,6 +861,35 @@ describe(`Tests ${example.url}`, () => {
             .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
+        });
+
+        it('should not delete default 404', async () => {
+            let temporaryCreatedDefault404Id;
+            try {
+                let [default404] = await db.select().from('routes').where({ route: makeSpecialRoute('404'), domainId: null });
+
+                if (!default404) {
+                    const response = await request.post(example.url).send(example.correct404);
+
+                    default404 = response.body;
+
+                    if (response.body.id) {
+                        temporaryCreatedDefault404Id = response.body.id;
+                    }
+                }
+
+                const idDefault404 = default404.id;
+
+                const response = await request.delete(example.url + idDefault404)
+                    .expect(500, 'Default 404 error can\'t be deleted');
+
+                expect(response.body).deep.equal({});
+            } finally {
+                if (temporaryCreatedDefault404Id) {
+                    await db('route_slots').where('routeId', temporaryCreatedDefault404Id).delete();
+                    await db('routes').where('id', temporaryCreatedDefault404Id).delete();
+                }
+            }
         });
 
         it('should successfully delete record', async () => {

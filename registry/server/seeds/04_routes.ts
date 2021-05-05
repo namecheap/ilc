@@ -25,9 +25,7 @@ export async function seed(knex: Knex): Promise<any> {
             next: false,
         }, {
             id: 7,
-            specialRole: '404',
-            orderPos: -10000,
-            route: '',
+            route: 'special:404',
             next: false,
             templateName: 'master',
         }, {
@@ -56,9 +54,7 @@ export async function seed(knex: Knex): Promise<any> {
         },
         {
             id: 12,
-            specialRole: '404',
-            orderPos: -10001,
-            route: '',
+            route: 'special:404',
             next: false,
             templateName: 'master',
             domainId: 1,

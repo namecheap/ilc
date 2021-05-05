@@ -10,10 +10,15 @@ import {
     BooleanField,
     Filter,
     BooleanInput,
-    ReferenceInput,
     SelectInput,
     ReferenceField,
+    Link,
+    TopToolbar,
+    Button,
+    sanitizeListRestProps,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
+import IconAdd from '@material-ui/icons/Add';
+
 
 import dataProvider from '../dataProvider';
 
@@ -49,21 +54,21 @@ const ListActionsToolbar = ({ children, ...props }) => {
     );
 };
 
-const ListFilter = (props) => {
+const ListFilter = ({ routerDomain, ...props }) => {
     const classes = useStyles();
 
     return (
         <Filter {...props} className={classes.filters}>
             <BooleanInput label="Show special" source="showSpecial" alwaysOn className={classes.filtersSpecial} />
             { 
-                props.routerDomain.length
+                routerDomain.length
                 ? <SelectInput 
                     alwaysOn
                     source="domainId"
                     label="Domain"
                     optionText="domainName"
                     resettable
-                    choices={props.routerDomain}
+                    choices={routerDomain}
                     />
                 : null
             }
@@ -71,7 +76,7 @@ const ListFilter = (props) => {
     );
 };
 
-const ListGrid = (props) => {
+const ListGrid = ({ routerDomain, ...props }) => {
     return (
         <Datagrid {...props} rowClick="edit" optimized>
             {!props.filterValues.showSpecial ? <TextField source="id" sortable={false} /> : null }
@@ -83,7 +88,7 @@ const ListGrid = (props) => {
                 <TextField source="name" />
             </ReferenceField>
             {
-                props.routerDomain.length
+                routerDomain.length
                 ? <ReferenceField label="Domain Name" source="domainId" reference="router_domains" emptyText="-" sortable={false}>
                     <TextField source="domainName" />
                 </ReferenceField>
@@ -97,6 +102,30 @@ const ListGrid = (props) => {
     );
 };
 
+const ListActions = ({
+    className,
+    resource,
+    filters,
+    displayedFilters,
+    filterValues,
+    showFilter,
+    ...rest
+}) => (
+    <TopToolbar className={className} {...sanitizeListRestProps(rest)}>
+        {filters && cloneElement(filters, {
+            resource,
+            showFilter,
+            displayedFilters,
+            filterValues,
+            context: 'button',
+        })}
+        <Link to={`/route/create${filterValues.showSpecial ? '?special=1' : ''}`}>
+            <Button label={`create ${filterValues.showSpecial ? 'special route' : ''}`}>
+                <IconAdd />
+            </Button>
+        </Link>
+    </TopToolbar>
+);
 
 const PostList = props => {
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
@@ -124,6 +153,7 @@ const PostList = props => {
         <List
             {...props}
             bulkActionButtons={<ListBulkActions />}
+            actions={<ListActions />}
             exporter={false}
             filters={<ListFilter routerDomain={routerDomain} />}
             perPage={25}

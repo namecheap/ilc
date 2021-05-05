@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router';
+import queryString from 'query-string';
 import {
     Create,
     Edit,
@@ -39,6 +41,10 @@ const allowedAppKinds = [
     { id: 'regular', name: 'Regular' },
 ];
 
+const allowedSpecialRoles = [
+    { id: '404', name: '404' },
+];
+
 const InputForm = ({mode = 'edit', ...props}) => {
     const [isMultiDomain, setIsMultiDomain] = useState(false);
 
@@ -53,6 +59,11 @@ const InputForm = ({mode = 'edit', ...props}) => {
             });
     }, []);
 
+    const location = useLocation();
+    const isCreateSpecial = !!queryString.parse(location.search).special;
+    const isUpdateSpecial = !!props.record.specialRole;
+    const isSpecial = isCreateSpecial || isUpdateSpecial;
+
     return (
         <TabbedForm {...props}>
             <FormTab label="General">
@@ -60,13 +71,14 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     ? <TextField source="id" />
                     : null}
 
-                <FormDataConsumer>
-                    {({ formData, ...rest }) => !formData.specialRole && [
+                {isSpecial
+                    ? <SelectInput resettable source="specialRole" label="Special role" validate={[required()]} choices={allowedSpecialRoles} />
+                    : [
                         <NumberInput source="orderPos" validate={[required()]} />,
                         <TextInput source="route" fullWidth validate={[required()]} />,
-                        <BooleanInput source="next" />
+                        <BooleanInput source="next" defaultValue={false} />
                     ]}
-                </FormDataConsumer>
+                
                 <ReferenceInput reference="template"
                                 source="templateName"
                                 label="Template name">

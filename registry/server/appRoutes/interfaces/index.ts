@@ -56,9 +56,12 @@ export const partialAppRouteSchema = Joi.object({
     ...commonAppRoute,
 });
 
+const conditionSpecialRole = { is: Joi.exist(), then: Joi.forbidden(), otherwise: Joi.required() };
+
 export const appRouteSchema = Joi.object({
     ...commonAppRoute,
-    orderPos: commonAppRoute.orderPos.required(),
-    route: commonAppRoute.route.required(),
     slots: commonAppRoute.slots.required(),
+    orderPos: commonAppRoute.orderPos.when('specialRole', conditionSpecialRole),
+    route: commonAppRoute.route.when('specialRole', conditionSpecialRole),
+    next: commonAppRoute.next.when('specialRole', conditionSpecialRole),
 });
