@@ -48,7 +48,7 @@ Bringing microservices to the frontend requires a layout service that composes a
     * [Parcels](./docs/parcels.md)
     * [Plugins](https://github.com/namecheap/ilc-plugins-sdk)
     * [App Wrappers](./docs/app_wrappers.md)
-* 💲 **Baked by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with community
+* 💲 **Backed by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with community
 
 ## 🚀 Quick start
 
