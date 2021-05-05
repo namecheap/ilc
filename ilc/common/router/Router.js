@@ -98,7 +98,7 @@ module.exports = class Router {
             let routeExp;
 
             if (v.route === '*') {
-                routeExp = new RegExp(`(.*)`);
+                routeExp = new RegExp(`(\/).*`);
             } else if (v.route === '/') {
                 routeExp = new RegExp(`^(/)$`);
             } else if (v.route.match(/\/\*$/) !== null) {

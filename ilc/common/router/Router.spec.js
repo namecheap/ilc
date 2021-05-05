@@ -170,6 +170,29 @@ describe('router', () => {
             });
         });
 
+        it('should return matched route with correct basePath if exists only route="*" as final point', () => {
+            const independentRouteStar = registryConfig.routes.find(n => n.route === '*');
+
+            const router = new Router({
+                ...registryConfig,
+                routes: [{
+                    ...independentRouteStar,
+                    next: false,
+                }],
+            });
+            const reqUrl = '/hero/apps?prop=value';
+            
+            const result = {
+                ...independentRouteStar,
+                reqUrl,
+                specialRole: null,
+                basePath: '/',
+            };
+            delete result.next;
+
+            chai.expect(router.match(reqUrl)).to.be.eql(result);
+        });
+
         it('should return 404 route when a router does not match any route', () => {
             const router = new Router(registryConfig);
             const reqUrl = '/nonexistent?prop=value';
