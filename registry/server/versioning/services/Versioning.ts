@@ -128,7 +128,7 @@ export class Versioning {
 
 
         const res = {
-            data: _.omit(dbRes, [entityConf.idColumn]),
+            data: _.omit(dbRes, [...(entityConf.omitColumns || []), entityConf.idColumn]),
             related: {} as Record<string, any>,
         }
 

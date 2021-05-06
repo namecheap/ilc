@@ -9,6 +9,7 @@ import { appRouteSchema } from '../interfaces';
 import * as httpErrors from '../../errorHandler/httpErrors';
 import { retrieveAppRouteFromDB } from './getAppRoute';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
+import {getJoiErr, joiErrorToResponse} from '../../util/helpers';
 
 const validateRequestBeforeCreateAppRoute = validateRequestFactory([{
     schema: appRouteSchema,
@@ -44,13 +45,38 @@ const createAppRoute = async (req: Request, res: Response) => {
         let { message } = e;
 
         // error messages for uniq constraint "route" and "domainId"
-        const sqliteError = 'UNIQUE constraint failed: routes.route, routes.domainId';
-        const mysqlError = 'routes_route_and_domainId_unique';
+        const sqliteErrorRoute = 'UNIQUE constraint failed: routes.route, routes.domainIdIdxble';
+        const mysqlErrorRoute = 'routes_route_and_domainIdIdxble_unique';
 
-        if (message.includes(sqliteError) || message.includes(mysqlError)) {
-            message = `SpecialRole "${req.body.specialRole}" for provided DomainId "${req.body.domainId}" already exists`;
+        if (message.includes(sqliteErrorRoute) || message.includes(mysqlErrorRoute)) {
+            res.status(422);
+            if (appRouteData.specialRole) {
+                return res.send(joiErrorToResponse(
+                    getJoiErr('specialRole', `"specialRole" "${appRouteData.specialRole}" for provided "domainId" already exists`)
+                ));
+            } else {
+                return res.send(joiErrorToResponse(
+                    getJoiErr('route', `Specified "route" value already exists`)
+                ));
+            }
         }
-        throw new httpErrors.DBError({ message })
+
+        // error messages for uniq constraint "orderPos" and "domainId"
+        const sqliteErrorOrderPos = 'UNIQUE constraint failed: routes.orderPos, routes.domainIdIdxble';
+        const mysqlErrorOrderPos = 'routes_orderpos_and_domainIdIdxble_unique';
+
+        if (message.includes(sqliteErrorOrderPos) || message.includes(mysqlErrorOrderPos)) {
+            res.status(422);
+            return res.send(joiErrorToResponse(
+                getJoiErr('route', `Specified "orderPos" value already exists for routes with provided "domainId"`)
+            ));
+        }
+
+        if (['foreign key constraint fails', 'FOREIGN KEY constraint failed'].some(v => message.includes(v))) {
+            throw new httpErrors.DBError({ message })
+        }
+
+        throw e;
     }
 
     const savedAppRoute = await retrieveAppRouteFromDB(savedAppRouteId!);

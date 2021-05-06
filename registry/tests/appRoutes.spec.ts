@@ -123,12 +123,37 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Create', () => {
+        it('should successfully create record', async () => {
+            let routeId;
+
+            try {
+                let response = await request.post(example.url)
+                    .send(example.correct)
+                    .expect(200);
+
+                routeId = response.body.id;
+
+                const expectedRoute = {
+                    id: routeId,
+                    ..._.omitBy(example.correct, _.isNil),
+                };
+                expect(response.body).deep.equal(expectedRoute);
+
+                response = await request.get(example.url + routeId)
+                    .expect(200);
+
+                expect(response.body).deep.equal(expectedRoute);
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+            }
+        });
+
         it('should not create simple record due to required fields', async () => {
             let routeId;
 
             try {
                 const response = await request.post(example.url)
-                    .send(_.omit(example.correct, ['orderPos', 'route', 'slots', 'next']));
+                    .send(_.omit(example.correct, ['route', 'slots', 'next']));
 
                 if (response.body.id) {
                     routeId = response.body.id;
@@ -136,9 +161,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.status).equal(422);
                 expect(response.text).equal(
-                    '"orderPos" is required\n' +
                     '"route" is required\n' +
-                    '"next" is required\n' +
                     '"slots" is required'
                 );
                 expect(response.body).deep.equal({});
@@ -248,14 +271,14 @@ describe(`Tests ${example.url}`, () => {
                 routeId1 = response1.body.id;
 
                 const response2 = await request.post(example.url)
-                    .send(example.correct);
+                    .send({...example.correct, route: '/someOtherRoute'});
 
                 if (response2.body.id) {
                     routeId2 = response2.body.id;
                 }
 
-                expect(response2.status).equal(500);
-                expect(response2.text).to.include('UNIQUE constraint failed: routes.orderPos');
+                expect(response2.status).equal(422);
+                expect(response2.text).to.include('Specified "orderPos" value already exists for routes with provided "domainId"');
             } finally {
                 routeId1 && await request.delete(example.url + routeId1);
                 routeId2 && await request.delete(example.url + routeId2);
@@ -396,37 +419,12 @@ describe(`Tests ${example.url}`, () => {
                     routeId2 = response2.body.id;
                 }
 
-                expect(response2.status).equal(500);
-                expect(response2.text).to.include(`SpecialRole "404" for provided DomainId "${domainId}" already exists`);
+                expect(response2.status).equal(422);
+                expect(response2.text).to.include(`"specialRole" "404" for provided "domainId" already exists`);
             } finally {
                 routeId1 && await request.delete(example.url + routeId1);
                 routeId2 && await request.delete(example.url + routeId2);
                 domainId && await request.delete(example.routerDomain.url + domainId);
-            }
-        });
-
-        it('should successfully create record', async () => {
-            let routeId;
-
-            try {
-                let response = await request.post(example.url)
-                    .send(example.correct)
-                    .expect(200);
-
-                routeId = response.body.id;
-
-                const expectedRoute = {
-                    id: routeId,
-                    ..._.omitBy(example.correct, _.isNil),
-                };
-                expect(response.body).deep.equal(expectedRoute);
-
-                response = await request.get(example.url + routeId)
-                    .expect(200);
-
-                expect(response.body).deep.equal(expectedRoute);
-            } finally {
-                routeId && await request.delete(example.url + routeId);
             }
         });
 
@@ -516,6 +514,25 @@ describe(`Tests ${example.url}`, () => {
                 response = await request.get(example.url + routeId).expect(200);
 
                 expect(response.body).deep.equal(expectedRoute);
+            } finally {
+                routeId && await request.delete(example.url + routeId);
+            }
+        });
+
+        it('should create record with omitted orderPos, it should be defined automatically', async () => {
+            let routeId;
+
+            try {
+                let response = await request.post(example.url)
+                    .send(_.omit(example.correct, 'orderPos'))
+                    .expect(200);
+
+                routeId = response.body.id;
+
+                expect(response.body.orderPos).to.be.above(0);
+
+                await request.get(example.url + routeId)
+                    .expect(200);
             } finally {
                 routeId && await request.delete(example.url + routeId);
             }
@@ -675,7 +692,7 @@ describe(`Tests ${example.url}`, () => {
                 routeId1 = response.body.id;
 
                 response = await request.post(example.url)
-                    .send({ ...example.correct, orderPos: 200000, })
+                    .send({ ...example.correct, route: '/someDiffRoute', orderPos: 200000, })
                     .expect(200);
                 routeId2 = response.body.id;
 
