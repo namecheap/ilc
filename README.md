@@ -92,6 +92,7 @@ And don't miss the **[Step-By-Step lessons about apps development with ILC](./do
 * [Compatibility with legacy UMD bundles](./docs/umd_bundles_compatibility.md)
 * [Global API](https://namecheap.github.io/ilc-sdk/pages/Pages/global_api.html)
 * [ILC transition hooks](./docs/transition_hooks.md)
+* [Multi-domains](./docs/multi-domains.md)
 
 ## 🔌 Adapters
 To conveniently connect various frameworks to ILC we rely on the [ecosystem of the single-spa](https://single-spa.js.org/docs/ecosystem)
