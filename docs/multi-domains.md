@@ -40,6 +40,6 @@ Off-topic: you can notice **Domain's** drop-down at the top of the body, with th
 ## Additional information
 
 - ILC detects domain from the **request.hostname** of Fastify and checks if we have this hostname in the list of **Router domains**.
-  - link to documentation of Fastify's **request** - https://www.fastify.io/docs/latest/Request/#request
+  - [link to documentation of Fastify's **request**](https://www.fastify.io/docs/latest/Request/#request)
 - Every registered domain in **Router domains** has it's own set of routes. They do not overlap.
 - Domain is optional for routes, so if the request is going from the domain which is absent in **Router domains** - then routes w/o assigned domain will be used for routing.
