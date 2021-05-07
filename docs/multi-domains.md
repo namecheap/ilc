@@ -21,6 +21,7 @@ If you are going to use ILC only with one domain name, then this document is use
 1. Let's add the handler of the **404** error, to do it click on the **Routes** item in the left sidebar menu (you will be forwarded to this link).
 
 1. At the top of the body click on **Show special**, to set the checkbox to active state. You will see a list of special routes (for now there are routes only for 404 pages).
+**NB:** the 404 route without a specified domain name is can't be removed and is used as a fallback for all domains, so you can use one default 404 for all domains.
 
 1. At the top right corner, click **Create special route** (you will be forwarded to this link).
     1. In the **Special role** field choose **404**;
@@ -35,3 +36,10 @@ Off-topic: you can notice **Domain's** drop-down at the top of the body, with th
     1. If you need to move some old routes under newly created domain - just modify field **Domain** in their preferences.
 
 1. Open the route created in the previous step in a browser, to check if everything works as expected.
+
+## Additional information
+
+- ILC detects domain from the **request.hostname** of Fastify and checks if we have this hostname in the list of **Router domains**.
+  - link to documentation of Fastify's **request** - https://www.fastify.io/docs/latest/Request/#request
+- Every registered domain in **Router domains** has it's own set of routes. They do not overlap.
+- Domain is optional for routes, so if the request is going from the domain which is absent in **Router domains** - then routes w/o assigned domain will be used for routing.
