@@ -1,6 +1,6 @@
 # Multi-domains
 
-ILC supports multi-domains, which means that you don't need to roll out personal instances of ILC for each of them, you just can use one instance for all of them.  
+ILC can handle requests coming from multiple domains, so that you don't need to roll out individual instances of the ILC for every domain, you just can use one instance for all of them.  
 If you are going to use ILC only with one domain name, then this document is useless for you now. But when you decide to kick off developing at least under one more domain, then we recommend you come back and follow the steps below.
 
 ## How to add a new domain name
