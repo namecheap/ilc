@@ -43,7 +43,8 @@ function insertStart(stream, attributes, headers, index) {
         if (bundleVersionOverrides.spaBundle) {
             // We need appName at client side to properly perform override System.js import map
             // See client side code in AsyncBootUp.js
-            bundleVersionOverrides.appName = appIdToNameAndSlot(attributes.id).appName;
+            const appId = attributes.wrapperConf ? attributes.wrapperConf.appId : attributes.id;
+            bundleVersionOverrides.appName = appIdToNameAndSlot(appId).appName;
         }
 
         stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
