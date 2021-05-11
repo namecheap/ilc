@@ -44,6 +44,7 @@ export default class WrapApp {
 
         const mount = async (props) => {
             props.renderApp = this.#renderAppFactory(props, appCallbacks, wrapperCallbacks);
+
             if (this.#appRenderedAtSsr) {
                 await appCallbacks.mount(props);
 
@@ -79,6 +80,7 @@ export default class WrapApp {
         const newProps = Object.assign({}, props);
         newProps.appId = this.#wrapperConf.appId;
         newProps.getCurrentPathProps = () => this.#wrapperConf.props;
+        newProps.getCurrentBasePath = () => '/';
 
         return newProps;
     }

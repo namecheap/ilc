@@ -37,7 +37,7 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
 
         if (attributes.wrapperConf) {
             const wrapperConf = attributes.wrapperConf;
-            const reqUrl = makeFragmentUrl(currRoute, wrapperConf.src, wrapperConf.appId, wrapperConf.props);
+            const reqUrl = makeFragmentUrl(currRoute, wrapperConf.src, wrapperConf.appId, wrapperConf.props, true);
 
             const fragmentRequest = makeRequest(
                 reqUrl,
@@ -107,11 +107,11 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
     });
 }
 
-function makeFragmentUrl(route, baseUrl, appId, props) {
+function makeFragmentUrl(route, baseUrl, appId, props, ignoreBasePath = false) {
     const url = new URL(baseUrl);
 
     const reqProps = {
-        basePath: route.basePath,
+        basePath: ignoreBasePath ? '/' : route.basePath,
         reqUrl: route.reqUrl,
         fragmentName: appId,
     };
