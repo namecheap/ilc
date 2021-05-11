@@ -43,7 +43,7 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                 reqUrl,
                 {...filterHeaders(attributes, request), ...requiredHeaders},
                 wrapperConf.timeout,
-                attributes.ignoreInvalidSsl,
+                attributes.ignoreInvalidSsl || wrapperConf.ignoreInvalidSsl,
             );
 
             fragmentRequest.on('response', response => {
