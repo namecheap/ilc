@@ -11,6 +11,7 @@ import {
     Filter,
     BooleanInput,
     SelectInput,
+    TextInput,
     ReferenceField,
     Link,
     TopToolbar,
@@ -60,9 +61,9 @@ const ListFilter = ({ routerDomain, ...props }) => {
     return (
         <Filter {...props} className={classes.filters}>
             <BooleanInput label="Show special" source="showSpecial" alwaysOn className={classes.filtersSpecial} />
-            { 
+            {
                 routerDomain.length
-                ? <SelectInput 
+                ? <SelectInput
                     alwaysOn
                     source="domainId"
                     label="Domain"
@@ -70,6 +71,11 @@ const ListFilter = ({ routerDomain, ...props }) => {
                     resettable
                     choices={routerDomain}
                     />
+                : null
+            }
+            {
+                !props.filterValues.showSpecial
+                ? <TextInput label="Route prefix" source="routePrefix" alwaysOn resettable/>
                 : null
             }
         </Filter>
@@ -94,7 +100,7 @@ const ListGrid = ({ routerDomain, ...props }) => {
                 </ReferenceField>
                 : null
             }
-            
+
             <ListActionsToolbar>
                 <EditButton />
             </ListActionsToolbar>

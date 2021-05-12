@@ -16,6 +16,10 @@ const getAppRoutes = async (req: Request, res: Response) => {
         query.where('routes.route', 'like', `${SPECIAL_PREFIX}%`);
     } else {
         query.whereNot('routes.route', 'like', `${SPECIAL_PREFIX}%`);
+
+        if (filters.routePrefix !== undefined) {
+            query.where('routes.route', 'like', `${filters.routePrefix}%`)
+        }
     }
 
     if (filters.domainId !== undefined) {
