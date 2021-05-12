@@ -119,7 +119,7 @@ describe(`Tests ${example.url}`, () => {
                             headers: {
                                 'X-Powered-By': 'JS',
                                 'X-My-Awesome-Header': 'Awesome',
-                                'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
+                                'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000,https://my.awesome.server/my-awesome-script.js;rel=script;loveyou=3000',
                             },
                         },
                     },
@@ -176,7 +176,8 @@ describe(`Tests ${example.url}`, () => {
                         <meta charset="utf-8" />
                         <meta name="viewport" content="width=device-width,initial-scale=1"/>
                         ${`<!-- Template include "${includes[0].attributes.id}" START -->\n` +
-                        '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
+                        '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
+                        '<script src="https://my.awesome.server/my-awesome-script.js"></script>' +
                         includes[0].api.response.data +
                         `\n<!-- Template include "${includes[0].attributes.id}" END -->`
                         }

@@ -2,6 +2,7 @@ import axios from 'axios';
 
 import parseLinkHeader from './parseLinkHeader';
 import errors from '../errors';
+import { uniqueArray } from '../../util/helpers';
 
 interface IncludeAttributes {
     id: string,
@@ -12,14 +13,27 @@ interface IncludesAttributes {
     [include: string]: IncludeAttributes
 }
 
-async function renderTemplate(template: string): Promise<{content: string, styleRefs: Array<string>}> {
+type FetchedIncludes = {
+    includeHtmlTag: string;
+    includeResult: string;
+    styleRefs: string[];
+}[];
+
+type RenderTemplateResult = {
+    content: string;
+    styleRefs: string[];
+};
+
+async function renderTemplate(template: string): Promise<RenderTemplateResult> {
     const includesAttributes = matchIncludesAttributes(template);
 
+    const result: RenderTemplateResult = {
+        content: template,
+        styleRefs: [],
+    };
+
     if (!Object.keys(includesAttributes).length) {
-        return {
-            content: template,
-            styleRefs: [],
-        };
+        return result;
     }
 
     const duplicateIncludesAttributes = selectDuplicateIncludesAttributes(includesAttributes);
@@ -31,22 +45,16 @@ async function renderTemplate(template: string): Promise<{content: string, style
         );
     };
 
-    const includes = await fetchIncludes(includesAttributes);
+    const fetchedIncludes = await fetchIncludes(includesAttributes);
 
-    const content = Object.keys(includesAttributes).reduce((
-        template: string,
-        include: string,
-        includeDataIndex: number,
-    ) => template.split(include).join(includes[includeDataIndex].data), template);
+    fetchedIncludes.forEach(({ includeHtmlTag, includeResult, styleRefs }) => {
+        result.styleRefs = result.styleRefs.concat(styleRefs);
+        result.content = result.content.replace(includeHtmlTag, includeResult);
+    });
 
-    const styleRefs = includes
-        .reduce((styleRefs: Array<string>, currInclude) => styleRefs.concat(currInclude.styleRefs), [])
-        .filter((styleRef, index, styleRefs) => styleRefs.indexOf(styleRef) === index);
+    result.styleRefs = uniqueArray(result.styleRefs);
 
-    return {
-        content,
-        styleRefs,
-    };
+    return result;
 };
 
 function matchIncludesAttributes(template: string): IncludesAttributes {
@@ -92,30 +100,27 @@ function selectDuplicateIncludesAttributes(includesAttributes: IncludesAttribute
         attributes.findIndex(({ id, src }: IncludeAttributes) => id === currentAttributes.id || src === currentAttributes.src) !== index);
 }
 
-async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Array<{data: string, styleRefs: Array<string>}>> {
-    const includes = Object.keys(includesAttributes);
+async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<FetchedIncludes> {
+    const includeHtmlTags = Object.keys(includesAttributes);
 
-    if (!includes.length) {
+    if (!includeHtmlTags.length) {
         return [];
     }
 
-    return Promise.all(includes.map(async (include: string) => {
-        const {
-            src,
-            timeout = 10000,
-            id,
-        } = includesAttributes[include];
+    return Promise.all(includeHtmlTags.map(async (includeHtmlTag: string) => {
+        const parsedHtmlTag = includesAttributes[includeHtmlTag];
+        const { id, src, timeout = 10000 } = parsedHtmlTag;
 
         try {
             if (!id || !src) {
-                throw new Error(`Necessary attribute src or id was not provided by ${include}!`);
+                throw new Error(`Necessary attribute src or id was not provided by ${includeHtmlTag}!`);
             }
 
             let {
                 data,
                 headers: {
                     link,
-                }
+                },
             } = await axios.get(src, {
                 timeout: +timeout,
             });
@@ -123,12 +128,16 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
             let styleRefs: Array<string> = [];
 
             if (link) {
-                styleRefs = selectStyleRefs(link);
-                data = styleRefs.map(wrapWithStylesheetLink).join('\n') + data;
+                const refs = selectStyleAndScriptRefs(link);
+                styleRefs = refs.styles;
+                const stylesheets = refs.styles.map(wrapWithStylesheetLink);
+                const scripts = refs.scripts.map(wrapWithScriptTag);
+                data = [...stylesheets, ...scripts].join('\n') + data;
             }
 
             return {
-                data: wrapWithComments(id, data),
+                includeHtmlTag,
+                includeResult: wrapWithComments(id, data),
                 styleRefs,
             };
         } catch (e) {
@@ -136,29 +145,36 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Ar
                 message: `Failed to fetch include with ID "${id}" due to: ${e.message}`,
                 cause: e,
                 data: {
-                    include,
+                    include: includeHtmlTag,
                 }
             })
         }
     }));
 }
 
-function selectStyleRefs(link: string): Array<string> {
+function selectStyleAndScriptRefs(link: string) {
     const includeLinkHeader = parseLinkHeader(link);
 
-    return includeLinkHeader.reduce((styleRefs: Array<string>, attributes: any) => {
-        if (attributes.rel !== 'stylesheet') {
-            return styleRefs;
+    return includeLinkHeader.reduce((acc: Record<'styles' | 'scripts', string[]>, attributes: any) => {
+        if (attributes.rel === 'stylesheet') {
+            acc.styles.push(attributes.uri);
+        } else if (attributes.rel === 'script') {
+            acc.scripts.push(attributes.uri);
         }
 
-        styleRefs.push(attributes.uri);
-
-        return styleRefs;
-    }, []);
+        return acc;
+    }, {
+        styles: [],
+        scripts: [],
+    });
 }
 
 function wrapWithStylesheetLink(styleRef: string): string {
     return `<link rel="stylesheet" href="${styleRef}">`;
+}
+
+function wrapWithScriptTag(url: string): string {
+    return `<script src="${url}"></script>`;
 }
 
 function wrapWithComments(id: string, data: string): string {

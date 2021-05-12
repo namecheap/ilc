@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const urljoin = require('url-join');
+const { uniqueArray } = require('../../common/utils');
 
 module.exports = class ConfigsInjector {
     #newrelic;
@@ -74,16 +75,16 @@ module.exports = class ConfigsInjector {
         const routeStyleRefs = _.reduce(slots, (styleRefs, slotData) => {
             const appInfo = apps[slotData.appName];
 
-            if (appInfo.cssBundle && !_.includes(styleRefs, appInfo.cssBundle)) {
+            if (appInfo.cssBundle && !styleRefs.includes(appInfo.cssBundle)) {
                 styleRefs.push(appInfo.cssBundle);
             }
 
             return styleRefs;
         }, []);
 
-        const styleRefs = _.concat(routeStyleRefs, templateStyleRefs);
+        const styleRefs = routeStyleRefs.concat(templateStyleRefs);
 
-        return _.filter(styleRefs, (styleRef, index, styleRefs) => styleRefs.indexOf(styleRef) === index);
+        return uniqueArray(styleRefs);
     };
 
     //TODO: add App Wrappers support
@@ -123,7 +124,7 @@ module.exports = class ConfigsInjector {
         }, {spaBundles: [], dependencies: {}, stylesheetLinks: []});
 
         const scriptRefs = _.concat([this.#getClientjsUrl()], routeAssets.spaBundles, _.values(routeAssets.dependencies));
-        const withoutDuplicateScriptRefs = _.filter(scriptRefs, (scriptRef, index, scriptRefs) => scriptRefs.indexOf(scriptRef) === index);
+        const withoutDuplicateScriptRefs = uniqueArray(scriptRefs);
 
         return {
             scriptLinks: _.map(withoutDuplicateScriptRefs, this.#wrapWithLinkToPreloadScript),
