@@ -25,8 +25,11 @@ function cloneDeep(source) {
     return deepmerge({}, source);
 }
 
+const uniqueArray = array => [...new Set(array)];
+
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
     cloneDeep,
+    uniqueArray,
 }

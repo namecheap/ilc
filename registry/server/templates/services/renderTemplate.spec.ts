@@ -18,13 +18,13 @@ describe('renderTemplate', () => {
                         data: `
                             <div id="include-id-1">
                                 This include has all necessary attributes
-                                and a specified link header which is a stylesheet
+                                and a specified link header which is a stylesheet and script
                             </div>
                         `,
                         headers: {
                             'X-Powered-By': 'JS',
                             'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
+                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000,https://my.awesome.server/my-awesome-script.js;rel=script;loveyou=3000',
                         },
                     },
                 },
@@ -69,7 +69,7 @@ describe('renderTemplate', () => {
                         data: `
                             <div id="include-id-3">
                                 This include has all necessary attributes
-                                and a specified header link which is a stylesheet
+                                and a specified header link which is a stylesheet and script
                                 and its timeout is equal 0
                                 but response is delayed
                             </div>
@@ -77,7 +77,7 @@ describe('renderTemplate', () => {
                         headers: {
                             'X-Powered-By': 'JS',
                             'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.amazing.server/my-amazing-stylesheet.css;rel=stylesheet;loveyou=3000;',
+                            'Link': 'https://my.amazing.server/my-amazing-stylesheet.css;rel=stylesheet;loveyou=3000;,https://my.amazing.server/my-awesome-script.js;rel=script;loveyou=3000',
                         },
                     }
                 },
@@ -166,7 +166,8 @@ describe('renderTemplate', () => {
                 <meta name="viewport" content="width=device-width,initial-scale=1"/>
                 ${
                     `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
-                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
+                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
+                    '<script src="https://my.awesome.server/my-awesome-script.js"></script>' +
                     includes[0].api.response.data +
                     `\n<!-- Template include "${includes[0].attributes.id}" END -->`
                 }
@@ -178,7 +179,8 @@ describe('renderTemplate', () => {
                 <script>window.console.log('Something...')</script>
                 ${
                     `<!-- Template include "${includes[2].attributes.id}" START -->\n` +
-                    '<link rel="stylesheet" href="https://my.amazing.server/my-amazing-stylesheet.css">' +
+                    '<link rel="stylesheet" href="https://my.amazing.server/my-amazing-stylesheet.css">\n' +
+                    '<script src="https://my.amazing.server/my-awesome-script.js"></script>' +
                     includes[2].api.response.data +
                     `\n<!-- Template include "${includes[2].attributes.id}" END -->`
                 }

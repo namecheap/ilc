@@ -14,3 +14,5 @@ export function getJoiErr(path: string, message: string) {
         type: 'any.custom',
     }], undefined);
 }
+
+export const uniqueArray = (array: any[]) => [...new Set(array)];
