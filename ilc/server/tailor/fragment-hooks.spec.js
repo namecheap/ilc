@@ -41,7 +41,6 @@ describe('fragment-hooks', () => {
             const fragmentAttrs = getFragmentAttributes({async: true});
             const headers = {
                 link: '<https://domain.com/app.css>; rel="stylesheet"',
-                // link: '<https://domain.com/single_spa.js>; rel="fragment-script"; as="script"; crossorigin="anonymous",<https://domain.com/app.css>; rel="stylesheet"',
             };
 
             insertStart(mockStream, fragmentAttrs, headers, 0);
