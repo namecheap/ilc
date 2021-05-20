@@ -132,7 +132,10 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Fe
                 styleRefs = refs.styles;
                 const stylesheets = refs.styles.map(wrapWithStylesheetLink);
                 const scripts = refs.scripts.map(wrapWithScriptTag);
-                data = [...stylesheets, ...scripts].join('\n') + data;
+                data = stylesheets.join('\n') + data;
+                if (scripts.length) {
+                    data += '\n' + scripts.join('\n');
+                }
             }
 
             return {
