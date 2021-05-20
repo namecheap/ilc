@@ -166,10 +166,10 @@ describe('renderTemplate', () => {
                 <meta name="viewport" content="width=device-width,initial-scale=1"/>
                 ${
                     `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
-                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
-                    '<script src="https://my.awesome.server/my-awesome-script.js"></script>' +
-                    includes[0].api.response.data +
-                    `\n<!-- Template include "${includes[0].attributes.id}" END -->`
+                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
+                    includes[0].api.response.data + '\n' +
+                    '<script src="https://my.awesome.server/my-awesome-script.js"></script>\n' +
+                    `<!-- Template include "${includes[0].attributes.id}" END -->`
                 }
                 ${
                     `<!-- Template include "${includes[1].attributes.id}" START -->\n` +
@@ -179,10 +179,10 @@ describe('renderTemplate', () => {
                 <script>window.console.log('Something...')</script>
                 ${
                     `<!-- Template include "${includes[2].attributes.id}" START -->\n` +
-                    '<link rel="stylesheet" href="https://my.amazing.server/my-amazing-stylesheet.css">\n' +
-                    '<script src="https://my.amazing.server/my-awesome-script.js"></script>' +
-                    includes[2].api.response.data +
-                    `\n<!-- Template include "${includes[2].attributes.id}" END -->`
+                    '<link rel="stylesheet" href="https://my.amazing.server/my-amazing-stylesheet.css">' +
+                    includes[2].api.response.data + '\n' +
+                    '<script src="https://my.amazing.server/my-awesome-script.js"></script>\n' +
+                    `<!-- Template include "${includes[2].attributes.id}" END -->`
                 }
             </head>
             <body>

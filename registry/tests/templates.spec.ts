@@ -176,10 +176,10 @@ describe(`Tests ${example.url}`, () => {
                         <meta charset="utf-8" />
                         <meta name="viewport" content="width=device-width,initial-scale=1"/>
                         ${`<!-- Template include "${includes[0].attributes.id}" START -->\n` +
-                        '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
-                        '<script src="https://my.awesome.server/my-awesome-script.js"></script>' +
-                        includes[0].api.response.data +
-                        `\n<!-- Template include "${includes[0].attributes.id}" END -->`
+                        '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
+                        includes[0].api.response.data + '\n' +
+                        '<script src="https://my.awesome.server/my-awesome-script.js"></script>\n' +
+                        `<!-- Template include "${includes[0].attributes.id}" END -->`
                         }
                         <script>window.console.log('Something...')</script>
                     </head>
