@@ -15,6 +15,21 @@ function getRegistryMock(overrideConfig = {}) {
                         spaBundle: 'http://localhost/index.js',
                         kind: 'regular',
                         ssr: {src: 'http://apps.test/regular'}
+                    },
+                    '@portal/essential': {
+                        spaBundle: 'http://localhost/index.js',
+                        kind: 'essential',
+                        ssr: {src: 'http://apps.test/seesntial'}
+                    },
+                    '@portal/wrapper': {
+                        spaBundle: 'http://localhost/index.js',
+                        kind: 'wrapper',
+                        ssr: {src: 'http://apps.test/wrapper'}
+                    },
+                    '@portal/wrappedApp': {
+                        spaBundle: 'http://localhost/index.js',
+                        kind: 'primary',
+                        ssr: {src: 'http://apps.test/wrappedApp'}
                     }
                 },
                 templates: ['master'],
@@ -36,6 +51,14 @@ function getRegistryMock(overrideConfig = {}) {
                         route: '/primary',
                         template: 'master'
                     },
+                    {
+                        slots: {
+                            primary: { appName: '@portal/wrappedApp' },
+                        },
+                        routeId: 3,
+                        route: '/wrapper',
+                        template: 'master'
+                    }
                 ],
                 specialRoutes: {
                     '404': {
