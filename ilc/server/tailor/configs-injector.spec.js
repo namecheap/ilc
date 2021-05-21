@@ -181,6 +181,8 @@ describe('configs injector', () => {
                     wrappedWith: 'firstApp',
                 },
             },
+            routes: [],
+            specialRoutes: {},
         };
 
         registryConfig.apps['thirdApp'] = {
@@ -211,6 +213,8 @@ describe('configs injector', () => {
                     secondApp: pickApp(registryConfig.apps.secondApp),
                     thirdApp: pickApp(registryConfig.apps.thirdApp),
                 },
+                routes: [],
+                specialRoutes: {},
             });
         };
 

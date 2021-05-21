@@ -18,7 +18,6 @@ describe('server router', () => {
         const registryConfig = getRegistryMock({
             routes: [
                 {
-                    routeId: 'noAppRoute',
                     route: '/no-app',
                     next: false,
                     template: 'noAppTemplate',
@@ -180,7 +179,6 @@ describe('server router', () => {
 
         const routes = [
             {
-                routeId: 'commonRoute',
                 route: '*',
                 next: true,
                 template: 'commonTemplate',
@@ -204,7 +202,6 @@ describe('server router', () => {
                 },
             },
             {
-                routeId: 'heroRoute',
                 route: '/hero/*',
                 next: true,
                 template: 'heroTemplate',
@@ -228,7 +225,6 @@ describe('server router', () => {
                 },
             },
             {
-                routeId: 'appsRoute',
                 route: '/hero/apps',
                 next: false,
                 slots: {
@@ -241,7 +237,6 @@ describe('server router', () => {
                 }
             },
             {
-                routeId: 'newsRoute',
                 route: '/news',
                 next: false,
                 slots: {
@@ -265,7 +260,6 @@ describe('server router', () => {
         const router = new ServerRouter(logger, request, request.url);
 
         chai.expect(router.getRoute()).to.be.eql({
-            routeId: 'appsRoute',
             route: '/hero/apps',
             basePath: '/hero/apps',
             reqUrl: request.url,
@@ -369,7 +363,6 @@ describe('server router', () => {
         const router = new ServerRouter(logger, request, request.url);
 
         chai.expect(router.getRoute()).to.be.eql({
-            routeId: registryConfig.specialRoutes['404'].routeId,
             route: registryConfig.specialRoutes['404'].route,
             basePath: '/',
             reqUrl: request.url,

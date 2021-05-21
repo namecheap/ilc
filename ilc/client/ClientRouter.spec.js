@@ -175,6 +175,7 @@ describe('client router', () => {
                 slots: {
                     ...registryConfig.routes[1].slots,
                 },
+                meta: {},
             };
 
             const expectedRouteProps = {
@@ -232,6 +233,7 @@ describe('client router', () => {
                 slots: {
                     ...registryConfig.routes[1].slots,
                 },
+                meta: {},
             };
 
             const expectedRouteProps = {
@@ -293,6 +295,7 @@ describe('client router', () => {
                 slots: {
                     ...registryConfig.routes[1].slots,
                 },
+                meta: {},
             };
 
             router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
@@ -309,6 +312,7 @@ describe('client router', () => {
                 slots: {
                     ...registryConfig.routes[2].slots,
                 },
+                meta: {},
             };
 
             window.dispatchEvent(singleSpaBeforeRoutingEvent);
@@ -332,6 +336,7 @@ describe('client router', () => {
                 slots: {
                     ...registryConfig.routes[1].slots,
                 },
+                meta: {},
             };
 
             router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);

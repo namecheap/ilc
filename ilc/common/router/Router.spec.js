@@ -205,6 +205,79 @@ describe('Router', () => {
             });
         });
 
+        it('should merge slot props when necessary', () => {
+            const router = new Router({
+                routes: [{
+                    route: '*',
+                    next: true,
+                    template: 'test',
+                    slots: {
+                        navbar: {
+                            appName: 'navbar',
+                            props: {
+                                a: '1',
+                            },
+                            kind: 'essential',
+                        },
+                        body: {
+                            appName: 'someApp',
+                            props: {
+                                c: '3',
+                            },
+                            kind: 'primary',
+                        },
+                    },
+                    meta: {},
+                }, {
+                    route: '/hero/*',
+                    slots: {
+                        navbar: {
+                            appName: 'navbar',
+                            props: {
+                                b: '2',
+                            },
+                        },
+                        body: {
+                            appName: 'anotherApp',
+                            props: {
+                                d: '4',
+                            },
+                            kind: 'primary',
+                        },
+                    },
+                    meta: {},
+                }],
+                specialRoutes: {},
+            });
+            const reqUrl = '/hero/test';
+
+            chai.expect(router.match(reqUrl)).to.be.eql({
+                route: '/hero/*',
+                basePath: '/hero',
+                reqUrl,
+                template: 'test',
+                specialRole: null,
+                slots: {
+                    navbar: {
+                        appName: 'navbar',
+                        props: { // Props here are merged from both routes
+                            a: '1',
+                            b: '2',
+                        },
+                        kind: 'essential',
+                    },
+                    body: {
+                        appName: 'anotherApp',
+                        props: { // Props here are taken from last route only
+                            d: '4',
+                        },
+                        kind: 'primary',
+                    },
+                },
+                meta: {},
+            });
+        });
+
         describe('when a route has `/` at the end', () => {
             const routeThatHasTrailingSlashAtTheEnd = Object.freeze({
                 route: '/launchpad/',
@@ -241,6 +314,7 @@ describe('Router', () => {
                     template: 'launchpadTemplate',
                     specialRole: null,
                     slots: routeThatHasTrailingSlashAtTheEnd.slots,
+                    meta: {},
                 });
             });
 
@@ -255,6 +329,7 @@ describe('Router', () => {
                     template: 'launchpadTemplate',
                     specialRole: null,
                     slots: routeThatHasTrailingSlashAtTheEnd.slots,
+                    meta: {},
                 });
             });
 
@@ -291,6 +366,7 @@ describe('Router', () => {
                     template: 'homeTemplate',
                     specialRole: null,
                     slots: routeThatEqualsTrailingSlash.slots,
+                    meta: {},
                 });
             });
 
