@@ -159,7 +159,12 @@ module.exports = class ConfigsInjector {
             registryConfig.apps,
             v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind', 'wrappedWith'])
         );
-        const spaConfig = JSON.stringify(_.omit({...registryConfig, apps}, ['templates']));
+        const spaConfig = JSON.stringify({
+            apps,
+            routes: registryConfig.routes.map(v => _.omit(v, ['routeId'])),
+            specialRoutes: _.mapValues(registryConfig.specialRoutes, v => _.omit(v, ['routeId'])),
+            settings: registryConfig.settings,
+        });
 
         return `<script type="ilc-config">${spaConfig}</script>`;
     };

@@ -2,11 +2,10 @@ const chai = require('chai');
 
 const Router = require('./Router');
 
-describe('router', () => {
+describe('Router', () => {
     const registryConfig = Object.freeze({
         routes: [
             {
-                routeId: 'commonRoute',
                 route: '*',
                 next: true,
                 template: 'commonTemplate',
@@ -34,7 +33,6 @@ describe('router', () => {
                 },
             },
             {
-                routeId: 'heroRoute',
                 route: '/hero/*',
                 next: true,
                 template: 'heroTemplate',
@@ -54,7 +52,6 @@ describe('router', () => {
                 },
             },
             {
-                routeId: 'appsRoute',
                 route: '/hero/apps',
                 next: false,
                 slots: {
@@ -73,7 +70,6 @@ describe('router', () => {
                 },
             },
             {
-                routeId: 'newsRoute',
                 route: '/news',
                 next: false,
                 slots: {
@@ -94,7 +90,6 @@ describe('router', () => {
         ],
         specialRoutes: {
             '404': {
-                routeId: 'errorsRoute',
                 route: '/404',
                 next: false,
                 template: 'errorsTemplate',
@@ -130,7 +125,6 @@ describe('router', () => {
         it('should throw an error when a route does not have a template', () => {
             const routes = [
                 {
-                    routeId: 'noTemplateRoute',
                     route: '/no-template',
                     next: false,
                     slots: {}
@@ -151,7 +145,6 @@ describe('router', () => {
             const reqUrl = '/hero/apps?prop=value';
 
             chai.expect(router.match(reqUrl)).to.be.eql({
-                routeId: 'appsRoute',
                 route: '/hero/apps',
                 basePath: '/hero/apps',
                 reqUrl,
@@ -181,7 +174,7 @@ describe('router', () => {
                 }],
             });
             const reqUrl = '/hero/apps?prop=value';
-            
+
             const result = {
                 ...independentRouteStar,
                 reqUrl,
@@ -198,7 +191,6 @@ describe('router', () => {
             const reqUrl = '/nonexistent?prop=value';
 
             chai.expect(router.match(reqUrl)).to.be.eql({
-                routeId: 'errorsRoute',
                 route: '/404',
                 basePath: '/',
                 reqUrl,
@@ -215,7 +207,6 @@ describe('router', () => {
 
         describe('when a route has `/` at the end', () => {
             const routeThatHasTrailingSlashAtTheEnd = Object.freeze({
-                routeId: 'launchpadRoute',
                 route: '/launchpad/',
                 next: false,
                 template: 'launchpadTemplate',
@@ -244,7 +235,6 @@ describe('router', () => {
                 const reqUrlThatDoesNotHaveTrailingSlashAtTheEnd = '/launchpad';
 
                 chai.expect(router.match(reqUrlThatDoesNotHaveTrailingSlashAtTheEnd)).to.be.eql({
-                    routeId: 'launchpadRoute',
                     route: '/launchpad/',
                     basePath: '/launchpad',
                     reqUrl: reqUrlThatDoesNotHaveTrailingSlashAtTheEnd,
@@ -259,7 +249,6 @@ describe('router', () => {
                 const reqUrlThatHasTrailingSlashAtTheEnd = '/launchpad/';
 
                 chai.expect(router.match(reqUrlThatHasTrailingSlashAtTheEnd)).to.be.eql({
-                    routeId: 'launchpadRoute',
                     route: '/launchpad/',
                     basePath: '/launchpad',
                     reqUrl: reqUrlThatHasTrailingSlashAtTheEnd,
@@ -271,7 +260,6 @@ describe('router', () => {
 
             it('should return a matched route when a requested url is `/`', () => {
                 const routeThatEqualsTrailingSlash = Object.freeze({
-                    routeId: 'homeRoute',
                     route: '/',
                     next: false,
                     template: 'homeTemplate',
@@ -297,7 +285,6 @@ describe('router', () => {
                 const reqUrl = '/';
 
                 chai.expect(router.match(reqUrl)).to.be.eql({
-                    routeId: 'homeRoute',
                     route: '/',
                     basePath: '/',
                     reqUrl,
@@ -312,7 +299,6 @@ describe('router', () => {
                 const reqUrl = '/launchpad/something';
 
                 chai.expect(router.match(reqUrl)).to.be.eql({
-                    routeId: 'errorsRoute',
                     route: '/404',
                     basePath: '/',
                     reqUrl,
@@ -335,7 +321,6 @@ describe('router', () => {
             const reqUrl = '/tst';
 
             chai.expect(router.matchSpecial(reqUrl, 404)).to.be.eql({
-                routeId: 'errorsRoute',
                 route: '/404',
                 basePath: '/',
                 reqUrl,
@@ -362,7 +347,6 @@ describe('router', () => {
                 routes: registryConfig.routes,
                 specialRoutes: {
                     '404': {
-                        routeId: 'errorsRoute',
                         route: '/404',
                         next: false,
                         template: '',

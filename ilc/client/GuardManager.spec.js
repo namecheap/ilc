@@ -9,7 +9,6 @@ describe('GuardManager', () => {
     let clock;
 
     const route = Object.freeze({
-        routeId: 1,
         specialRole: null,
         meta: {
             protected: true,
@@ -17,7 +16,6 @@ describe('GuardManager', () => {
         reqUrl: '/some/url',
     });
     const prevRoute = Object.freeze({
-        routeId: 2,
         specialRole: null,
         meta: {
             protected: true,

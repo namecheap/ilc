@@ -59,14 +59,12 @@ describe('client router', () => {
 
     const routes = [
         {
-            routeId: 'commonRoute',
             route: '*',
             next: true,
             template: 'commonTemplate',
             slots: {},
         },
         {
-            routeId: 'heroRoute',
             route: '/hero',
             next: false,
             slots: {
@@ -89,7 +87,6 @@ describe('client router', () => {
             },
         },
         {
-            routeId: 'opponentRoute',
             route: '/opponent',
             next: false,
             slots: {
@@ -105,7 +102,6 @@ describe('client router', () => {
             },
         },
         {
-            routeId: 'baseRoute',
             route: '/base',
             next: false,
             template: 'baseTemplate',
@@ -119,7 +115,6 @@ describe('client router', () => {
             },
         },
         {
-            routeId: 'rootRoute',
             route: '/',
             next: false,
             template: 'baseTemplate',
@@ -136,7 +131,6 @@ describe('client router', () => {
 
     const specialRoutes = {
         '404': {
-            routeId: 'errorsRoute',
             route: '/404',
             next: false,
             template: 'errorsTemplate',
@@ -173,7 +167,6 @@ describe('client router', () => {
             document.body.appendChild(mainRef);
 
             const expectedRoute = {
-                routeId: registryConfig.routes[1].routeId,
                 route: location.pathname,
                 basePath: location.pathname,
                 reqUrl: location.pathname + location.search,
@@ -231,7 +224,6 @@ describe('client router', () => {
             document.body.appendChild(mainRef);
 
             const expectedRoute = {
-                routeId: registryConfig.routes[1].routeId,
                 route: registryConfig.routes[1].route,
                 basePath: registryConfig.routes[1].route,
                 reqUrl,
@@ -293,7 +285,6 @@ describe('client router', () => {
             };
 
             const expectedPrevRoute = {
-                routeId: registryConfig.routes[1].routeId,
                 route: location.pathname,
                 basePath: location.pathname,
                 reqUrl: location.pathname + location.search,
@@ -310,7 +301,6 @@ describe('client router', () => {
             location.search = '?see=you';
 
             const expectedCurrentRoute = {
-                routeId: registryConfig.routes[2].routeId,
                 route: location.pathname,
                 basePath: location.pathname,
                 reqUrl: location.pathname + location.search,
@@ -334,7 +324,6 @@ describe('client router', () => {
             };
 
             const expectedRoute = {
-                routeId: registryConfig.routes[1].routeId,
                 route: location.pathname,
                 basePath: location.pathname,
                 reqUrl: location.pathname + location.search,
