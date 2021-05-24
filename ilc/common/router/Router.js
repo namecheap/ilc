@@ -30,6 +30,8 @@ module.exports = class Router {
             const {
                 next,
                 routeExp,
+                slots,
+                meta,
                 ...routeProps
             } = route;
 
@@ -39,10 +41,13 @@ module.exports = class Router {
                 continue;
             }
 
-            res = deepmerge(res, {
-                specialRole: null,
+            res = {
+                ...res,
                 ...routeProps,
-            });
+                specialRole: null,
+                meta: deepmerge(res.meta || {}, meta || {}),
+                slots: this.#mergeSlots(res.slots || {}, slots),
+            };
 
             if (next !== true) {
                 res.basePath = match[1];
@@ -68,17 +73,12 @@ module.exports = class Router {
         let res = {
             basePath: '/',
             reqUrl,
-        };
-
-        res = deepmerge(res, {
             specialRole: specialRouteId,
             route: specialRoute.route,
-            routeId: specialRoute.routeId,
             slots: specialRoute.slots,
             template: specialRoute.template,
             meta: specialRoute.meta,
-        });
-
+        };
 
         this.#validateResultingRoute(res);
 
@@ -125,4 +125,21 @@ module.exports = class Router {
     #escapeStringRegexp = (str) => {
         return str.replace(/[|\\{}()[\]^$+*?.-]/g, '\\$&');
     };
+
+
+    #mergeSlots = (a, b) => {
+        const res = {...a, ...b};
+
+        for (let slotName in res) {
+            if (!res.hasOwnProperty(slotName)) {
+                continue;
+            }
+
+            if (a[slotName] && b[slotName] && a[slotName].appName === b[slotName].appName) {
+                res[slotName] = deepmerge(a[slotName], b[slotName]);
+            }
+        }
+
+        return res;
+    }
 };

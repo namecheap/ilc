@@ -24,6 +24,22 @@ const createAppRoute = async (req: Request, res: Response) => {
 
     const appRoute = transformSpecialRoutesForDB(appRouteData);
 
+    if (appRouteData.specialRole) {
+        const existingRoute = await db
+            .first()
+            .from('routes')
+            .where({
+                route: appRoute.route,
+                domainId: appRoute.domainId,
+            });
+
+        if (existingRoute !== undefined) {
+            return res.status(422).send(joiErrorToResponse(
+                getJoiErr('specialRole', `"specialRole" "${appRouteData.specialRole}" for provided "domainId" already exists`)
+            ));
+        }
+    }
+
     let savedAppRouteId: number;
 
     try {
@@ -43,23 +59,6 @@ const createAppRoute = async (req: Request, res: Response) => {
         });
     } catch (e) {
         let { message } = e;
-
-        // error messages for uniq constraint "route" and "domainId"
-        const sqliteErrorRoute = 'UNIQUE constraint failed: routes.route, routes.domainIdIdxble';
-        const mysqlErrorRoute = 'routes_route_and_domainIdIdxble_unique';
-
-        if (message.includes(sqliteErrorRoute) || message.includes(mysqlErrorRoute)) {
-            res.status(422);
-            if (appRouteData.specialRole) {
-                return res.send(joiErrorToResponse(
-                    getJoiErr('specialRole', `"specialRole" "${appRouteData.specialRole}" for provided "domainId" already exists`)
-                ));
-            } else {
-                return res.send(joiErrorToResponse(
-                    getJoiErr('route', `Specified "route" value already exists`)
-                ));
-            }
-        }
 
         // error messages for uniq constraint "orderPos" and "domainId"
         const sqliteErrorOrderPos = 'UNIQUE constraint failed: routes.orderPos, routes.domainIdIdxble';
