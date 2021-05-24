@@ -5,7 +5,7 @@ const parseLinkHeader = require('tailorx/lib/parse-link-header');
 
 const { appIdToNameAndSlot } = require('../../common/utils');
 
-function insertStart(stream, attributes, headers, index) {
+function insertStart(stream, attributes, headers) {
     const bundleVersionOverrides = _.pick(attributes, ['wrapperPropsOverride']);
 
     if (headers.link) {

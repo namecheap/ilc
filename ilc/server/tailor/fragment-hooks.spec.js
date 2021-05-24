@@ -10,7 +10,7 @@ describe('fragment-hooks', () => {
             const fragmentAttrs = getFragmentAttributes();
             const headers = {};
 
-            insertEnd(mockStream, fragmentAttrs, headers, 0);
+            insertEnd(mockStream, fragmentAttrs, headers);
 
             chai.expect(mockStream.readableLength).to.be.equal(0);
         });
@@ -27,7 +27,7 @@ describe('fragment-hooks', () => {
             });
             const headers = {};
 
-            insertStart(mockStream, fragmentAttrs, headers, 0);
+            insertStart(mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -43,7 +43,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/app.css>; rel="stylesheet"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers, 0);
+            insertStart(mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -62,7 +62,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/app.css>; rel="stylesheet"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers, 0);
+            insertStart(mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -80,7 +80,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/app.css>; rel="stylesheet"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers, 0);
+            insertStart(mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -97,7 +97,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/single_spa.js>; rel="fragment-script"; as="script"; crossorigin="anonymous"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers, 0);
+            insertStart(mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
             chai.expect(streamData).to.be.instanceOf(Buffer);
@@ -120,7 +120,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/single_spa.js>; rel="fragment-script"; as="script"; crossorigin="anonymous"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers, 0);
+            insertStart(mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
             chai.expect(streamData).to.be.instanceOf(Buffer);
@@ -134,7 +134,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/single_spa.js>; rel="fragment-dependency"; name="dep_name"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers, 0);
+            insertStart(mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -149,7 +149,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/single_spa.js>; rel="fragment-dependency"; name="dep_name", <https://domain2.com/single_spa2.js>; rel="fragment-dependency"; name="dep_name2"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers, 0);
+            insertStart(mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -164,7 +164,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/single_spa.js>; rel="fragment-script"; as="script"; crossorigin="anonymous", <https://domain.com/single_spa.js>; rel="fragment-dependency";',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers, 0);
+            insertStart(mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
