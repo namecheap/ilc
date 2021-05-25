@@ -110,10 +110,34 @@ function setupMockServersForApps() {
         });
 }
 
+/**
+ * Returns mock attributes for tests
+ * @param overrideAttributes override default attributes
+ * @returns {{async: boolean, public: boolean, ignoreInvalidSsl: boolean, appProps: {}, wrapperConf: null, id: string, returnHeaders: boolean, url: string, timeout: number, primary: boolean, forwardQuerystring: boolean}}
+ */
+function getFragmentAttributes(overrideAttributes = {}) {
+    const defaultAttributes = {
+        id: 'microfrontend__at__slot',
+        appProps: {},
+        wrapperConf: null,
+        url: 'https://domain.com/',
+        async: false,
+        primary: false,
+        public: false,
+        timeout: 1000,
+        returnHeaders: false,
+        forwardQuerystring: false,
+        ignoreInvalidSsl: false,
+    }
+
+    return {...defaultAttributes, ...overrideAttributes};
+}
+
 module.exports = {
     getRegistryMock,
     getRouterProps,
     getFragmentResponses,
     getPluginManagerMock,
     setupMockServersForApps,
+    getFragmentAttributes,
 }
