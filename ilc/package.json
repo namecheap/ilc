@@ -8,6 +8,7 @@
     "test:ci": "npm run test -- --forbid-only",
     "test:watch": "npm run test -- --watch",
     "test:coverage": "cross-env NODE_ENV=test nyc mocha",
+    "test:coverage-text": "cross-env NODE_ENV=test nyc --reporter=text mocha",
     "test:client": "npm run build:systemjs && cross-env NODE_ENV=test karma start",
     "test:client:watch": "npm run test:client -- --single-run=false --auto-watch=true",
     "start": "node --max-http-header-size 30000 server/index.js",
