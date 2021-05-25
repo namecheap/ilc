@@ -19,7 +19,14 @@ describe('WrapApp', () => {
      * Init fake <script type="ilc-config">...</script>
      * @param {Object} config
      */
-    function initFakeIlcConfig(config) {
+    function initFakeIlcConfig(config = {}) {
+        const existentIlcConfigScriptEl = document.querySelector('script[type="ilc-config"]');
+
+        if (existentIlcConfigScriptEl) {
+            existentIlcConfigScriptEl.innerHTML = JSON.stringify(config);
+            return;
+        }
+
         const ilcConfigScriptElAttr = document.createAttribute('type');
         ilcConfigScriptElAttr.value = 'ilc-config';
 
@@ -35,13 +42,22 @@ describe('WrapApp', () => {
      * @param name
      */
     function initFakeSlot(name) {
+        const existentSlotEl = document.getElementById(name);
+
+        if (existentSlotEl) {
+            existentSlotEl.innerHTML = '';
+            return;
+        }
+
         const slotEl = document.createElement('div');
         slotEl.id = name;
         document.body.appendChild(slotEl);
     }
 
-    initFakeIlcConfig({});
-    initFakeSlot('body');
+    beforeEach(() => {
+        initFakeIlcConfig();
+        initFakeSlot('body');
+    });
 
     afterEach(() => {
        Object.keys(appCallbacksFake).forEach((key) => appCallbacksFake[key].resetHistory());
@@ -172,6 +188,7 @@ describe('WrapApp', () => {
     });
 
     it('should mount wrapper and then wrapped application with extra props', async () => {
+
         // Initialisation
 
         const wrapApp = new WrapApp(
