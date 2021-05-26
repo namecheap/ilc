@@ -10,6 +10,23 @@ const getThresholds = () => ({
 });
 
 module.exports = function (config) {
+
+    /**
+     * Force to use glob config to be able to run specific test files
+     * @example npm run test:client:watch -- --glob=./client/WrapApp.spec.js
+     *
+     * Otherwise used default files mask
+     */
+    const files = config.glob ? [config.glob] : [
+        'client/**/*.spec.js',
+        'common/**/*.spec.js',
+        'systemjs/**/*.spec.js',
+        {
+            pattern: 'systemjs/spec/fixtures/**/*.js',
+            included: false,
+        },
+    ];
+
     config.set({
         singleRun: true,
         browsers: [
@@ -39,15 +56,7 @@ module.exports = function (config) {
             'karma-webpack',
             'karma-sourcemap-loader',
         ],
-        files: [
-            'client/**/*.spec.js',
-            'common/**/*.spec.js',
-            'systemjs/**/*.spec.js',
-            {
-                pattern: 'systemjs/spec/fixtures/**/*.js',
-                included: false,
-            },
-        ],
+        files,
         preprocessors: {
             'client/**/!(*.spec).js': [
                 'webpack',
