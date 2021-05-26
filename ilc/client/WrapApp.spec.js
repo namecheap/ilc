@@ -15,6 +15,46 @@ describe('WrapApp', () => {
         unmount: sinon.spy(() => Promise.resolve()),
     };
 
+    const appCallbacksFakeArray = {
+        bootstrap: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
+        mount: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
+        unmount: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
+    }
+
+    const wrapperCallbacksFakeArray = {
+        bootstrap: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
+        mount: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
+        unmount: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
+    }
+
+    /**
+     * Reset `appCallbacksFake` callbacks history
+     */
+    function appCallbacksFakeResetHistory() {
+        Object.keys(appCallbacksFake).forEach((key) => appCallbacksFake[key].resetHistory());
+    }
+
+    /**
+     * Reset `wrapperCallbacksFake` callbacks history
+     */
+    function wrapperCallbacksFakeResetHistory() {
+        Object.keys(wrapperCallbacksFake).forEach((key) => wrapperCallbacksFake[key].resetHistory());
+    }
+
+    /**
+     * Reset `appCallbacksFakeArray` callbacks history
+     */
+    function appCallbacksFakeArrayResetHistory() {
+        Object.keys(appCallbacksFakeArray).forEach((key) => appCallbacksFakeArray[key].forEach((func) => func.resetHistory()));
+    }
+
+    /**
+     * Reset `wrapperCallbacksFakeArray` callbacks history
+     */
+    function wrapperCallbacksFakeArrayResetHistory() {
+        Object.keys(wrapperCallbacksFakeArray).forEach((key) => wrapperCallbacksFakeArray[key].forEach((func) => func.resetHistory()));
+    }
+
     /**
      * Init fake <script type="ilc-config">...</script>
      * @param {Object} config
@@ -54,20 +94,99 @@ describe('WrapApp', () => {
         document.body.appendChild(slotEl);
     }
 
+    /**
+     * Wrapping your sinon spied functions with chai expectations
+     * to confirm that functions are being called
+     * @param {Array<Function>} spiedFunctions
+     */
+    function expectCallbacksToBeCalled(spiedFunctions) {
+        for (const func of spiedFunctions) {
+            chai.expect(func.called).to.be.true;
+        }
+    }
+
+    /**
+     * Wrapping your sinon spied functions with chai expectations
+     * to confirm that functions are not being called
+     * @param {Array<Function>} spiedFunctions
+     */
+    function expectCallbacksToNotBeCalled(spiedFunctions) {
+        for (const func of spiedFunctions) {
+            chai.expect(func.called).to.be.false
+        }
+    }
+
     beforeEach(() => {
         initFakeIlcConfig();
         initFakeSlot('body');
     });
 
     afterEach(() => {
-       Object.keys(appCallbacksFake).forEach((key) => appCallbacksFake[key].resetHistory());
-       Object.keys(wrapperCallbacksFake).forEach((key) => wrapperCallbacksFake[key].resetHistory());
+        appCallbacksFakeResetHistory();
+        wrapperCallbacksFakeResetHistory();
+        appCallbacksFakeArrayResetHistory();
+        wrapperCallbacksFakeArrayResetHistory();
     });
 
-    it('should mount wrapper when no ssr overrides provided', async () => {
+    it('should bootstrap wrapper', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
 
-        // Initialisation
+        const { bootstrap } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
 
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+
+        chai.expect(wrapperCallbacksFake.bootstrap.called).to.be.true;
+        chai.expect(appCallbacksFake.bootstrap.called).to.be.false;
+    });
+
+    it('should bootstrap wrapper with array of callbacks', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+
+        expectCallbacksToBeCalled([ ...wrapperCallbacksFakeArray.bootstrap ]);
+        expectCallbacksToNotBeCalled([ ...appCallbacksFakeArray.bootstrap ]);
+    });
+
+    it('should mount wrapper', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+
+        chai.expect(wrapperCallbacksFake.mount.called).to.be.true;
+        chai.expect(appCallbacksFake.mount.called).to.be.false;
+    });
+
+    it('should mount wrapper [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+
+        expectCallbacksToBeCalled([ ...wrapperCallbacksFakeArray.mount ]);
+        expectCallbacksToNotBeCalled([ ...appCallbacksFakeArray.mount ]);
+    });
+
+    it('should unmount wrapper', async () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
@@ -75,65 +194,245 @@ describe('WrapApp', () => {
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
 
-        // Execution
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
+
+        chai.expect(wrapperCallbacksFake.unmount.called).to.be.true;
+        chai.expect(appCallbacksFake.unmount.called).to.be.false;
+    });
+
+    it('should unmount wrapper [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
         await mount({ appId: 'wrappedApp__at__body' });
         await unmount({ appId: 'wrappedApp__at__body' });
 
-        // Execution results extracting
-
-        const wrapperBootstrapFuncCalledArgs = wrapperCallbacksFake.bootstrap.args[0][0];
-        const wrapperMountFuncCalledArgs = wrapperCallbacksFake.mount.args[0][0];
-        const wrapperUnmountFuncCalledArgs = wrapperCallbacksFake.unmount.args[0][0];
-
-        const currentBootstrapPathProps = wrapperBootstrapFuncCalledArgs.getCurrentPathProps();
-        const currentBootstrapBasePath = wrapperBootstrapFuncCalledArgs.getCurrentBasePath();
-
-        const currentMountPathProps = wrapperMountFuncCalledArgs.getCurrentPathProps();
-        const currentMountBasePath = wrapperMountFuncCalledArgs.getCurrentBasePath();
-
-        const currentUnmountPathProps = wrapperUnmountFuncCalledArgs.getCurrentPathProps();
-        const currentUnmountBasePath = wrapperUnmountFuncCalledArgs.getCurrentBasePath();
-
-        // Expectations
-
-        const expectedBootstrapAppId = 'wrapper__at__body';
-        const expectedBootstrapPathProps = { prop: 'value' };
-        const expectedBootstrapCurrentBasePath = '/';
-
-        const expectedMountAppId = 'wrapper__at__body';
-        const expectedMountPathProps = { prop: 'value' };
-        const expectedMountCurrentBasePath = '/';
-
-        const expectedUnmountAppId = 'wrapper__at__body';
-        const expectedUnmountPathProps = { prop: 'value' };
-        const expectedUnmountCurrentBasePath = '/';
-
-        chai.expect(appCallbacksFake.bootstrap.called).to.be.false;
-        chai.expect(appCallbacksFake.mount.called).to.be.false;
-        chai.expect(appCallbacksFake.unmount.called).to.be.false;
-
-        chai.expect(wrapperCallbacksFake.bootstrap.called).to.be.true;
-        chai.expect(wrapperBootstrapFuncCalledArgs.appId).to.be.equal(expectedBootstrapAppId);
-        chai.expect(currentBootstrapPathProps).to.deep.equal(expectedBootstrapPathProps);
-        chai.expect(currentBootstrapBasePath).to.be.equal(expectedBootstrapCurrentBasePath);
-
-        chai.expect(wrapperCallbacksFake.mount.called).to.be.true;
-        chai.expect(wrapperMountFuncCalledArgs.appId).to.be.equal(expectedMountAppId);
-        chai.expect(currentMountPathProps).to.deep.equal(expectedMountPathProps);
-        chai.expect(currentMountBasePath).to.be.equal(expectedMountCurrentBasePath);
-
-        chai.expect(wrapperCallbacksFake.unmount.called).to.be.true;
-        chai.expect(wrapperUnmountFuncCalledArgs.appId).to.be.equal(expectedUnmountAppId);
-        chai.expect(currentUnmountPathProps).to.deep.equal(expectedUnmountPathProps);
-        chai.expect(currentUnmountBasePath).to.be.equal(expectedUnmountCurrentBasePath);
+        expectCallbacksToBeCalled([ ...wrapperCallbacksFakeArray.unmount ]);
+        expectCallbacksToNotBeCalled([ ...appCallbacksFakeArray.unmount ]);
     });
 
-    it('should mount wrapped application when ssr overrides provided', async () => {
+    it('should forward a correct appId for wrapper callbacks', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
 
-        // Initialisation
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
 
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
+
+        const wrapperBootstrapFuncArgs = wrapperCallbacksFake.bootstrap.args[0][0];
+        const wrapperMountFuncArgs = wrapperCallbacksFake.mount.args[0][0];
+        const wrapperUnmountFuncArgs = wrapperCallbacksFake.unmount.args[0][0];
+
+        const expectedAppId = 'wrapper__at__body';
+
+        chai.expect(wrapperBootstrapFuncArgs.appId).to.be.equal(expectedAppId);
+        chai.expect(wrapperMountFuncArgs.appId).to.be.equal(expectedAppId);
+        chai.expect(wrapperUnmountFuncArgs.appId).to.be.equal(expectedAppId);
+    });
+
+    it('should forward a correct appId for wrapper callbacks [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
+
+        const wrapperBootstrapFunc0Args = wrapperCallbacksFakeArray.bootstrap[0].args[0][0];
+        const wrapperBootstrapFunc1Args = wrapperCallbacksFakeArray.bootstrap[1].args[0][0];
+        const wrapperMountFunc0Args = wrapperCallbacksFakeArray.mount[0].args[0][0];
+        const wrapperMountFunc1Args = wrapperCallbacksFakeArray.mount[1].args[0][0];
+        const wrapperUnmountFunc0Args = wrapperCallbacksFakeArray.unmount[0].args[0][0];
+        const wrapperUnmountFunc1Args = wrapperCallbacksFakeArray.unmount[1].args[0][0];
+
+        const expectedAppId = 'wrapper__at__body';
+
+        chai.expect(wrapperBootstrapFunc0Args.appId).to.be.equal(expectedAppId);
+        chai.expect(wrapperBootstrapFunc1Args.appId).to.be.equal(expectedAppId);
+        chai.expect(wrapperMountFunc0Args.appId).to.be.equal(expectedAppId);
+        chai.expect(wrapperMountFunc1Args.appId).to.be.equal(expectedAppId);
+        chai.expect(wrapperUnmountFunc0Args.appId).to.be.equal(expectedAppId);
+        chai.expect(wrapperUnmountFunc1Args.appId).to.be.equal(expectedAppId);
+    });
+
+    it('should forward a correct current base path for wrapper callbacks', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
+
+        const wrapperBootstrapFuncArgs = wrapperCallbacksFake.bootstrap.args[0][0];
+        const wrapperMountFuncArgs = wrapperCallbacksFake.mount.args[0][0];
+        const wrapperUnmountFuncArgs = wrapperCallbacksFake.unmount.args[0][0];
+
+        const expectedCurrentBasePath = '/';
+
+        chai.expect(wrapperBootstrapFuncArgs.getCurrentBasePath()).to.be.equal(expectedCurrentBasePath);
+        chai.expect(wrapperMountFuncArgs.getCurrentBasePath()).to.be.equal(expectedCurrentBasePath);
+        chai.expect(wrapperUnmountFuncArgs.getCurrentBasePath()).to.be.equal(expectedCurrentBasePath);
+    });
+
+    it('should forward a correct current base path for wrapper callbacks [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
+
+        const wrapperBootstrapFunc0Args = wrapperCallbacksFakeArray.bootstrap[0].args[0][0];
+        const wrapperBootstrapFunc1Args = wrapperCallbacksFakeArray.bootstrap[1].args[0][0];
+        const wrapperMountFunc0Args = wrapperCallbacksFakeArray.mount[0].args[0][0];
+        const wrapperMountFunc1Args = wrapperCallbacksFakeArray.mount[1].args[0][0];
+        const wrapperUnmountFunc0Args = wrapperCallbacksFakeArray.unmount[0].args[0][0];
+        const wrapperUnmountFunc1Args = wrapperCallbacksFakeArray.unmount[1].args[0][0];
+
+        const expectedCurrentBasePath = '/';
+
+        chai.expect(wrapperBootstrapFunc0Args.getCurrentBasePath()).to.be.equal(expectedCurrentBasePath);
+        chai.expect(wrapperBootstrapFunc1Args.getCurrentBasePath()).to.be.equal(expectedCurrentBasePath);
+        chai.expect(wrapperMountFunc0Args.getCurrentBasePath()).to.be.equal(expectedCurrentBasePath);
+        chai.expect(wrapperMountFunc1Args.getCurrentBasePath()).to.be.equal(expectedCurrentBasePath);
+        chai.expect(wrapperUnmountFunc0Args.getCurrentBasePath()).to.be.equal(expectedCurrentBasePath);
+        chai.expect(wrapperUnmountFunc1Args.getCurrentBasePath()).to.be.equal(expectedCurrentBasePath);
+    });
+
+    it('should forward a correct props for wrapper callbacks', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
+
+        const wrapperBootstrapFuncArgs = wrapperCallbacksFake.bootstrap.args[0][0];
+        const wrapperMountFuncArgs = wrapperCallbacksFake.mount.args[0][0];
+        const wrapperUnmountFuncArgs = wrapperCallbacksFake.unmount.args[0][0];
+
+        const expectedCurrentPathProps = { prop: 'value' };
+
+        chai.expect(wrapperBootstrapFuncArgs.getCurrentPathProps()).to.deep.equal(expectedCurrentPathProps);
+        chai.expect(wrapperMountFuncArgs.getCurrentPathProps()).to.deep.equal(expectedCurrentPathProps);
+        chai.expect(wrapperUnmountFuncArgs.getCurrentPathProps()).to.deep.equal(expectedCurrentPathProps);
+    });
+
+    it('should forward a correct props for wrapper callbacks [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
+
+        const wrapperBootstrapFunc0Args = wrapperCallbacksFakeArray.bootstrap[0].args[0][0];
+        const wrapperBootstrapFunc1Args = wrapperCallbacksFakeArray.bootstrap[1].args[0][0];
+        const wrapperMountFunc0Args = wrapperCallbacksFakeArray.mount[0].args[0][0];
+        const wrapperMountFunc1Args = wrapperCallbacksFakeArray.mount[1].args[0][0];
+        const wrapperUnmountFunc0Args = wrapperCallbacksFakeArray.unmount[0].args[0][0];
+        const wrapperUnmountFunc1Args = wrapperCallbacksFakeArray.unmount[1].args[0][0];
+
+        const expectedCurrentPathProps = { prop: 'value' };
+
+        chai.expect(wrapperBootstrapFunc0Args.getCurrentPathProps()).to.deep.equal(expectedCurrentPathProps);
+        chai.expect(wrapperBootstrapFunc1Args.getCurrentPathProps()).to.deep.equal(expectedCurrentPathProps);
+        chai.expect(wrapperMountFunc0Args.getCurrentPathProps()).to.deep.equal(expectedCurrentPathProps);
+        chai.expect(wrapperMountFunc1Args.getCurrentPathProps()).to.deep.equal(expectedCurrentPathProps);
+        chai.expect(wrapperUnmountFunc0Args.getCurrentPathProps()).to.deep.equal(expectedCurrentPathProps);
+        chai.expect(wrapperUnmountFunc1Args.getCurrentPathProps()).to.deep.equal(expectedCurrentPathProps);
+    });
+
+    it('should bootstrap wrapped app', async () => {
+        const wrapApp = new WrapApp(
+            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            { fromLocation: 1, propFromWrapper: 'AAAAA' },
+        );
+
+        const { bootstrap } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+
+        chai.expect(appCallbacksFake.bootstrap.called).to.be.true;
+        chai.expect(wrapperCallbacksFake.bootstrap.called).to.be.false;
+    });
+
+    it('should bootstrap wrapped app [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            { fromLocation: 1, propFromWrapper: 'AAAAA' },
+        );
+
+        const { bootstrap } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+
+        expectCallbacksToBeCalled([ ...appCallbacksFakeArray.bootstrap ]);
+        expectCallbacksToNotBeCalled([ ...wrapperCallbacksFakeArray.bootstrap ]);
+    });
+
+    it('should mount wrapped app', async () => {
+        const wrapApp = new WrapApp(
+            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            { fromLocation: 1, propFromWrapper: 'AAAAA' },
+        );
+
+        const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+
+        chai.expect(appCallbacksFake.mount.called).to.be.true;
+        chai.expect(wrapperCallbacksFake.mount.called).to.be.false;
+    });
+
+    it('should mount wrapped app [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            { fromLocation: 1, propFromWrapper: 'AAAAA' },
+        );
+
+        const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+
+        expectCallbacksToBeCalled([ ...appCallbacksFakeArray.mount ]);
+        expectCallbacksToNotBeCalled([ ...wrapperCallbacksFakeArray.mount ]);
+    });
+
+    it('should unmount wrapped app', async () => {
         const wrapApp = new WrapApp(
             { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
@@ -141,56 +440,135 @@ describe('WrapApp', () => {
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
 
-        // Execution
-
-        await bootstrap({ getCurrentPathProps: () => ({ pathBootstrapProp: 'path-prop-value' }), appId: 'wrappedApp__at__body' });
-        await mount({ getCurrentPathProps: () => ({ pathMountProp: 'path-prop-value' }), appId: 'wrappedApp__at__body' });
-        await unmount({ getCurrentPathProps: () => ({ pathUnmountProp: 'path-prop-value' }), appId: 'wrappedApp__at__body' });
-
-        // Execution results extracting
-
-        const appBootstrapFuncCalledArgs = appCallbacksFake.bootstrap.args[0][0];
-        const appMountFuncCalledArgs = appCallbacksFake.mount.args[0][0];
-        const appUnmountFuncCalledArgs = appCallbacksFake.unmount.args[0][0];
-
-        const currentBootstrapPathProps = appBootstrapFuncCalledArgs.getCurrentPathProps();
-
-        const currentMountPathProps = appMountFuncCalledArgs.getCurrentPathProps();
-
-        const currentUnmountPathProps = appUnmountFuncCalledArgs.getCurrentPathProps();
-
-        // Expectations
-
-        const expectedBootstrapAppId = 'wrappedApp__at__body';
-        const expectedBootstrapPathProps = { pathBootstrapProp: 'path-prop-value' };
-
-        const expectedMountAppId = 'wrappedApp__at__body';
-        const expectedMountPathProps = { pathMountProp: 'path-prop-value' };
-
-        const expectedUnmountAppId = 'wrappedApp__at__body';
-        const expectedUnmountPathProps = { pathUnmountProp: 'path-prop-value' };
-
-        chai.expect(wrapperCallbacksFake.bootstrap.called).to.be.false;
-        chai.expect(wrapperCallbacksFake.mount.called).to.be.false;
-        chai.expect(wrapperCallbacksFake.unmount.called).to.be.false;
-
-        chai.expect(appCallbacksFake.bootstrap.called).to.be.true;
-        chai.expect(appBootstrapFuncCalledArgs.appId).to.be.equal(expectedBootstrapAppId);
-        chai.expect(currentBootstrapPathProps).to.deep.equal(expectedBootstrapPathProps);
-
-        chai.expect(appCallbacksFake.mount.called).to.be.true;
-        chai.expect(appMountFuncCalledArgs.appId).to.be.equal(expectedMountAppId);
-        chai.expect(currentMountPathProps).to.deep.equal(expectedMountPathProps);
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
 
         chai.expect(appCallbacksFake.unmount.called).to.be.true;
-        chai.expect(appUnmountFuncCalledArgs.appId).to.be.equal(expectedUnmountAppId);
-        chai.expect(currentUnmountPathProps).to.deep.equal(expectedUnmountPathProps);
+        chai.expect(wrapperCallbacksFake.unmount.called).to.be.false;
     });
 
-    it('should mount wrapper and then wrapped application with extra props', async () => {
+    it('should unmount wrapped app [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            { fromLocation: 1, propFromWrapper: 'AAAAA' },
+        );
 
-        // Initialisation
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
 
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
+
+        expectCallbacksToBeCalled([ ...appCallbacksFakeArray.unmount ]);
+        expectCallbacksToNotBeCalled([ ...wrapperCallbacksFakeArray.unmount ]);
+    });
+
+    it('should forward a correct appId for wrapped app callbacks', async () => {
+        const wrapApp = new WrapApp(
+            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            { fromLocation: 1, propFromWrapper: 'AAAAA' },
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
+
+        const appBootstrapFuncArgs = appCallbacksFake.bootstrap.args[0][0];
+        const appMountFuncArgs = appCallbacksFake.mount.args[0][0];
+        const appUnmountFuncArgs = appCallbacksFake.unmount.args[0][0];
+
+        const expectedAppId = 'wrappedApp__at__body';
+
+        chai.expect(appBootstrapFuncArgs.appId).to.be.equal(expectedAppId);
+        chai.expect(appMountFuncArgs.appId).to.be.equal(expectedAppId);
+        chai.expect(appUnmountFuncArgs.appId).to.be.equal(expectedAppId);
+    });
+
+    it('should forward a correct props for wrapped app callbacks [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            { fromLocation: 1, propFromWrapper: 'AAAAA' },
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
+
+        await bootstrap({ getCurrentPathProps: () => ({ bootstrapProp: 'value' }), appId: 'wrappedApp__at__body' });
+        await mount({ getCurrentPathProps: () => ({ mountProp: 'value' }), appId: 'wrappedApp__at__body' });
+        await unmount({ getCurrentPathProps: () => ({ unmountProp: 'value' }), appId: 'wrappedApp__at__body' });
+
+        const appBootstrapFunc0Args = appCallbacksFakeArray.bootstrap[0].args[0][0];
+        const appBootstrapFunc1Args = appCallbacksFakeArray.bootstrap[1].args[0][0];
+        const appMountFunc0Args = appCallbacksFakeArray.mount[0].args[0][0];
+        const appMountFunc1Args = appCallbacksFakeArray.mount[1].args[0][0];
+        const appUnmountFunc0Args = appCallbacksFakeArray.unmount[0].args[0][0];
+        const appUnmountFunc1Args = appCallbacksFakeArray.unmount[1].args[0][0];
+
+        const expectedBootstrapProps = { bootstrapProp: 'value' };
+        const expectedMountProps = { mountProp: 'value' };
+        const expectedUnmountProps = { unmountProp: 'value' };
+
+        chai.expect(appBootstrapFunc0Args.getCurrentPathProps()).to.deep.equal(expectedBootstrapProps);
+        chai.expect(appBootstrapFunc1Args.getCurrentPathProps()).to.deep.equal(expectedBootstrapProps);
+        chai.expect(appMountFunc0Args.getCurrentPathProps()).to.deep.equal(expectedMountProps);
+        chai.expect(appMountFunc1Args.getCurrentPathProps()).to.deep.equal(expectedMountProps);
+        chai.expect(appUnmountFunc0Args.getCurrentPathProps()).to.deep.equal(expectedUnmountProps);
+        chai.expect(appUnmountFunc1Args.getCurrentPathProps()).to.deep.equal(expectedUnmountProps);
+    });
+
+    it('should dynamically render wrapped app after wrapper has been rendered', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+
+        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        await mount(mountProps);
+
+        const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
+        await mountProps.renderApp(extraPropsFromWrapper);
+
+        expectCallbacksToBeCalled([
+            wrapperCallbacksFake.bootstrap,
+            wrapperCallbacksFake.mount,
+            wrapperCallbacksFake.unmount,
+            appCallbacksFake.bootstrap,
+            appCallbacksFake.mount,
+        ]);
+    });
+
+    it('should dynamically render wrapped app after wrapper has been rendered [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+
+        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        await mount(mountProps);
+
+        const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
+        await mountProps.renderApp(extraPropsFromWrapper);
+
+        expectCallbacksToBeCalled([
+            ...wrapperCallbacksFakeArray.bootstrap,
+            ...wrapperCallbacksFakeArray.mount,
+            ...wrapperCallbacksFakeArray.unmount,
+            ...appCallbacksFakeArray.bootstrap,
+            ...appCallbacksFakeArray.mount,
+        ]);
+    });
+
+    it('should correctly unmount wrapped app that has been rendered dynamically', async () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
@@ -198,94 +576,179 @@ describe('WrapApp', () => {
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
 
-        // Execution & expectations
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+
+        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        await mount(mountProps);
+
+        const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
+        await mountProps.renderApp(extraPropsFromWrapper);
+
+        await unmount({ appId: 'wrappedApp__at__body', getCurrentPathProps: () => ({ propUnmount: 'value' }) });
+
+        chai.expect(appCallbacksFake.unmount.called).to.be.true;
+    });
+
+    it('should correctly unmount wrapped app that has been rendered dynamically [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
         const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
         await mount(mountProps);
 
-        chai.expect(wrapperCallbacksFake.bootstrap.called).to.be.true;
-        chai.expect(wrapperCallbacksFake.mount.called).to.be.true;
-        chai.expect(wrapperCallbacksFake.unmount.called).to.be.false;
+        const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
+        await mountProps.renderApp(extraPropsFromWrapper);
 
-        chai.expect(appCallbacksFake.bootstrap.called).to.be.false;
-        chai.expect(appCallbacksFake.mount.called).to.be.false;
-        chai.expect(appCallbacksFake.unmount.called).to.be.false;
+        await unmount({ appId: 'wrappedApp__at__body', getCurrentPathProps: () => ({ propUnmount: 'value' }) });
+
+        expectCallbacksToBeCalled(appCallbacksFakeArray.unmount);
+    });
+
+    it('should forward a correct appId upon dynamic mount/unmount of wrapped app', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+
+        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        await mount(mountProps);
 
         const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
         await mountProps.renderApp(extraPropsFromWrapper);
 
-        chai.expect(wrapperCallbacksFake.unmount.called).to.be.true;
-        chai.expect(appCallbacksFake.bootstrap.called).to.be.true;
-        chai.expect(appCallbacksFake.mount.called).to.be.true;
-        chai.expect(appCallbacksFake.unmount.called).to.be.false;
+        await unmount({ appId: 'wrappedApp__at__body'} );
 
-        await unmount({ appId: 'wrappedApp__at__body', getCurrentPathProps: () => ({ propUnmount: 'value' }) });
+        const wrapperBootstrapFuncArgs = wrapperCallbacksFake.bootstrap.args[0][0];
+        const wrapperMountFuncArgs = wrapperCallbacksFake.mount.args[0][0];
+        const wrapperUnmountFuncArgs = wrapperCallbacksFake.unmount.args[0][0];
 
-        chai.expect(appCallbacksFake.unmount.called).to.be.true;
+        const appBootstrapFuncArgs = appCallbacksFake.bootstrap.args[0][0];
+        const appMountFuncArgs = appCallbacksFake.mount.args[0][0];
+        const appUnmountFuncArgs = appCallbacksFake.unmount.args[0][0];
 
-        const wrapperBootstrapFuncCalledArgs = wrapperCallbacksFake.bootstrap.args[0][0];
-        const wrapperMountFuncCalledArgs = wrapperCallbacksFake.mount.args[0][0];
-        const wrapperUnmountFuncCalledArgs = wrapperCallbacksFake.unmount.args[0][0];
+        const expectedWrapperAppId = 'wrapper__at__body';
+        const expectedWrappedAppAppId = 'wrappedApp__at__body';
 
-        const appBootstrapFuncCalledArgs = appCallbacksFake.bootstrap.args[0][0];
-        const appMountFuncCalledArgs = appCallbacksFake.mount.args[0][0];
-        const appUnmountFuncCalledArgs = appCallbacksFake.unmount.args[0][0];
+        chai.expect(wrapperBootstrapFuncArgs.appId).to.be.equal(expectedWrapperAppId);
+        chai.expect(wrapperMountFuncArgs.appId).to.be.equal(expectedWrapperAppId);
+        chai.expect(wrapperUnmountFuncArgs.appId).to.be.equal(expectedWrapperAppId);
 
-        const currentWrapperBootstrapPathProps = wrapperBootstrapFuncCalledArgs.getCurrentPathProps();
-        const currentWrapperBootstrapBasePath = wrapperBootstrapFuncCalledArgs.getCurrentBasePath();
+        chai.expect(appBootstrapFuncArgs.appId).to.be.equal(expectedWrappedAppAppId);
+        chai.expect(appMountFuncArgs.appId).to.be.equal(expectedWrappedAppAppId);
+        chai.expect(appUnmountFuncArgs.appId).to.be.equal(expectedWrappedAppAppId);
+    });
 
-        const currentWrapperMountPathProps = wrapperMountFuncCalledArgs.getCurrentPathProps();
-        const currentWrapperMountBasePath = wrapperMountFuncCalledArgs.getCurrentBasePath();
+    it('should forward a correct appId upon dynamic mount/unmount of wrapped app [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
 
-        const currentWrapperUnmountPathProps = wrapperUnmountFuncCalledArgs.getCurrentPathProps();
-        const currentWrapperUnmountBasePath = wrapperUnmountFuncCalledArgs.getCurrentBasePath();
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
 
-        const currentAppBootstrapPathProps = appBootstrapFuncCalledArgs.getCurrentPathProps();
-        const currentAppMountPathProps = appMountFuncCalledArgs.getCurrentPathProps();
-        const currentAppUnmountPathProps = appUnmountFuncCalledArgs.getCurrentPathProps();
+        await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        const expectedWrapperBootstrapAppId = 'wrapper__at__body';
-        const expectedWrapperBootstrapPathProps = { prop: 'value' };
-        const expectedWrapperBootstrapBasePath = '/';
+        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        await mount(mountProps);
 
-        const expectedWrapperMountAppId = 'wrapper__at__body';
-        const expectedWrapperMountPathProps = { prop: 'value' };
-        const expectedWrapperMountBasePath = '/';
+        const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
+        await mountProps.renderApp(extraPropsFromWrapper);
 
-        const expectedWrapperUnmountAppId = 'wrapper__at__body';
-        const expectedWrapperUnmountPathProps = { prop: 'value' };
-        const expectedWrapperUnmountBasePath = '/';
+        await unmount({ appId: 'wrappedApp__at__body'} );
 
-        const expectedAppBootstrapAppId = 'wrappedApp__at__body';
-        const expectedAppBootstrapPathProps = { propMount: 'value' };
+        const wrapperBootstrapFunc0Args = wrapperCallbacksFakeArray.bootstrap[0].args[0][0];
+        const wrapperBootstrapFunc1Args = wrapperCallbacksFakeArray.bootstrap[1].args[0][0];
+        const wrapperMountFunc0Args = wrapperCallbacksFakeArray.mount[0].args[0][0];
+        const wrapperMountFunc1Args = wrapperCallbacksFakeArray.mount[1].args[0][0];
+        const wrapperUnmountFunc0Args = wrapperCallbacksFakeArray.unmount[0].args[0][0];
+        const wrapperUnmountFunc1Args = wrapperCallbacksFakeArray.unmount[1].args[0][0];
 
-        const expectedAppMountAppId = 'wrappedApp__at__body';
-        const expectedAppMountPathProps = { propMount: 'value' };
+        const appBootstrapFunc0Args = appCallbacksFakeArray.bootstrap[0].args[0][0];
+        const appBootstrapFunc1Args = appCallbacksFakeArray.bootstrap[1].args[0][0];
+        const appMountFunc0Args = appCallbacksFakeArray.bootstrap[0].args[0][0];
+        const appMountFunc1Args = appCallbacksFakeArray.bootstrap[1].args[0][0];
+        const appUnmountFunc0Args = appCallbacksFakeArray.unmount[0].args[0][0];
+        const appUnmountFunc1Args = appCallbacksFakeArray.unmount[1].args[0][0];
 
-        const expectedAppUnmountAppId = 'wrappedApp__at__body';
-        const expectedAppUnmountPathProps = { propUnmount: 'value' };
+        const expectedWrapperAppId = 'wrapper__at__body';
+        const expectedWrappedAppAppId = 'wrappedApp__at__body';
 
-        chai.expect(wrapperBootstrapFuncCalledArgs.appId).to.be.equal(expectedWrapperBootstrapAppId);
-        chai.expect(currentWrapperBootstrapPathProps).to.deep.equal(expectedWrapperBootstrapPathProps);
-        chai.expect(currentWrapperBootstrapBasePath).to.be.equal(expectedWrapperBootstrapBasePath);
+        chai.expect(wrapperBootstrapFunc0Args.appId).to.be.equal(expectedWrapperAppId);
+        chai.expect(wrapperBootstrapFunc1Args.appId).to.be.equal(expectedWrapperAppId);
+        chai.expect(wrapperMountFunc0Args.appId).to.be.equal(expectedWrapperAppId);
+        chai.expect(wrapperMountFunc1Args.appId).to.be.equal(expectedWrapperAppId);
+        chai.expect(wrapperUnmountFunc0Args.appId).to.be.equal(expectedWrapperAppId);
+        chai.expect(wrapperUnmountFunc1Args.appId).to.be.equal(expectedWrapperAppId);
 
-        chai.expect(wrapperMountFuncCalledArgs.appId).to.be.equal(expectedWrapperMountAppId);
-        chai.expect(currentWrapperMountPathProps).to.deep.equal(expectedWrapperMountPathProps);
-        chai.expect(currentWrapperMountBasePath).to.be.equal(expectedWrapperMountBasePath);
+        chai.expect(appBootstrapFunc0Args.appId).to.be.equal(expectedWrappedAppAppId);
+        chai.expect(appBootstrapFunc1Args.appId).to.be.equal(expectedWrappedAppAppId);
+        chai.expect(appMountFunc0Args.appId).to.be.equal(expectedWrappedAppAppId);
+        chai.expect(appMountFunc1Args.appId).to.be.equal(expectedWrappedAppAppId);
+        chai.expect(appUnmountFunc0Args.appId).to.be.equal(expectedWrappedAppAppId);
+        chai.expect(appUnmountFunc1Args.appId).to.be.equal(expectedWrappedAppAppId);
+    });
 
-        chai.expect(wrapperUnmountFuncCalledArgs.appId).to.be.equal(expectedWrapperUnmountAppId);
-        chai.expect(currentWrapperUnmountPathProps).to.deep.equal(expectedWrapperUnmountPathProps);
-        chai.expect(currentWrapperUnmountBasePath).to.be.equal(expectedWrapperUnmountBasePath);
+    it('should forward a correct extra props provided upon dynamic render of wrapped app', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
 
-        chai.expect(appBootstrapFuncCalledArgs.appId).to.be.equal(expectedAppBootstrapAppId);
-        chai.expect(currentAppBootstrapPathProps).to.deep.equal(expectedAppBootstrapPathProps);
+        const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
 
-        chai.expect(appMountFuncCalledArgs.appId).to.be.equal(expectedAppMountAppId);
-        chai.expect(currentAppMountPathProps).to.deep.equal(expectedAppMountPathProps);
+        await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        chai.expect(appUnmountFuncCalledArgs.appId).to.be.equal(expectedAppUnmountAppId);
-        chai.expect(currentAppUnmountPathProps).to.deep.equal(expectedAppUnmountPathProps);
+        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        await mount(mountProps);
+
+        const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
+        await mountProps.renderApp(extraPropsFromWrapper);
+
+        const appBootstrapFuncArgs = appCallbacksFake.bootstrap.args[0][0];
+        const appMountFuncArgs = appCallbacksFake.mount.args[0][0];
+
+        const expectedExtraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1, propMount: 'value' };
+
+        chai.expect(appBootstrapFuncArgs.getCurrentPathProps()).to.deep.equal(expectedExtraPropsFromWrapper);
+        chai.expect(appMountFuncArgs.getCurrentPathProps()).to.deep.equal(expectedExtraPropsFromWrapper);
+    });
+
+    it('should forward a correct extra props provided upon dynamic render of wrapped app [arrayed callbacks]', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+
+        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        await mount(mountProps);
+
+        const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
+        await mountProps.renderApp(extraPropsFromWrapper);
+
+        const appBootstrapFunc0Args = appCallbacksFakeArray.bootstrap[0].args[0][0];
+        const appBootstrapFunc1Args = appCallbacksFakeArray.bootstrap[1].args[0][0];
+        const appMountFunc0Args = appCallbacksFakeArray.mount[0].args[0][0];
+        const appMountFunc1Args = appCallbacksFakeArray.mount[1].args[0][0];
+
+        const expectedExtraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1, propMount: 'value' };
+
+        chai.expect(appBootstrapFunc0Args.getCurrentPathProps()).to.deep.equal(expectedExtraPropsFromWrapper);
+        chai.expect(appBootstrapFunc1Args.getCurrentPathProps()).to.deep.equal(expectedExtraPropsFromWrapper);
+        chai.expect(appMountFunc0Args.getCurrentPathProps()).to.deep.equal(expectedExtraPropsFromWrapper);
+        chai.expect(appMountFunc1Args.getCurrentPathProps()).to.deep.equal(expectedExtraPropsFromWrapper);
     });
 });
