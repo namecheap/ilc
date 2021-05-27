@@ -4,6 +4,7 @@ module.exports = {
     'all': true,
     'reporter': [
         'html',
+        'text',
     ],
     'check-coverage': true,
 
