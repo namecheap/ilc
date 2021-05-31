@@ -73,7 +73,7 @@ module.exports = (registryService, pluginManager) => {
         req.raw.registryConfig = registryConfig;
         req.raw.router = new ServerRouter(req.log, req.raw, unlocalizedUrl);
 
-        const redirectTo = await guardManager.redirectTo(req.log, req.raw);
+        const redirectTo = await guardManager.redirectTo(req);
 
         if (redirectTo) {
             res.redirect(urlProcessor.process(i18n.localizeUrl(registryConfig.settings.i18n, redirectTo, {

@@ -8,8 +8,12 @@ class GuardManager {
         this.#transitionHooksPlugin = pluginManager.getTransitionHooksPlugin();
     }
 
-    async redirectTo(log, req) {
-        const route = req.router.getRoute();
+    /**
+     * @param {FastifyRequest} req
+     * @return {Promise<null|*>}
+     */
+    async redirectTo(req) {
+        const route = req.raw.router.getRoute();
 
         if (route.specialRole !== null) {
             return null;
@@ -27,9 +31,10 @@ class GuardManager {
                     route: {
                         meta: route.meta,
                         url: route.reqUrl,
+                        hostname: req.hostname,
                     },
-                    log,
-                    req,
+                    log: req.log,
+                    req: req.raw,
                 });
 
                 if (action.type === actionTypes.redirect && action.newLocation) {
