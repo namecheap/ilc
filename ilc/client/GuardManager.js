@@ -34,10 +34,12 @@ export default class GuardManager {
                     route: {
                         meta: route.meta,
                         url: route.reqUrl,
+                        hostname: window.location.hostname,
                     },
                     prevRoute: {
                         meta: prevRoute.meta,
                         url: prevRoute.reqUrl,
+                        hostname: window.location.hostname,
                     },
                     navigate: this.#router.navigateToUrl,
                 });

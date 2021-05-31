@@ -99,18 +99,23 @@ describe('GuardManager', () => {
             debug: () => { },
             trace: () => { },
         });
-        const req = Object.freeze({
+        const rawReq = Object.freeze({
             router: {
                 getRoute: () => route,
             },
         });
+        const req = {
+            raw: rawReq,
+            log,
+            hostname: 'test.com'
+        };
 
         describe('should have access to a provided URL', () => {
             it('if transition hooks are non existent', async () => {
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns([]);
 
-                const redirectTo = await new GuardManager(pluginManager).redirectTo(log, req);
+                const redirectTo = await new GuardManager(pluginManager).redirectTo(req);
 
                 chai.expect(redirectTo).to.be.null;
             });
@@ -122,12 +127,12 @@ describe('GuardManager', () => {
                 const route = Object.freeze({
                     specialRole: 404,
                 });
-                const req = Object.freeze({
+                const rawReq = Object.freeze({
                     router: {
                         getRoute: () => route,
                     },
                 });
-                const redirectTo = await new GuardManager(pluginManager).redirectTo(log, req);
+                const redirectTo = await new GuardManager(pluginManager).redirectTo({...req, raw: rawReq});
 
                 chai.expect(redirectTo).to.be.null;
             });
@@ -141,12 +146,12 @@ describe('GuardManager', () => {
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-                const redirectTo = await new GuardManager(pluginManager).redirectTo(log, req);
+                const redirectTo = await new GuardManager(pluginManager).redirectTo(req);
 
                 for (const hook of hooks) {
                     chai.expect(hook.calledOnceWith({
-                        route: {meta: route.meta, url: route.reqUrl},
-                        req,
+                        route: {meta: route.meta, url: route.reqUrl, hostname: req.hostname},
+                        req: rawReq,
                         log,
                     })).to.be.true;
                 }
@@ -168,7 +173,7 @@ describe('GuardManager', () => {
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-                await chai.expect(new GuardManager(pluginManager).redirectTo(log, req)).to.eventually.be.rejected.then((rejectedError) => {
+                await chai.expect(new GuardManager(pluginManager).redirectTo(req)).to.eventually.be.rejected.then((rejectedError) => {
                     chai.expect(rejectedError).to.be.instanceOf(errors.GuardTransitionHookError);
                     chai.expect(rejectedError.data).to.be.eql({
                         hookIndex: 1,
@@ -178,8 +183,8 @@ describe('GuardManager', () => {
 
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(hook.calledOnceWith({
-                        route: {meta: route.meta, url: route.reqUrl},
-                        req,
+                        route: {meta: route.meta, url: route.reqUrl, hostname: req.hostname},
+                        req: rawReq,
                         log,
                     })).to.be.true;
                 }
@@ -201,12 +206,12 @@ describe('GuardManager', () => {
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-                const redirectTo = await new GuardManager(pluginManager).redirectTo(log, req);
+                const redirectTo = await new GuardManager(pluginManager).redirectTo(req);
 
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(hook.calledOnceWith({
-                        route: {meta: route.meta, url: route.reqUrl},
-                        req,
+                        route: {meta: route.meta, url: route.reqUrl, hostname: req.hostname},
+                        req: rawReq,
                         log,
                     })).to.be.true;
                 }
