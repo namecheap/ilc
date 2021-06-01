@@ -93,8 +93,8 @@ describe('GuardManager', () => {
 
             for (const hook of hooks) {
                 sinon.assert.calledOnceWithExactly(hook, {
-                    route: {meta: route.meta, url: route.reqUrl, hostname: window.location.hostname},
-                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.hostname},
+                    route: {meta: route.meta, url: route.reqUrl, hostname: window.location.host},
+                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.host},
                     navigate: router.navigateToUrl
                 });
             }
@@ -129,8 +129,8 @@ describe('GuardManager', () => {
 
             for (const hook of [hooks[0], hooks[1]]) {
                 sinon.assert.calledOnceWithExactly(hook, {
-                    route: {meta: route.meta, url: route.reqUrl, hostname: window.location.hostname},
-                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.hostname},
+                    route: {meta: route.meta, url: route.reqUrl, hostname: window.location.host},
+                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.host},
                     navigate: router.navigateToUrl
                 });
             }
@@ -159,8 +159,8 @@ describe('GuardManager', () => {
 
             for (const hook of [hooks[0], hooks[1]]) {
                 sinon.assert.calledOnceWithExactly(hook, {
-                    route: {meta: route.meta, url: route.reqUrl, hostname: window.location.hostname},
-                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.hostname},
+                    route: {meta: route.meta, url: route.reqUrl, hostname: window.location.host},
+                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.host},
                     navigate: router.navigateToUrl
                 });
             }
@@ -189,8 +189,8 @@ describe('GuardManager', () => {
 
             for (const hook of [hooks[0], hooks[1]]) {
                 sinon.assert.calledOnceWithExactly(hook, {
-                    route: {meta: route.meta, url: route.reqUrl, hostname: window.location.hostname},
-                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.hostname},
+                    route: {meta: route.meta, url: route.reqUrl, hostname: window.location.host},
+                    prevRoute: {meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.host},
                     navigate: router.navigateToUrl
                 });
             }
