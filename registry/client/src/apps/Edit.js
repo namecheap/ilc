@@ -70,9 +70,6 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     {id: 'regular', name: 'Regular'},
                     {id: 'wrapper', name: 'Wrapper'},
                 ]} validate={validators.required} />
-                <ReferenceArrayInput reference="shared_props" source="configSelector" label="Shared props selector">
-                    <AutocompleteArrayInput />
-                </ReferenceArrayInput>
                 <FormDataConsumer>
                     {({ formData, ...rest }) => formData.kind !== 'wrapper' &&
                         <ReferenceInput reference="app" source="wrappedWith" label="Wrapped with" filter={{kind: 'wrapper'}} allowEmpty {...rest}>
@@ -80,6 +77,8 @@ const InputForm = ({mode = 'edit', ...props}) => {
                         </ReferenceInput>
                     }
                 </FormDataConsumer>
+                <JsonField source="discoveryMetadata" label="Discovery metadata (can be used to retrieve apps filtered by some metadata fields)." />
+                <TextInput fullWidth multiline source="adminNotes" label="Admin notes (store here some information about the app, e.g. link to git repository, names of the app owners etc)." />
             </FormTab>
             <FormTab label="Assets">
                 <FormDataConsumer>
@@ -108,6 +107,9 @@ const InputForm = ({mode = 'edit', ...props}) => {
                 <NumberInput source="ssr.timeout" label="Request timeout, in ms" />
             </FormTab>
             <FormTab label="Props">
+                <ReferenceArrayInput reference="shared_props" source="configSelector" label="Shared props selector">
+                    <AutocompleteArrayInput />
+                </ReferenceArrayInput>
                 <JsonField source="props" label="Properties that will be passed to application" />
                 <JsonField source="ssrProps" label="Properties that will be added to main props at SSR request, allow to override certain values" />
             </FormTab>

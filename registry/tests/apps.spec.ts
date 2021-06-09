@@ -21,6 +21,11 @@ const correct = Object.freeze({
     kind: 'primary',
     // dependencies: {},
     // props: {},
+    discoveryMetadata: {
+        foo: 'foo1',
+        bar: 'bar1',
+    },
+    adminNotes: 'Lorem ipsum',
 });
 
 const example = <any>{
@@ -54,6 +59,11 @@ const example = <any>{
             assetsPath: 'http://127.0.0.1:3001/uisamplereactUpdated',
             locationStrategy: 'browserHistoryUpdated',
         },
+        discoveryMetadata: {
+            foo: 'updated foo1',
+            bar: 'updated bar1',
+        },
+        adminNotes: 'Updated Lorem ipsum',
     }),
 };
 example.encodedName = encodeURIComponent(example.correct.name);
@@ -78,6 +88,8 @@ describe(`Tests ${example.url}`, () => {
                 assetsDiscoveryUrl: 789,
                 dependencies: 456,
                 props: 789,
+                discoveryMetadata: 111,
+                adminNotes: 222,
             };
 
             let response = await request.post(example.url)
@@ -94,6 +106,8 @@ describe(`Tests ${example.url}`, () => {
                 '"props" must be of type object\n' +
                 '"configSelector" must be an array\n' +
                 '"ssr" must be of type object\n' +
+                '"discoveryMetadata" must be of type object\n' +
+                '"adminNotes" must be a string\n' +
                 '"name" must be a string'
                 );
 
@@ -261,6 +275,8 @@ describe(`Tests ${example.url}`, () => {
                     dependencies: 456,
                     props: 789,
                     kind: 'origin',
+                    discoveryMetadata: 111,
+                    adminNotes: 222,
                 };
 
                 const response = await request.put(example.url + example.encodedName)
@@ -277,7 +293,9 @@ describe(`Tests ${example.url}`, () => {
                         '"props" must be of type object\n' +
                         '"configSelector" must be an array\n' +
                         '"ssr" must be of type object\n' +
-                        '"kind" must be one of [primary, essential, regular, wrapper]'
+                        '"kind" must be one of [primary, essential, regular, wrapper]\n' +
+                        '"discoveryMetadata" must be of type object\n' +
+                        '"adminNotes" must be a string'
                     );
                 expect(response.body).deep.equal({});
             } finally {

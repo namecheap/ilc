@@ -12,6 +12,10 @@ export function transformGet(app) {
     if (app.ssrProps) {
         app.ssrProps = JSON.stringify(app.ssrProps);
     }
+
+    if (app.discoveryMetadata) {
+        app.discoveryMetadata = JSON.stringify(app.discoveryMetadata);
+    }
 }
 
 export function transformSet(app) {
@@ -20,6 +24,9 @@ export function transformSet(app) {
     }
     if (app.ssrProps && typeof app.ssrProps === 'string') {
         app.ssrProps = JSON.parse(app.ssrProps);
+    }
+    if (app.discoveryMetadata && typeof app.discoveryMetadata === 'string') {
+        app.discoveryMetadata = JSON.parse(app.discoveryMetadata);
     }
     if (app.dependencies) {
         app.dependencies = app.dependencies.reduce((acc, v) => {

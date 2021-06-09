@@ -7,16 +7,18 @@ const Joi = JoiDefault.defaults(schema => {
 });
 
 export default interface App {
-    name: string,
-    spaBundle: string,
-    cssBundle: string,
-    assetsDiscoveryUrl?: string,
-    dependencies?: string, // JSON({ [packageName: string]: string })
-    props?: string, // JSON({ [propName: string]: any })
-    ssrProps?: string, // JSON({ [propName: string]: any })
-    configSelector?: string,
-    ssr: string, // JSON({ src: string, timeout: number })
-    wrappedWith?: string,
+    name: string;
+    spaBundle: string;
+    cssBundle: string;
+    assetsDiscoveryUrl?: string;
+    dependencies?: string; // JSON({ [packageName: string]: string })
+    props?: string; // JSON({ [propName: string]: any })
+    ssrProps?: string; // JSON({ [propName: string]: any })
+    configSelector?: string;
+    ssr: string; // JSON({ src: string, timeout: number })
+    wrappedWith?: string;
+    discoveryMetadata?: string; // JSON({ [propName: string]: any })
+    adminNotes?: string;
 };
 
 export const appNameSchema = Joi.string().trim().min(1);
@@ -50,6 +52,8 @@ const commonApp = {
             return value;
         }),
     }),
+    discoveryMetadata: Joi.object().default({}),
+    adminNotes: Joi.string().trim().default(null),
 };
 
 export const partialAppSchema = Joi.object({
