@@ -1,7 +1,7 @@
 import { request, requestWithAuth, expect } from './common';
 
 describe(`Tests for public API`, () => {
-    describe('getAppsByMetadata', () => {
+    describe('appDiscovery', () => {
         const url = '/api/v1/public/app_discovery';
         const result = Object.freeze({
             name: '@portal/ncTestAppReactSsr',

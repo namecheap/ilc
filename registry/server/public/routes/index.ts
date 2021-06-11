@@ -1,9 +1,9 @@
 import express from 'express';
 
-import getAppsByMetadata from './getAppsByMetadata';
+import appDiscovery from './appDiscovery';
 
 const externalRouter = express.Router();
 
-externalRouter.get('/app_discovery', ...getAppsByMetadata);
+externalRouter.get('/app_discovery', ...appDiscovery);
 
 export default externalRouter;

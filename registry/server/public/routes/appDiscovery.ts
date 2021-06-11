@@ -4,7 +4,7 @@ import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { AppsByMetadata } from '../interfaces';
 
-const getAppsByMetadata = async (req: Request, res: Response): Promise<void> => {
+const appDiscovery = async (req: Request, res: Response): Promise<void> => {
     const apps = await db.select('name', 'discoveryMetadata').from('apps');
 
     const response: AppsByMetadata = preProcessResponse(apps);
@@ -12,4 +12,4 @@ const getAppsByMetadata = async (req: Request, res: Response): Promise<void> => 
     res.status(200).send(response);
 };
 
-export default [getAppsByMetadata];
+export default [appDiscovery];
