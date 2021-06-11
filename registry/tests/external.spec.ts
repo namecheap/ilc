@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { request, requestWithAuth, expect } from './common';
 
 describe(`Tests for external API`, () => {
@@ -38,27 +37,7 @@ describe(`Tests for external API`, () => {
             await request.delete('/api/v1/app/' + encodedName);
         });
 
-
-        it('should return empty array for non-existing metadata field', async () => {
-            const response = await request.get(url + '?nonExisted=foo').expect(200);
-
-            expect(response.body).deep.equal([]);
-        });
-
-        it('should not return record if one metadata field is correct but another isn\'t', async () => {
-            const response = await request.get(url + '?existedFoo=foo&nonExisted=foo').expect(200);
-
-            expect(response.body).deep.equal([]);
-        });
-
-        it('should successfully return record with correct metadata fields', async () => {
-            const response = await request.get(url + '?existedFoo=foo&existedBar=bar').expect(200);
-
-            expect(response.body).to.be.an('array').that.is.not.empty;
-            expect(response.body).to.deep.include(result);
-        });
-
-        it('should successfully return record if query isn\'t provided', async () => {
+        it('should successfully return records', async () => {
             const response = await request.get(url).expect(200);
 
             expect(response.body).to.be.an('array').that.is.not.empty;
