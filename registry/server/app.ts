@@ -41,6 +41,7 @@ export default (withAuth: boolean = true) => {
     app.use('/api/v1/versioning', authMw, routes.versioning);
     app.use('/api/v1/settings', routes.settings(authMw));
     app.use('/api/v1/router_domains', routes.routerDomains(authMw));
+    app.use('/api/v1/public', routes.public);
 
     app.use(errorHandler);
 

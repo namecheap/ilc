@@ -7,3 +7,4 @@ export { default as authEntities } from '../authEntities/routes';
 export { default as settings } from '../settings/routes';
 export { default as versioning } from '../versioning/routes';
 export { default as routerDomains } from '../routerDomains/routes';
+export { default as public } from '../public/routes';
