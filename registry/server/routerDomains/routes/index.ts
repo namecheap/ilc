@@ -6,7 +6,7 @@ import updateRouterDomains from './updateRouterDomains';
 import createRouterDomains from './createRouterDomains';
 import deleteRouterDomains from './deleteRouterDomains';
 
-export default (authMw: RequestHandler) => {
+export default (authMw: RequestHandler[]) => {
     const routerDomainsRouter = express.Router();
 
     routerDomainsRouter.get('/', ...getAllRouterDomains);

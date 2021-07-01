@@ -5,7 +5,8 @@ import sessionKnex from 'connect-session-knex';
 import {Express, RequestHandler} from 'express';
 import {Strategy as BearerStrategy} from 'passport-http-bearer';
 import * as bcrypt from 'bcrypt';
-import {Issuer as OIDCIssuer, Strategy as OIDCStrategy, TokenSet, UserinfoResponse} from 'openid-client';
+import {Issuer as OIDCIssuer, Strategy as OIDCStrategy, TokenSet } from 'openid-client';
+import { AuthRoles } from './authEntities/interfaces';
 
 import db from './db';
 import {SettingsService} from "./settings/services/SettingsService";
@@ -18,7 +19,7 @@ export interface User {
     role: string;
 }
 
-export default (app: Express, settingsService: SettingsService, config: any): RequestHandler => {
+export default (app: Express, settingsService: SettingsService, config: any): RequestHandler[] => {
     const SessionKnex = sessionKnex(session);
     const sessionConfig = Object.assign({
         resave: false,
@@ -238,13 +239,21 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
         res.json(availableMethods);
     });
 
-    return (req: any, res: any, next: any) => {
+    const rolesMiddleware = (req: any, res: any, next: any) => {
+        if (req.user.role === AuthRoles.readonly && req.method !== 'GET') {
+            return res.status(403).send({ message: `Access denied. "${req.user.identifier}" has "readonly" access.` });
+        }
+
+        return next();
+    };
+
+    return [(req: any, res: any, next: any) => {
         if (!req.user) {
             return passport.authenticate('bearer', { session: false })(req, res, next);
         }
 
         return next();
-    };
+    }, rolesMiddleware];
 }
 
 async function getEntityWithCreds(provider: string, identifier: string, secret: string|null):Promise<User|null> {

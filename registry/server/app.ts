@@ -25,7 +25,7 @@ export default (withAuth: boolean = true) => {
 
     app.use('/', serveStatic('client/dist'));
 
-    let authMw: RequestHandler = (req, res, next) => next();
+    let authMw: RequestHandler[] = [(req, res, next) => next()];
     if (withAuth) {
         authMw = auth(app, settingsService, {
             session: {secret: config.get('auth.sessionSecret')}

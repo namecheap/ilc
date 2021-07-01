@@ -10,6 +10,7 @@ module.exports = {
             password: 'DB_PASSWORD',
             database: 'DB_NAME',
         },
+        defaultSecret: 'DEFAULT_SECRET',
     },
     auth: {
         sessionSecret: 'AUTH_SESSION_SECRET',

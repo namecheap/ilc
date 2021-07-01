@@ -8,25 +8,29 @@ import {
     TextField,
     ReferenceInput,
     SelectInput,
+    usePermissions,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
+import { CustomBottomToolbar } from '../components';
 
 const Title = ({ record }) => {
     return (<span>{record ? `Router Domains #${record.id}` : ''}</span>);
 };
 
 const InputForm = ({ mode = 'edit', ...props }) => {
+    const { permissions } = usePermissions();
+
     return (
-        <SimpleForm {...props}>
+        <SimpleForm {...props} toolbar={<CustomBottomToolbar />}>
             {mode === 'edit'
                 ? <TextField source="id" />
                 : null}
 
-            <TextInput source="domainName" fullWidth validate={required()}  />
+            <TextInput source="domainName" fullWidth validate={required()} disabled={permissions?.input.disabled} />
             <ReferenceInput reference="template"
                 source="template500"
                 label="Template of 500 error"
                 validate={required()}>
-                <SelectInput resettable optionText="name" />
+                <SelectInput resettable optionText="name" disabled={permissions?.input.disabled} />
             </ReferenceInput>
         </SimpleForm>
     );

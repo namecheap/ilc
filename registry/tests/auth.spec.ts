@@ -12,6 +12,9 @@ import db from '../server/db';
 import auth from '../server/auth';
 import {SettingKeys} from "../server/settings/interfaces";
 import nock from "nock";
+import * as bcrypt from 'bcrypt';
+
+const generateResp403 = (username: string) => ({ message: `Access denied. "${username}" has "readonly" access.` });
 
 const getApp = () => {
     const app = express();
@@ -19,10 +22,10 @@ const getApp = () => {
     app.use(bodyParser.json());
 
     app.use(auth(app, settingsService, {
-        session: {secret: 'testSecret'}
+        session: { secret: 'testSecret' }
     }));
 
-    app.get('/protected', (req, res) => res.send('ok'));
+    app.use('/protected', (req, res) => res.send('ok'));
     app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
         console.error(error);
         res.status(500).send(error.stack);
@@ -32,12 +35,6 @@ const getApp = () => {
 };
 
 describe('Authentication / Authorization', () => {
-    const request = supertest(getApp());
-    //It's hardcoded in DB migrations
-    const authToken = Buffer.from('root_api_token', 'utf8').toString('base64')
-        + ':'
-        + Buffer.from('token_secret', 'utf8').toString('base64');
-
     // 1 minute before test JWT token expiration
     // necessary for JWT signature validation
     before(() => tk.travel(new Date(1596125628000)));
@@ -49,27 +46,92 @@ describe('Authentication / Authorization', () => {
         nock.enableNetConnect();
     });
 
-    it('should return 401 for non-authenticated requests', async () => {
-        await request.get('/protected')
-            .expect(401);
+    describe('Common', () => {
+        const request = supertest(getApp());
+
+        it('should return 401 for non-authenticated requests', async () => {
+            await request.get('/protected')
+                .expect(401);
+        });
     });
 
     describe('Bearer token', () => {
-        it('should authenticate with correct creds', async () => {
-            await request.get('/protected')
-                .set('Authorization', `Bearer ${authToken}`)
-                .expect(200, 'ok');
-        });
+        const request = supertest(getApp());
+
+        const userIdentifier = 'root_api_token';
+
+        //It's hardcoded in DB migrations
+        const authToken = Buffer.from(userIdentifier, 'utf8').toString('base64')
+            + ':'
+            + Buffer.from('token_secret', 'utf8').toString('base64');
 
         it('should not authenticate with invalid creds', async () => {
             await request.get('/protected')
                 .set('Authorization', `Bearer invalid`)
                 .expect(401);
         });
+
+        it('should authenticate with correct creds', async () => {
+            await request.get('/protected')
+                .set('Authorization', `Bearer ${authToken}`)
+                .expect(200, 'ok');
+        });
+
+        describe('Roles', () => {
+            it('should provide correct access for "admin"', async () => {
+                await request.get('/protected')
+                    .set('Authorization', `Bearer ${authToken}`)
+                    .expect(200);
+
+                await request.post('/protected')
+                    .set('Authorization', `Bearer ${authToken}`)
+                    .expect(200);
+
+                await request.put('/protected')
+                    .set('Authorization', `Bearer ${authToken}`)
+                    .expect(200);
+
+                await request.delete('/protected')
+                    .set('Authorization', `Bearer ${authToken}`)
+                    .expect(200);
+            });
+
+            it('should provide correct access for "readonly"', async () => {
+                await db('auth_entities').where('identifier', userIdentifier).update({
+                    role: 'readonly',
+                });
+
+                try {
+                    await request.get('/protected')
+                        .set('Authorization', `Bearer ${authToken}`)
+                        .expect(200);
+    
+                    await request.post('/protected')
+                        .set('Authorization', `Bearer ${authToken}`)
+                        .expect(403, generateResp403(userIdentifier));
+    
+                    await request.put('/protected')
+                        .set('Authorization', `Bearer ${authToken}`)
+                        .expect(403, generateResp403(userIdentifier));
+    
+                    await request.delete('/protected')
+                        .set('Authorization', `Bearer ${authToken}`)
+                        .expect(403, generateResp403(userIdentifier));
+                } finally {
+                    await db('auth_entities').where('identifier', userIdentifier).update({
+                        role: 'admin',
+                    });
+                }
+            });
+        });
     });
 
     describe('Local login/password', () => {
         const agent = supertestAgent(getApp());
+
+        afterEach(async () => {
+            await agent.get('/auth/logout');
+        });
 
         it('should authenticate with correct creds', async () => {
             const expectedCookie = JSON.stringify({ authEntityId: 1, identifier: 'root', role: 'admin' });
@@ -85,19 +147,72 @@ describe('Authentication / Authorization', () => {
                 .expect(200)
                 .expect('set-cookie', /connect\.sid=.+; Path=\/; HttpOnly/)
                 .expect('set-cookie', cookieRegex);
+
+            // respect session cookie
+            await agent.get('/protected').expect(200, 'ok');
+
+            // correctly logout
+            await agent.get('/auth/logout').expect(302);
+            await agent.get('/protected').expect(401);
         });
 
-        it('should respect session cookie', async () => {
-            await agent.get('/protected')
-                .expect(200, 'ok');
-        });
+        describe('Roles', () => {
+            const userIdentifier = 'user_test_role';
+            const password = 'user_test_role_password';
 
-        it('should correctly logout', async () => {
-            await agent.get('/auth/logout')
-                .expect(302);
+            beforeEach(async () => {
+                await db('auth_entities').insert({
+                    identifier: userIdentifier,
+                    provider: 'local',
+                    secret: await bcrypt.hash(password, await bcrypt.genSalt()),
+                    role: 'admin',
+                });
+            });
 
-            await agent.get('/protected')
-                .expect(401);
+            afterEach(async () => {
+                await agent.get('/auth/logout');
+                await db('auth_entities').where('identifier', userIdentifier).delete();
+            });
+
+            it('should provide correct access for "admin"', async () => {
+                await agent.post('/auth/local')
+                    .set('Content-Type', 'application/json')
+                    .send({ username: userIdentifier, password });
+
+                await agent.get('/protected')
+                    .expect(200);
+
+                await agent.post('/protected')
+                    .expect(200);
+
+                await agent.put('/protected')
+                    .expect(200);
+
+                await agent.delete('/protected')
+                    .expect(200);
+            });
+
+            it('should provide correct access for "readonly"', async () => {
+                await db('auth_entities').where('identifier', userIdentifier).update({
+                    role: 'readonly',
+                });
+
+                await agent.post('/auth/local')
+                    .set('Content-Type', 'application/json')
+                    .send({ username: userIdentifier, password });
+
+                await agent.get('/protected')
+                    .expect(200);
+
+                await agent.post('/protected')
+                    .expect(403, generateResp403(userIdentifier));
+
+                await agent.put('/protected')
+                    .expect(403, generateResp403(userIdentifier));
+
+                await agent.delete('/protected')
+                    .expect(403, generateResp403(userIdentifier));
+            });
         });
     });
 
@@ -145,6 +260,12 @@ describe('Authentication / Authorization', () => {
         describe('Authentication', () => {
             let getStub: sinon.SinonStub<[SettingKeys, (string | null | undefined)?], Promise<any>>;
 
+            const getQueryOfCodeAndSessionState = (location: string) => {
+                const sessionState = location.match(/&state=(.+)/)![1];
+
+                return `code=AAAAAAAAAAAAAAAAAAAAAA.7UjvqJE02Ag0ALN4QpjqgYZze6I.cStoX13h4k_jZPkfxNvFYEK8Vh4Vr1bAomKpI72xC457l5qyppB4pVq9YNyx-DFx6n9c7eWL4S36g-pa1dXd-KvwI32CjaadHDwfBogpGnBXX12_ytUsU8XIG0oRJrAix7MEDtHf1B_0W2DTO6cAJz8FUOTAh_VQ4QOETxnm458tHFu6iZvN5InmIVr5WILzFBhDnpaJEZzLgmKeYW5voCaoGa2gacPb7J5PJ0RBqP01JCi-K6XtIuO3JZNDikE9RlW2u5nKeaaojn6eRZKGu88NLywvjBXSzoMw5VfR9bH-RyaKe01QVtefeiY6ROGXNtdxw0i2K2a-YoG6SH49xA&state=${sessionState}`;
+            };
+
             beforeEach(() => {
                 getStub = sinon.stub(settingsService, 'get');
 
@@ -156,14 +277,16 @@ describe('Authentication / Authorization', () => {
                 getStub.withArgs(SettingKeys.AuthOpenIdIdentifierClaimName).returns(Promise.resolve('email'));
             });
 
+            afterEach(async () => {
+                await agent.get('/auth/logout');
+            });
+
             it('should fail against OpenID server for unknown auth entity', async () => {
                 const res = await agent.get('/auth/openid')
                     .expect(302)
                     .expect('Location', new RegExp('https://adfs\\.service\\.namecheap\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$'));
 
-                const sessionState = (res.header['location'] as string).match(/&state=(.+)/)![1];
-
-                await agent.get(`/auth/openid/return?code=AAAAAAAAAAAAAAAAAAAAAA.7UjvqJE02Ag0ALN4QpjqgYZze6I.cStoX13h4k_jZPkfxNvFYEK8Vh4Vr1bAomKpI72xC457l5qyppB4pVq9YNyx-DFx6n9c7eWL4S36g-pa1dXd-KvwI32CjaadHDwfBogpGnBXX12_ytUsU8XIG0oRJrAix7MEDtHf1B_0W2DTO6cAJz8FUOTAh_VQ4QOETxnm458tHFu6iZvN5InmIVr5WILzFBhDnpaJEZzLgmKeYW5voCaoGa2gacPb7J5PJ0RBqP01JCi-K6XtIuO3JZNDikE9RlW2u5nKeaaojn6eRZKGu88NLywvjBXSzoMw5VfR9bH-RyaKe01QVtefeiY6ROGXNtdxw0i2K2a-YoG6SH49xA&state=${sessionState}`)
+                await agent.get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
                     .expect(401)
                     .expect(`<pre>Can't find presented identifiers "vladlen.f@namecheap.com" in auth entities list</pre><br><a href="/">Go to main page</a>`);
 
@@ -192,9 +315,7 @@ describe('Authentication / Authorization', () => {
                         .expect(302)
                         .expect('Location', new RegExp('https://adfs\\.service\\.namecheap\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$'));
 
-                    const sessionState = (res.header['location'] as string).match(/&state=(.+)/)![1];
-
-                    await agent.get(`/auth/openid/return?code=AAAAAAAAAAAAAAAAAAAAAA.7UjvqJE02Ag0ALN4QpjqgYZze6I.cStoX13h4k_jZPkfxNvFYEK8Vh4Vr1bAomKpI72xC457l5qyppB4pVq9YNyx-DFx6n9c7eWL4S36g-pa1dXd-KvwI32CjaadHDwfBogpGnBXX12_ytUsU8XIG0oRJrAix7MEDtHf1B_0W2DTO6cAJz8FUOTAh_VQ4QOETxnm458tHFu6iZvN5InmIVr5WILzFBhDnpaJEZzLgmKeYW5voCaoGa2gacPb7J5PJ0RBqP01JCi-K6XtIuO3JZNDikE9RlW2u5nKeaaojn6eRZKGu88NLywvjBXSzoMw5VfR9bH-RyaKe01QVtefeiY6ROGXNtdxw0i2K2a-YoG6SH49xA&state=${sessionState}`)
+                    await agent.get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
                         .expect(302)
                         .expect('Location', '/')
                         .expect((res) => {
@@ -209,11 +330,12 @@ describe('Authentication / Authorization', () => {
                             assert.strictEqual(userInfo.role, 'admin');
                         });
 
-                    await agent.get('/protected')
-                        .expect(200, 'ok');
+                    // respect session cookie
+                    await agent.get('/protected').expect(200, 'ok');
 
-                    await agent.get('/auth/logout')
-                        .expect(302);
+                    // correctly logout
+                    await agent.get('/auth/logout').expect(302);
+                    await agent.get('/protected').expect(401);
                 });
 
                 it('should authenticate against OpenID server & perform impersonation', async () => {
@@ -223,9 +345,7 @@ describe('Authentication / Authorization', () => {
                         .expect(302)
                         .expect('Location', new RegExp('https://adfs\\.service\\.namecheap\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$'));
 
-                    const sessionState = (res.header['location'] as string).match(/&state=(.+)/)![1];
-
-                    await agent.get(`/auth/openid/return?code=AAAAAAAAAAAAAAAAAAAAAA.7UjvqJE02Ag0ALN4QpjqgYZze6I.cStoX13h4k_jZPkfxNvFYEK8Vh4Vr1bAomKpI72xC457l5qyppB4pVq9YNyx-DFx6n9c7eWL4S36g-pa1dXd-KvwI32CjaadHDwfBogpGnBXX12_ytUsU8XIG0oRJrAix7MEDtHf1B_0W2DTO6cAJz8FUOTAh_VQ4QOETxnm458tHFu6iZvN5InmIVr5WILzFBhDnpaJEZzLgmKeYW5voCaoGa2gacPb7J5PJ0RBqP01JCi-K6XtIuO3JZNDikE9RlW2u5nKeaaojn6eRZKGu88NLywvjBXSzoMw5VfR9bH-RyaKe01QVtefeiY6ROGXNtdxw0i2K2a-YoG6SH49xA&state=${sessionState}`)
+                    await agent.get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
                         .expect(302)
                         .expect('Location', '/')
                         .expect((res) => {
@@ -240,17 +360,53 @@ describe('Authentication / Authorization', () => {
                             assert.strictEqual(userInfo.role, 'admin');
                         });
 
-                    await agent.get('/protected')
-                        .expect(200, 'ok');
+                    // respect session cookie
+                    await agent.get('/protected').expect(200, 'ok');
+
+                    // correctly logout
+                    await agent.get('/auth/logout').expect(302);
+                    await agent.get('/protected').expect(401);
                 });
-            });
 
-            it('should correctly logout', async () => {
-                await agent.get('/auth/logout')
-                    .expect(302);
+                describe('Roles', () => {
+                    it('should provide correct access for "admin"', async () => {
+                        const res = await agent.get('/auth/openid');
+                        await agent.get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
 
-                await agent.get('/protected')
-                    .expect(401);
+                        await agent.get('/protected')
+                            .expect(200, 'ok');
+
+                        await agent.post('/protected')
+                            .expect(200, 'ok');
+
+                        await agent.put('/protected')
+                            .expect(200, 'ok');
+
+                        await agent.delete('/protected')
+                            .expect(200, 'ok');
+                    });
+
+                    it('should provide correct access for "readonly"', async () => {
+                        await db('auth_entities').where('identifier', userIdentifier).update({
+                            role: 'readonly',
+                        });
+
+                        const res = await agent.get('/auth/openid');
+                        await agent.get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
+
+                        await agent.get('/protected')
+                            .expect(200, 'ok');
+
+                        await agent.post('/protected')
+                            .expect(403, generateResp403(userIdentifier));
+
+                        await agent.put('/protected')
+                            .expect(403, generateResp403(userIdentifier));
+
+                        await agent.delete('/protected')
+                            .expect(403, generateResp403(userIdentifier));
+                    });
+                });
             });
         });
     });

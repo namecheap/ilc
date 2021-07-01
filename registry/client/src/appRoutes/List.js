@@ -1,9 +1,7 @@
-import React, { Children, Fragment, cloneElement, memo, useState, useEffect } from 'react';
+import React, { cloneElement, useState, useEffect } from 'react';
 import { useMediaQuery, makeStyles } from '@material-ui/core';
 import {
-    BulkDeleteButton,
     Datagrid,
-    EditButton,
     List,
     SimpleList,
     TextField,
@@ -17,25 +15,18 @@ import {
     TopToolbar,
     Button,
     sanitizeListRestProps,
+    usePermissions,
+    EditButton,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import IconAdd from '@material-ui/icons/Add';
-
-
 import dataProvider from '../dataProvider';
-
-const ListBulkActions = memo(props => (
-    <Fragment>
-        <BulkDeleteButton {...props} />
-    </Fragment>
-));
+import {
+    Empty,
+    PostListBulkActions,
+    ListActionsToolbar,
+} from '../components';
 
 const useStyles = makeStyles({
-    toolbar: {
-        alignItems: 'center',
-        display: 'flex',
-        marginTop: -1,
-        marginBottom: -1,
-    },
     filters: {
         alignItems: 'center',
         marginTop: '0',
@@ -44,16 +35,6 @@ const useStyles = makeStyles({
         marginBottom: '-6px',
     },
 });
-
-const ListActionsToolbar = ({ children, ...props }) => {
-    const classes = useStyles();
-
-    return (
-        <div className={classes.toolbar}>
-            {Children.map(children, button => cloneElement(button, props))}
-        </div>
-    );
-};
 
 const ListFilter = ({ routerDomain, ...props }) => {
     const classes = useStyles();
@@ -134,6 +115,8 @@ const ListActions = ({
 );
 
 const PostList = props => {
+    const { permissions } = usePermissions();
+
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
 
     const [routerDomain, setRouterDomain] = useState([]);
@@ -158,11 +141,12 @@ const PostList = props => {
     return (
         <List
             {...props}
-            bulkActionButtons={<ListBulkActions />}
-            actions={<ListActions />}
+            bulkActionButtons={permissions?.buttons.hidden ? false : <PostListBulkActions />}
             exporter={false}
             filters={<ListFilter routerDomain={routerDomain} />}
             perPage={25}
+            actions={permissions?.buttons.hidden ? false : <ListActions />}
+            empty={<Empty />}
         >
             {isSmall ? (
                 <SimpleList

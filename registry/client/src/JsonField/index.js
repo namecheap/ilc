@@ -2,11 +2,13 @@ import React, {
     useState,
     useCallback,
     useRef,
+    useEffect,
 } from "react";
 
 import {
     FieldTitle,
-    useInput
+    useInput,
+    usePermissions,
 } from 'react-admin';
 
 import Typography from "@material-ui/core/Typography";
@@ -18,10 +20,11 @@ import 'brace/mode/json';
 const style = {height: '300px'};
 
 export default ({
-   label,
-   source,
-   resource,
-   ...rest
+    label,
+    source,
+    resource,
+    mode = 'view',
+    ...rest
 }) => {
     const {
         input: {onChange: inputOnChange, value},
@@ -47,6 +50,10 @@ export default ({
         jsonVal = JSON.parse(value)
     } catch (e) {}
 
+    useEffect(() => {
+        jsonEditorRef.current.setMode(mode);
+    }, [mode]);
+
     return (
         <div>
             <Typography component="h4">
@@ -61,7 +68,7 @@ export default ({
             <JsonEditor
                 ref={setJsonEditorRef}
                 htmlElementProps={{ style }}
-                mode="code"
+                mode={mode}
                 value={jsonVal}
                 ace={ace}
                 onChange={value => { // Here we receive only valid values

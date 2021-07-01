@@ -25,7 +25,7 @@ export default {
             });
     },
     checkError: ({ status }) => {
-        return status === 401 || status === 403
+        return status === 401
             ? Promise.reject()
             : Promise.resolve();
     },
@@ -36,10 +36,29 @@ export default {
     },
     getPermissions: () => {
         const userInfo = Cookies.getJSON('ilc:userInfo');
-        return userInfo ? Promise.resolve(userInfo.role) : Promise.reject();
+
+        if (!userInfo) {
+            return Promise.reject();
+        }
+
+        const permissions = {
+            role: userInfo.role,
+            input: {
+                disabled: userInfo.role === 'readonly',
+            },
+            jsonEditor: {
+                mode: userInfo.role === 'readonly' ? 'view' : 'code',
+            },
+            buttons: {
+                hidden: userInfo.role === 'readonly'
+            },
+        };
+
+        return Promise.resolve(permissions);
     },
     getIdentity: () => {
         const userInfo = Cookies.getJSON('ilc:userInfo');
-        return { id: userInfo.identifier, fullName: userInfo.identifier };
+
+        return { id: userInfo.identifier, fullName: `${userInfo.identifier} ("${userInfo.role}" access)` };
     }
 };

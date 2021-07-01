@@ -1,47 +1,33 @@
-import React, { Children, Fragment, cloneElement, memo } from 'react';
-import { useMediaQuery, makeStyles } from '@material-ui/core';
+import React from 'react';
+import { useMediaQuery } from '@material-ui/core';
 import {
-    BulkDeleteButton,
     Datagrid,
-    EditButton,
     List,
     SimpleList,
     TextField,
     ReferenceField,
+    usePermissions,
+    EditButton,
 } from 'react-admin';
-
-const PostListBulkActions = memo(props => (
-    <Fragment>
-        <BulkDeleteButton {...props} />
-    </Fragment>
-));
-
-const ListActionsToolbar = ({ children, ...props }) => {
-    const classes = makeStyles({
-        toolbar: {
-            alignItems: 'center',
-            display: 'flex',
-            marginTop: -1,
-            marginBottom: -1,
-        },
-    });
-
-    return (
-        <div className={classes.toolbar}>
-            {Children.map(children, button => cloneElement(button, props))}
-        </div>
-    );
-};
+import {
+    Empty,
+    PostListBulkActions,
+    ListActionsToolbar,
+} from '../components';
 
 const PostList = props => {
+    const { permissions } = usePermissions();
+
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
 
     return (
         <List
             {...props}
-            bulkActionButtons={<PostListBulkActions />}
+            bulkActionButtons={permissions?.buttons.hidden ? false : <PostListBulkActions />}
             exporter={false}
             perPage={10}
+            actions={permissions?.buttons.hidden ? false : undefined}
+            empty={<Empty />}
         >
             {isSmall ? (
                 <SimpleList

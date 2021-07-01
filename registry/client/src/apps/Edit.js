@@ -1,5 +1,4 @@
 import React, {Fragment} from 'react';
-
 import {
     Create,
     Edit,
@@ -15,10 +14,12 @@ import {
     ReferenceArrayInput,
     ReferenceInput,
     AutocompleteArrayInput,
+    usePermissions,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
 import JsonField from '../JsonField/index';
 import * as validators from '../validators';
+import { CustomBottomToolbar } from '../components';
 
 const Title = ({record}) => {
     return (<span>{record ? `App "${record.name}"` : ''}</span>);
@@ -58,27 +59,51 @@ const validateApp = (values) => {
 };
 
 const InputForm = ({mode = 'edit', ...props}) => {
+    const { permissions } = usePermissions();
+
     return (
-        <TabbedForm initialValues={{dependencies: []}} {...props}>
+        <TabbedForm initialValues={{ dependencies: [] }} {...props} toolbar={<CustomBottomToolbar />}>
             <FormTab label="Summary">
                 {mode === 'edit'
                     ? <TextField source="name" />
-                    : <TextInput source="name" fullWidth validate={validators.required} />}
-                <SelectInput source="kind" choices={[
-                    {id: 'primary', name: 'Primary'},
-                    {id: 'essential', name: 'Essential'},
-                    {id: 'regular', name: 'Regular'},
-                    {id: 'wrapper', name: 'Wrapper'},
-                ]} validate={validators.required} />
+                    : <TextInput source="name" fullWidth validate={validators.required} disabled={permissions?.input.disabled} />}
+                <SelectInput
+                    source="kind"
+                    choices={[
+                        {id: 'primary', name: 'Primary'},
+                        {id: 'essential', name: 'Essential'},
+                        {id: 'regular', name: 'Regular'},
+                        {id: 'wrapper', name: 'Wrapper'},
+                    ]}
+                    validate={validators.required}
+                    disabled={permissions?.input.disabled}
+                />
                 <FormDataConsumer>
                     {({ formData, ...rest }) => formData.kind !== 'wrapper' &&
-                        <ReferenceInput reference="app" source="wrappedWith" label="Wrapped with" filter={{kind: 'wrapper'}} allowEmpty {...rest}>
+                        <ReferenceInput
+                            reference="app"
+                            source="wrappedWith"
+                            label="Wrapped with"
+                            filter={{kind: 'wrapper'}}
+                            allowEmpty {...rest}
+                            disabled={permissions?.input.disabled}
+                        >
                             <SelectInput optionText="name" />
                         </ReferenceInput>
                     }
                 </FormDataConsumer>
-                <JsonField source="discoveryMetadata" label="Discovery metadata (can be used to retrieve apps filtered by some metadata fields)." />
-                <TextInput fullWidth multiline source="adminNotes" label="Admin notes (store here some information about the app, e.g. link to git repository, names of the app owners etc)." />
+                <JsonField
+                    source="discoveryMetadata"
+                    label="Discovery metadata (can be used to retrieve apps filtered by some metadata fields)."
+                    mode={permissions?.jsonEditor.mode}
+                />
+                <TextInput
+                    fullWidth
+                    multiline
+                    source="adminNotes"
+                    label="Admin notes (store here some information about the app, e.g. link to git repository, names of the app owners etc)."
+                    disabled={permissions?.input.disabled}
+                />
             </FormTab>
             <FormTab label="Assets">
                 <FormDataConsumer>
@@ -88,13 +113,13 @@ const InputForm = ({mode = 'edit', ...props}) => {
 
                         return (
                             <Fragment>
-                                <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" helperText={assetsDiscoveryUrlWarningText} />
-                                <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl} required={hasAssetsDiscoveryUrl ? false : true} />
-                                <TextInput fullWidth resettable type="url" source="cssBundle" validate={validators.url} />
+                                <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" helperText={assetsDiscoveryUrlWarningText} disabled={permissions?.input.disabled} />
+                                <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl || permissions?.input.disabled} required={!hasAssetsDiscoveryUrl} />
+                                <TextInput fullWidth resettable type="url" source="cssBundle" validate={validators.url} disabled={permissions?.input.disabled} />
                                 <ArrayInput source="dependencies">
-                                    <SimpleFormIterator>
-                                        <TextInput fullWidth label="Name" source="key" validate={validators.required} />
-                                        <TextInput fullWidth label="URL" type="url" source="value" validate={[validators.required, validators.url]} />
+                                    <SimpleFormIterator disableRemove={permissions?.buttons.hidden} disableAdd={permissions?.buttons.hidden}>
+                                        <TextInput fullWidth label="Name" source="key" validate={validators.required} disabled={permissions?.input.disabled} />
+                                        <TextInput fullWidth label="URL" type="url" source="value" validate={[validators.required, validators.url]} disabled={permissions?.input.disabled} />
                                     </SimpleFormIterator>
                                 </ArrayInput>
                             </Fragment>
@@ -103,15 +128,15 @@ const InputForm = ({mode = 'edit', ...props}) => {
                 </FormDataConsumer>
             </FormTab>
             <FormTab label="SSR">
-                <TextInput source="ssr.src" label="URL" type="url" validate={validators.url} fullWidth />
-                <NumberInput source="ssr.timeout" label="Request timeout, in ms" />
+                <TextInput source="ssr.src" label="URL" type="url" validate={validators.url} fullWidth disabled={permissions?.input.disabled} />
+                <NumberInput source="ssr.timeout" label="Request timeout, in ms" disabled={permissions?.input.disabled} />
             </FormTab>
             <FormTab label="Props">
-                <ReferenceArrayInput reference="shared_props" source="configSelector" label="Shared props selector">
+                <ReferenceArrayInput reference="shared_props" source="configSelector" label="Shared props selector" disabled={permissions?.input.disabled}>
                     <AutocompleteArrayInput />
                 </ReferenceArrayInput>
-                <JsonField source="props" label="Properties that will be passed to application" />
-                <JsonField source="ssrProps" label="Properties that will be added to main props at SSR request, allow to override certain values" />
+                <JsonField source="props" label="Properties that will be passed to application" mode={permissions?.jsonEditor.mode} />
+                <JsonField source="ssrProps" label="Properties that will be added to main props at SSR request, allow to override certain values" mode={permissions?.jsonEditor.mode} />
             </FormTab>
         </TabbedForm>
     );
