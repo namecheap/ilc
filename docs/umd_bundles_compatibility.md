@@ -15,7 +15,7 @@ This will remove `window.define` variable so all your libs should instead use `w
 When using webpack - here is how you can force usage of `window.ILC.define` while building the apps for ILC:
 
 ```javascript
-const WrapperPlugin = require('wrapper-webpack-plugin');
+const ilcWebpackPluginsFactory = require('ilc-sdk').WebpackPluginsFactory;
 
 module.exports = {
     entry: 'src/app.js',
@@ -24,13 +24,7 @@ module.exports = {
         libraryTarget: 'amd',
     },
     module: { /* ... */ },
-    plugins: [
-        new WrapperPlugin({
-            test: /\.js$/, // only wrap output of bundle files with '.js' extension
-            header: '(function(define){\n',
-            footer: '\n})((window.ILC && window.ILC.define) || window.define);'
-        }),
-    ],
+    plugins: ilcWebpackPluginsFactory().client,
 };
 
 
