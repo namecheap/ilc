@@ -41,6 +41,8 @@ services:
   demo-apps:
     image: namecheap/ilc-demo-apps:latest
     network_mode: "service:ilc" # We need this to make apps accessible at 127.0.0.1 inside "ilc" container
+    env_file:
+      - ./demo-apps.env  # Used by the demo site to override PUBLIC_HOST var
   mysql:
     image: mysql:5.7
     volumes:

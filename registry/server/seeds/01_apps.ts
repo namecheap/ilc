@@ -15,9 +15,7 @@ export async function seed(knex: Knex): Promise<any> {
                 src: 'http://localhost:8235/',
                 timeout: 1000,
             }),
-            props: JSON.stringify({
-                publicPath: `http://${publicHost}:8235/`
-            }),
+            props: '{}',
             kind: 'essential',
         }, {
             name: '@portal/people',
@@ -28,9 +26,7 @@ export async function seed(knex: Knex): Promise<any> {
                 rxjs: 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.js',
                 '@portal/fetchWithCache': `http://${publicHost}:8238/fetchWithCache.js`,
             }),
-            props: JSON.stringify({
-                publicPath: `http://${publicHost}:8236/`
-            }),
+            props: '{}',
             kind: 'primary',
         }, {
             name: '@portal/planets',
@@ -50,9 +46,7 @@ export async function seed(knex: Knex): Promise<any> {
             }),
             assetsDiscoveryUrl: 'http://127.0.0.1:8239/_spa/dev/assets-discovery',
             dependencies: '{}',
-            props: JSON.stringify({
-                publicPath: `http://${publicHost}:8239/dist/`
-            }),
+            props: '{}',
             kind: 'primary',
         }, {
             name: '@portal/system',
