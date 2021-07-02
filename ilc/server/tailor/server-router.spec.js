@@ -287,6 +287,7 @@ describe('server router', () => {
         chai.expect(router.getFragmentsContext()).to.eql({
             navbar__at__navbar: {
                 ...apps["@portal/navbar"].ssr,
+                spaBundleUrl: apps["@portal/navbar"].spaBundle,
                 appProps: {
                     ...apps["@portal/navbar"].props,
                     ...routes[0].slots.navbar.props,
@@ -295,6 +296,7 @@ describe('server router', () => {
             },
             footer__at__footer: {
                 ...apps["@portal/footer"].ssr,
+                spaBundleUrl: apps["@portal/footer"].spaBundle,
                 primary: true,
                 appProps: {
                     ...routes[0].slots.footer.props,
@@ -303,6 +305,7 @@ describe('server router', () => {
             },
             contact__at__contact: {
                 ...apps.contact.ssr,
+                spaBundleUrl: apps.contact.spaBundle,
                 appProps: {
                     ...apps.contact.props,
                     ...routes[1].slots.contact.props,
@@ -311,6 +314,7 @@ describe('server router', () => {
             },
             apps__at__apps: {
                 src: apps.apps.ssr.src,
+                spaBundleUrl: apps.apps.spaBundle,
                 timeout: apps.apps.ssr.timeout,
                 'ignore-invalid-ssl': true,
                 appProps: {},
@@ -377,6 +381,7 @@ describe('server router', () => {
         chai.expect(router.getFragmentsContext()).to.eql({
             apps__at__apps: {
                 ...apps.apps.ssr,
+                spaBundleUrl: apps.apps.spaBundle,
                 primary: true,
                 appProps: {},
                 wrapperConf: null

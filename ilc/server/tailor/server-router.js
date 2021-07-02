@@ -75,6 +75,7 @@ module.exports = class ServerRouter {
                 row.props || {}
                 ]);
             ssrOpts.wrapperConf = row.wrapperConf;
+            ssrOpts.spaBundleUrl = appInfo.spaBundle;
 
             res[appId] = ssrOpts;
 
