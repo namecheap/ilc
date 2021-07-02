@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
+const isRelativeUrl = require('is-relative-url');
 const parseLinkHeader = require('tailorx/lib/parse-link-header');
 
 const { appIdToNameAndSlot } = require('../../common/utils');
@@ -14,10 +15,11 @@ function insertStart(stream, attributes, headers) {
 
         refs.forEach(ref => {
             if (ref.rel === 'stylesheet') {
-                bundleVersionOverrides.cssBundle = ref.uri;
+                const uri = fixUri(attributes, ref.uri);
+                bundleVersionOverrides.cssBundle = uri;
                 stream.write(
                     isAsync
-                        ? `<!-- Async fragments are not fully implemented yet: ${ref.uri} -->`
+                        ? `<!-- Async fragments are not fully implemented yet: ${uri} -->`
                         : id
                         ?
                         '<script>(function(url, id){' +
@@ -25,16 +27,16 @@ function insertStart(stream, attributes, headers) {
                         'if (link && link.href !== url) {' +
                         `link.href = url;` +
                         '}' +
-                        `})("${ref.uri}", "${id}");</script>`
+                        `})("${uri}", "${id}");</script>`
                         : ''
                 );
             } else if (ref.rel === 'fragment-script') {
-                bundleVersionOverrides.spaBundle = ref.uri;
+                bundleVersionOverrides.spaBundle = fixUri(attributes, ref.uri);
             } else if (ref.rel === 'fragment-dependency' && ref.params.name) {
                 if (bundleVersionOverrides.dependencies === undefined) {
                     bundleVersionOverrides.dependencies = {};
                 }
-                bundleVersionOverrides.dependencies[ref.params.name] = ref.uri;
+                bundleVersionOverrides.dependencies[ref.params.name] = fixUri(attributes, ref.uri);
             }
         });
     }
@@ -53,6 +55,16 @@ function insertStart(stream, attributes, headers) {
 
 function insertEnd(stream, attributes, headers, index) {
     // disabling default TailorX behaviour
+}
+
+function fixUri(fragmentAttrs, uri) {
+    if (!isRelativeUrl(uri)) {
+        return uri;
+    }
+
+    const { spaBundleUrl } = fragmentAttrs;
+
+    return new URL(uri, spaBundleUrl).href;
 }
 
 module.exports = {
