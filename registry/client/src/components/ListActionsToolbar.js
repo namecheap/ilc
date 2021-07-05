@@ -14,7 +14,7 @@ const classes = makeStyles({
 const ListActionsToolbar = ({ children, ...props }) => {
     const { permissions } = usePermissions();
 
-    if (permissions?.buttons.hidden) {
+    if (permissions === 'readonly') {
         return null;
     }
 

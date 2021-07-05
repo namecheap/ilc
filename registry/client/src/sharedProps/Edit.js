@@ -6,32 +6,26 @@ import {
     TextInput,
     required,
     TextField,
-    usePermissions,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import JsonField from '../JsonField/index';
-import CustomBottomToolbar from '../components/CustomBottomToolbar';
-
-const Title = ({ record }) => {
-    return (<span>{record ? `Props set "${record.name}"` : ''}</span>);
-};
+import Title from './Title';
+import { JSON_FIELD_CODE_MODE } from '../constants';
 
 const InputForm = ({mode = 'edit', ...props}) => {
-    const { permissions } = usePermissions();
-
     return (
-        <SimpleForm initialValues={{ props: {} }} {...props} toolbar={<CustomBottomToolbar />}>
+        <SimpleForm initialValues={{ props: {} }} {...props}>
             {mode === 'edit'
                 ? <TextField source="name" />
-                : <TextInput source="name" fullWidth validate={required()} disabled={permissions?.input.disabled} />}
+                : <TextInput source="name" fullWidth validate={required()} />}
             <JsonField
                 source="props"
                 label="Properties that will be passed to applications"
-                mode={permissions?.jsonEditor.mode}
+                mode={JSON_FIELD_CODE_MODE}
             />
             <JsonField
                 source="ssrProps"
                 label="Properties that will be added to main props at SSR request, allow to override certain values"
-                mode={permissions?.jsonEditor.mode}
+                mode={JSON_FIELD_CODE_MODE}
             />
         </SimpleForm>
     );

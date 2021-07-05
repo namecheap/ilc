@@ -7,26 +7,26 @@ import {
     TextField,
     ChipField,
     ReferenceField,
-    usePermissions,
     EditButton,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import {
     Empty,
-    PostListBulkActions,
+    ListBulkActions,
     ListActionsToolbar,
 } from '../components';
 
 const PostList = props => {
-    const { permissions } = usePermissions();
+    const { permissions } = props;
 
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
+
     return (
         <List
             {...props}
-            bulkActionButtons={permissions?.buttons.hidden ? false : <PostListBulkActions />}
+            bulkActionButtons={permissions === 'readonly' ? false : <ListBulkActions />}
             exporter={false}
             perPage={25}
-            actions={permissions?.buttons.hidden ? false : undefined}
+            actions={permissions === 'readonly' ? false : undefined}
             empty={<Empty />}
         >
             {isSmall ? (
@@ -35,7 +35,7 @@ const PostList = props => {
                     secondaryText={record => record.kind}
                 />
             ) : (
-                <Datagrid rowClick="edit" optimized>
+                <Datagrid rowClick="show" optimized>
                     <TextField source="name" />
                     <TextField source="kind" />
                     <ReferenceField source="configSelector" reference="shared_props" emptyText="-" sortable={false}>

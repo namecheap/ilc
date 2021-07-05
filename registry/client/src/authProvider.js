@@ -37,24 +37,7 @@ export default {
     getPermissions: () => {
         const userInfo = Cookies.getJSON('ilc:userInfo');
 
-        if (!userInfo) {
-            return Promise.reject();
-        }
-
-        const permissions = {
-            role: userInfo.role,
-            input: {
-                disabled: userInfo.role === 'readonly',
-            },
-            jsonEditor: {
-                mode: userInfo.role === 'readonly' ? 'view' : 'code',
-            },
-            buttons: {
-                hidden: userInfo.role === 'readonly'
-            },
-        };
-
-        return Promise.resolve(permissions);
+        return userInfo ? Promise.resolve(userInfo.role) : Promise.reject();
     },
     getIdentity: () => {
         const userInfo = Cookies.getJSON('ilc:userInfo');

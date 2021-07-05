@@ -4,7 +4,6 @@ import knex from 'knex';
 import config from 'config';
 import rangeExtender from './range';
 import addVersioning from './versioning';
-import * as bcrypt from 'bcrypt';
 
 const client: string = config.get('database.client');
 
@@ -41,12 +40,4 @@ export function dbFactory(conf: knex.Config) {
     return addVersioning(knexInstance);
 }
 
-const db = dbFactory(knexConf);
-
-//set password for default users (root and readonly)
-(async (secret: string) => {
-    secret = await bcrypt.hash(secret, await bcrypt.genSalt())
-    await db('auth_entities').whereIn('identifier', ['root', 'readonly']).update({ secret });
-})(config.get('database.defaultSecret'));
-
-export default db;
+export default dbFactory(knexConf);

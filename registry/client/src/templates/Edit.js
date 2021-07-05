@@ -6,23 +6,16 @@ import {
     TextInput,
     required,
     TextField,
-    usePermissions,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
-import { CustomBottomToolbar } from '../components';
-
-const Title = ({ record }) => {
-    return (<span>{record ? `Template "${record.name}"` : ''}</span>);
-};
+import Title from './Title';
 
 const InputForm = ({mode = 'edit', ...props}) => {
-    const { permissions } = usePermissions();
-
     return (
-        <SimpleForm {...props} toolbar={<CustomBottomToolbar />}>
+        <SimpleForm {...props}>
             {mode === 'edit'
                 ? <TextField source="name" />
-                : <TextInput source="name" fullWidth validate={required()} disabled={permissions?.input.disabled} />}
-            <TextInput source="content" multiline fullWidth disabled={permissions?.input.disabled} />
+                : <TextInput source="name" fullWidth validate={required()} />}
+            <TextInput source="content" multiline fullWidth />
         </SimpleForm>
     );
 };

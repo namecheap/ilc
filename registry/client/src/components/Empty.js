@@ -15,8 +15,8 @@ const Empty = () => {
             <Typography variant="h4" paragraph>
                 No {defaultTitle} yet.
             </Typography>
-            { permissions?.buttons.hidden
-                ? <Typography variant="body1">You have "{permissions?.role}" permissions, so you can't create new items here.</Typography>
+            { permissions === 'readonly'
+                ? <Typography variant="body1">You have "{permissions}" permissions, so you can't create new items here.</Typography>
                 : <CreateButton basePath={basePath} />
             }
         </Box>

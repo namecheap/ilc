@@ -15,14 +15,13 @@ import {
     TopToolbar,
     Button,
     sanitizeListRestProps,
-    usePermissions,
     EditButton,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import IconAdd from '@material-ui/icons/Add';
 import dataProvider from '../dataProvider';
 import {
     Empty,
-    PostListBulkActions,
+    ListBulkActions,
     ListActionsToolbar,
 } from '../components';
 
@@ -65,7 +64,7 @@ const ListFilter = ({ routerDomain, ...props }) => {
 
 const ListGrid = ({ routerDomain, ...props }) => {
     return (
-        <Datagrid {...props} rowClick="edit" optimized>
+        <Datagrid {...props} rowClick="show" optimized>
             {!props.filterValues.showSpecial ? <TextField source="id" sortable={false} /> : null }
             {!props.filterValues.showSpecial ? <TextField source="orderPos" sortable={false} /> : null }
             {!props.filterValues.showSpecial ? <TextField source="route" sortable={false} /> : null }
@@ -115,7 +114,7 @@ const ListActions = ({
 );
 
 const PostList = props => {
-    const { permissions } = usePermissions();
+    const { permissions } = props;
 
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
 
@@ -141,11 +140,11 @@ const PostList = props => {
     return (
         <List
             {...props}
-            bulkActionButtons={permissions?.buttons.hidden ? false : <PostListBulkActions />}
+            bulkActionButtons={permissions === 'readonly' ? false : <ListBulkActions />}
             exporter={false}
             filters={<ListFilter routerDomain={routerDomain} />}
             perPage={25}
-            actions={permissions?.buttons.hidden ? false : <ListActions />}
+            actions={permissions === 'readonly' ? false : <ListActions />}
             empty={<Empty />}
         >
             {isSmall ? (

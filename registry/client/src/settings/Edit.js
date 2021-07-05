@@ -8,44 +8,47 @@ import {
     RadioButtonGroupInput,
     BooleanInput,
     PasswordInput,
-    usePermissions,
+    Toolbar,
+    SaveButton,
 } from 'react-admin';
 
 import * as validators from '../validators';
 import { types } from './dataTransform';
-import { CustomBottomToolbar } from '../components';
+import Title from './Title';
 
-const Title = (props) => {
-    return (<span>{props.record ? `Setting "${props.record.key}"` : ''}</span>);
+const MyToolbar = (props) => {
+    return (
+        <Toolbar {...props}>
+            <SaveButton />
+        </Toolbar>
+    );
 };
 
 const Input = (props) => {
-    const { permissions } = usePermissions();
-
     switch(props.record.meta.type) {
         case types.url: {
-            return (<TextInput source="value" fullWidth={true} validate={validators.url} disabled={permissions?.input.disabled} />);
+            return (<TextInput source="value" fullWidth={true} validate={validators.url} />);
         }
         case types.enum: {
-            return (<RadioButtonGroupInput row={false} source="value" choices={props.record.meta.choices} disabled={permissions?.input.disabled} />);
+            return (<RadioButtonGroupInput row={false} source="value" choices={props.record.meta.choices} />);
         }
         case types.boolean: {
-            return (<BooleanInput source="value" disabled={permissions?.input.disabled} />);
+            return (<BooleanInput source="value" />);
         }
         case types.password: {
-            return (<PasswordInput source="value" fullWidth={true} disabled={permissions?.input.disabled} />);
+            return (<PasswordInput source="value" fullWidth={true} />);
         }
         case types.stringArray: {
             return (
                 <ArrayInput source="value">
-                    <SimpleFormIterator disableRemove={permissions?.buttons.hidden} disableAdd={permissions?.buttons.hidden}>
-                        <TextInput fullWidth={true} disabled={permissions?.input.disabled} />
+                    <SimpleFormIterator>
+                        <TextInput fullWidth={true} />
                     </SimpleFormIterator>
                 </ArrayInput>
             );
         }
         default: {
-            return (<TextInput source="value" fullWidth={true} disabled={permissions?.input.disabled} />);
+            return (<TextInput source="value" fullWidth={true} />);
         }
     }
 };
@@ -53,7 +56,7 @@ const Input = (props) => {
 const MyEdit = (props) => {
     return (
         <Edit title={<Title />} undoable={false} {...props}>
-            <SimpleForm toolbar={<CustomBottomToolbar alwaysDisableRemove={true} />}>
+            <SimpleForm toolbar={<MyToolbar />}>
                 <Input />
             </SimpleForm>
         </Edit>

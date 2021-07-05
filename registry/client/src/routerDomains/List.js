@@ -6,27 +6,26 @@ import {
     SimpleList,
     TextField,
     ReferenceField,
-    usePermissions,
     EditButton,
 } from 'react-admin';
 import {
     Empty,
-    PostListBulkActions,
+    ListBulkActions,
     ListActionsToolbar,
 } from '../components';
 
 const PostList = props => {
-    const { permissions } = usePermissions();
+    const { permissions } = props;
 
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
 
     return (
         <List
             {...props}
-            bulkActionButtons={permissions?.buttons.hidden ? false : <PostListBulkActions />}
+            bulkActionButtons={permissions === 'readonly' ? false : <ListBulkActions />}
             exporter={false}
             perPage={10}
-            actions={permissions?.buttons.hidden ? false : undefined}
+            actions={permissions === 'readonly' ? false : undefined}
             empty={<Empty />}
         >
             {isSmall ? (
@@ -35,7 +34,7 @@ const PostList = props => {
                     secondaryText={record => record.domainName}
                 />
             ) : (
-                <Datagrid rowClick="edit" optimized>
+                <Datagrid rowClick="show" optimized>
                     <TextField source="id" sortable={false} />
                     <TextField source="domainName" sortable={false} />
                     <ReferenceField label="Template 500" source="template500" reference="template" emptyText="-" sortable={false}>

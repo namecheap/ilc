@@ -8,7 +8,6 @@ import React, {
 import {
     FieldTitle,
     useInput,
-    usePermissions,
 } from 'react-admin';
 
 import Typography from "@material-ui/core/Typography";

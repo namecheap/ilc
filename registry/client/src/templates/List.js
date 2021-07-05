@@ -5,28 +5,27 @@ import {
     List,
     SimpleList,
     TextField,
-    usePermissions,
     EditButton,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import {
     Empty,
-    PostListBulkActions,
+    ListBulkActions,
     ListActionsToolbar,
     RemovePagination,
 } from '../components';
 
 const PostList = props => {
-    const { permissions } = usePermissions();
+    const { permissions } = props;
 
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
 
     return (
         <List
             {...props}
-            bulkActionButtons={permissions?.buttons.hidden ? false : <PostListBulkActions />}
+            bulkActionButtons={permissions === 'readonly' ? false : <ListBulkActions />}
             exporter={false}
             pagination={<RemovePagination />}
-            actions={permissions?.buttons.hidden ? false : undefined}
+            actions={permissions === 'readonly' ? false : undefined}
             empty={<Empty />}
         >
             {isSmall ? (
@@ -34,7 +33,7 @@ const PostList = props => {
                     primaryText={record => record.name}
                 />
             ) : (
-                <Datagrid rowClick="edit" optimized>
+                <Datagrid rowClick="show" optimized>
                     <TextField source="name" />
                     <ListActionsToolbar>
                         <EditButton />

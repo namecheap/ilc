@@ -7,22 +7,15 @@ import {
     TextInput,
     required,
     TextField,
-    usePermissions,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
-import { CustomBottomToolbar } from '../components';
-
-const Title = ({ record }) => {
-    return (<span>{record ? `Auth Entity "${record.identifier}"` : ''}</span>);
-};
+import Title from './Title';
 
 const InputForm = ({mode = 'edit', ...props}) => {
-    const { permissions } = usePermissions();
-
     return (
-        <SimpleForm {...props} toolbar={<CustomBottomToolbar />}>
+        <SimpleForm {...props}>
             {mode === 'edit'
                 ? <TextField source="identifier" />
-                : <TextInput source="identifier" fullWidth validate={required()} disabled={permissions?.input.disabled} />}
+                : <TextInput source="identifier" fullWidth validate={required()} />}
             {mode === 'edit'
                 ? <TextField source="provider" />
                 : <SelectInput
@@ -33,7 +26,6 @@ const InputForm = ({mode = 'edit', ...props}) => {
                         { id: 'local', name: 'Local' },
                         { id: 'openid', name: 'OpenID' },
                     ]}
-                    disabled={permissions?.input.disabled}
                 />}
             <SelectInput
                 source="role"
@@ -43,9 +35,8 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     { id: 'admin', name: 'Admin' },
                     { id: 'readonly', name: 'Readonly' },
                 ]}
-                disabled={permissions?.input.disabled}
             />
-            <TextInput source="secret" fullWidth disabled={permissions?.input.disabled} />
+            <TextInput source="secret" fullWidth />
         </SimpleForm>
     );
 };

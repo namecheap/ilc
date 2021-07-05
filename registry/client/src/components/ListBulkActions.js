@@ -3,10 +3,10 @@ import {
     BulkDeleteButton,
 } from 'react-admin';
 
-const PostListBulkActions = memo(props => (
+const ListBulkActions = memo(props => (
     <Fragment>
         <BulkDeleteButton {...props} />
     </Fragment>
 ));
 
-export default PostListBulkActions;
+export default ListBulkActions;

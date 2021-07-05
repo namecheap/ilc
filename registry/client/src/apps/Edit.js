@@ -14,16 +14,12 @@ import {
     ReferenceArrayInput,
     ReferenceInput,
     AutocompleteArrayInput,
-    usePermissions,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
 import JsonField from '../JsonField/index';
 import * as validators from '../validators';
-import { CustomBottomToolbar } from '../components';
-
-const Title = ({record}) => {
-    return (<span>{record ? `App "${record.name}"` : ''}</span>);
-};
+import Title from './Title';
+import { JSON_FIELD_CODE_MODE } from '../constants';
 
 const selectHasAssetsDiscoveryUrl = (formData) => formData.assetsDiscoveryUrl && formData.assetsDiscoveryUrl.length !== 0;
 const selectWarnMessageDueToAssetsDiscoveryUrl = (formData) => {
@@ -59,14 +55,12 @@ const validateApp = (values) => {
 };
 
 const InputForm = ({mode = 'edit', ...props}) => {
-    const { permissions } = usePermissions();
-
     return (
-        <TabbedForm initialValues={{ dependencies: [] }} {...props} toolbar={<CustomBottomToolbar />}>
+        <TabbedForm initialValues={{ dependencies: [] }} {...props}>
             <FormTab label="Summary">
                 {mode === 'edit'
                     ? <TextField source="name" />
-                    : <TextInput source="name" fullWidth validate={validators.required} disabled={permissions?.input.disabled} />}
+                    : <TextInput source="name" fullWidth validate={validators.required} />}
                 <SelectInput
                     source="kind"
                     choices={[
@@ -76,7 +70,6 @@ const InputForm = ({mode = 'edit', ...props}) => {
                         {id: 'wrapper', name: 'Wrapper'},
                     ]}
                     validate={validators.required}
-                    disabled={permissions?.input.disabled}
                 />
                 <FormDataConsumer>
                     {({ formData, ...rest }) => formData.kind !== 'wrapper' &&
@@ -86,7 +79,6 @@ const InputForm = ({mode = 'edit', ...props}) => {
                             label="Wrapped with"
                             filter={{kind: 'wrapper'}}
                             allowEmpty {...rest}
-                            disabled={permissions?.input.disabled}
                         >
                             <SelectInput optionText="name" />
                         </ReferenceInput>
@@ -95,14 +87,13 @@ const InputForm = ({mode = 'edit', ...props}) => {
                 <JsonField
                     source="discoveryMetadata"
                     label="Discovery metadata (can be used to retrieve apps filtered by some metadata fields)."
-                    mode={permissions?.jsonEditor.mode}
+                    mode={JSON_FIELD_CODE_MODE}
                 />
                 <TextInput
                     fullWidth
                     multiline
                     source="adminNotes"
                     label="Admin notes (store here some information about the app, e.g. link to git repository, names of the app owners etc)."
-                    disabled={permissions?.input.disabled}
                 />
             </FormTab>
             <FormTab label="Assets">
@@ -113,13 +104,13 @@ const InputForm = ({mode = 'edit', ...props}) => {
 
                         return (
                             <Fragment>
-                                <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" helperText={assetsDiscoveryUrlWarningText} disabled={permissions?.input.disabled} />
-                                <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl || permissions?.input.disabled} required={!hasAssetsDiscoveryUrl} />
-                                <TextInput fullWidth resettable type="url" source="cssBundle" validate={validators.url} disabled={permissions?.input.disabled} />
+                                <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" helperText={assetsDiscoveryUrlWarningText} />
+                                <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl} required={!hasAssetsDiscoveryUrl} />
+                                <TextInput fullWidth resettable type="url" source="cssBundle" validate={validators.url} />
                                 <ArrayInput source="dependencies">
-                                    <SimpleFormIterator disableRemove={permissions?.buttons.hidden} disableAdd={permissions?.buttons.hidden}>
-                                        <TextInput fullWidth label="Name" source="key" validate={validators.required} disabled={permissions?.input.disabled} />
-                                        <TextInput fullWidth label="URL" type="url" source="value" validate={[validators.required, validators.url]} disabled={permissions?.input.disabled} />
+                                    <SimpleFormIterator>
+                                        <TextInput fullWidth label="Name" source="key" validate={validators.required} />
+                                        <TextInput fullWidth label="URL" type="url" source="value" validate={[validators.required, validators.url]} />
                                     </SimpleFormIterator>
                                 </ArrayInput>
                             </Fragment>
@@ -128,15 +119,15 @@ const InputForm = ({mode = 'edit', ...props}) => {
                 </FormDataConsumer>
             </FormTab>
             <FormTab label="SSR">
-                <TextInput source="ssr.src" label="URL" type="url" validate={validators.url} fullWidth disabled={permissions?.input.disabled} />
-                <NumberInput source="ssr.timeout" label="Request timeout, in ms" disabled={permissions?.input.disabled} />
+                <TextInput source="ssr.src" label="URL" type="url" validate={validators.url} fullWidth />
+                <NumberInput source="ssr.timeout" label="Request timeout, in ms" />
             </FormTab>
             <FormTab label="Props">
-                <ReferenceArrayInput reference="shared_props" source="configSelector" label="Shared props selector" disabled={permissions?.input.disabled}>
+                <ReferenceArrayInput reference="shared_props" source="configSelector" label="Shared props selector">
                     <AutocompleteArrayInput />
                 </ReferenceArrayInput>
-                <JsonField source="props" label="Properties that will be passed to application" mode={permissions?.jsonEditor.mode} />
-                <JsonField source="ssrProps" label="Properties that will be added to main props at SSR request, allow to override certain values" mode={permissions?.jsonEditor.mode} />
+                <JsonField source="props" label="Properties that will be passed to application" mode={JSON_FIELD_CODE_MODE} />
+                <JsonField source="ssrProps" label="Properties that will be added to main props at SSR request, allow to override certain values" mode={JSON_FIELD_CODE_MODE} />
             </FormTab>
         </TabbedForm>
     );
