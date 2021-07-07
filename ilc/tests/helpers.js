@@ -144,6 +144,7 @@ function getFragmentAttributes(overrideAttributes = {}) {
         appProps: {},
         wrapperConf: null,
         url: 'https://domain.com/',
+        spaBundleUrl: 'http://localhost:8239/test/dir/single_spa.js',
         async: false,
         primary: false,
         public: false,
