@@ -15,7 +15,7 @@ import {JsonEditor} from "jsoneditor-react";
 import ace from "brace";
 import 'brace/mode/json';
 
-const style = {height: '300px'};
+const style = { marginBottom: 22 };
 
 export default ({
    label,
@@ -36,11 +36,19 @@ export default ({
     const setJsonEditorRef = useCallback((node) => {
         if (node) {
             jsonEditorRef.current = node.jsonEditor;
+
+            if (!initialHeight) {
+                jsonEditorRef.current.aceEditor?.setOptions({
+                    maxLines: 15
+                });
+            }
+            setInitialHeight(true);
         } else {
             jsonEditorRef.current = null;
         }
     });
     const [autoHeight, setAutoHeight] = useState(false);
+    const [initialHeight, setInitialHeight] = useState(false);
 
     let jsonVal = {};
     try {
