@@ -22,7 +22,7 @@ import Help from "../components/Help";
 import Localization from "../Localization";
 import dataProvider from '../dataProvider';
 import Title from './Title';
-import { JSON_FIELD_CODE_MODE } from '../constants';
+import { APP_KINDS } from '../constants';
 
 const requiredSpecial = (value, allValues, props) => {
     if (!allValues.specialRole) {
@@ -32,11 +32,7 @@ const requiredSpecial = (value, allValues, props) => {
     return required()(value, allValues);
 };
 
-const allowedAppKinds = [
-    { id: 'primary', name: 'Primary' },
-    { id: 'essential', name: 'Essential' },
-    { id: 'regular', name: 'Regular' },
-];
+
 
 const allowedSpecialRoles = [
     { id: '404', name: '404' },
@@ -90,20 +86,20 @@ const InputForm = ({mode = 'edit', ...props}) => {
                         </ReferenceInput>
                     </Help>
                     : null}
-                <JsonField source="meta" label="Metadata" mode={JSON_FIELD_CODE_MODE} />
+                <JsonField source="meta" label="Metadata" />
             </FormTab>
             <FormTab label="Slots">
                 <ArrayInput source="slots">
                     <SimpleFormIterator>
                         <TextInput source="key" label="Slot name" validate={[required()]} fullWidth />
                         <ReferenceInput reference="app"
-                                        filter={{kind: allowedAppKinds.map(v => v.id)}}
+                                        filter={{kind: APP_KINDS.map(v => v.id)}}
                                         source="appName"
                                         label="App name">
                             <AutocompleteInput optionValue="name" validate={[required()]} />
                         </ReferenceInput>
-                        <SelectInput resettable source="kind" label="App type" choices={allowedAppKinds} />
-                        <JsonField source="props" label="Properties that will be passed to application at current route" mode={JSON_FIELD_CODE_MODE} />
+                        <SelectInput resettable source="kind" label="App type" choices={APP_KINDS} />
+                        <JsonField source="props" label="Properties that will be passed to application at current route" />
                     </SimpleFormIterator>
                 </ArrayInput>
             </FormTab>

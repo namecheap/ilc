@@ -1,109 +1,71 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import {
     Show,
-    FormTab,
-    SelectInput,
-    TabbedForm,
-    TextInput,
-    ArrayInput,
-    SimpleFormIterator,
-    FormDataConsumer,
-    NumberInput,
+    Tab,
+    TabbedShowLayout,
+    ArrayField,
     TextField,
-    ReferenceArrayInput,
-    ReferenceInput,
-    AutocompleteArrayInput,
+    Datagrid,
+    UrlField,
+    ReferenceArrayField,
+    SingleFieldList,
+    ChipField,
+    SelectField
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
-import JsonField from '../JsonField/index';
-import * as validators from '../validators';
+import { JsonFieldShow } from '../JsonField';
 import Title from './Title';
-import { JSON_FIELD_VIEW_MODE } from '../constants';
 import { ShowTopToolbar } from '../components';
+import { EMPTY_TEXT, APP_KINDS_WITH_WRAPPER } from '../constants';
 
 export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props }) => {
     return (
         <Show {...props} title={<Title />} actions={<ShowTopToolbar />}>
-            <TabbedForm initialValues={{ dependencies: [] }} {...props} toolbar={null}>
-                <FormTab label="Summary">
+            <TabbedShowLayout initialValues={{ dependencies: [] }} {...props} toolbar={null}>
+                <Tab label="Summary">
                     <TextField source="name" />
-                    <SelectInput
+                    <SelectField
                         source="kind"
-                        choices={[
-                            { id: 'primary', name: 'Primary' },
-                            { id: 'essential', name: 'Essential' },
-                            { id: 'regular', name: 'Regular' },
-                            { id: 'wrapper', name: 'Wrapper' },
-                        ]}
-                        validate={validators.required}
-                        disabled={true}
+                        choices={APP_KINDS_WITH_WRAPPER}
                     />
-                    <FormDataConsumer>
-                        {({ formData, ...rest }) => formData.kind !== 'wrapper' &&
-                            <ReferenceInput
-                                reference="app"
-                                source="wrappedWith"
-                                label="Wrapped with"
-                                filter={{ kind: 'wrapper' }}
-                                allowEmpty {...rest}
-                                disabled={true}
-                            >
-                                <SelectInput optionText="name" />
-                            </ReferenceInput>
-                        }
-                    </FormDataConsumer>
-                    <JsonField
+                    <TextField source="wrappedWith" emptyText={EMPTY_TEXT} />
+                    <JsonFieldShow
                         source="discoveryMetadata"
                         label="Discovery metadata (can be used to retrieve apps filtered by some metadata fields)."
-                        mode={JSON_FIELD_VIEW_MODE}
                     />
-                    <TextInput
-                        fullWidth
-                        multiline
-                        source="adminNotes"
-                        label="Admin notes (store here some information about the app, e.g. link to git repository, names of the app owners etc)."
-                        disabled={true}
-                    />
-                </FormTab>
-                <FormTab label="Assets">
-                    <FormDataConsumer>
-                        {({ formData }) => {
-                            return (
-                                <Fragment>
-                                    <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" disabled={true} />
-                                    <TextInput fullWidth resettable type="url" source="spaBundle" disabled={true} />
-                                    <TextInput fullWidth resettable type="url" source="cssBundle" validate={validators.url} disabled={true} />
-                                    <ArrayInput source="dependencies">
-                                        <SimpleFormIterator disableRemove={true} disableAdd={true}>
-                                            <TextInput fullWidth label="Name" source="key" validate={validators.required} disabled={true} />
-                                            <TextInput fullWidth label="URL" type="url" source="value" validate={[validators.required, validators.url]} disabled={true} />
-                                        </SimpleFormIterator>
-                                    </ArrayInput>
-                                </Fragment>
-                            );
-                        }}
-                    </FormDataConsumer>
-                </FormTab>
-                <FormTab label="SSR">
-                    <TextInput source="ssr.src" label="URL" type="url" validate={validators.url} fullWidth disabled={true} />
-                    <NumberInput source="ssr.timeout" label="Request timeout, in ms" disabled={true} />
-                </FormTab>
-                <FormTab label="Props">
-                    <ReferenceArrayInput reference="shared_props" source="configSelector" label="Shared props selector" disabled={true}>
-                        <AutocompleteArrayInput />
-                    </ReferenceArrayInput>
-                    <JsonField
-                        mode={JSON_FIELD_VIEW_MODE}
+                    <TextField source="adminNotes" emptyText={EMPTY_TEXT} />
+                </Tab>
+                <Tab label="Assets">
+                    <UrlField source="assetsDiscoveryUrl" emptyText={EMPTY_TEXT} />
+                    <UrlField source="spaBundle" />
+                    <UrlField source="cssBundle" emptyText={EMPTY_TEXT} />
+                    <ArrayField source="dependencies">
+                        <Datagrid>
+                            <TextField label="Name" source="key" />
+                            <UrlField label="URL" source="value" />
+                        </Datagrid>
+                    </ArrayField>
+                </Tab>
+                <Tab label="SSR">
+                    <UrlField source="ssr.src" label="URL" emptyText={EMPTY_TEXT} />
+                    <TextField source="ssr.timeout" label="Request timeout, in ms" emptyText={EMPTY_TEXT} />
+                </Tab>
+                <Tab label="Props">
+                    <ReferenceArrayField reference="shared_props" source="configSelector" label="Shared props selector">
+                        <SingleFieldList>
+                            <ChipField source="name" />
+                        </SingleFieldList>
+                    </ReferenceArrayField>
+                    <JsonFieldShow
                         source="props"
                         label="Properties that will be passed to application"
                     />
-                    <JsonField
-                        mode={JSON_FIELD_VIEW_MODE}
+                    <JsonFieldShow
                         source="ssrProps"
                         label="Properties that will be added to main props at SSR request, allow to override certain values"
                     />
-                </FormTab>
-            </TabbedForm>
+                </Tab>
+            </TabbedShowLayout>
         </Show>
     );
 };

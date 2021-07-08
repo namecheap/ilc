@@ -1,45 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Show,
-    TabbedForm,
-    FormTab,
-    NumberInput,
-    TextInput,
-    BooleanInput,
-    required,
+    TabbedShowLayout,
+    Tab,
+    BooleanField,
     TextField,
-    ReferenceInput,
-    SelectInput,
-    ArrayInput,
-    SimpleFormIterator,
-    AutocompleteInput,
-    FormDataConsumer,
+    ReferenceField,
+    SelectField,
+    ShowController,
+    ShowView,
 } from 'react-admin';
-import JsonField from "../JsonField"; // eslint-disable-line import/no-unresolved
-import Help from "../components/Help";
-import Localization from "../Localization";
+import { JsonFieldShow } from "../JsonField"; // eslint-disable-line import/no-unresolved
 import dataProvider from '../dataProvider';
 import Title from './Title';
-import { JSON_FIELD_VIEW_MODE } from '../constants';
-import { ShowTopToolbar } from '../components';
-
-const requiredSpecial = (value, allValues, props) => {
-    if (!allValues.specialRole) {
-        return undefined;
-    }
-
-    return required()(value, allValues);
-};
-
-const allowedAppKinds = [
-    { id: 'primary', name: 'Primary' },
-    { id: 'essential', name: 'Essential' },
-    { id: 'regular', name: 'Regular' },
-];
-
-const allowedSpecialRoles = [
-    { id: '404', name: '404' },
-];
+import { EMPTY_TEXT } from '../constants';
+import { ShowTopToolbar, ListArrayFields } from '../components';
+import { APP_KINDS, SPECIAL_ROLES } from '../constants';
 
 export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props }) => {
     const [isMultiDomain, setIsMultiDomain] = useState(false);
@@ -55,61 +30,64 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
             });
     }, []);
 
+    
     return (
-        <Show title={<Title />} {...props} actions={<ShowTopToolbar />}>
-            <TabbedForm {...props} toolbar={null}>
-                <FormTab label="General">
-                    <TextField source="id" />
-                    
-                    <FormDataConsumer>
-                        {({ formData }) => {
-                            if (formData.specialRole) {
-                                return <SelectInput resettable source="specialRole" label="Special role" validate={[required()]} choices={allowedSpecialRoles} disabled={true} />;
-                            } else {
-                                return (
-                                    <>
-                                        <TextInput source="route" fullWidth validate={[required()]} disabled={true} />
-                                        <NumberInput source="orderPos" label="Order position of the route" helperText="Leave blank to place route at the bottom of the list" disabled={true} />
-                                        <BooleanInput source="next" defaultValue={false} disabled={true} />
-                                    </>
-                                );
+        <ShowController {...props}>
+            {({ translate, ...controllerProps}) => 
+                <ShowView {...props} {...controllerProps} title={<Title />} actions={<ShowTopToolbar />}>
+                    <TabbedShowLayout {...props} toolbar={null}>
+                        <Tab label="General">
+                            <TextField source="id" />
+                            { controllerProps.record?.specialRole
+                                ? <SelectField source="specialRole" label="Special role" choices={SPECIAL_ROLES} />
+                                : [
+                                    <TextField source="route" key="route" label="Route" />,
+                                    <TextField source="orderPos" key="orderPos" label="Order position of the route" />,
+                                    <BooleanField source="next" key="next" defaultValue={false} />,
+                                ]
                             }
-                        }}
-                    </FormDataConsumer>
-
-                    <ReferenceInput reference="template"
-                        source="templateName"
-                        label="Template name">
-                        <SelectInput resettable validate={[requiredSpecial]} optionText="name" disabled={true} />
-                    </ReferenceInput>
-                    {isMultiDomain
-                        ? <Help title={Localization.routes.domainHelp}>
-                            <ReferenceInput reference="router_domains"
-                                source="domainId"
-                                label="Domain">
-                                <SelectInput resettable optionText="domainName" disabled={true} />
-                            </ReferenceInput>
-                        </Help>
-                        : null}
-                    <JsonField source="meta" label="Metadata" />
-                </FormTab>
-                <FormTab label="Slots">
-                    <ArrayInput source="slots">
-                        <SimpleFormIterator disableRemove={true} disableAdd={true}>
-                            <TextInput source="key" label="Slot name" validate={[required()]} fullWidth disabled={true} />
-                            <ReferenceInput reference="app"
-                                filter={{ kind: allowedAppKinds.map(v => v.id) }}
-                                source="appName"
-                                label="App name"
-                                disabled={true}>
-                                <AutocompleteInput optionValue="name" validate={[required()]} />
-                            </ReferenceInput>
-                            <SelectInput resettable source="kind" label="App type" choices={allowedAppKinds} disabled={true} />
-                            <JsonField source="props" label="Properties that will be passed to application at current route" mode={JSON_FIELD_VIEW_MODE} />
-                        </SimpleFormIterator>
-                    </ArrayInput>
-                </FormTab>
-            </TabbedForm>
-        </Show>
+                
+                            <ReferenceField reference="template"
+                                source="templateName"
+                                label="Template name"
+                                emptyText={EMPTY_TEXT}>
+                                <TextField source="name" />
+                            </ReferenceField>
+                            {isMultiDomain
+                                ? <ReferenceField reference="router_domains"
+                                    source="domainId"
+                                    label="Domain"
+                                    emptyText={EMPTY_TEXT}>
+                                    <TextField source="domainName" />
+                                </ReferenceField>
+                                : null}
+                            <JsonFieldShow source="meta" label="Metadata" />
+                        </Tab>
+                        <Tab label="Slots">
+                            <ListArrayFields source="slots">
+                                <TextField source="key" label="Slot name" />
+                                <ReferenceField reference="app"
+                                    filter={{ kind: APP_KINDS.map(v => v.id) }}
+                                    source="appName"
+                                    label="App name"
+                                    link={(data, category) => '/'+category+'/'+encodeURIComponent(data.appName)}>
+                                    <TextField source="name" />
+                                </ReferenceField>
+                                <SelectField
+                                    source="kind"
+                                    label="App type"
+                                    emptyText={EMPTY_TEXT}
+                                    choices={APP_KINDS}
+                                />
+                                <JsonFieldShow
+                                    source="props"
+                                    label="Properties that will be passed to application at current route"
+                                />
+                            </ListArrayFields>
+                        </Tab>
+                    </TabbedShowLayout>
+                </ShowView>
+            }
+        </ShowController>
     );
 };

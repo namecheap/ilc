@@ -9,7 +9,6 @@ import {
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import JsonField from '../JsonField/index';
 import Title from './Title';
-import { JSON_FIELD_CODE_MODE } from '../constants';
 
 const InputForm = ({mode = 'edit', ...props}) => {
     return (
@@ -20,12 +19,10 @@ const InputForm = ({mode = 'edit', ...props}) => {
             <JsonField
                 source="props"
                 label="Properties that will be passed to applications"
-                mode={JSON_FIELD_CODE_MODE}
             />
             <JsonField
                 source="ssrProps"
                 label="Properties that will be added to main props at SSR request, allow to override certain values"
-                mode={JSON_FIELD_CODE_MODE}
             />
         </SimpleForm>
     );

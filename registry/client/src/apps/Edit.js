@@ -19,7 +19,7 @@ import {
 import JsonField from '../JsonField/index';
 import * as validators from '../validators';
 import Title from './Title';
-import { JSON_FIELD_CODE_MODE } from '../constants';
+import { APP_KINDS_WITH_WRAPPER } from '../constants';
 
 const selectHasAssetsDiscoveryUrl = (formData) => formData.assetsDiscoveryUrl && formData.assetsDiscoveryUrl.length !== 0;
 const selectWarnMessageDueToAssetsDiscoveryUrl = (formData) => {
@@ -63,12 +63,7 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     : <TextInput source="name" fullWidth validate={validators.required} />}
                 <SelectInput
                     source="kind"
-                    choices={[
-                        {id: 'primary', name: 'Primary'},
-                        {id: 'essential', name: 'Essential'},
-                        {id: 'regular', name: 'Regular'},
-                        {id: 'wrapper', name: 'Wrapper'},
-                    ]}
+                    choices={APP_KINDS_WITH_WRAPPER}
                     validate={validators.required}
                 />
                 <FormDataConsumer>
@@ -87,7 +82,6 @@ const InputForm = ({mode = 'edit', ...props}) => {
                 <JsonField
                     source="discoveryMetadata"
                     label="Discovery metadata (can be used to retrieve apps filtered by some metadata fields)."
-                    mode={JSON_FIELD_CODE_MODE}
                 />
                 <TextInput
                     fullWidth
@@ -126,8 +120,8 @@ const InputForm = ({mode = 'edit', ...props}) => {
                 <ReferenceArrayInput reference="shared_props" source="configSelector" label="Shared props selector">
                     <AutocompleteArrayInput />
                 </ReferenceArrayInput>
-                <JsonField source="props" label="Properties that will be passed to application" mode={JSON_FIELD_CODE_MODE} />
-                <JsonField source="ssrProps" label="Properties that will be added to main props at SSR request, allow to override certain values" mode={JSON_FIELD_CODE_MODE} />
+                <JsonField source="props" label="Properties that will be passed to application" />
+                <JsonField source="ssrProps" label="Properties that will be added to main props at SSR request, allow to override certain values" />
             </FormTab>
         </TabbedForm>
     );

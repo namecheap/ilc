@@ -43,6 +43,8 @@ const SourceValueField = (props) => {
 }
 
 const PostList = props => {
+    const { permissions } = props;
+
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
 
     return (
@@ -59,7 +61,7 @@ const PostList = props => {
                         secondaryText={record => record.value}
                     />
                 ) : (
-                    <Datagrid rowClick="show" optimized>
+                    <Datagrid rowClick={permissions === 'readonly' ? undefined : 'edit'} optimized>
                         <TextField source="key" />
                         <SourceValueField source="value" />
                         <TextField source="scope" />
