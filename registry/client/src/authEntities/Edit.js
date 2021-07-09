@@ -8,10 +8,7 @@ import {
     required,
     TextField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
-
-const Title = ({ record }) => {
-    return (<span>{record ? `Auth Entity "${record.identifier}"` : ''}</span>);
-};
+import Title from './Title';
 
 const InputForm = ({mode = 'edit', ...props}) => {
     return (
@@ -21,15 +18,24 @@ const InputForm = ({mode = 'edit', ...props}) => {
                 : <TextInput source="identifier" fullWidth validate={required()} />}
             {mode === 'edit'
                 ? <TextField source="provider" />
-                : <SelectInput source="provider" fullWidth validate={required()} choices={[
-                    { id: 'bearer', name: 'Bearer' },
-                    { id: 'local', name: 'Local' },
-                    { id: 'openid', name: 'OpenID' },
-                ]} />}
-            <SelectInput source="role" fullWidth validate={required()} choices={[
-                { id: 'admin', name: 'Admin' },
-                { id: 'user', name: 'User' },
-            ]} />
+                : <SelectInput
+                    source="provider"
+                    fullWidth
+                    validate={required()} choices={[
+                        { id: 'bearer', name: 'Bearer' },
+                        { id: 'local', name: 'Local' },
+                        { id: 'openid', name: 'OpenID' },
+                    ]}
+                />}
+            <SelectInput
+                source="role"
+                fullWidth
+                validate={required()}
+                choices={[
+                    { id: 'admin', name: 'Admin' },
+                    { id: 'readonly', name: 'Readonly' },
+                ]}
+            />
             <TextInput source="secret" fullWidth />
         </SimpleForm>
     );

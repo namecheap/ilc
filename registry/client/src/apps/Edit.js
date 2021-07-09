@@ -1,5 +1,4 @@
 import React, {Fragment} from 'react';
-
 import {
     Create,
     Edit,
@@ -19,10 +18,8 @@ import {
 
 import JsonField from '../JsonField/index';
 import * as validators from '../validators';
-
-const Title = ({record}) => {
-    return (<span>{record ? `App "${record.name}"` : ''}</span>);
-};
+import Title from './Title';
+import { APP_KINDS_WITH_WRAPPER } from '../constants';
 
 const selectHasAssetsDiscoveryUrl = (formData) => formData.assetsDiscoveryUrl && formData.assetsDiscoveryUrl.length !== 0;
 const selectWarnMessageDueToAssetsDiscoveryUrl = (formData) => {
@@ -59,26 +56,39 @@ const validateApp = (values) => {
 
 const InputForm = ({mode = 'edit', ...props}) => {
     return (
-        <TabbedForm initialValues={{dependencies: []}} {...props}>
+        <TabbedForm initialValues={{ dependencies: [] }} {...props}>
             <FormTab label="Summary">
                 {mode === 'edit'
                     ? <TextField source="name" />
                     : <TextInput source="name" fullWidth validate={validators.required} />}
-                <SelectInput source="kind" choices={[
-                    {id: 'primary', name: 'Primary'},
-                    {id: 'essential', name: 'Essential'},
-                    {id: 'regular', name: 'Regular'},
-                    {id: 'wrapper', name: 'Wrapper'},
-                ]} validate={validators.required} />
+                <SelectInput
+                    source="kind"
+                    choices={APP_KINDS_WITH_WRAPPER}
+                    validate={validators.required}
+                />
                 <FormDataConsumer>
                     {({ formData, ...rest }) => formData.kind !== 'wrapper' &&
-                        <ReferenceInput reference="app" source="wrappedWith" label="Wrapped with" filter={{kind: 'wrapper'}} allowEmpty {...rest}>
+                        <ReferenceInput
+                            reference="app"
+                            source="wrappedWith"
+                            label="Wrapped with"
+                            filter={{kind: 'wrapper'}}
+                            allowEmpty {...rest}
+                        >
                             <SelectInput optionText="name" />
                         </ReferenceInput>
                     }
                 </FormDataConsumer>
-                <JsonField source="discoveryMetadata" label="Discovery metadata (can be used to retrieve apps filtered by some metadata fields)." />
-                <TextInput fullWidth multiline source="adminNotes" label="Admin notes (store here some information about the app, e.g. link to git repository, names of the app owners etc)." />
+                <JsonField
+                    source="discoveryMetadata"
+                    label="Discovery metadata (can be used to retrieve apps filtered by some metadata fields)."
+                />
+                <TextInput
+                    fullWidth
+                    multiline
+                    source="adminNotes"
+                    label="Admin notes (store here some information about the app, e.g. link to git repository, names of the app owners etc)."
+                />
             </FormTab>
             <FormTab label="Assets">
                 <FormDataConsumer>
@@ -89,7 +99,7 @@ const InputForm = ({mode = 'edit', ...props}) => {
                         return (
                             <Fragment>
                                 <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" helperText={assetsDiscoveryUrlWarningText} />
-                                <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl} required={hasAssetsDiscoveryUrl ? false : true} />
+                                <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl} required={!hasAssetsDiscoveryUrl} />
                                 <TextInput fullWidth resettable type="url" source="cssBundle" validate={validators.url} />
                                 <ArrayInput source="dependencies">
                                     <SimpleFormIterator>

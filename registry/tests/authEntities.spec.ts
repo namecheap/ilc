@@ -11,7 +11,7 @@ const example = {
     }),
     updated: Object.freeze({
         secret: 'tst2',
-        role: 'user',
+        role: 'readonly',
     }),
 };
 
@@ -28,7 +28,7 @@ describe(`Tests ${example.url}`, () => {
                 `"identifier" must be a string\n` +
                 `"secret" must be a string\n` +
                 `"provider" must be one of [local, bearer, openid]\n` +
-                `"role" must be one of [admin, user]`;
+                `"role" must be one of [admin, readonly]`;
 
             const incorrect = {
                 identifier: 123,

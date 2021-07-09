@@ -14,6 +14,7 @@ module.exports = {
         seeds: {
             directory: './server/seeds',
         },
+        rootPassword: null,
     },
     newrelic: {
         licenseKey: null,

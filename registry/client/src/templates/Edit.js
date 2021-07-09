@@ -7,10 +7,7 @@ import {
     required,
     TextField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
-
-const Title = ({ record }) => {
-    return (<span>{record ? `Template "${record.name}"` : ''}</span>);
-};
+import Title from './Title';
 
 const InputForm = ({mode = 'edit', ...props}) => {
     return (
@@ -18,7 +15,7 @@ const InputForm = ({mode = 'edit', ...props}) => {
             {mode === 'edit'
                 ? <TextField source="name" />
                 : <TextInput source="name" fullWidth validate={required()} />}
-            <TextInput source="content" multiline fullWidth/>
+            <TextInput source="content" multiline fullWidth />
         </SimpleForm>
     );
 };

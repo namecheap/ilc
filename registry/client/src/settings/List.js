@@ -1,34 +1,20 @@
-import React, {Children, cloneElement} from 'react';
-import {useMediaQuery, makeStyles} from '@material-ui/core';
+import React from 'react';
+import { useMediaQuery } from '@material-ui/core';
 import {
     List,
     Datagrid,
-    EditButton,
     BooleanField,
     SimpleList,
     SelectField,
     TextField,
     FunctionField,
+    EditButton,
 } from 'react-admin';
+import {
+    ListActionsToolbar,
+} from '../components';
 
 import {types} from './dataTransform';
-
-const ListActionsToolbar = ({children, ...props}) => {
-    const classes = makeStyles({
-        toolbar: {
-            alignItems: 'center',
-            display: 'flex',
-            marginTop: -1,
-            marginBottom: -1,
-        },
-    });
-
-    return (
-        <div className={classes.toolbar}>
-            {Children.map(children, button => cloneElement(button, props))}
-        </div>
-    );
-};
 
 const SourceValueField = (props) => {
     const secret = '********';
@@ -57,7 +43,10 @@ const SourceValueField = (props) => {
 }
 
 const PostList = props => {
+    const { permissions } = props;
+
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
+
     return (
         <List
             {...props}
@@ -72,7 +61,7 @@ const PostList = props => {
                         secondaryText={record => record.value}
                     />
                 ) : (
-                    <Datagrid rowClick="edit" optimized>
+                    <Datagrid rowClick={permissions === 'readonly' ? undefined : 'edit'} optimized>
                         <TextField source="key" />
                         <SourceValueField source="value" />
                         <TextField source="scope" />

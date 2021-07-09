@@ -7,7 +7,7 @@ import updateTemplate from './updateTemplate';
 import createTemplate from './createTemplate';
 import deleteTemplate from './deleteTemplate';
 
-export default (authMw: RequestHandler) => {
+export default (authMw: RequestHandler[]) => {
     const templatesRouter = express.Router();
 
     templatesRouter.get('/', authMw, ...getTemplates);

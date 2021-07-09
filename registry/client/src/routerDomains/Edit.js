@@ -9,10 +9,7 @@ import {
     ReferenceInput,
     SelectInput,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
-
-const Title = ({ record }) => {
-    return (<span>{record ? `Router Domains #${record.id}` : ''}</span>);
-};
+import Title from './Title';
 
 const InputForm = ({ mode = 'edit', ...props }) => {
     return (
@@ -21,7 +18,7 @@ const InputForm = ({ mode = 'edit', ...props }) => {
                 ? <TextField source="id" />
                 : null}
 
-            <TextInput source="domainName" fullWidth validate={required()}  />
+            <TextInput source="domainName" fullWidth validate={required()} />
             <ReferenceInput reference="template"
                 source="template500"
                 label="Template of 500 error"

@@ -4,24 +4,22 @@ import React, {
     useRef,
 } from "react";
 
-import {
-    FieldTitle,
-    useInput
-} from 'react-admin';
+import { useInput } from 'react-admin';
 
-import Typography from "@material-ui/core/Typography";
 import {JsonEditor} from "jsoneditor-react";
 
 import ace from "brace";
 import 'brace/mode/json';
+import { Labeled } from 'react-admin';
+
 
 const style = { marginBottom: 22 };
 
 export default ({
-   label,
-   source,
-   resource,
-   ...rest
+    label,
+    source,
+    resource,
+    ...rest
 }) => {
     const {
         input: {onChange: inputOnChange, value},
@@ -57,32 +55,62 @@ export default ({
 
     return (
         <div>
-            <Typography component="h4">
-                <FieldTitle
-                    label={label}
-                    source={source}
-                    resource={resource}
-                    isRequired={isRequired}
-                />
-            </Typography>
-
-            <JsonEditor
-                ref={setJsonEditorRef}
-                htmlElementProps={{ style }}
-                mode="code"
-                value={jsonVal}
-                ace={ace}
-                onChange={value => { // Here we receive only valid values
-                    inputOnChange(JSON.stringify(value));
-                    if (jsonEditorRef.current && !autoHeight) {
-                        jsonEditorRef.current.aceEditor.setOptions({
-                            maxLines: 10000
-                        });
-                        setAutoHeight(true)
-                    }
-                }}
-            />
+            <Labeled label={label} isRequired={isRequired} fullWidth>
+                <>
+                    <JsonEditor
+                        ref={setJsonEditorRef}
+                        htmlElementProps={{ style }}
+                        mode="code"
+                        value={jsonVal}
+                        ace={ace}
+                        onChange={value => { // Here we receive only valid values
+                            inputOnChange(JSON.stringify(value));
+                            if (jsonEditorRef.current && !autoHeight) {
+                                jsonEditorRef.current.aceEditor.setOptions({
+                                    maxLines: 10000
+                                });
+                                setAutoHeight(true)
+                            }
+                        }}
+                    />
+                </>
+            </Labeled>
         </div>
 
     );
+};
+
+export const JsonFieldShow = ({
+    label,
+    source,
+    addLabel = true,
+    record,
+}) => {
+    let jsonVal = {};
+    if (record && record[source]) {
+        try {
+            jsonVal = JSON.parse(record[source])
+        } catch (e) { }
+    }
+
+    const result = (
+        <JsonEditor
+            htmlElementProps={{ style }}
+            mode="view"
+            value={jsonVal}
+            ace={ace}
+        />
+    );
+
+    if (addLabel) {
+        return (
+            <div>
+                <Labeled label={label} fullWidth>
+                    <>{result}</>
+                </Labeled>
+            </div>
+        );
+    }
+
+    return result
 };

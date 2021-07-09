@@ -9,7 +9,7 @@ const AuthProvidersVals = Object.values(AuthProviders);
 
 export enum AuthRoles {
     admin = 'admin',
-    user = 'user',
+    readonly = 'readonly',
 }
 const AuthRolesVals = Object.values(AuthRoles);
 

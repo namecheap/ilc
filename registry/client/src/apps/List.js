@@ -1,47 +1,33 @@
-import React, { Children, Fragment, cloneElement, memo } from 'react';
-import { useMediaQuery, makeStyles } from '@material-ui/core';
+import React from 'react';
+import { useMediaQuery } from '@material-ui/core';
 import {
-    BulkDeleteButton,
     Datagrid,
-    EditButton,
     List,
     SimpleList,
     TextField,
     ChipField,
     ReferenceField,
+    EditButton,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
-
-const PostListBulkActions = memo(props => (
-    <Fragment>
-        <BulkDeleteButton {...props} />
-    </Fragment>
-));
-
-const ListActionsToolbar = ({ children, ...props }) => {
-    const classes = makeStyles({
-        toolbar: {
-            alignItems: 'center',
-            display: 'flex',
-            marginTop: -1,
-            marginBottom: -1,
-        },
-    });
-
-    return (
-        <div className={classes.toolbar}>
-            {Children.map(children, button => cloneElement(button, props))}
-        </div>
-    );
-};
+import {
+    Empty,
+    ListBulkActions,
+    ListActionsToolbar,
+} from '../components';
 
 const PostList = props => {
+    const { permissions } = props;
+
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
+
     return (
         <List
             {...props}
-            bulkActionButtons={<PostListBulkActions />}
+            bulkActionButtons={permissions === 'readonly' ? false : <ListBulkActions />}
             exporter={false}
             perPage={25}
+            actions={permissions === 'readonly' ? false : undefined}
+            empty={<Empty />}
         >
             {isSmall ? (
                 <SimpleList
@@ -49,7 +35,7 @@ const PostList = props => {
                     secondaryText={record => record.kind}
                 />
             ) : (
-                <Datagrid rowClick="edit" optimized>
+                <Datagrid rowClick="show" optimized>
                     <TextField source="name" />
                     <TextField source="kind" />
                     <ReferenceField source="configSelector" reference="shared_props" emptyText="-" sortable={false}>
