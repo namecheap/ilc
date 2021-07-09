@@ -1,9 +1,7 @@
-import React, { Children, Fragment, cloneElement, memo, useState, useEffect } from 'react';
+import React, { cloneElement, useState, useEffect } from 'react';
 import { useMediaQuery, makeStyles } from '@material-ui/core';
 import {
-    BulkDeleteButton,
     Datagrid,
-    EditButton,
     List,
     SimpleList,
     TextField,
@@ -17,25 +15,17 @@ import {
     TopToolbar,
     Button,
     sanitizeListRestProps,
+    EditButton,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import IconAdd from '@material-ui/icons/Add';
-
-
 import dataProvider from '../dataProvider';
-
-const ListBulkActions = memo(props => (
-    <Fragment>
-        <BulkDeleteButton {...props} />
-    </Fragment>
-));
+import {
+    Empty,
+    ListBulkActions,
+    ListActionsToolbar,
+} from '../components';
 
 const useStyles = makeStyles({
-    toolbar: {
-        alignItems: 'center',
-        display: 'flex',
-        marginTop: -1,
-        marginBottom: -1,
-    },
     filters: {
         alignItems: 'center',
         marginTop: '0',
@@ -44,16 +34,6 @@ const useStyles = makeStyles({
         marginBottom: '-6px',
     },
 });
-
-const ListActionsToolbar = ({ children, ...props }) => {
-    const classes = useStyles();
-
-    return (
-        <div className={classes.toolbar}>
-            {Children.map(children, button => cloneElement(button, props))}
-        </div>
-    );
-};
 
 const ListFilter = ({ routerDomain, ...props }) => {
     const classes = useStyles();
@@ -84,7 +64,7 @@ const ListFilter = ({ routerDomain, ...props }) => {
 
 const ListGrid = ({ routerDomain, ...props }) => {
     return (
-        <Datagrid {...props} rowClick="edit" optimized>
+        <Datagrid {...props} rowClick="show" optimized>
             {!props.filterValues.showSpecial ? <TextField source="id" sortable={false} /> : null }
             {!props.filterValues.showSpecial ? <TextField source="orderPos" sortable={false} /> : null }
             {!props.filterValues.showSpecial ? <TextField source="route" sortable={false} /> : null }
@@ -134,6 +114,8 @@ const ListActions = ({
 );
 
 const PostList = props => {
+    const { permissions } = props;
+
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
 
     const [routerDomain, setRouterDomain] = useState([]);
@@ -158,11 +140,12 @@ const PostList = props => {
     return (
         <List
             {...props}
-            bulkActionButtons={<ListBulkActions />}
-            actions={<ListActions />}
+            bulkActionButtons={permissions === 'readonly' ? false : <ListBulkActions />}
             exporter={false}
             filters={<ListFilter routerDomain={routerDomain} />}
             perPage={25}
+            actions={permissions === 'readonly' ? false : <ListActions />}
+            empty={<Empty />}
         >
             {isSmall ? (
                 <SimpleList

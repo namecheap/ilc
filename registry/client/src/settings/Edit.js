@@ -13,11 +13,8 @@ import {
 } from 'react-admin';
 
 import * as validators from '../validators';
-import {types} from './dataTransform';
-
-const Title = (props) => {
-    return (<span>{props.record ? `Setting "${props.record.key}"` : ''}</span>);
-};
+import { types } from './dataTransform';
+import Title from './Title';
 
 const MyToolbar = (props) => {
     return (
@@ -42,7 +39,13 @@ const Input = (props) => {
             return (<PasswordInput source="value" fullWidth={true} />);
         }
         case types.stringArray: {
-            return (<ArrayInput source="value"><SimpleFormIterator><TextInput fullWidth={true} /></SimpleFormIterator></ArrayInput>);
+            return (
+                <ArrayInput source="value">
+                    <SimpleFormIterator>
+                        <TextInput fullWidth={true} />
+                    </SimpleFormIterator>
+                </ArrayInput>
+            );
         }
         default: {
             return (<TextInput source="value" fullWidth={true} />);
