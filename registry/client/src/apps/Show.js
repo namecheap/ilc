@@ -33,7 +33,7 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
                         source="discoveryMetadata"
                         label="Discovery metadata (can be used to retrieve apps filtered by some metadata fields)."
                     />
-                    <TextField source="adminNotes" emptyText={EMPTY_TEXT} />
+                    <TextField source="adminNotes" component="pre" emptyText={EMPTY_TEXT} />
                 </Tab>
                 <Tab label="Assets">
                     <UrlField source="assetsDiscoveryUrl" emptyText={EMPTY_TEXT} />
