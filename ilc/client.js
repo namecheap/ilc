@@ -22,6 +22,7 @@ import {triggerAppChange} from './client/navigationEvents';
 import GuardManager from './client/GuardManager';
 import ParcelApi from './client/ParcelApi';
 import bundleLoaderFactory from './client/BundleLoader';
+import getListSharedLibraries from './client/getListSharedLibraries';
 
 import registerSpaApps from './client/registerSpaApps';
 
@@ -64,6 +65,8 @@ const parcelApi = new ParcelApi(registryConf, bundleLoader, window.ILC.getAppSdk
 window.ILC.mountRootParcel = singleSpa.mountRootParcel;
 window.ILC.loadApp = bundleLoader.loadAppWithCss.bind(bundleLoader); // Internal API for Namecheap, not for public use
 window.ILC.importParcelFromApp = parcelApi.importParcelFromApp;
+window.ILC.getListSharedLibraries = getListSharedLibraries;
+
 // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
 // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
 
