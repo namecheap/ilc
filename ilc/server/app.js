@@ -1,3 +1,4 @@
+const newrelic = require('newrelic');
 const _ = require('lodash');
 const config = require('config');
 const fastify = require('fastify');
@@ -67,7 +68,12 @@ module.exports = (registryService, pluginManager) => {
         req.headers['x-request-host'] = req.hostname;
         req.headers['x-request-uri'] = url;
 
-        registryConfig = mergeConfigs(registryConfig, parseOverrideConfig(req.headers.cookie, registryConfig.settings.overrideConfigTrustedOrigins));
+        const overrideConfigs = parseOverrideConfig(req.headers.cookie, registryConfig.settings.overrideConfigTrustedOrigins);
+        // Excluding LDE related transactions from NewRelic
+        if (overrideConfigs !== null) {
+            newrelic.getTransaction().ignore();
+        }
+        registryConfig = mergeConfigs(registryConfig, overrideConfigs);
 
         const unlocalizedUrl = i18n.unlocalizeUrl(registryConfig.settings.i18n, url);
         req.raw.registryConfig = registryConfig;
