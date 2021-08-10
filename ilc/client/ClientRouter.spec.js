@@ -498,6 +498,24 @@ describe('client router', () => {
             chai.expect(singleSpa.navigateToUrl.called).to.be.false;
             chai.expect(clickEvent.defaultPrevented).to.be.false;
         });
+
+        it('should NOT handle click events on anchors with target="_blank"', () => {
+            const anchor = {
+                id: 'click-me',
+            };
+
+            anchor.ref = html`
+                <a id="${anchor.id}" target="_blank">
+                    Hi there! I am anchor tag and I do have target="_blank" attribute.
+                </a>
+            `;
+
+            document.body.appendChild(anchor.ref);
+            document.getElementById(anchor.id).dispatchEvent(clickEvent);
+
+            chai.expect(singleSpa.navigateToUrl.called).to.be.false;
+            chai.expect(clickEvent.defaultPrevented).to.be.false;
+        });
     });
 
     describe('while getting route props', () => {
