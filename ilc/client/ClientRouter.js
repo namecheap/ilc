@@ -176,7 +176,7 @@ export default class ClientRouter {
             : event.target.closest('a');
         const href = anchor && anchor.getAttribute('href');
 
-        if (event.defaultPrevented || !href) {
+        if (event.defaultPrevented || !href || !['', '_self'].includes(anchor.target)) {
             return;
         }
 
