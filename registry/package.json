@@ -20,7 +20,7 @@
         "test:ci": "npm run migrate && npm run test -- --forbid-only",
         "test:coverage": "cross-env NODE_ENV=test nyc mocha",
         "postinstall": "npm run migrate && npm run seed",
-        "assetsdiscovery": "cross-env NODE_ENV=production INTERVAL=2000 node ./build/server/runnerAppAssetsDiscovery.js"
+        "assetsdiscovery": "cross-env NODE_ENV=production INTERVAL=2000 node ./build/server/runnerAssetsDiscovery.js"
     },
     "author": "Vladlen Fedosov",
     "license": "Apache-2.0",

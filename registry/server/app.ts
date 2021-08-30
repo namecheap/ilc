@@ -13,8 +13,8 @@ import settingsService from './settings/services/SettingsService';
 
 export default (withAuth: boolean = true) => {
     // As in production there can be 2+ instances of the ILC registry
-    // AppAssetsDiscovery should be run separately via "npm run assetsdiscovery"
-    !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAppAssetsDiscovery');
+    // AssetsDiscovery should be run separately via "npm run assetsdiscovery"
+    !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAssetsDiscovery');
 
     const app = express();
 
