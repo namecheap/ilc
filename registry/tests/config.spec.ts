@@ -47,6 +47,11 @@ const example = {
         domainName: 'domainNameCorrect.com',
         template500: templateName,
     }),
+    sharedLibs: Object.freeze({
+        name: 'testSharedLibName',
+        spaBundle: 'http://localhost:1234/testSharedLibBundle.js',
+        adminNotes: 'Lorem ipsum dolor',
+    }),
 };
 
 describe('Tests /api/v1/config', () => {
@@ -73,6 +78,8 @@ describe('Tests /api/v1/config', () => {
 
                 await request.post('/api/v1/shared_props/').send(example.sharedProps).expect(200);
 
+                await request.post('/api/v1/shared_libs/').send(example.sharedLibs).expect(200);
+
                 const response = await request.get('/api/v1/config')
                 .expect(200);
 
@@ -84,6 +91,7 @@ describe('Tests /api/v1/config', () => {
                 expect(response.body.routes).to.be.an('array');
                 expect(response.body.specialRoutes).to.be.an('array');
                 expect(response.body.routerDomains).to.be.undefined;
+                expect(response.body.sharedLibs).to.be.an('object');
 
                 expect(response.body.routes).to.deep.include({
                     routeId,
@@ -127,6 +135,10 @@ describe('Tests /api/v1/config', () => {
                         routingStrategy: 'prefix_except_default',
                     }
                 });
+
+                expect(response.body.sharedLibs).include({
+                    [example.sharedLibs.name]: example.sharedLibs.spaBundle,
+                });
             } finally {
                 routeId && await request.delete('/api/v1/route/' + routeId);
                 routeIdWithDomain && await request.delete('/api/v1/route/' + routeIdWithDomain);
@@ -134,6 +146,7 @@ describe('Tests /api/v1/config', () => {
                 await request.delete('/api/v1/template/' + example.templates.name);
                 await request.delete('/api/v1/app/' + encodeURIComponent(example.apps.name));
                 await request.delete('/api/v1/shared_props/' + example.sharedProps.name);
+                await request.delete('/api/v1/shared_libs/' + example.sharedLibs.name);
             }
         })
     });

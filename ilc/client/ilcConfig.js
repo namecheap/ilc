@@ -12,13 +12,12 @@ export default function () {
 
     registryConf = JSON.parse(confScript.innerHTML);
 
-    document.head.appendChild(getSystemjsImportmap(registryConf.apps));
+    document.head.appendChild(getSystemjsImportmap(registryConf));
 
     return registryConf;
 };
 
-function getSystemjsImportmap(apps) {
-    const res = {};
+function getSystemjsImportmap({ apps, sharedLibs }) {
     const deps = {};
 
     /**
@@ -41,9 +40,13 @@ function getSystemjsImportmap(apps) {
         }
     }
 
+    for (const name in sharedLibs) {
+        deps[`@sharedLibrary/${name}`] = sharedLibs[name];
+    }
+
     const script = document.createElement('script');
     script.type = 'systemjs-importmap';
-    script.text = JSON.stringify({imports: Object.assign({}, res, deps)});
+    script.text = JSON.stringify({ imports: deps });
 
     return script;
 }
