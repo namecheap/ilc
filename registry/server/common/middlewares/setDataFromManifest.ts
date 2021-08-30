@@ -7,21 +7,21 @@ import axios from 'axios';
 
 import {
     parseJSON,
-} from '../../common/services/json';
-import processManifest from '../../common/services/assetsManifestProcessor';
+} from '../services/json';
+import processManifest from '../services/assetsManifestProcessor';
 
 const setDataFromManifest = async (req: Request, res: Response, next: NextFunction) => {
-    const app = req.body;
+    const entity = req.body;
 
-    if (app.assetsDiscoveryUrl) {
+    if (entity.assetsDiscoveryUrl) {
         let response;
 
         try {
-            response = await axios.get(app.assetsDiscoveryUrl, {
+            response = await axios.get(entity.assetsDiscoveryUrl, {
                 responseType: 'json',
             });
         } catch (error) {
-            console.error(`Caught an error while trying to fetch a manifest file from '${app.assetsDiscoveryUrl}':`, error);
+            console.error(`Caught an error while trying to fetch a manifest file from '${entity.assetsDiscoveryUrl}':`, error);
             res.status(422).send('"spaBundle" can not be taken from a manifest file by provided "assetsDiscoveryUrl"');
             return;
         }
@@ -30,21 +30,21 @@ const setDataFromManifest = async (req: Request, res: Response, next: NextFuncti
             spaBundle,
             cssBundle,
             dependencies,
-        } = processManifest(app.assetsDiscoveryUrl, response.data);
+        } = processManifest(entity.assetsDiscoveryUrl, response.data);
 
         if (spaBundle) {
-            app.spaBundle = spaBundle;
+            entity.spaBundle = spaBundle;
         } else {
             res.status(422).send('"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually');
             return;
         }
 
         if (cssBundle) {
-            app.cssBundle = cssBundle;
+            entity.cssBundle = cssBundle;
         }
 
         if (dependencies) {
-            app.dependencies = parseJSON(dependencies);
+            entity.dependencies = parseJSON(dependencies);
         }
     }
 

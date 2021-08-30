@@ -6,7 +6,7 @@ import {
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import setDataFromManifest from '../middlewares/setDataFromManifest';
+import setDataFromManifest from '../../common/middlewares/setDataFromManifest';
 import {
     stringifyJSON,
 } from '../../common/services/json';

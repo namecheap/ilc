@@ -2,76 +2,37 @@ import nock from 'nock';
 import _ from 'lodash';
 import { request, requestWithAuth, expect } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
-
-const assetsDiscovery = {
-    host: 'http://127.0.0.1:1234',
-    path: '/_spa/dev/assets-discovery',
-};
-
-const assetsDiscoveryUrl = assetsDiscovery.host + assetsDiscovery.path;
-
-const correct = Object.freeze({
-    name: '@portal/ncTestAppReactssr',
-    spaBundle: 'http://localhost:1234/ncTestAppReactssr.js',
-    cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssr.css',
-    configSelector: ['ncTestSharedPropsName'],
-    ssr: {
-        src: "http://127.0.0.1:1234/fragment",
-        timeout: 1000,
-    },
-    kind: 'primary',
-    // dependencies: {},
-    // props: {},
-    discoveryMetadata: {
-        foo: 'foo1',
-        bar: 'bar1',
-    },
-    adminNotes: 'Lorem ipsum',
-});
+import * as bcrypt from 'bcrypt';
 
 const example = <any>{
-    url: '/api/v1/app/',
-    assetsDiscovery,
+    url: '/api/v1/shared_libs/',
+    assetsDiscovery: {
+        host: 'http://127.0.0.1:1234',
+        path: '/_spa/dev/assets-discovery',
+    },
     manifest: {
         spaBundle: 'http://127.0.0.1:8239/dist/single_spa.js',
-        cssBundle: 'http://127.0.0.1:8239/dist/common.6c686c02a026a4af4016.css',
     },
-    correct,
-    correctWithAssetsDiscoveryUrl: Object.freeze({
-        ...correct,
-        assetsDiscoveryUrl,
+    correct: Object.freeze({
+        name: 'testNameSharedLib',
+        spaBundle: 'http://localhost:1234/testSpaBundleSharedLib.js',
+        adminNotes: 'Lorem ipsum admin notes dolor sit',
     }),
     updated: Object.freeze({
-        name: '@portal/ncTestAppReactssr',
-        spaBundle: 'http://localhost:1234/ncTestAppReactssrUpdated.js',
-        cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssrUpdated.css',
-        configSelector: ['ncTestSharedPropsNameUpdated'],
-        ssr: {
-            src: "http://127.0.0.1:1234/fragmentUpdated",
-            timeout: 2000,
-        },
-        kind: 'regular',
-        dependencies: {
-            react: 'https://cdnjs.cloudflare.com/ajax/libs/react/16.8.6/umd/react.development.js',
-            'react-dom': 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.6/umd/react-dom.development.js',
-        },
-        props: {
-            fragmentModuleName: 'reactssr-app-mainUpdated',
-            assetsPath: 'http://127.0.0.1:3001/uisamplereactUpdated',
-            locationStrategy: 'browserHistoryUpdated',
-        },
-        discoveryMetadata: {
-            foo: 'updated foo1',
-            bar: 'updated bar1',
-        },
-        adminNotes: 'Updated Lorem ipsum',
+        name: 'testNameSharedLib',
+        spaBundle: 'http://localhost:1234/testSpaBundleSharedLibUPDATED.js',
+        adminNotes: 'Lorem ipsum admin notes dolor sit UPDATED',
     }),
 };
-example.encodedName = encodeURIComponent(example.correct.name);
+
+example.correctWithAssetsDiscoveryUrl = Object.freeze({
+    ...example.correct,
+    assetsDiscoveryUrl: example.assetsDiscovery.host + example.assetsDiscovery.path,
+});
 
 describe(`Tests ${example.url}`, () => {
     describe('Create', () => {
-        it('should not create record without a required field: name', async () => {
+        it('should not create record without a required fields', async () => {
             const response = await request.post(example.url)
             .send(_.omit(example.correct, ['name', 'spaBundle']))
             .expect(422, '"spaBundle" is required\n"name" is required');
@@ -81,16 +42,10 @@ describe(`Tests ${example.url}`, () => {
 
         it('should not create record with incorrect type of fields', async () => {
             const incorrect = {
-                name: 123,
-                spaBundle: 456,
-                cssBundle: 789,
-                configSelector: 654,
-                ssr: 456,
-                assetsDiscoveryUrl: 789,
-                dependencies: 456,
-                props: 789,
-                discoveryMetadata: 111,
-                adminNotes: 222,
+                name: 111,
+                spaBundle: 222,
+                assetsDiscoveryUrl: 333,
+                adminNotes: 444,
             };
 
             let response = await request.post(example.url)
@@ -100,14 +55,8 @@ describe(`Tests ${example.url}`, () => {
             })
             .expect(
                 422,
-                '"cssBundle" must be a string\n' +
                 '"assetsDiscoveryUrl" must be a string\n' +
                 '"spaBundle" must be a string\n' +
-                '"dependencies" must be of type object\n' +
-                '"props" must be of type object\n' +
-                '"configSelector" must be an array\n' +
-                '"ssr" must be of type object\n' +
-                '"discoveryMetadata" must be of type object\n' +
                 '"adminNotes" must be a string\n' +
                 '"name" must be a string'
                 );
@@ -128,12 +77,12 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(example.correct);
 
-                response = await request.get(example.url + example.encodedName)
+                response = await request.get(example.url + example.correct.name)
                     .expect(200);
 
                 expect(response.body).deep.equal(example.correct);
             } finally {
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -142,7 +91,7 @@ describe(`Tests ${example.url}`, () => {
 
             try {
                 const scope = nock(example.assetsDiscovery.host);
-                scope.log(console.log).get(example.assetsDiscovery.path).delay(0).reply(404);
+                scope.get(example.assetsDiscovery.path).delay(0).reply(404);
 
                 const response = await request
                     .post(example.url)
@@ -152,7 +101,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal({});
             } finally {
                 unmuteConsole();
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -168,7 +117,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -177,13 +126,14 @@ describe(`Tests ${example.url}`, () => {
                 const scope = nock(example.assetsDiscovery.host);
                 scope.log(console.log).get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
 
-                const response = await request.post(example.url).send(example.correctWithAssetsDiscoveryUrl).expect(200);
+                const response = await request.post(example.url).send(example.correctWithAssetsDiscoveryUrl);
+
                 expect(response.body).deep.equal({
                     ...example.correctWithAssetsDiscoveryUrl,
                     ...example.manifest,
                 });
             } finally {
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -197,7 +147,7 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Read', () => {
-        it('should return 404 for non-existing id', async () => {
+        it('should return 404 for non-existing "name"', async () => {
             const incorrect = { name: 123 };
             const response = await request.get(example.url + incorrect.name)
             .expect(404, 'Not found');
@@ -209,12 +159,12 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await request.post(example.url).send(example.correct);
 
-                const response = await request.get(example.url + example.encodedName)
+                const response = await request.get(example.url + example.correct.name)
                     .expect(200);
 
                 expect(response.body).deep.equal(example.correct);
             } finally {
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -228,7 +178,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).to.be.an('array').that.is.not.empty;
                 expect(response.body).to.deep.include(example.correct);
             } finally {
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -256,13 +206,13 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await request.post(example.url).send(example.correct).expect(200);
 
-                const response = await request.put(example.url + example.encodedName)
+                const response = await request.put(example.url + example.correct.name)
                     .send(example.updated)
                     .expect(422, '"name" is not allowed');
 
                 expect(response.body).deep.equal({});
             } finally {
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -272,18 +222,11 @@ describe(`Tests ${example.url}`, () => {
 
                 const incorrect = {
                     spaBundle: 456,
-                    cssBundle: 789,
-                    configSelector: 654,
-                    ssr: 456,
                     assetsDiscoveryUrl: 789,
-                    dependencies: 456,
-                    props: 789,
-                    kind: 'origin',
-                    discoveryMetadata: 111,
                     adminNotes: 222,
                 };
 
-                const response = await request.put(example.url + example.encodedName)
+                const response = await request.put(example.url + example.correct.name)
                     .send({
                         ..._.omit(example.updated, 'name'),
                         ...incorrect,
@@ -291,19 +234,12 @@ describe(`Tests ${example.url}`, () => {
                     .expect(
                         422,
                         '"spaBundle" must be a string\n' +
-                        '"cssBundle" must be a string\n' +
                         '"assetsDiscoveryUrl" must be a string\n' +
-                        '"dependencies" must be of type object\n' +
-                        '"props" must be of type object\n' +
-                        '"configSelector" must be an array\n' +
-                        '"ssr" must be of type object\n' +
-                        '"kind" must be one of [primary, essential, regular, wrapper]\n' +
-                        '"discoveryMetadata" must be of type object\n' +
                         '"adminNotes" must be a string'
                     );
                 expect(response.body).deep.equal({});
             } finally {
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -311,13 +247,13 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await request.post(example.url).send(example.correct).expect(200);
 
-                const response = await request.put(example.url + example.encodedName)
+                const response = await request.put(example.url + example.correct.name)
                     .send(_.omit(example.updated, 'name'))
                     .expect(200);
 
                 expect(response.body).deep.equal(example.updated);
             } finally {
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -328,16 +264,16 @@ describe(`Tests ${example.url}`, () => {
                 await request.post(example.url).send(example.correct).expect(200);
 
                 const scope = nock(example.assetsDiscovery.host);
-                scope.log(console.log).get(example.assetsDiscovery.path).delay(0).reply(404);
+                scope.get(example.assetsDiscovery.path).delay(0).reply(404);
 
-                const response = await request.put(example.url + example.encodedName)
+                const response = await request.put(example.url + example.correct.name)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
                     .expect(422, `"spaBundle" can not be taken from a manifest file by provided "assetsDiscoveryUrl"`);
 
                 expect(response.body).deep.equal({});
             } finally {
                 unmuteConsole();
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -348,13 +284,13 @@ describe(`Tests ${example.url}`, () => {
                 const scope = nock(example.assetsDiscovery.host);
                 scope.log(console.log).get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify({}));
 
-                const response = await request.put(example.url + example.encodedName)
+                const response = await request.put(example.url + example.correct.name)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
                     .expect(422, `"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually`);
 
                 expect(response.body).deep.equal({});
             } finally {
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -365,7 +301,7 @@ describe(`Tests ${example.url}`, () => {
                 const scope = nock(example.assetsDiscovery.host);
                 scope.log(console.log).get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
 
-                const response = await request.put(example.url + example.encodedName)
+                const response = await request.put(example.url + example.correct.name)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'));
 
                 expect(response.body).deep.equal({
@@ -373,7 +309,7 @@ describe(`Tests ${example.url}`, () => {
                     ...example.manifest,
                 });
             } finally {
-                await request.delete(example.url + example.encodedName);
+                await request.delete(example.url + example.correct.name);
             }
         });
 
@@ -389,7 +325,7 @@ describe(`Tests ${example.url}`, () => {
     describe('Delete', () => {
         it('should not delete any record if record doesn\'t exist', async () => {
             const incorrect = { name: 123 };
-            const response = await request.delete(example.url + encodeURIComponent(incorrect.name))
+            const response = await request.delete(example.url + incorrect.name)
             .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
@@ -398,7 +334,7 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully delete record', async () => {
             await request.post(example.url).send(example.correct).expect(200);
 
-            const response = await request.delete(example.url + example.encodedName)
+            const response = await request.delete(example.url + example.correct.name)
             .expect(204, '');
 
             expect(response.body).deep.equal({});

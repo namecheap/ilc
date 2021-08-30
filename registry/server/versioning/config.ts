@@ -42,6 +42,10 @@ const versioningConf: Record<EntityTypes | keyof typeof EntityTypes, EntityConf>
         idColumn: 'id',
         related: [],
     },
+    [EntityTypes.shared_libs]: {
+        idColumn: 'name',
+        related: [],
+    },
 };
 
 export default versioningConf;
