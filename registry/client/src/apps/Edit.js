@@ -36,19 +36,10 @@ const selectWarnMessageDueToAssetsDiscoveryUrl = (formData) => {
 const validateApp = (values) => {
     const errors = {};
 
-    const assetsDiscoveryUrlShouldBeUrl = validators.url(values.assetsDiscoveryUrl);
-    const spaBundleShouldBeUrl = validators.url(values.spaBundle);
-    const spaBundleShouldBeRequired = values.assetsDiscoveryUrl ? undefined : validators.required(values.spaBundle);
-
-    if (assetsDiscoveryUrlShouldBeUrl !== undefined) {
-        errors.assetsDiscoveryUrl = [];
-        errors.assetsDiscoveryUrl.push(assetsDiscoveryUrlShouldBeUrl);
-    }
-
-    if (spaBundleShouldBeUrl !== undefined || spaBundleShouldBeRequired !== undefined) {
-        errors.spaBundle = [];
-        spaBundleShouldBeUrl && errors.spaBundle.push(spaBundleShouldBeUrl);
-        spaBundleShouldBeRequired && errors.spaBundle.push(spaBundleShouldBeRequired);
+    if (values.assetsDiscoveryUrl) {
+        errors.assetsDiscoveryUrl = validators.url(values.assetsDiscoveryUrl);
+    } else {
+        errors.spaBundle = values.spaBundle ? validators.url(values.spaBundle) : validators.required(values.spaBundle);
     }
 
     return errors;
@@ -99,7 +90,7 @@ const InputForm = ({mode = 'edit', ...props}) => {
                         return (
                             <Fragment>
                                 <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" helperText={assetsDiscoveryUrlWarningText} />
-                                <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl} required={!hasAssetsDiscoveryUrl} />
+                                <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl} />
                                 <TextInput fullWidth resettable type="url" source="cssBundle" validate={validators.url} />
                                 <ArrayInput source="dependencies">
                                     <SimpleFormIterator>
