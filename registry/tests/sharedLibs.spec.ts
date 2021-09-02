@@ -96,7 +96,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await request
                     .post(example.url)
                     .send(example.correctWithAssetsDiscoveryUrl)
-                    .expect(422, `"spaBundle" can not be taken from a manifest file by provided "assetsDiscoveryUrl"`);
+                    .expect(422, `"assetsDiscoveryUrl" is not available. Check the url via browser manually.`);
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -268,7 +268,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await request.put(example.url + example.correct.name)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
-                    .expect(422, `"spaBundle" can not be taken from a manifest file by provided "assetsDiscoveryUrl"`);
+                    .expect(422, `"assetsDiscoveryUrl" is not available. Check the url via browser manually.`);
 
                 expect(response.body).deep.equal({});
             } finally {
