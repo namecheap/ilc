@@ -23,7 +23,11 @@ module.exports = function setup(tailor, errorHandlingService) {
                 errorHandlingService.noticeError(new errors.TailorError({message: 'Something went terribly wrong during error handling', cause: err}));
             });
         } else {
-            errorHandlingService.noticeError(new errors.TailorError({message: `Tailor error while headers already sent ${urlPart}`, cause: err}));
+            errorHandlingService.noticeError(
+                new errors.TailorError({message: `Tailor error while headers already sent ${urlPart}`, cause: err}),
+                {},
+                { reportError: !req.ldeRelated },
+            );
         }
     }
 
@@ -37,7 +41,7 @@ module.exports = function setup(tailor, errorHandlingService) {
             cause: err,
             data: { fragmentAttrs }
         };
-        errorHandlingService.noticeError(new errors.FragmentError(errOpts));
+        errorHandlingService.noticeError(new errors.FragmentError(errOpts), {}, { reportError: !req.ldeRelated });
     }
 
     function handleFragmentWarn(req, fragmentAttrs, err) {
@@ -46,7 +50,7 @@ module.exports = function setup(tailor, errorHandlingService) {
             cause: err,
             data: { fragmentAttrs }
         };
-        errorHandlingService.noticeError(new errors.FragmentWarn(errOpts));
+        errorHandlingService.noticeError(new errors.FragmentWarn(errOpts), {}, { reportError: !req.ldeRelated });
     }
 
     //General Tailor & primary fragment errors
