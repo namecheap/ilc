@@ -71,6 +71,7 @@ module.exports = (registryService, pluginManager) => {
         const overrideConfigs = parseOverrideConfig(req.headers.cookie, registryConfig.settings.overrideConfigTrustedOrigins);
         // Excluding LDE related transactions from NewRelic
         if (overrideConfigs !== null) {
+            req.raw.ldeRelated = true;
             newrelic.getTransaction().ignore();
         }
         registryConfig = mergeConfigs(registryConfig, overrideConfigs);

@@ -7,6 +7,8 @@ const Agent = require('agentkeepalive');
 const HttpsAgent = require('agentkeepalive').HttpsAgent;
 const deepmerge = require('deepmerge');
 
+const errors = require('./errors');
+
 // By default tailor supports gzipped response from fragments
 const requiredHeaders = {
     'accept-encoding': 'gzip, deflate'
@@ -82,7 +84,9 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                     reject(e);
                 }
             });
-            fragmentRequest.on('error', reject);
+            fragmentRequest.on('error', error => {
+                reject(new errors.FragmentRequestError({message: `Error during SSR request to fragment wrapper at URL: ${fragmentUrl}`, cause: error}));
+            });
             fragmentRequest.end();
         } else {
             const reqUrl = makeFragmentUrl({
@@ -112,7 +116,12 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                     reject(e);
                 }
             });
-            fragmentRequest.on('error', reject);
+            fragmentRequest.on('error', error => {
+                reject(new errors.FragmentRequestError({
+                    message: `Error during SSR request to fragment at URL: ${fragmentUrl}`,
+                    cause: error,
+                }));
+            });
             fragmentRequest.end();
         }
     });

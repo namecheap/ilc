@@ -18,9 +18,14 @@ module.exports = class ErrorHandler {
      *
      * @param {Error} err
      * @param {{}} errInfo
+     * @param {Object} options
+     * @param {Boolean} options.reportError = true
      */
-    noticeError(err, errInfo = {}) {
+    noticeError(err, errInfo = {}, options) {
         const infoData = Object.assign({}, errInfo);
+        options = Object.assign({}, {
+            reportError: true
+        }, options);
 
         if (err.data === undefined) {
             const ExtendedError = extendError(err.name);
@@ -29,7 +34,10 @@ module.exports = class ErrorHandler {
             Object.assign(err.data, infoData);
         }
 
-        this.#errorsService.noticeError(err, infoData);
+        if (options.reportError) {
+            this.#errorsService.noticeError(err, infoData);
+        }
+
         this.#logger.error(err);
     }
 
@@ -49,7 +57,7 @@ module.exports = class ErrorHandler {
             this.noticeError(err, {
                 reqId: req.id,
                 errorId
-            });
+            }, { reportError: !req.ldeRelated });
 
             const currentDomain = req.hostname;
             let data = await this.#registryService.getTemplate('500', currentDomain);

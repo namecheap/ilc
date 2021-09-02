@@ -50,6 +50,8 @@ describe('error handler', () => {
                     message: `Tailor error while headers already sent while processing request "${request.originalUrl}"`,
                     cause: error,
                 }),
+                {},
+                { reportError: true },
             ]);
         });
 
@@ -109,6 +111,8 @@ describe('error handler', () => {
                         fragmentAttrs,
                     },
                 }),
+                {},
+                { reportError: true },
             ]);
         });
 
@@ -139,6 +143,8 @@ describe('error handler', () => {
                         fragmentAttrs,
                     },
                 }),
+                {},
+                { reportError: true },
             ]);
         });
     });
