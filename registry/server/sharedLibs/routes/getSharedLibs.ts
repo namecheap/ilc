@@ -11,7 +11,7 @@ const getSharedLibs = async (req: Request, res: Response): Promise<void> => {
 
     const sharedLibs = await query.range(req.query.range as string | undefined);
 
-    res.setHeader('Content-Range', sharedLibs.pagination.total); //Stub for future pagination capabilities
+    res.setHeader('Content-Range', sharedLibs.pagination.total);
     res.status(200).send(preProcessResponse(sharedLibs.data));
 };
 

@@ -34,6 +34,9 @@ const updateSharedLib = async (req: Request<UpdateSharedLibRequestParams>, res: 
     const sharedLib = req.body;
     const sharedLibName = req.params.name;
 
+    // "dependencies" comes from assets-discovery.json, but we don't have column dependencies at the current moment
+    delete sharedLib.dependencies;
+
     const countToUpdate = await db('shared_libs').where({ name: sharedLibName })
     if (!countToUpdate.length) {
         res.status(404).send('Not found');

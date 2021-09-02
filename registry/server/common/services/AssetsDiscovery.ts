@@ -59,6 +59,10 @@ export default class AssetsDiscovery {
             }
 
             let data = manifestProcessor(reqUrl, res.data);
+            if (this.tableName === 'shared_libs') {
+                // "dependencies" comes from assets-discovery.json, but we don't have column dependencies at the current moment
+                delete data.dependencies;
+            }
 
             await knex(this.tableName).where(this.tableId, entity[this.tableId]).update(Object.assign({}, data, {
                 assetsDiscoveryUpdatedAt: now,

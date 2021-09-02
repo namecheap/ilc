@@ -22,7 +22,7 @@ const setDataFromManifest = async (req: Request, res: Response, next: NextFuncti
             });
         } catch (error) {
             console.error(`Caught an error while trying to fetch a manifest file from '${entity.assetsDiscoveryUrl}':`, error);
-            res.status(422).send('"spaBundle" can not be taken from a manifest file by provided "assetsDiscoveryUrl"');
+            res.status(422).send('"assetsDiscoveryUrl" is not available. Check the url via browser manually.');
             return;
         }
 

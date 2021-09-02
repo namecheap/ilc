@@ -15,6 +15,7 @@ import authEntities from './authEntities';
 import settings from './settings';
 import versioning from './versioning';
 import routerDomains from './routerDomains';
+import sharedLibs from './sharedLibs';
 
 render(
     <Admin
@@ -39,6 +40,7 @@ render(
             return [
                 <Resource name="app" {...filterPermissions(apps)} />,
                 <Resource name="shared_props" {...filterPermissions(sharedProps)} />,
+                <Resource name="shared_libs" {...filterPermissions(sharedLibs)} />,
                 <Resource name="template" {...filterPermissions(templates)} />,
                 <Resource name="route" {...filterPermissions(appRoutes)} />,
                 <Resource name="router_domains" {...filterPermissions(routerDomains)} />,

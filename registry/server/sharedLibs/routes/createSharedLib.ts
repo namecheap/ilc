@@ -19,6 +19,9 @@ const validateRequestBeforeCreateSharedLib = validateRequestFactory([{
 const createSharedLib = async (req: Request, res: Response): Promise<void> => {
     const sharedLib = req.body;
 
+    // "dependencies" comes from assets-discovery.json, but we don't have column dependencies at the current moment
+    delete sharedLib.dependencies;
+
     await db.versioning(req.user, { type: 'shared_libs', id: sharedLib.name }, async (trx) => {
         await db('shared_libs').insert(sharedLib).transacting(trx);
     });
