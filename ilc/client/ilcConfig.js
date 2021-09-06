@@ -12,12 +12,12 @@ export default function () {
 
     registryConf = JSON.parse(confScript.innerHTML);
 
-    document.head.appendChild(getSystemjsImportmap(registryConf));
+    document.head.appendChild(getSystemjsImportmap(registryConf.apps, registryConf.sharedLibs));
 
     return registryConf;
 };
 
-function getSystemjsImportmap({ apps, sharedLibs }) {
+function getSystemjsImportmap(apps, sharedLibs) {
     const deps = {};
 
     /**

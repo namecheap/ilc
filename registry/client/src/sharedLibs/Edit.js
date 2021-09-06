@@ -6,8 +6,9 @@ import {
     TabbedForm,
     TextInput,
     FormDataConsumer,
-    TextField,
+    FunctionField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
+import { Typography } from '@material-ui/core';
 
 import * as validators from '../validators';
 import Title from './Title';
@@ -42,13 +43,28 @@ const validateSharedLib = (values) => {
     return errors;
 };
 
+const styles = {
+    row: {
+        display: 'flex',
+        width: '100%',
+        alignItems: 'center',
+    },
+};
+
 const InputForm = ({mode = 'edit', ...props}) => {
     return (
         <TabbedForm {...props}>
             <FormTab label="Summary">
                 {mode === 'edit'
-                    ? <TextField source="name" />
-                    : <TextInput source="name" fullWidth />}
+                    ? <FunctionField
+                        label="Name"
+                        render={record => `@sharedLibrary/${record.name}`}
+                    />
+                    : <div style={styles.row}>
+                        <Typography variant="body1">@sharedLibrary/</Typography>
+                        <TextInput source="name" fullWidth />
+                    </div>
+                }
                 <TextInput
                     fullWidth
                     multiline

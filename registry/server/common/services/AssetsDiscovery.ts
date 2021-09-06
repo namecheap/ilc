@@ -4,6 +4,7 @@ import urljoin from 'url-join';
 
 import knex from '../../db';
 import manifestProcessor from './assetsManifestProcessor';
+import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 
 export default class AssetsDiscovery {
     private tableName: string;
@@ -58,11 +59,7 @@ export default class AssetsDiscovery {
                 continue;
             }
 
-            let data = manifestProcessor(reqUrl, res.data);
-            if (this.tableName === 'shared_libs') {
-                // "dependencies" comes from assets-discovery.json, but we don't have column dependencies at the current moment
-                delete data.dependencies;
-            }
+            let data = manifestProcessor(reqUrl, res.data, AssetsDiscoveryWhiteLists[this.tableName]);
 
             await knex(this.tableName).where(this.tableId, entity[this.tableId]).update(Object.assign({}, data, {
                 assetsDiscoveryUpdatedAt: now,

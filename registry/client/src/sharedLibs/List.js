@@ -6,6 +6,7 @@ import {
     SimpleList,
     TextField,
     EditButton,
+    FunctionField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import {
     Empty,
@@ -29,12 +30,15 @@ const PostList = props => {
         >
             {isSmall ? (
                 <SimpleList
-                    primaryText={record => record.name}
+                    primaryText={record => `@sharedLibrary/${record.name}`}
                     secondaryText={record => record.spaBundle}
                 />
             ) : (
                 <Datagrid rowClick="show" optimized>
-                    <TextField source="name" />
+                    <FunctionField
+                        label="Name"
+                        render={record => `@sharedLibrary/${record.name}`}
+                    />
                     <TextField source="spaBundle" />
                     <ListActionsToolbar>
                         <EditButton />

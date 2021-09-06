@@ -37,6 +37,13 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
     const app = req.body;
     const appName = req.params.name;
 
+    try {
+        await setDataFromManifest(app, 'apps');
+    } catch (error) {
+        res.status(422).send(error.message);
+        return;
+    }
+
     const countToUpdate = await db('apps').where({ name: appName })
     if (!countToUpdate.length) {
         res.status(404).send('Not found');
@@ -55,4 +62,4 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
     res.status(200).send(preProcessResponse(updatedApp));
 };
 
-export default [validateRequestBeforeUpdateApp, setDataFromManifest, updateApp];
+export default [validateRequestBeforeUpdateApp, updateApp];

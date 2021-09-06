@@ -34,8 +34,12 @@ const updateSharedLib = async (req: Request<UpdateSharedLibRequestParams>, res: 
     const sharedLib = req.body;
     const sharedLibName = req.params.name;
 
-    // "dependencies" comes from assets-discovery.json, but we don't have column dependencies at the current moment
-    delete sharedLib.dependencies;
+    try {
+        await setDataFromManifest(sharedLib, 'shared_libs');
+    } catch (error) {
+        res.status(422).send(error.message);
+        return;
+    }
 
     const countToUpdate = await db('shared_libs').where({ name: sharedLibName })
     if (!countToUpdate.length) {
@@ -52,4 +56,4 @@ const updateSharedLib = async (req: Request<UpdateSharedLibRequestParams>, res: 
     res.status(200).send(preProcessResponse(updatedSharedLib));
 };
 
-export default [validateRequestBeforeUpdateSharedLib, setDataFromManifest, updateSharedLib];
+export default [validateRequestBeforeUpdateSharedLib, updateSharedLib];

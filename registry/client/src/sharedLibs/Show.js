@@ -5,6 +5,7 @@ import {
     TabbedShowLayout,
     TextField,
     UrlField,
+    FunctionField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
 import Title from './Title';
@@ -16,7 +17,10 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
         <Show {...props} title={<Title />} actions={<ShowTopToolbar />}>
             <TabbedShowLayout {...props} toolbar={null}>
                 <Tab label="Summary">
-                    <TextField source="name" />
+                    <FunctionField
+                        label="Name"
+                        render={record => `@sharedLibrary/${record.name}`}
+                    />
                     <TextField source="adminNotes" component="pre" emptyText={EMPTY_TEXT} />
                 </Tab>
                 <Tab label="Assets">
