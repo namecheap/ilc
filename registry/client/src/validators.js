@@ -17,3 +17,9 @@ export const url = (value) => {
         return 'Should be a valid URL';
     }
 };
+
+export const disallowedWhiteSpaces = (value) => {
+    if (value.includes(' ')) {
+        return 'Whitespaces are disallowed'
+    }
+};

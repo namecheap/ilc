@@ -8,6 +8,7 @@ import * as appRoutes from './appRoutes/dataTransform';
 import * as settings from './settings/dataTransform';
 import * as authEntities from './authEntities/dataTransform';
 import * as routerDomains from './routerDomains/dataTransform';
+import * as sharedLibs from './sharedLibs/dataTransform';
 
 import httpClient from './httpClient';
 
@@ -107,6 +108,9 @@ function transformGetter(resource, data) {
         case 'router_domains':
             routerDomains.transformGet(data);
             break;
+        case 'shared_libs':
+            sharedLibs.transformGet(data);
+            break;
         default:
     }
 }
@@ -133,6 +137,9 @@ function transformSetter(resource, data, operation) {
             break;
         case 'router_domains':
             routerDomains.transformSet(data, operation);
+            break;
+        case 'shared_libs':
+            sharedLibs.transformSet(data, operation);
             break;
         default:
     }

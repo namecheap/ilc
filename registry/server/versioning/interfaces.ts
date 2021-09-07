@@ -7,6 +7,7 @@ export enum EntityTypes {
     shared_props = 'shared_props',
     templates = 'templates',
     router_domains = 'router_domains',
+    shared_libs = 'shared_libs',
 }
 
 export interface OperationConf {

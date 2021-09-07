@@ -13,6 +13,7 @@ import auth from '../server/auth';
 import {SettingKeys} from "../server/settings/interfaces";
 import nock from "nock";
 import * as bcrypt from 'bcrypt';
+import { muteConsole, unmuteConsole } from './utils/console';
 
 const generateResp403 = (username: string) => ({ message: `Access denied. "${username}" has "readonly" access.` });
 
@@ -232,29 +233,35 @@ describe('Authentication / Authorization', () => {
         });
 
         it('should be possible to turn it off/on in settings', async () => {
-            //Disabled by default
+            muteConsole();
 
-            await agent.get('/auth/openid')
-                .expect(404);
+            try {
+                //Disabled by default
 
-            await agent.get('/auth/openid/return')
-                .expect(404);
+                await agent.get('/auth/openid')
+                    .expect(404);
 
-            await agent.post('/auth/openid/return')
-                .expect(404);
+                await agent.get('/auth/openid/return')
+                    .expect(404);
 
-            sinon.stub(settingsService, 'get').returns(Promise.resolve(true));
-            //settings.get.withArgs(SettingKeys.AuthOpenIdEnabled).returns(Promise.resolve(true));
+                await agent.post('/auth/openid/return')
+                    .expect(404);
+
+                sinon.stub(settingsService, 'get').returns(Promise.resolve(true));
+                //settings.get.withArgs(SettingKeys.AuthOpenIdEnabled).returns(Promise.resolve(true));
 
 
-            await agent.get('/auth/openid')
-                .expect(500); //500 since we don't stub anything else
+                await agent.get('/auth/openid')
+                    .expect(500); //500 since we don't stub anything else
 
-            await agent.get('/auth/openid/return')
-                .expect(500); //500 since we don't stub anything else
+                await agent.get('/auth/openid/return')
+                    .expect(500); //500 since we don't stub anything else
 
-            await agent.post('/auth/openid/return')
-                .expect(500); //500 since we don't stub anything else
+                await agent.post('/auth/openid/return')
+                    .expect(500); //500 since we don't stub anything else
+            } finally {
+                unmuteConsole();
+            }
         });
 
         describe('Authentication', () => {

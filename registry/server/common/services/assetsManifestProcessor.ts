@@ -1,9 +1,8 @@
 import _ from 'lodash';
 import url from 'url';
 
-
-export default function processManifest(baseUrl: string, manifest: any) {
-    let data = _.pick(manifest, ['spaBundle', 'cssBundle', 'dependencies']);
+export default function processManifest(baseUrl: string, manifest: any, whiteList: string[]) {
+    const data = _.pick(manifest, whiteList);
 
     if (data.spaBundle) {
         data.spaBundle = url.resolve(baseUrl, data.spaBundle);

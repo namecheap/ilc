@@ -6,7 +6,7 @@ import {
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import setDataFromManifest from '../middlewares/setDataFromManifest';
+import setDataFromManifest from '../../common/middlewares/setDataFromManifest';
 import {
     stringifyJSON,
 } from '../../common/services/json';
@@ -22,6 +22,13 @@ const validateRequestBeforeCreateApp = validateRequestFactory([{
 const createApp = async (req: Request, res: Response): Promise<void> => {
     const app = req.body;
 
+    try {
+        await setDataFromManifest(app, 'apps');
+    } catch (error) {
+        res.status(422).send(error.message);
+        return;
+    }
+
     await db.versioning(req.user, {type: 'apps', id: app.name}, async (trx) => {
         await db('apps')
             .insert(stringifyJSON(['dependencies', 'props', 'ssrProps', 'ssr', 'configSelector', 'discoveryMetadata'], app))
@@ -33,4 +40,4 @@ const createApp = async (req: Request, res: Response): Promise<void> => {
     res.status(200).send(preProcessResponse(savedApp));
 };
 
-export default [validateRequestBeforeCreateApp, setDataFromManifest, createApp];
+export default [validateRequestBeforeCreateApp, createApp];

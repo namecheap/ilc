@@ -6,5 +6,6 @@ require('newrelic'); //Should be lower then NODE_CONFIG_DIR env var definition
 const tmpInterval = Number(process.env.INTERVAL);
 const interval = Number.isNaN(tmpInterval) ? undefined : tmpInterval;
 
-import AppAssetsDiscovery from './common/services/AppAssetsDiscovery';
-new AppAssetsDiscovery().start(interval);
+import AssetsDiscovery from './common/services/AssetsDiscovery';
+new AssetsDiscovery('apps').start(interval);
+new AssetsDiscovery('shared_libs').start(interval);

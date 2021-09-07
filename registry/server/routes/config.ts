@@ -9,7 +9,7 @@ import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transfo
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-    const [apps, templates, routes, sharedProps, settings, routerDomains] = await Promise.all([
+    const [apps, templates, routes, sharedProps, settings, routerDomains, sharedLibs] = await Promise.all([
         knex.select().from('apps'),
         knex.select('name').from('templates'),
         knex.select()
@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
         knex.select().from('shared_props'),
         knex.select().from('settings').where('scope', Scope.Ilc),
         knex.select().from('router_domains'),
+        knex.select().from('shared_libs'),
     ]);
 
     const data = {
@@ -27,6 +28,7 @@ router.get('/', async (req, res) => {
         routes: [] as any[],
         specialRoutes: [] as any[],
         settings: {},
+        sharedLibs: {},
     };
 
     data.apps = apps.reduce((acc, v) => {
@@ -89,6 +91,11 @@ router.get('/', async (req, res) => {
 
     data.settings = preProcessResponse(settings).reduce((acc: {[key: string]: any}, setting: Setting) => {
         _.set(acc, setting.key, setting.value);
+        return acc;
+    }, {});
+
+    data.sharedLibs = sharedLibs.reduce((acc, { name, spaBundle }) => {
+        acc[name] = spaBundle;
         return acc;
     }, {});
 

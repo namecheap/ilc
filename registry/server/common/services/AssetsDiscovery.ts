@@ -4,13 +4,18 @@ import urljoin from 'url-join';
 
 import knex from '../../db';
 import manifestProcessor from './assetsManifestProcessor';
+import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 
-export default class AppAssetsDiscovery {
+export default class AssetsDiscovery {
+    private tableName: string;
+    private tableId: string;
     private timerId?: NodeJS.Timeout;
 
     private intervalSeconds: number;
 
-    constructor(intervalSeconds = 5) {
+    constructor(tableName: string, { tableId = 'name', intervalSeconds = 5 } = {}) {
+        this.tableName = tableName;
+        this.tableId = tableId;
         this.intervalSeconds = intervalSeconds;
     }
 
@@ -28,21 +33,21 @@ export default class AppAssetsDiscovery {
         const now = Math.floor(Date.now() / 1000);
         const updateAfter = now - this.intervalSeconds;
 
-        const apps = await knex.select().from('apps')
+        const entities = await knex.select().from(this.tableName)
             .whereNotNull('assetsDiscoveryUrl')
             .andWhere(function () {
                 this.whereNull('assetsDiscoveryUpdatedAt')
                     .orWhere('assetsDiscoveryUpdatedAt', '<', updateAfter);
             });
 
-        for (const app of apps) {
-            let reqUrl = app.assetsDiscoveryUrl;
+        for (const entity of entities) {
+            let reqUrl = entity.assetsDiscoveryUrl;
 
             // This implementation of communication between ILC & apps duplicates code in ILC ServerRouter
             // and so should be refactored in the future.
-            if (app.props && app.props !== '{}') {
-                const appProps = Buffer.from(app.props).toString('base64');
-                reqUrl = urljoin(reqUrl, `?appProps=${appProps}`);
+            if (entity.props && entity.props !== '{}') {
+                const entityProps = Buffer.from(entity.props).toString('base64');
+                reqUrl = urljoin(reqUrl, `?appProps=${entityProps}`);
             }
 
             let res: AxiosResponse;
@@ -50,13 +55,13 @@ export default class AppAssetsDiscovery {
                 res = await axios.get(reqUrl, {responseType: 'json'});
             } catch (err) {
                 //TODO: add exponential back-off
-                console.warn(`Can't refresh assets for app "${app.name}". Error: ${err.toString()}`);
+                console.warn(`Can't refresh assets for "${entity[this.tableId]}". Error: ${err.toString()}`);
                 continue;
             }
 
-            let data = manifestProcessor(reqUrl, res.data);
+            let data = manifestProcessor(reqUrl, res.data, AssetsDiscoveryWhiteLists[this.tableName]);
 
-            await knex('apps').where('name', app.name).update(Object.assign({}, data, {
+            await knex(this.tableName).where(this.tableId, entity[this.tableId]).update(Object.assign({}, data, {
                 assetsDiscoveryUpdatedAt: now,
             }));
         }

@@ -13,8 +13,8 @@ import settingsService from './settings/services/SettingsService';
 
 export default (withAuth: boolean = true) => {
     // As in production there can be 2+ instances of the ILC registry
-    // AppAssetsDiscovery should be run separately via "npm run assetsdiscovery"
-    !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAppAssetsDiscovery');
+    // AssetsDiscovery should be run separately via "npm run assetsdiscovery"
+    !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAssetsDiscovery');
 
     const app = express();
 
@@ -41,6 +41,7 @@ export default (withAuth: boolean = true) => {
     app.use('/api/v1/versioning', authMw, routes.versioning);
     app.use('/api/v1/settings', routes.settings(authMw));
     app.use('/api/v1/router_domains', routes.routerDomains(authMw));
+    app.use('/api/v1/shared_libs', authMw, routes.sharedLibs);
     app.use('/api/v1/public', routes.public);
 
     app.use(errorHandler);
