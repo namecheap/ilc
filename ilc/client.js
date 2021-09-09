@@ -64,6 +64,7 @@ const parcelApi = new ParcelApi(registryConf, bundleLoader, window.ILC.getAppSdk
 window.ILC.mountRootParcel = singleSpa.mountRootParcel;
 window.ILC.loadApp = bundleLoader.loadAppWithCss.bind(bundleLoader); // Internal API for Namecheap, not for public use
 window.ILC.importParcelFromApp = parcelApi.importParcelFromApp;
+window.ILC.getAllSharedLibNames = async () => Object.keys(registryConf.sharedLibs);
 // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
 // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
 
