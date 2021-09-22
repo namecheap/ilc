@@ -18,7 +18,7 @@ import { ListActionsToolbar } from '../components';
 
 const MyFilter = (props) => (
     <Filter {...props}>
-        <SelectInput label="Entity Type" source="entity_type" choices={[{id: 'apps', name: 'Apps'}, {id: 'routes', name: 'Routes'}]} alwaysOn/>
+        <SelectInput label="Entity Type" source="entity_type" choices={[{id: 'apps', name: 'Apps'}, {id: 'routes', name: 'Routes'}, {id: 'shared_libs', name: 'Shared libs'}]} alwaysOn/>
         <TextInput label="Entity ID" source="entity_id" alwaysOn />
         <TextInput label="Created by" source="created_by" alwaysOn />
     </Filter>
