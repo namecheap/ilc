@@ -7,4 +7,5 @@ export function transformSet(sharedLib) {
         delete sharedLib.spaBundle;
     }
     delete sharedLib.id;
+    delete sharedLib.assetsDiscoveryUpdatedAt;
 }
