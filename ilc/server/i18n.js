@@ -1,5 +1,5 @@
 const Cookie = require('cookie');
-const Intl = require('ilc-sdk/app').Intl;
+const IlcIntl = require('ilc-sdk/app').IlcIntl;
 const {intlSchema} = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
 
 const i18nCookie = require('../common/i18nCookie');
@@ -16,22 +16,22 @@ const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, 
 
     if (encodedI18nCookie) {
         decodedI18nCookie = i18nCookie.decode(encodedI18nCookie);
-        currI18nConf.locale = Intl.getCanonicalLocale(decodedI18nCookie.locale, i18nConfig.supported.locale) || currI18nConf.locale;
+        currI18nConf.locale = IlcIntl.getCanonicalLocale(decodedI18nCookie.locale, i18nConfig.supported.locale) || currI18nConf.locale;
         currI18nConf.currency = i18nConfig.supported.currency.includes(decodedI18nCookie.currency) ? decodedI18nCookie.currency : currI18nConf.currency;
     }
 
     currI18nConf = await i18nParamsDetectionPlugin.detectI18nConfig(
         req.raw,
         {
-            parseUrl: (url) => Intl.parseUrl(i18nConfig, url),
-            localizeUrl: (url, {locale}) => Intl.localizeUrl(i18nConfig, url, {locale}),
-            getCanonicalLocale: (locale) => Intl.getCanonicalLocale(locale, i18nConfig.supported.locale),
+            parseUrl: (url) => IlcIntl.parseUrl(i18nConfig, url),
+            localizeUrl: (url, {locale}) => IlcIntl.localizeUrl(i18nConfig, url, {locale}),
+            getCanonicalLocale: (locale) => IlcIntl.getCanonicalLocale(locale, i18nConfig.supported.locale),
         },
         currI18nConf,
         decodedI18nCookie,
     );
 
-    const fixedUrl = Intl.localizeUrl(i18nConfig, req.raw.url, {locale: currI18nConf.locale});
+    const fixedUrl = IlcIntl.localizeUrl(i18nConfig, req.raw.url, {locale: currI18nConf.locale});
     if (fixedUrl !== req.raw.url) {
         reply.redirect(fixedUrl);
         return;
@@ -67,7 +67,7 @@ function unlocalizeUrl(i18nConfig, url) {
         return url;
     }
 
-    return Intl.parseUrl(i18nConfig, url).cleanUrl;
+    return IlcIntl.parseUrl(i18nConfig, url).cleanUrl;
 }
 
 function localizeUrl(i18nConfig, url, configOverride) {
@@ -75,7 +75,7 @@ function localizeUrl(i18nConfig, url, configOverride) {
         return url;
     }
 
-    return Intl.localizeUrl(i18nConfig, url, configOverride);
+    return IlcIntl.localizeUrl(i18nConfig, url, configOverride);
 }
 
 module.exports = {
