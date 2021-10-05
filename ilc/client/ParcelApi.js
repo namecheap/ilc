@@ -1,6 +1,6 @@
 import debug from 'debug';
 import {flattenFnArray} from './utils';
-import {Intl as IlcIntl} from 'ilc-sdk/app';
+import { IlcIntl } from 'ilc-sdk/app';
 
 export default class ParcelApi {
     #registryConf;

@@ -3,6 +3,7 @@ import debug from 'debug';
 
 import Router from '../common/router/Router';
 import * as errors from '../common/router/errors';
+import { isSpecialUrl } from 'ilc-sdk/app';
 
 export default class ClientRouter {
     errors = errors;
@@ -176,12 +177,11 @@ export default class ClientRouter {
             : event.target.closest('a');
         const href = anchor && anchor.getAttribute('href');
 
-        if (event.defaultPrevented || !href || !['', '_self'].includes(anchor.target)) {
+        if (event.defaultPrevented || href === null || !['', '_self'].includes(anchor.target) || isSpecialUrl(href)) {
             return;
         }
 
         const {specialRole} = this.match(href);
-
         if (specialRole === null) {
             this.#debug(`Calling singleSpa.navigateToUrl("${href}")`);
             this.#singleSpa.navigateToUrl(href);

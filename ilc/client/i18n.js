@@ -1,4 +1,4 @@
-import {Intl as IlcIntl} from 'ilc-sdk/app';
+import { IlcIntl } from 'ilc-sdk/app';
 import Cookies from 'js-cookie';
 
 import transactionManagerFactory from './TransactionManager';
