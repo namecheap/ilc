@@ -102,10 +102,17 @@ describe('merge configs', () => {
         },
     };
 
+    const sharedLibs = {
+        sharedLibrary1: 'https://somewhere.com/original1.js',
+        sharedLibrary2: 'https://somewhere.com/original2.js',
+        sharedLibrary3: 'https://somewhere.com/original3.js',
+    };
+
     const registryConfig = {
         apps,
         routes,
         specialRoutes,
+        sharedLibs,
     };
 
     describe('should return original config', () => {
@@ -187,6 +194,15 @@ describe('merge configs', () => {
             },
         ];
 
+        const overrideSharedLibs = {
+            sharedLibrary1: {
+                spaBundle: 'https://somewhere.com/overriden1.js',
+            },
+            sharedLibrary2: {
+                spaBundle: 'https://somewhere.com/overriden2.js',
+            },
+        };
+
         const mergedRoute = {
             routeId: 'willChangeRoute',
             route: '/changed',
@@ -232,6 +248,12 @@ describe('merge configs', () => {
             },
         };
 
+        const mergedSharedLibs = {
+            sharedLibrary1: 'https://somewhere.com/overriden1.js',
+            sharedLibrary2: 'https://somewhere.com/overriden2.js',
+            sharedLibrary3: 'https://somewhere.com/original3.js',
+        };
+
         it('should override only apps when they exist', () => {
             const overrideConfig = {
                 apps: overrideApps,
@@ -270,10 +292,24 @@ describe('merge configs', () => {
             chai.expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
         });
 
-        it('should override apps and routes when they both exist', () => {
+        it('should override only sharedLibs when they exist', () => {
+            const overrideConfig = {
+                sharedLibs: overrideSharedLibs,
+            };
+
+            const mergedConfig = {
+                ...registryConfig,
+                sharedLibs: mergedSharedLibs,
+            };
+
+            chai.expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
+        });
+
+        it('should override apps, routes and sharedLibs when they exist', () => {
             const overrideConfig = {
                 apps: overrideApps,
                 routes: overrideRoutes,
+                sharedLibs: overrideSharedLibs,
             };
 
             const [newRoute] = overrideConfig.routes;
@@ -292,6 +328,7 @@ describe('merge configs', () => {
                     mergedRoute,
                     newRoute,
                 ],
+                sharedLibs: mergedSharedLibs,
             };
 
             chai.expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);

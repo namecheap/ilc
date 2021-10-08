@@ -48,6 +48,11 @@ const getExampleObject = (ip = '10.1.150.223', protocol = 'http:') => (
                 },
             },
         ],
+        sharedLibs: {
+            sharedLibrary: {
+                spaBundle: `${protocol}//${ip}:5555/bundle.js`,
+            },
+        },
     }
 );
 
@@ -86,6 +91,9 @@ const getSanitizedObject = () => (
                 },
             },
         ],
+        sharedLibs: {
+            sharedLibrary: {},
+        },
     }
 );
 
@@ -131,6 +139,11 @@ const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:', useCompressi
                 },
             },
         ],
+        sharedLibs: {
+            sharedLibrary: {
+                spaBundle: `${protocol}//${ip}:5555/bundle.js`,
+            },
+        },
     });
 
     let encodedValue;

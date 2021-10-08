@@ -74,9 +74,16 @@ module.exports = (cookie, trustedOrigins) => {
             overrideConfig = JSON.parse(decodeURIComponent(overrideConfig));
         }
 
-        if (overrideConfig.apps && trustedOrigins !== 'all') {
-            const parsedTrustedOrigin = typeof trustedOrigins === 'string' && trustedOrigins.split(',').map(n=>n.trim());
-            sanitizeSpoofedLinks(overrideConfig.apps, parsedTrustedOrigin);
+        if (trustedOrigins !== 'all') {
+            const parsedTrustedOrigin = typeof trustedOrigins === 'string' && trustedOrigins.split(',').map(n => n.trim());
+
+            if (overrideConfig.apps) {
+                sanitizeSpoofedLinks(overrideConfig.apps, parsedTrustedOrigin);
+            }
+
+            if (overrideConfig.sharedLibs) {
+                sanitizeSpoofedLinks(overrideConfig.sharedLibs, parsedTrustedOrigin);
+            }
         }
 
         /**

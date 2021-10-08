@@ -120,3 +120,19 @@ document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`
 ```
 - since you probably run your MS locally via http and if your production site uses https so you will have problems with mixed content when you try to send request to http from https, so the simplest way to resolve it - just turn off checking in your browser. Details [link](https://docs.adobe.com/content/help/en/target/using/experiences/vec/troubleshoot-composer/mixed-content.html).
 - if you exclude some libs e.g. via ["externals"](https://github.com/namecheap/ilc/blob/e1ea372f822fc95790e73743c5ad7ddf31e3c892/devFragments/people/webpack.config.js#L95) property of webpack config - comment it during developing at production.
+
+## Shared libraries
+Shared libraries support the same way of developing like MSs. You just need to provide library name (w/o prefix "@sharedLibrary/") and path to spa-bundle:
+```js
+const overrideConfig = encodeURIComponent(
+    JSON.stringify({
+        "sharedLibs": {
+            "sampleLibrary": {
+                "spaBundle": 'http://10.1.150.85:9001/bundle.js',
+            },
+        },
+    })
+);
+
+document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`
+```
