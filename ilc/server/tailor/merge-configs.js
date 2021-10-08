@@ -2,7 +2,7 @@ const deepmerge = require('deepmerge');
 const _ = require('lodash');
 
 module.exports = (original, override) => {
-    if (!override || !override.apps && !override.routes) {
+    if (!override || !override.apps && !override.routes && !override.sharedLibs) {
         return original;
     }
 
@@ -43,6 +43,16 @@ module.exports = (original, override) => {
                 ];
             }
         });
+    }
+
+    if (override.sharedLibs) {
+        for (let sharedLibName in override.sharedLibs) {
+            const { spaBundle } = override.sharedLibs[sharedLibName]
+
+            if (spaBundle) {
+                cloned.sharedLibs[sharedLibName] = spaBundle;
+            }
+        }
     }
 
     return cloned;
