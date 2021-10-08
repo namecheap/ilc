@@ -46,13 +46,13 @@ module.exports = (original, override) => {
     }
 
     if (override.sharedLibs) {
-        for (let sharedLibName in override.sharedLibs) {
-            const { spaBundle } = override.sharedLibs[sharedLibName]
+        Object.entries(override.sharedLibs).forEach(([sharedLibName, sharedLibConfig]) => {
+            const { spaBundle } = sharedLibConfig;
 
             if (spaBundle) {
                 cloned.sharedLibs[sharedLibName] = spaBundle;
             }
-        }
+        });
     }
 
     return cloned;
