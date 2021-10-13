@@ -1,0 +1,16 @@
+name: Deploy Documentation
+on:
+  push:
+    branches: 
+      - master
+      - gh-pages
+jobs:
+  build_docs:
+    name: Build documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+              
+      - name: Generate docs and publish to GitHub Pages
+        run: docker run --rm -t -v ${PWD}:/docs squidfunk/mkdocs-material gh-deploy --force
