@@ -143,3 +143,13 @@ jobs:
               docker tag namecheap/ilc_tmp:${GITHUB_SHA:0:7} namecheap/ilc:$i
               docker push namecheap/ilc:$i
           done
+
+  build_docs:
+    needs: [build_ilc, build_registry, push_images]
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+              
+      - name: Generate docs and publish to GitHub Pages
+        run: docker run --rm -t -v ${PWD}:/docs squidfunk/mkdocs-material:latest gh-deploy --force
