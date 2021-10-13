@@ -16,7 +16,7 @@ As soon as you started the app - try to play few tic-tac-toe matches 😎
 
 ## Adapting the app to ILC
 
-To make the application work correctly with ILC we need to make it compliant with [ILC to App interface](../../ilc_app_interface.md).
+To make the application work correctly with ILC we need to make it compliant with [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html).
 Fortunately that's pretty easy, go through the source code and resolve **all** the `//TODO:` comments I placed for you there.
 
 As soon as you're finished with this - restart the app & try to open `/microfrontend` route. 

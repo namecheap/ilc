@@ -1,0 +1,55 @@
+site_name: Isomorphic Layout Composer
+site_author: Anton Zolotukhin
+
+theme:
+  name: material
+  icon:
+    logo: material/scissors-cutting
+    repo: fontawesome/brands/github
+  palette:
+    primary: indigo
+    accent: deep purple
+  features:
+    - navigation.sections
+    - navigation.top
+
+repo_url: https://github.com/namecheap/ilc
+repo_name: namecheap/ilc
+
+nav:
+  - Home: index.md
+  - Installation: installation_guide.md
+  - Micro-frontend Types: microfrontend-types.md
+  - App deployments with ILC: stepbystep/index.md
+  - ILC Registry: registry.md
+  - Animation during reroute: animation_during_reroute.md
+  - Global error handling: global_errors_handling.md
+  - Internationalization: i18n.md
+  - Develop at Production: develop_at_production.md
+  - Compatibility with legacy UMD bundles: umd_bundles_compatibility.md
+  - ILC transition hooks: transition_hooks.md
+  - Multi-domains: multi-domains.md
+  - Advanced features:
+    - Parcels: parcels.md
+    - Plugins: https://github.com/namecheap/ilc-plugins-sdk
+    - App Wrappers: app_wrappers.md
+  - How-to Guides:
+      - App deploy with React + ILC:
+        - Lesson 1: stepbystep/react/lesson1.md
+        - Lesson 2: stepbystep/react/lesson2.md
+        - Lesson 3: stepbystep/react/lesson3.md
+        - Lesson 4: stepbystep/react/lesson4.md
+  - External resources:
+    - ILC to App interface: https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html
+    - Demo applications used in quick start: https://github.com/namecheap/ilc-demo-apps
+    - Global API: https://namecheap.github.io/ilc-sdk/pages/Pages/global_api.html
+    - SDK for ILC plugins development: https://github.com/namecheap/ilc-plugins-sdk
+    - Public Path Problem: https://namecheap.github.io/ilc-sdk/pages/Pages/public_path.html
+
+markdown_extensions:
+  - attr_list
+  - toc:
+      permalink: ⚓︎
+
+docs_dir: 'docs'
+site_dir: 'output'
