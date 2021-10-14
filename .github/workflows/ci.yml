@@ -145,7 +145,7 @@ jobs:
           done
 
   build_docs:
-    needs: [build_ilc, build_registry, push_images]
+    needs: [push_images]
     name: Build documentation
     runs-on: ubuntu-latest
     steps:
