@@ -10,7 +10,7 @@ In order to upgrade ILC to higher version you only need to replace running Docke
 in the following order: Registry first, ILC itself after. 
 So you should never have newer version of ILC running alongside outdated Registry. 
 
-To get more information about exact configuration of the Docker images see [docker-compose.yml](https://github.com/namecheap/ilc/blob/master/docker-compose.yml).
+To get more information about exact configuration of the Docker images see [docker-compose.yml]({{ repo.full_url }}/docker-compose.yml){: target=_blank} :octicons-link-external-16:
 
 ## Environment variables
 
@@ -19,8 +19,8 @@ parameters that can be configured only via environment variables passed to Docke
 
 You can find full list of them in the following files:
 
-* [ILC container](https://github.com/namecheap/ilc/blob/master/ilc/config/custom-environment-variables.json5)
-* [Registry container](https://github.com/namecheap/ilc/blob/master/registry/config/custom-environment-variables.ts)
+* [ILC container]({{ repo.full_url }}/ilc/config/custom-environment-variables.json5){: target=_blank} :octicons-link-external-16:
+* [Registry container]({{ repo.full_url }}/registry/config/custom-environment-variables.ts){: target=_blank} :octicons-link-external-16:
 
 ## Authentication credentials configuration
 
