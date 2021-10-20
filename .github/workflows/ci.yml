@@ -143,3 +143,18 @@ jobs:
               docker tag namecheap/ilc_tmp:${GITHUB_SHA:0:7} namecheap/ilc:$i
               docker push namecheap/ilc:$i
           done
+
+  build_docs:
+    needs: [push_images]
+    name: Build documentation
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build the Docker image
+        run: |
+          docker build -t ilc-mkdocs - < ./.mkdocs/Dockerfile
+              
+      - name: Generate docs and publish to GitHub Pages
+        run: docker run --rm -v ${PWD}:/docs ilc-mkdocs gh-deploy --force

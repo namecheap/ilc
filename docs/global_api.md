@@ -1,3 +1,3 @@
 # Global API
 
-[Moved to new location](https://namecheap.github.io/ilc-sdk/pages/Pages/global_api.html)
+[Global API documentation](https://namecheap.github.io/ilc-sdk/pages/Pages/global_api.html){: target=_blank} :octicons-link-external-16:

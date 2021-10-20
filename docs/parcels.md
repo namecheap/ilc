@@ -1,3 +1,7 @@
+---
+ignore_macros: true
+---
+
 # Parcels
 
 > Parcels are an advanced feature of ILC / single-spa. We recommend that you use _Applications_ as the primary type of micro-frontend 

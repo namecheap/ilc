@@ -38,3 +38,10 @@ In order to run tests:
 ILC uses [debug](https://www.npmjs.com/package/debug) package at client side to produce
 verbose logs for debug purposes. 
 To enable it, execute `localStorage.debug = 'ILC:*'` in the browser console.
+
+## Documentation website
+
+1. Build docker image for docs: `docker build -t ilc-mkdocs - < ./.mkdocs/Dockerfile`
+1. Watch or build docs:
+    * **Dev mode (watch)**: `docker run --rm -it -p 8000:8000 -v ${PWD}:/docs ilc-mkdocs`
+    * **Build**: `docker run --rm -v ${PWD}:/docs ilc-mkdocs build`

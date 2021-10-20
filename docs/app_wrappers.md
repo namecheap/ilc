@@ -32,7 +32,7 @@ To see it in action [go to our demo website](http://demo.microfrontends.online/w
 
 ### Client side API
 
-At client side Wrapper App receives an additional property `renderApp` via [ILC to App interface](./ilc_app_interface.md).
+At client side Wrapper App receives an additional property `renderApp` via [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html).
 
 ### Server side API
 
