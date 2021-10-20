@@ -148,13 +148,13 @@ jobs:
     needs: [push_images]
     name: Build documentation
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install required packages
+      - name: Build the Docker image
         run: |
-          pip3 install mkdocs-material
-          pip3 install mkdocs-macros-plugin
+          docker build -t ilc-mkdocs - < ./.mkdocs/Dockerfile
               
       - name: Generate docs and publish to GitHub Pages
-        run: mkdocs gh-deploy --force
+        run: docker run --rm -v ${PWD}:/docs ilc-mkdocs gh-deploy --force
