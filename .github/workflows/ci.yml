@@ -157,10 +157,15 @@ jobs:
           cd ..
           mkdir temp-for-push
           git clone -b master https://github.com/bandantonio/documentation.git temp-for-push/documentation
+          cp -LR ilc/.mkdocs temp-for-push/documentation/docs/ilc
+          cp ilc/mkdocs.yml temp-for-push/documentation/docs/ilc
           cd temp-for-push/documentation
-          echo "test file" >> readme.md
-          cat readme.md
           git status
+          git config user.name "Antonio"
+          git config user.email "zolotuhin87@gmail.com"
+          git add .
+          git status
+          git remote -v
           
         # uses: TomoeMami/copy_file_to_another_repo_action@main
         # env:
