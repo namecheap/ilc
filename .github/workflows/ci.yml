@@ -156,11 +156,11 @@ jobs:
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.DOCS_AGGREGATION }}
-          src_path: /.mkdocs
+          src_path: .mkdocs
           dst_path: ./docs/ilc
           clean: true
           dst_owner: bandantonio
-          dst_repo_name: documentation
+          dst_repo_name: bandantonio/documentation
 
       - name: Build the Docker image
         run: |
