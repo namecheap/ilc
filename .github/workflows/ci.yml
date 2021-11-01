@@ -160,13 +160,11 @@ jobs:
           cp -LR ilc/.mkdocs temp-for-push/documentation/docs/ilc
           cp ilc/mkdocs.yml temp-for-push/documentation/docs/ilc
           cd temp-for-push/documentation
-          git config user.name "Antonio"
-          git config user.email "zolotuhin87@gmail.com"
           git status
           git add .
           git status
           git commit -m "AUTO: update from ilc repo"
-          git push origin master
+          git push https://${{ secrets.DOCS_AGGREGATION }}@github.com/bandantonio/documentation.git
           
         # uses: TomoeMami/copy_file_to_another_repo_action@main
         # env:
