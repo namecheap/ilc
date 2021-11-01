@@ -157,7 +157,7 @@ jobs:
         with:
           personal_token: ${{ secrets.DOCS_AGGREGATION }}
           src_path: /.mkdocs
-          dst_path: /docs/ilc/
+          dst_path: ./docs/ilc
           clean: true
           dst_owner: bandantonio
           dst_repo_name: documentation
