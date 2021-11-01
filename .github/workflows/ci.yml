@@ -154,23 +154,16 @@ jobs:
       
       - name: Copy
         uses: cpina/github-action-push-to-another-repository@main
-          env:
-            API_TOKEN_GITHUB: ${{ secrets.DOCS_AGGREGATION }}
-          with:
-            source-directory: /.mkdocs
-            target-directory: /docs/ilc
-            destination-github-username: bandantonio
-            destination-repository-name: documentation
-            user-email: zolotuhin87@gmail.com
-            commit-message: Auto merge from $REPOSITORY_URL
-            target-branch: master
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.DOCS_AGGREGATION }}
         with:
-          personal_token: ${{ secrets.DOCS_AGGREGATION }}
-          src_path: /.mkdocs
-          dst_path: /docs/
-          clean: true
-          dst_owner: bandantonio
-          dst_repo_name: documentation
+          source-directory: /.mkdocs
+          target-directory: /docs/ilc
+          destination-github-username: bandantonio
+          destination-repository-name: documentation
+          user-email: zolotuhin87@gmail.com
+          commit-message: Auto merge from $REPOSITORY_URL
+          target-branch: master
 
       - name: Build the Docker image
         run: |
