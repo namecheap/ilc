@@ -165,6 +165,7 @@ jobs:
           cd ../temp-for-push/documentation
           echo "--DOCS--"
           ls -a
+          echo "Test" >> test.md
           git status
           git config user.name "Antonio"
           git config user.email "zolotuhin87@gmail.com"
