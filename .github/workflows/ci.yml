@@ -158,6 +158,7 @@ jobs:
           personal_token: ${{ secrets.GITHUB_TOKEN }}
           src_path: /.mkdocs
           dst_path: /docs/ilc/
+          clean: true
           dst_owner: bandantonio
           dst_repo_name: ilc
 
