@@ -156,8 +156,8 @@ jobs:
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.GITHUB_TOKEN }}
-          src_path: ./.mkdocs
-          dst_path: ./docs/ilc/
+          src_path: /.mkdocs
+          dst_path: /docs/ilc/
           clean: true
           dst_owner: bandantonio
           dst_repo_name: documentation
