@@ -160,6 +160,8 @@ jobs:
           cp -LR ilc/.mkdocs temp-for-push/documentation/docs/ilc
           cp ilc/mkdocs.yml temp-for-push/documentation/docs/ilc
           cd temp-for-push/documentation
+          git config user.name "Antonio"
+          git config user.email "zolotuhin87@gmail.com"
           git status
           git add .
           git status
