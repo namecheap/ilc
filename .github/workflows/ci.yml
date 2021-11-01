@@ -155,13 +155,14 @@ jobs:
       - name: Copy
         run: |
           mkdir temp-for-push
-          cp -R .mkdocs temp-for-push
-          cp mkdocs.yml temp-for-push
-          ls -la
+          git clone -b master https://github.com/bandantonio/documentation.git temp-for-push/documentation
+          cp -R .mkdocs temp-for-push/documentation/docs/ilc
+          cp mkdocs.yml temp-for-push/documentation/docs/ilc
           cd temp-for-push
-          ls -la
           git status
-          git commit -am "AUTO: merge"
+          git add .
+          git commit -m "AUTO: merge"
+          git remote -v
         # uses: TomoeMami/copy_file_to_another_repo_action@main
         # env:
         #   API_TOKEN_GITHUB: ${{ secrets.DOCS_AGGREGATION }}
