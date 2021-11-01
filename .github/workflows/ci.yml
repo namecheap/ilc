@@ -145,12 +145,22 @@ jobs:
           done
 
   build_docs:
-    needs: [push_images]
+    # needs: [push_images]
     name: Build documentation
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    # if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
+      
+      - name: Copy
+        uses: andstor/copycat-action@v3
+        with:
+          personal_token: ${{ secrets.GITHUB_TOKEN }}
+          src_path: /.mkdocs
+          dst_path: /docs/ilc/
+          dst_owner: bandantonio
+          dst_repo_name: ilc
+
 
       - name: Build the Docker image
         run: |
