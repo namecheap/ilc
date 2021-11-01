@@ -167,6 +167,7 @@ jobs:
           git config user.email "zolotuhin87@gmail.com"
           git add .
           git commit -m "AUTO merge"
+          git remote -v
         # uses: TomoeMami/copy_file_to_another_repo_action@main
         # env:
         #   API_TOKEN_GITHUB: ${{ secrets.DOCS_AGGREGATION }}
