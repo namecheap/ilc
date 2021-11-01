@@ -153,17 +153,15 @@ jobs:
       - uses: actions/checkout@v2
       
       - name: Copy
-        uses: cpina/github-action-push-to-another-repository@main
+        uses: dmnemec/copy_file_to_another_repo_action@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.DOCS_AGGREGATION }}
         with:
-          source-directory: './.mkdocs'
-          target-directory: './docs/ilc'
-          destination-github-username: 'bandantonio'
-          destination-repository-name: 'documentation'
-          user-email: zolotuhin87@gmail.com
-          commit-message: See ORIGIN_COMMIT from $GITHUB_REF
-          target-branch: master
+          source_file: '/.mkdocs'
+          destination_repo: 'bandantonio/documentation'
+          destination_folder: 'docs/ilc'
+          user_name: 'bandantonio'
+          destination_branch: 'master'
 
       - name: Build the Docker image
         run: |
