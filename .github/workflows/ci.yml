@@ -157,12 +157,14 @@ jobs:
         env:
           API_TOKEN_GITHUB: ${{ secrets.DOCS_AGGREGATION }}
         with:
-          source_file: .mkdocs
+          source_file: .mkdocs/
           destination_repo: 'bandantonio/documentation'
-          destination_folder: docs/ilc
+          destination_folder: docs/ilc/
           user_email: zolotuhin87@gmail.com
           user_name: Antonio
           commit_message: 'AUTO: merge from $REPOSITORY_URL'
+          destination_branch: master
+          destination_branch_create: test
           git_server: github.com
 
       - name: Build the Docker image
