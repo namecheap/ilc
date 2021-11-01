@@ -160,7 +160,7 @@ jobs:
           dst_path: ./docs/ilc/
           clean: true
           dst_owner: bandantonio
-          dst_repo_name: ilc
+          dst_repo_name: documentation
 
 
       - name: Build the Docker image
