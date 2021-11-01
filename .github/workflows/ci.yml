@@ -163,6 +163,7 @@ jobs:
           destination-repository-name: documentation
           user-email: zolotuhin87@gmail.com
           commit-message: Auto merge from $REPOSITORY_URL
+          source-branch: test-aggregation
           target-branch: master
 
       - name: Build the Docker image
