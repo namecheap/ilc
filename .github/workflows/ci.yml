@@ -8,141 +8,141 @@ on:
       - '**'
 
 jobs:
-  build_ilc:
-    name: Build ILC
-    runs-on: ubuntu-latest
+  # build_ilc:
+  #   name: Build ILC
+  #   runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v1
+  #   steps:
+  #   - uses: actions/checkout@v1
 
-    - name: Docker ilc auth
-      run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
+  #   - name: Docker ilc auth
+  #     run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
-    - name: Build the Docker image
-      run: |
-        cd ./ilc/
-        DOCKER_BUILDKIT=1 docker build . --tag ilc:tmp
+  #   - name: Build the Docker image
+  #     run: |
+  #       cd ./ilc/
+  #       DOCKER_BUILDKIT=1 docker build . --tag ilc:tmp
 
-    - name: Run sever side tests
-      run: docker run ilc:tmp npm run test:ci
+  #   - name: Run sever side tests
+  #     run: docker run ilc:tmp npm run test:ci
 
-    - name: Run server side tests coverage
-      run: docker run --volume /artifacts/ilc/.test_output/server:/temporary ilc:tmp bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
+  #   - name: Run server side tests coverage
+  #     run: docker run --volume /artifacts/ilc/.test_output/server:/temporary ilc:tmp bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: server-side-tests-artifacts
-        path: /artifacts/ilc/.test_output/server/
+  #   - uses: actions/upload-artifact@v2
+  #     with:
+  #       name: server-side-tests-artifacts
+  #       path: /artifacts/ilc/.test_output/server/
 
-    - name: Build the Docker image to test client side
-      run: |
-        cd ./ilc/
-        DOCKER_BUILDKIT=1 docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=ilc:tmp
+  #   - name: Build the Docker image to test client side
+  #     run: |
+  #       cd ./ilc/
+  #       DOCKER_BUILDKIT=1 docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=ilc:tmp
 
-    - name: Run client side tests
-      run: |
-        echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
-        sudo sysctl -p
-        docker run --volume /artifacts/ilc/.test_output/client:/temporary ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /temporary"
+  #   - name: Run client side tests
+  #     run: |
+  #       echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+  #       sudo sysctl -p
+  #       docker run --volume /artifacts/ilc/.test_output/client:/temporary ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /temporary"
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: client-side-tests-artifacts
-        path: /artifacts/ilc/.test_output/client/
+  #   - uses: actions/upload-artifact@v2
+  #     with:
+  #       name: client-side-tests-artifacts
+  #       path: /artifacts/ilc/.test_output/client/
 
-    - name: Push to temp repo
-      run: |
-        docker tag ilc:tmp namecheap/ilc_tmp:${GITHUB_SHA:0:7}
-        docker push namecheap/ilc_tmp:${GITHUB_SHA:0:7}
+  #   - name: Push to temp repo
+  #     run: |
+  #       docker tag ilc:tmp namecheap/ilc_tmp:${GITHUB_SHA:0:7}
+  #       docker push namecheap/ilc_tmp:${GITHUB_SHA:0:7}
 
-  build_registry:
-    name: Build Registry
-    runs-on: ubuntu-latest
+  # build_registry:
+  #   name: Build Registry
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v1
+  #   steps:
+  #     - uses: actions/checkout@v1
 
-      - name: Docker registry auth
-        run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
+  #     - name: Docker registry auth
+  #       run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
-      - name: Build the Docker image
-        run: |
-          cd ./registry/
-          docker build . --tag registry:tmp
+  #     - name: Build the Docker image
+  #       run: |
+  #         cd ./registry/
+  #         docker build . --tag registry:tmp
 
-      - name: Run tests
-        run: docker run registry:tmp npm run test:ci
+  #     - name: Run tests
+  #       run: docker run registry:tmp npm run test:ci
 
-      - name: Push to temp repo
-        run: |
-          docker tag registry:tmp namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
-          docker push namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
+  #     - name: Push to temp repo
+  #       run: |
+  #         docker tag registry:tmp namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
+  #         docker push namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
 
-  e2e_tests:
-    name: Run E2E tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
+  # e2e_tests:
+  #   name: Run E2E tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v1
 
-      - name: Use Node.js 14
-        uses: actions/setup-node@v1
-        with:
-          node-version: 14
+  #     - name: Use Node.js 14
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: 14
 
-      - name: Install Chrome deps
-        run: sudo apt-get update && sudo apt-get install -y libgbm-dev
+  #     - name: Install Chrome deps
+  #       run: sudo apt-get update && sudo apt-get install -y libgbm-dev
 
-      - name: Cache node modules
-        uses: actions/cache@v1
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.os }}-build
+  #     - name: Cache node modules
+  #       uses: actions/cache@v1
+  #       env:
+  #         cache-name: cache-node-modules
+  #       with:
+  #         path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+  #         key: ${{ runner.os }}-build
 
-      - name: Install dependencies
-        run: npm i
+  #     - name: Install dependencies
+  #       run: npm i
 
-      - name: Build ILC & Registry
-        run: npm run build
+  #     - name: Build ILC & Registry
+  #       run: npm run build
 
-      - name: Run E2E tests
-        run: cd e2e && npm start
+  #     - name: Run E2E tests
+  #       run: cd e2e && npm start
 
-  push_images:
-    needs: [build_ilc, build_registry, e2e_tests]
-    name: Push images to registry
-    runs-on: ubuntu-latest
-    steps:
-      - name: Docker registry auth
-        run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
+  # push_images:
+  #   needs: [build_ilc, build_registry, e2e_tests]
+  #   name: Push images to registry
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Docker registry auth
+  #       run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
-      - name: Calc tags
-        id: tags
-        run: |
-          BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
-          LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
-          DOCKER_TAGS="$LATEST${BRANCH//\//_}"
-          echo "Tags that will be used: $DOCKER_TAGS"
-          echo ::set-output name=docker_tags::$DOCKER_TAGS
+  #     - name: Calc tags
+  #       id: tags
+  #       run: |
+  #         BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
+  #         LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
+  #         DOCKER_TAGS="$LATEST${BRANCH//\//_}"
+  #         echo "Tags that will be used: $DOCKER_TAGS"
+  #         echo ::set-output name=docker_tags::$DOCKER_TAGS
 
-      - name: Pull images
-        run: |
-          docker pull namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
-          docker pull namecheap/ilc_tmp:${GITHUB_SHA:0:7}
+  #     - name: Pull images
+  #       run: |
+  #         docker pull namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
+  #         docker pull namecheap/ilc_tmp:${GITHUB_SHA:0:7}
 
-      - name: Push images
-        run: |
-          TAGS="${{ steps.tags.outputs.docker_tags }}"
+  #     - name: Push images
+  #       run: |
+  #         TAGS="${{ steps.tags.outputs.docker_tags }}"
 
-          for i in ${TAGS//,/ }
-          do
-              docker tag namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
-              docker push namecheap/ilc_registry:$i
+  #         for i in ${TAGS//,/ }
+  #         do
+  #             docker tag namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
+  #             docker push namecheap/ilc_registry:$i
 
-              docker tag namecheap/ilc_tmp:${GITHUB_SHA:0:7} namecheap/ilc:$i
-              docker push namecheap/ilc:$i
-          done
+  #             docker tag namecheap/ilc_tmp:${GITHUB_SHA:0:7} namecheap/ilc:$i
+  #             docker push namecheap/ilc:$i
+  #         done
 
   build_docs:
     # needs: [push_images]
@@ -153,18 +153,27 @@ jobs:
       - uses: actions/checkout@v2
       
       - name: Copy
-        uses: TomoeMami/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.DOCS_AGGREGATION }}
-        with:
-          source_file: .mkdocs/
-          destination_repo: 'bandantonio/documentation'
-          destination_folder: docs/ilc/
-          user_email: zolotuhin87@gmail.com
-          user_name: Antonio
-          commit_message: AUTO merge
-          destination_branch: master
-          git_server: github.com
+        run: |
+          mkdir temp-for-push
+          cp -R .mkdocs temp-for-push
+          cp mkdocs.yml temp-for-push
+          ls -la
+          cd temp-for-push
+          ls -la
+          git status
+          git commit -am "AUTO: merge"
+        # uses: TomoeMami/copy_file_to_another_repo_action@main
+        # env:
+        #   API_TOKEN_GITHUB: ${{ secrets.DOCS_AGGREGATION }}
+        # with:
+        #   source_file: .mkdocs/
+        #   destination_repo: 'bandantonio/documentation'
+        #   destination_folder: docs/ilc/
+        #   user_email: zolotuhin87@gmail.com
+        #   user_name: Antonio
+        #   commit_message: AUTO merge
+        #   destination_branch: master
+        #   git_server: github.com
 
       - name: Build the Docker image
         run: |
