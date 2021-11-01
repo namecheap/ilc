@@ -156,12 +156,15 @@ jobs:
         run: |
           cd ..
           mkdir temp-for-push
-          ls -a
           git clone -b master https://github.com/bandantonio/documentation.git temp-for-push/documentation
           cd ./ilc
+          echo "--ILC--"
+          ls -a
           cp -LR .mkdocs ../temp-for-push/documentation/docs/ilc
           cp mkdocs.yml ../temp-for-push/documentation/docs/ilc
           cd ../temp-for-push/documentation
+          echo "--DOCS--"
+          ls -a
           git status
           git config user.name "Antonio"
           git config user.email "zolotuhin87@gmail.com"
