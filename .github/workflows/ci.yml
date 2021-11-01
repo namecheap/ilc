@@ -163,7 +163,6 @@ jobs:
           user_email: zolotuhin87@gmail.com
           user_name: Antonio
           commit_message: 'AUTO: merge from $REPOSITORY_URL'
-          destination_branch: master
           git_server: github.com
 
       - name: Build the Docker image
