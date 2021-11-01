@@ -159,15 +159,16 @@ jobs:
           ls -la
           cp -R .mkdocs temp-for-push/documentation/docs/ilc
           cp mkdocs.yml temp-for-push/documentation/docs/ilc
-          cd temp-for-push
-          echo "--temp-for-push--"
+          cd temp-for-push/documentation
+          echo "--documentation--"
           ls -la
           git status
           git config user.name "Antonio"
           git config user.email "zolotuhin87@gmail.com"
           git add .
-          git commit -m "AUTO merge"
+          git status
           git remote -v
+          
         # uses: TomoeMami/copy_file_to_another_repo_action@main
         # env:
         #   API_TOKEN_GITHUB: ${{ secrets.DOCS_AGGREGATION }}
