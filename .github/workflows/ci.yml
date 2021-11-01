@@ -155,7 +155,7 @@ jobs:
       - name: Copy
         uses: cpina/github-action-push-to-another-repository@main
         env:
-          API_TOKEN_GITHUB: ${{ secrets.GITHUB_TOKEN }}
+          API_TOKEN_GITHUB: ${{ secrets.DOCS_AGGREGATION }}
         with:
           source-directory: '.mkdocs'
           target-directory: '/docs/ilc'
