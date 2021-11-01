@@ -157,7 +157,7 @@ jobs:
           cd ..
           mkdir temp-for-push
           git clone -b master https://github.com/bandantonio/documentation.git temp-for-push/documentation
-          ls -a
+          cd temp-for-push/documentation
           echo "test file" >> readme.md
           cat readme.md
           git status
