@@ -8,7 +8,7 @@
 [![Docker Pulls](https://badgen.net/docker/pulls/namecheap/ilc?icon=docker&label=ILC%20pulls)](https://hub.docker.com/r/namecheap/ilc)
 [![Docker Pulls](https://badgen.net/docker/pulls/namecheap/ilc_registry?icon=docker&label=ILC%20registry%20pulls)](https://hub.docker.com/r/namecheap/ilc_registry)
 
-Isomorphic Layout Composer (ILC) - layout service that compose a web page from fragment services.
+**Isomorphic Layout Composer (ILC)** - layout service that compose a web page from fragment services.
 It supports client/server based page composition.
 
 It's key difference and advantage against other solutions lays in the fact that it does page composition isomorphically.
