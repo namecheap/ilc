@@ -155,18 +155,20 @@ jobs:
       - name: Copy
         run: |
           cd ..
-          mkdir temp-for-push
-          git clone -b master https://github.com/bandantonio/documentation.git temp-for-push/documentation
-          cp -LR ilc/.mkdocs temp-for-push/documentation/docs/ilc
-          cp ilc/mkdocs.yml temp-for-push/documentation/docs/ilc
-          cd temp-for-push/documentation
+          mkdir temp-dir-for-aggregation
+          git clone -b master https://github.com/bandantonio/documentation.git temp-dir-for-aggregation/documentation
+          mkdir -p temp-dir-for-aggregation/documentation/ilc && cp -LR ilc/.mkdocs "$_"
+          cp ilc/mkdocs.yml temp-dir-for-aggregation/documentation/ilc
+          cd temp-dir-for-aggregation/documentation
           git config user.name "Antonio"
           git config user.email "zolotuhin87@gmail.com"
           git status
           git add .
           git status
-          git commit -m "AUTO: update from ilc repo"
-          git push https://${{ secrets.DOCS_AGGREGATION }}@github.com/bandantonio/documentation.git
+          git commit -m "AUTO: merge ${{ github.repository }}"
+          git push origin master
+        
+        # git push https://${{ secrets.DOCS_AGGREGATION }}@github.com/bandantonio/documentation.git
           
         # uses: TomoeMami/copy_file_to_another_repo_action@main
         # env:
