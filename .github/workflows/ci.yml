@@ -166,9 +166,7 @@ jobs:
           git add .
           git status
           git commit -m "AUTO: merge ${{ github.repository }}"
-          git push origin master
-        
-        # git push https://${{ secrets.DOCS_AGGREGATION }}@github.com/bandantonio/documentation.git
+          git push https://${{ secrets.DOCS_AGGREGATION }}@github.com/bandantonio/documentation.git
           
         # uses: TomoeMami/copy_file_to_another_repo_action@main
         # env:
