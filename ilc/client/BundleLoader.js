@@ -36,23 +36,41 @@ export class BundleLoader {
     }
 
     loadAppWithCss(appName) {
-        const app = this.#getApp(appName);
-        const waitTill = [this.loadApp(appName)];
-
-        if (app.cssBundle) {
-            waitTill.push(this.loadCss(app.cssBundle));
-        }
+        const waitTill = [this.loadApp(appName), this.loadCss(appName)];
 
         return Promise.all(waitTill).then(values => values[0]);
     }
 
-    loadCss(url) {
-        return this.#systemJs.import(url).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
+    loadCss(appName) {
+        const app = this.#getApp(appName);
+        const { cssBundle } = app;
+
+        if (!cssBundle) {
+            return Promise.resolve();
+        }
+
+        return this.#systemJs.import(cssBundle)
+        .then(() => {
+            const currentLink = document.querySelector(`link[href="${cssBundle}"]`)
+            currentLink.setAttribute('data-fragment-id', appName)
+        })
+        .catch(err => {
             //TODO: error handling should be improved, need to submit PR with typed errors
             if (typeof err.message !== 'string' || err.message.indexOf('has already been loaded using another way') === -1) {
                 throw err;
             }
         });
+    }
+
+    unloadCss(appName) {
+        const currentLink = document.querySelector(`link[data-fragment-id="${appName}"]`);
+        if (!currentLink) {
+            // app does not have cssBundle
+            return;
+        }
+
+        this.#systemJs.delete(currentLink.href);
+        currentLink.remove();
     }
 
     #getApp = (appName) => {

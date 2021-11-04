@@ -3,7 +3,7 @@ import * as singleSpa from 'single-spa';
 
 import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
 import {makeAppId} from '../common/utils';
-import {getSlotElement, prependSpaCallback} from './utils';
+import {getSlotElement, prependSpaCallbacks} from './utils';
 import WrapApp from './WrapApp';
 import isActiveFactory from './isActiveFactory';
 import AsyncBootUp from './AsyncBootUp';
@@ -17,7 +17,11 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
         const appId = pair.appId;
 
         const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId));
-        const onUnmount = async () => appSdk.unmount();
+        const onUnmount = async () => {
+            bundleLoader.unloadCss(appName);
+
+            return appSdk.unmount();
+        };
 
         singleSpa.registerApplication(
             appId,
@@ -42,9 +46,9 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                     appConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
                 }
 
-                const waitTill = [bundleLoader.loadAppWithCss(appName)];
+                const waitTill = [bundleLoader.loadApp(appName)];
                 if (wrapperConf !== null) {
-                    waitTill.push(bundleLoader.loadAppWithCss(appConf.wrappedWith));
+                    waitTill.push(bundleLoader.loadApp(appConf.wrappedWith));
                 }
 
                 return Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {
@@ -54,7 +58,10 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                         spaCallbacks = wrapper.wrapWith(spaCallbacks, wrapperSpaCallbacks);
                     }
 
-                    return prependSpaCallback(spaCallbacks, 'unmount', onUnmount);
+                    return prependSpaCallbacks(spaCallbacks, [
+                        { type: 'mount', callback: async () => bundleLoader.loadCss(appName) },
+                        { type: 'unmount', callback: onUnmount },
+                    ]);
                 });
             },
             isActiveFactory(router, appName, slotName),
