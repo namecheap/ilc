@@ -16,6 +16,8 @@ export class TransactionManager {
     #spinnerTimeout;
 
     #fakeSlots = [];
+    #cssToRemove = []; // list of "link" tags of apps from previous route, which should be removed on transition end
+
     #hiddenSlots = [];
     #transactionBlockers = [];
     #windowEventHandlers = {};
@@ -37,7 +39,7 @@ export class TransactionManager {
         promise.then(afterPromise).catch(afterPromise)
     }
 
-    handlePageTransaction(slotName, willBe) {
+    handlePageTransaction(slotName, willBe, appName) {
         if (this.#spinnerConfig.enabled === false) {
             return;
         }
@@ -51,10 +53,10 @@ export class TransactionManager {
                 this.#addContentListener(slotName);
                 break;
             case slotWillBe.removed:
-                this.#renderFakeSlot(slotName);
+                this.#renderFakeSlot(slotName, appName);
                 break;
             case slotWillBe.rerendered:
-                this.#renderFakeSlot(slotName);
+                this.#renderFakeSlot(slotName, appName);
                 this.#addContentListener(slotName);
                 break;
             case slotWillBe.default:
@@ -106,9 +108,15 @@ export class TransactionManager {
         observer.observe(targetNode, { childList: true, subtree: true, attributeFilter: ['style'] });
     };
 
-    #renderFakeSlot = slotName => {
+    #renderFakeSlot = (slotName, appName) => {
         const targetNode = getSlotElement(slotName);
         const clonedNode = targetNode.cloneNode(true);
+
+        const cssBundleLink = document.querySelector(`link[data-fragment-id="${appName}"]`);
+        if (cssBundleLink) {
+            this.#cssToRemove.push(cssBundleLink);
+        }
+
         clonedNode.removeAttribute('id');
         clonedNode.removeAttribute('class');
         clonedNode.style.display = ''; // reset "display" in case if renderFakeSlot is run after addContentListener (slotWillBe.rendered and then slotWillBe.removed). Since we hide (set display: none) original DOM-node inside addContentListener.
@@ -121,8 +129,16 @@ export class TransactionManager {
     #onAllSlotsLoaded = () => {
         this.#fakeSlots.forEach(node => node.remove());
         this.#fakeSlots.length = 0;
+
         this.#hiddenSlots.forEach(node => node.style.display = '');
         this.#hiddenSlots.length = 0;
+
+        this.#cssToRemove.forEach(link => {
+            window.System.delete(link.href);
+            link.remove()
+        });
+        this.#cssToRemove.length = 0;
+
         this.#removeGlobalSpinner();
         document.body.removeAttribute('name');
         scrollRestorer.restoreScroll(window.history.state ? window.history : {state: {scroll: {x: 0, y: 0}}});

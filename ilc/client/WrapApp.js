@@ -11,6 +11,9 @@ const APP_STATES = {
 
 export default class WrapApp {
     #wrapperConf;
+    #appName;
+    #wrapperName;
+    #bundleLoader;
     #appRenderedAtSsr = false;
     #appExtraProps = {};
     #transactionManager;
@@ -18,7 +21,7 @@ export default class WrapApp {
     #appState = 0;
     #wrapperState = 0;
 
-    constructor(wrapperConf, ssrOverrideProps) {
+    constructor(wrapperConf, ssrOverrideProps, { appName, wrapperName, bundleLoader }) {
         this.#wrapperConf = wrapperConf;
         this.#transactionManager = transactionManager();
 
@@ -26,6 +29,10 @@ export default class WrapApp {
             this.#appExtraProps = ssrOverrideProps;
             this.#appRenderedAtSsr = true;
         }
+
+        this.#appName = appName;
+        this.#wrapperName = wrapperName;
+        this.#bundleLoader = bundleLoader;
     }
 
     wrapWith(appCallbacks, wrapperCallbacks) {
@@ -89,13 +96,16 @@ export default class WrapApp {
         this.#appExtraProps = extraProps;
 
         const {slotName} = appIdToNameAndSlot(props.appId);
-        this.#transactionManager.handlePageTransaction(slotName, slotWillBe.rerendered);
+
+        this.#transactionManager.handlePageTransaction(slotName, slotWillBe.rerendered, this.#wrapperName);
 
         await wrapperCallbacks.unmount(props);
 
         if (this.#appState < APP_STATES.bootstrapped) {
             await appCallbacks.bootstrap(props);
         }
+
+        this.#bundleLoader.loadCssByAppName(this.#appName);
         await appCallbacks.mount(props);
     }
 

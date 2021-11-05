@@ -17,11 +17,7 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
         const appId = pair.appId;
 
         const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId));
-        const onUnmount = async () => {
-            bundleLoader.unloadCss(appName);
-
-            return appSdk.unmount();
-        };
+        const onUnmount = async () => appSdk.unmount();
 
         singleSpa.registerApplication(
             appId,
@@ -39,12 +35,6 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                 bundleLoader.preloadApp(appName);
 
                 const overrides = await asyncBootUp.waitForSlot(slotName);
-                // App wrapper was rendered at SSR instead of app
-                if (wrapperConf !== null && overrides.wrapperPropsOverride === null) {
-                    wrapperConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : wrapperConf.cssBundle;
-                } else {
-                    appConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
-                }
 
                 const waitTill = [bundleLoader.loadApp(appName)];
                 if (wrapperConf !== null) {
@@ -53,13 +43,27 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
 
                 return Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {
                     if (wrapperConf !== null) {
-                        const wrapper = new WrapApp(wrapperConf, overrides.wrapperPropsOverride);
+                        const wrapper = new WrapApp(wrapperConf, overrides.wrapperPropsOverride, {
+                            wrapperName: appConf.wrappedWith,
+                            appName,
+                            bundleLoader,
+                        });
 
                         spaCallbacks = wrapper.wrapWith(spaCallbacks, wrapperSpaCallbacks);
                     }
 
                     return prependSpaCallbacks(spaCallbacks, [
-                        { type: 'mount', callback: async () => bundleLoader.loadCss(appName) },
+                        {
+                            type: 'mount',
+                            callback: () => {
+                                const isWrapperRenderedAtSSR = wrapperConf !== null && overrides.wrapperPropsOverride === null; // App wrapper was rendered at SSR instead of app
+                                if (isWrapperRenderedAtSSR) {
+                                    return bundleLoader.loadCss(overrides.cssBundle ? overrides.cssBundle : wrapperConf.cssBundle, appConf.wrappedWith)
+                                } else {
+                                    return bundleLoader.loadCss(overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle, appName)
+                                }
+                            },
+                        },
                         { type: 'unmount', callback: onUnmount },
                     ]);
                 });

@@ -36,22 +36,24 @@ export class BundleLoader {
     }
 
     loadAppWithCss(appName) {
-        const waitTill = [this.loadApp(appName), this.loadCss(appName)];
+        const app = this.#getApp(appName);
+        const waitTill = [this.loadApp(appName)];
+
+        if (app.cssBundle) {
+            waitTill.push(this.loadCss(app.cssBundle, appName));
+        }
 
         return Promise.all(waitTill).then(values => values[0]);
     }
 
-    loadCss(appName) {
-        const app = this.#getApp(appName);
-        const { cssBundle } = app;
-
-        if (!cssBundle) {
+    loadCss(url, appName) {
+        if (!url) {
             return Promise.resolve();
         }
 
-        return this.#systemJs.import(cssBundle)
+        return this.#systemJs.import(url)
         .then(() => {
-            const currentLink = document.querySelector(`link[href="${cssBundle}"]`)
+            const currentLink = document.querySelector(`link[href="${url}"]`)
             currentLink.setAttribute('data-fragment-id', appName)
         })
         .catch(err => {
@@ -62,15 +64,10 @@ export class BundleLoader {
         });
     }
 
-    unloadCss(appName) {
-        const currentLink = document.querySelector(`link[data-fragment-id="${appName}"]`);
-        if (!currentLink) {
-            // app does not have cssBundle
-            return;
-        }
+    loadCssByAppName(appName) {
+        const app = this.#getApp(appName);
 
-        this.#systemJs.delete(currentLink.href);
-        currentLink.remove();
+        return this.loadCss(app.cssBundle, appName);
     }
 
     #getApp = (appName) => {

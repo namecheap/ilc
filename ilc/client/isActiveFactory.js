@@ -37,7 +37,7 @@ export const createFactory = (triggerAppChange, handlePageTransaction, slotWillB
             }
         }
 
-        handlePageTransaction(slotName, willBe);
+        handlePageTransaction(slotName, willBe, appName);
         reload = false;
 
         return isActive;
