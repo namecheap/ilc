@@ -35,10 +35,17 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                 bundleLoader.preloadApp(appName);
 
                 const overrides = await asyncBootUp.waitForSlot(slotName);
+                // App wrapper was rendered at SSR instead of app
+                const isWrapperRenderedAtSSR = wrapperConf !== null && overrides.wrapperPropsOverride === null;
+                if (isWrapperRenderedAtSSR) {
+                    wrapperConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : wrapperConf.cssBundle;
+                } else {
+                    appConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
+                }
 
-                const waitTill = [bundleLoader.loadApp(appName)];
+                const waitTill = [bundleLoader.loadAppWithCss(appName)];
                 if (wrapperConf !== null) {
-                    waitTill.push(bundleLoader.loadApp(appConf.wrappedWith));
+                    waitTill.push(bundleLoader.loadAppWithCss(appConf.wrappedWith));
                 }
 
                 return Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {
@@ -56,11 +63,10 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                         {
                             type: 'mount',
                             callback: () => {
-                                const isWrapperRenderedAtSSR = wrapperConf !== null && overrides.wrapperPropsOverride === null; // App wrapper was rendered at SSR instead of app
                                 if (isWrapperRenderedAtSSR) {
-                                    return bundleLoader.loadCss(overrides.cssBundle ? overrides.cssBundle : wrapperConf.cssBundle, appConf.wrappedWith)
+                                    return bundleLoader.loadCss(wrapperConf.cssBundle, appConf.wrappedWith)
                                 } else {
-                                    return bundleLoader.loadCss(overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle, appName)
+                                    return bundleLoader.loadCss(appConf.cssBundle, appName)
                                 }
                             },
                         },
