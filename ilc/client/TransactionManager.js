@@ -117,6 +117,20 @@ export class TransactionManager {
             this.#cssToRemove.push(cssBundleLink);
         }
 
+        // "kremling-loader" marks node-wrapper and injected styles with custom "namespace", so we need to temporary clone marked styles with namespace
+        const wrapperAttrs = [...clonedNode.children[0].attributes];
+        wrapperAttrs.forEach((attr) => {
+            if (['id', 'class', 'style'].includes(attr.name)) {
+                return;
+            }
+
+            [...document.head.querySelectorAll(`style[${attr.name}]`)].forEach((styleTag) => {
+                const clonedStyle = styleTag.cloneNode(true);
+
+                clonedNode.appendChild(clonedStyle);
+            });
+        });
+
         clonedNode.removeAttribute('id');
         clonedNode.removeAttribute('class');
         clonedNode.style.display = ''; // reset "display" in case if renderFakeSlot is run after addContentListener (slotWillBe.rendered and then slotWillBe.removed). Since we hide (set display: none) original DOM-node inside addContentListener.
