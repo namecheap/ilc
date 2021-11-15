@@ -105,7 +105,7 @@ export default class WrapApp {
             await appCallbacks.bootstrap(props);
         }
 
-        this.#bundleLoader.loadCssByAppName(this.#appName);
+        await this.#bundleLoader.loadCssByAppName(this.#appName);
         await appCallbacks.mount(props);
     }
 
