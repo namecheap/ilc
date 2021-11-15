@@ -6,9 +6,9 @@ const errors = require('./errors');
  * @param {http.ServerResponse} response - fragment response
  * @param {Object} context - contextual info about request
  * @param {http.IncomingMessage} context.request - incoming request from browser
+ * @param {Boolean} context.request.isWrappersChild - Indicates if Wrapper's child is requested
  * @param {Object} context.fragmentAttributes - fragment attributes map
  * @param {String} context.fragmentUrl - URL that was requested on fragment
- * @param {String} context.isWrapper - Indicates if App Wrapper is requested
  */
 module.exports = (response, context) => {
     const currRoute = context.request.router.getRoute();
@@ -29,7 +29,7 @@ module.exports = (response, context) => {
 
     if (isPrimaryError || isNonPrimaryError) {
         throw new Error(
-            `Request error for ${context.isWrapper ? 'App Wrapper' : 'Fragment'}. statusCode: ${response.statusCode}; statusMessage: ${response.statusMessage}; url: ${context.fragmentUrl};`
+            `Request error for ${context.request.isWrappersChild ? 'App under Wrapper' : 'Fragment'}. statusCode: ${response.statusCode}; statusMessage: ${response.statusMessage}; url: ${context.fragmentUrl};`
         );
     }
 

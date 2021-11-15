@@ -57,6 +57,7 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
             fragmentRequest.on('response', response => {
                 try {
                     // Wrapper says that we need to request wrapped application
+                    console.log(response.statusCode);
                     if (response.statusCode === 210) {
                         const propsOverride = response.headers['x-props-override'];
                         attributes.wrapperPropsOverride = {};
@@ -66,6 +67,8 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                             attributes.wrapperPropsOverride = props;
                         }
                         attributes.wrapperConf = null;
+
+                        request.isWrappersChild = true;
 
                         resolve(requestFragment(fragmentUrl, attributes, request));
 
@@ -77,7 +80,6 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                             request,
                             fragmentUrl: reqUrl,
                             fragmentAttributes: attributes,
-                            isWrapper: true,
                         })
                     );
                 } catch (e) {

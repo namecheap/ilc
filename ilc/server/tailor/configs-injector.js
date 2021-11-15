@@ -65,26 +65,46 @@ module.exports = class ConfigsInjector {
     }
 
     getAssetsToPreload = async (request) => {
+        const styleRefs = request.styleRefs.map(item => {
+            if (request.isWrappersChild && item.cssBundleOfWrappersChild) {
+                return item.cssBundleOfWrappersChild;
+            } else {
+                return item.cssBundle;
+            }
+        });
+
         return {
             scriptRefs: [],
-            styleRefs: request.styleRefs,
+            styleRefs,
         };
     };
 
     #getRouteStyleRefsToPreload = (apps, slots, templateStyleRefs) => {
-        const routeStyleRefs = _.reduce(slots, (styleRefs, slotData) => {
+        let styleRefs = templateStyleRefs.map(styleRef => ({ cssBundle: styleRef }));
+
+        styleRefs = _.reduce(slots, (acc, slotData) => {
             const appInfo = apps[slotData.appName];
 
-            if (appInfo.cssBundle && !styleRefs.includes(appInfo.cssBundle)) {
-                styleRefs.push(appInfo.cssBundle);
+            if (!appInfo.cssBundle) {
+                return acc;
             }
 
-            return styleRefs;
-        }, []);
+            const styleRef = {
+                cssBundle: appInfo.wrappedWith ? apps[appInfo.wrappedWith]?.cssBundle : appInfo.cssBundle, // if it's wrapper - then wrapped app's css is used by default
+                cssBundleOfWrappersChild: appInfo.wrappedWith && appInfo.cssBundle, // app under wrapper
+            };
 
-        const styleRefs = routeStyleRefs.concat(templateStyleRefs);
+            const styleRefExists = acc.find(item => item.cssBundle === styleRef.cssBundle && item.wrapperCssBundle === styleRef.wrapperCssBundle);
+            if (styleRefExists) {
+                return acc;
+            }
 
-        return uniqueArray(styleRefs);
+            acc.push(styleRef);
+
+            return acc;
+        }, styleRefs);
+
+        return styleRefs;
     };
 
     //TODO: add App Wrappers support
