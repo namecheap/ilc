@@ -20,6 +20,7 @@ export async function seed(knex: Knex): Promise<any> {
         }, {
             name: '@portal/people',
             spaBundle: `http://${publicHost}:8236/people.js`,
+            cssBundle: `http://${publicHost}:8236/people.css`,
             dependencies: JSON.stringify({
                 react: 'https://cdnjs.cloudflare.com/ajax/libs/react/16.8.6/umd/react.development.js',
                 'react-dom': 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.6/umd/react-dom.development.js',
@@ -61,6 +62,7 @@ export async function seed(knex: Knex): Promise<any> {
         }, {
             name: '@portal/systemWithWrapper',
             spaBundle: `http://${publicHost}:8240/index.js`,
+            cssBundle: `http://${publicHost}:8240/system.css`,
             ssr: JSON.stringify({
                 src: "http://127.0.0.1:8240/fragment",
                 timeout: 1000,
@@ -77,6 +79,7 @@ export async function seed(knex: Knex): Promise<any> {
         }, {
             name: '@portal/wrapper',
             spaBundle: `http://${publicHost}:8234/client-entry.js`,
+            cssBundle: `http://${publicHost}:8234/wrapper.css`,
             ssr: JSON.stringify({
                 src: "http://127.0.0.1:8234/fragment",
                 timeout: 2000,
