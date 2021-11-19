@@ -489,7 +489,7 @@ describe('TransactionManager', () => {
                 <script>document.querySelector('#${spinner.id}').classList.add('${expectedClass}')</script>
             `
         });
-        handlePageTransaction = transactionManager.handlePageTransaction.bind(transactionManager);
+        const handlePageTransaction = transactionManager.handlePageTransaction.bind(transactionManager);
 
         applications.navbar.appendApplication();
         applications.body.appendApplication();
@@ -500,5 +500,7 @@ describe('TransactionManager', () => {
 
         chai.expect(spinner.getRef()).to.be.not.null;
         chai.expect(spinner.getRef().classList.value).to.include(expectedClass);
+
+        spinner.getRef().remove();
     });
 });
