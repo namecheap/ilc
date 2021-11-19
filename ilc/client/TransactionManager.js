@@ -143,8 +143,19 @@ export class TransactionManager {
                 this.#globalSpinner.showModal();
             } else {
                 this.#globalSpinner = document.createElement('div');
+                this.#globalSpinner.classList.add('ilcSpinnerWrapper');
                 this.#globalSpinner.innerHTML = this.#spinnerConfig.customHTML;
                 document.body.appendChild(this.#globalSpinner);
+
+                // run script tags
+                this.#globalSpinner.querySelectorAll('script').forEach(oldScript => {
+                    const newScript = document.createElement('script');
+
+                    newScript.innerHTML = oldScript.innerHTML;
+
+                    oldScript.parentNode.insertBefore(newScript, oldScript);
+                    oldScript.remove();
+                });
             }
         }, 200);
     };
