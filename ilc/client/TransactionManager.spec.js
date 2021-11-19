@@ -478,4 +478,27 @@ describe('TransactionManager', () => {
         await clock.runAllAsync();
         chai.expect(spinner.getRef()).to.be.null;
     });
+
+    it('should run scripts in customHTML', async () => {
+        const expectedClass = 'iAmSetFromCustomHTML';
+
+        const transactionManager = new TransactionManager({
+            enabled: true,
+            customHTML: `
+                <div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>
+                <script>document.querySelector('#${spinner.id}').classList.add('${expectedClass}')</script>
+            `
+        });
+        handlePageTransaction = transactionManager.handlePageTransaction.bind(transactionManager);
+
+        applications.navbar.appendApplication();
+        applications.body.appendApplication();
+
+        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+        chai.expect(spinner.getRef().classList.value).to.include(expectedClass);
+    });
 });
