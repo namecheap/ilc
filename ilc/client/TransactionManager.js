@@ -143,7 +143,7 @@ export class TransactionManager {
                 this.#globalSpinner.showModal();
             } else {
                 this.#globalSpinner = document.createElement('div');
-                this.#globalSpinner.classList.add('wrapperIlcSpinner');
+                this.#globalSpinner.classList.add('ilcSpinnerWrapper');
                 this.#globalSpinner.innerHTML = this.#spinnerConfig.customHTML;
                 document.body.appendChild(this.#globalSpinner);
 
