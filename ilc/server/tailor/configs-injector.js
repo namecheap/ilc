@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const urljoin = require('url-join');
-const { uniqueArray } = require('../../common/utils');
+const { uniqueArray, encodeScriptTags } = require('../../common/utils');
 
 module.exports = class ConfigsInjector {
     #newrelic;
@@ -159,13 +159,15 @@ module.exports = class ConfigsInjector {
             registryConfig.apps,
             v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind', 'wrappedWith'])
         );
-        const spaConfig = JSON.stringify({
+        let spaConfig = JSON.stringify({
             apps,
             routes: registryConfig.routes.map(v => _.omit(v, ['routeId'])),
             specialRoutes: _.mapValues(registryConfig.specialRoutes, v => _.omit(v, ['routeId'])),
             settings: registryConfig.settings,
             sharedLibs: registryConfig.sharedLibs,
         });
+
+        spaConfig = encodeScriptTags(spaConfig);
 
         return `<script type="ilc-config">${spaConfig}</script>`;
     };

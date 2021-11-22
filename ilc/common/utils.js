@@ -27,9 +27,14 @@ function cloneDeep(source) {
 
 const uniqueArray = array => [...new Set(array)];
 
+const encodeScriptTags = value => value.replace(/<script/g, '&lt;script').replace(/<\/script>/g, '&lt;%2F;script&gt;');
+const decodeScriptTags = value => value.replace(/&lt;script/g, '<script').replace(/&lt;%2F;script&gt;/g, '</script>');
+
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
     cloneDeep,
     uniqueArray,
+    encodeScriptTags,
+    decodeScriptTags,
 }
