@@ -1,3 +1,5 @@
+import { decodeHtmlEntities } from '../common/utils';
+
 let registryConf = null;
 
 export default function () {
@@ -11,6 +13,11 @@ export default function () {
     }
 
     registryConf = JSON.parse(confScript.innerHTML);
+
+    const customHTML = registryConf.settings?.globalSpinner.customHTML;
+    if (customHTML) {
+        registryConf.settings.globalSpinner.customHTML = decodeHtmlEntities(customHTML);
+    }
 
     document.head.appendChild(getSystemjsImportmap(registryConf.apps, registryConf.sharedLibs));
 

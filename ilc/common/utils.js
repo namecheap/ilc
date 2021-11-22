@@ -27,9 +27,14 @@ function cloneDeep(source) {
 
 const uniqueArray = array => [...new Set(array)];
 
+const encodeHtmlEntities = value => value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const decodeHtmlEntities = value => value.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
     cloneDeep,
     uniqueArray,
+    encodeHtmlEntities,
+    decodeHtmlEntities,
 }
