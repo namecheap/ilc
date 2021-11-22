@@ -48,7 +48,7 @@ const Input = (props) => {
             );
         }
         default: {
-            return (<TextInput source="value" fullWidth={true} />);
+            return (<TextInput multiline source="value" fullWidth={true} />);
         }
     }
 };
