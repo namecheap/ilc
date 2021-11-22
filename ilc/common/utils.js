@@ -27,14 +27,14 @@ function cloneDeep(source) {
 
 const uniqueArray = array => [...new Set(array)];
 
-const encodeScriptTags = value => value.replace(/<script/g, '&lt;script').replace(/<\/script>/g, '&lt;%2F;script&gt;');
-const decodeScriptTags = value => value.replace(/&lt;script/g, '<script').replace(/&lt;%2F;script&gt;/g, '</script>');
+const encodeHtmlEntities = value => value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const decodeHtmlEntities = value => value.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
 
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
     cloneDeep,
     uniqueArray,
-    encodeScriptTags,
-    decodeScriptTags,
+    encodeHtmlEntities,
+    decodeHtmlEntities,
 }

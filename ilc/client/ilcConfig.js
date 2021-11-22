@@ -1,4 +1,4 @@
-import { decodeScriptTags } from '../common/utils';
+import { decodeHtmlEntities } from '../common/utils';
 
 let registryConf = null;
 
@@ -12,9 +12,12 @@ export default function () {
         throw new Error('Can\'t find single-spa config');
     }
 
-    const conf = decodeScriptTags(confScript.innerHTML);
+    registryConf = JSON.parse(confScript.innerHTML);
 
-    registryConf = JSON.parse(conf);
+    const { customHTML } = registryConf.settings.globalSpinner;
+    if (customHTML) {
+        registryConf.settings.globalSpinner.customHTML = decodeHtmlEntities(customHTML);
+    }
 
     document.head.appendChild(getSystemjsImportmap(registryConf.apps, registryConf.sharedLibs));
 
