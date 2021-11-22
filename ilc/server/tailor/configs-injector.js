@@ -161,7 +161,7 @@ module.exports = class ConfigsInjector {
         );
 
         let settings = registryConfig.settings;
-        const customHTML = registryConfig.settings?.globalSpinner.customHTML;
+        const customHTML = registryConfig.settings?.globalSpinner?.customHTML;
         
         if (customHTML) {
             settings = {

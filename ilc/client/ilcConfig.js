@@ -14,7 +14,7 @@ export default function () {
 
     registryConf = JSON.parse(confScript.innerHTML);
 
-    const { customHTML } = registryConf.settings.globalSpinner;
+    const customHTML = registryConf.settings?.globalSpinner.customHTML;
     if (customHTML) {
         registryConf.settings.globalSpinner.customHTML = decodeHtmlEntities(customHTML);
     }
