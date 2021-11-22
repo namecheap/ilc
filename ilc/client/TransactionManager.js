@@ -157,7 +157,7 @@ export class TransactionManager {
                     oldScript.remove();
                 });
             }
-        }, 200);
+        }, 300);
     };
 
     #removeGlobalSpinner = () => {
