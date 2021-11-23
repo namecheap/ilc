@@ -479,6 +479,43 @@ describe('TransactionManager', () => {
         chai.expect(spinner.getRef()).to.be.null;
     });
 
+    it('should destroy spinner in at least 300ms if it is appeared', async () => {
+        clock.restore();
+
+        const newBodyApplication = {
+            id: 'new-body-application',
+            class: 'new-body-spa',
+        };
+
+        newBodyApplication.ref = html`
+            <div id="${newBodyApplication.id}" class="${newBodyApplication.class}" style="display: none;">
+                Hello! I am hidden MS, so spinner is still visible
+            </div>
+        `;
+
+        applications.navbar.appendApplication();
+        applications.body.appendApplication();
+
+        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+
+        applications.body.removeApplication();
+        slots.body.ref.appendChild(newBodyApplication.ref);
+
+        await new Promise(resolve => setTimeout(resolve, 180));
+        chai.expect(spinner.getRef()).to.be.null;
+
+        await new Promise(resolve => setTimeout(resolve, 20));
+        chai.expect(spinner.getRef()).to.be.not.null;
+
+        document.getElementById(newBodyApplication.id).style.display = '';
+
+        await new Promise(resolve => setTimeout(resolve, 280));
+        chai.expect(spinner.getRef()).to.be.not.null;
+
+        await new Promise(resolve => setTimeout(resolve, 20));
+        chai.expect(spinner.getRef()).to.be.null;
+    });
+
     it('should run scripts in customHTML', async () => {
         const expectedClass = 'iAmSetFromCustomHTML';
 

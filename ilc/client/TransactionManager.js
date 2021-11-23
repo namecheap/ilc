@@ -136,6 +136,12 @@ export class TransactionManager {
         }
 
         this.#spinnerTimeout = setTimeout(() => {
+            // if spinner appeared then show it at least 300ms, to avoid flashing it like a glitch
+            const forceShowSpinner = setTimeout(() => {
+                this.#removeTransactionBlocker(forceShowSpinner);
+            }, 300);
+            this.#transactionBlockers.push(forceShowSpinner);
+
             if (!this.#spinnerConfig.customHTML) {
                 this.#globalSpinner = document.createElement('dialog');
                 this.#globalSpinner.innerHTML = 'loading....';
