@@ -501,7 +501,7 @@ describe('TransactionManager', () => {
         applications.body.removeApplication();
         slots.body.ref.appendChild(newBodyApplication.ref);
 
-        await new Promise(resolve => setTimeout(resolve, 180));
+        await new Promise(resolve => setTimeout(resolve, 280));
         chai.expect(spinner.getRef()).to.be.null;
 
         await new Promise(resolve => setTimeout(resolve, 20));
@@ -509,7 +509,7 @@ describe('TransactionManager', () => {
 
         document.getElementById(newBodyApplication.id).style.display = '';
 
-        await new Promise(resolve => setTimeout(resolve, 280));
+        await new Promise(resolve => setTimeout(resolve, 480));
         chai.expect(spinner.getRef()).to.be.not.null;
 
         await new Promise(resolve => setTimeout(resolve, 20));
