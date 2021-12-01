@@ -39,7 +39,7 @@ Scenario('Renders (CSR) global 404 page for non-existing News app route', (I, ne
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingRoute), 10);
     I.click(newsPage.linkWithUrl(newsPage.url.nonExistingRoute));
-    I.seeInSource(common.text404NotFoundVue);
+    I.seeInSource(common.text404NotFound);
 
     //After 404 page ILC continues normal operation
     I.click(newsPage.linkWithUrl(newsPage.url.main));
@@ -72,7 +72,7 @@ Scenario('Renders (CSR) global 404 page for non-existing News resource', (I, new
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingResource), 10);
     I.click(newsPage.linkWithUrl(newsPage.url.nonExistingResource));
-    I.seeInSource(common.text404NotFoundVue);
+    I.seeInSource(common.text404NotFound);
 
     //After 404 page ILC continues normal operation
     I.wait(5); //Hack to fix issue with the Vue Router
