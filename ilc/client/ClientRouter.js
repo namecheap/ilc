@@ -4,6 +4,7 @@ import debug from 'debug';
 import Router from '../common/router/Router';
 import * as errors from '../common/router/errors';
 import { isSpecialUrl } from 'ilc-sdk/app';
+import { triggerAppChange } from './navigationEvents';
 
 export default class ClientRouter {
     errors = errors;
@@ -73,6 +74,7 @@ export default class ClientRouter {
     #setInitialRoutes = (state) => {
         // we should respect base tag for cached pages
         const base = document.querySelector('base');
+
         if (base) {
             const a = document.createElement('a');
             a.href = base.getAttribute('href');
@@ -200,8 +202,10 @@ export default class ClientRouter {
         }
 
         console.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
+        
         this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl(true)};
-        this.#singleSpa.triggerAppChange(); //This call would immediately invoke "single-spa:before-routing-event" and start apps mount/unmount process
+
+        triggerAppChange(); //This call would immediately invoke "ilc:before-routing" and start apps mount/unmount process
     };
 
     #getCurrUrl = (withLocale = false) => {
