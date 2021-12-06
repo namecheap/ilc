@@ -16,7 +16,6 @@ export class TransactionManager {
     #spinnerTimeout;
 
     #forceShowSpinner;
-    #isSlotsLoadedEventFired;
 
     #fakeSlots = [];
     #hiddenSlots = [];
@@ -129,7 +128,6 @@ export class TransactionManager {
         this.#removeGlobalSpinner();
         document.body.removeAttribute('name');
         scrollRestorer.restoreScroll(window.history.state ? window.history : {state: {scroll: {x: 0, y: 0}}});
-        this.#isSlotsLoadedEventFired = false;
     };
 
     #runGlobalSpinner = () => {
@@ -184,9 +182,8 @@ export class TransactionManager {
 
         const isOnlySpinnerBlocker = this.#transactionBlockers.length === 1 && this.#transactionBlockers[0] === this.#forceShowSpinner;
 
-        if (isOnlySpinnerBlocker || !this.#transactionBlockers.length && !this.#isSlotsLoadedEventFired) {
+        if (isOnlySpinnerBlocker || !this.#transactionBlockers.length && blocker !== this.#forceShowSpinner) {
             window.dispatchEvent(new CustomEvent('ilc:all-slots-loaded'));
-            this.#isSlotsLoadedEventFired = true;
         }
 
         if (!this.#transactionBlockers.length) {
