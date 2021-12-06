@@ -8,23 +8,33 @@ describe('async boot up', () => {
     const overrideImportMap = sinon.spy(window.System, 'overrideImportMap');
     const logger = {
         info: sinon.spy(),
+        warn: sinon.spy(),
     };
     const performance = {
         now: sinon.stub(),
     };
 
+    const emptyOverrides = Object.freeze({
+        spaBundle: null,
+        cssBundle: null,
+        wrapperPropsOverride: null,
+    });
+
     let clock;
 
     beforeEach(() => {
         clock = sinon.useFakeTimers();
+        window.ilcApps = [];
     });
 
     afterEach(() => {
+        delete window.ilcApps;
         clock.restore();
 
         overrideImportMap.resetHistory();
         performance.now.reset();
         logger.info.resetHistory();
+        logger.warn.resetHistory();
 
         while (document.body.lastChild) {
             document.body.removeChild(document.body.lastChild);
@@ -35,10 +45,13 @@ describe('async boot up', () => {
         overrideImportMap.restore();
     });
 
-    it('should throw an error when a slot can not be found on the page by slot name', async () => {
+    it('should log a warning when a slot can not be found on the page by slot name', async () => {
         const slots = {
-            undefined: {
-                id: 'undefined',
+            before_page_loaded: {
+                id: 'slot_before_page_loaded',
+            },
+            after_page_loaded: {
+                id: 'slot_after_page_loaded',
             },
         };
 
@@ -54,26 +67,29 @@ describe('async boot up', () => {
         `;
 
         document.body.appendChild(slots.ref);
-        window.ilcApps = [];
 
         const asyncBootUp = new AsyncBootUp(logger, performance);
 
-        let expectedError;
+        const [readySlotOverrides] = await Promise.all([
+            asyncBootUp.waitForSlot(slots.before_page_loaded.id),
 
-        try {
-            await Promise.all([
-                asyncBootUp.waitForSlot(slots.undefined.id),
+            Promise.resolve()
+                .then(() => window.ilcApps.push(Infinity))
+                .then(() => clock.runAllAsync())
+        ]);
 
-                Promise.resolve()
-                    .then(() => window.ilcApps.push(slots.undefined.id))
-                    .then(() => clock.runAllAsync())
-            ]);
-        } catch (error) {
-            expectedError = error;
-        }
+        sinon.assert.calledWithExactly(
+            logger.warn,
+            `Looks like we're missing slot "${slots.before_page_loaded.id}" in template... Ignoring possible config overrides...`
+        );
+        chai.expect(readySlotOverrides).to.be.eql(emptyOverrides);
 
-        chai.expect(expectedError).instanceOf(Error);
-        chai.expect(expectedError.message).to.be.eql(`Can not find '${slots.undefined.id}' on the page!`);
+        const readySlotOverrides2 = await asyncBootUp.waitForSlot(slots.after_page_loaded.id);
+        sinon.assert.calledWithExactly(
+            logger.warn,
+            `Looks like we're missing slot "${slots.after_page_loaded.id}" in template... Ignoring possible config overrides...`
+        );
+        chai.expect(readySlotOverrides2).to.be.eql(emptyOverrides);
     });
 
     it('should not wait for slots that are ready and return default override configs at once', async () => {
@@ -109,11 +125,7 @@ describe('async boot up', () => {
 
         const readySlotOverrides = await asyncBootUp.waitForSlot(slots.ready.id);
 
-        chai.expect(readySlotOverrides).to.be.eql({
-            spaBundle: null,
-            cssBundle: null,
-            wrapperPropsOverride: null,
-        });
+        chai.expect(readySlotOverrides).to.be.eql(emptyOverrides);
 
         chai.expect(overrideImportMap.called).to.be.false;
 

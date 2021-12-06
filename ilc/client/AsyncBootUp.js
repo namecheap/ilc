@@ -7,6 +7,7 @@ export default class AsyncBootUp {
     #afterRoutingEvent = false;
     #appsWaitingForSlot = {};
     #readySlots = [];
+    #pageLoadingIsDone = false;
 
     constructor(logger = window.console, performance = window.performance) {
         this.#logger = logger;
@@ -35,9 +36,11 @@ export default class AsyncBootUp {
         await new Promise(resolve => {
             if (this.#readySlots.includes(slotName)) {
                 return resolve();
+            } else if (!this.#pageLoadingIsDone) {
+                this.#appsWaitingForSlot[slotName] = resolve;
+            } else {
+                return resolve(); // We don't have such slot on the page
             }
-
-            this.#appsWaitingForSlot[slotName] = resolve;
         });
 
         if (!this.#afterRoutingEvent) {
@@ -46,9 +49,9 @@ export default class AsyncBootUp {
         }
 
         const slotEl = document.getElementById(slotName);
-
         if (slotEl === null) {
-            throw new Error(`Can not find '${slotName}' on the page!`);
+            this.#logger.warn(`Looks like we're missing slot "${slotName}" in template... Ignoring possible config overrides...`);
+            return res;
         }
 
         const overridesEl = slotEl.querySelector('script[type="spa-config-override"]');
@@ -82,8 +85,19 @@ export default class AsyncBootUp {
 
     #markSlotAsReady = (id) => {
         setTimeout(() => {
-            this.#readySlots.push(id);
-            this.#appsWaitingForSlot[id] && this.#appsWaitingForSlot[id]();
+            // All slots has been loaded
+            if (id === Infinity) { // Infinity here used as indicator of the end of the slots list
+                this.#pageLoadingIsDone = true;
+                for (let slotName in this.#appsWaitingForSlot) {
+                    this.#appsWaitingForSlot[slotName]();
+                }
+            } else {
+                this.#readySlots.push(id);
+                if (this.#appsWaitingForSlot[id]) {
+                    this.#appsWaitingForSlot[id]();
+                    delete this.#appsWaitingForSlot[id];
+                }
+            }
         }, 0);
     }
 };
