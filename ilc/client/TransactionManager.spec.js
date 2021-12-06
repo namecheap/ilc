@@ -482,14 +482,9 @@ describe('TransactionManager', () => {
     it('should destroy spinner in at least 300ms if it is appeared', async () => {
         clock.restore();
 
-        const newBodyApplication = {
-            id: 'new-body-application',
-            class: 'new-body-spa',
-        };
-
-        newBodyApplication.ref = html`
-            <div id="${newBodyApplication.id}" class="${newBodyApplication.class}" style="display: none;">
-                Hello! I am hidden MS, so spinner is still visible
+        const newBodyApplication = html`
+            <div id="new-body-application" class="new-body-spa">
+                Foo bar
             </div>
         `;
 
@@ -499,7 +494,6 @@ describe('TransactionManager', () => {
         handlePageTransaction(slots.body.id, slotWillBe.rerendered);
 
         applications.body.removeApplication();
-        slots.body.ref.appendChild(newBodyApplication.ref);
 
         await new Promise(resolve => setTimeout(resolve, 280));
         chai.expect(spinner.getRef()).to.be.null;
@@ -507,7 +501,7 @@ describe('TransactionManager', () => {
         await new Promise(resolve => setTimeout(resolve, 20));
         chai.expect(spinner.getRef()).to.be.not.null;
 
-        document.getElementById(newBodyApplication.id).style.display = '';
+        slots.body.ref.appendChild(newBodyApplication);
 
         await new Promise(resolve => setTimeout(resolve, 480));
         chai.expect(spinner.getRef()).to.be.not.null;
@@ -539,5 +533,114 @@ describe('TransactionManager', () => {
         chai.expect(spinner.getRef().classList.value).to.include(expectedClass);
 
         spinner.getRef().remove();
+    });
+
+    describe('should trigger "ilc:all-slots-loaded" only once', () => {
+        it('when spinner was not run', async () => {
+            clock.restore();
+
+            let runCount = 0;
+            const handlerAllSlotsLoaded = () => { runCount++ };
+            window.addEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+
+            const newBodyApplication = html`
+                <div id="new-body-application" class="new-body-spa">
+                    Foo bar
+                </div>
+            `;
+
+            applications.navbar.appendApplication();
+            applications.body.appendApplication();
+
+            handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+
+            applications.body.removeApplication();
+
+            // render fragment immediately
+            await new Promise(resolve => setTimeout(resolve, 0));
+            chai.expect(spinner.getRef()).to.be.null;
+
+            slots.body.ref.appendChild(newBodyApplication);
+
+            await new Promise(resolve => setTimeout(resolve, 0));
+            chai.expect(spinner.getRef()).to.be.null;
+
+            chai.expect(runCount).to.equals(1);
+
+            window.removeEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+        });
+
+        it('when spinner was run and "min time" was not exceeded', async () => {
+            clock.restore();
+
+            let runCount = 0;
+            const handlerAllSlotsLoaded = () => { runCount++ };
+            window.addEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+
+            const newBodyApplication = html`
+                <div id="new-body-application" class="new-body-spa">
+                    Foo bar
+                </div>
+            `;
+
+            applications.navbar.appendApplication();
+            applications.body.appendApplication();
+
+            handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+
+            applications.body.removeApplication();
+
+            // render spinner
+            await new Promise(resolve => setTimeout(resolve, 300));
+            chai.expect(spinner.getRef()).to.be.not.null;
+
+            slots.body.ref.appendChild(newBodyApplication);
+
+            // spinner is visible, but all slots are rendered so "ilc:all-slots-loaded" was fired
+            await new Promise(resolve => setTimeout(resolve, 480));
+            chai.expect(spinner.getRef()).to.be.not.null;
+            chai.expect(runCount).to.equals(1);
+
+            // spinner is removed but "ilc:all-slots-loaded" was not fired second time
+            await new Promise(resolve => setTimeout(resolve, 20));
+            chai.expect(spinner.getRef()).to.be.null;
+            chai.expect(runCount).to.equals(1);
+
+            window.removeEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+        });
+
+        it('when spinner was run and "min time" was exceeded', async () => {
+            clock.restore();
+
+            let runCount = 0;
+            const handlerAllSlotsLoaded = () => { runCount++ };
+            window.addEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+
+            const newBodyApplication = html`
+                <div id="new-body-application" class="new-body-spa">
+                    Foo bar
+                </div>
+            `;
+
+            applications.navbar.appendApplication();
+            applications.body.appendApplication();
+
+            handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+
+            applications.body.removeApplication();
+
+            // render spinner
+            await new Promise(resolve => setTimeout(resolve, 300));
+            chai.expect(spinner.getRef()).to.be.not.null;
+
+            slots.body.ref.appendChild(newBodyApplication);
+
+            // spinner disappeared 100ms ago and "ilc:all-slots-loaded" was fired only once
+            await new Promise(resolve => setTimeout(resolve, 600));
+            chai.expect(spinner.getRef()).to.be.null;
+            chai.expect(runCount).to.equals(1);
+
+            window.removeEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+        });
     });
 });

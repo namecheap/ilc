@@ -15,6 +15,8 @@ export class TransactionManager {
     #globalSpinner;
     #spinnerTimeout;
 
+    #forceShowSpinner;
+
     #fakeSlots = [];
     #hiddenSlots = [];
     #transactionBlockers = [];
@@ -118,7 +120,7 @@ export class TransactionManager {
         this.#hiddenSlots.push(targetNode);
     };
 
-    #onAllSlotsLoaded = () => {
+    #onPageReady = () => {
         this.#fakeSlots.forEach(node => node.remove());
         this.#fakeSlots.length = 0;
         this.#hiddenSlots.forEach(node => node.style.display = '');
@@ -126,8 +128,6 @@ export class TransactionManager {
         this.#removeGlobalSpinner();
         document.body.removeAttribute('name');
         scrollRestorer.restoreScroll(window.history.state ? window.history : {state: {scroll: {x: 0, y: 0}}});
-
-        window.dispatchEvent(new CustomEvent('ilc:all-slots-loaded'));
     };
 
     #runGlobalSpinner = () => {
@@ -137,10 +137,11 @@ export class TransactionManager {
 
         this.#spinnerTimeout = setTimeout(() => {
             // if spinner appeared in 300ms, then show it at least 500ms, to avoid flashing it like a glitch
-            const forceShowSpinner = setTimeout(() => {
-                this.#removeTransactionBlocker(forceShowSpinner);
+            this.#forceShowSpinner = setTimeout(() => {
+                this.#removeTransactionBlocker(this.#forceShowSpinner);
+                this.#forceShowSpinner = null;
             }, 500);
-            this.#transactionBlockers.push(forceShowSpinner);
+            this.#transactionBlockers.push(this.#forceShowSpinner);
 
             if (!this.#spinnerConfig.customHTML) {
                 this.#globalSpinner = document.createElement('dialog');
@@ -178,7 +179,16 @@ export class TransactionManager {
 
     #removeTransactionBlocker = (blocker) => {
         this.#transactionBlockers.splice(this.#transactionBlockers.indexOf(blocker), 1);
-        !this.#transactionBlockers.length && this.#onAllSlotsLoaded();
+
+        const isOnlySpinnerBlocker = this.#transactionBlockers.length === 1 && this.#transactionBlockers[0] === this.#forceShowSpinner;
+
+        if (isOnlySpinnerBlocker || !this.#transactionBlockers.length && blocker !== this.#forceShowSpinner) {
+            window.dispatchEvent(new CustomEvent('ilc:all-slots-loaded'));
+        }
+
+        if (!this.#transactionBlockers.length) {
+            this.#onPageReady();
+        }
     };
 
     #addEventListeners = () => {
@@ -202,7 +212,8 @@ export class TransactionManager {
 
     #onRouteChange = () => {
         if (this.#transactionBlockers.length === 0) {
-            this.#onAllSlotsLoaded();
+            this.#onPageReady();
+            window.dispatchEvent(new CustomEvent('ilc:all-slots-loaded'));
         }
     };
 }
