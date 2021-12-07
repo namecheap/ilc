@@ -1,6 +1,6 @@
 Feature('navbar ilc demo application');
 
-Scenario('should open every page and show a content only of an opened page', async (I, peoplePage, newsPage, planetsPage) => {
+Scenario('should open every page and show a content only of an opened page', async ({I, peoplePage, newsPage, planetsPage}) => {
     I.amOnPage('/');
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.main), 10);
     I.click(newsPage.linkWithUrl(newsPage.url.main));
@@ -72,7 +72,7 @@ Scenario('should open every page and show a content only of an opened page', asy
 });
 
 
-Scenario('should open new tab on click with command', async (I, peoplePage, newsPage) => {
+Scenario('should open new tab on click with command', async ({I, peoplePage, newsPage}) => {
     I.amOnPage('/');
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.main), 10);
     I.click(newsPage.linkWithUrl(newsPage.url.main));

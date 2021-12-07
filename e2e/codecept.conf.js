@@ -1,5 +1,7 @@
 const path = require('path');
 
+const preSettings = require('./codecept.presettings.js');
+
 exports.config = {
     output: path.join(__dirname, '.codecept_output', 'artifacts'),
     helpers: {
@@ -23,8 +25,8 @@ exports.config = {
         },
     },
     mocha: {},
-    bootstrap: './codecept.presettings.js',
-    teardown: './codecept.presettings.js',
+    bootstrap: preSettings.bootstrap,
+    teardown: preSettings.teardown,
     hooks: [],
     plugins: {
         screenshotOnFail: {

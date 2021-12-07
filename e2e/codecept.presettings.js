@@ -28,20 +28,23 @@ const resources = [
 
 let childProcess;
 
-const shutDown = (done) => {
+const shutDown = async () => {
     if (!childProcess) {
-        return done();
+        return;
     }
 
     console.log(`Killing child process...`);
-    childProcess.once('exit', () => {
-        console.log(`Child process was successfully killed. Shutting down...`);
-        done();
-    });
     childProcess.kill('SIGTERM', { forceKillAfterTimeout: 3000 });
+
+    await new Promise(resolve => {
+        childProcess.once('exit', () => {
+            console.log(`Child process was successfully killed. Shutting down...`);
+            resolve();
+        });
+    });
 };
 
-const bootstrap = async (done) => {
+const bootstrap = async () => {
     try {
         await new Promise((resolve, reject) => {
             const verbose = process.env.TEST_ENV === 'verbose';
@@ -52,27 +55,25 @@ const bootstrap = async (done) => {
             childProcess.once('error', (error) => {
                 reject(error);
             });
-            childProcess.once('exit', () => !childProcess.killed && done(new Error('Child process exited...')));
+            childProcess.once('exit', () => !childProcess.killed && reject(new Error('Child process exited...')));
+            childProcess.catch(reject);
 
             waitOn({
                 resources,
                 timeout: 10 * 60 * 1000,
                 interval: 1000,
                 verbose,
-            }).then(() => resolve()).catch((error) => {
-                reject(error);
-            });
+            }).then(resolve).catch(reject);
         });
-
-        done();
     } catch (error) {
         console.error('Error during bootstrap...');
         console.error(error);
-        shutDown(() => done(error));
+        await shutDown();
+        throw error;
     }
 };
 
-const teardown = (done) => shutDown(() => done());
+const teardown = async () => shutDown();
 
 module.exports = {
     bootstrap,

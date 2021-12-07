@@ -1,6 +1,6 @@
 Feature('news ilc demo application');
 
-Scenario('should open a news page and show news sources', async (I, newsPage: newsPage) => {
+Scenario('should open a news page and show news sources', async ({I, newsPage: newsPage}) => {
     I.amOnPage('/');
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.main), 10);
     I.click(newsPage.linkWithUrl(newsPage.url.main));
@@ -12,7 +12,7 @@ Scenario('should open a news page and show news sources', async (I, newsPage: ne
     I.see('Pick a news source', newsPage.bannerHeadline);
 });
 
-Scenario('should open an article page from a direct link', async (I, newsPage: newsPage) => {
+Scenario('should open an article page from a direct link', async ({I, newsPage: newsPage}) => {
     I.amOnPage(newsPage.url.main);
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.newsSources, 10);

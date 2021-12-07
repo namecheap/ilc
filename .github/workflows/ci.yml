@@ -84,10 +84,10 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Use Node.js 14
+      - name: Use Node.js 16
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 16
 
       - name: Install Chrome deps
         run: sudo apt-get update && sudo apt-get install -y libgbm-dev
@@ -155,6 +155,6 @@ jobs:
       - name: Build the Docker image
         run: |
           docker build -t ilc-mkdocs - < ./.mkdocs/Dockerfile
-              
+
       - name: Generate docs and publish to GitHub Pages
         run: docker run --rm -v ${PWD}:/docs ilc-mkdocs gh-deploy --force
