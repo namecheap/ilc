@@ -1,7 +1,8 @@
 import {triggerAppChange} from './navigationEvents';
 import transactionManager, {slotWillBe} from './TransactionManager';
+import {getSlotElement} from './utils';
 
-export const createFactory = (triggerAppChange, handlePageTransaction, slotWillBe) => (router, appName, slotName) => {
+export const createFactory = (logger, triggerAppChange, handlePageTransaction, slotWillBe) => (router, appName, slotName) => {
     let reload = false;
 
     return () => {
@@ -12,6 +13,15 @@ export const createFactory = (triggerAppChange, handlePageTransaction, slotWillB
 
         let isActive = checkActivity(router.getCurrentRoute());
         const wasActive = checkActivity(router.getPrevRoute());
+
+        if (isActive || wasActive) {
+            try {
+                getSlotElement(slotName);
+            } catch (e) {
+                logger.error(`Failed to activate application "${appName}" due to absence of requested slot "${slotName}" in template.`);
+                return false;
+            }
+        }
 
         let willBe = slotWillBe.default;
         !wasActive && isActive && (willBe = slotWillBe.rendered);
@@ -25,7 +35,7 @@ export const createFactory = (triggerAppChange, handlePageTransaction, slotWillB
                 window.addEventListener('single-spa:app-change', function singleSpaAppChange() {
                     window.removeEventListener('single-spa:app-change', singleSpaAppChange);
                     //TODO: need to consider addition of the new update() hook to the adapter. So it will be called instead of re-mount, if available.
-                    console.log(`ILC: Triggering app re-mount for ${appName} due to changed props.`);
+                    logger.log(`ILC: Triggering app re-mount for ${appName} due to changed props.`);
 
                     reload = true;
 
@@ -48,7 +58,7 @@ let defaultInstance = null;
 export default function (...args) {
     if (defaultInstance === null) {
         const tm = transactionManager();
-        defaultInstance = createFactory(triggerAppChange, tm.handlePageTransaction.bind(tm), slotWillBe);
+        defaultInstance = createFactory(window.console, triggerAppChange, tm.handlePageTransaction.bind(tm), slotWillBe);
     }
 
     return defaultInstance(...args);

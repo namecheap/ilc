@@ -1,5 +1,6 @@
 import chai from 'chai';
 import sinon from 'sinon';
+import html from 'nanohtml';
 
 import {slotWillBe} from './TransactionManager';
 import {createFactory} from './isActiveFactory';
@@ -9,6 +10,11 @@ describe('is active factory', () => {
 
     const triggerAppChange = sinon.spy();
     const handlePageTransaction = sinon.spy();
+
+    const logger = {
+        log: sinon.spy(),
+        error: sinon.spy(),
+    };
 
     const router = {
         getPrevRouteProps: sinon.stub(),
@@ -35,14 +41,24 @@ describe('is active factory', () => {
         },
     };
 
+    const pageTemplate = html`
+        <main>
+            <!-- Region "${slotName}" START -->
+            <div id="${slotName}"></div>
+            <!-- Region "${slotName}" END -->
+        </main>
+    `;
+
     let isActive;
     let clock;
 
     beforeEach(() => {
-        const isActiveFactory = createFactory(triggerAppChange, handlePageTransaction, slotWillBe);
+        const isActiveFactory = createFactory(logger, triggerAppChange, handlePageTransaction, slotWillBe);
         isActive = isActiveFactory(router, appName, slotName);
 
         clock = sinon.useFakeTimers();
+
+        document.body.appendChild(pageTemplate);
     });
 
     afterEach(() => {
@@ -53,8 +69,11 @@ describe('is active factory', () => {
 
         handlePageTransaction.resetHistory();
         triggerAppChange.resetHistory();
+        logger.log.resetHistory();
+        logger.error.resetHistory();
 
         clock.restore();
+        document.body.removeChild(pageTemplate);
     });
 
     it('should return true when a slot is going to be rendered', async () => {
@@ -114,6 +133,10 @@ describe('is active factory', () => {
 
         chai.expect(triggerAppChange.calledOnce).to.be.true;
         chai.expect(handlePageTransaction.firstCall.calledWithExactly(slotName, slotWillBe.rerendered)).to.be.true;
+        sinon.assert.calledWithExactly(
+            logger.log,
+            `ILC: Triggering app re-mount for ${appName} due to changed props.`
+        );
 
         chai.expect(isActive()).to.be.true;
 
@@ -132,5 +155,36 @@ describe('is active factory', () => {
 
         chai.expect(triggerAppChange.calledOnce).to.be.true;
         chai.expect(handlePageTransaction.secondCall.calledWithExactly(slotName, slotWillBe.default)).to.be.true;
+    });
+
+    it('should return false and log an error when there are no slot in template present for isActive/wasActive app', async () => {
+        const slotName = 'nonExistingInTpl';
+        const isActiveFactory = createFactory(logger, triggerAppChange, handlePageTransaction, slotWillBe);
+        const isActive = isActiveFactory(router, appName, slotName);
+
+        const routeThatHasProvidedSlot = {
+            slots: {
+                [slotName]: {
+                    appName,
+                },
+            },
+        };
+
+        router.getCurrentRoute.onFirstCall().returns(routeThatHasProvidedSlot);
+        router.getPrevRoute.onFirstCall().returns(routeThatDoesNotHaveProvidedSlot);
+
+        chai.expect(isActive()).to.be.false;
+
+        dispatchSingleSpaAppChangeEvent();
+
+        await clock.runAllAsync();
+
+        chai.expect(triggerAppChange.called).to.be.false;
+        chai.expect(handlePageTransaction.calledOnceWithExactly(slotName, slotWillBe.removed)).to.be.false;
+
+        sinon.assert.calledWithExactly(
+            logger.error,
+            `Failed to activate application "${appName}" due to absence of requested slot "${slotName}" in template.`
+        );
     });
 });
