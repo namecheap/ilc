@@ -107,7 +107,13 @@ jobs:
         run: npm run build
 
       - name: Run E2E tests
-        run: cd e2e && npm start
+        run: cd e2e && npm run start:verbose
+
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: e2e-tests-artifacts
+          path: e2e/.codecept_output
 
   push_images:
     needs: [build_ilc, build_registry, e2e_tests]

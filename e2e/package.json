@@ -5,7 +5,7 @@
     "main": "index.js",
     "private": true,
     "scripts": {
-        "start": "codeceptjs run",
+        "start": "codeceptjs run --reporter mocha-multi",
         "start:verbose": "cross-env TEST_ENV=verbose npm start -- --verbose",
         "start:verbose:ui": "cross-env SHOW_UI=true npm run start:verbose",
         "start:gui": "codecept-ui",
@@ -21,6 +21,8 @@
         "codeceptjs": "^3.2.2",
         "cross-env": "^7.0.2",
         "execa": "^4.0.1",
+        "mocha-multi": "^1.1.5",
+        "mochawesome": "^7.0.1",
         "puppeteer": "^12.0.1",
         "ts-node": "^10.4.0",
         "typescript": "^4.5.2",

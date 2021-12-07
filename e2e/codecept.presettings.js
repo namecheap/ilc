@@ -29,7 +29,7 @@ const resources = [
 let childProcess;
 
 const shutDown = async () => {
-    if (!childProcess) {
+    if (!childProcess || childProcess.exitCode !== null) {
         return;
     }
 
@@ -69,7 +69,7 @@ const bootstrap = async () => {
         console.error('Error during bootstrap...');
         console.error(error);
         await shutDown();
-        throw error;
+        process.exit(1);
     }
 };
 
