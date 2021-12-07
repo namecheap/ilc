@@ -65,6 +65,11 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                 appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
                 errorHandler: appErrorHandlerFactory(appName, slotName),
                 appSdk,
+                render404: () => {
+                    window.dispatchEvent(new CustomEvent('ilc:404', {
+                        detail: { appId },
+                    }));
+                }
             }
         );
     });
