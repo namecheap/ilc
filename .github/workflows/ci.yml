@@ -107,7 +107,7 @@ jobs:
         run: npm run build
 
       - name: Run E2E tests
-        run: cd e2e && npm run start:verbose
+        run: cd e2e && npm run start
 
       - uses: actions/upload-artifact@v2
         if: failure()

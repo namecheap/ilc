@@ -70,22 +70,3 @@ Scenario('should open every page and show a content only of an opened page', asy
     I.dontSeeElement(peoplePage.fetchMorePeople);
     I.dontSeeElement(peoplePage.personsList);
 });
-
-
-Scenario('should open new tab on click with command', async ({I, peoplePage, newsPage}) => {
-    I.amOnPage('/');
-    I.waitForElement(newsPage.linkWithUrl(newsPage.url.main), 10);
-    I.click(newsPage.linkWithUrl(newsPage.url.main));
-    I.waitInUrl(newsPage.url.main, 10);
-
-    I.pressKeyDown('Control');
-    I.click(peoplePage.goToPeople);
-    I.pressKeyUp('Control');
-    I.pressKeyDown('Command');
-    I.click(peoplePage.goToPeople);
-    I.pressKeyUp('Command');
-    I.seeCurrentUrlEquals(newsPage.url.main);
-
-    I.switchToNextTab();
-    I.seeCurrentUrlEquals(peoplePage.peopleUrl);
-});
