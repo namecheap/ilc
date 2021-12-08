@@ -1,18 +1,17 @@
+import { clickOnLink } from './utils';
+
 Feature('navbar ilc demo application');
 
 Scenario('should open every page and show a content only of an opened page', async ({I, peoplePage, newsPage, planetsPage}) => {
     I.amOnPage('/');
-    I.waitForElement(newsPage.linkWithUrl(newsPage.url.main), 10);
-    I.click(newsPage.linkWithUrl(newsPage.url.main));
-    I.waitInUrl(newsPage.url.main, 10);
+    clickOnLink(newsPage.url.main, true);
     I.seeAttributesOnElements(newsPage.linkWithUrl(newsPage.url.main), {
         'aria-current': 'page',
     });
     I.waitForElement(newsPage.newsSources, 10);
     I.see('Pick a news source', newsPage.bannerHeadline);
 
-    I.click(peoplePage.goToPeople);
-    I.waitInUrl(peoplePage.peopleUrl, 10);
+    clickOnLink(peoplePage.peopleUrl, true);
     I.seeAttributesOnElements(peoplePage.goToPeople, {
         'aria-current': 'page',
     });
@@ -22,8 +21,7 @@ Scenario('should open every page and show a content only of an opened page', asy
     I.waitForClickable(peoplePage.fetchMorePeople, 10);
     I.seeNumberOfVisibleElements(peoplePage.personsList, 10);
 
-    I.click(planetsPage.goToPlanets);
-    I.waitInUrl(planetsPage.planetsUrl, 10);
+    clickOnLink(planetsPage.planetsUrl);
     I.seeAttributesOnElements(planetsPage.goToPlanets, {
         'aria-current': 'page',
     });
@@ -33,14 +31,12 @@ Scenario('should open every page and show a content only of an opened page', asy
     I.see('No planet selected', planetsPage.selectedPlanet);
     I.waitNumberOfVisibleElements(planetsPage.planetsList, 10, 10);
 
-    I.click('body > div#navbar a[href="/nosuchpath"]');
-    I.waitInUrl('/nosuchpath', 10);
+    clickOnLink('/nosuchpath');
     I.waitForText('404 not found', 10, 'body > div#body');
     I.dontSeeElement(planetsPage.selectedPlanet);
     I.dontSeeElement(planetsPage.planetsList);
 
-    I.click(planetsPage.goToPlanets);
-    I.waitInUrl(planetsPage.planetsUrl, 10);
+    clickOnLink(planetsPage.planetsUrl);
     I.seeAttributesOnElements(planetsPage.goToPlanets, {
         'aria-current': 'page',
     });
@@ -48,8 +44,7 @@ Scenario('should open every page and show a content only of an opened page', asy
     I.see('No planet selected', planetsPage.selectedPlanet);
     I.waitNumberOfVisibleElements(planetsPage.planetsList, 10, 10);
 
-    I.click(peoplePage.goToPeople);
-    I.waitInUrl(peoplePage.peopleUrl, 10);
+    clickOnLink(peoplePage.peopleUrl);
     I.seeAttributesOnElements(peoplePage.goToPeople, {
         'aria-current': 'page',
     });
@@ -59,8 +54,7 @@ Scenario('should open every page and show a content only of an opened page', asy
     I.waitForClickable(peoplePage.fetchMorePeople, 10);
     I.seeNumberOfVisibleElements(peoplePage.personsList, 10);
 
-    I.click(newsPage.linkWithUrl(newsPage.url.main));
-    I.waitInUrl(newsPage.url.main, 10);
+    clickOnLink(newsPage.url.main);
     I.seeAttributesOnElements(newsPage.linkWithUrl(newsPage.url.main), {
         'aria-current': 'page',
     });
