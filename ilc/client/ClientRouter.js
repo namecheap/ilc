@@ -202,7 +202,7 @@ export default class ClientRouter {
         }
 
         console.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
-        
+
         this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl(true)};
 
         triggerAppChange(); //This call would immediately invoke "ilc:before-routing" and start apps mount/unmount process

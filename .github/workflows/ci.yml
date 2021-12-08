@@ -84,10 +84,10 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Use Node.js 14
+      - name: Use Node.js 16
         uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 16
 
       - name: Install Chrome deps
         run: sudo apt-get update && sudo apt-get install -y libgbm-dev
@@ -107,7 +107,13 @@ jobs:
         run: npm run build
 
       - name: Run E2E tests
-        run: cd e2e && npm start
+        run: cd e2e && npm run start
+
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: e2e-tests-artifacts
+          path: e2e/.codecept_output
 
   push_images:
     needs: [build_ilc, build_registry, e2e_tests]
@@ -155,6 +161,6 @@ jobs:
       - name: Build the Docker image
         run: |
           docker build -t ilc-mkdocs - < ./.mkdocs/Dockerfile
-              
+
       - name: Generate docs and publish to GitHub Pages
         run: docker run --rm -v ${PWD}:/docs ilc-mkdocs gh-deploy --force

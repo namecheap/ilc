@@ -1,6 +1,6 @@
 Feature('Hooks');
 
-Scenario('Renders a confirmation dialog when a user tries to go to a protected page', (I, hooksPage: hooksPage) => {
+Scenario('Renders a confirmation dialog when a user tries to go to a protected page', ({I, hooksPage: hooksPage}) => {
     I.clearCookie();
     I.amOnPage(hooksPage.url.entry);
     I.seeElement(hooksPage.goToProtectedPage);
@@ -22,13 +22,13 @@ Scenario('Renders a confirmation dialog when a user tries to go to a protected p
     I.dontSeeElement(hooksPage.confirmDialog);
 });
 
-Scenario('Redirects to home page when a user tries to visit protected page', (I, hooksPage: hooksPage) => {
+Scenario('Redirects to home page when a user tries to visit protected page', ({I, hooksPage: hooksPage}) => {
     I.clearCookie();
     I.amOnPage(hooksPage.url.protected);
     I.waitInUrl('/', 30);
 });
 
-Scenario('Renders a confirmation dialog when a user try to navigate by the forward browser button to a protected page', (I, hooksPage: hooksPage) => {
+Scenario('Renders a confirmation dialog when a user try to navigate by the forward browser button to a protected page', ({I, hooksPage: hooksPage}) => {
     I.clearCookie();
     I.amOnPage(hooksPage.url.entry);
     I.seeElement(hooksPage.goToProtectedPage);
@@ -52,7 +52,7 @@ Scenario('Renders a confirmation dialog when a user try to navigate by the forwa
     I.waitInUrl(hooksPage.url.entry, 30);
 });
 
-Scenario('Renders a confirmation dialog when a user try to navigate by the help of the back browser button to a protected page', (I, hooksPage: hooksPage) => {
+Scenario('Renders a confirmation dialog when a user try to navigate by the help of the back browser button to a protected page', ({I, hooksPage: hooksPage}) => {
     I.clearCookie();
     I.amOnPage(hooksPage.url.entry);
     I.seeElement(hooksPage.goToProtectedPage);

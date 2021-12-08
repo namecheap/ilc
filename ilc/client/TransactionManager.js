@@ -143,14 +143,17 @@ export class TransactionManager {
             }, 500);
             this.#transactionBlockers.push(this.#forceShowSpinner);
 
+            const spinnerClass = 'ilcSpinnerWrapper';
+
             if (!this.#spinnerConfig.customHTML) {
                 this.#globalSpinner = document.createElement('dialog');
+                this.#globalSpinner.setAttribute('class', spinnerClass);
                 this.#globalSpinner.innerHTML = 'loading....';
                 document.body.appendChild(this.#globalSpinner);
                 this.#globalSpinner.showModal();
             } else {
                 this.#globalSpinner = document.createElement('div');
-                this.#globalSpinner.classList.add('ilcSpinnerWrapper');
+                this.#globalSpinner.classList.add(spinnerClass);
                 this.#globalSpinner.innerHTML = this.#spinnerConfig.customHTML;
                 document.body.appendChild(this.#globalSpinner);
 

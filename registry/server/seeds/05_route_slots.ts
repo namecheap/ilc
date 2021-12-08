@@ -66,6 +66,14 @@ export async function seed(knex: Knex): Promise<any> {
             name: 'body',
             appName: '@portal/system',
             props: JSON.stringify({ _statusCode: '404', title: '404 not found on 127.0.0.1' }),
+        },
+        {
+            routeId: 13, // /missing-slot-in-tpl/
+            name: 'invalid-slot',
+            appName: '@portal/system',
+            props: JSON.stringify({
+                page: 'home'
+            }),
         }
     ]);
 }

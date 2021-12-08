@@ -1,6 +1,6 @@
 Feature('people ilc demo application');
 
-Scenario('should open a people page without any selected planet initially', async (I, peoplePage) => {
+Scenario('should open a people page without any selected planet initially', async ({I, peoplePage}) => {
     I.amOnPage('/');
     I.waitForElement(peoplePage.goToPeople, 30);
     I.click(peoplePage.goToPeople);
@@ -13,7 +13,7 @@ Scenario('should open a people page without any selected planet initially', asyn
     I.seeNumberOfVisibleElements(peoplePage.personsList, 10);
 });
 
-Scenario('should show more persons', async (I, peoplePage) => {
+Scenario('should show more persons', async ({I, peoplePage}) => {
     I.amOnPage(peoplePage.peopleUrl);
     I.waitForElement(peoplePage.fetchMorePeople, 30);
     I.waitForClickable(peoplePage.fetchMorePeople, 30);
@@ -23,7 +23,7 @@ Scenario('should show more persons', async (I, peoplePage) => {
     I.stopMocking();
 });
 
-Scenario('should show person`s details', async (I, peoplePage) => {
+Scenario('should show person`s details', async ({I, peoplePage}) => {
     I.amOnPage(peoplePage.peopleUrl);
     I.waitNumberOfVisibleElements(peoplePage.personsList, 10, 30);
 
