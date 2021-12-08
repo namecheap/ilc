@@ -27,6 +27,10 @@ exports.config = {
         },
         Mochawesome: {
             uniqueScreenshotNames: true
+        },
+        // Adds assertions to API https://www.npmjs.com/package/codeceptjs-chai
+        ChaiWrapper : {
+            require: 'codeceptjs-chai'
         }
     },
     mocha: {
