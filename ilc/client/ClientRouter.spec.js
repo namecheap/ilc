@@ -516,6 +516,51 @@ describe('client router', () => {
             chai.expect(singleSpa.navigateToUrl.called).to.be.false;
             chai.expect(clickEvent.defaultPrevented).to.be.false;
         });
+
+        describe('should NOT handle click events on with pressed:', () => {
+            let anchor;
+            const pageReloadPreventer = (e) => {
+                if (e instanceof MouseEvent && e.target === anchor.ref) {
+                    e.preventDefault();
+                }
+            };
+
+            beforeEach(() => {
+                window.addEventListener('click', pageReloadPreventer);
+
+                anchor = {
+                    id: 'click-me',
+                    href: registryConfig.routes[2].route,
+                };
+
+                anchor.ref = html`
+                    <a id="${anchor.id}" href="${anchor.href}">
+                        Hi there! I am an anchor tag.
+                    </a>
+                `;
+
+                document.body.appendChild(anchor.ref);
+            });
+
+            afterEach(() => {
+                window.removeEventListener('click', pageReloadPreventer);
+            });
+
+            for (const keyType of ['metaKey', 'altKey', 'ctrlKey', 'shiftKey']) {
+                it(`${keyType} key`, () => {
+                    clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        [keyType]: true,
+                    });
+
+                    document.getElementById(anchor.id).dispatchEvent(clickEvent);
+
+                    chai.expect(singleSpa.navigateToUrl.called).to.be.false;
+                });
+            }
+        });
+
     });
 
     describe('while getting route props', () => {
