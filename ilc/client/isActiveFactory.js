@@ -1,6 +1,5 @@
 import {triggerAppChange} from './navigationEvents';
-import transactionManager, {slotWillBe} from './TransactionManager';
-import {getSlotElement} from './utils';
+import transactionManager, {slotWillBe} from './TransactionManager/TransactionManager';
 
 export const createFactory = (logger, triggerAppChange, handlePageTransaction, slotWillBe) => (router, appName, slotName) => {
     let reload = false;
@@ -13,15 +12,6 @@ export const createFactory = (logger, triggerAppChange, handlePageTransaction, s
 
         let isActive = checkActivity(router.getCurrentRoute());
         const wasActive = checkActivity(router.getPrevRoute());
-
-        if (isActive || wasActive) {
-            try {
-                getSlotElement(slotName);
-            } catch (e) {
-                logger.error(`Failed to activate application "${appName}" due to absence of requested slot "${slotName}" in template.`);
-                return false;
-            }
-        }
 
         let willBe = slotWillBe.default;
         !wasActive && isActive && (willBe = slotWillBe.rendered);

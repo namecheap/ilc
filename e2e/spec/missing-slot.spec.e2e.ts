@@ -8,7 +8,12 @@ Scenario('(SSR) should correctly open page where app requires missing slot in te
     I.amOnPage(testPageUrl);
 
     const consoleMessages: ConsoleMessage[] = await I.grabBrowserLogs();
-    I.assertContain(consoleMessages.map(v => v.text()), 'Failed to activate application "@portal/system" due to absence of requested slot "invalid-slot" in template.');
+    const messagesText = consoleMessages.map(v => v.text());
+
+    I.assertContain(messagesText, `Looks like we're missing slot "invalid-slot" in template... Ignoring possible config overrides...`);
+
+    const notMountedErrExists = messagesText.some(v => v.includes(`NOT_MOUNTED: Failed to mount application \\"@portal/system\\" to slot \\"invalid-slot\\" due to absence of the slot in template`));
+    I.assertTrue(notMountedErrExists, 'Contains NOT_MOUNTED error');
 
     // Navbar was rendered correctly
     I.waitForElement(peoplePage.goToPeople, 10);
@@ -31,7 +36,10 @@ Scenario('(CSR) should correctly open page where app requires missing slot in te
     I.waitInUrl(testPageUrl, 10);
 
     const consoleMessages: ConsoleMessage[] = await I.grabBrowserLogs();
-    I.assertContain(consoleMessages.map(v => v.text()), 'Failed to activate application "@portal/system" due to absence of requested slot "invalid-slot" in template.');
+    const messagesText = consoleMessages.map(v => v.text());
+
+    const notMountedErrExists = messagesText.some(v => v.includes(`NOT_MOUNTED: Failed to mount application \\"@portal/system\\" to slot \\"invalid-slot\\" due to absence of the slot in template`));
+    I.assertTrue(notMountedErrExists, 'Contains NOT_MOUNTED error');
 
     // Navbar was rendered correctly
     I.waitForElement(peoplePage.goToPeople, 10);

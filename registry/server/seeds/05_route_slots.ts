@@ -70,6 +70,7 @@ export async function seed(knex: Knex): Promise<any> {
         {
             routeId: 13, // /missing-slot-in-tpl/
             name: 'invalid-slot',
+            kind: 'regular',
             appName: '@portal/system',
             props: JSON.stringify({
                 page: 'home'

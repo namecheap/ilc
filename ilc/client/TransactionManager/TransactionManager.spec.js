@@ -10,6 +10,10 @@ import {
 describe('TransactionManager', () => {
     const locationHash = 'i-am-location-hash';
 
+    const logger = {
+        warn: sinon.spy(),
+    };
+
     const slots = {
         id: 'slots',
         appendSlots: () => document.body.appendChild(slots.ref),
@@ -74,7 +78,7 @@ describe('TransactionManager', () => {
     beforeEach(() => {
         window.location.hash = locationHash;
 
-        const transactionManager = new TransactionManager({
+        const transactionManager = new TransactionManager(logger, {
             enabled: true,
             customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`
         });
@@ -97,12 +101,32 @@ describe('TransactionManager', () => {
         slots.removeSlots();
         clock.restore();
         removePageTransactionListeners();
+        logger.warn.resetHistory();
     });
 
     it('should throw an error when a slot name is not provided', () => {
         chai.expect(() => handlePageTransaction()).to.throw(
             'A slot name was not provided!'
         );
+    });
+
+    it('should log warning when a non-existing slot name is provided', () => {
+        const slotName = 'invalid-slot-name';
+        const willBe = slotWillBe.rendered;
+        handlePageTransaction(slotName, willBe);
+
+        sinon.assert.calledWithExactly(
+            logger.warn,
+            `Failed to correctly handle page transition "${willBe}" for slot "${slotName}" due to it's absence in template. Ignoring it...`
+        );
+    });
+
+    it('should not log warning when a non-existing slot name is provided but the action is default', () => {
+        const slotName = 'invalid-slot-name';
+        const willBe = slotWillBe.default;
+        handlePageTransaction(slotName, willBe);
+
+        sinon.assert.notCalled(logger.warn);
     });
 
     it('should throw an error when a slot action does not match any possible option to handle', () => {
@@ -380,6 +404,59 @@ describe('TransactionManager', () => {
             chai.expect(slots.body.getComputedStyle().display).to.be.equal('block');
             chai.expect(slots.body.getAttributeName()).to.be.null;
         });
+
+        it('should correctly handle duplicative calls when a slot is going to be rendered and then removed', async () => {
+            const newBodyApplication = {
+                id: 'new-body-application',
+                class: 'new-body-spa',
+            };
+
+            newBodyApplication.ref = html`
+                <div id="${newBodyApplication.id}" class="${newBodyApplication.class}">
+                    Hello! I am new Body SPA
+                </div>
+            `;
+
+            applications.body.appendApplication();
+
+            handlePageTransaction(slots.body.id, slotWillBe.rendered);
+            handlePageTransaction(slots.body.id, slotWillBe.rendered);
+            handlePageTransaction(slots.body.id, slotWillBe.removed);
+            handlePageTransaction(slots.body.id, slotWillBe.removed);
+
+            await clock.runAllAsync();
+
+            applications.body.removeApplication();
+
+            await clock.runAllAsync();
+
+            const bodyApplications = document.getElementsByClassName(applications.body.class);
+            chai.expect(bodyApplications.length).to.be.equal(1);
+
+            const [fakeBodyApplicationRef] = bodyApplications;
+            const fakeBodySlot = fakeBodyApplicationRef.parentNode;
+
+            chai.expect(fakeBodyApplicationRef.id).to.be.equal(applications.body.id);
+
+            chai.expect(window.getComputedStyle(fakeBodyApplicationRef, null).display).to.be.equal('block');
+            chai.expect(slots.body.getComputedStyle().display).to.be.equal('none');
+            chai.expect(window.getComputedStyle(fakeBodySlot, null).display).to.be.equal('block');
+
+            chai.expect(fakeBodySlot.nodeName).to.be.equal(slots.body.ref.nodeName);
+            chai.expect(fakeBodySlot.id).to.be.equal('');
+            chai.expect(fakeBodySlot.className).to.be.equal('');
+
+            chai.expect(spinner.getRef()).to.be.not.null;
+            chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
+
+            slots.body.ref.appendChild(newBodyApplication.ref);
+
+            await clock.runAllAsync();
+
+            chai.expect(spinner.getRef()).to.be.null;
+            chai.expect(slots.body.getComputedStyle().display).to.be.equal('block');
+            chai.expect(slots.body.getAttributeName()).to.be.null;
+        });
     });
 
     it('should destroy spinner when all fragments contain text nodes', async () => {
@@ -513,7 +590,7 @@ describe('TransactionManager', () => {
     it('should run scripts in customHTML', async () => {
         const expectedClass = 'iAmSetFromCustomHTML';
 
-        const transactionManager = new TransactionManager({
+        const transactionManager = new TransactionManager(logger, {
             enabled: true,
             customHTML: `
                 <div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>

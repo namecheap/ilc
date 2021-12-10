@@ -56,6 +56,19 @@ export default class ClientRouter {
     match = (url) => this.#router.match(this.#i18n.unlocalizeUrl(url.replace(this.#location.origin, '') || '/'));
     navigateToUrl = (url) => this.#singleSpa.navigateToUrl(this.#i18n.localizeUrl(url));
 
+    getRelevantAppKind(appName, slotName) {
+        const appKind = this.#registryConf.apps[appName].kind;
+
+        const currentRoute = this.getCurrentRoute();
+        const slotKindCurr = currentRoute.slots[slotName] && currentRoute.slots[slotName].kind;
+        // Here we're also checking previous route as app may throw an error right after URL change.
+        // During unmounting for example.
+        const previousRoute = this.getPrevRoute();
+        const slotKindPrev = previousRoute.slots[slotName] && previousRoute.slots[slotName].kind;
+
+        return slotKindCurr || slotKindPrev || appKind;
+    }
+
     #getRouteProps(appName, slotName, route) {
         if (this.#registryConf.apps[appName] === undefined) {
             throw new this.errors.RouterError({message: 'Can not find info about the app.', data: {appName}});

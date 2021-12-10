@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 import html from 'nanohtml';
 
-import {slotWillBe} from './TransactionManager';
+import {slotWillBe} from './TransactionManager/TransactionManager';
 import {createFactory} from './isActiveFactory';
 
 describe('is active factory', () => {
@@ -155,36 +155,5 @@ describe('is active factory', () => {
 
         chai.expect(triggerAppChange.calledOnce).to.be.true;
         chai.expect(handlePageTransaction.secondCall.calledWithExactly(slotName, slotWillBe.default)).to.be.true;
-    });
-
-    it('should return false and log an error when there are no slot in template present for isActive/wasActive app', async () => {
-        const slotName = 'nonExistingInTpl';
-        const isActiveFactory = createFactory(logger, triggerAppChange, handlePageTransaction, slotWillBe);
-        const isActive = isActiveFactory(router, appName, slotName);
-
-        const routeThatHasProvidedSlot = {
-            slots: {
-                [slotName]: {
-                    appName,
-                },
-            },
-        };
-
-        router.getCurrentRoute.onFirstCall().returns(routeThatHasProvidedSlot);
-        router.getPrevRoute.onFirstCall().returns(routeThatDoesNotHaveProvidedSlot);
-
-        chai.expect(isActive()).to.be.false;
-
-        dispatchSingleSpaAppChangeEvent();
-
-        await clock.runAllAsync();
-
-        chai.expect(triggerAppChange.called).to.be.false;
-        chai.expect(handlePageTransaction.calledOnceWithExactly(slotName, slotWillBe.removed)).to.be.false;
-
-        sinon.assert.calledWithExactly(
-            logger.error,
-            `Failed to activate application "${appName}" due to absence of requested slot "${slotName}" in template.`
-        );
     });
 });

@@ -3,7 +3,7 @@ import uuidv4 from 'uuid/v4';
 import noticeError from './noticeError';
 import crashIlc from './crashIlc';
 
-export default function fragmentErrorHandlerFactory(registryConf, getCurrentPath, appName, slotName) {
+export default function fragmentErrorHandlerFactory(registryConf, getRelevantAppKind, appName, slotName) {
     return (error, errorInfo = {}) => {
         if (!navigator.onLine) {
             return window.location.reload();
@@ -19,8 +19,7 @@ export default function fragmentErrorHandlerFactory(registryConf, getCurrentPath
             errorId,
         });
 
-        const currentPath = getCurrentPath();
-        const fragmentKind = selectFragmentKind(registryConf, currentPath, appName, slotName);
+        const fragmentKind = getRelevantAppKind(appName, slotName);
 
         if (isEssentialOrPrimaryFragment(fragmentKind)) {
             crashIlc(errorId);
@@ -33,13 +32,6 @@ const FRAGMENT_KIND = Object.freeze({
     essential: 'essential',
     regular: 'regular',
 });
-
-function selectFragmentKind(registryConf, path, appName, slotName) {
-    const appKind = registryConf.apps[appName].kind;
-    const slotKind = path.slots[slotName] && path.slots[slotName].kind;
-
-    return slotKind || appKind;
-};
 
 function isEssentialOrPrimaryFragment(fragmentKind) {
     return [

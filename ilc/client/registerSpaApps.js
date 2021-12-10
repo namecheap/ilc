@@ -18,6 +18,15 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
 
         const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId));
         const onUnmount = async () => appSdk.unmount();
+        // We prepend this lifecycle function to have unified behaviour for all apps when
+        // we're missing slot for them to be mounted in template
+        const onMount = async () => {
+            try {
+                getSlotElement(slotName);
+            } catch (e) {
+                throw new Error(`Failed to mount application "${appName}" to slot "${slotName}" due to absence of the slot in template!`);
+            }
+        };
 
         singleSpa.registerApplication(
             appId,
@@ -54,7 +63,9 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                         spaCallbacks = wrapper.wrapWith(spaCallbacks, wrapperSpaCallbacks);
                     }
 
-                    return prependSpaCallback(spaCallbacks, 'unmount', onUnmount);
+                    const cbs = prependSpaCallback(spaCallbacks, 'unmount', onUnmount);
+
+                    return prependSpaCallback(cbs, 'mount', onMount);
                 });
             },
             isActiveFactory(router, appName, slotName),
