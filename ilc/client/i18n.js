@@ -1,7 +1,7 @@
 import { IlcIntl } from 'ilc-sdk/app';
 import Cookies from 'js-cookie';
 
-import transactionManagerFactory from './TransactionManager';
+import transactionManagerFactory from './TransactionManager/TransactionManager';
 import {appIdToNameAndSlot} from '../common/utils';
 import i18nCookie from '../common/i18nCookie';
 import dispatchSynchronizedEvent from './dispatchSynchronizedEvent';

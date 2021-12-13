@@ -1,5 +1,5 @@
 import {flattenFnArray} from './utils';
-import transactionManager, {slotWillBe} from './TransactionManager';
+import transactionManager, {slotWillBe} from './TransactionManager/TransactionManager';
 import {appIdToNameAndSlot} from '../common/utils';
 
 const APP_STATES = {

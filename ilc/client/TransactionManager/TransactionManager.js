@@ -1,5 +1,6 @@
-import { getSlotElement } from './utils';
-import getIlcConfig from './ilcConfig';
+import { getSlotElement } from '../utils';
+import getIlcConfig from '../ilcConfig';
+import TransactionBlocker from './TransactionBlocker';
 
 import scrollRestorer from '@mapbox/scroll-restorer';
 
@@ -11,18 +12,22 @@ export const slotWillBe = {
 };
 
 export class TransactionManager {
+    #logger;
     #spinnerConfig;
     #globalSpinner;
     #spinnerTimeout;
 
-    #forceShowSpinner;
+    // IE 11 backward compatibility
+    #forceShowSpinnerBlockerId = window.Symbol ? window.Symbol('forceShowSpinner') : 'FORCE_SHOW_SPINNER';
 
     #fakeSlots = [];
     #hiddenSlots = [];
+    /** @type TransactionBlocker[] */
     #transactionBlockers = [];
     #windowEventHandlers = {};
 
-    constructor(spinnerConfig = {enabled: true, customHTML: ''}) {
+    constructor(logger, spinnerConfig = {enabled: true, customHTML: ''}) {
+        this.#logger = logger;
         this.#spinnerConfig = spinnerConfig;
         this.#addEventListeners();
     }
@@ -33,7 +38,7 @@ export class TransactionManager {
         }
 
         this.#runGlobalSpinner();
-        this.#transactionBlockers.push(promise);
+        this.#transactionBlockers.push(new TransactionBlocker(promise));
 
         const afterPromise = () => this.#removeTransactionBlocker(promise);
         promise.then(afterPromise).catch(afterPromise)
@@ -46,6 +51,16 @@ export class TransactionManager {
 
         if (!slotName) {
             throw new Error('A slot name was not provided!');
+        }
+
+        try {
+            getSlotElement(slotName);
+        } catch (e) { // TODO: better error detection
+            if (willBe !== slotWillBe.default) {
+                this.#logger.warn(`Failed to correctly handle page transition "${willBe}" for slot "${slotName}" due to it's absence in template. Ignoring it...`);
+            }
+
+            return;
         }
 
         switch (willBe) {
@@ -66,7 +81,15 @@ export class TransactionManager {
         }
     }
 
+    reportSlotRenderingError(slotName) {
+        this.#removeTransactionBlocker(slotName);
+    }
+
     #addContentListener = slotName => {
+        if (this.#transactionBlockerExists(slotName)) {
+            return;
+        }
+
         this.#runGlobalSpinner();
 
         if (window.location.hash) {
@@ -79,7 +102,7 @@ export class TransactionManager {
             isAnyChildVisible: false,
         };
 
-        const observer = new MutationObserver((mutationsList, observer) => {
+        const observer = new MutationObserver((mutationsList) => {
             if (!status.hasAddedNodes) {
                 status.hasAddedNodes = !!mutationsList.find(mutation => mutation.addedNodes.length);
             }
@@ -98,10 +121,13 @@ export class TransactionManager {
 
             if (Object.values(status).some(n => !n)) return;
 
-            observer.disconnect();
-            this.#removeTransactionBlocker(observer);
+            this.#removeTransactionBlocker(slotName);
         });
-        this.#transactionBlockers.push(observer);
+
+        this.#transactionBlockers.push(new TransactionBlocker(slotName).setDestroyFn(() => {
+            observer.disconnect();
+        }));
+
         const targetNode = getSlotElement(slotName);
         targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
         this.#hiddenSlots.push(targetNode);
@@ -110,25 +136,47 @@ export class TransactionManager {
 
     #renderFakeSlot = slotName => {
         const targetNode = getSlotElement(slotName);
+        if (targetNode.hasAttribute('ilc-fake-slot-rendered')) {
+            return; // Looks like it was already rendered
+        }
         const clonedNode = targetNode.cloneNode(true);
+
         clonedNode.removeAttribute('id');
         clonedNode.removeAttribute('class');
         clonedNode.style.display = ''; // reset "display" in case if renderFakeSlot is run after addContentListener (slotWillBe.rendered and then slotWillBe.removed). Since we hide (set display: none) original DOM-node inside addContentListener.
+
         this.#fakeSlots.push(clonedNode);
+
         targetNode.parentNode.insertBefore(clonedNode, targetNode.nextSibling);
         targetNode.style.display = 'none'; // we hide old slot because fake already in the DOM.
+        targetNode.setAttribute('ilc-fake-slot-rendered', '1');
+
         this.#hiddenSlots.push(targetNode);
     };
 
     #onPageReady = () => {
         this.#fakeSlots.forEach(node => node.remove());
         this.#fakeSlots.length = 0;
-        this.#hiddenSlots.forEach(node => node.style.display = '');
+        this.#hiddenSlots.forEach(node => {
+            node.style.display = '';
+            node.hasAttribute('ilc-fake-slot-rendered') && node.removeAttribute('ilc-fake-slot-rendered')
+        });
         this.#hiddenSlots.length = 0;
         this.#removeGlobalSpinner();
         document.body.removeAttribute('name');
         scrollRestorer.restoreScroll(window.history.state ? window.history : {state: {scroll: {x: 0, y: 0}}});
     };
+
+    // if spinner appeared in 300ms, then show it at least 500ms, to avoid flashing it like a glitch
+    #getForceShowSpinnerBlocker = () => {
+        const timer = setTimeout(() => {
+            this.#removeTransactionBlocker(this.#forceShowSpinnerBlockerId);
+        }, 500);
+
+        return new TransactionBlocker(this.#forceShowSpinnerBlockerId).setDestroyFn(() => {
+            timer && clearTimeout(timer);
+        })
+    }
 
     #runGlobalSpinner = () => {
         if (this.#spinnerConfig.enabled === false || this.#spinnerTimeout) {
@@ -136,12 +184,7 @@ export class TransactionManager {
         }
 
         this.#spinnerTimeout = setTimeout(() => {
-            // if spinner appeared in 300ms, then show it at least 500ms, to avoid flashing it like a glitch
-            this.#forceShowSpinner = setTimeout(() => {
-                this.#removeTransactionBlocker(this.#forceShowSpinner);
-                this.#forceShowSpinner = null;
-            }, 500);
-            this.#transactionBlockers.push(this.#forceShowSpinner);
+            this.#transactionBlockers.push(this.#getForceShowSpinnerBlocker());
 
             const spinnerClass = 'ilcSpinnerWrapper';
 
@@ -180,12 +223,26 @@ export class TransactionManager {
         this.#spinnerTimeout = null;
     };
 
-    #removeTransactionBlocker = (blocker) => {
-        this.#transactionBlockers.splice(this.#transactionBlockers.indexOf(blocker), 1);
+    #transactionBlockerExists = (blockerId) => {
+        return this.#transactionBlockers.find(v => v.getId() === blockerId) !== undefined
+    }
 
-        const isOnlySpinnerBlocker = this.#transactionBlockers.length === 1 && this.#transactionBlockers[0] === this.#forceShowSpinner;
+    #removeTransactionBlocker = (blockerId) => {
+        const blockerIdx = this.#transactionBlockers.findIndex(v => v.getId() === blockerId);
+        if (blockerIdx === -1) {
+            return; // No blocker - no actions
+        }
+        /** @type TransactionBlocker */
+        const blockerEl = this.#transactionBlockers[blockerIdx];
 
-        if (isOnlySpinnerBlocker || !this.#transactionBlockers.length && blocker !== this.#forceShowSpinner) {
+        blockerEl.destroy();
+        this.#transactionBlockers.splice(blockerIdx, 1);
+
+        const isOnlySpinnerBlockerLeft = this.#transactionBlockers.length === 1
+            && this.#transactionBlockers[0].getId() === this.#forceShowSpinnerBlockerId;
+        const removingNotSpinnerBlockerAsLastOne = this.#transactionBlockers.length === 0 && blockerId !== this.#forceShowSpinnerBlockerId;
+
+        if (isOnlySpinnerBlockerLeft || removingNotSpinnerBlockerAsLastOne) {
             window.dispatchEvent(new CustomEvent('ilc:all-slots-loaded'));
         }
 
@@ -228,7 +285,7 @@ let defaultInstance = null;
 export default function defaultFactory() {
     if (defaultInstance === null) {
         const ilcSettings = getIlcConfig().settings;
-        defaultInstance = new TransactionManager(ilcSettings && ilcSettings.globalSpinner);
+        defaultInstance = new TransactionManager(window.console, ilcSettings && ilcSettings.globalSpinner);
     }
 
     return defaultInstance;
