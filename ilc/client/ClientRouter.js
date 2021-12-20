@@ -22,6 +22,7 @@ export default class ClientRouter {
     #forceSpecialRoute = null;
     #i18n;
     #debug;
+    render404;
 
     constructor(
         registryConf,
@@ -42,6 +43,8 @@ export default class ClientRouter {
         this.#router = new Router(registryConf);
         this.#currentUrl = this.#getCurrUrl();
         this.#debug = debug('ILC:ClientRouter');
+
+        this.render404 = this.#createSpecialRouteHandler(404);
 
         this.#setInitialRoutes(state);
         this.#addEventListeners();
@@ -110,7 +113,7 @@ export default class ClientRouter {
 
     #addEventListeners = () => {
         this.#windowEventHandlers['ilc:before-routing'] = this.#onSingleSpaRoutingEvents;
-        this.#windowEventHandlers['ilc:404'] = this.#onSpecialRouteTrigger(404);
+        this.#windowEventHandlers['ilc:404'] = this.render404;
 
         for (let key in this.#windowEventHandlers) {
             if (!this.#windowEventHandlers.hasOwnProperty(key)) {
@@ -204,7 +207,7 @@ export default class ClientRouter {
         }
     };
 
-    #onSpecialRouteTrigger = (specialRouteId) => (e) => {
+    #createSpecialRouteHandler = (specialRouteId) => (e) => {
         const appId = e.detail && e.detail.appId;
         const mountedApps = this.#singleSpa.getMountedApps();
         if (!mountedApps.includes(appId)) {
