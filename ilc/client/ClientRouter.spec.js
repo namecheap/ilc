@@ -626,4 +626,78 @@ describe('client router', () => {
             chai.expect(singleSpa.navigateToUrl.calledWithExactly(localizedUrl));
         });
     });
+
+    describe('should listen to "ilc:404"', () => {
+        const logger = {
+            log: sinon.spy(),
+            warn: sinon.spy(),
+        };
+
+        const singleSpa = {
+            getMountedApps: () => ['mounted_app__at__some_place', 'hero__at__some_place'],
+        };
+
+        afterEach(() => {
+            logger.log.resetHistory();
+            logger.warn.resetHistory();
+        });
+
+        it('should ignore not mounted fragments', () => {
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, undefined, logger);
+
+            const appId = 'not_mounted_app__at__some_place';
+
+            window.dispatchEvent(new CustomEvent('ilc:404', {
+                detail: { appId },
+            }));
+
+            sinon.assert.calledWithExactly(
+                logger.warn,
+                `ILC: Ignoring special route "404" trigger which came from not mounted app "${appId}". Currently mounted apps: ${singleSpa.getMountedApps().join(', ')}.`
+            );
+        });
+
+        it('should ignore non-primary fragments', () => {
+            const nonPrimaryKind = 'regular';
+            const appId = 'mounted_app__at__some_place';
+
+            router = new ClientRouter({
+                ...registryConfig,
+                apps: {
+                    ...registryConfig.apps,
+                    '@portal/mounted_app': {
+                        kind: nonPrimaryKind,
+                    }
+                }
+            }, {}, undefined, singleSpa, undefined, logger);
+
+            window.dispatchEvent(new CustomEvent('ilc:404', {
+                detail: { appId },
+            }));
+
+            sinon.assert.calledWithExactly(
+                logger.warn,
+                `ILC: Ignoring special route "404" trigger which came from non-primary app "${appId}". "${appId}" is "${nonPrimaryKind}"`
+            );
+        });
+
+        it('should handle ilc:404 successfully', () => {
+            const beforeRoutingHandler = sinon.spy();
+            window.addEventListener('ilc:before-routing', beforeRoutingHandler);
+
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, undefined, logger);
+
+            const appId = 'hero__at__some_place';
+
+            window.dispatchEvent(new CustomEvent('ilc:404', {
+                detail: { appId },
+            }));
+
+            sinon.assert.calledWithExactly(
+                logger.log,
+                `ILC: Special route "404" was triggered by "${appId}" app. Performing rerouting...`
+            );
+            sinon.assert.calledOnce(beforeRoutingHandler);
+        });
+    });
 });

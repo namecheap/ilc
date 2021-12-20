@@ -2,6 +2,7 @@ import uuidv4 from 'uuid/v4';
 
 import noticeError from './noticeError';
 import crashIlc from './crashIlc';
+import { FRAGMENT_KIND } from '../../common/constants';
 
 export default function fragmentErrorHandlerFactory(registryConf, getRelevantAppKind, appName, slotName) {
     return (error, errorInfo = {}) => {
@@ -20,22 +21,10 @@ export default function fragmentErrorHandlerFactory(registryConf, getRelevantApp
         });
 
         const fragmentKind = getRelevantAppKind(appName, slotName);
-
-        if (isEssentialOrPrimaryFragment(fragmentKind)) {
+        const isEssentialOrPrimaryFragment = [ FRAGMENT_KIND.primary, FRAGMENT_KIND.essential ].includes(fragmentKind);
+    
+        if (isEssentialOrPrimaryFragment) {
             crashIlc(errorId);
         }
     };
-}
-
-const FRAGMENT_KIND = Object.freeze({
-    primary: 'primary',
-    essential: 'essential',
-    regular: 'regular',
-});
-
-function isEssentialOrPrimaryFragment(fragmentKind) {
-    return [
-        FRAGMENT_KIND.primary,
-        FRAGMENT_KIND.essential,
-    ].includes(fragmentKind);
 }

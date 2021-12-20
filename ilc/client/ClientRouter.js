@@ -5,6 +5,8 @@ import Router from '../common/router/Router';
 import * as errors from '../common/router/errors';
 import { isSpecialUrl } from 'ilc-sdk/app';
 import { triggerAppChange } from './navigationEvents';
+import { appIdToNameAndSlot } from '../common/utils';
+import { FRAGMENT_KIND } from '../common/constants';
 
 export default class ClientRouter {
     errors = errors;
@@ -22,6 +24,7 @@ export default class ClientRouter {
     #forceSpecialRoute = null;
     #i18n;
     #debug;
+    render404;
 
     constructor(
         registryConf,
@@ -42,6 +45,8 @@ export default class ClientRouter {
         this.#router = new Router(registryConf);
         this.#currentUrl = this.#getCurrUrl();
         this.#debug = debug('ILC:ClientRouter');
+
+        this.render404 = this.#createSpecialRouteHandler(404);
 
         this.#setInitialRoutes(state);
         this.#addEventListeners();
@@ -110,7 +115,7 @@ export default class ClientRouter {
 
     #addEventListeners = () => {
         this.#windowEventHandlers['ilc:before-routing'] = this.#onSingleSpaRoutingEvents;
-        this.#windowEventHandlers['ilc:404'] = this.#onSpecialRouteTrigger(404);
+        this.#windowEventHandlers['ilc:404'] = this.render404;
 
         for (let key in this.#windowEventHandlers) {
             if (!this.#windowEventHandlers.hasOwnProperty(key)) {
@@ -204,17 +209,29 @@ export default class ClientRouter {
         }
     };
 
-    #onSpecialRouteTrigger = (specialRouteId) => (e) => {
+    #createSpecialRouteHandler = (specialRouteId) => (e) => {
         const appId = e.detail && e.detail.appId;
+
         const mountedApps = this.#singleSpa.getMountedApps();
         if (!mountedApps.includes(appId)) {
-            return console.warn(
+            return this.#logger.warn(
                 `ILC: Ignoring special route "${specialRouteId}" trigger which came from not mounted app "${appId}". ` +
                 `Currently mounted apps: ${mountedApps.join(', ')}.`
             );
         }
 
-        console.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
+        const { appName, slotName } = appIdToNameAndSlot(appId);
+        const fragmentKind = this.getRelevantAppKind(appName, slotName);
+        const isPrimary = fragmentKind === FRAGMENT_KIND.primary;
+
+        if (specialRouteId === 404 && !isPrimary) {
+            return this.#logger.warn(
+                `ILC: Ignoring special route "${specialRouteId}" trigger which came from non-primary app "${appId}". ` +
+                `"${appId}" is "${fragmentKind}"`
+            );
+        }
+
+        this.#logger.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
 
         this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl(true)};
 

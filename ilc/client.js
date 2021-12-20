@@ -56,7 +56,16 @@ if (!registryConf.settings.amdDefineCompatibilityMode) {
  */
 window.ILC.getAppSdkAdapter = appId => ({
     appId,
-    intl: i18n ? i18n.getAdapter() : null
+    intl: i18n ? i18n.getAdapter() : null,
+    trigger404Page: (withCustomContent) => {
+        if (withCustomContent) {
+            return;
+        }
+
+        router.render404({
+            detail: { appId },
+        });
+    },
 });
 window.ILC.navigate = router.navigateToUrl.bind(router);
 
