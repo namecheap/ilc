@@ -5,6 +5,8 @@ import Router from '../common/router/Router';
 import * as errors from '../common/router/errors';
 import { isSpecialUrl } from 'ilc-sdk/app';
 import { triggerAppChange } from './navigationEvents';
+import { appIdToNameAndSlot } from '../common/utils';
+import { FRAGMENT_KIND } from '../common/constants';
 
 export default class ClientRouter {
     errors = errors;
@@ -209,11 +211,23 @@ export default class ClientRouter {
 
     #createSpecialRouteHandler = (specialRouteId) => (e) => {
         const appId = e.detail && e.detail.appId;
+
         const mountedApps = this.#singleSpa.getMountedApps();
         if (!mountedApps.includes(appId)) {
             return console.warn(
                 `ILC: Ignoring special route "${specialRouteId}" trigger which came from not mounted app "${appId}". ` +
                 `Currently mounted apps: ${mountedApps.join(', ')}.`
+            );
+        }
+
+        const { appName, slotName } = appIdToNameAndSlot(appId);
+        const fragmentKind = this.getRelevantAppKind(appName, slotName);
+        const isPrimary = fragmentKind === FRAGMENT_KIND.primary;
+
+        if (specialRouteId === 404 && !isPrimary) {
+            return console.warn(
+                `ILC: Ignoring special route "${specialRouteId}" trigger which came from non-primary app "${appId}". ` +
+                `"${appId}" is "${fragmentKind}"`
             );
         }
 
