@@ -214,7 +214,7 @@ export default class ClientRouter {
 
         const mountedApps = this.#singleSpa.getMountedApps();
         if (!mountedApps.includes(appId)) {
-            return console.warn(
+            return this.#logger.warn(
                 `ILC: Ignoring special route "${specialRouteId}" trigger which came from not mounted app "${appId}". ` +
                 `Currently mounted apps: ${mountedApps.join(', ')}.`
             );
@@ -225,13 +225,13 @@ export default class ClientRouter {
         const isPrimary = fragmentKind === FRAGMENT_KIND.primary;
 
         if (specialRouteId === 404 && !isPrimary) {
-            return console.warn(
+            return this.#logger.warn(
                 `ILC: Ignoring special route "${specialRouteId}" trigger which came from non-primary app "${appId}". ` +
                 `"${appId}" is "${fragmentKind}"`
             );
         }
 
-        console.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
+        this.#logger.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
 
         this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl(true)};
 
