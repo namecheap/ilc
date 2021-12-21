@@ -145,10 +145,17 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
                             identifiers = [identifiers];
                         }
 
-                        let user: any;
+                        let user: User | null = null;
                         for (let id of identifiers) {
-                            user = await getEntityWithCreds('openid', id, null);
-                            if (user) {
+                            const entity = await getEntityWithCreds('openid', id, null);
+                            if (!entity) {
+                                continue;
+                            }
+
+                            user = entity;
+
+                            // can be case when user exists in a few openIds, so we try find admin's role
+                            if (entity.role === AuthRoles.admin) {
                                 break;
                             }
                         }
@@ -157,7 +164,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
                             return done(null, false, { message: `Can\'t find presented identifiers "${identifiers.toString()}" in auth entities list` });
                         }
                         if (uidClaimName && claims[uidClaimName]) {
-                            user.identifier = claims[uidClaimName];
+                            user.identifier = claims[uidClaimName] as string;
                         }
 
                         return done(null, user);
