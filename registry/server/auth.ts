@@ -145,10 +145,10 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
                             identifiers = [identifiers];
                         }
 
-                        let user: any;
+                        let user: User | null = null;
                         for (let id of identifiers) {
                             user = await getEntityWithCreds('openid', id, null);
-                            if (user) {
+                            if (user && user.role === AuthRoles.admin) {
                                 break;
                             }
                         }
@@ -157,7 +157,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
                             return done(null, false, { message: `Can\'t find presented identifiers "${identifiers.toString()}" in auth entities list` });
                         }
                         if (uidClaimName && claims[uidClaimName]) {
-                            user.identifier = claims[uidClaimName];
+                            user.identifier = claims[uidClaimName] as string;
                         }
 
                         return done(null, user);
