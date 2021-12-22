@@ -154,7 +154,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
 
                             user = entity;
 
-                            // can be case when user exists in a few openIds, so we try find admin's role
+                            // we may have case when user exists for a few identifiers, so we try find the most permissive role
                             if (entity.role === AuthRoles.admin) {
                                 break;
                             }
