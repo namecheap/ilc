@@ -78,7 +78,7 @@ export default class ClientRouter {
         return slotKindCurr || slotKindPrev || appKind;
     }
 
-    #reload = false;
+    #isReloadingCurrentRoute = false;
 
     isAppWithinSlotActive(appName, slotName) {
         const checkActivity = (route) => Object.entries(route.slots).some(([ currentSlotName, slot ]) => slot.appName === appName && currentSlotName === slotName);
@@ -90,7 +90,7 @@ export default class ClientRouter {
         !wasActive && isActive && (willBe = slotWillBe.rendered);
         wasActive && !isActive && (willBe = slotWillBe.removed);
 
-        if (isActive && wasActive && this.#reload === false) {
+        if (isActive && wasActive && this.#isReloadingCurrentRoute === false) {
             const oldProps = this.getPrevRouteProps(appName, slotName);
             const currProps = this.getCurrentRouteProps(appName, slotName);
 
@@ -98,7 +98,7 @@ export default class ClientRouter {
                 window.addEventListener('single-spa:app-change', () => {
                     this.#logger.log(`ILC: Triggering app re-mount for ${appName} due to changed props.`);
 
-                    this.#reload = true;
+                    this.#isReloadingCurrentRoute = true;
 
                     triggerAppChange();
                 }, { once: true});
@@ -109,7 +109,7 @@ export default class ClientRouter {
         }
 
         this.#handlePageTransaction(slotName, willBe);
-        this.#reload = false;
+        this.#isReloadingCurrentRoute = false;
 
         return isActive;
     }
