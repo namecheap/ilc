@@ -7,6 +7,7 @@ import { isSpecialUrl } from 'ilc-sdk/app';
 import { triggerAppChange } from './navigationEvents';
 import { appIdToNameAndSlot } from '../common/utils';
 import { FRAGMENT_KIND } from '../common/constants';
+import { slotWillBe } from './TransactionManager/TransactionManager';
 
 export default class ClientRouter {
     errors = errors;
@@ -24,6 +25,7 @@ export default class ClientRouter {
     #forceSpecialRoute = null;
     #i18n;
     #debug;
+    #handlePageTransaction;
     render404;
 
     constructor(
@@ -34,9 +36,11 @@ export default class ClientRouter {
             localizeUrl: (url) => url,
         },
         singleSpa,
+        handlePageTransaction,
         location = window.location,
         logger = window.console
     ) {
+        this.#handlePageTransaction = handlePageTransaction;
         this.#singleSpa = singleSpa;
         this.#location = location;
         this.#logger = logger;
@@ -72,6 +76,42 @@ export default class ClientRouter {
         const slotKindPrev = previousRoute.slots[slotName] && previousRoute.slots[slotName].kind;
 
         return slotKindCurr || slotKindPrev || appKind;
+    }
+
+    #reload = false;
+
+    isAppWithinSlotActive(appName, slotName) {
+        const checkActivity = (route) => Object.entries(route.slots).some(([ currentSlotName, slot ]) => slot.appName === appName && currentSlotName === slotName);
+
+        let isActive = checkActivity(this.#currentRoute);
+        const wasActive = checkActivity(this.#prevRoute);
+
+        let willBe = slotWillBe.default;
+        !wasActive && isActive && (willBe = slotWillBe.rendered);
+        wasActive && !isActive && (willBe = slotWillBe.removed);
+
+        if (isActive && wasActive && this.#reload === false) {
+            const oldProps = this.getPrevRouteProps(appName, slotName);
+            const currProps = this.getCurrentRouteProps(appName, slotName);
+
+            if (JSON.stringify(oldProps) !== JSON.stringify(currProps)) {
+                window.addEventListener('single-spa:app-change', () => {
+                    this.#logger.log(`ILC: Triggering app re-mount for ${appName} due to changed props.`);
+
+                    this.#reload = true;
+
+                    triggerAppChange();
+                }, { once: true});
+
+                isActive = false;
+                willBe = slotWillBe.rerendered;
+            }
+        }
+
+        this.#handlePageTransaction(slotName, willBe);
+        this.#reload = false;
+
+        return isActive;
     }
 
     #getRouteProps(appName, slotName, route) {

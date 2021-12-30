@@ -44,7 +44,7 @@ export class TransactionManager {
         promise.then(afterPromise).catch(afterPromise)
     }
 
-    handlePageTransaction(slotName, willBe) {
+    handlePageTransaction = (slotName, willBe) => {
         if (this.#spinnerConfig.enabled === false) {
             return;
         }
@@ -79,7 +79,7 @@ export class TransactionManager {
             default:
                 throw new Error(`The slot action '${willBe}' did not match any possible values!`);
         }
-    }
+    };
 
     reportSlotRenderingError(slotName) {
         this.#removeTransactionBlocker(slotName);
