@@ -25,8 +25,12 @@ export default class ClientRouter {
     #forceSpecialRoute = null;
     #i18n;
     #debug;
-    #handlePageTransaction;
     render404;
+    #handlePageTransaction;
+    #activeApps = {
+        prev: {},
+        current: {},
+    };
 
     constructor(
         registryConf,
@@ -78,38 +82,15 @@ export default class ClientRouter {
         return slotKindCurr || slotKindPrev || appKind;
     }
 
-    #isReloadingCurrentRoute = false;
-
     isAppWithinSlotActive(appName, slotName) {
-        const checkActivity = (route) => Object.entries(route.slots).some(([ currentSlotName, slot ]) => slot.appName === appName && currentSlotName === slotName);
-
-        let isActive = checkActivity(this.#currentRoute);
-        const wasActive = checkActivity(this.#prevRoute);
+        let isActive = this.#activeApps.current[slotName] === appName;
+        const wasActive = this.#activeApps.prev[slotName] === appName;
 
         let willBe = slotWillBe.default;
         !wasActive && isActive && (willBe = slotWillBe.rendered);
         wasActive && !isActive && (willBe = slotWillBe.removed);
 
-        if (isActive && wasActive && this.#isReloadingCurrentRoute === false) {
-            const oldProps = this.getPrevRouteProps(appName, slotName);
-            const currProps = this.getCurrentRouteProps(appName, slotName);
-
-            if (JSON.stringify(oldProps) !== JSON.stringify(currProps)) {
-                window.addEventListener('single-spa:app-change', () => {
-                    this.#logger.log(`ILC: Triggering app re-mount for ${appName} due to changed props.`);
-
-                    this.#isReloadingCurrentRoute = true;
-
-                    triggerAppChange();
-                }, { once: true});
-
-                isActive = false;
-                willBe = slotWillBe.rerendered;
-            }
-        }
-
         this.#handlePageTransaction(slotName, willBe);
-        this.#isReloadingCurrentRoute = false;
 
         return isActive;
     }
@@ -151,6 +132,9 @@ export default class ClientRouter {
         }
 
         this.#prevRoute = this.#currentRoute;
+
+        this.#activeApps.prev = this.#createActiveAppsObject(this.#prevRoute.slots);
+        this.#activeApps.current = this.#createActiveAppsObject(this.#currentRoute.slots);
     };
 
     #addEventListeners = () => {
@@ -218,7 +202,56 @@ export default class ClientRouter {
                 },
             });
         }
+
+        this.#activeApps.prev = this.#createActiveAppsObject(this.#prevRoute.slots);
+        this.#activeApps.current = this.#createActiveAppsObject(this.#currentRoute.slots);
+
+        const appsWithDifferentProps = this.#getAppsWithDifferentProps(this.#prevRoute.slots, this.#currentRoute.slots);
+        if (appsWithDifferentProps.length) {
+            // temporary remove slot with old props
+            // it will be rendered with new props in "single-spa:app-change" handler
+            appsWithDifferentProps.forEach(({ slotName }) => {
+                this.#activeApps.current[slotName] = null;
+            });
+
+            window.addEventListener('single-spa:app-change', () => {
+                this.#logger.log(`ILC: Triggering app re-mount for [${appsWithDifferentProps.map(n => n.appName)}] due to changed props.`);
+
+                appsWithDifferentProps.forEach(({ appName, slotName }) => {
+                    this.#activeApps.current[slotName] = appName;
+                });
+
+                triggerAppChange();
+            }, { once: true });
+        }
     };
+
+    #createActiveAppsObject(slots) {
+        return Object.entries(slots).reduce((acc, [slotName, slotApp]) => {
+            acc[slotName] = slotApp.appName;
+            return acc;
+        }, {});
+    }
+
+    #getAppsWithDifferentProps(prevSlots, currentSlots) {
+        return Object.entries(prevSlots).reduce((acc, [slotName, prevSlotApp]) => {
+            const currentSlotApp = currentSlots[slotName];
+            const isTheSameSlotApp = currentSlotApp.appName === prevSlotApp.appName;
+
+            if (!isTheSameSlotApp) {
+                return acc;
+            }
+
+            if (JSON.stringify(prevSlotApp.props) === JSON.stringify(currentSlotApp.props)) {
+                return acc;
+            }
+
+            return [...acc, {
+                appName: currentSlotApp.appName,
+                slotName,
+            }];
+        }, []);
+    }
 
     #onClickLink = (event) => {
         const {
