@@ -6,15 +6,42 @@ export async function seed(knex: Knex): Promise<any> {
             routeId: 1, // *
             name: 'navbar',
             appName: '@portal/navbar',
-        }, {
+            props: JSON.stringify({
+                foo: 'default'
+            }),
+        },
+        {
             routeId: 2, // /news/*
             name: 'body',
             appName: '@portal/news',
-        }, {
+        },
+
+
+
+        {
+            routeId: 3,
+            name: 'navbar',
+            appName: '@portal/navbar',
+            props: JSON.stringify({
+                foo: 'PEOPLE'
+            }),
+        },
+        {
             routeId: 3, // /people/*
             name: 'body',
             appName: '@portal/people',
-        }, {
+        },
+
+
+        {
+            routeId: 4,
+            name: 'navbar',
+            appName: '@portal/navbar',
+            props: JSON.stringify({
+                foo: 'PLANETS'
+            }),
+        },
+        {
             routeId: 4, // /planets/*
             name: 'body',
             appName: '@portal/planets',

@@ -1,7 +1,7 @@
 import {triggerAppChange} from './navigationEvents';
 import transactionManager, {slotWillBe} from './TransactionManager/TransactionManager';
 
-export const createFactory = (logger, triggerAppChange, handlePageTransaction, slotWillBe) => (router, appName, slotName) => {
+export const createFactory = (logger, triggerAppChange, handlePageTransaction, slotWillBe) => (router, appName, slotName, getSpaCallbacks) => {
     let reload = false;
 
     return () => {
@@ -22,18 +22,28 @@ export const createFactory = (logger, triggerAppChange, handlePageTransaction, s
             const currProps = router.getCurrentRouteProps(appName, slotName);
 
             if (JSON.stringify(oldProps) !== JSON.stringify(currProps)) {
-                window.addEventListener('single-spa:app-change', function singleSpaAppChange() {
-                    window.removeEventListener('single-spa:app-change', singleSpaAppChange);
-                    //TODO: need to consider addition of the new update() hook to the adapter. So it will be called instead of re-mount, if available.
-                    logger.log(`ILC: Triggering app re-mount for ${appName} due to changed props.`);
+                const spaCallbacks = getSpaCallbacks();
 
-                    reload = true;
+                if (spaCallbacks.appCallbacks.update) {
+                    spaCallbacks.appCallbacks.update({
+                        ...spaCallbacks.customProps,
+                        ...currProps,
+                        name: spaCallbacks.customProps.appId,
+                    });
+                } else {
+                    window.addEventListener('single-spa:app-change', () => {
+                        window.removeEventListener('single-spa:app-change', singleSpaAppChange);
+                        //TODO: need to consider addition of the new update() hook to the adapter. So it will be called instead of re-mount, if available.
+                        logger.log(`ILC: Triggering app re-mount for ${appName} due to changed props.`);
 
-                    triggerAppChange();
-                });
+                        reload = true;
 
-                isActive = false;
-                willBe = slotWillBe.rerendered;
+                        triggerAppChange();
+                    }, { once: true });
+
+                    isActive = false;
+                    willBe = slotWillBe.rerendered;
+                }
             }
         }
 

@@ -28,6 +28,21 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
             }
         };
 
+        const customProps = {
+            domElementGetter: () => getSlotElement(slotName),
+            getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
+            getCurrentBasePath: () => router.getCurrentRoute().basePath,
+            appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
+            errorHandler: appErrorHandlerFactory(appName, slotName),
+            appSdk,
+        };
+
+        let appCallbacks;
+        const getSpaCallbacks = () => ({
+            customProps,
+            appCallbacks,
+        });
+
         singleSpa.registerApplication(
             appId,
             async () => {
@@ -64,19 +79,13 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                     }
 
                     const cbs = prependSpaCallback(spaCallbacks, 'unmount', onUnmount);
+                    appCallbacks = prependSpaCallback(cbs, 'mount', onMount);
 
-                    return prependSpaCallback(cbs, 'mount', onMount);
+                    return appCallbacks;
                 });
             },
-            isActiveFactory(router, appName, slotName),
-            {
-                domElementGetter: () => getSlotElement(slotName),
-                getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
-                getCurrentBasePath: () => router.getCurrentRoute().basePath,
-                appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
-                errorHandler: appErrorHandlerFactory(appName, slotName),
-                appSdk,
-            }
+            isActiveFactory(router, appName, slotName, getSpaCallbacks),
+            customProps,
         );
     });
 }
