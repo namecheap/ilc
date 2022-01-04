@@ -236,8 +236,12 @@ export default class ClientRouter {
     #getAppsWithDifferentProps(prevSlots, currentSlots) {
         return Object.entries(prevSlots).reduce((acc, [slotName, prevSlotApp]) => {
             const currentSlotApp = currentSlots[slotName];
-            const isTheSameSlotApp = currentSlotApp.appName === prevSlotApp.appName;
+            
+            if (!currentSlotApp) {
+                return acc;
+            }
 
+            const isTheSameSlotApp = currentSlotApp.appName === prevSlotApp.appName;
             if (!isTheSameSlotApp) {
                 return acc;
             }
