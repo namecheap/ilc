@@ -10,6 +10,9 @@ describe('client router', () => {
         triggerAppChange: () => {},
         getMountedApps: () => [],
     };
+
+    const handlePageTransaction = () => { };
+
     const apps = {
         '@portal/hero': {
             spaBundle: 'https://somewhere.com/heroSpaBundle.js',
@@ -195,7 +198,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
 
             chai.expect(router.getCurrentRoute()).to.be.eql(expectedRoute);
             chai.expect(router.getPrevRoute()).to.be.eql(expectedRoute);
@@ -253,7 +256,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location, logger);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location, logger);
 
             chai.expect(mainRef.getElementsByTagName('base')).to.be.empty;
 
@@ -298,7 +301,7 @@ describe('client router', () => {
                 meta: {},
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
 
             location.pathname = registryConfig.routes[2].route;
             location.search = '?see=you';
@@ -339,7 +342,7 @@ describe('client router', () => {
                 meta: {},
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
 
             window.dispatchEvent(singleSpaBeforeRoutingEvent);
 
@@ -356,7 +359,7 @@ describe('client router', () => {
                     search: '?hi=there',
                 };
 
-                router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
+                router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
 
                 const [eventName, eventListener] = addEventListener.getCall(0).args;
 
@@ -383,7 +386,7 @@ describe('client router', () => {
         };
 
         beforeEach(() => {
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction);
             clickEvent = new Event('click', {
                 bubbles: true,
                 cancelable: true,
@@ -565,7 +568,7 @@ describe('client router', () => {
 
     describe('while getting route props', () => {
         beforeEach(() => {
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction);
         });
 
         it('should throw an error when an app is not defined', () => {
@@ -593,7 +596,7 @@ describe('client router', () => {
             i18n.unlocalizeUrl.callsFake((url) => url);
             i18n.localizeUrl.callsFake((url) => url);
 
-            router = new ClientRouter(registryConfig, {}, i18n, singleSpa);
+            router = new ClientRouter(registryConfig, {}, i18n, singleSpa, handlePageTransaction);
         });
 
         afterEach(() => {
@@ -643,7 +646,7 @@ describe('client router', () => {
         });
 
         it('should ignore not mounted fragments', () => {
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, undefined, logger);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             const appId = 'not_mounted_app__at__some_place';
 
@@ -669,7 +672,7 @@ describe('client router', () => {
                         kind: nonPrimaryKind,
                     }
                 }
-            }, {}, undefined, singleSpa, undefined, logger);
+            }, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             window.dispatchEvent(new CustomEvent('ilc:404', {
                 detail: { appId },
@@ -685,7 +688,7 @@ describe('client router', () => {
             const beforeRoutingHandler = sinon.spy();
             window.addEventListener('ilc:before-routing', beforeRoutingHandler);
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, undefined, logger);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             const appId = 'hero__at__some_place';
 
