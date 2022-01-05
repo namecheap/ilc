@@ -208,18 +208,14 @@ export default class ClientRouter {
 
         const appsWithDifferentProps = this.#getAppsWithDifferentProps(this.#prevRoute.slots, this.#currentRoute.slots);
         if (appsWithDifferentProps.length) {
-            // temporary remove slot with old props
-            // it will be rendered with new props in "single-spa:app-change" handler
+            // temporary remove slot with old props, to remove it from DOM
+            // it will be rendered with new props in "onSingleSpaRoutingEvents" which is run with the help of "triggerAppChange"
             appsWithDifferentProps.forEach(({ slotName }) => {
-                this.#activeApps.current[slotName] = null;
+                delete this.#activeApps.current[slotName];
             });
 
             window.addEventListener('single-spa:app-change', () => {
                 this.#logger.log(`ILC: Triggering app re-mount for [${appsWithDifferentProps.map(n => n.appName)}] due to changed props.`);
-
-                appsWithDifferentProps.forEach(({ appName, slotName }) => {
-                    this.#activeApps.current[slotName] = appName;
-                });
 
                 triggerAppChange();
             }, { once: true });
