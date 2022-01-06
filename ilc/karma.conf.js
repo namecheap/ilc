@@ -117,5 +117,8 @@ module.exports = function (config) {
         webpackMiddleware: {
             noInfo: true
         },
+        parallelOptions: {
+            executors: 2,
+        },
     });
 };
