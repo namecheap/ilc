@@ -710,18 +710,12 @@ describe('client router', () => {
         const logger = {
             log: sinon.spy(),
         };
-        let clock;
 
         const isActiveHero = () => router.isAppWithinSlotActive('@portal/hero', 'hero');
-
-        beforeEach(() => {
-            clock = sinon.useFakeTimers();
-        });
 
         afterEach(() => {
             handlePageTransaction.resetHistory();
             logger.log.resetHistory();
-            clock.restore();
         });
 
         it('should return false when a slot is going to be removed', () => {
@@ -730,14 +724,13 @@ describe('client router', () => {
 
             history.replaceState({}, undefined, '/hero');
             chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.rendered);
+            handlePageTransaction.resetHistory();
 
             history.replaceState({}, undefined, '/opponent');
             chai.expect(isActiveHero()).to.be.eql(false);
-
-            sinon.assert.callOrder(
-                handlePageTransaction.withArgs('hero', slotWillBe.rendered),
-                handlePageTransaction.withArgs('hero', slotWillBe.removed)
-            );
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.removed);
+            handlePageTransaction.resetHistory();
         });
 
         it('should return true when a slot is going to be rendered', () => {
@@ -746,14 +739,13 @@ describe('client router', () => {
 
             history.replaceState({}, undefined, '/opponent');
             chai.expect(isActiveHero()).to.be.eql(false);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
             
             history.replaceState({}, undefined, '/hero');
             chai.expect(isActiveHero()).to.be.eql(true);
-
-            sinon.assert.callOrder(
-                handlePageTransaction.withArgs('hero', slotWillBe.default),
-                handlePageTransaction.withArgs('hero', slotWillBe.rendered)
-            );
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.rendered);
+            handlePageTransaction.resetHistory();
         });
 
         it('should return always true when a slot exists on both routes', () => {
@@ -762,14 +754,13 @@ describe('client router', () => {
 
             history.replaceState({}, undefined, '/base');
             chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
 
             history.replaceState({}, undefined, '/');
             chai.expect(isActiveHero()).to.be.eql(true);
-
-            sinon.assert.callOrder(
-                handlePageTransaction.withArgs('hero', slotWillBe.default),
-                handlePageTransaction.withArgs('hero', slotWillBe.default)
-            );
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
         });
 
         it('should rerender app on change props', () => {
@@ -786,7 +777,7 @@ describe('client router', () => {
                             hero: {
                                 appName: apps['@portal/hero'].name,
                                 props: { // another props
-                                    color: '#222',
+                                    newPropsKey: 'newPropsValue',
                                 },
                             },
                         },
