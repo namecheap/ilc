@@ -39,11 +39,13 @@ module.exports = function (config) {
             },
         },
         frameworks: [
+            'parallel',
             'mocha',
             'chai',
             'sinon',
         ],
         plugins: [
+            'karma-parallel',
             'karma-chrome-launcher',
 
             'karma-mocha',
