@@ -37,6 +37,8 @@ function callCapturedEventListeners(eventArguments) {
     });
 }
 
+const eventListeners = [];
+
 function patchedAddEventListener(eventName, fn) {
     if (
         typeof fn === 'function' &&
@@ -45,6 +47,12 @@ function patchedAddEventListener(eventName, fn) {
     ) {
         capturedEventListeners[eventName].push(fn);
         return;
+    }
+    
+    // the same handler of event can't be attached a few times
+    const alreadyExists = eventListeners.find(existed => existed.eventName === eventName && existed.fn === fn);
+    if (!alreadyExists) {
+        eventListeners.push({ eventName, fn });
     }
 
     return addEventListener.apply(this, arguments);
@@ -56,8 +64,23 @@ function patchedRemoveEventListener(eventName, fn) {
         return;
     }
 
+    const eventIndex = eventListeners.findIndex(existed => existed.eventName === eventName && existed.fn === fn);
+    if (eventIndex !== -1) {
+        eventListeners.splice(eventIndex, 1);
+    }
+
     return removeEventListener.apply(this, arguments);
 }
+
+// event handler ("fn") is optional. if it's omitted then looking for existence of just event name
+const hasEventListener = (eventName, fn) => {
+    return eventListeners.some(event => {
+        const theSameName = event.eventName === eventName;
+        const theSameFn = fn ? event.fn === dn : true;
+
+        return theSameName && theSameFn;
+    });
+};
 
 function fireRoutingEvent() {
     window.dispatchEvent(new CustomEvent('ilc:before-routing'));
@@ -182,6 +205,7 @@ addEventListener('popstate', handlePopState);
 
 window.addEventListener = patchedAddEventListener;
 window.removeEventListener = patchedRemoveEventListener;
+window.hasEventListener = hasEventListener;
 
 // We will trigger an app change for any routing events
 window.addEventListener('hashchange', fireRoutingEvent);

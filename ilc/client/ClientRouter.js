@@ -208,17 +208,30 @@ export default class ClientRouter {
 
         const appsWithDifferentProps = this.#getAppsWithDifferentProps(this.#prevRoute.slots, this.#currentRoute.slots);
         if (appsWithDifferentProps.length) {
-            // temporary remove slot with old props, to remove it from DOM
-            // it will be rendered with new props in "onSingleSpaRoutingEvents" which is run with the help of "triggerAppChange"
-            appsWithDifferentProps.forEach(({ slotName }) => {
-                delete this.#activeApps.current[slotName];
+            const appsToForceRerender = [];
+
+            appsWithDifferentProps.forEach(({ slotName, appName }) => {
+                const eventUpdateFragment = `ilc:update:${slotName}_${appName}`;
+
+                // if fragment provided "update" lifecycle method then it will be updated immediately w/o remounting app
+                // otherwise the fragment will be unmounted and mounted with new props
+                if (window.hasEventListener(eventUpdateFragment)) {
+                    window.dispatchEvent(new CustomEvent(eventUpdateFragment));
+                } else {
+                    // temporary remove slot with old props, to remove it from DOM
+                    // it will be rendered with new props with the help of "triggerAppChange"
+                    appsToForceRerender.push({ slotName, appName })
+                    delete this.#activeApps.current[slotName];
+                }
             });
 
-            window.addEventListener('single-spa:app-change', () => {
-                this.#logger.log(`ILC: Triggering app re-mount for [${appsWithDifferentProps.map(n => n.appName)}] due to changed props.`);
+            if (appsToForceRerender.length) {
+                window.addEventListener('single-spa:app-change', () => {
+                    this.#logger.log(`ILC: Triggering app re-mount for [${appsToForceRerender.map(n => n.appName)}] due to changed props.`);
 
-                triggerAppChange();
-            }, { once: true });
+                    triggerAppChange();
+                }, { once: true });
+            }
         }
     };
 

@@ -12,6 +12,7 @@ export function prependSpaCallback(spaCallbacks, type, callback) {
     const res = {
         bootstrap: spaCallbacks.bootstrap,
         mount: spaCallbacks.mount,
+        update: spaCallbacks.update,
         unmount: spaCallbacks.unmount,
         unload: spaCallbacks.unload,
     };

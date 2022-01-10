@@ -15,16 +15,43 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
         const appName = pair.appName;
         const appId = pair.appId;
 
+        let lifecycleMethods;
+        const updateFragmentManually = () => {
+            lifecycleMethods.update({
+                ...customProps,
+                name: appId,
+            });
+        };
+
         const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId));
-        const onUnmount = async () => appSdk.unmount();
-        // We prepend this lifecycle function to have unified behaviour for all apps when
-        // we're missing slot for them to be mounted in template
+        const onUnmount = async () => {
+            if (lifecycleMethods.update) {
+                window.removeEventListener(`ilc:update:${slotName}_${appName}`, updateFragmentManually);
+            }
+
+            appSdk.unmount();
+        };
         const onMount = async () => {
+            if (lifecycleMethods.update) {
+                window.addEventListener(`ilc:update:${slotName}_${appName}`, updateFragmentManually);
+            }
+
             try {
+                // it's necessary to have unified behaviour for all apps when
+                // we're missing slot for them to be mounted in template
                 getSlotElement(slotName);
             } catch (e) {
                 throw new Error(`Failed to mount application "${appName}" to slot "${slotName}" due to absence of the slot in template!`);
             }
+        };
+
+        const customProps = {
+            domElementGetter: () => getSlotElement(slotName),
+            getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
+            getCurrentBasePath: () => router.getCurrentRoute().basePath,
+            appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
+            errorHandler: appErrorHandlerFactory(appName, slotName),
+            appSdk,
         };
 
         singleSpa.registerApplication(
@@ -55,7 +82,7 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                     waitTill.push(bundleLoader.loadAppWithCss(appConf.wrappedWith));
                 }
 
-                return Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {
+                lifecycleMethods = await Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {
                     if (wrapperConf !== null) {
                         const wrapper = new WrapApp(wrapperConf, overrides.wrapperPropsOverride);
 
@@ -66,16 +93,11 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
 
                     return prependSpaCallback(cbs, 'mount', onMount);
                 });
+
+                return lifecycleMethods;
             },
             () => router.isAppWithinSlotActive(appName, slotName),
-            {
-                domElementGetter: () => getSlotElement(slotName),
-                getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
-                getCurrentBasePath: () => router.getCurrentRoute().basePath,
-                appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
-                errorHandler: appErrorHandlerFactory(appName, slotName),
-                appSdk,
-            }
+            customProps,
         );
     });
 }
