@@ -26,14 +26,14 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
         const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId));
         const onUnmount = async () => {
             if (lifecycleMethods.update) {
-                window.removeEventListener(`ilc:update:${slotName}_${appName}`, updateFragmentManually);
+                router.removeListener(`ilc:update:${slotName}_${appName}`, updateFragmentManually);
             }
 
             appSdk.unmount();
         };
         const onMount = async () => {
             if (lifecycleMethods.update) {
-                window.addEventListener(`ilc:update:${slotName}_${appName}`, updateFragmentManually);
+                router.addListener(`ilc:update:${slotName}_${appName}`, updateFragmentManually);
             }
 
             try {

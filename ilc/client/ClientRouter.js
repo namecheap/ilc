@@ -1,5 +1,6 @@
 import deepmerge from 'deepmerge';
 import debug from 'debug';
+import EventEmitter from 'eventemitter3';
 
 import Router from '../common/router/Router';
 import * as errors from '../common/router/errors';
@@ -9,7 +10,7 @@ import { appIdToNameAndSlot } from '../common/utils';
 import { FRAGMENT_KIND } from '../common/constants';
 import { slotWillBe } from './TransactionManager/TransactionManager';
 
-export default class ClientRouter {
+export default class ClientRouter extends EventEmitter {
     errors = errors;
 
     #currentUrl;
@@ -44,6 +45,8 @@ export default class ClientRouter {
         location = window.location,
         logger = window.console
     ) {
+        super();
+
         this.#handlePageTransaction = handlePageTransaction;
         this.#singleSpa = singleSpa;
         this.#location = location;
@@ -215,8 +218,8 @@ export default class ClientRouter {
 
                 // if fragment provided "update" lifecycle method then it will be updated immediately w/o remounting app
                 // otherwise the fragment will be unmounted and mounted with new props
-                if (window.hasEventListener(eventUpdateFragment)) {
-                    window.dispatchEvent(new CustomEvent(eventUpdateFragment));
+                if (this.listenerCount(eventUpdateFragment)) {
+                    this.emit(eventUpdateFragment);
                 } else {
                     // temporary remove slot with old props, to remove it from DOM
                     // it will be rendered with new props with the help of "triggerAppChange"
