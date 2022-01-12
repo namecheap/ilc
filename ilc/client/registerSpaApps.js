@@ -5,7 +5,6 @@ import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
 import {makeAppId} from '../common/utils';
 import {getSlotElement, prependSpaCallback} from './utils';
 import WrapApp from './WrapApp';
-import isActiveFactory from './isActiveFactory';
 import AsyncBootUp from './AsyncBootUp';
 
 export default function (registryConf, router, appErrorHandlerFactory, bundleLoader) {
@@ -68,7 +67,7 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                     return prependSpaCallback(cbs, 'mount', onMount);
                 });
             },
-            isActiveFactory(router, appName, slotName),
+            () => router.isAppWithinSlotActive(appName, slotName),
             {
                 domElementGetter: () => getSlotElement(slotName),
                 getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),

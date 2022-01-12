@@ -7,6 +7,7 @@ import { isSpecialUrl } from 'ilc-sdk/app';
 import { triggerAppChange } from './navigationEvents';
 import { appIdToNameAndSlot } from '../common/utils';
 import { FRAGMENT_KIND } from '../common/constants';
+import { slotWillBe } from './TransactionManager/TransactionManager';
 
 export default class ClientRouter {
     errors = errors;
@@ -25,6 +26,11 @@ export default class ClientRouter {
     #i18n;
     #debug;
     render404;
+    #handlePageTransaction;
+    #activeApps = {
+        prev: {},
+        current: {},
+    };
 
     constructor(
         registryConf,
@@ -34,9 +40,11 @@ export default class ClientRouter {
             localizeUrl: (url) => url,
         },
         singleSpa,
+        handlePageTransaction,
         location = window.location,
         logger = window.console
     ) {
+        this.#handlePageTransaction = handlePageTransaction;
         this.#singleSpa = singleSpa;
         this.#location = location;
         this.#logger = logger;
@@ -72,6 +80,19 @@ export default class ClientRouter {
         const slotKindPrev = previousRoute.slots[slotName] && previousRoute.slots[slotName].kind;
 
         return slotKindCurr || slotKindPrev || appKind;
+    }
+
+    isAppWithinSlotActive(appName, slotName) {
+        let isActive = this.#activeApps.current[slotName] === appName;
+        const wasActive = this.#activeApps.prev[slotName] === appName;
+
+        let willBe = slotWillBe.default;
+        !wasActive && isActive && (willBe = slotWillBe.rendered);
+        wasActive && !isActive && (willBe = slotWillBe.removed);
+
+        this.#handlePageTransaction(slotName, willBe);
+
+        return isActive;
     }
 
     #getRouteProps(appName, slotName, route) {
@@ -111,6 +132,9 @@ export default class ClientRouter {
         }
 
         this.#prevRoute = this.#currentRoute;
+
+        this.#activeApps.prev = this.#createActiveAppsObject(this.#prevRoute.slots);
+        this.#activeApps.current = this.#createActiveAppsObject(this.#currentRoute.slots);
     };
 
     #addEventListeners = () => {
@@ -178,7 +202,56 @@ export default class ClientRouter {
                 },
             });
         }
+
+        this.#activeApps.prev = this.#createActiveAppsObject(this.#prevRoute.slots);
+        this.#activeApps.current = this.#createActiveAppsObject(this.#currentRoute.slots);
+
+        const appsWithDifferentProps = this.#getAppsWithDifferentProps(this.#prevRoute.slots, this.#currentRoute.slots);
+        if (appsWithDifferentProps.length) {
+            // temporary remove slot with old props, to remove it from DOM
+            // it will be rendered with new props in "onSingleSpaRoutingEvents" which is run with the help of "triggerAppChange"
+            appsWithDifferentProps.forEach(({ slotName }) => {
+                delete this.#activeApps.current[slotName];
+            });
+
+            window.addEventListener('single-spa:app-change', () => {
+                this.#logger.log(`ILC: Triggering app re-mount for [${appsWithDifferentProps.map(n => n.appName)}] due to changed props.`);
+
+                triggerAppChange();
+            }, { once: true });
+        }
     };
+
+    #createActiveAppsObject(slots) {
+        return Object.entries(slots).reduce((acc, [slotName, slotApp]) => {
+            acc[slotName] = slotApp.appName;
+            return acc;
+        }, {});
+    }
+
+    #getAppsWithDifferentProps(prevSlots, currentSlots) {
+        return Object.entries(prevSlots).reduce((acc, [slotName, prevSlotApp]) => {
+            const currentSlotApp = currentSlots[slotName];
+            
+            if (!currentSlotApp) {
+                return acc;
+            }
+
+            const isTheSameSlotApp = currentSlotApp.appName === prevSlotApp.appName;
+            if (!isTheSameSlotApp) {
+                return acc;
+            }
+
+            if (JSON.stringify(prevSlotApp.props) === JSON.stringify(currentSlotApp.props)) {
+                return acc;
+            }
+
+            return [...acc, {
+                appName: currentSlotApp.appName,
+                slotName,
+            }];
+        }, []);
+    }
 
     #onClickLink = (event) => {
         const {
