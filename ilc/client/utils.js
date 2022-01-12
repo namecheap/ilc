@@ -8,20 +8,23 @@ export function getSlotElement(slotName) {
     return appContainer || slot;
 }
 
-export function prependSpaCallback(spaCallbacks, type, callback) {
+export function prependSpaCallbacks(spaCallbacks, newCallbacks) {
     const res = {
         bootstrap: spaCallbacks.bootstrap,
         mount: spaCallbacks.mount,
+        update: spaCallbacks.update,
         unmount: spaCallbacks.unmount,
         unload: spaCallbacks.unload,
     };
 
-    let orig = spaCallbacks[type];
-    if (Array.isArray(orig)) {
-        res[type] = [callback].concat(orig);
-    } else {
-        res[type] = [callback, orig];
-    }
+    newCallbacks.forEach(({ type, callback }) => {
+        let orig = spaCallbacks[type];
+        if (Array.isArray(orig)) {
+            res[type] = [callback].concat(orig);
+        } else {
+            res[type] = [callback, orig];
+        }
+    });
 
     return res;
 }

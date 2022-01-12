@@ -763,7 +763,7 @@ describe('client router', () => {
             handlePageTransaction.resetHistory();
         });
 
-        it('should rerender app on change props', () => {
+        it('should rerender app on change props with the help of unmounting and mounting', () => {
             const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event('single-spa:app-change'));
             const customRegistryConfig = {
                 ...registryConfig,
@@ -812,6 +812,54 @@ describe('client router', () => {
                 logger.log,
                 `ILC: Triggering app re-mount for [@portal/hero] due to changed props.`
             );
+        });
+
+        it('should rerender app on change props with the help of updating app (w/o unmounting app)', () => {
+            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event('single-spa:app-change'));
+            const customRegistryConfig = {
+                ...registryConfig,
+                routes: [
+                    ...routes.filter(n => n.route !== '/hero'),
+                    {
+                        route: '/hero',
+                        next: false,
+                        template: 'baseTemplate', // the ame template
+                        slots: {
+                            hero: {
+                                appName: apps['@portal/hero'].name,
+                                props: { // another props
+                                    newPropsKey: 'newPropsValue',
+                                },
+                            },
+                        },
+                    },
+                ],
+            };
+
+            history.replaceState({}, undefined, '/');
+            router = new ClientRouter(customRegistryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            // mock listening "update" event from hero
+            const eventNameUpdateHero = 'ilc:update:hero_@portal/hero';
+            const eventHandlerUpdateHero = sinon.spy();
+            router.addListener(eventNameUpdateHero, eventHandlerUpdateHero);
+
+            history.replaceState({}, undefined, '/base');
+
+            // the same slot so nothing changed
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
+
+            history.replaceState({}, undefined, '/hero');
+
+            // in case of "updating" we don't remove fragment, just update it with new props
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
+
+            sinon.assert.notCalled(logger.log);
+            sinon.assert.calledOnce(eventHandlerUpdateHero);
         });
     });
 });
