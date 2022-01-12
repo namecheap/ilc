@@ -3,7 +3,7 @@ import * as singleSpa from 'single-spa';
 
 import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
 import {makeAppId} from '../common/utils';
-import {getSlotElement, prependSpaCallback} from './utils';
+import {getSlotElement, prependSpaCallbacks} from './utils';
 import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 
@@ -89,9 +89,10 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
                         spaCallbacks = wrapper.wrapWith(spaCallbacks, wrapperSpaCallbacks);
                     }
 
-                    const cbs = prependSpaCallback(spaCallbacks, 'unmount', onUnmount);
-
-                    return prependSpaCallback(cbs, 'mount', onMount);
+                    return prependSpaCallbacks(spaCallbacks, [
+                        { type: 'unmount', callback: onUnmount},
+                        { type: 'mount', callback: onMount},
+                    ]);
                 });
 
                 return lifecycleMethods;
