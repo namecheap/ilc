@@ -16,6 +16,8 @@
 ## Order field
 ![ILC registry Order field](../assets/order-field.png)
 
+- It is used together with the `Next` field to customize which applications will be rendered on the page.
+
 - Only integer numbers are allowed, from minus infinity to plus infinity.
 
 - ILC goes through positions from lowest to highest (more details will be written below in the examples).
@@ -24,6 +26,8 @@
 
 ## Next field
 ![ILC registry Next field](../assets/next-field.png)
+
+- It is used to stop rendering at a current application, or conversely, continue searching for applications for rendering, after rendering the current one.
 
 - It can be set to `true` or `false`
 
