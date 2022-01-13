@@ -37,8 +37,13 @@
 
 ## Examples:
 
-- Let's try to enter the `/wrapper/` route, ILC will start from the application with the lowest `Order pos` value,
-in this case it is `-100`, because its route is `*` it will be rendered, and since the `Next` field is set to `true` ILC will go further along the order, `Order pos -1` **will not be rendered** because the `/simple/` route does not match the given one, we move further to position `0`, render this application because its route `*` and move on, because the `Next` field is set to `true`, next few applications will not be rendered, because their route does not match the specified one, until we reach the position `40`, its route exactly matches the specified one, the application will be rendered, and because `Next` is set to the value `false` ILС will not look for matches further. In total, we will render 3 applications, both routes `*` and route `/wrapper/`.
+- Let's try to enter the `/wrapper/` route.
+ 1. ILC will start from the application with the lowest `Order pos` value,in this case it is `-100`, because its route is `*` it will be rendered, and since the `Next` field is set to `true` ILC will go further along the order.
+ 2. `Order pos -1` **will not be rendered** because the `/simple/` route does not match the given one.
+ 3. ILC move further to position `0`, render this application because its route `*` and move on, because the `Next` field is set to `true`.
+ 4. Next few applications will not be rendered, because their route does not match the specified one, until we reach the position `40`.
+ 5. This route (with `Order pos 40`) exactly matches the specified one, the application will be rendered, and because `Next` is set to the value `false` ILС will not look for matches further.
+ 6. In total, we will render 3 applications, both routes `*` and route `/wrapper/`.
 
 ![ILC registry second example](../assets/first-case-route.png)
 
@@ -48,7 +53,10 @@ in this case it is `-100`, because its route is `*` it will be rendered, and sin
 
 #
 
-- Now suppose we need to render the page without app with `Order pos 0` and route `*` but with `navbar`, in this case, we need to set the `Order pos` for this route between `0` and `-100` because `-100` it's `navbar` position, so set our route (let this will be `/wrapper/`) accordingly `Order pos -2`. So ILC will start with the application with the lowest value of `Order pos`, it is `-100`, because it's route `*` it will be rendered, and the `Next` field is set to `true`, so the ILC will look for matches further, next one will be `Order pos -2` it's match and it will be rendered, `Next` value set to `false`, so ILС will not look for matches further.
+- Now suppose we need to render the page without app with `Order pos 0` and route `*` but with `navbar`.
+ In this case, we need to set the `Order pos` for this route between `0` and `-100` because `-100` it's `navbar` position, so set our route (let this will be `/wrapper/`) accordingly `Order pos -2`.
+ 1. So ILC will start with the application with the lowest value of `Order pos`, it is `-100`, because it's route `*` it will be rendered, and the `Next` field is set to `true`, so the ILC will look for matches further.
+ 2. Next one will be `Order pos -2` it's match and it will be rendered, `Next` value set to `false`, so ILС will not look for matches further.
 
 ![ILC registry first example](../assets/route2.png)
 
@@ -66,7 +74,9 @@ in this case it is `-100`, because its route is `*` it will be rendered, and sin
 
 #
 
-- In summary, I want to make it clear that using `Order pos` can flexibly customize the displayed content, for example, for `sidebar, navbar, footer` we set position `0, -100, -1000` and accordingly specifying for the new application a value above zero for its position, on the page will be rendered `sidebar, navbar, footer` and our new app, so set position between `0 and -100` we **don't** render the `sidebar`, between `-100 and -1000` we **don't** render `sidebar` and `navbar`, set the position below `-1000` we will render only new application, without `sidebar, navbar, footer`.
-
-
-
+- In summary, I want to make it clear that using `Order pos` can flexibly customize the displayed content, for example:
+ For `sidebar, navbar, footer` we set position `0, -100, -1000` and accordingly specifying for the new application a value above zero for its position.
+ 1. On the page will be rendered `sidebar, navbar, footer` and our new app.
+ 2. Then set position between `0 and -100` and we **don't** render the `sidebar`.
+ 3. Set position between `-100 and -1000` and we **don't** render `sidebar` and `navbar`.
+ 4. set the position below `-1000` and we will render only new application, without `sidebar, navbar, footer`.
