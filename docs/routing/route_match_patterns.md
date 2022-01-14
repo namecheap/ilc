@@ -1,7 +1,7 @@
 # Match & cascade merge
 
 ## Route field
-![ILC registry route](../assets/route-field.png)
+![ILC registry route](../assets/routes/route-field.png)
 
 - `*` - matches for any route.
 
@@ -14,7 +14,7 @@
 - Route must be unique for each domain, the exception is `*` (we can use the same order position, provided that the domain names are different).
 
 ## Order field
-![ILC registry Order field](../assets/order-field.png)
+![ILC registry Order field](../assets/routes/order-field.png)
 
 - Specifies the order in which the fragments should be fetched when constructing pages.
 
@@ -25,7 +25,7 @@
 - Order positions must be unique for each domain (we can use the same order position, provided that the domain names are different).
 
 ## Next field
-![ILC registry Next field](../assets/next-field.png)
+![ILC registry Next field](../assets/routes/next-field.png)
 
 - Specifies is ILC will move further in the list of applications or stop after rendering the current one.
 
@@ -45,11 +45,11 @@
  5. This route (with `Order pos 40`) exactly matches the specified one, the application will be rendered, and because `Next` is set to the value `false` ILС will not look for matches further.
  6. In total, we will render 3 applications, both routes `*` and route `/wrapper/`.
 
-![ILC registry second example](../assets/first-case-route.png)
+![ILC registry second example](../assets/routes/first-case-route.png)
 
 **Result:**
 
-![ILC registry second example result](../assets/first-case-result.png)
+![ILC registry second example result](../assets/routes/first-case-result.png)
 
 #
 
@@ -58,11 +58,11 @@
  1. So ILC will start with the application with the lowest value of `Order pos`, it is `-100`, because it's route `*` it will be rendered, and the `Next` field is set to `true`, so the ILC will look for matches further.
  2. Next one will be `Order pos -2` it's match and it will be rendered, `Next` value set to `false`, so ILС will not look for matches further.
 
-![ILC registry first example](../assets/route2.png)
+![ILC registry first example](../assets/routes/route2.png)
 
 **Result:**
 
-![ILC registry first example result](../assets/second-case-result.png)
+![ILC registry first example result](../assets/routes/second-case-result.png)
 
 #
 
@@ -70,7 +70,7 @@
 
 **Result:**
 
-![ILC registry third example result](../assets/third-case-result.png)
+![ILC registry third example result](../assets/routes/third-case-result.png)
 
 #
 

@@ -1,13 +1,13 @@
 # Route configuration options
 
  ## Route domains
- ![ILC registry domains field](../assets/domain-field.png)
+ ![ILC registry domains field](../assets/routes/domain-field.png)
 
  - You can add new domain in **Router domains** menu.
 
  - Domain name, must be without protocol, etc.
 
- ![ILC registry domains menu](../assets/domain-create.png)
+ ![ILC registry domains menu](../assets/routes/domain-create.png)
 
  - Empty `Domain Name` field is equal to main app domain.
 
@@ -15,20 +15,20 @@
 
  **For example:**
 
- ![ILC registry domains example](../assets/domain-example.png)
- ![color box](../assets/green-box.png) - render for main domain.
- ![color box](../assets/red-box.png) - render only for `127.0.0.1` domain.
+ ![ILC registry domains example](../assets/routes/domain-example.png)
+ ![color box](../assets/routes/green-box.png) - render for main domain.
+ ![color box](../assets/routes/red-box.png) - render only for `127.0.0.1` domain.
 
  - You can find more information about domain [here](../multi-domains.md)
 
  ## Route template
- ![ILC registry template field](../assets/template-field.png)
+ ![ILC registry template field](../assets/routes/template-field.png)
 
  - Template it's simple HTML file.
 
  - You can add new template in **Templates** menu.
 
- ![ILC registry template menu](../assets/template-create.png)
+ ![ILC registry template menu](../assets/routes/template-create.png)
 
  - Needed to build the structure of our page.
 
@@ -48,12 +48,12 @@
 
  ## Slot configuration
 
- ![ILC slot configuration](../assets/slot-configuration1.png)
- ![ILC slot configuration](../assets/slot-configuration2.png)
+ ![ILC slot configuration](../assets/routes/slot-configuration1.png)
+ ![ILC slot configuration](../assets/routes/slot-configuration2.png)
 
  1. **Slot name:**
 
-      - ![ILC ilc slots](../assets/ilc-slots.png) - Our templates have `ilc-slot`. In the `Slot Name` field, you must enter a name corresponding to the `ilc-slot id`, our application will be rendered inside this slot.
+      - ![ILC ilc slots](../assets/routes/ilc-slots.png) - Our templates have `ilc-slot`. In the `Slot Name` field, you must enter a name corresponding to the `ilc-slot id`, our application will be rendered inside this slot.
 
       - **Important!** Only one application can be rendered in one slot, if you add several applications to one slot, only the last one added will be rendered.
 
