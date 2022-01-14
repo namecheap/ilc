@@ -36,8 +36,8 @@
 
  ## Route metadata
 
- ![Route meta field in ILC registry](./assets/route_meta_field.gif)
+ ![Route meta field in ILC registry](../assets/route_meta_field.gif)
 
  - Used to determine whether the page will be protected, if so, access to it will be granted only after the user fulfills the necessary conditions, in this case it is just pressing the `confirm` button in practice, you can set any conditions (authorization forms, etc.)
 
- ![ILC transition hooks](./assets/transition_hooks.gif)
+ ![ILC transition hooks](../assets/transition_hooks.gif)
