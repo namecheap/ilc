@@ -46,11 +46,11 @@
 
  ## Slot configuration
 
- ![ILC slot configuration](../assets/slot-configuration1.gif)
- ![ILC slot configuration](../assets/slot-configuration2.gif)
+ ![ILC slot configuration](../assets/slot-configuration1.png)
+ ![ILC slot configuration](../assets/slot-configuration2.png)
 
  1. **Slot name:**
-  - ![ILC ilc slots](../assets/slot-configuration2.gif) - Our templates have `ilc-slot`. In the `Slot Name` field, you must enter a name corresponding to the `ilc-slot id`, our application will be rendered inside this slot.
+  - ![ILC ilc slots](../assets/slot-configuration2.png) - Our templates have `ilc-slot`. In the `Slot Name` field, you must enter a name corresponding to the `ilc-slot id`, our application will be rendered inside this slot.
 
   - **Important!** Only one application can be rendered in one slot, if you add several applications to one slot, only the last one added will be rendered.
 
