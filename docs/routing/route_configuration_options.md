@@ -1,13 +1,13 @@
 # Route configuration options
 
-## Route domains
-![ILC registry domains field](../assets/domain-field.png)
+ ## Route domains
+ ![ILC registry domains field](../assets/domain-field.png)
 
  - You can add new domain in **Router domains** menu.
 
  - Domain name, must be without protocol, etc.
 
-![ILC registry domains menu](../assets/domain-create.png)
+ ![ILC registry domains menu](../assets/domain-create.png)
 
  - Empty `Domain Name` field is equal to main app domain.
 
@@ -33,3 +33,11 @@
  - Needed to build the structure of our page.
 
  - **Important!** There must be at least one template in the routing chain.
+
+ ## Route metadata
+
+ ![Route meta field in ILC registry](./assets/route_meta_field.gif)
+
+ - Used to determine whether the page will be protected, if so, access to it will be granted only after the user fulfills the necessary conditions, in this case it is just pressing the `confirm` button in practice, you can set any conditions (authorization forms, etc.)
+
+ ![ILC transition hooks](./assets/transition_hooks.gif)
