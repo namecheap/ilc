@@ -2,9 +2,9 @@
 
  ## Route domains
 
- - ILC will check the exact match of domain names, accordingly, `secure.example.com` is not equal to `example.com`, so you may need to add the necessary subdomains.
+ ILC will check the exact match of domain names, accordingly, `secure.example.com` is not equal to `example.com`, so you may need to add the necessary subdomains.
 
- - ILC can handle requests coming from multiple domains, so that you don't need to roll out individual instances of the ILC for every domain, you just can use one instance for all of them.
+ ILC can handle requests coming from multiple domains, so that you don't need to roll out individual instances of the ILC for every domain, you just can use one instance for all of them.
 
  ![ILC registry domains field](../assets/routes/domain-field.png)
 
@@ -28,9 +28,9 @@
 
  ## Route template
 
- - **Important!** There must be at least one template in the routing chain.
+ **Important!** There must be at least one template in the routing chain.
 
- - The template is needed to build the structure of our page. So if you don't create a template, ILC won't know exactly where to render the content and will show you an error instead of the desired page.
+ The template is needed to build the structure of our page. So if you don't create a template, ILC won't know exactly where to render the content and will show you an error instead of the desired page.
 
  ![ILC registry template field](../assets/routes/template-field.png)
 
@@ -42,9 +42,9 @@
 
  ## Route metadata
 
- - Currently only one option is supported - `protected` with values `true` or `false`.
+ Currently only one option is supported - `protected` with values `true` or `false`.
 
- - Used to determine whether the page will be protected, if so, access to it will be granted only after the user fulfills the necessary conditions.
+ Used to determine whether the page will be protected, if so, access to it will be granted only after the user fulfills the necessary conditions.
 
  ![Route meta field in ILC registry](../assets/route_meta_field.gif)
 
@@ -56,7 +56,7 @@
 
  ## Slot configuration
 
- - Here are the main settings of our route, here we indicate exactly where our application will be displayed, the application itself, how critical this application is for our site, we can create new/change the current props of the application.
+ Here are the main settings of our route, here we indicate exactly where our application will be displayed, the application itself, how critical this application is for our site, we can create new/change the current props of the application.
 
  ![ILC slot configuration](../assets/routes/slot-configuration1.png)
  ![ILC slot configuration](../assets/routes/slot-configuration2.png)
