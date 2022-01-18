@@ -2,7 +2,7 @@
 
 To see special routes, use the `Show special` switcher at the top of the routes page
 
-It is used to render errors, if an application with the `Primary` or `Essential` type falls on the page, ILC will not find a match between the address bar and `Route`, `Template` will not be specified in the route chain, etc., ILC will use `Special route`.
+It is used to render errors, if an application with the `Primary` or `Essential` type falls on the page, ILC will not find a match between the address bar and `Route`, `Template` will not be specified in the route chain, etc., ILC will use `Special route` or simple template with an error, depending on the situation:
 
 ## '404' Error
 
@@ -24,7 +24,7 @@ It is used to render errors, if an application with the `Primary` or `Essential`
 
 ### Example:
 
-Let's go to the `/wrapper/blablabla/` route, ILC will render [404 Error](../global_errors_handling.md#404-error-not-found), because the specified route does not exactly match our routes, аnd all other routes (like `*`) will be ignored (in this case `navbar` it's part of [404 Error](../global_errors_handling.md#404-error-not-found), **not** our route `*` with `Order pos - 100`).
+Let's go to the `/wrapper/blablabla/` route, ILC will render [404 Error](../global_errors_handling.md#404-error-not-found), because the specified route does not exactly match our routes, аnd all other routes (like `*`) will be ignored because the [404 error](../global_errors_handling.md#404-error-not-found) is a special route, and as mentioned above, when it is rendered, all standard routes are ignored.(in this case `navbar` it's part of [404 Error](../global_errors_handling.md#404-error-not-found), **not** our route `*` with `Order pos - 100`).
 
 ![ILC registry route to error](../assets/routes/route.png)
 
@@ -32,9 +32,9 @@ Let's go to the `/wrapper/blablabla/` route, ILC will render [404 Error](../glob
 
 ![ILC registry 404 error example](../assets/routes/fourth-case-result.png)
 
-## '500' Error
+## '5XX' Error
 
-This error occurs if the ILC is unable to process the request (for example, because no [template](./route_configuration_options.md#route_template) is specified in the route chain, or other problems related to the inability of ILC to render the page).
+This [error](../global_errors_handling.md) occurs if the ILC is unable to process the request (for example, because no [template](./route_configuration_options.md#route_template) is specified in the route chain, or other problems related to the inability of ILC to render the page).
 
 ![ILC registry 500 Error](../assets/routes/500-error.png)
 
@@ -42,7 +42,14 @@ This error occurs if the ILC is unable to process the request (for example, beca
 
 - It is designed in such a way that ILC can render it under any conditions.
 
-- More about [500 Error](../global_errors_handling.md#5xx-errors-unexpected-errors).
+- The template with the name: `500` is used as the default error template for the main domain.
+
+- To assign different error templates for different domains, you must specify the template when creating the domain, as shown in the screenshots below.
+
+![ILC registry domains menu](../assets/routes/domain-create.png)
+![ILC registry set template of 500 error](../assets/routes/set-template-for-domains.png)
+
+- More about [5XX errors handling](../global_errors_handling.md#5xx-errors-unexpected-errors).
 
 ### Example:
 
