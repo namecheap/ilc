@@ -26,19 +26,30 @@ It is used to render errors, if an application with the `Primary` or `Essential`
 
 Let's go to the `/wrapper/blablabla/` route, ILC will render [404 Error](../global_errors_handling.md#404-error-not-found), because the specified route does not exactly match our routes, аnd all other routes (like `*`) will be ignored (in this case `navbar` it's part of [404 Error](../global_errors_handling.md#404-error-not-found), **not** our route `*` with `Order pos - 100`).
 
-![ILC registry second example](../assets/routes/route.png)
+![ILC registry route to error](../assets/routes/route.png)
 
 **Result:**
 
-![ILC registry fourth example result](../assets/routes/fourth-case-result.png)
+![ILC registry 404 error example](../assets/routes/fourth-case-result.png)
 
 ## '500' Error
 
-This error is a simple HTML template.
-
-It is designed in such a way that ILC can render it under any conditions.
+This error occurs if the ILC is unable to process the request (for example, because no [template](./route_configuration_options.md#route_template) is specified in the route chain, or other problems related to the inability of ILC to render the page).
 
 ![ILC registry 500 Error](../assets/routes/500-error.png)
 
-- More about [500 Error](../global_errors_handling.md#5xx-errors-unexpected-errors)
+- This error is a simple HTML template.
 
+- It is designed in such a way that ILC can render it under any conditions.
+
+- More about [500 Error](../global_errors_handling.md#5xx-errors-unexpected-errors).
+
+### Example:
+
+Let's go to the `/notemplate/` route, in this case, no template for the route is specified, so ILC cannot render the application, in which case we will see a [500 error](../global_errors_handling.md#5xx-errors-unexpected-errors).
+
+![ILC registry route to error](../assets/routes/notemplate-route.png)
+
+**Result:**
+
+![ILC registry 500 error exmple](../assets/routes/500-error-example.png)
