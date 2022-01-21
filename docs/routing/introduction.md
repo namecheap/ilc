@@ -12,7 +12,7 @@ The following describes how this is handled in the ILC, but first let's clear up
 
  - Soft transitions - A transition that only replaces the content within the app, not the app itself.
 
-  ![Introdaction demo](../assets/routes/introdaction-demo.png)
+  ![Introdaction demo](../assets/routes/introduction-demo.png)
 
 #
 
