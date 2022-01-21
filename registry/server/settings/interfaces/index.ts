@@ -21,6 +21,7 @@ export enum SettingKeys {
     I18nSupportedCurrencies = 'i18n.supported.currency',
     I18nRoutingStrategy = 'i18n.routingStrategy',
     OverrideConfigTrustedOrigins = 'overrideConfigTrustedOrigins',
+    OnPropsUpdate = 'onPropsUpdate',
 }
 
 export const enum TrailingSlashValues {
@@ -47,6 +48,12 @@ export const enum SettingTypes {
     StringArray = 'string[]',
     Enum = 'enum',
     Password = 'password',
+}
+
+
+export enum OnPropsUpdateValues {
+    Remount = 'remount',
+    Update = 'update',
 }
 
 type SettingValue = string | boolean | TrailingSlashValues | string[];
@@ -101,7 +108,11 @@ const valueSchema = Joi.alternatives().conditional('key', {
                 scheme: [/https?/],
                 allowRelative: false,
             }).allow(''),
-        }
+        },
+        {
+            is: Joi.valid(SettingKeys.OnPropsUpdate),
+            then: Joi.string().valid(...Object.values(OnPropsUpdateValues)).required(),
+        },
     ],
     otherwise: Joi.string().allow(''),
 });
