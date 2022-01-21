@@ -23,16 +23,18 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
             });
         };
 
+        const isUpdatePropsMode = () => lifecycleMethods.update && registryConf.settings.onPropsUpdate === 'update';
+
         const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId));
         const onUnmount = async () => {
-            if (lifecycleMethods.update) {
+            if (isUpdatePropsMode()) {
                 router.removeListener(`ilc:update:${slotName}_${appName}`, updateFragmentManually);
             }
 
             appSdk.unmount();
         };
         const onMount = async () => {
-            if (lifecycleMethods.update) {
+            if (isUpdatePropsMode()) {
                 router.addListener(`ilc:update:${slotName}_${appName}`, updateFragmentManually);
             }
 

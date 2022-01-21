@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import {SettingKeys, TrailingSlashValues} from '../server/settings/interfaces';
+import {SettingKeys, TrailingSlashValues, OnPropsUpdateValues} from '../server/settings/interfaces';
 import {request, expect, requestWithAuth} from './common';
 
 const templateName = 'ncTestTemplateName';
@@ -133,7 +133,8 @@ describe('Tests /api/v1/config', () => {
                             locale: ['en-US', 'ua-UA']
                         },
                         routingStrategy: 'prefix_except_default',
-                    }
+                    },
+                    [SettingKeys.OnPropsUpdate]: OnPropsUpdateValues.Remount,
                 });
 
                 expect(response.body.sharedLibs).include({
