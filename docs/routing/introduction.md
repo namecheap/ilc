@@ -8,11 +8,11 @@ Since we no longer have one monolithic application that handles all routes, inst
 
 The following describes how this is handled in the ILC, but first let's clear up the terminology:
 
- - Hard transitions - A transition handled by ILC, with such a transition, the application on the page changes to another one.
+ - Hard transitions - A transition handled by ILC routing, with such a transition, the application on the page changes to another one.
 
- - Soft transitions - A transition that is handled inside the application, with such a transition, only the content inside the application changes, but not the application itself.
+ - Soft transitions - A transition handled by own routing of some application at the page, with such a transition, only the content inside the application changes.
 
-  ![Introdaction demo](../assets/routes/introduction-demo.png)
+ ![Introdaction demo](../assets/routes/introduction-demo.png)
 
 #
 
@@ -23,15 +23,15 @@ Now, let's talk a little about the theory, after which we will move on to practi
  For clarity, here is the routing table:
  ![Routing table](../assets/routes/route.png)
 
-Let's go to the `/people/` route, it will be a `hard transitions` because we render a new application on the `/people/*` route.
+ Let's go to the `/people/` route, it will be a `hard transitions` because we render a new application on the `/people/*` route.
 
-![Navigation example](../assets/routes/navigation-example.png)
+ ![Navigation example](../assets/routes/navigation-example.png)
 
 Now let's pick someone from the list:
 
-![Navigation example](../assets/routes/navigation-example2.png)
+ ![Navigation example](../assets/routes/navigation-example2.png)
 
-Now our route looks like this: `/people/?selected=4/`, this time it's a `soft transition` because `/?selected=4/` is navigation within the app.
+ Now our route looks like this: `/people/?selected=4/`, this time it's a `soft transition` because `/?selected=4/` is navigation within the app.
 
 Now let's recap:
 Due to the fact that we use one HTML template for all pages, SSR occurs only once, then all navigation happens with the help of CSR and uses both hard and soft transitions, depending on the situation.
