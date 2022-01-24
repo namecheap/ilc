@@ -23,8 +23,9 @@ Now, let's talk a little about the theory, after which we will move on to practi
  For clarity, here is the routing table:
  ![Routing table](../assets/routes/route.png)
 
- Let's go to the `/people/` route, it will be a `hard transitions` because we render a new application on the `/people/*` route.
+ Suppose we are currently on the `/planets/` route, now let's go to the `/people/` route, so it will be a `hard transitions` because we render a new application on the `/people/*` route.
 
+ ![Navigation example](../assets/routes/hard-transition.png)
  ![Navigation example](../assets/routes/navigation-example.png)
 
 Now let's pick someone from the list:
