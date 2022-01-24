@@ -8,9 +8,9 @@ Since we no longer have one monolithic application that handles all routes, inst
 
 The following describes how this is handled in the ILC, but first let's clear up the terminology:
 
- - Hard transitions - Transition in which the application on the page is replaced by another one.
+ - Hard transitions - A transition handled by ILC, with such a transition, the application on the page changes to another one.
 
- - Soft transitions - A transition that only replaces the content within the app, not the app itself.
+ - Soft transitions - A transition that is handled inside the application, with such a transition, only the content inside the application changes, but not the application itself.
 
   ![Introdaction demo](../assets/routes/introduction-demo.png)
 
