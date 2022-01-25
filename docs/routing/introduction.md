@@ -31,15 +31,18 @@ ILC will appear in it as an application shell, it's job is to map URLs to the co
 Now more detail about ILC:
 
  In ILC, we can use one HTML template for all of our applications. With this approach, SSR occurs once when the page is first loaded, then all navigation occurs through CSR. In addition to the fact that all navigation inside the ILC is soft, it also uses "2-tiered routing".
- The app shell looks at the first part of the URL to determine which team is responsible (top-level routing). The router of the matched team processes the complete URL to find the correct page inside its single-page application (second-level routing).
+ ILC looks at the first part of the URL to determine which team is responsible (top-level routing). The router of the matched team processes the complete URL to find the correct page inside its single-page application (second-level routing).
 
  - top-level routing - A transition handled by ILC routing, with such a transition, the application on the page changes to another one.
 
- - second-level routing -  A transition handled by own routing of some application at the page, with such a transition, only the content inside the application changes.
+ - second-level routing - A transition handled by own routing of some application at the page, with such a transition, only the content inside the application changes.
 
  Transition between applications (top-level routing) in ILC occurs thanks to the `<a>` tags. To do this, ILC keeps track of all `<a>` tags on the page and handles clicking on them, provided that:
  1. tag contains non-empty `href`.
  2. `event.PreventDefault` not equal `false`
  3. `target` not equal `_self`
  4. This is not a special url (`mailto`, `tel`, etc.)
- 
+ Otherwise, the ILC does not take any part in processing the click on the link.
+
+Now let's recap:
+ ILC acts as an application shell for other applications, making all our transitions soft. In addition, we use two-level routing, so that each team can configure routing inside their application as they like, ILC will only need to specify the path to the application.
