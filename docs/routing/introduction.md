@@ -21,7 +21,7 @@ The following describes how this is handled in the ILC, but first let's dive a l
 
  ![Introdaction demo](../assets/routes/introduction-demo.png)
 
-In ILC, we use third approach called **Unified SPA**. The Unified SPA (Single Page Application) approach introduces a central application container. It handles page transitions between the teams. Here all navigations are soft.
+In ILC, we use third approach called **Unified SPA**. The Unified SPA (Single Page Application) approach introduces a central application container (it's ILC). It handles page transitions between the teams. Here all navigations are soft.
 
  ![Introdaction demo](../assets/routes/introduction-demo2.png)
 
@@ -31,9 +31,15 @@ Now more detail about ILC:
  
  Unlike the **flat routing** approach, where we would have to specify in the ILC the full route to every page of all our applications, with a **2-tiered routing** approach, we just need to specify in the ILC route to the application. All navigation within the application can be implemented by each developer team using the native tools of their application (like react-router, vue-router etc.).
 
- To make it clearer, here is a small example:
+To make it clearer, here is a small example:
 
- Transition between applications in ILC occurs thanks to the `<a>` tags. To do this, ILC keeps track of all `<a>` tags on the page and handles clicking on them, provided that:
+ !["2-tiered routing" approach](../assets/2_tiered_routing.png)
+
+ In this example the user opened a page at `/news/latest` URL. ILC looks at the first part of the URL(`/news/`) to determine what application is it for. It correlates to the `/news/*` route configured in ILC, this route contains information about apps that should be loaded on the page and props they need to receive. When we load and mount the application to its container DOM node – we also pass `basePath` property which should be used by application's router during its work. The application's router processes the complete URL to find the correct page inside its single-page application.
+
+ Within the application, we can use our native tools (for example `<Link>` in `React router`) to navigate between pages within the application, and `global link` - it's just <a>, tags to navigate between applications.
+
+ As mentioned before, transition between applications in ILC occurs thanks to the `<a>` tags. To do this, ILC keeps track of all `<a>` tags on the page and handles clicking on them, provided that:
  1. tag contains non-empty `href`.
  2. `event.PreventDefault` not equal `false`
  3. `target` not equal `_self`
@@ -42,4 +48,4 @@ Now more detail about ILC:
  Otherwise, the ILC does not take any part in processing the click on the link.
 
 Now let's recap:
- ILC acts as an application shell for other applications, making all our transitions soft. In addition, we use two-level routing, so that each team can configure routing inside their application as they like, ILC will only need to specify the path to the application.
+ ILC acts as an wrapper for other applications, making all our transitions soft. In addition, we use two-level routing, so that each team can configure routing inside their application as they like, in ILC, you only need to specify the path to the application.
