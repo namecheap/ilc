@@ -24,7 +24,7 @@ More details about i18n you can read [here](../i18n.md)
 ## Trailing slash
 
 A trailing slash is a forward slash (“/”) placed at the end of a URL.
-The decision to use a trailing slash or not is more a personal preference than a real need, in any case we provide the ability to control this.
+The decision to use a trailing slash or not is more a personal preference than actual necessity, except in some special cases. In any case we provide the ability to control this.
 
 ![Trailing slash](../assets/routes/trailing-slash.png)
 
