@@ -29,7 +29,7 @@ Now more detail about ILC:
 
  In ILC, we can use one HTML template for all of our applications. With this approach, initial page loading occurs only once when the page is first time loaded, then all navigation occurs through CSR. In addition to the fact that all navigation inside the ILC is soft, it also uses **2-tiered routing**.
  
- Unlike the **flat routing** approach, where we would have to specify in the ILC the full route to every page of all our applications, with a **2-tiered routing** approach, we just need to specify in the ILC route to the application. All navigation within the application can be implemented by each developer team using the native tools of their application (like react-router, vue-router etc.).
+ Unlike the **flat routing** approach, where we would have to specify in ILC full routes to every page of all our applications, with the **2-tiered routing** approach, it is enough for us to specify in the ILC, base URL to the application. All navigation within the application can be implemented by each developer team using the native tools of their application (like react-router, vue-router etc.).
 
 To make it clearer, here is a small example:
 
