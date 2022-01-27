@@ -4,7 +4,7 @@
 
 As you may have read in [intoduction](./introduction.md), all transitions in ilc are soft, which means that we can replace, add, remove applications on the page without reloading it, this is possible due to the use of one HTML template for all pages.
 
-At this point, let's take a closer look. Our templates contain so called [ilc-slots](.\route_configuration_options.md#slot-configuration) and our applications are rendered inside these slots. Only one application can be displayed in one slot at a time.
+At this point, let's take a closer look. Our templates contain so called [ilc-slots](./route_configuration_options.md#slot-configuration) and our applications are rendered inside these slots. Only one application can be displayed in one slot at a time.
 
 
 Now let's look at this with examples:
