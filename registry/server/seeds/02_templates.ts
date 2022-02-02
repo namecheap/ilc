@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import * as Knex from 'knex';
+import { Knex } from 'knex';
 
 export async function seed(knex: Knex): Promise<any> {
     return knex("templates").insert([

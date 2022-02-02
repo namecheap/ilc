@@ -21,7 +21,7 @@ const createSharedLib = async (req: Request, res: Response): Promise<void> => {
 
     try {
         await setDataFromManifest(sharedLib, 'shared_libs');
-    } catch (error) {
+    } catch (error: any) {
         res.status(422).send(error.message);
         return;
     }

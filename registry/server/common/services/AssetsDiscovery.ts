@@ -53,7 +53,7 @@ export default class AssetsDiscovery {
             let res: AxiosResponse;
             try {
                 res = await axios.get(reqUrl, {responseType: 'json'});
-            } catch (err) {
+            } catch (err: any) {
                 //TODO: add exponential back-off
                 console.warn(`Can't refresh assets for "${entity[this.tableId]}". Error: ${err.toString()}`);
                 continue;

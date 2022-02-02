@@ -21,12 +21,12 @@ const validateRequest = validateRequestFactory([{
 }]);
 
 const deleteRouterDomains = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    
+
     await db.versioning(req.user, { type: 'router_domains', id: req.params.id }, async (trx) => {
         let count;
         try {
             count = await db('router_domains').where('id', req.params.id).delete().transacting(trx);
-        } catch (e) {
+        } catch (e: any) {
             throw new httpErrors.DBError({ message: e.message })
         }
 

@@ -1,4 +1,4 @@
-import * as Knex from "knex";
+import { Knex } from "knex";
 import * as bcrypt from 'bcrypt';
 
 export async function up(knex: Knex): Promise<any> {

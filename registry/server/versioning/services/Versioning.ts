@@ -1,11 +1,12 @@
 import versioningConfig from '../config';
-import Knex, {Transaction} from 'knex';
+import {Knex} from 'knex';
 import {User} from "../../auth";
 import _ from 'lodash';
 
 import * as errors from '../errors';
 import * as interfaces from '../interfaces';
 import {EntityTypes} from "../interfaces";
+import Transaction = Knex.Transaction;
 
 export * from '../interfaces';
 

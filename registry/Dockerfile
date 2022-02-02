@@ -6,14 +6,17 @@ RUN apk --no-cache add --virtual builds-deps build-base python3 && \
 # Legacy infrastructure support
 RUN npm install -g stdout-mq@^2.4.0
 
-ADD ./ /codebase
 WORKDIR /codebase
 
-RUN npm install --no-package-lock --no-progress --ignore-scripts
+COPY package-lock.json package.json /codebase/
+RUN npm ci --no-package-lock --ignore-scripts
 RUN npm rebuild bcrypt --build-from-source
-RUN npm install sqlite3 mysql
+RUN npm install better-sqlite3 mysql
 
-RUN cd ./client && npm install --no-progress --ignore-scripts
+COPY client/package-lock.json client/package.json /codebase/client/
+RUN cd ./client && npm ci --ignore-scripts
+
+ADD ./ /codebase
 
 RUN npm run build
 

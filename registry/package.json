@@ -53,8 +53,8 @@
         "sinon": "^9.0.2",
         "supertest": "4.0.2",
         "timekeeper": "^2.2.0",
-        "ts-node": "^8.10.2",
-        "typescript": "^3.9.7"
+        "ts-node": "^10.4.0",
+        "typescript": "^4.5.5"
     },
     "dependencies": {
         "@namecheap/error-extender": "^1.2.0",
@@ -62,13 +62,13 @@
         "bcrypt": "^5.0.0",
         "body-parser": "^1.19.0",
         "config": "^3.2.3",
-        "connect-session-knex": "^1.7.1",
+        "connect-session-knex": "^2.1.1",
         "express": "^4.17.1",
         "express-session": "^1.17.1",
         "http-shutdown": "^1.2.1",
         "is-valid-domain": "0.0.19",
         "joi": "^17.2.1",
-        "knex": "^0.21.1",
+        "knex": "^1.0.2",
         "lodash": "^4.17.19",
         "newrelic": "^6.9.0",
         "openid-client": "^3.15.9",
@@ -78,7 +78,7 @@
         "query-string": "^7.0.0",
         "serve-static": "^1.14.1",
         "source-map-support": "^0.5.19",
-        "sqlite3": "^5.0.0",
+        "better-sqlite3": "^7.5.0",
         "url-join": "^4.0.1",
         "uuid": "^3.4.0"
     }
