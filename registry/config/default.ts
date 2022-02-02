@@ -1,7 +1,7 @@
 module.exports = {
     port: 4001,
     database: {
-        client: 'better-sqlite3',
+        client: 'sqlite3',
         connection: {
             database: 'registry_db',
             filename: './server/dbfiles/db.sqlite',

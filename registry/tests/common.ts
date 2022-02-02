@@ -7,7 +7,7 @@ export const requestWithAuth = supertest(app(true));
 
 export function dbFactory() {
     return dbFactoryOrig({
-        client: 'better-sqlite3',
+        client: 'sqlite3',
         connection: ':memory:',
         useNullAsDefault: true,
         pool: {
