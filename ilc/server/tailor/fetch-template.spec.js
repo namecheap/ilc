@@ -31,28 +31,31 @@ describe('fetch templates', () => {
 
   const parseTemplate = sinon.stub();
 
+  let fetchTemplateSetup;
+
   request.router.getFragmentsTpl = (arg) => arg;
+
+  beforeEach(() => {
+    fetchTemplateSetup = fetchTemplate(configsInjector, newrelic, registryService);
+  })
 
   afterEach(() => {
     newrelic.setTransactionName.resetHistory();
     parseTemplate.reset();
-
-    for (let key in currentRoute) {
-      delete currentRoute[key];
-    }
+    currentRoute = {};
   });
 
   it('should throw Error if template is undefined', async () => {
     currentRoute.template = undefined;
 
-    await chai.expect(fetchTemplate({}, {}, registryService)(request)).to.eventually.rejectedWith('Can\'t match route base template to config map');
+    await chai.expect(fetchTemplateSetup(request)).to.eventually.rejectedWith('Can\'t match route base template to config map');
   });
 
   it('RegExp should work correctly', async () => {
     currentRoute.template = 'exist';
     currentRoute.route = '/exist';
 
-    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate);
+    await fetchTemplateSetup(request, parseTemplate);
 
     sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'exist');
   });
@@ -61,7 +64,7 @@ describe('fetch templates', () => {
     currentRoute.template = 'exist';
     currentRoute.specialRole = 'exist';
 
-    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate);
+    await fetchTemplateSetup(request, parseTemplate);
 
     sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'special:exist');
   });
@@ -69,7 +72,7 @@ describe('fetch templates', () => {
   it('should return parseTemplate function with right arguments', async () => {
     currentRoute.template = 'exist';
 
-    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate);
+    await fetchTemplateSetup(request, parseTemplate);
 
     sinon.assert.calledOnceWithExactly(parseTemplate, 'inject text', 'ilcState text');
   });
