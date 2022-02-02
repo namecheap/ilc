@@ -35,8 +35,9 @@ jobs:
         platforms: linux/amd64,linux/arm64
         push: true
         cache-from: |
-          namecheap/ilc:latest
-          namecheap/ilc_tmp:latest
+          type=registry,ref=namecheap/ilc_tmp:buildcache
+        cache-to: |
+          type=registry,ref=namecheap/ilc_tmp:buildcache,mode=max
         tags: |
           namecheap/ilc_tmp:${{ env.SHA }}
           namecheap/ilc_tmp:latest
@@ -95,8 +96,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           cache-from: |
-            namecheap/ilc_registry:latest
-            namecheap/ilc_tmp:reg_latest
+            type=registry,ref=namecheap/ilc_tmp:buildcache_registry
+          cache-to: |
+            type=registry,ref=namecheap/ilc_tmp:buildcache_registry,mode=max
           tags: |
             namecheap/ilc_tmp:reg_${{ env.SHA }}
             namecheap/ilc_tmp:reg_latest
