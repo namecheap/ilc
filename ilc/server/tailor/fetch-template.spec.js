@@ -1,11 +1,11 @@
 const chai = require('chai');
 const sinon = require('sinon');
 
-const fetchTemplates = require('./fetch-template');
+const fetchTemplate = require('./fetch-template');
 
-describe('fetch templates', () => {
+describe.only('fetch templates', () => {
   const configsInjector = {
-    inject: sinon.stub(),
+    inject: () => 'inject text',
   };
 
   const newrelic = {
@@ -13,52 +13,64 @@ describe('fetch templates', () => {
   };
 
   const registryService = {
-    getTemplate: (arg) => arg,
+    getTemplate: async (arg) => {
+      const result = await arg;
+
+      return result;
+    },
   };
 
+  let currentRoute = {};
+
   const request = {
-    router: {},
-    ilcState: 'ilcState text'
+    router: {
+      getRoute: () => currentRoute,
+    },
+    ilcState: 'ilcState text',
   };
 
   const parseTemplate = sinon.stub();
 
-  request.router.getFragmentsTpl = function(arg) {
-    return `${arg}`
-  };
+  request.router.getFragmentsTpl = (arg) => arg;
 
-  it('should throw Error if template is undefined', async () => {
-    request.router.getRoute = function() {
-      return {
-        template: undefined,
-      }
-    };
+  afterEach(() => {
+    newrelic.setTransactionName.resetHistory();
+    parseTemplate.reset();
 
-    await chai.expect(fetchTemplates({}, {}, registryService)(request)).to.eventually.rejectedWith('Can\'t match route base template to config map');
+    for (let key in currentRoute) {
+      delete currentRoute[key];
+    }
   });
 
-  it('should set transaction name in newrelic', async () => {
-    request.router.getRoute = function() {
-      return {
-        template: 'exist',
-        route: 'exist',
-        specialRole: '',
-      }
-    };
+  it('should throw Error if template is undefined', async () => {
+    currentRoute.template = undefined;
 
-    await fetchTemplates(configsInjector, newrelic, registryService)(request, parseTemplate)
+    await chai.expect(fetchTemplate({}, {}, registryService)(request)).to.eventually.rejectedWith('Can\'t match route base template to config map');
+  });
+
+  it('RegExp should work correctly', async () => {
+    currentRoute.template = 'exist';
+    currentRoute.route = '/exist';
+
+    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate)
 
     sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'exist');
   });
 
-  it('should return parseTemplate function with right arguments', async () => {
-    request.router.getRoute = function() {
-      return {
-        template: 'exist',
-      }
-    };
+  it('should set transaction name in newrelic if there is no route', async () => {
+    currentRoute.template = 'exist';
+    currentRoute.specialRole = 'exist';
 
-    await fetchTemplates(configsInjector, newrelic, registryService)(request, parseTemplate)
-    sinon.assert.calledWithExactly(parseTemplate, undefined, 'ilcState text');
+    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate)
+
+    sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'special:exist');
+  });
+
+  it('should return parseTemplate function with right arguments', async () => {
+    currentRoute.template = 'exist';
+
+    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate)
+
+    sinon.assert.calledOnceWithExactly(parseTemplate, 'inject text', 'ilcState text');
   });
 });
