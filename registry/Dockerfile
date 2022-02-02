@@ -1,6 +1,7 @@
 FROM node:14-alpine
 
-RUN apk --no-cache add --virtual builds-deps build-base python3
+RUN apk --no-cache add --virtual builds-deps build-base python3 && \
+    ln -sf python3 /usr/bin/python
 
 # Legacy infrastructure support
 RUN npm install -g stdout-mq@^2.4.0
