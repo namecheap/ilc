@@ -29,13 +29,7 @@ module.exports = (configsInjector, newrelic, registryService) => async (
         newrelic.setTransactionName(routeName);
     }
 
-    let baseTemplate = configsInjector.inject(request, template.data, currRoute.slots);
-    baseTemplate = baseTemplate.replace(/<ilc-slot\s+id="(.+)"\s*\/?>/gm, function (match, id) {
-        return `<!-- Region "${id}" START -->\n` +
-            `<div id="${id}"><slot name="${id}"></slot></div>\n` +
-            `<script>window.ilcApps.push('${id}');</script>\n` +
-            `<!-- Region "${id}" END -->`;
-    });
+    const baseTemplate = configsInjector.inject(request, template.data, currRoute.slots);
 
     return parseTemplate(baseTemplate, childTemplate);
 };

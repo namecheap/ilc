@@ -1,7 +1,11 @@
 const path = require('path');
 
+const preSettings = require('./codecept.presettings.js');
+
+const outputDir = path.join(__dirname, '.codecept_output');
+
 exports.config = {
-    output: path.join(__dirname, '.codecept_output', 'artifacts'),
+    output: outputDir,
     helpers: {
         Puppeteer: {
             url: `http://localhost:8233`,
@@ -17,14 +21,38 @@ exports.config = {
             persisterOptions: {
                 keepUnusedRequests: false,
                 fs: {
-                    recordingsDir: path.join(__dirname, '.codecept_output', 'requests'),
+                    recordingsDir: path.join(outputDir, 'requests'),
                 },
             },
         },
+        Mochawesome: {
+            uniqueScreenshotNames: true
+        },
+        // Adds assertions to API https://www.npmjs.com/package/codeceptjs-chai
+        ChaiWrapper : {
+            require: 'codeceptjs-chai'
+        }
     },
-    mocha: {},
-    bootstrap: './codecept.presettings.js',
-    teardown: './codecept.presettings.js',
+    mocha: {
+        reporterOptions: {
+            'codeceptjs-cli-reporter': {
+                stdout: "-",
+                options: {
+                    verbose: true,
+                    steps: true,
+                }
+            },
+            mochawesome: {
+                stdout: path.join(outputDir, 'console.log'),
+                options: {
+                    reportDir: outputDir,
+                    reportFilename: "report"
+                }
+            },
+        }
+    },
+    bootstrap: preSettings.bootstrap,
+    teardown: preSettings.teardown,
     hooks: [],
     plugins: {
         screenshotOnFail: {

@@ -183,6 +183,24 @@ describe('configs injector', () => {
             },
             routes: [],
             specialRoutes: {},
+            settings: {
+                globalSpinner: {
+                    customHTML:
+                        '<div class="customSpinnerHTML">I am spinner</div>' +
+                        '<style>' +
+                            '.customSpinnerHTML {' +
+                                'position: fixed;' +
+                                'left: 50%;' +
+                                'top: 50%;' +
+                                'z-index: 1000;' +
+                            '}' +
+                        '</style>' +
+                        '<script type="text/javascript">' +
+                            'console.log("Custom spinner JS")' +
+                        '</script>'
+                    ,
+                }
+            }
         };
 
         registryConfig.apps['thirdApp'] = {
@@ -215,6 +233,23 @@ describe('configs injector', () => {
                 },
                 routes: [],
                 specialRoutes: {},
+                settings: {
+                    globalSpinner: {
+                        customHTML:
+                            '&lt;div class=&quot;customSpinnerHTML&quot;&gt;I am spinner&lt;/div&gt;'+
+                            '&lt;style&gt;' +
+                            '.customSpinnerHTML {' +
+                                'position: fixed;' +
+                                'left: 50%;' +
+                                'top: 50%;' +
+                                'z-index: 1000;' +
+                            '}' +
+                            '&lt;/style&gt;' +
+                            '&lt;script type=&quot;text/javascript&quot;&gt;' +
+                                'console.log(&quot;Custom spinner JS&quot;)' +
+                            '&lt;/script&gt;'
+                    }
+                }
             });
         };
 

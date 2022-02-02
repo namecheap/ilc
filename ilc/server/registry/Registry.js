@@ -116,9 +116,21 @@ module.exports = class Registry {
             });
         }
 
+        let templateStr = res.data.content;
+
+        let lastMatchOffset = templateStr.lastIndexOf('<ilc-slot');
+        templateStr = templateStr.replace(/<ilc-slot\s+id="(.+)"\s*\/?>/gm, function (match, id, offset) {
+            return `<!-- Region "${id}" START -->\n` +
+                // We change simplified slot definition onto TailorX required one
+                `<div id="${id}"><slot name="${id}"></slot></div>\n` +
+                // Used for AsyncBootUp functionality at client side
+                `<script>window.ilcApps.push('${id}');${lastMatchOffset === offset ? 'window.ilcApps.push(Infinity);' : ''}</script>\n` +
+                `<!-- Region "${id}" END -->`;
+        });
+
         this.#cacheHeated.template = true;
 
-        return res.data;
+        return {...res.data, content: templateStr};
     };
 
     #getRouterDomains = async () => {

@@ -1,7 +1,7 @@
 import * as Knex from "knex";
 
 export async function seed(knex: Knex): Promise<any> {
-    return knex("routes").insert([
+    return knex('routes').insert([
         {
             id: 1,
             orderPos: 0,
@@ -51,13 +51,17 @@ export async function seed(knex: Knex): Promise<any> {
             meta: JSON.stringify({
                 protected: true,
             }),
-        },
-        {
+        }, {
             id: 12,
             route: 'special:404',
             next: false,
             templateName: 'master',
             domainId: 1,
+        }, {
+            id: 13,
+            orderPos: 70,
+            route: '/missing-slot-in-tpl/',
+            next: false,
         },
     ]);
 }

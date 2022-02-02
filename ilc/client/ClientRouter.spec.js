@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import html from 'nanohtml';
 
 import ClientRouter from './ClientRouter';
+import { slotWillBe } from './TransactionManager/TransactionManager';
 
 describe('client router', () => {
     const singleSpa = {
@@ -10,6 +11,9 @@ describe('client router', () => {
         triggerAppChange: () => {},
         getMountedApps: () => [],
     };
+
+    const handlePageTransaction = () => { };
+
     const apps = {
         '@portal/hero': {
             spaBundle: 'https://somewhere.com/heroSpaBundle.js',
@@ -195,7 +199,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
 
             chai.expect(router.getCurrentRoute()).to.be.eql(expectedRoute);
             chai.expect(router.getPrevRoute()).to.be.eql(expectedRoute);
@@ -253,7 +257,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location, logger);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location, logger);
 
             chai.expect(mainRef.getElementsByTagName('base')).to.be.empty;
 
@@ -298,7 +302,7 @@ describe('client router', () => {
                 meta: {},
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
 
             location.pathname = registryConfig.routes[2].route;
             location.search = '?see=you';
@@ -339,7 +343,7 @@ describe('client router', () => {
                 meta: {},
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
 
             window.dispatchEvent(singleSpaBeforeRoutingEvent);
 
@@ -356,7 +360,7 @@ describe('client router', () => {
                     search: '?hi=there',
                 };
 
-                router = new ClientRouter(registryConfig, {}, undefined, singleSpa, location);
+                router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
 
                 const [eventName, eventListener] = addEventListener.getCall(0).args;
 
@@ -383,7 +387,7 @@ describe('client router', () => {
         };
 
         beforeEach(() => {
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction);
             clickEvent = new Event('click', {
                 bubbles: true,
                 cancelable: true,
@@ -516,11 +520,56 @@ describe('client router', () => {
             chai.expect(singleSpa.navigateToUrl.called).to.be.false;
             chai.expect(clickEvent.defaultPrevented).to.be.false;
         });
+
+        describe('should NOT handle click events on with pressed:', () => {
+            let anchor;
+            const pageReloadPreventer = (e) => {
+                if (e instanceof MouseEvent && e.target === anchor.ref) {
+                    e.preventDefault();
+                }
+            };
+
+            beforeEach(() => {
+                window.addEventListener('click', pageReloadPreventer);
+
+                anchor = {
+                    id: 'click-me',
+                    href: registryConfig.routes[2].route,
+                };
+
+                anchor.ref = html`
+                    <a id="${anchor.id}" href="${anchor.href}">
+                        Hi there! I am an anchor tag.
+                    </a>
+                `;
+
+                document.body.appendChild(anchor.ref);
+            });
+
+            afterEach(() => {
+                window.removeEventListener('click', pageReloadPreventer);
+            });
+
+            for (const keyType of ['metaKey', 'altKey', 'ctrlKey', 'shiftKey']) {
+                it(`${keyType} key`, () => {
+                    clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        [keyType]: true,
+                    });
+
+                    document.getElementById(anchor.id).dispatchEvent(clickEvent);
+
+                    chai.expect(singleSpa.navigateToUrl.called).to.be.false;
+                });
+            }
+        });
+
     });
 
     describe('while getting route props', () => {
         beforeEach(() => {
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa);
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction);
         });
 
         it('should throw an error when an app is not defined', () => {
@@ -548,7 +597,7 @@ describe('client router', () => {
             i18n.unlocalizeUrl.callsFake((url) => url);
             i18n.localizeUrl.callsFake((url) => url);
 
-            router = new ClientRouter(registryConfig, {}, i18n, singleSpa);
+            router = new ClientRouter(registryConfig, {}, i18n, singleSpa, handlePageTransaction);
         });
 
         afterEach(() => {
@@ -579,6 +628,238 @@ describe('client router', () => {
             router.navigateToUrl(unlocalizedUrl);
 
             chai.expect(singleSpa.navigateToUrl.calledWithExactly(localizedUrl));
+        });
+    });
+
+    describe('should listen to "ilc:404"', () => {
+        const logger = {
+            log: sinon.spy(),
+            warn: sinon.spy(),
+        };
+
+        const singleSpa = {
+            getMountedApps: () => ['mounted_app__at__some_place', 'hero__at__some_place'],
+        };
+
+        afterEach(() => {
+            logger.log.resetHistory();
+            logger.warn.resetHistory();
+        });
+
+        it('should ignore not mounted fragments', () => {
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            const appId = 'not_mounted_app__at__some_place';
+
+            window.dispatchEvent(new CustomEvent('ilc:404', {
+                detail: { appId },
+            }));
+
+            sinon.assert.calledWithExactly(
+                logger.warn,
+                `ILC: Ignoring special route "404" trigger which came from not mounted app "${appId}". Currently mounted apps: ${singleSpa.getMountedApps().join(', ')}.`
+            );
+        });
+
+        it('should ignore non-primary fragments', () => {
+            const nonPrimaryKind = 'regular';
+            const appId = 'mounted_app__at__some_place';
+
+            router = new ClientRouter({
+                ...registryConfig,
+                apps: {
+                    ...registryConfig.apps,
+                    '@portal/mounted_app': {
+                        kind: nonPrimaryKind,
+                    }
+                }
+            }, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            window.dispatchEvent(new CustomEvent('ilc:404', {
+                detail: { appId },
+            }));
+
+            sinon.assert.calledWithExactly(
+                logger.warn,
+                `ILC: Ignoring special route "404" trigger which came from non-primary app "${appId}". "${appId}" is "${nonPrimaryKind}"`
+            );
+        });
+
+        it('should handle ilc:404 successfully', () => {
+            const beforeRoutingHandler = sinon.spy();
+            window.addEventListener('ilc:before-routing', beforeRoutingHandler);
+
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            const appId = 'hero__at__some_place';
+
+            window.dispatchEvent(new CustomEvent('ilc:404', {
+                detail: { appId },
+            }));
+
+            sinon.assert.calledWithExactly(
+                logger.log,
+                `ILC: Special route "404" was triggered by "${appId}" app. Performing rerouting...`
+            );
+            sinon.assert.calledOnce(beforeRoutingHandler);
+        });
+    });
+
+    describe('is active factory', () => {
+        const handlePageTransaction = sinon.spy();
+        const logger = {
+            log: sinon.spy(),
+        };
+
+        const isActiveHero = () => router.isAppWithinSlotActive('@portal/hero', 'hero');
+
+        afterEach(() => {
+            handlePageTransaction.resetHistory();
+            logger.log.resetHistory();
+        });
+
+        it('should return false when a slot is going to be removed', () => {
+            history.replaceState({}, undefined, '/opponent');
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            history.replaceState({}, undefined, '/hero');
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.rendered);
+            handlePageTransaction.resetHistory();
+
+            history.replaceState({}, undefined, '/opponent');
+            chai.expect(isActiveHero()).to.be.eql(false);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.removed);
+            handlePageTransaction.resetHistory();
+        });
+
+        it('should return true when a slot is going to be rendered', () => {
+            history.replaceState({}, undefined, '/opponent');
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            history.replaceState({}, undefined, '/opponent');
+            chai.expect(isActiveHero()).to.be.eql(false);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
+            
+            history.replaceState({}, undefined, '/hero');
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.rendered);
+            handlePageTransaction.resetHistory();
+        });
+
+        it('should return always true when a slot exists on both routes', () => {
+            history.replaceState({}, undefined, '/');
+            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            history.replaceState({}, undefined, '/base');
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
+
+            history.replaceState({}, undefined, '/');
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
+        });
+
+        it('should rerender app on change props with the help of unmounting and mounting', () => {
+            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event('single-spa:app-change'));
+            const customRegistryConfig = {
+                ...registryConfig,
+                routes: [
+                    ...routes.filter(n => n.route !== '/hero'),
+                    {
+                        route: '/hero',
+                        next: false,
+                        template: 'baseTemplate', // the ame template
+                        slots: {
+                            hero: {
+                                appName: apps['@portal/hero'].name,
+                                props: { // another props
+                                    newPropsKey: 'newPropsValue',
+                                },
+                            },
+                        },
+                    },
+                ],
+            };
+
+            history.replaceState({}, undefined, '/');
+            router = new ClientRouter(customRegistryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            history.replaceState({}, undefined, '/base');
+
+            // the same slot so nothing changed
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
+
+            history.replaceState({}, undefined, '/hero');
+
+            // remove slot with old props
+            chai.expect(isActiveHero()).to.be.eql(false);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.removed);
+            handlePageTransaction.resetHistory();
+
+            // trigger rerender, just to render previously removed fragments
+            dispatchSingleSpaAppChangeEvent();
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
+
+            sinon.assert.calledWithExactly(
+                logger.log,
+                `ILC: Triggering app re-mount for [@portal/hero] due to changed props.`
+            );
+        });
+
+        it('should rerender app on change props with the help of updating app (w/o unmounting app)', () => {
+            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event('single-spa:app-change'));
+            const customRegistryConfig = {
+                ...registryConfig,
+                routes: [
+                    ...routes.filter(n => n.route !== '/hero'),
+                    {
+                        route: '/hero',
+                        next: false,
+                        template: 'baseTemplate', // the ame template
+                        slots: {
+                            hero: {
+                                appName: apps['@portal/hero'].name,
+                                props: { // another props
+                                    newPropsKey: 'newPropsValue',
+                                },
+                            },
+                        },
+                    },
+                ],
+            };
+
+            history.replaceState({}, undefined, '/');
+            router = new ClientRouter(customRegistryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            // mock listening "update" event from hero
+            const eventNameUpdateHero = 'ilc:update:hero_@portal/hero';
+            const eventHandlerUpdateHero = sinon.spy();
+            router.addListener(eventNameUpdateHero, eventHandlerUpdateHero);
+
+            history.replaceState({}, undefined, '/base');
+
+            // the same slot so nothing changed
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
+
+            history.replaceState({}, undefined, '/hero');
+
+            // in case of "updating" we don't remove fragment, just update it with new props
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            handlePageTransaction.resetHistory();
+
+            sinon.assert.notCalled(logger.log);
+            sinon.assert.calledOnce(eventHandlerUpdateHero);
         });
     });
 });

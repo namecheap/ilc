@@ -22,21 +22,22 @@ import {triggerAppChange} from './client/navigationEvents';
 import GuardManager from './client/GuardManager';
 import ParcelApi from './client/ParcelApi';
 import bundleLoaderFactory from './client/BundleLoader';
-
 import registerSpaApps from './client/registerSpaApps';
+import transactionManagerFactory from './client/TransactionManager/TransactionManager';
 
 const registryConf = getIlcConfig();
 const state = initIlcState();
+const transactionManager = transactionManagerFactory();
 
 const appErrorHandlerFactory = (appName, slotName) => {
-    return fragmentErrorHandlerFactory(registryConf, router.getCurrentRoute, appName, slotName);
+    return fragmentErrorHandlerFactory(registryConf, router.getRelevantAppKind.bind(router), appName, slotName);
 };
 
 const pluginManager = new PluginManager(require.context('./node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/));
 const i18n = registryConf.settings.i18n.enabled
     ? new I18n(registryConf.settings.i18n, {...singleSpa, triggerAppChange}, appErrorHandlerFactory)
     : null;
-const router = new Router(registryConf, state, i18n ? i18n : undefined, singleSpa);
+const router = new Router(registryConf, state, i18n ? i18n : undefined, singleSpa, transactionManager.handlePageTransaction);
 const guardManager = new GuardManager(router, pluginManager, internalErrorHandler);
 const urlProcessor = new UrlProcessor(registryConf.settings.trailingSlash);
 const bundleLoader = bundleLoaderFactory(registryConf);
@@ -56,7 +57,16 @@ if (!registryConf.settings.amdDefineCompatibilityMode) {
  */
 window.ILC.getAppSdkAdapter = appId => ({
     appId,
-    intl: i18n ? i18n.getAdapter() : null
+    intl: i18n ? i18n.getAdapter() : null,
+    trigger404Page: (withCustomContent) => {
+        if (withCustomContent) {
+            return;
+        }
+
+        router.render404({
+            detail: { appId },
+        });
+    },
 });
 window.ILC.navigate = router.navigateToUrl.bind(router);
 
@@ -69,7 +79,7 @@ window.ILC.getAllSharedLibNames = async () => Object.keys(registryConf.sharedLib
 // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
 
 registerSpaApps(registryConf, router, appErrorHandlerFactory, bundleLoader);
-setupErrorHandlers(registryConf, router.getCurrentRoute, setNavigationErrorHandler);
+setupErrorHandlers(registryConf, router.getRelevantAppKind.bind(router), setNavigationErrorHandler, transactionManager);
 setupPerformanceMonitoring(router.getCurrentRoute);
 
 singleSpa.setBootstrapMaxTime(5000, false);

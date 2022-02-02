@@ -1,11 +1,16 @@
 import deepmerge from 'deepmerge';
 import debug from 'debug';
+import EventEmitter from 'eventemitter3';
 
 import Router from '../common/router/Router';
 import * as errors from '../common/router/errors';
 import { isSpecialUrl } from 'ilc-sdk/app';
+import { triggerAppChange } from './navigationEvents';
+import { appIdToNameAndSlot } from '../common/utils';
+import { FRAGMENT_KIND } from '../common/constants';
+import { slotWillBe } from './TransactionManager/TransactionManager';
 
-export default class ClientRouter {
+export default class ClientRouter extends EventEmitter {
     errors = errors;
 
     #currentUrl;
@@ -21,6 +26,12 @@ export default class ClientRouter {
     #forceSpecialRoute = null;
     #i18n;
     #debug;
+    render404;
+    #handlePageTransaction;
+    #activeApps = {
+        prev: {},
+        current: {},
+    };
 
     constructor(
         registryConf,
@@ -30,9 +41,13 @@ export default class ClientRouter {
             localizeUrl: (url) => url,
         },
         singleSpa,
+        handlePageTransaction,
         location = window.location,
         logger = window.console
     ) {
+        super();
+
+        this.#handlePageTransaction = handlePageTransaction;
         this.#singleSpa = singleSpa;
         this.#location = location;
         this.#logger = logger;
@@ -41,6 +56,8 @@ export default class ClientRouter {
         this.#router = new Router(registryConf);
         this.#currentUrl = this.#getCurrUrl();
         this.#debug = debug('ILC:ClientRouter');
+
+        this.render404 = this.#createSpecialRouteHandler(404);
 
         this.#setInitialRoutes(state);
         this.#addEventListeners();
@@ -54,6 +71,32 @@ export default class ClientRouter {
 
     match = (url) => this.#router.match(this.#i18n.unlocalizeUrl(url.replace(this.#location.origin, '') || '/'));
     navigateToUrl = (url) => this.#singleSpa.navigateToUrl(this.#i18n.localizeUrl(url));
+
+    getRelevantAppKind(appName, slotName) {
+        const appKind = this.#registryConf.apps[appName].kind;
+
+        const currentRoute = this.getCurrentRoute();
+        const slotKindCurr = currentRoute.slots[slotName] && currentRoute.slots[slotName].kind;
+        // Here we're also checking previous route as app may throw an error right after URL change.
+        // During unmounting for example.
+        const previousRoute = this.getPrevRoute();
+        const slotKindPrev = previousRoute.slots[slotName] && previousRoute.slots[slotName].kind;
+
+        return slotKindCurr || slotKindPrev || appKind;
+    }
+
+    isAppWithinSlotActive(appName, slotName) {
+        let isActive = this.#activeApps.current[slotName] === appName;
+        const wasActive = this.#activeApps.prev[slotName] === appName;
+
+        let willBe = slotWillBe.default;
+        !wasActive && isActive && (willBe = slotWillBe.rendered);
+        wasActive && !isActive && (willBe = slotWillBe.removed);
+
+        this.#handlePageTransaction(slotName, willBe);
+
+        return isActive;
+    }
 
     #getRouteProps(appName, slotName, route) {
         if (this.#registryConf.apps[appName] === undefined) {
@@ -73,6 +116,7 @@ export default class ClientRouter {
     #setInitialRoutes = (state) => {
         // we should respect base tag for cached pages
         const base = document.querySelector('base');
+
         if (base) {
             const a = document.createElement('a');
             a.href = base.getAttribute('href');
@@ -91,11 +135,14 @@ export default class ClientRouter {
         }
 
         this.#prevRoute = this.#currentRoute;
+
+        this.#activeApps.prev = this.#createActiveAppsObject(this.#prevRoute.slots);
+        this.#activeApps.current = this.#createActiveAppsObject(this.#currentRoute.slots);
     };
 
     #addEventListeners = () => {
         this.#windowEventHandlers['ilc:before-routing'] = this.#onSingleSpaRoutingEvents;
-        this.#windowEventHandlers['ilc:404'] = this.#onSpecialRouteTrigger(404);
+        this.#windowEventHandlers['ilc:404'] = this.render404;
 
         for (let key in this.#windowEventHandlers) {
             if (!this.#windowEventHandlers.hasOwnProperty(key)) {
@@ -158,7 +205,69 @@ export default class ClientRouter {
                 },
             });
         }
+
+        this.#activeApps.prev = this.#createActiveAppsObject(this.#prevRoute.slots);
+        this.#activeApps.current = this.#createActiveAppsObject(this.#currentRoute.slots);
+
+        const appsWithDifferentProps = this.#getAppsWithDifferentProps(this.#prevRoute.slots, this.#currentRoute.slots);
+        if (appsWithDifferentProps.length) {
+            const appsToForceRerender = [];
+
+            appsWithDifferentProps.forEach(({ slotName, appName }) => {
+                const eventUpdateFragment = `ilc:update:${slotName}_${appName}`;
+
+                // if fragment provided "update" lifecycle method then it will be updated immediately w/o remounting app
+                // otherwise the fragment will be unmounted and mounted with new props
+                if (this.listenerCount(eventUpdateFragment)) {
+                    this.emit(eventUpdateFragment);
+                } else {
+                    // temporary remove slot with old props, to remove it from DOM
+                    // it will be rendered with new props with the help of "triggerAppChange"
+                    appsToForceRerender.push({ slotName, appName })
+                    delete this.#activeApps.current[slotName];
+                }
+            });
+
+            if (appsToForceRerender.length) {
+                window.addEventListener('single-spa:app-change', () => {
+                    this.#logger.log(`ILC: Triggering app re-mount for [${appsToForceRerender.map(n => n.appName)}] due to changed props.`);
+
+                    triggerAppChange();
+                }, { once: true });
+            }
+        }
     };
+
+    #createActiveAppsObject(slots) {
+        return Object.entries(slots).reduce((acc, [slotName, slotApp]) => {
+            acc[slotName] = slotApp.appName;
+            return acc;
+        }, {});
+    }
+
+    #getAppsWithDifferentProps(prevSlots, currentSlots) {
+        return Object.entries(prevSlots).reduce((acc, [slotName, prevSlotApp]) => {
+            const currentSlotApp = currentSlots[slotName];
+            
+            if (!currentSlotApp) {
+                return acc;
+            }
+
+            const isTheSameSlotApp = currentSlotApp.appName === prevSlotApp.appName;
+            if (!isTheSameSlotApp) {
+                return acc;
+            }
+
+            if (JSON.stringify(prevSlotApp.props) === JSON.stringify(currentSlotApp.props)) {
+                return acc;
+            }
+
+            return [...acc, {
+                appName: currentSlotApp.appName,
+                slotName,
+            }];
+        }, []);
+    }
 
     #onClickLink = (event) => {
         const {
@@ -189,19 +298,33 @@ export default class ClientRouter {
         }
     };
 
-    #onSpecialRouteTrigger = (specialRouteId) => (e) => {
+    #createSpecialRouteHandler = (specialRouteId) => (e) => {
         const appId = e.detail && e.detail.appId;
+
         const mountedApps = this.#singleSpa.getMountedApps();
         if (!mountedApps.includes(appId)) {
-            return console.warn(
+            return this.#logger.warn(
                 `ILC: Ignoring special route "${specialRouteId}" trigger which came from not mounted app "${appId}". ` +
                 `Currently mounted apps: ${mountedApps.join(', ')}.`
             );
         }
 
-        console.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
+        const { appName, slotName } = appIdToNameAndSlot(appId);
+        const fragmentKind = this.getRelevantAppKind(appName, slotName);
+        const isPrimary = fragmentKind === FRAGMENT_KIND.primary;
+
+        if (specialRouteId === 404 && !isPrimary) {
+            return this.#logger.warn(
+                `ILC: Ignoring special route "${specialRouteId}" trigger which came from non-primary app "${appId}". ` +
+                `"${appId}" is "${fragmentKind}"`
+            );
+        }
+
+        this.#logger.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
+
         this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl(true)};
-        this.#singleSpa.triggerAppChange(); //This call would immediately invoke "single-spa:before-routing-event" and start apps mount/unmount process
+
+        triggerAppChange(); //This call would immediately invoke "ilc:before-routing" and start apps mount/unmount process
     };
 
     #getCurrUrl = (withLocale = false) => {

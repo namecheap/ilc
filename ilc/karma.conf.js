@@ -39,11 +39,13 @@ module.exports = function (config) {
             },
         },
         frameworks: [
+            'parallel',
             'mocha',
             'chai',
             'sinon',
         ],
         plugins: [
+            'karma-parallel',
             'karma-chrome-launcher',
 
             'karma-mocha',
@@ -114,6 +116,9 @@ module.exports = function (config) {
         },
         webpackMiddleware: {
             noInfo: true
+        },
+        parallelOptions: {
+            executors: 2,
         },
     });
 };

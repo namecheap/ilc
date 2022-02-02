@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const urljoin = require('url-join');
-const { uniqueArray } = require('../../common/utils');
+const { uniqueArray, encodeHtmlEntities } = require('../../common/utils');
 
 module.exports = class ConfigsInjector {
     #newrelic;
@@ -159,11 +159,25 @@ module.exports = class ConfigsInjector {
             registryConfig.apps,
             v => _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind', 'wrappedWith'])
         );
-        const spaConfig = JSON.stringify({
+
+        let settings = registryConfig.settings;
+        const customHTML = registryConfig.settings?.globalSpinner?.customHTML;
+        
+        if (customHTML) {
+            settings = {
+                ...registryConfig.settings,
+                globalSpinner: {
+                    ...registryConfig.settings.globalSpinner,
+                    customHTML: encodeHtmlEntities(customHTML),
+                }
+            };
+        }
+
+        let spaConfig = JSON.stringify({
             apps,
             routes: registryConfig.routes.map(v => _.omit(v, ['routeId'])),
             specialRoutes: _.mapValues(registryConfig.specialRoutes, v => _.omit(v, ['routeId'])),
-            settings: registryConfig.settings,
+            settings,
             sharedLibs: registryConfig.sharedLibs,
         });
 

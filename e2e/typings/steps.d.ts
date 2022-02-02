@@ -5,11 +5,12 @@ type planetsPage = typeof import('../spec/pages/planets');
 type hooksPage = typeof import('../spec/pages/hooks');
 type common = typeof import('../spec/pages/common');
 type MockRequestHelper = import('@codeceptjs/mock-request');
+type ChaiWrapper = import('codeceptjs-chai');
 
 declare namespace CodeceptJS {
   interface SupportObject { I: CodeceptJS.I, peoplePage: peoplePage, newsPage: newsPage, planetsPage: planetsPage, hooksPage: hooksPage, common: common }
   interface CallbackOrder { [0]: CodeceptJS.I; [1]: peoplePage; [2]: newsPage; [3]: planetsPage; [4]: hooksPage; [5]: common }
-  interface Methods extends CodeceptJS.Puppeteer, MockRequestHelper {}
+  interface Methods extends CodeceptJS.Puppeteer, MockRequestHelper, ChaiWrapper {}
   interface I extends WithTranslation<Methods> {}
   namespace Translation {
     interface Actions {}
