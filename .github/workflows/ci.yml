@@ -36,7 +36,10 @@ jobs:
         push: true
         cache-from: |
           namecheap/ilc:latest
-        tags: namecheap/ilc_tmp:${{ env.SHA }}
+          namecheap/ilc_tmp:latest
+        tags: |
+          namecheap/ilc_tmp:${{ env.SHA }}
+          namecheap/ilc_tmp:latest
 
     - name: Run sever side tests
       run: docker run namecheap/ilc_tmp:$SHA npm run test:ci
@@ -72,6 +75,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
+      - uses: benjlevesque/short-sha@v1.2
+        id: sha7
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -90,7 +96,10 @@ jobs:
           push: true
           cache-from: |
             namecheap/ilc_registry:latest
-          tags: namecheap/ilc_tmp:reg_${{ env.SHA }}
+            namecheap/ilc_tmp:reg_latest
+          tags: |
+            namecheap/ilc_tmp:reg_${{ env.SHA }}
+            namecheap/ilc_tmp:reg_latest
 
       - name: Run tests
         run: docker run namecheap/ilc_tmp:reg_$SHA npm run test:ci
@@ -144,7 +153,7 @@ jobs:
         id: tags
         run: |
           BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
-          LATEST=$([ "$BRANCH" == "master" ] && echo "latest,$SHA," || echo "")
+          LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
           DOCKER_TAGS="$LATEST${BRANCH//\//_}"
           echo "Tags that will be used: $DOCKER_TAGS"
           echo ::set-output name=docker_tags::$DOCKER_TAGS
@@ -160,8 +169,8 @@ jobs:
 
           for i in ${TAGS//,/ }
           do
-              ./regctl image copy namecheap/ilc_tmp:reg_$SHA namecheap/ilc_registry:$i
-              ./regctl image copy namecheap/ilc_tmp:$SHA namecheap/ilc:$i
+              ./regctl image copy namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
+              ./regctl image copy namecheap/ilc_tmp:${GITHUB_SHA:0:7} namecheap/ilc:$i
           done
 
   build_docs:
