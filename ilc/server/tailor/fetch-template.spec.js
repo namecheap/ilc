@@ -3,7 +3,7 @@ const sinon = require('sinon');
 
 const fetchTemplate = require('./fetch-template');
 
-describe.only('fetch templates', () => {
+describe('fetch templates', () => {
   const configsInjector = {
     inject: () => 'inject text',
   };
@@ -52,7 +52,7 @@ describe.only('fetch templates', () => {
     currentRoute.template = 'exist';
     currentRoute.route = '/exist';
 
-    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate)
+    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate);
 
     sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'exist');
   });
@@ -61,7 +61,7 @@ describe.only('fetch templates', () => {
     currentRoute.template = 'exist';
     currentRoute.specialRole = 'exist';
 
-    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate)
+    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate);
 
     sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'special:exist');
   });
@@ -69,7 +69,7 @@ describe.only('fetch templates', () => {
   it('should return parseTemplate function with right arguments', async () => {
     currentRoute.template = 'exist';
 
-    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate)
+    await fetchTemplate(configsInjector, newrelic, registryService)(request, parseTemplate);
 
     sinon.assert.calledOnceWithExactly(parseTemplate, 'inject text', 'ilcState text');
   });
