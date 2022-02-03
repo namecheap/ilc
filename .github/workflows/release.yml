@@ -34,11 +34,10 @@ jobs:
           echo ::set-output name=docker_tags::$DOCKER_TAGS
           echo ::set-output name=tag::$(echo $GITHUB_REF | cut -d / -f 3)
 
-      - name: Pull & tag images for release
+      - name: Install regctl
         run: |
-          docker pull namecheap/ilc:${GITHUB_SHA:0:7}
-          docker pull namecheap/ilc_registry:${GITHUB_SHA:0:7}
-
+          curl -L https://github.com/regclient/regclient/releases/download/v0.3.10/regctl-linux-amd64 > ./regctl
+          chmod 755 ./regctl
 
       - name: Push images
         run: |
@@ -46,11 +45,8 @@ jobs:
 
           for i in ${TAGS//,/ }
           do
-              docker tag namecheap/ilc:${GITHUB_SHA:0:7} namecheap/ilc:$i
-              docker push namecheap/ilc:$i
-
-              docker tag namecheap/ilc_registry:${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
-              docker push namecheap/ilc_registry:$i
+              ./regctl image copy namecheap/ilc:${GITHUB_SHA:0:7} namecheap/ilc:$i
+              ./regctl image copy namecheap/ilc_registry:${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
           done
 
       - name: Get release description
