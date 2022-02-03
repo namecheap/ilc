@@ -44,6 +44,7 @@ services:
     env_file:
       - ./demo-apps.env  # Used by the demo site to override PUBLIC_HOST var
   mysql:
+    platform: linux/x86_64
     image: mysql:5.7
     volumes:
       - "./dbfiles:/var/lib/mysql"

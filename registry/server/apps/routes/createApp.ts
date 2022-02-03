@@ -24,7 +24,7 @@ const createApp = async (req: Request, res: Response): Promise<void> => {
 
     try {
         await setDataFromManifest(app, 'apps');
-    } catch (error) {
+    } catch (error: any) {
         res.status(422).send(error.message);
         return;
     }

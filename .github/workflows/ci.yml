@@ -15,19 +15,38 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
+    - uses: benjlevesque/short-sha@v1.2
+      id: sha7
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v1
+
     - name: Docker ilc auth
       run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
     - name: Build the Docker image
-      run: |
-        cd ./ilc/
-        DOCKER_BUILDKIT=1 docker build . --tag ilc:tmp
+      uses: docker/build-push-action@v2
+      with:
+        context: "{{defaultContext}}:ilc"
+        platforms: linux/amd64,linux/arm64
+        push: true
+        cache-from: |
+          type=registry,ref=namecheap/ilc_tmp:buildcache
+        cache-to: |
+          type=registry,ref=namecheap/ilc_tmp:buildcache,mode=max
+        tags: |
+          namecheap/ilc_tmp:${{ env.SHA }}
+          namecheap/ilc_tmp:latest
 
     - name: Run sever side tests
-      run: docker run ilc:tmp npm run test:ci
+      run: docker run namecheap/ilc_tmp:$SHA npm run test:ci
 
     - name: Run server side tests coverage
-      run: docker run --volume /artifacts/ilc/.test_output/server:/temporary ilc:tmp bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
+      run: docker run --volume /artifacts/ilc/.test_output/server:/temporary namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
 
     - uses: actions/upload-artifact@v2
       with:
@@ -37,7 +56,7 @@ jobs:
     - name: Build the Docker image to test client side
       run: |
         cd ./ilc/
-        DOCKER_BUILDKIT=1 docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=ilc:tmp
+        DOCKER_BUILDKIT=1 docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=namecheap/ilc_tmp:$SHA
 
     - name: Run client side tests
       run: |
@@ -50,11 +69,6 @@ jobs:
         name: client-side-tests-artifacts
         path: /artifacts/ilc/.test_output/client/
 
-    - name: Push to temp repo
-      run: |
-        docker tag ilc:tmp namecheap/ilc_tmp:${GITHUB_SHA:0:7}
-        docker push namecheap/ilc_tmp:${GITHUB_SHA:0:7}
-
   build_registry:
     name: Build Registry
     runs-on: ubuntu-latest
@@ -62,21 +76,35 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
+      - uses: benjlevesque/short-sha@v1.2
+        id: sha7
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
       - name: Docker registry auth
         run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
       - name: Build the Docker image
-        run: |
-          cd ./registry/
-          docker build . --tag registry:tmp
+        uses: docker/build-push-action@v2
+        with:
+          context: "{{defaultContext}}:registry"
+          platforms: linux/amd64,linux/arm64
+          push: true
+          cache-from: |
+            type=registry,ref=namecheap/ilc_tmp:buildcache_registry
+          cache-to: |
+            type=registry,ref=namecheap/ilc_tmp:buildcache_registry,mode=max
+          tags: |
+            namecheap/ilc_tmp:reg_${{ env.SHA }}
+            namecheap/ilc_tmp:reg_latest
 
       - name: Run tests
-        run: docker run registry:tmp npm run test:ci
-
-      - name: Push to temp repo
-        run: |
-          docker tag registry:tmp namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
-          docker push namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
+        run: docker run namecheap/ilc_tmp:reg_$SHA npm run test:ci
 
   e2e_tests:
     name: Run E2E tests
@@ -132,10 +160,10 @@ jobs:
           echo "Tags that will be used: $DOCKER_TAGS"
           echo ::set-output name=docker_tags::$DOCKER_TAGS
 
-      - name: Pull images
+      - name: Install regctl
         run: |
-          docker pull namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
-          docker pull namecheap/ilc_tmp:${GITHUB_SHA:0:7}
+          curl -L https://github.com/regclient/regclient/releases/download/v0.3.10/regctl-linux-amd64 > ./regctl
+          chmod 755 ./regctl
 
       - name: Push images
         run: |
@@ -143,11 +171,8 @@ jobs:
 
           for i in ${TAGS//,/ }
           do
-              docker tag namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
-              docker push namecheap/ilc_registry:$i
-
-              docker tag namecheap/ilc_tmp:${GITHUB_SHA:0:7} namecheap/ilc:$i
-              docker push namecheap/ilc:$i
+              ./regctl image copy namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
+              ./regctl image copy namecheap/ilc_tmp:${GITHUB_SHA:0:7} namecheap/ilc:$i
           done
 
   build_docs:
