@@ -45,7 +45,10 @@ To create a template, go to the **Templates** section in the sidebar.
 
 ## Route metadata
 
-Metadata is used to determine whether the page should be protected. If yes, access to the protected page will be granted only after the user fulfills the required conditions.
+The `Metadata` field is handled by plugins, not by ILC. For example, ILC has the [Transition hooks](https://github.com/namecheap/ilc-plugins-sdk/tree/master/src/plugins/transitionHooks) plugin installed by default. This plugin determines whether the page should be protected. If yes, it will grant access to the protected page only after the user fulfills the required conditions.
+
+!!! info ""
+    ILC also supports custom plugins. You can learn more about them in the [ilc-plugins-sdk repository](https://github.com/namecheap/ilc-plugins-sdk)
 
 ### Supported options
 
@@ -59,7 +62,7 @@ In the basic scenario, the required condition to access the protected page is to
 
 ![ILC transition hooks](../assets/transition_hooks.gif)
 
-More information about protected route is available in the [ILC transition hooks page](../transition_hooks.md).
+More information about the Transition hooks plugin is available in the [ILC transition hooks page](../transition_hooks.md).
 
 ## Slot configuration
 
