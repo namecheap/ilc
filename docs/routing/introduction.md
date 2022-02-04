@@ -1,10 +1,13 @@
 # Introduction
 
-## Problem statement
-
 Most JavaScript frameworks come with a dedicated routing solution like `angular/router` or `vue-router`.
 They allow you to navigate through pages of an application without a full page refresh on every click.
+
+## Problem statement
+
 When you have a monolithic application, it handles all the routes on its own. When there are two or more applications, they also handle all their routes independently. Since, by default, one independent application know nothing about routes and pages of other independent application. This gives you a problem to solve - a routing issue.
+
+## Routing basics
 
 Before proceeding with details on how the issue is handled by ILC, get familiar with the basics of routing in the micro-frontends and terminology:
 
@@ -36,6 +39,7 @@ In the example above, the user opened the `/news/latest` page URL. ILC checks th
 You can use native tools (for example `<Link>` in `React router`) to navigate between pages within the application, and `global link` - a link (`<a>` tag) to navigate between applications.
 
 In ILC, as mentioned before, the transition between applications occurs via the `<a>` tags. To do this, ILC keeps track of all `<a>` tags on the page and handles clicks on them, provided that:
+
 1. Tag contains a non-empty `href`.
 1. `event.PreventDefault` does not equal `false`.
 1. `target`does not equal `_self`.
@@ -44,4 +48,5 @@ In ILC, as mentioned before, the transition between applications occurs via the 
 If one of the above points is not met, ILC ignores the processing of the clicks on the link.
 
 ### Conclusion
+
 ILC acts as a wrapper for other applications making all the transitions soft. Furthermore, it uses two-level routing so that teams can configure routing inside their application as they need to, whereas, in ILC, you only need to specify the path to the application.
