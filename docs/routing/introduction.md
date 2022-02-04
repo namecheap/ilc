@@ -1,14 +1,18 @@
 # Introduction
 
+## Problem statement
+
 Most JavaScript frameworks come with a dedicated routing solution like `angular/router` or `vue-router`.
 They allow you to navigate through pages of an application without a full page refresh on every click.
-Since we no longer have one monolithic application that handles all routes, instead we have several independent applications, we need to solve an important issue, namely routing.
+When you have a monolithic application, it handles all the routes on its own. When there are two or more applications, they also handle all their routes independently. Since, by default, one independent application know nothing about routes and pages of other independent application. This gives you a problem to solve - a routing issue.
 
 Before proceeding with details on how the issue is handled by ILC, get familiar with the basics of routing in the micro-frontends and terminology:
 
 - **Hard navigation** describes a page transition where the browser
 loads the complete HTML for the next page from the server.
 - **Soft navigation** describes a page transition that is rendered entirely on the client-side, typically by using a client-side router. In this scenario, the client fetches data from the server via API.
+
+## Solution
 
 There are several approaches to implement navigation. The common ones are described below:
 
