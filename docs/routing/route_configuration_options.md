@@ -2,9 +2,9 @@
 
 ## Route domains
 
-ILC checks the exact match of domain names. It means that `secure.example.com` is not equal to `example.com`, and you may need to add the necessary subdomains to handle this case properly.
-
 ILC can handle requests coming from multiple domains, so you can use a single ILC instance to handle them instead of rolling out individual instances for every domain.
+
+ILC checks the exact match of domain names. It means that `secure.example.com` is not equal to `example.com`, and you may need to add the necessary subdomains to handle this case properly.
 
 ![ILC registry domains field](../assets/routes/domain-field.png)
 
@@ -17,7 +17,7 @@ ILC can handle requests coming from multiple domains, so you can use a single IL
             ![ILC registry domains menu](../assets/routes/domain-create.png)
 
 !!! note ""
-    The application renders only one domain at the same time. To add one header to several domains, you need to create the same route several times specifying the required domain for each route.
+    ILC renders applications for only one domain at the same time. To add one header to several domains, you need to create the same route several times specifying the required domain for each route.
 
     For example:
 
@@ -32,7 +32,7 @@ More information about domains is available in the [Multi-domains page](../multi
 
 ## Route template
 
-Template is an HTML file that is used to build the structure of your page. Template is **mandatory**. If it is missing, ILC won't be able to render your content properly and will throw an error.
+Template is an HTML file that is used to build the structure of your page. If it is missing in the routing chain, ILC won't be able to render your content properly and will throw an error.
 
 ![ILC registry template field](../assets/routes/template-field.png)
 
