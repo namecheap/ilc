@@ -38,6 +38,7 @@ nav:
     - ILC transition hooks: docs/transition_hooks.md
     - Multi-domains: docs/multi-domains.md
     - Routing:
+      - Introduction: docs/routing/introduction.md
       - Route configuration: docs/routing/route_configuration_options.md
       - Match & cascade merge: docs/routing/route_match_patterns.md
     - Advanced features:
