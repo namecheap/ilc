@@ -40,6 +40,7 @@ nav:
     - Routing:
       - Route configuration: docs/routing/route_configuration_options.md
       - Match & cascade merge: docs/routing/route_match_patterns.md
+      - Special routes: docs/routing/special_routes.md
     - Advanced features:
       - Parcels: docs/parcels.md
       - Plugins: https://github.com/namecheap/ilc-plugins-sdk
