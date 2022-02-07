@@ -27,5 +27,5 @@ ILC allows you to manage cases with a trailing slash, but the decision to use it
 To manage trailing slash behavior, there are the following options:
 
 1. **Do nothing** - No effect at URLs.
-1. **Redirect to non-trailing slash** - Remove trailing slash at the end of URLs, if present.
-1. **Redirect to trailing slash** - Add trailing slash to the end of URLs, if not present.
+1. **Redirect to non-trailing slash** - It redirects to the URL **without** a trailing slash at the end.
+1. **Redirect to trailing slash** - It redirects to the URL **with** a trailing slash at the end.
