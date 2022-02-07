@@ -1,4 +1,4 @@
-import * as Knex from "knex";
+import { Knex } from "knex";
 import {RoutingStrategyValues, Scope, SettingKeys, SettingTypes} from "../settings/interfaces";
 
 

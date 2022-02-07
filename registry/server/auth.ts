@@ -1,7 +1,6 @@
 import passport from 'passport';
 import {Strategy as LocalStrategy} from 'passport-local';
 import session from 'express-session';
-import sessionKnex from 'connect-session-knex';
 import {Express, RequestHandler} from 'express';
 import {Strategy as BearerStrategy} from 'passport-http-bearer';
 import * as bcrypt from 'bcrypt';
@@ -12,6 +11,9 @@ import db from './db';
 import {SettingsService} from "./settings/services/SettingsService";
 import {SettingKeys} from "./settings/interfaces";
 import urljoin from 'url-join';
+
+// https://github.com/gx0r/connect-session-knex/issues/91
+const sessionKnex = require('connect-session-knex');
 
 export interface User {
     authEntityId: number;
@@ -25,7 +27,11 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
         resave: false,
         saveUninitialized: false,
         cookie: {httpOnly: true, secure: false},
-        store: new SessionKnex({ knex: db, createTable: false, tablename: 'sessions' }),
+        store: new SessionKnex({
+            knex: db,
+            createTable: false,
+            tablename: 'sessions'
+        }),
     }, config.session);
 
     if (app.get('env') === 'production') {

@@ -5,10 +5,13 @@ RUN apk update && apk add --no-cache bash git openssh python3 make g++ findutils
 # Legacy infrastructure support
 RUN npm install -g stdout-mq@^2.4.0
 
-COPY ./ /codebase
 WORKDIR /codebase
 
-RUN npm install --no-package-lock --no-progress
+COPY package-lock.json package.json /codebase/
+RUN npm ci --no-package-lock --ignore-scripts
+
+COPY ./ /codebase
+
 RUN npm run build
 
 ENV NODE_ENV=production

@@ -56,13 +56,13 @@ Check out [demo website available online](http://demo.microfrontends.online/) or
 
 1. Get familiar with [Installation guide](./docs/installation_guide.md)
 1. Clone this repository
-1. Run `docker-compose up -d`
-1. _During first launch or shutdown only._ Run `docker-compose run registry npm run seed`
+1. Run `docker compose up -d`
+1. _During first launch or shutdown only._ Run `docker compose run registry npm run seed`
 1. PROFIT 😎
-    * View logs via `docker-compose logs -f --tail=10`
+    * View logs via `docker compose logs -f --tail=10`
     * Open ILC at http://localhost:8233/
     * Open Registry UI at http://localhost:4001/ & use `root/pwd` credentials to sign in.
-    * Shutdown everything with `docker-compose down`
+    * Shutdown everything with `docker compose down`
 
 More information about demo applications used in this quick start [you can find here](https://github.com/namecheap/ilc-demo-apps).
 

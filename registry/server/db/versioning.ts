@@ -1,10 +1,9 @@
-import type Knex from 'knex';
-import type {Transaction} from 'knex';
+import type {Knex} from 'knex';
 
 import versioningService, {OperationConf} from '../versioning/services/Versioning';
 
 export interface VersionedKnex extends Knex {
-    versioning(user: any, conf: OperationConf, callback: (transaction: Transaction) => Promise<void|number>): Promise<number>;
+    versioning(user: any, conf: OperationConf, callback: (transaction: Knex.Transaction) => Promise<void|number>): Promise<number>;
 }
 
 export default function (knex: Knex|any): VersionedKnex {

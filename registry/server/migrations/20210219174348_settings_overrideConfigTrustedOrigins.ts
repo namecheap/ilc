@@ -1,4 +1,4 @@
-import * as Knex from "knex";
+import { Knex } from "knex";
 import { Scope, SettingKeys, SettingTypes } from "../settings/interfaces";
 
 export async function up(knex: Knex): Promise<any> {

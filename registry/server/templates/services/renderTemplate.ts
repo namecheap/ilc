@@ -143,7 +143,7 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Fe
                 includeResult: wrapWithComments(id, data),
                 styleRefs,
             };
-        } catch (e) {
+        } catch (e: any) {
             throw new errors.FetchIncludeError({
                 message: `Failed to fetch include with ID "${id}" due to: ${e.message}`,
                 cause: e,
