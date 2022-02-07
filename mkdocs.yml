@@ -40,7 +40,7 @@ nav:
     - Routing:
       - Introduction: docs/routing/introduction.md
       - Route configuration: docs/routing/route_configuration_options.md
-      - Match & cascade merge: docs/routing/route_match_patterns.md
+      - Route matching patterns: docs/routing/route_matching_patterns.md
       - i18n & trailing slash: docs/routing/localization_and_trailing_slash.md
     - Advanced features:
       - Parcels: docs/parcels.md
@@ -61,13 +61,18 @@ nav:
     - License: LICENSE.md
 
 markdown_extensions:
+  - admonition
   - attr_list
   - toc:
       permalink: ⚓︎
+  - pymdownx.details
   - pymdownx.magiclink
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
 
 plugins:
   - search
@@ -76,6 +81,9 @@ plugins:
 extra:
   repo:
     full_url: https://github.com/namecheap/ilc/blob/master
+
+extra_css:
+  - docs/assets/styles/styles.css
 
 docs_dir: '.mkdocs'
 site_dir: 'mkdocs_dist'
