@@ -21,6 +21,7 @@ More information about the 404 error is available in the [Global error handling 
 ## '5XX' errors
 
 ILC render this error as a simple HTML file. This consideration is made to minimize the chances of error occurrence on rendering since if ILC fails, this HTML file will be used by the browser to show an error to the user.
+
 The '500' template acts as the default error template for the main domain.
 
 ![ILC registry 500 error](../assets/routes/500-error.png)
@@ -31,7 +32,7 @@ To assign different error templates to domains, you must specify the template wh
 ![ILC registry set template of 500 error](../assets/routes/set-template-for-domains.png)
 
 ??? tip "Preview error"
-     In ILC, it is possible to preview the 500 error via the `/_ilc/500/` route.
+    In ILC, it is possible to preview the 500 error via the `/_ilc/500/` route.
 
     For example: `http://demo.microfrontends.online/_ilc/500` is the preview route for the demo website.
 
