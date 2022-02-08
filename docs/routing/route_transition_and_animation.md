@@ -7,9 +7,10 @@ As you may have read in [intoduction](./introduction.md), all transitions in the
 For example:
 
 In this example, the routing table looks as follows:
+
 ![Routing table](../assets/routes/routing-table.png)
 
-In our HTML template - 2 ilc-slots: 
+Whereas the HTML template contains two ilc-slots:
 
   ```html
   <body>
