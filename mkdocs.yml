@@ -40,10 +40,9 @@ nav:
     - Routing:
       - Introduction: docs/routing/introduction.md
       - Route configuration: docs/routing/route_configuration_options.md
-      - Match & cascade merge: docs/routing/route_match_patterns.md
-      - Special routes: docs/routing/special_routes.md
       - Route matching patterns: docs/routing/route_matching_patterns.md
       - i18n & trailing slash: docs/routing/localization_and_trailing_slash.md
+      - Special routes: docs/routing/special_routes.md
     - Advanced features:
       - Parcels: docs/parcels.md
       - Plugins: https://github.com/namecheap/ilc-plugins-sdk
