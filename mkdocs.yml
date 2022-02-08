@@ -40,7 +40,7 @@ nav:
     - Routing:
       - Route configuration: docs/routing/route_configuration_options.md
       - Match & cascade merge: docs/routing/route_match_patterns.md
-      - Route transition & animation: docs/routing/route_transition_and_animation.md
+      - Route transition and animation: docs/routing/route_transition_and_animation.md
     - Advanced features:
       - Parcels: docs/parcels.md
       - Plugins: https://github.com/namecheap/ilc-plugins-sdk

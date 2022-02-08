@@ -1,41 +1,53 @@
-# Route transition & animation
+# Route transition and animation
 
-## Overall principle
+## Overview
 
-As you may have read in [intoduction](./introduction.md), all transitions in ilc are soft, which means that we can replace, add, remove applications on the page without reloading it, this is possible due to the use of one HTML template for all pages.
+As you may have read in [intoduction](./introduction.md), all transitions in the ILC are soft. It means that you can add, remove, and replace applications on the page without reloading thanks to the use of one HTML template for all pages. This template comtains so-called [ilc-slots](./route_configuration_options.md#slot-configuration) that are used to render applications. (one application per slot at a time).
 
-At this point, let's take a closer look. Our templates contain so called [ilc-slots](./route_configuration_options.md#slot-configuration) and our applications are rendered inside these slots. Only one application can be displayed in one slot at a time.
+For example:
 
-
-Now let's look at this with examples:
-
-We use this routing table:
+In this example, the routing table looks as follows:
 ![Routing table](../assets/routes/routing-table.png)
 
-In our HTML template - 2 ilc-slots: ![two ilc-slots](../assets/routes/slots.png)
+In our HTML template - 2 ilc-slots: 
 
-let's go to the `/wrapper/` route, in this case we'll render the app in both slots, the navigation bar (![red box](../assets/routes/red-box.png)) in the `navbar` slot, and the main app (![green box](../assets/routes/green-box.png)) in the `body` slot
+  ```html
+  <body>
+    <ilc-slot id="navbar" />
+    <ilc-slot id="body" />
+  </body>
+  ```
+
+Navigate to the `/wrapper/` route.
+In this case, ILC will render the application in both slots: the navigation bar (:fontawesome-solid-square:{ .color-red }) in the `navbar` slot, and the main app (:fontawesome-solid-square:{ .color-green }) in the `body` slot.
 
 ![example](../assets/routes/two-app-render-example.png)
 
-Now let's go to the `/hooks/` route, and the app inside the `body` slot will be replaced while the navigation bar will stay in place.
+Navigate to the `/hooks/` route.
+The application inside the `body` slot will be replaced, while the navigation bar will stay in place.
 
 ![example](../assets/routes/replaced-app-example.png)
 
-Now let's go to the `/noheader/` route, here we have only one application specified, which is rendered inside the `body` slot, the `navbar` slot is now empty.
+Navigate to the `/noheader/` route.
+For this route, there is only one application specified that is rendered inside the `body` slot. The `navbar` slot is empty now.
 
 ![example](../assets/routes/noheader-example.png)
 
-In addition, I would like to remind you that routing within applications can be processed by native application tools and not processed in any way in ILC, and accordingly the content will always be located inside the same ILC slot.
+!!! info ""
+    Routing within applications can be processed natively by application tools instead of the ILC. With this routing, the content will always be located inside the same ILC slot.
 
 ## Animation capabilities
 
-No matter how hard we try to optimize the system to minimize the delay and provide users with a well-designed product, there will always be a point where the user has to wait. That is why ILC has a built-in ability to display a spinner when loading an application, despite this, we recommend using more progressive tools like `Skeleton loader` - placeholder for the information that is still loading. It mimic the structure and look of the entire view. But this is just our recommendation, the choice of what to use is up to you, and here you will find descriptions of the standard ILC tools.
+Regardless of system optimization or how well your product design is, there will always be a point where the user has to wait. For these cases, ILC has a built-in feature to display a spinner when loading an application. 
 
-Global spinner:
+### Global spinner
 
 ![Global spinner](../assets/routes/spinner.png)
 
-In the settings there are 2 items responsible for this.
- 1. `globalSpinner.enabled` - allows you to enable or disable the display of the spinner.
- 2. `globalSpinner.customHTML` - allows you to add your custom spinner.
+There are the following settings to configure spinner behavior:
+
+1. `globalSpinner.enabled` - enable or disable the display of the spinner.
+1. `globalSpinner.customHTML` - add your custom spinner.
+
+!!! info ""
+    We recommend using more progressive tools like `Skeleton loader` - a placeholder for the information that is still loading that mimics the look and structure of the entire view.
