@@ -42,6 +42,7 @@ nav:
       - Route configuration: docs/routing/route_configuration_options.md
       - Route matching patterns: docs/routing/route_matching_patterns.md
       - i18n & trailing slash: docs/routing/localization_and_trailing_slash.md
+      - Special routes: docs/routing/special_routes.md
     - Advanced features:
       - Parcels: docs/parcels.md
       - Plugins: https://github.com/namecheap/ilc-plugins-sdk
