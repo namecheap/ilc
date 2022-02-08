@@ -1,0 +1,8 @@
+{
+    "watch": ["src/server", "src/systemjs"],
+    "execMap": {
+        "ts": "ts-node"
+    },
+    "exec": "ts-node ./src/server/index.js",
+    "delay": 750
+}

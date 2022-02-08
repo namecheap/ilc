@@ -1,5 +1,5 @@
 const path = require('path');
-const webpackConfig = require('./build/webpack');
+const webpackConfig = require('./src/build/webpack');
 const nycConfig = require('./nyc.config');
 
 const getThresholds = () => ({

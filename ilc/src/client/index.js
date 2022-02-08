@@ -1,7 +1,7 @@
 import {
     setNavigationErrorHandler,
     addNavigationHook,
-} from './client/navigationEvents/setupEvents';
+} from './navigationEvents/setupEvents';
 
 import * as singleSpa from 'single-spa';
 
@@ -9,21 +9,21 @@ import {
     PluginManager,
 } from 'ilc-plugins-sdk/browser';
 
-import Router from './client/ClientRouter';
-import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
-import fragmentErrorHandlerFactory from './client/errorHandler/fragmentErrorHandlerFactory';
-import internalErrorHandler from './client/errorHandler/internalErrorHandler';
-import getIlcConfig from './client/ilcConfig';
-import initIlcState from './client/initIlcState';
-import setupPerformanceMonitoring from './client/performance';
-import I18n from './client/i18n';
-import UrlProcessor from './common/UrlProcessor';
-import {triggerAppChange} from './client/navigationEvents';
-import GuardManager from './client/GuardManager';
-import ParcelApi from './client/ParcelApi';
-import bundleLoaderFactory from './client/BundleLoader';
-import registerSpaApps from './client/registerSpaApps';
-import transactionManagerFactory from './client/TransactionManager/TransactionManager';
+import Router from './ClientRouter';
+import setupErrorHandlers from './errorHandler/setupErrorHandlers';
+import fragmentErrorHandlerFactory from './errorHandler/fragmentErrorHandlerFactory';
+import internalErrorHandler from './errorHandler/internalErrorHandler';
+import getIlcConfig from './ilcConfig';
+import initIlcState from './initIlcState';
+import setupPerformanceMonitoring from './performance';
+import I18n from './i18n';
+import UrlProcessor from '../common/UrlProcessor';
+import {triggerAppChange} from './navigationEvents';
+import GuardManager from './GuardManager';
+import ParcelApi from './ParcelApi';
+import bundleLoaderFactory from './BundleLoader';
+import registerSpaApps from './registerSpaApps';
+import transactionManagerFactory from './TransactionManager/TransactionManager';
 
 const registryConf = getIlcConfig();
 const state = initIlcState();
@@ -33,7 +33,7 @@ const appErrorHandlerFactory = (appName, slotName) => {
     return fragmentErrorHandlerFactory(registryConf, router.getRelevantAppKind.bind(router), appName, slotName);
 };
 
-const pluginManager = new PluginManager(require.context('./node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/));
+const pluginManager = new PluginManager(require.context('../../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/));
 const i18n = registryConf.settings.i18n.enabled
     ? new I18n(registryConf.settings.i18n, {...singleSpa, triggerAppChange}, appErrorHandlerFactory)
     : null;

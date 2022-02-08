@@ -5,10 +5,10 @@ const WrapperPlugin = require('wrapper-webpack-plugin');
 const {ResolveIlcDefaultPluginsWebpackPlugin} = require('ilc-plugins-sdk/webpack');
 
 module.exports = {
-    entry: path.resolve(__dirname, '../client.js'),
+    entry: path.resolve(__dirname, '../../src/client/index.js'),
     output: {
         filename: 'client.js',
-        path: path.resolve(__dirname, '../public'),
+        path: path.resolve(__dirname, '../../public'),
     },
     mode: 'production',
     module: {
@@ -36,7 +36,7 @@ module.exports = {
     plugins: [
         new WrapperPlugin({
             test: /\.js$/,
-            header: () => fs.readFileSync(path.resolve(__dirname, '../public/system.js')),
+            header: () => fs.readFileSync(path.resolve(__dirname, '../../public/system.js')),
             afterOptimizations: true,
         }),
     ],
