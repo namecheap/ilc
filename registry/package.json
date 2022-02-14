@@ -22,7 +22,7 @@
         "postinstall": "npm run migrate && npm run seed",
         "assetsdiscovery": "cross-env NODE_ENV=production INTERVAL=2000 node ./build/server/runnerAssetsDiscovery.js"
     },
-    "author": "Vladlen Fedosov",
+    "author": "",
     "license": "Apache-2.0",
     "devDependencies": {
         "@types/bcrypt": "^3.0.0",
