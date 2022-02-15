@@ -17,7 +17,7 @@
     "build:systemjs": "node ./systemjs/build.js",
     "build:polyfills": "mkdir -p ./public && nwget https://polyfill.io/v3/polyfill.min.js?features=URL%2CObject.entries%2CDocumentFragment.prototype.append%2CElement.prototype.append%2CElement.prototype.remove%2CObject.assign%2CElement.prototype.closest%2CCustomEvent%2CObject.values%2CArray.from -O ./public/polyfill.min.js"
   },
-  "author": "Vladlen Fedosov",
+  "author": "",
   "license": "Apache-2.0",
   "dependencies": {
     "@mapbox/scroll-restorer": "1.0.0",

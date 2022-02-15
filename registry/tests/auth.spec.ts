@@ -106,15 +106,15 @@ describe('Authentication / Authorization', () => {
                     await request.get('/protected')
                         .set('Authorization', `Bearer ${authToken}`)
                         .expect(200);
-    
+
                     await request.post('/protected')
                         .set('Authorization', `Bearer ${authToken}`)
                         .expect(403, generateResp403(userIdentifier));
-    
+
                     await request.put('/protected')
                         .set('Authorization', `Bearer ${authToken}`)
                         .expect(403, generateResp403(userIdentifier));
-    
+
                     await request.delete('/protected')
                         .set('Authorization', `Bearer ${authToken}`)
                         .expect(403, generateResp403(userIdentifier));
@@ -221,7 +221,7 @@ describe('Authentication / Authorization', () => {
         const agent = supertestAgent(getApp());
 
         beforeEach(() => {
-            const oidcServer = nock('https://adfs.service.namecheap.com/');
+            const oidcServer = nock('https://ad.example.doesnotmatter.com/');
             //oidcServer.log(console.log);
 
             oidcServer.get('/adfs/.well-known/openid-configuration')
@@ -278,7 +278,7 @@ describe('Authentication / Authorization', () => {
 
                 getStub.withArgs(SettingKeys.BaseUrl).returns(Promise.resolve('http://localhost:4000/'));
                 getStub.withArgs(SettingKeys.AuthOpenIdEnabled).returns(Promise.resolve(true));
-                getStub.withArgs(SettingKeys.AuthOpenIdDiscoveryUrl).returns(Promise.resolve('https://adfs.service.namecheap.com/adfs/'));
+                getStub.withArgs(SettingKeys.AuthOpenIdDiscoveryUrl).returns(Promise.resolve('https://ad.example.doesnotmatter.com/adfs/'));
                 getStub.withArgs(SettingKeys.AuthOpenIdClientId).returns(Promise.resolve('ba05c345-e144-4688-b0be-3e1097ddd32d'));
                 getStub.withArgs(SettingKeys.AuthOpenIdClientSecret).returns(Promise.resolve('test'));
                 getStub.withArgs(SettingKeys.AuthOpenIdIdentifierClaimName).returns(Promise.resolve('email'));
@@ -291,18 +291,18 @@ describe('Authentication / Authorization', () => {
             it('should fail against OpenID server for unknown auth entity', async () => {
                 const res = await agent.get('/auth/openid')
                     .expect(302)
-                    .expect('Location', new RegExp('https://adfs\\.service\\.namecheap\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$'));
+                    .expect('Location', new RegExp('https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$'));
 
                 await agent.get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
                     .expect(401)
-                    .expect(`<pre>Can't find presented identifiers "vladlen.f@namecheap.com" in auth entities list</pre><br><a href="/">Go to main page</a>`);
+                    .expect(`<pre>Can't find presented identifiers "main-user@namecheap.com" in auth entities list</pre><br><a href="/">Go to main page</a>`);
 
                 await agent.get('/protected')
                     .expect(401);
             });
 
             describe('Create test user & perform authentication', () => {
-                const userIdentifier = 'vladlen.f@namecheap.com'; //Same as in test token
+                const userIdentifier = 'main-user@namecheap.com'; // Same as in test token
 
                 beforeEach(async () => {
                     await db('auth_entities').where('identifier', userIdentifier).delete();
@@ -320,7 +320,7 @@ describe('Authentication / Authorization', () => {
                 it('should authenticate against OpenID server', async () => {
                     const res = await agent.get('/auth/openid')
                         .expect(302)
-                        .expect('Location', new RegExp('https://adfs\\.service\\.namecheap\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$'));
+                        .expect('Location', new RegExp('https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$'));
 
                     await agent.get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
                         .expect(302)
@@ -350,7 +350,7 @@ describe('Authentication / Authorization', () => {
 
                     const res = await agent.get('/auth/openid')
                         .expect(302)
-                        .expect('Location', new RegExp('https://adfs\\.service\\.namecheap\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$'));
+                        .expect('Location', new RegExp('https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$'));
 
                     await agent.get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
                         .expect(302)
@@ -363,7 +363,7 @@ describe('Authentication / Authorization', () => {
                             const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
                             const userInfo = JSON.parse(parts['ilc:userInfo']);
 
-                            assert.strictEqual(userInfo.identifier, 'vladlenf@corp.namecheap.net');
+                            assert.strictEqual(userInfo.identifier, userIdentifier);
                             assert.strictEqual(userInfo.role, 'admin');
                         });
 
