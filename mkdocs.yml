@@ -39,7 +39,7 @@ nav:
     - Multi-domains: docs/multi-domains.md
     - Routing:
       - Route configuration: docs/routing/route_configuration_options.md
-      - Match & cascade merge: docs/routing/route_match_patterns.md
+      - Route matching patterns: docs/routing/route_matching_patterns.md
       - Route transition and animation: docs/routing/route_transition_and_animation.md
     - Advanced features:
       - Parcels: docs/parcels.md
