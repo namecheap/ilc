@@ -9,6 +9,9 @@ const deepmerge = require('deepmerge');
 
 const errors = require('./errors');
 
+const NS_IN_SEC = 1e6;
+const MS_IN_SEC = 1000;
+
 // By default tailor supports gzipped response from fragments
 const requiredHeaders = {
     'accept-encoding': 'gzip, deflate'
@@ -96,6 +99,7 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                 props: attributes.appProps,
             });
 
+            const startTime = process.hrtime();
             const fragmentRequest = makeRequest(
                 reqUrl,
                 {...filterHeaders(attributes, request), ...requiredHeaders},
@@ -115,6 +119,12 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                 } catch (e) {
                     reject(e);
                 }
+            });
+            fragmentRequest.on('timeout', () => {
+                const endTime = process.hrtime(startTime);
+                reject(new errors.FragmentRequestError({
+                    message: `Error during SSR request to fragment at URL: ${fragmentUrl} due to timeout after ${endTime[0] * MS_IN_SEC + endTime[1] / NS_IN_SEC}ms`
+                }))
             });
             fragmentRequest.on('error', error => {
                 reject(new errors.FragmentRequestError({
