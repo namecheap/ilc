@@ -251,7 +251,7 @@ describe('renderTemplate', () => {
         let catchedError;
         try {
             await renderTemplate(template);
-        } catch (error) {
+        } catch (error: any) {
             catchedError = error;
         }
 
@@ -462,7 +462,7 @@ describe('renderTemplate', () => {
 
         try {
             await renderTemplate(template);
-        } catch (error) {
+        } catch (error: any) {
             catchedError = error;
         }
 

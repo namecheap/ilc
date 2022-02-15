@@ -38,9 +38,12 @@ nav:
     - ILC transition hooks: docs/transition_hooks.md
     - Multi-domains: docs/multi-domains.md
     - Routing:
+      - Introduction: docs/routing/introduction.md
       - Route configuration: docs/routing/route_configuration_options.md
       - Route matching patterns: docs/routing/route_matching_patterns.md
       - Route transition and animation: docs/routing/route_transition_and_animation.md
+      - i18n & trailing slash: docs/routing/localization_and_trailing_slash.md
+      - Special routes: docs/routing/special_routes.md
     - Advanced features:
       - Parcels: docs/parcels.md
       - Plugins: https://github.com/namecheap/ilc-plugins-sdk
@@ -60,13 +63,18 @@ nav:
     - License: LICENSE.md
 
 markdown_extensions:
+  - admonition
   - attr_list
   - toc:
       permalink: ⚓︎
+  - pymdownx.details
   - pymdownx.magiclink
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
 
 plugins:
   - search
@@ -75,6 +83,9 @@ plugins:
 extra:
   repo:
     full_url: https://github.com/namecheap/ilc/blob/master
+
+extra_css:
+  - docs/assets/styles/styles.css
 
 docs_dir: '.mkdocs'
 site_dir: 'mkdocs_dist'

@@ -36,7 +36,7 @@ const updateSharedLib = async (req: Request<UpdateSharedLibRequestParams>, res: 
 
     try {
         await setDataFromManifest(sharedLib, 'shared_libs');
-    } catch (error) {
+    } catch (error: any) {
         res.status(422).send(error.message);
         return;
     }

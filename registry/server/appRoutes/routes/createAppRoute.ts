@@ -58,7 +58,7 @@ const createAppRoute = async (req: Request, res: Response) => {
             return savedAppRouteId;
         });
     } catch (e) {
-        let { message } = e;
+        let { message } = e as Error;
 
         // error messages for uniq constraint "orderPos" and "domainId"
         const sqliteErrorOrderPos = 'UNIQUE constraint failed: routes.orderPos, routes.domainIdIdxble';

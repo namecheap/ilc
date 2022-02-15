@@ -1,4 +1,4 @@
-import * as Knex from 'knex';
+import { Knex } from 'knex';
 
 const publicHost = process.env.PUBLIC_HOST || 'localhost';
 

@@ -1,10 +1,10 @@
-import * as Knex from "knex";
+import { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<any> {
     if (isMySQL(knex)) {
         return Promise.resolve()
             .then(() => knex.schema.alterTable('routes', table => {
-                table.integer('orderPos', 10).nullable().alter(); // alter table don't affect only uniq constraint, so you don't need and it's disallowed to set unique('routes_orderpos_unique') here
+                table.integer('orderPos', 10).nullable().alter({}); // alter table don't affect only uniq constraint, so you don't need and it's disallowed to set unique('routes_orderpos_unique') here
             }))
     } else {
         // SQLite doesn't support alter columns
@@ -49,7 +49,7 @@ export async function down(knex: Knex): Promise<any> {
     if (isMySQL(knex)) {
         return Promise.resolve()
             .then(() => knex.schema.alterTable('routes', table => {
-                table.integer('orderPos', 10).notNullable().alter();
+                table.integer('orderPos', 10).notNullable().alter({});
             }));
     } else {
         return Promise.resolve()

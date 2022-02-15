@@ -40,7 +40,7 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
     try {
         await setDataFromManifest(app, 'apps');
     } catch (error) {
-        res.status(422).send(error.message);
+        res.status(422).send((error as Error).message);
         return;
     }
 
