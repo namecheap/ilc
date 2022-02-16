@@ -859,6 +859,10 @@ describe('client router', () => {
             handlePageTransaction.resetHistory();
 
             sinon.assert.notCalled(logger.log);
+            sinon.assert.notCalled(eventHandlerUpdateHero);
+
+            dispatchSingleSpaAppChangeEvent();
+
             sinon.assert.calledOnce(eventHandlerUpdateHero);
         });
     });
