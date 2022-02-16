@@ -6,6 +6,7 @@ const requestFragmentSetup = require('./request-fragment');
 const ServerRouter = require('./server-router');
 const { getRegistryMock } = require('../../tests/helpers');
 const { getFragmentAttributes } = require('../../tests/helpers');
+const errors = require('./errors');
 
 describe('request-fragment', () => {
     /**
@@ -205,4 +206,51 @@ describe('request-fragment', () => {
         chai.expect(filterHeadersMock.calledTwice).to.be.equal(true);
     });
 
+    it('should return timeout if timeout is specified for fragment', async () => {
+        const registryConfig = getRegistryMock().getConfig().data;
+
+        let timeoutMs = 200;
+        const attributes = getFragmentAttributes({
+            id: 'primary__at__primary',
+            appProps: { publicPath: 'http://apps.test/primary' },
+            wrapperConf: null,
+            url: 'http://apps.test/primary',
+            async: false,
+            primary: false,
+            public: false,
+            timeout: timeoutMs,
+            returnHeaders: false,
+            forwardQuerystring: false,
+            ignoreInvalidSsl: false
+        });
+
+        const request = { registryConfig, ilcState: {} };
+        request.router = new ServerRouter(logger, request, '/primary');
+
+        // Expectations
+
+        const expectedRouterProps = { basePath: '/primary', reqUrl: '/primary', 'fragmentName': 'primary__at__primary' };
+        const expectedAppProps = { publicPath: 'http://apps.test/primary' };
+
+        const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
+        const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
+
+        const mockRequestScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
+            .get('/primary')
+            .query({
+                routerProps: expectedRouterPropsEncoded,
+                appProps: expectedAppPropsEncoded,
+            })
+            .delay(timeoutMs + 20)
+            .reply(200);
+
+        try {
+            await requestFragment(attributes.url, attributes, request);
+            mockRequestScope.done();
+            chai.expect.fail('This code should not be reached, because error expected to be thrown above');
+        } catch (e) {
+            chai.expect(e).to.be.an.instanceof(errors.FragmentRequestError);
+            chai.expect(e.message).to.contain('timeout');
+        }
+    });
 })
