@@ -5,6 +5,8 @@ import transactionManagerFactory from './TransactionManager/TransactionManager';
 import {appIdToNameAndSlot} from '../common/utils';
 import i18nCookie from '../common/i18nCookie';
 import dispatchSynchronizedEvent from './dispatchSynchronizedEvent';
+import singleSpaEvents from './constants/singleSpaEvents';
+import ilcEvents from './constants/ilcEvents';
 
 export default class I18n {
     #config;
@@ -27,7 +29,7 @@ export default class I18n {
 
         this.#prevConfig = this.#get();
 
-        window.addEventListener('single-spa:before-mount-routing-event', this.#onBeforeAppsMount);
+        window.addEventListener(singleSpaEvents.BEFORE_MOUNT_ROUTING_EVENT, this.#onBeforeAppsMount);
     }
 
     unlocalizeUrl = v => IlcIntl.parseUrl(this.#config, v).cleanUrl;
@@ -45,7 +47,7 @@ export default class I18n {
      * Used only for tests
      */
     destroy() {
-        window.removeEventListener('single-spa:before-mount-routing-event', this.#onBeforeAppsMount);
+        window.removeEventListener(singleSpaEvents.BEFORE_MOUNT_ROUTING_EVENT, this.#onBeforeAppsMount);
     }
 
     /**
@@ -90,7 +92,7 @@ export default class I18n {
         this.#prevConfig = currConfig;
 
         const changeFlow = dispatchSynchronizedEvent(
-            'ilc:intl-update',
+            ilcEvents.INTL_UPDATE,
             this.#get(),
             (actorId, ...args) => {
                 const {appName, slotName} = appIdToNameAndSlot(actorId);

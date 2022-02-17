@@ -6,6 +6,7 @@ import {makeAppId} from '../common/utils';
 import {getSlotElement, prependSpaCallbacks} from './utils';
 import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
+import ilcEvents from './constants/ilcEvents';
 
 export default function (registryConf, router, appErrorHandlerFactory, bundleLoader) {
     const asyncBootUp = new AsyncBootUp();
@@ -28,14 +29,14 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
         const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId));
         const onUnmount = async () => {
             if (isUpdatePropsMode()) {
-                router.removeListener(`ilc:update:${slotName}_${appName}`, updateFragmentManually);
+                router.removeListener(ilcEvents.updateAppInSlot(slotName, appName), updateFragmentManually);
             }
 
             appSdk.unmount();
         };
         const onMount = async () => {
             if (isUpdatePropsMode()) {
-                router.addListener(`ilc:update:${slotName}_${appName}`, updateFragmentManually);
+                router.addListener(ilcEvents.updateAppInSlot(slotName, appName), updateFragmentManually);
             }
 
             try {

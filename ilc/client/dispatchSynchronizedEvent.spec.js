@@ -2,8 +2,7 @@ import {expect} from 'chai';
 import sinon from 'sinon';
 
 import dispatchSynchronizedEvent from './dispatchSynchronizedEvent';
-
-const eventName = 'ilc:intl-update';
+import ilcEvents from './constants/ilcEvents';
 
 let listeners = [];
 
@@ -25,7 +24,7 @@ describe('dispatchSynchronizedEvent', () => {
         const l2 = createListener();
         const errLogger = sinon.spy(console.error);
 
-        const res = dispatchSynchronizedEvent(eventName, testData, errLogger);
+        const res = dispatchSynchronizedEvent(ilcEvents.INTL_UPDATE, testData, errLogger);
 
         sinon.assert.calledOnceWithExactly(l1.prepare, sinon.match(testData));
         sinon.assert.notCalled(l1.execute);
@@ -62,7 +61,7 @@ describe('dispatchSynchronizedEvent', () => {
         const l2 = createListener();
         const errLogger = sinon.spy(console.error);
 
-        const res = dispatchSynchronizedEvent(eventName, testData, errLogger);
+        const res = dispatchSynchronizedEvent(ilcEvents.INTL_UPDATE, testData, errLogger);
 
         const l1PrepResult = 'l1 expected reject res';
         l1.rejectPrep(l1PrepResult); // NOTICE REJECT HERE!
@@ -88,7 +87,7 @@ describe('dispatchSynchronizedEvent', () => {
         const l2 = createListener();
         const errLogger = sinon.spy(console.error);
 
-        const res = dispatchSynchronizedEvent(eventName, testData, errLogger);
+        const res = dispatchSynchronizedEvent(ilcEvents.INTL_UPDATE, testData, errLogger);
 
         l1.resolvePrep();
         l2.resolvePrep();
@@ -132,11 +131,11 @@ function createListener(actorId = 'testActor') {
             });
         },
         unwatch(){
-            window.removeEventListener(eventName, this._listener);
+            window.removeEventListener(ilcEvents.INTL_UPDATE, this._listener);
         },
     }
 
-    window.addEventListener(eventName, listener._listener);
+    window.addEventListener(ilcEvents.INTL_UPDATE, listener._listener);
 
     listeners.push(listener);
 

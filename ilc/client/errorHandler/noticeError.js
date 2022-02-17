@@ -1,6 +1,8 @@
+import ilcEvents from '../constants/ilcEvents';
+
 let ilcAlreadyCrashed = false;
 
-window.addEventListener('ilc:crash', () => ilcAlreadyCrashed = true);
+window.addEventListener(ilcEvents.CRASH, () => ilcAlreadyCrashed = true);
 
 export default function (err, errInfo) {
     if (ilcAlreadyCrashed) {

@@ -4,16 +4,18 @@ import sinon from 'sinon';
 import I18n from './i18n';
 import Cookies from 'js-cookie';
 import i18nCookie from '../common/i18nCookie';
+import singleSpaEvents from './constants/singleSpaEvents';
+import ilcEvents from './constants/ilcEvents';
 
 describe('I18n', () => {
     const intlChangeEvent = sinon.spy();
-    window.addEventListener('ilc:intl-update', intlChangeEvent);
+    window.addEventListener(ilcEvents.INTL_UPDATE, intlChangeEvent);
 
     const singleSpaMock = (url) => {
         if (url) {
             history.pushState({}, undefined, url);
         }
-        window.dispatchEvent(new Event('single-spa:before-mount-routing-event'));
+        window.dispatchEvent(new Event(singleSpaEvents.BEFORE_MOUNT_ROUTING_EVENT));
     };
     const singleSpa = {
         navigateToUrl: sinon.spy(singleSpaMock),
@@ -117,7 +119,7 @@ describe('I18n', () => {
             sinon.assert.notCalled(singleSpa.navigateToUrl);
         });
 
-        it('triggers "ilc:intl-update" when only locale changes', () => {
+        it(`triggers "${ilcEvents.INTL_UPDATE}" when only locale changes`, () => {
             const adapter = defaultIntl.getAdapter();
 
             const newConf = {...adapter.get(), locale: 'ua-UA'};
@@ -126,7 +128,7 @@ describe('I18n', () => {
             sinon.assert.calledOnceWithExactly(intlChangeEvent, sinon.match({detail: newConf}));
         });
 
-        it('triggers "ilc:intl-update" when only currency changes', () => {
+        it(`triggers "${ilcEvents.INTL_UPDATE}" when only currency changes`, () => {
             const adapter = defaultIntl.getAdapter();
 
             const newConf = {...adapter.get(), currency: 'UAH'};
@@ -135,7 +137,7 @@ describe('I18n', () => {
             sinon.assert.calledOnceWithExactly(intlChangeEvent, sinon.match({detail: newConf}));
         });
 
-        it('triggers "ilc:intl-update" when locale & currency change', () => {
+        it(`triggers "${ilcEvents.INTL_UPDATE}" when locale & currency change`, () => {
             const adapter = defaultIntl.getAdapter();
 
             const newConf = {locale: 'ua-UA', currency: 'UAH'};

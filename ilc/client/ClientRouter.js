@@ -9,6 +9,8 @@ import { triggerAppChange } from './navigationEvents';
 import { appIdToNameAndSlot } from '../common/utils';
 import { FRAGMENT_KIND } from '../common/constants';
 import { slotWillBe } from './TransactionManager/TransactionManager';
+import singleSpaEvents from './constants/singleSpaEvents';
+import ilcEvents from './constants/ilcEvents';
 
 export default class ClientRouter extends EventEmitter {
     errors = errors;
@@ -141,8 +143,8 @@ export default class ClientRouter extends EventEmitter {
     };
 
     #addEventListeners = () => {
-        this.#windowEventHandlers['ilc:before-routing'] = this.#onSingleSpaRoutingEvents;
-        this.#windowEventHandlers['ilc:404'] = this.render404;
+        this.#windowEventHandlers[ilcEvents.BEFORE_ROUTING] = this.#onSingleSpaRoutingEvents;
+        this.#windowEventHandlers[ilcEvents.NOT_FOUND] = this.render404;
 
         for (let key in this.#windowEventHandlers) {
             if (!this.#windowEventHandlers.hasOwnProperty(key)) {
@@ -215,7 +217,7 @@ export default class ClientRouter extends EventEmitter {
             const updateEventsToTrigger = [];
 
             appsWithDifferentProps.forEach(({ slotName, appName }) => {
-                const eventUpdateFragment = `ilc:update:${slotName}_${appName}`;
+                const eventUpdateFragment = ilcEvents.updateAppInSlot(slotName, appName);
 
                 // if fragment provided "update" lifecycle method then it will be updated immediately w/o remounting app
                 // otherwise the fragment will be unmounted and mounted with new props
@@ -229,15 +231,15 @@ export default class ClientRouter extends EventEmitter {
                 }
             });
 
-            window.addEventListener('single-spa:app-change', () => {
-                if (updateEventsToTrigger.length) {
-                    updateEventsToTrigger.forEach(this.emit.bind(this));
-                }
-
+            window.addEventListener(singleSpaEvents.APP_CHANGE, () => {
                 if (appsToForceRerender.length) {
                     this.#logger.log(`ILC: Triggering app re-mount for [${appsToForceRerender}] due to changed props.`);
 
                     triggerAppChange();
+                }
+
+                if (updateEventsToTrigger.length) {
+                    updateEventsToTrigger.forEach(this.emit.bind(this));
                 }
             }, { once: true });
         }

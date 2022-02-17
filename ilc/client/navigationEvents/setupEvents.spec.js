@@ -1,5 +1,6 @@
 import chai from 'chai';
 import sinon from 'sinon';
+import ilcEvents from '../constants/ilcEvents';
 
 import {
     addNavigationHook,
@@ -14,7 +15,7 @@ describe('setupEvents', () => {
     const popstateEventHandler = sinon.spy();
 
     before(() => {
-        window.addEventListener('ilc:before-routing', beforeRoutingEventHandler);
+        window.addEventListener(ilcEvents.BEFORE_ROUTING, beforeRoutingEventHandler);
         window.addEventListener('popstate', popstateEventHandler);
     });
 
@@ -29,7 +30,7 @@ describe('setupEvents', () => {
     });
 
     after(() => {
-        window.removeEventListener('ilc:before-routing', beforeRoutingEventHandler);
+        window.removeEventListener(ilcEvents.BEFORE_ROUTING, beforeRoutingEventHandler);
         window.removeEventListener('popstate', popstateEventHandler);
     });
 
