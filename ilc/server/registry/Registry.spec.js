@@ -5,17 +5,6 @@ const nock = require('nock');
 const Registry = require('./Registry');
 
 describe('Registry', () => {
-  const wrapFetchWithCache = () => {
-    return (arg) => ({
-      data: [
-        {
-          domainName: 'this',
-          template500: arg || 'exist',
-        }
-      ],
-    })
-  };
-
   const address = 'http://registry:8080/';
   const logger = {
     debug: sinon.stub(),
@@ -25,10 +14,22 @@ describe('Registry', () => {
   afterEach(() => {
     logger.debug.reset();
     logger.info.resetHistory();
+    nock.cleanAll();
   });
 
   it('getConfig should return right value', async () => {
-    const registry = new Registry(address, wrapFetchWithCache, logger);
+    const mockGetConfig = () => {
+      return () => ({
+        data: [
+          {
+            domainName: 'this',
+            template500: 'exist',
+          }
+        ],
+      })
+    };
+
+    const registry = new Registry(address, mockGetConfig, logger);
     const getConfig = await registry.getConfig();
   
     await chai.expect(getConfig).to.be.eql({
@@ -42,7 +43,7 @@ describe('Registry', () => {
   })
 
   it('filter in getConfig should work correctly', async () => {
-    const wrapFetchWithCache = () => {
+    const mockGetConfigWithFilter = () => {
       return () => ({
         data: {
           routes: [
@@ -71,7 +72,7 @@ describe('Registry', () => {
       })
     };
 
-    const registry = new Registry(address, wrapFetchWithCache, logger);
+    const registry = new Registry(address, mockGetConfigWithFilter, logger);
     const getConfig = await registry.getConfig({ filter: { domain: '2' } });
 
     await chai.expect(getConfig).to.be.eql({
@@ -91,10 +92,21 @@ describe('Registry', () => {
   })
 
   it('getTemplate should return right value if template name equal 500', async () => {
+    const mockGetTemplate = () => {
+      return (arg) => ({
+        data: [
+          {
+            domainName: 'this',
+            template500: arg || 'exist',
+          }
+        ],
+      })
+    };
+
     const templateName = '500';
     const forDomain = 'this';
 
-    const registry = new Registry(address, wrapFetchWithCache, logger);
+    const registry = new Registry(address, mockGetTemplate, logger);
     const getTemplate = await registry.getTemplate(templateName, forDomain);
 
     await chai.expect(getTemplate).to.be.eql({
@@ -108,10 +120,21 @@ describe('Registry', () => {
   })
 
   it('getTemplate should return right value if template name not equal 500', async () => {
+    const mockGetTemplate = () => {
+      return (arg) => ({
+        data: [
+          {
+            domainName: 'this',
+            template500: arg || 'exist',
+          }
+        ],
+      })
+    };
+
     const templateName = '501';
     const forDomain = 'this';
 
-    const registry = new Registry(address, wrapFetchWithCache, logger);
+    const registry = new Registry(address, mockGetTemplate, logger);
     const getTemplate = await registry.getTemplate(templateName, forDomain);
 
     await chai.expect(getTemplate).to.be.eql({
@@ -124,29 +147,20 @@ describe('Registry', () => {
     })
   })
 
-  it('Registry should preheat successfully', async () => {
-    const registry = new Registry(address, wrapFetchWithCache, logger);
-    await registry.preheat();
-
-    sinon.assert.calledTwice(logger.info)
-    sinon.assert.calledWithExactly(logger.info, 'Registry is preheating...');
-    sinon.assert.calledWithExactly(logger.info, 'Registry preheated successfully!');
-  })
-
   it('Registry should preheat only once', async () => {
-    const wrapFetchWithCache = (callback) => callback;
+    const mockPreheat = (callback) => callback;
 
-    const mockConfigRequest = nock('http://registry:8080').get('/api/v1/config').reply(200, {
+    nock(address).get('/api/v1/config').reply(200, {
       content: '<ilc-slot id="body" />',
     });
 
-    const mockTemplateRequest = nock('http://registry:8080').get('/api/v1/template/500/rendered').reply(200, {
+    nock(address).get('/api/v1/template/500/rendered').reply(200, {
       content: '<ilc-slot id="body" />',
     });
 
-    const mockRouterRequest = nock('http://registry:8080').get('/api/v1/router_domains').reply(200);
+    nock(address).get('/api/v1/router_domains').reply(200);
 
-    const registry = new Registry(address, wrapFetchWithCache, logger);
+    const registry = new Registry(address, mockPreheat, logger);
     await registry.preheat();
     await registry.preheat();
 
@@ -156,28 +170,28 @@ describe('Registry', () => {
   })
 
   describe('Handling errors', async () => {
-    const wrapFetchWithCache = (callback) => callback;
+    const mockPreheat = (callback) => callback;
 
     it('getConfig should throw error', async () => {
-      const mockConfigRequest = nock('http://registry:8080').get('/api/v1/config').reply(404);
+      nock(address).get('/api/v1/config').reply(404);
 
-      const registry = new Registry(address, wrapFetchWithCache, logger);
+      const registry = new Registry(address, mockPreheat, logger);
 
       await chai.expect(registry.getConfig()).to.eventually.rejectedWith('Error while requesting config from registry');
     });
 
     it('getTemplate should throw error', async () => {
-      const mockTemplateRequest = nock('http://registry:8080').get('/api/v1/template/505/rendered').reply(404);
+      nock(address).get('/api/v1/template/505/rendered').reply(404);
 
-      const registry = new Registry(address, wrapFetchWithCache, logger);
+      const registry = new Registry(address, mockPreheat, logger);
 
       await chai.expect(registry.getTemplate('505')).to.eventually.rejectedWith('Error while requesting rendered template "505" from registry');
     });
 
     it('getRouterDomains should throw error', async () => {
-      const mockRouterRequest = nock('http://registry:8080').get('/api/v1/router_domains').reply(404);
+      nock(address).get('/api/v1/router_domains').reply(404);
 
-      const registry = new Registry(address, wrapFetchWithCache, logger);
+      const registry = new Registry(address, mockPreheat, logger);
 
       await chai.expect(registry.getRouterDomains()).to.eventually.rejectedWith('Error while requesting routerDomains from registry');
     });
