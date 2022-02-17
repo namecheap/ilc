@@ -131,7 +131,7 @@ describe('Registry', () => {
       })
     };
 
-    const templateName = '501';
+    const templateName = 'anotherErrorTemplate';
     const forDomain = 'this';
 
     const registry = new Registry(address, mockGetTemplate, logger);
@@ -141,7 +141,7 @@ describe('Registry', () => {
       data: [
         {
           domainName: 'this',
-          template500: '501',
+          template500: 'anotherErrorTemplate',
         }
       ],
     })
@@ -181,11 +181,11 @@ describe('Registry', () => {
     });
 
     it('getTemplate should throw error', async () => {
-      nock(address).get('/api/v1/template/505/rendered').reply(404);
+      nock(address).get('/api/v1/template/anotherErrorTemplate/rendered').reply(404);
 
       const registry = new Registry(address, mockPreheat, logger);
 
-      await chai.expect(registry.getTemplate('505')).to.eventually.rejectedWith('Error while requesting rendered template "505" from registry');
+      await chai.expect(registry.getTemplate('anotherErrorTemplate')).to.eventually.rejectedWith('Error while requesting rendered template "anotherErrorTemplate" from registry');
     });
 
     it('getRouterDomains should throw error', async () => {
