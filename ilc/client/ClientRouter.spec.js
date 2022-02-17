@@ -4,6 +4,8 @@ import html from 'nanohtml';
 
 import ClientRouter from './ClientRouter';
 import { slotWillBe } from './TransactionManager/TransactionManager';
+import singleSpaEvents from './constants/singleSpaEvents';
+import ilcEvents from './constants/ilcEvents';
 
 describe('client router', () => {
     const singleSpa = {
@@ -275,10 +277,10 @@ describe('client router', () => {
         });
     });
 
-    describe('should listen to ilc:before-routing event when client routes was initialized', () => {
+    describe(`should listen to ${ilcEvents.BEFORE_ROUTING} event when client routes was initialized`, () => {
         let singleSpaBeforeRoutingEvent;
 
-        const singleSpaBeforeRoutingEventName = 'ilc:before-routing';
+        const singleSpaBeforeRoutingEventName = ilcEvents.BEFORE_ROUTING;
 
         beforeEach(() => {
             singleSpaBeforeRoutingEvent = new Event(singleSpaBeforeRoutingEventName);
@@ -631,7 +633,7 @@ describe('client router', () => {
         });
     });
 
-    describe('should listen to "ilc:404"', () => {
+    describe(`should listen to "${ilcEvents.NOT_FOUND}"`, () => {
         const logger = {
             log: sinon.spy(),
             warn: sinon.spy(),
@@ -651,7 +653,7 @@ describe('client router', () => {
 
             const appId = 'not_mounted_app__at__some_place';
 
-            window.dispatchEvent(new CustomEvent('ilc:404', {
+            window.dispatchEvent(new CustomEvent(ilcEvents.NOT_FOUND, {
                 detail: { appId },
             }));
 
@@ -675,7 +677,7 @@ describe('client router', () => {
                 }
             }, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
-            window.dispatchEvent(new CustomEvent('ilc:404', {
+            window.dispatchEvent(new CustomEvent(ilcEvents.NOT_FOUND, {
                 detail: { appId },
             }));
 
@@ -685,15 +687,15 @@ describe('client router', () => {
             );
         });
 
-        it('should handle ilc:404 successfully', () => {
+        it(`should handle ${ilcEvents.NOT_FOUND} successfully`, () => {
             const beforeRoutingHandler = sinon.spy();
-            window.addEventListener('ilc:before-routing', beforeRoutingHandler);
+            window.addEventListener(ilcEvents.BEFORE_ROUTING, beforeRoutingHandler);
 
             router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             const appId = 'hero__at__some_place';
 
-            window.dispatchEvent(new CustomEvent('ilc:404', {
+            window.dispatchEvent(new CustomEvent(ilcEvents.NOT_FOUND, {
                 detail: { appId },
             }));
 
@@ -712,6 +714,7 @@ describe('client router', () => {
         };
 
         const isActiveHero = () => router.isAppWithinSlotActive('@portal/hero', 'hero');
+        const isActiveOpponent = () => router.isAppWithinSlotActive('@portal/opponent', 'opponent');
 
         afterEach(() => {
             handlePageTransaction.resetHistory();
@@ -764,7 +767,7 @@ describe('client router', () => {
         });
 
         it('should rerender app on change props with the help of unmounting and mounting', () => {
-            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event('single-spa:app-change'));
+            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event(singleSpaEvents.APP_CHANGE));
             const customRegistryConfig = {
                 ...registryConfig,
                 routes: [
@@ -815,7 +818,7 @@ describe('client router', () => {
         });
 
         it('should rerender app on change props with the help of updating app (w/o unmounting app)', () => {
-            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event('single-spa:app-change'));
+            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event(singleSpaEvents.APP_CHANGE));
             const customRegistryConfig = {
                 ...registryConfig,
                 routes: [
@@ -840,7 +843,7 @@ describe('client router', () => {
             router = new ClientRouter(customRegistryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             // mock listening "update" event from hero
-            const eventNameUpdateHero = 'ilc:update:hero_@portal/hero';
+            const eventNameUpdateHero = ilcEvents.updateAppInSlot('hero', '@portal/hero');
             const eventHandlerUpdateHero = sinon.spy();
             router.addListener(eventNameUpdateHero, eventHandlerUpdateHero);
 
@@ -859,7 +862,62 @@ describe('client router', () => {
             handlePageTransaction.resetHistory();
 
             sinon.assert.notCalled(logger.log);
+            sinon.assert.notCalled(eventHandlerUpdateHero);
+
+            dispatchSingleSpaAppChangeEvent();
+
             sinon.assert.calledOnce(eventHandlerUpdateHero);
+        });
+
+        it('should replace apps and update props with different values only at the same time to avoid inconsistency in behaviour', () => {
+            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event(singleSpaEvents.APP_CHANGE));
+            const customRegistryConfig = {
+                ...registryConfig,
+                routes: [
+                    ...routes,
+                    {
+                        route: '/update_hero-and-replace_opponent',
+                        next: false,
+                        template: 'baseTemplate',
+                        slots: {
+                            opponent: {
+                                appName: apps['@portal/opponent'].name,
+                                props: {
+                                    newPropsKeyOpponent: 'newPropsValueOpponent',
+                                },
+                            },
+                            hero: {
+                                appName: apps['@portal/hero'].name,
+                                props: {
+                                    newPropsKeyHero: 'newPropsValueHero',
+                                },
+                            },
+                        },
+                    },
+                ],
+            };
+
+            history.replaceState({}, undefined, '/');
+            router = new ClientRouter(customRegistryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            // mock listening "update" event ONLY for hero
+            const eventNameUpdateHero = ilcEvents.updateAppInSlot('hero', '@portal/hero');
+            const eventHandlerUpdateHero = sinon.spy();
+            router.addListener(eventNameUpdateHero, eventHandlerUpdateHero);
+
+            history.replaceState({}, undefined, '/update_hero-and-replace_opponent');
+
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.notCalled(eventHandlerUpdateHero);
+            chai.expect(isActiveOpponent()).to.be.eql(false);
+            sinon.assert.notCalled(logger.log);
+
+            dispatchSingleSpaAppChangeEvent();
+
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnce(eventHandlerUpdateHero);
+            chai.expect(isActiveOpponent()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(logger.log, 'ILC: Triggering app re-mount for [@portal/opponent] due to changed props.');
         });
     });
 });

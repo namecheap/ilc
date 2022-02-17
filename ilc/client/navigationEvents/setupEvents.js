@@ -1,3 +1,5 @@
+import ilcEvents from '../constants/ilcEvents';
+
 let hooks = [];
 let errorHandler = null;
 let currUrl = window.location.href;
@@ -60,7 +62,7 @@ function patchedRemoveEventListener(eventName, fn) {
 }
 
 function fireRoutingEvent() {
-    window.dispatchEvent(new CustomEvent('ilc:before-routing'));
+    window.dispatchEvent(new CustomEvent(ilcEvents.BEFORE_ROUTING));
 }
 
 export function addNavigationHook(fn) {

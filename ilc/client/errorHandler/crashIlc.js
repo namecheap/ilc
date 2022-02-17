@@ -2,6 +2,7 @@ import uuidv4 from 'uuid/v4';
 
 import registryService from '../registry/factory';
 import noticeError from './noticeError';
+import ilcEvents from '../constants/ilcEvents';
 
 export default function crashIlc(errorId = '') {
     registryService.getTemplate('500')
@@ -9,7 +10,7 @@ export default function crashIlc(errorId = '') {
             data = data.data.replace('%ERRORID%', errorId ? `Error ID: ${errorId}` : '');
 
             document.querySelector('html').innerHTML = data;
-            window.dispatchEvent(new CustomEvent('ilc:crash'));
+            window.dispatchEvent(new CustomEvent(ilcEvents.CRASH));
         })
         .catch((error) => {
             noticeError(error, {

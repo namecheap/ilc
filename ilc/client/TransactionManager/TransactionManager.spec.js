@@ -1,6 +1,7 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import html from 'nanohtml';
+import ilcEvents from '../constants/ilcEvents';
 
 import {
     slotWillBe,
@@ -612,13 +613,13 @@ describe('TransactionManager', () => {
         spinner.getRef().remove();
     });
 
-    describe('should trigger "ilc:all-slots-loaded" only once', () => {
+    describe(`should trigger "${ilcEvents.ALL_SLOTS_LOADED}" only once`, () => {
         it('when spinner was not run', async () => {
             clock.restore();
 
             let runCount = 0;
             const handlerAllSlotsLoaded = () => { runCount++ };
-            window.addEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+            window.addEventListener(ilcEvents.ALL_SLOTS_LOADED, handlerAllSlotsLoaded);
 
             const newBodyApplication = html`
                 <div id="new-body-application" class="new-body-spa">
@@ -644,7 +645,7 @@ describe('TransactionManager', () => {
 
             chai.expect(runCount).to.equals(1);
 
-            window.removeEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+            window.removeEventListener(ilcEvents.ALL_SLOTS_LOADED, handlerAllSlotsLoaded);
         });
 
         it('when spinner was run and "min time" was not exceeded', async () => {
@@ -652,7 +653,7 @@ describe('TransactionManager', () => {
 
             let runCount = 0;
             const handlerAllSlotsLoaded = () => { runCount++ };
-            window.addEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+            window.addEventListener(ilcEvents.ALL_SLOTS_LOADED, handlerAllSlotsLoaded);
 
             const newBodyApplication = html`
                 <div id="new-body-application" class="new-body-spa">
@@ -683,7 +684,7 @@ describe('TransactionManager', () => {
             chai.expect(spinner.getRef()).to.be.null;
             chai.expect(runCount).to.equals(1);
 
-            window.removeEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+            window.removeEventListener(ilcEvents.ALL_SLOTS_LOADED, handlerAllSlotsLoaded);
         });
 
         it('when spinner was run and "min time" was exceeded', async () => {
@@ -691,7 +692,7 @@ describe('TransactionManager', () => {
 
             let runCount = 0;
             const handlerAllSlotsLoaded = () => { runCount++ };
-            window.addEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+            window.addEventListener(ilcEvents.ALL_SLOTS_LOADED, handlerAllSlotsLoaded);
 
             const newBodyApplication = html`
                 <div id="new-body-application" class="new-body-spa">
@@ -717,7 +718,7 @@ describe('TransactionManager', () => {
             chai.expect(spinner.getRef()).to.be.null;
             chai.expect(runCount).to.equals(1);
 
-            window.removeEventListener('ilc:all-slots-loaded', handlerAllSlotsLoaded);
+            window.removeEventListener(ilcEvents.ALL_SLOTS_LOADED, handlerAllSlotsLoaded);
         });
     });
 });

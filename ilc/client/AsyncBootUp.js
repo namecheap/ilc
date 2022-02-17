@@ -1,3 +1,5 @@
+import singleSpaEvents from './constants/singleSpaEvents';
+
 const System = window.System;
 
 export default class AsyncBootUp {
@@ -19,7 +21,7 @@ export default class AsyncBootUp {
         }
 
         window.ilcApps = {push: id => this.#markSlotAsReady(id)};
-        window.addEventListener('single-spa:routing-event', () => (this.#afterRoutingEvent = true));
+        window.addEventListener(singleSpaEvents.ROUTING_EVENT, () => (this.#afterRoutingEvent = true));
     }
 
     async waitForSlot(slotName) {

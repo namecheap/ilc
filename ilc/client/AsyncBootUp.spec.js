@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import html from 'nanohtml';
 
 import AsyncBootUp from './AsyncBootUp';
+import singleSpaEvents from './constants/singleSpaEvents';
 
 describe('async boot up', () => {
     const overrideImportMap = sinon.spy(window.System, 'overrideImportMap');
@@ -309,7 +310,7 @@ describe('async boot up', () => {
         window.ilcApps = [];
 
         const asyncBootUp = new AsyncBootUp(logger, performance);
-        window.dispatchEvent(new Event('single-spa:routing-event'));
+        window.dispatchEvent(new Event(singleSpaEvents.ROUTING_EVENT));
         const footerSlotOverrides = await asyncBootUp.waitForSlot(slots.footer.id);
 
         chai.expect(footerSlotOverrides).to.be.eql({

@@ -1,9 +1,11 @@
+import singleSpaEvents from './constants/singleSpaEvents';
+import ilcEvents from './constants/ilcEvents';
 
 export default function init(getCurrentPath) {
     let startRouting;
     let targetHref;
 
-    window.addEventListener('single-spa:before-routing-event', () => {
+    window.addEventListener(singleSpaEvents.BEFORE_ROUTING_EVENT, () => {
         // Check is needed as this event may be triggered 2 times
         // due to "app re-mount due to changed props" functionality
         if (targetHref === window.location.href) {
@@ -14,7 +16,7 @@ export default function init(getCurrentPath) {
         targetHref = window.location.href;
     });
 
-    window.addEventListener('ilc:all-slots-loaded', () => {
+    window.addEventListener(ilcEvents.ALL_SLOTS_LOADED, () => {
         const currentPath = getCurrentPath();
         const endRouting = performance.now();
         const timeMs = parseInt(endRouting - startRouting);

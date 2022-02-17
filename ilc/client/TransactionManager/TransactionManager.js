@@ -1,6 +1,8 @@
 import { getSlotElement } from '../utils';
 import getIlcConfig from '../ilcConfig';
 import TransactionBlocker from './TransactionBlocker';
+import singleSpaEvents from '../constants/singleSpaEvents';
+import ilcEvents from '../constants/ilcEvents';
 
 import scrollRestorer from '@mapbox/scroll-restorer';
 
@@ -243,7 +245,7 @@ export class TransactionManager {
         const removingNotSpinnerBlockerAsLastOne = this.#transactionBlockers.length === 0 && blockerId !== this.#forceShowSpinnerBlockerId;
 
         if (isOnlySpinnerBlockerLeft || removingNotSpinnerBlockerAsLastOne) {
-            window.dispatchEvent(new CustomEvent('ilc:all-slots-loaded'));
+            window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
         }
 
         if (!this.#transactionBlockers.length) {
@@ -254,8 +256,8 @@ export class TransactionManager {
     #addEventListeners = () => {
         scrollRestorer.start({ autoRestore: false, captureScrollDebounce: 150 });
 
-        this.#windowEventHandlers['ilc:crash'] = this.#removeGlobalSpinner;
-        this.#windowEventHandlers['single-spa:routing-event'] = this.#onRouteChange;
+        this.#windowEventHandlers[ilcEvents.CRASH] = this.#removeGlobalSpinner;
+        this.#windowEventHandlers[singleSpaEvents.ROUTING_EVENT] = this.#onRouteChange;
 
         for (const eventName in this.#windowEventHandlers) {
             window.addEventListener(eventName, this.#windowEventHandlers[eventName]);
@@ -273,7 +275,7 @@ export class TransactionManager {
     #onRouteChange = () => {
         if (this.#transactionBlockers.length === 0) {
             this.#onPageReady();
-            window.dispatchEvent(new CustomEvent('ilc:all-slots-loaded'));
+            window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
         }
     };
 }
