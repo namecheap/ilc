@@ -712,6 +712,7 @@ describe('client router', () => {
         };
 
         const isActiveHero = () => router.isAppWithinSlotActive('@portal/hero', 'hero');
+        const isActiveOpponent = () => router.isAppWithinSlotActive('@portal/opponent', 'opponent');
 
         afterEach(() => {
             handlePageTransaction.resetHistory();
@@ -864,6 +865,57 @@ describe('client router', () => {
             dispatchSingleSpaAppChangeEvent();
 
             sinon.assert.calledOnce(eventHandlerUpdateHero);
+        });
+
+        it('should replace apps and update props with different values only at the same time to avoid inconsistency in behaviour', () => {
+            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event('single-spa:app-change'));
+            const customRegistryConfig = {
+                ...registryConfig,
+                routes: [
+                    ...routes,
+                    {
+                        route: '/update_hero-and-replace_opponent',
+                        next: false,
+                        template: 'baseTemplate',
+                        slots: {
+                            opponent: {
+                                appName: apps['@portal/opponent'].name,
+                                props: {
+                                    newPropsKeyOpponent: 'newPropsValueOpponent',
+                                },
+                            },
+                            hero: {
+                                appName: apps['@portal/hero'].name,
+                                props: {
+                                    newPropsKeyHero: 'newPropsValueHero',
+                                },
+                            },
+                        },
+                    },
+                ],
+            };
+
+            history.replaceState({}, undefined, '/');
+            router = new ClientRouter(customRegistryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+            // mock listening "update" event ONLY for hero
+            const eventNameUpdateHero = 'ilc:update:hero_@portal/hero';
+            const eventHandlerUpdateHero = sinon.spy();
+            router.addListener(eventNameUpdateHero, eventHandlerUpdateHero);
+
+            history.replaceState({}, undefined, '/update_hero-and-replace_opponent');
+
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.notCalled(eventHandlerUpdateHero);
+            chai.expect(isActiveOpponent()).to.be.eql(false);
+            sinon.assert.notCalled(logger.log);
+
+            dispatchSingleSpaAppChangeEvent();
+
+            chai.expect(isActiveHero()).to.be.eql(true);
+            sinon.assert.calledOnce(eventHandlerUpdateHero);
+            chai.expect(isActiveOpponent()).to.be.eql(true);
+            sinon.assert.calledOnceWithExactly(logger.log, 'ILC: Triggering app re-mount for [@portal/opponent] due to changed props.');
         });
     });
 });
