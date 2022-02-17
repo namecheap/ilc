@@ -708,6 +708,8 @@ describe('client router', () => {
     });
 
     describe('is active factory', () => {
+        const dispatchIlcPageReadyEvent = () => window.dispatchEvent(new Event(ilcEvents.PAGE_READY));
+
         const handlePageTransaction = sinon.spy();
         const logger = {
             log: sinon.spy(),
@@ -767,7 +769,6 @@ describe('client router', () => {
         });
 
         it('should rerender app on change props with the help of unmounting and mounting', () => {
-            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event(singleSpaEvents.APP_CHANGE));
             const customRegistryConfig = {
                 ...registryConfig,
                 routes: [
@@ -806,7 +807,7 @@ describe('client router', () => {
             handlePageTransaction.resetHistory();
 
             // trigger rerender, just to render previously removed fragments
-            dispatchSingleSpaAppChangeEvent();
+            dispatchIlcPageReadyEvent();
             chai.expect(isActiveHero()).to.be.eql(true);
             sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
             handlePageTransaction.resetHistory();
@@ -818,7 +819,6 @@ describe('client router', () => {
         });
 
         it('should rerender app on change props with the help of updating app (w/o unmounting app)', () => {
-            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event(singleSpaEvents.APP_CHANGE));
             const customRegistryConfig = {
                 ...registryConfig,
                 routes: [
@@ -864,13 +864,12 @@ describe('client router', () => {
             sinon.assert.notCalled(logger.log);
             sinon.assert.notCalled(eventHandlerUpdateHero);
 
-            dispatchSingleSpaAppChangeEvent();
+            dispatchIlcPageReadyEvent();
 
             sinon.assert.calledOnce(eventHandlerUpdateHero);
         });
 
         it('should replace apps and update props with different values only at the same time to avoid inconsistency in behaviour', () => {
-            const dispatchSingleSpaAppChangeEvent = () => window.dispatchEvent(new Event(singleSpaEvents.APP_CHANGE));
             const customRegistryConfig = {
                 ...registryConfig,
                 routes: [
@@ -912,7 +911,7 @@ describe('client router', () => {
             chai.expect(isActiveOpponent()).to.be.eql(false);
             sinon.assert.notCalled(logger.log);
 
-            dispatchSingleSpaAppChangeEvent();
+            dispatchIlcPageReadyEvent();
 
             chai.expect(isActiveHero()).to.be.eql(true);
             sinon.assert.calledOnce(eventHandlerUpdateHero);

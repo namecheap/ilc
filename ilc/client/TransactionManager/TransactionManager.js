@@ -167,6 +167,8 @@ export class TransactionManager {
         this.#removeGlobalSpinner();
         document.body.removeAttribute('name');
         scrollRestorer.restoreScroll(window.history.state ? window.history : {state: {scroll: {x: 0, y: 0}}});
+
+        window.dispatchEvent(new CustomEvent(ilcEvents.PAGE_READY));
     };
 
     // if spinner appeared in 300ms, then show it at least 500ms, to avoid flashing it like a glitch
