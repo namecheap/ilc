@@ -25,7 +25,7 @@ have Parcels exported not from the application's bundle.
 
 ### React
 
-Go to http://demo.microfrontends.online/people and click at the "Open" button to see Vue.js app being rendered within React one.
+Go to http://ilc-demo.namecheap.technology/people and click at the "Open" button to see Vue.js app being rendered within React one.
 
 Below you can find links to the source code which powers the demo from above.
 
@@ -80,7 +80,7 @@ export default () => (
 
 ### Vue.js
 
-Go to http://demo.microfrontends.online/planets and click at the "Open" button to see React app being rendered within Vue.js one.
+Go to http://ilc-demo.namecheap.technology/planets and click at the "Open" button to see React app being rendered within Vue.js one.
 
 Below you can find links to the source code which powers the demo from above.
 

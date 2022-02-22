@@ -40,4 +40,4 @@ Every hook receives route information and _navigate_ method on client side from 
 
 ## Demo
 
-You can see an example how it works in ILC on our [demo website](http://demo.microfrontends.online/hooks/).
+You can see an example how it works in ILC on our [demo website](http://ilc-demo.namecheap.technology/hooks/).

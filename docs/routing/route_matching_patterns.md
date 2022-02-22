@@ -48,7 +48,7 @@ Before proceeding with the examples, ensure that your routing table looks as fol
 
 #### `/wrapper/` route
 
-1. After [configuring your routing table](#prerequisites), navigate to the `http://demo.microfrontends.online/wrapper/`
+1. After [configuring your routing table](#prerequisites), navigate to the `http://ilc-demo.namecheap.technology/wrapper/`
 
 **ILC side:**
   
