@@ -13,4 +13,9 @@
         customClientJsWrapper: null,
     },
     overrideConfigTrustedOrigins: null,
+    logger: {
+        accessLog: {
+            ignoreUrls: []
+        }
+    }
 }
