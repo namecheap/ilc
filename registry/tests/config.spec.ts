@@ -1,5 +1,4 @@
 import _ from 'lodash';
-
 import {SettingKeys, TrailingSlashValues, OnPropsUpdateValues} from '../server/settings/interfaces';
 import {request, expect, requestWithAuth} from './common';
 
@@ -44,7 +43,7 @@ const example = {
         }
     }),
     routerDomains: Object.freeze({
-        domainName: 'domainNameCorrect.com',
+        domainName: '127.0.0.1:8233',
         template500: templateName,
     }),
     sharedLibs: Object.freeze({
@@ -80,8 +79,7 @@ describe('Tests /api/v1/config', () => {
 
                 await request.post('/api/v1/shared_libs/').send(example.sharedLibs).expect(200);
 
-                const response = await request.get('/api/v1/config')
-                .expect(200);
+                const response = await request.get('/api/v1/config').expect(200);
 
                 expect(response.text).to.be.a('string');
                 expect(response.body).to.be.an('object');
@@ -98,11 +96,9 @@ describe('Tests /api/v1/config', () => {
                     ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
                 });
 
-                expect(response.body.routes).to.deep.include({
-                    routeId: routeIdWithDomain,
-                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
-                    domain: example.routerDomains.domainName,
-                });
+                response.body.specialRoutes.map((item: Record<string, unknown>) => (
+                    item.domain && expect(item).to.have.property('domain')
+                ));
 
                 expect(response.body.apps[example.apps.name])
                 .deep.equal(
