@@ -10,6 +10,7 @@ import errorHandler from './errorHandler';
 import serveStatic from 'serve-static';
 import auth from './auth';
 import settingsService from './settings/services/SettingsService';
+import { configResolverMiddleware } from "./middleware";
 
 export default async (withAuth: boolean = true) => {
     // As in production there can be 2+ instances of the ILC registry
@@ -34,7 +35,8 @@ export default async (withAuth: boolean = true) => {
         });
     }
 
-    app.use('/api/v1/config', routes.config);
+    app.use('/api/v1/config', routes.config, configResolverMiddleware);
+
     app.use('/api/v1/app', authMw, routes.apps);
     app.use('/api/v1/template', routes.templates(authMw));
     app.use('/api/v1/route', authMw, routes.appRoutes);

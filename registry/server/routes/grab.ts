@@ -1,14 +1,10 @@
-import _ from 'lodash';
-import express from 'express';
+import knex from "../db";
+import {Scope, Setting} from "../settings/interfaces";
+import _ from "lodash";
+import {transformSpecialRoutesForConsumer} from "../appRoutes/services/transformSpecialRoutes";
+import preProcessResponse from "../settings/services/preProcessResponse";
 
-import knex from '../db';
-import {Setting, Scope} from '../settings/interfaces';
-import preProcessResponse from '../settings/services/preProcessResponse';
-import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
-import { configResolverMiddleware } from '../middleware'
-const router = express.Router();
-
-router.get('/', async (req, res, next) => {
+export const grab = async () => {
     const [apps, templates, routes, sharedProps, settings, routerDomains, sharedLibs] = await Promise.all([
         knex.select().from('apps'),
         knex.select('name').from('templates'),
@@ -100,9 +96,4 @@ router.get('/', async (req, res, next) => {
         acc[name] = spaBundle;
         return acc;
     }, {});
-
-    res.locals.data = data;
-    return next();
-});
-
-export default router;
+}

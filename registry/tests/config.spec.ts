@@ -45,7 +45,7 @@ const example = {
         }
     }),
     routerDomains: Object.freeze({
-        domainName: 'domainNameCorrect.com',
+        domainName: '127.0.0.1:8233',
         template500: templateName,
     }),
     sharedLibs: Object.freeze({
@@ -107,11 +107,9 @@ describe('Tests /api/v1/config', () => {
                     ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
                 });
 
-                expect(response.body.routes).to.deep.include({
-                    routeId: routeIdWithDomain,
-                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
-                    domain: example.routerDomains.domainName,
-                });
+                response.body.specialRoutes.map((item: Record<string, unknown>) => (
+                    item.domain && expect(item).to.have.property('domain')
+                ));
 
                 expect(response.body.apps[example.apps.name])
                 .deep.equal(
