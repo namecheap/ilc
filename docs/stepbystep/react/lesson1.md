@@ -42,7 +42,7 @@ To make your new fancy micro frontend work we need to determine your `publicPath
     You can use services like https://ngrok.com/ to get one if your Internet provider keeps you behind NAT.
     
 As soon as you've figured out all the details - let's change the ILC config for us. 
-To do so you need to open http://demo.microfrontends.online/nosuchpath and execute the following code in browser console:
+To do so you need to open http://ilc-demo.namecheap.technology/nosuchpath and execute the following code in browser console:
 
 ```javascript
 var publicPath = 'https://abcde.sse.codesandbox.io/public/';

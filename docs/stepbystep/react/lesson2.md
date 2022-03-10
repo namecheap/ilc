@@ -60,7 +60,7 @@ In this step we're gonna use our public demo website and "[Develop right at "pro
 
 More info about how to determine public & SSR paths for your particular case – you can find [in the previous lesson](./lesson1.md).
 
-Now let's open [demo.microfrontends.online/nosuchpath](http://demo.microfrontends.online/nosuchpath) and by setting "magic cookie" in our browser  – let's change ILC config on the fly:
+Now let's open [ilc-demo.namecheap.technology/nosuchpath](http://ilc-demo.namecheap.technology/nosuchpath) and by setting "magic cookie" in our browser  – let's change ILC config on the fly:
 
 ```javascript
 var publicPath = 'https://abcde.sse.codesandbox.io/public/';

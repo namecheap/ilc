@@ -22,7 +22,7 @@ nav:
   - Home:
     - Home: index.md
     - Contributing: CONTRIBUTING.md
-  - Demo website: http://demo.microfrontends.online/
+  - Demo website: http://ilc-demo.namecheap.technology
   - Documentation:
     - Installation: docs/installation_guide.md
     - Micro-frontend Types: docs/microfrontend-types.md

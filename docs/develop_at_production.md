@@ -7,16 +7,16 @@ production website.
 This gives you ability to see the final result sooner w/o necessity to mock other Micro Frontends inside your
 local development environment.
 
-## Practical example, how to develop your app within our [demo site](http://demo.microfrontends.online/news/)
+## Practical example, how to develop your app within our [demo site](http://ilc-demo.namecheap.technology/news/)
 
-Let's imagine that our [demo site](http://demo.microfrontends.online/news/) is your production environment.
+Let's imagine that our [demo site](http://ilc-demo.namecheap.technology/news/) is your production environment.
 And let's try to substitute _News app_ with the one that you'll run locally.
 
 1. Run our demo apps locally. To do so, follow the instruction here [ilc-demo-apps#development-process](https://github.com/namecheap/ilc-demo-apps#development-process).
 1. If you're behind NAT and don't have "white" IP address on your machine - use [ngrok](https://ngrok.com/) or any another similar tool to create public url for exposing your local apps.
     - [Download & install](https://ngrok.com/download) ngrok using instruction from their website.
     - As _News app_ uses `8239` port – run `ngrok http 8239` and you will receive your exposed url, e.g. `http://c6960219.ngrok.io`.
-1. Open [demo site](http://demo.microfrontends.online/news/) and add next cookies:
+1. Open [demo site](http://ilc-demo.namecheap.technology/news/) and add next cookies:
     ```javascript
     const exposedUrl = 'http://c6960219.ngrok.io'; // or if you don't have NAT - http://YOUR_PUBLIC_IP:8239
     const overrideConfig = encodeURIComponent(JSON.stringify({
@@ -36,11 +36,11 @@ And let's try to substitute _News app_ with the one that you'll run locally.
 
     document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`
     ```
-1. Try to refresh http://demo.microfrontends.online/news/ several times & using "Network" tabs in browser dev tools ensure 
+1. Try to refresh http://ilc-demo.namecheap.technology/news/ several times & using "Network" tabs in browser dev tools ensure 
 that some requests now go to the URL we specified before in `exposedUrl` variable.
 1. Now let's try to make some changes in our local _News app_ and see them appeared at our Demo website.
     - Go to cloned `ilc-demo-apps` repo, open the file `/ilc-demo-apps/apps/news-ssr/src/components/Home.vue` and replace `<h1>Pick a news source</h1>` with `<h1>Hello world</h1>`.
-    - Now switch to your browser and refresh page http://demo.microfrontends.online/news/.
+    - Now switch to your browser and refresh page http://ilc-demo.namecheap.technology/news/.
     - If everything is ok, you will see h1 with text "Hello world".
 1. Last step is to check that SSR works correctly:
     - Turn off javascript with the help of dev-tools in your browser. e.g. [explanation how to do it for Chrome](https://developers.google.com/web/tools/chrome-devtools/javascript/disable)

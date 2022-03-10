@@ -3,7 +3,7 @@
 ----
 
 [![Latest version](https://badgen.net/github/tag/namecheap/ilc?label=Latest%20version&color=green&cache=900)](https://github.com/namecheap/ilc/releases)
-[![Demo website](./docs/assets/demo-website.svg)](http://demo.microfrontends.online/)
+[![Demo website](./docs/assets/demo-website.svg)](http://ilc-demo.namecheap.technology)
 [![Actions Status](https://github.com/namecheap/ilc/workflows/CI/badge.svg)](https://github.com/namecheap/ilc/actions)
 [![Docker Pulls](https://badgen.net/docker/pulls/namecheap/ilc?icon=docker&label=ILC%20pulls)](https://hub.docker.com/r/namecheap/ilc)
 [![Docker Pulls](https://badgen.net/docker/pulls/namecheap/ilc_registry?icon=docker&label=ILC%20registry%20pulls)](https://hub.docker.com/r/namecheap/ilc_registry)
@@ -43,7 +43,7 @@ Bringing microservices to the frontend requires a layout service that composes a
 * ⚡️ **Built for speed** - server side part of the system adds just ~17ms of latency
 * 👨‍💻 **Develop right at production** - [Doc](./docs/develop_at_production.md)
 * 🌐 **Internationalization support** - it is ready to serve your clients from any country.
-[Doc](./docs/i18n.md), [Demo with localized navbar](http://demo.microfrontends.online/ua/)
+[Doc](./docs/i18n.md), [Demo with localized navbar](http://ilc-demo.namecheap.technology/ua/)
 * 📡 **Other advanced features:**
     * [Parcels](./docs/parcels.md)
     * [Plugins](https://github.com/namecheap/ilc-plugins-sdk)
@@ -52,7 +52,7 @@ Bringing microservices to the frontend requires a layout service that composes a
 
 ## 🚀 Quick start
 
-Check out [demo website available online](http://demo.microfrontends.online/) or go through the steps to spin it up locally:
+Check out [demo website available online](http://ilc-demo.namecheap.technology/) or go through the steps to spin it up locally:
 
 1. Get familiar with [Installation guide](./docs/installation_guide.md)
 1. Clone this repository

@@ -41,7 +41,7 @@ With the introduction of the micro frontends & global ILC router things become a
 
 - **ILC Router** – if there is no route configured in Registry for requested URL - it will trigger an appearance of the special 404 route ([Namecheap example](https://www.namecheap.com/status/404.aspx)). This logic will work seamlessly between SSR & CSR.
     
-    Ex: `/nosuchpath` url was requested. Or try <http://demo.microfrontends.online/nosuchpath>
+    Ex: `/nosuchpath` url was requested. Or try <http://ilc-demo.namecheap.technology/nosuchpath>
 
 - **App Router** – (_only for primary apps_) there also may be cases when we have a route configured in Registry, however the app which is responsible for the page - fails to find the requested resource by it's ID. Imagine that you're trying to open a page of the non-existing product. Here there are 2 ways for the app to handle this case:
     - _Fallback to global 404 page_ - recommended approach, in this case app's content will be abandoned and users will see content of the special 404 route. To do this at CSR/SSR do the following:

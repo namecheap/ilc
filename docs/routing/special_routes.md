@@ -34,6 +34,6 @@ To assign different error templates to domains, you must specify the template wh
 ??? tip "Preview error"
     In ILC, it is possible to preview the 500 error via the `/_ilc/500/` route.
 
-    For example: `http://demo.microfrontends.online/_ilc/500` is the preview route for the demo website.
+    For example: `http://ilc-demo.namecheap.technology/_ilc/500` is the preview route for the demo website.
 
 More information about the 5xx errors handling is available in the [Global error handling page](../global_errors_handling.md#5xx-errors-unexpected-errors).
