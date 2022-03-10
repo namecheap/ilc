@@ -19,7 +19,7 @@ export default (withAuth: boolean = true) => {
     const app = express();
 
     app.use(bodyParser.json({
-        limit: config.get<number>('http.requestLimit'),
+        limit: config.get<string>('http.requestLimit'),
     }));
     app.use(bodyParser.urlencoded());
 

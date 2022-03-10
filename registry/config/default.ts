@@ -23,6 +23,6 @@ module.exports = {
         sessionSecret: 'zaM7%#BjyZZ3A5zV@Mpt',
     },
     http: {
-        requestLimit: 200,
+        requestLimit: '200kb',
     }
 };
