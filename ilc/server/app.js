@@ -21,7 +21,7 @@ module.exports = (registryService, pluginManager) => {
     const app = fastify(Object.assign(
         {
             trustProxy: false, // TODO: should be configurable via Registry,
-            disableRequestLogging: true,
+            // disableRequestLogging: true,
         },
         _.omit(_.pick(pluginManager.getReportingPlugin(), ['logger', 'requestIdLogLabel', 'genReqId']), _.isEmpty),
     ));
