@@ -20,6 +20,9 @@ module.exports = {
         licenseKey: null,
     },
     auth: {
-        sessionSecret: 'zaM7%#BjyZZ3A5zV@Mpt'
+        sessionSecret: 'zaM7%#BjyZZ3A5zV@Mpt',
+    },
+    http: {
+        requestLimit: '200kb',
     }
 };
