@@ -24,7 +24,7 @@ nav:
     - Contributing: CONTRIBUTING.md
   - Demo website: http://ilc-demo.namecheap.technology
   - Documentation:
-    - Installation: docs/installation_guide.md
+    - Overview: docs/overview.md
     - Micro-frontend Types: docs/microfrontend-types.md
     - App deployments with ILC: docs/stepbystep/index.md
     - ILC to App interface: docs/ilc_app_interface.md
