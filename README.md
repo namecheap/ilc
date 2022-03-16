@@ -118,7 +118,7 @@ The `namecheap/ilc` repository consists of the following parts:
 * [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html)
 * [ILC Registry](./docs/registry.md)
 * [Animation during reroute](./docs/animation_during_reroute.md)
-* [Global error handling](./docs/global_errors_handling.md)
+* [Global error handling](./docs/global_error_handlingmd)
 * [Demo applications used in quick start](https://github.com/namecheap/ilc-demo-apps)
 * [SDK for ILC plugins development](https://github.com/namecheap/ilc-plugins-sdk)
 * [Compatibility with legacy UMD bundles](./docs/umd_bundles_compatibility.md)
