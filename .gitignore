@@ -5,3 +5,4 @@ node_modules
 .vscode
 /dbfiles
 /mkdocs_dist
+registry/lde/dbfiles
