@@ -46,8 +46,7 @@
     "systemjs-css-extra": "^1.0.2",
     "tailorx": "^7.0.0",
     "url-join": "^4.0.1",
-    "uuid": "^3.4.0",
-    "pino": "^7.8.0"
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
