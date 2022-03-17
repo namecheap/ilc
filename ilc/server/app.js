@@ -52,7 +52,7 @@ module.exports = (registryService, pluginManager) => {
                 {
                     url: req.raw.url,
                     statusCode: reply.statusCode,
-                    responseTime: Date.now() - reply.startTime,
+                    responseTime: reply.getResponseTime(),
                 },
                 "request completed"
             );
