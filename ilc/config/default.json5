@@ -15,7 +15,7 @@
     overrideConfigTrustedOrigins: null,
     logger: {
         accessLog: {
-            ignoreUrls: []
+            ignoreUrls: ''
         }
     }
 }
