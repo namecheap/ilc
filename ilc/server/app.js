@@ -28,7 +28,7 @@ module.exports = (registryService, pluginManager) => {
 
     app.addHook('onRequest', async (req, reply) => {
 
-        const ignoredUrls = config.get('logger.accessLog.ignoreUrls');
+        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
         const currentUrl = req.raw.url;
 
         if(!ignoredUrls.includes(currentUrl)) {
@@ -44,7 +44,7 @@ module.exports = (registryService, pluginManager) => {
 
     app.addHook("onResponse", (req, reply, done) => {
 
-        const ignoredUrls = config.get('logger.accessLog.ignoreUrls');
+        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
         const currentUrl = req.raw.url;
 
         if(!ignoredUrls.includes(currentUrl)) {
