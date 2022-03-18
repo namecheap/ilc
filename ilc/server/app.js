@@ -19,16 +19,46 @@ module.exports = (registryService, pluginManager) => {
     const guardManager = new GuardManager(pluginManager);
 
     const app = fastify(Object.assign(
-        {trustProxy: false}, // TODO: should be configurable via Registry,
+        {
+            trustProxy: false, // TODO: should be configurable via Registry,
+            disableRequestLogging: true,
+        },
         _.omit(_.pick(pluginManager.getReportingPlugin(), ['logger', 'requestIdLogLabel', 'genReqId']), _.isEmpty),
     ));
 
     app.addHook('onRequest', async (req, reply) => {
+
+        const ignoredUrls = config.get('logger.accessLog.ignoreUrls');
+        const currentUrl = req.raw.url;
+
+        if(!ignoredUrls.includes(currentUrl)) {
+            req.log.info({ url: req.raw.url, id: req.id }, "received request");
+        }
+
         req.raw.ilcState = {};
         const registryConfig = (await registryService.getConfig()).data;
         const i18nOnRequest = i18n.onRequestFactory(registryConfig.settings.i18n, pluginManager.getI18nParamsDetectionPlugin());
 
         await i18nOnRequest(req, reply);
+    });
+
+    app.addHook("onResponse", (req, reply, done) => {
+
+        const ignoredUrls = config.get('logger.accessLog.ignoreUrls');
+        const currentUrl = req.raw.url;
+
+        if(!ignoredUrls.includes(currentUrl)) {
+            req.log.info(
+                {
+                    url: req.raw.url,
+                    statusCode: reply.statusCode,
+                    responseTime: reply.getResponseTime(),
+                },
+                "request completed"
+            );
+        }
+
+        done();
     });
 
     const tailor = tailorFactory(
