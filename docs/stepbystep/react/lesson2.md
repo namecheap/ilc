@@ -56,7 +56,7 @@ As soon as you're finished with this – restart the app and try to open `/micro
 Configuring ILC to handle new app
 =================================
 
-In this step we're gonna use our public demo website and "[Develop right at "production"](../../develop_at_production.md)" ILC feature to complete the task. We will do it for the sake of simplicity only. However you can achieve pretty the same results using ILC that you run locally.
+In this step we're gonna use our public demo website and "[Develop in production](../../develop_in_production.md)" ILC feature to complete the task. We will do it for the sake of simplicity only. However you can achieve pretty the same results using ILC that you run locally.
 
 More info about how to determine public & SSR paths for your particular case – you can find [in the previous lesson](./lesson1.md).
 
