@@ -56,7 +56,9 @@ module.exports = class ErrorHandler {
         try {
             this.noticeError(err, {
                 reqId: req.id,
-                errorId
+                errorId,
+                domain: req.hostname,
+                url: req.url
             }, { reportError: !req.ldeRelated });
 
             const currentDomain = req.hostname;

@@ -32,7 +32,7 @@ module.exports = (registryService, pluginManager) => {
         const currentUrl = req.raw.url;
 
         if(!ignoredUrls.includes(currentUrl)) {
-            req.log.info({ url: req.raw.url, id: req.id }, "received request");
+            req.log.info({ url: req.raw.url, id: req.id, domain: req.hostname }, "received request");
         }
 
         req.raw.ilcState = {};
@@ -52,6 +52,7 @@ module.exports = (registryService, pluginManager) => {
                 {
                     url: req.raw.url,
                     statusCode: reply.statusCode,
+                    domain: req.hostname,
                     responseTime: reply.getResponseTime(),
                 },
                 "request completed"
