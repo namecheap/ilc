@@ -9,6 +9,14 @@ const example = {
         name: 'ncTestTemplateName',
         content: 'ncTestTemplateContent'
     }),
+    correctLocalized: Object.freeze({
+        name: 'localizedTestTemplate' + Math.random() * 10000,
+        content: 'test content',
+        localizedVersions: {
+            'es-MX': { content: 'Espaniol content' },
+            'fr-FR': { content: 'French content' },
+        }
+    }),
     updated: Object.freeze({
         name: 'ncTestTemplateName',
         content: 'ncTestTemplateContentUpdated'
@@ -65,6 +73,16 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal(example.correct);
             } finally {
                 await request.delete(example.url + example.correct.name);
+            }
+        });
+
+        it('should create localized versions of template', async () => {
+            try {
+                let response = await request.post(example.url)
+                    .send(example.correctLocalized);
+                expect(response.status).to.eq(200, response.text);
+            } finally {
+                await request.delete(example.url + example.correctLocalized.name);
             }
         });
 

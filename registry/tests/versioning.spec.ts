@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { request, requestWithAuth, expect } from './common';
 
 import db from '../server/db';
