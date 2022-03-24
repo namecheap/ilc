@@ -4,11 +4,11 @@ import {
 } from 'express';
 import Joi from 'joi';
 
-import db from '../../db';
-import Template, {
+import {
     templateNameSchema,
 } from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
+import { readTemplateWithAllVersions } from '../services/templatesRepository';
 
 type GetTemplateRequestParams = {
     name: string
@@ -26,13 +26,14 @@ const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response
         name: templateName,
     } = req.params;
 
-    const [template] = await db.select().from<Template>('templates').where('name', templateName);
+    const template = await readTemplateWithAllVersions(templateName);
 
     if (!template) {
         res.status(404).send('Not found');
-    } else {
-        res.status(200).send(template);
+        return;
     }
+
+    res.status(200).send(template);
 };
 
 export default [validateRequestBeforeGetTemplate, getTemplate];

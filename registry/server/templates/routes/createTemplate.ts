@@ -10,6 +10,7 @@ import Template, {
     templateSchema,
 } from '../interfaces';
 import { tables } from '../../db/structure';
+import { readTemplateWithAllVersions } from '../services/templatesRepository';
 
 const validateRequestBeforeCreateTemplate = validateRequestFactory([{
     schema: templateSchema,
@@ -32,15 +33,7 @@ const createTemplate = async (req: Request, res: Response): Promise<void> => {
         await insertLocalizedVersions(locales, template, request);
     }
 
-    const [savedTemplate] = await db.select().from<Template>(tables.templates).where('name', template.name);
-    if (locales.length) {
-        const localizedTemplates = await db.select().from<LocalizedTemplate>(tables.templatesLocalized).where('templateName', template.name);
-        savedTemplate.localizedVersions = localizedTemplates.reduce((item, acc) => {
-            acc[item.locale] = { content: item.content };
-            return acc;
-        }, {});
-    }
-
+    const savedTemplate = await readTemplateWithAllVersions(template.name);
     res.status(200).send(savedTemplate);
 };
 

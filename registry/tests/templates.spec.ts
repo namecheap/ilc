@@ -65,12 +65,13 @@ describe(`Tests ${example.url}`, () => {
                     .send(example.correct)
                     .expect(200)
 
-                expect(response.body).deep.equal(example.correct);
+                let createdTemplate = { ...example.correct, localizedVersions: {} };
+                expect(response.body).deep.equal(createdTemplate);
 
                 response = await request.get(example.url + example.correct.name)
                     .expect(200);
 
-                expect(response.body).deep.equal(example.correct);
+                expect(response.body).deep.equal(createdTemplate);
             } finally {
                 await request.delete(example.url + example.correct.name);
             }
@@ -111,7 +112,20 @@ describe(`Tests ${example.url}`, () => {
                 const response = await requestWithAuth.get(example.url + example.correct.name)
                     .expect(200);
 
-                expect(response.body).deep.equal(example.correct);
+                expect(response.body).deep.equal({ ...example.correct, localizedVersions: {} });
+            } finally {
+                await request.delete(example.url + example.correct.name);
+            }
+        });
+
+        it('should return localized versions of the template', async () => {
+            try {
+                await request.post(example.url).send(example.correctLocalized).expect(200);
+
+                const response = await requestWithAuth.get(example.url + example.correctLocalized.name)
+                    .expect(200);
+
+                expect(response.body).deep.equal(example.correctLocalized);
             } finally {
                 await request.delete(example.url + example.correct.name);
             }
