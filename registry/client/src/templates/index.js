@@ -1,12 +1,12 @@
 import Icon from '@material-ui/icons/DeveloperBoard';
-import {MyEdit, MyCreate} from './Edit';
+import {TemplateEdit, TemplateCreate} from './Edit';
 import Show from './Show';
 import List from './List';
 
 export default {
     list: List,
-    create: MyCreate,
-    edit: MyEdit,
+    create: TemplateCreate,
+    edit: TemplateEdit,
     show: Show,
     icon: Icon,
 };
