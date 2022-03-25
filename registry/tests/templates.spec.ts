@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import nock from 'nock';
 
-import {request, expect, requestWithAuth} from './common';
+import { request, expect, requestWithAuth } from './common';
 
 const example = {
     url: '/api/v1/template/',
@@ -21,9 +21,21 @@ const example = {
         name: 'ncTestTemplateName',
         content: 'ncTestTemplateContentUpdated'
     }),
+    updatedLocalized: Object.freeze({
+        content: 'test content',
+        localizedVersions: {
+            'fr-FR': { content: 'French superior content' },
+            'fr-CA': { content: 'Canada content' }
+        }
+    }),
 };
 
 describe(`Tests ${example.url}`, () => {
+    afterEach(async () => {
+        await request.delete(example.url + example.correctLocalized.name);
+        await request.delete(example.url + example.correct.name);
+    });
+
     describe('Create', () => {
         it('should not create record without a required field: name', async () => {
             const response = await request.post(example.url)
@@ -60,31 +72,23 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully create record', async () => {
-            try {
-                let response = await request.post(example.url)
-                    .send(example.correct)
-                    .expect(200)
+            let response = await request.post(example.url)
+                .send(example.correct)
+                .expect(200)
 
-                let createdTemplate = { ...example.correct, localizedVersions: {} };
-                expect(response.body).deep.equal(createdTemplate);
+            let createdTemplate = { ...example.correct, localizedVersions: {} };
+            expect(response.body).deep.equal(createdTemplate);
 
-                response = await request.get(example.url + example.correct.name)
-                    .expect(200);
+            response = await request.get(example.url + example.correct.name)
+                .expect(200);
 
-                expect(response.body).deep.equal(createdTemplate);
-            } finally {
-                await request.delete(example.url + example.correct.name);
-            }
+            expect(response.body).deep.equal(createdTemplate);
         });
 
         it('should create localized versions of template', async () => {
-            try {
-                let response = await request.post(example.url)
-                    .send(example.correctLocalized);
-                expect(response.status).to.eq(200, response.text);
-            } finally {
-                await request.delete(example.url + example.correctLocalized.name);
-            }
+            let response = await request.post(example.url)
+                .send(example.correctLocalized);
+            expect(response.status).to.eq(200, response.text);
         });
 
         describe('Authentication / Authorization', () => {
@@ -106,29 +110,21 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully return record w/o authentication', async () => {
-            try {
-                await request.post(example.url).send(example.correct).expect(200);
+            await request.post(example.url).send(example.correct).expect(200);
 
-                const response = await requestWithAuth.get(example.url + example.correct.name)
-                    .expect(200);
+            const response = await requestWithAuth.get(example.url + example.correct.name)
+                .expect(200);
 
-                expect(response.body).deep.equal({ ...example.correct, localizedVersions: {} });
-            } finally {
-                await request.delete(example.url + example.correct.name);
-            }
+            expect(response.body).deep.equal({ ...example.correct, localizedVersions: {} });
         });
 
         it('should return localized versions of the template', async () => {
-            try {
-                await request.post(example.url).send(example.correctLocalized).expect(200);
+            await request.post(example.url).send(example.correctLocalized).expect(200);
 
-                const response = await requestWithAuth.get(example.url + example.correctLocalized.name)
-                    .expect(200);
+            const response = await requestWithAuth.get(example.url + example.correctLocalized.name)
+                .expect(200);
 
-                expect(response.body).deep.equal(example.correctLocalized);
-            } finally {
-                await request.delete(example.url + example.correct.name);
-            }
+            expect(response.body).deep.equal(example.correctLocalized);
         });
 
         it('should return a rendered template w/o authentication', async () => {
@@ -183,16 +179,16 @@ describe(`Tests ${example.url}`, () => {
             };
 
             includes.forEach(({
-                api: {
-                    route,
-                    delay,
-                    response: {
-                        status,
-                        data,
-                        headers,
-                    },
-                },
-            }) => scope.log(console.log).persist().get(route).delay(delay).reply(status, data, headers));
+                                  api: {
+                                      route,
+                                      delay,
+                                      response: {
+                                          status,
+                                          data,
+                                          headers,
+                                      },
+                                  },
+                              }) => scope.log(console.log).persist().get(route).delay(delay).reply(status, data, headers));
 
             try {
                 await request.post(example.url).send(template).expect(200);
@@ -208,11 +204,11 @@ describe(`Tests ${example.url}`, () => {
                         <meta charset="utf-8" />
                         <meta name="viewport" content="width=device-width,initial-scale=1"/>
                         ${`<!-- Template include "${includes[0].attributes.id}" START -->\n` +
-                        '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
-                        includes[0].api.response.data + '\n' +
-                        '<script src="https://my.awesome.server/my-awesome-script.js"></script>\n' +
-                        `<!-- Template include "${includes[0].attributes.id}" END -->`
-                        }
+                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
+                    includes[0].api.response.data + '\n' +
+                    '<script src="https://my.awesome.server/my-awesome-script.js"></script>\n' +
+                    `<!-- Template include "${includes[0].attributes.id}" END -->`
+                    }
                         <script>window.console.log('Something...')</script>
                     </head>
                     <body>
@@ -238,17 +234,13 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully return all existed records', async () => {
-            try {
-                await request.post(example.url).send(example.correct).expect(200);
+            await request.post(example.url).send(example.correct).expect(200);
 
-                const response = await request.get(example.url)
-                    .expect(200);
+            const response = await request.get(example.url)
+                .expect(200);
 
-                expect(response.body).to.be.an('array').that.is.not.empty;
-                expect(response.body).to.deep.include(example.correct);
-            } finally {
-                await request.delete(example.url + example.correct.name);
-            }
+            expect(response.body).to.be.an('array').that.is.not.empty;
+            expect(response.body).to.deep.include(example.correct);
         });
     });
 
@@ -262,49 +254,47 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not update record if forbidden "name" is passed', async () => {
-            try {
-                await request.post(example.url).send(example.correct).expect(200);
+            await request.post(example.url).send(example.correct).expect(200);
 
-                const response = await request.put(example.url + example.correct.name)
-                    .send(example.updated)
-                    .expect(422, '"name" is not allowed');
+            const response = await request.put(example.url + example.correct.name)
+                .send(example.updated)
+                .expect(422, '"name" is not allowed');
 
-                expect(response.body).deep.equal({});
-            } finally {
-                await request.delete(example.url + example.correct.name);
-            }
+            expect(response.body).deep.equal({});
         });
 
         it('should not update record with incorrect type of field: content', async () => {
-            try {
-                await request.post(example.url).send(example.correct).expect(200);
+            await request.post(example.url).send(example.correct).expect(200);
 
-                const incorrect = {
-                    name: 123,
-                    content: 456
-                };
+            const incorrect = {
+                name: 123,
+                content: 456
+            };
 
-                const response = await request.put(example.url + example.correct.name)
-                    .send(_.omit(incorrect, 'name'))
-                    .expect(422, '"content" must be a string');
-                expect(response.body).deep.equal({});
-            } finally {
-                await request.delete(example.url + example.correct.name);
-            }
+            const response = await request.put(example.url + example.correct.name)
+                .send(_.omit(incorrect, 'name'))
+                .expect(422, '"content" must be a string');
+            expect(response.body).deep.equal({});
         });
 
         it('should successfully update record', async () => {
-            try {
-                await request.post(example.url).send(example.correct).expect(200);
+            await request.post(example.url).send(example.correct).expect(200);
 
-                const response = await request.put(example.url + example.correct.name)
-                    .send(_.omit(example.updated, 'name'))
-                    .expect(200);
+            const response = await request.put(example.url + example.correct.name)
+                .send(_.omit(example.updated, 'name'))
+                .expect(200);
 
-                expect(response.body).deep.equal(example.updated);
-            } finally {
-                await request.delete(example.url + example.correct.name);
-            }
+            expect(response.body).deep.equal({ ...example.updated, localizedVersions: {} });
+        });
+
+        it('should successfully update localized versions of the template', async () => {
+            await request.post(example.url).send(example.correctLocalized).expect(200);
+
+            const response = await request.put(example.url + example.correctLocalized.name)
+                .send(_.omit(example.updatedLocalized, 'name'))
+                .expect(200);
+
+            expect(response.body).deep.equal({ name: example.correctLocalized.name, ...example.updatedLocalized });
         });
 
         describe('Authentication / Authorization', () => {
@@ -353,7 +343,7 @@ describe(`Tests ${example.url}`, () => {
                     .expect(404, 'Not found');
             } finally {
                 routerDomainsId && await request.delete('/api/v1/router_domains/' + routerDomainsId);
-                await request.delete(example.url + example.correct.name)
+                await request.delete(example.url + example.correct.name);
             }
         });
 

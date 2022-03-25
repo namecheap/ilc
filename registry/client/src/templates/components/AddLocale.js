@@ -16,7 +16,8 @@ const modalBoxStyle = {
 export function AddLocale(props) {
     const [addingLocale, setAddingLocale] = useState('');
 
-    const addLang = () => {
+    const addLang = (e) => {
+        e.preventDefault();
         props.onLocaleAdded(addingLocale);
         setAddingLocale('');
     }

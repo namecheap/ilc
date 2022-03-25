@@ -29,16 +29,19 @@ const commonTemplate = {
     }),
 };
 
+const localizedVersions = Joi.object().pattern(Joi.string().regex(/[a-z]{2}-[A-Z]{2,4}/).min(5).max(7), Joi.object({
+    content: commonTemplate.content.required()
+}));
+
 export const partialTemplateSchema = Joi.object({
     ...commonTemplate,
     name: templateNameSchema.forbidden(),
+    localizedVersions
 });
 
 export const templateSchema = Joi.object({
     ...commonTemplate,
     name: templateNameSchema.required(),
     content: commonTemplate.content.required(),
-    localizedVersions: Joi.object().pattern(Joi.string().regex(/[a-z]{2}-[A-Z]{2,4}/).min(5).max(7), Joi.object({
-        content: commonTemplate.content.required()
-    }))
+    localizedVersions
 });
