@@ -224,6 +224,15 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should return localized version of rendered template', async () => {
+            await request.post(example.url).send(example.correctLocalized).expect(200);
+
+            const response = await request.get(example.url + example.correctLocalized.name + '/rendered?locale=' + 'es-MX');
+
+            expect(response.status).to.eq(200, JSON.stringify(response.body));
+            expect(response.body.content).to.eq(example.correctLocalized.localizedVersions['es-MX'].content);
+        });
+
         it('should return 404 while requesting a non-existent rendered template', async () => {
             const incorrect = { name: 123 };
             const response = await request

@@ -30,7 +30,7 @@ describe('ErrorHandler', () => {
 
     it('should show 500 error page with an error id', async () => {
         nock(config.get('registry').address).get('/api/v1/router_domains').reply(200, []);
-        nock(config.get('registry').address).get(`/api/v1/template/500/rendered`).reply(200, {
+        nock(config.get('registry').address).get(`/api/v1/template/500/rendered?locale=en-US`).reply(200, {
             content:
                 '<html>' +
                 '<body>' +
@@ -43,6 +43,7 @@ describe('ErrorHandler', () => {
         });
 
         const response = await server.get('/_ilc/500').expect(500);
+        console.log(response.text);
         const {errorId} = response.text.match(errorIdRegExp).groups;
 
         chai.expect(response.header['cache-control']).to.be.eql('no-cache, no-store, must-revalidate');

@@ -2,8 +2,7 @@ import { Box, Paper } from '@material-ui/core';
 import React from 'react';
 
 export function TabPanel(props) {
-    const {children, selected, value, ...restProps} = props;
-
+    const {children, selected, value} = props;
     return (
         <div
             role="tabpanel"
@@ -14,7 +13,7 @@ export function TabPanel(props) {
             {selected === value && (
                 <Paper>
                     <Box p={2}>
-                        {React.cloneElement(children, restProps)}
+                        {React.cloneElement(children)}
                     </Box>
                 </Paper>
             )}

@@ -14,6 +14,8 @@ class InputForm extends React.Component {
         locales: Object.keys(this.props.record.localizedVersions || {})
     }
 
+    currentLocales = this.state.locales;
+
     render() {
         let {mode, ...props} = this.props;
         const onLocaleAdded = (locale) => {
