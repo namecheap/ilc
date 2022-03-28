@@ -10,7 +10,7 @@ export default interface Template {
 export interface LocalizedTemplate {
     templateName: string;
     content: string;
-    locale?: string;
+    locale: string;
 }
 
 export const templateNameSchema = Joi.string().min(1).max(50);
