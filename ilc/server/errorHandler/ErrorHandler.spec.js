@@ -43,7 +43,7 @@ describe('ErrorHandler', () => {
         });
 
         const response = await server.get('/_ilc/500').expect(500);
-        console.log(response.text);
+
         const {errorId} = response.text.match(errorIdRegExp).groups;
 
         chai.expect(response.header['cache-control']).to.be.eql('no-cache, no-store, must-revalidate');
