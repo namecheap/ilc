@@ -5,8 +5,6 @@
 ## Install and setup LDE
 
 1. Clone the [namecheap/ilc](https://github.com/namecheap/ilc/) repository.
-1. (_For internal employees only_): Clone the [ilc.internal](https://git.namecheap.net/projects/RND/repos/ilc.internal/browse) repository
-    1. Follow the guide inside the repository to setup NC-specific applications.
 1. Run `npm install`
 1. Run `npm start`
 1. Open your browser and navigate to ILC or Registry UI:
