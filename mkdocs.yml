@@ -46,7 +46,7 @@ nav:
             - Lesson 4: docs/stepbystep/react/lesson4.md
     - Routing:
       - Introduction: docs/routing/introduction.md
-      - Route configuration: docs/routing/route_configuration_options.md
+      - Route configuration: docs/routing/route_configuration.md
       - Route matching patterns: docs/routing/route_matching_patterns.md
       - Route transition and animation: docs/routing/route_transition_and_animation.md
       - i18n & trailing slash: docs/routing/localization_and_trailing_slash.md
