@@ -5,7 +5,7 @@ const {intlSchema} = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" im
 const i18nCookie = require('../common/i18nCookie');
 
 const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, reply) => {
-    if (!i18nConfig.enabled || req.raw.url === '/ping' || req.raw.url.startsWith('/_ilc/')) {
+    if (!i18nConfig.enabled || req.raw.url === '/ping') {
         return; // Excluding system routes
     }
 
@@ -31,10 +31,12 @@ const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, 
         decodedI18nCookie,
     );
 
-    const fixedUrl = IlcIntl.localizeUrl(i18nConfig, req.raw.url, {locale: currI18nConf.locale});
-    if (fixedUrl !== req.raw.url) {
-        reply.redirect(fixedUrl);
-        return;
+    if (!req.raw.url.startsWith('/_ilc/')) {
+        const fixedUrl = IlcIntl.localizeUrl(i18nConfig, req.raw.url, {locale: currI18nConf.locale});
+        if (fixedUrl !== req.raw.url) {
+            reply.redirect(fixedUrl);
+            return;
+        }
     }
 
     // Passing current locale to TailorX in order to render template properly

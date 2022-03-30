@@ -8,11 +8,13 @@ import _ from 'lodash/fp';
 import noticeError from '../../errorHandler/noticeError';
 import db from '../../db';
 import Template, {
+    LocalizedTemplate,
     templateNameSchema,
 } from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
 import renderTemplate from '../services/renderTemplate';
 import errors from '../errors';
+import { tables } from '../../db/structure';
 
 type GetTemplateRenderedRequestParams = {
     name: string
@@ -30,16 +32,29 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
         name: templateName,
     } = req.params;
 
-    const [template] = await db.select().from<Template>('templates').where('name', templateName);
+    const { locale } = req.query;
 
-    if (!template) {
+    const [defaultTemplate] = await db.select().from<Template>('templates').where('name', templateName);
+
+    if (!defaultTemplate) {
         res.status(404).send('Not found');
         return;
     }
 
+    let content = defaultTemplate.content;
+    if (locale) {
+        const [localizedTemplate] = await db.select()
+            .from<LocalizedTemplate>(tables.templatesLocalized)
+            .where('templateName', templateName)
+            .andWhere('locale', locale as string);
+        if (localizedTemplate) {
+            content = localizedTemplate.content;
+        }
+    }
+
     try {
-        const renderedTemplate = await renderTemplate(template.content);
-        res.status(200).send(_.assign(template, renderedTemplate));
+        const renderedTemplate = await renderTemplate(content);
+        res.status(200).send(_.assign(defaultTemplate, renderedTemplate));
     } catch (e) {
         if (e instanceof errors.FetchIncludeError) {
             res.status(503).send(e.message);
