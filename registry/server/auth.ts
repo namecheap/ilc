@@ -90,6 +90,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
 
 
 
+    let openIdInitialized = false;
     // Accept the OpenID identifier and redirect the user to their OpenID
     // provider for authentication.  When complete, the provider will redirect
     // the user back to the application at:
@@ -112,9 +113,8 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
             SettingKeys.AuthOpenIdUniqueIdentifierClaimName,
             SettingKeys.AuthOpenIdRequestedScopes,
         ];
-        if (await settingsService.hasChanged(callerId, keysToWatch)) {
+        if (!openIdInitialized || await settingsService.hasChanged(callerId, keysToWatch)) {
             console.log('Change of the OpenID authentication config detected. Reinitializing auth backend...');
-            passport.unuse('openid');
 
             const issuer = await OIDCIssuer.discover(await settingsService.get(SettingKeys.AuthOpenIdDiscoveryUrl, callerId)); // => Promise
 
@@ -179,6 +179,8 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
                     }
                 })
             );
+
+            openIdInitialized = true;
         }
 
         next();
