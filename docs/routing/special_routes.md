@@ -12,7 +12,7 @@ To see 404 error routes, use the `Show special` switcher at the top of the route
 
 ![ILC registry special routes switcher](../assets/routes/special-routes-switcher.png)
 
-Unlike simple routes that use composition with the help of the `Next` property, the special route has its own configuration. It means that you must add the template and all the necessary applications (for example, header, footer) to the `Special route` [slot](./route_configuration_options.md#slot-configuration) (see the screenshot below).
+Unlike simple routes that use composition with the help of the `Next` property, the special route has its own configuration. It means that you must add the template and all the necessary applications (for example, header, footer) to the `Special route` [slot](./route_configuration.md#slot-configuration) (see the screenshot below).
 
 ![ILC registry error slot](../assets/routes/error-slot.png)
 
