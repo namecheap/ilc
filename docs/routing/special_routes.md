@@ -16,7 +16,7 @@ Unlike simple routes that use composition with the help of the `Next` property, 
 
 ![ILC registry error slot](../assets/routes/error-slot.png)
 
-More information about the 404 error is available in the [Global error handling page](../global_error_handlingmd#404-error-not-found).
+More information about the 404 error is available in the [Global error handling page](../global_error_handling.md#404-error-not-found).
 
 ## '5XX' errors
 
