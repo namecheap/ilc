@@ -29,16 +29,16 @@ describe(`Tests for public API`, () => {
                 adminNotes: 'Lorem ipsum',
             };
 
-            await request.post('/api/v1/app/').send(record);
+            await request().then(r => r.post('/api/v1/app/').send(record));
         });
 
         after(async () => {
             const encodedName = encodeURIComponent(result.name);
-            await request.delete('/api/v1/app/' + encodedName);
+            await request().then(r => r.delete('/api/v1/app/' + encodedName));
         });
 
         it('should successfully return records', async () => {
-            const response = await request.get(url).expect(200);
+            const response = await request().then(r => r.get(url).expect(200));
 
             expect(response.body).to.be.an('array').that.is.not.empty;
             expect(response.body).to.deep.include(result);
@@ -46,8 +46,8 @@ describe(`Tests for public API`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should be accessible w/o authentication', async () => {
-                await requestWithAuth.get(url)
-                    .expect(200);
+                await requestWithAuth().then(r => r.get(url)
+                    .expect(200));
             });
         });
     });

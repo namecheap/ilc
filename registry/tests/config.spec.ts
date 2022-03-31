@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import supertest from 'supertest';
 
 import {SettingKeys, TrailingSlashValues, OnPropsUpdateValues} from '../server/settings/interfaces';
 import {request, expect, requestWithAuth} from './common';
@@ -55,32 +56,40 @@ const example = {
 };
 
 describe('Tests /api/v1/config', () => {
+    let req: supertest.SuperTest<supertest.Test>;
+    let reqWithAuth: supertest.SuperTest<supertest.Test>;
+
+    beforeEach(async () => {
+        req = await request();
+        reqWithAuth = await requestWithAuth();
+    })
+
     describe('Read', () => {
         it('should successfully return config', async () => {
             let routeId, routerDomainsId, routeIdWithDomain;
 
             try {
-                await request.post('/api/v1/template/').send(example.templates).expect(200);
-                const responseRouterDomains = await request.post('/api/v1/router_domains/').send(example.routerDomains).expect(200);
+                await req.post('/api/v1/template/').send(example.templates).expect(200);
+                const responseRouterDomains = await req.post('/api/v1/router_domains/').send(example.routerDomains).expect(200);
                 routerDomainsId = responseRouterDomains.body.id;
 
-                await request.post('/api/v1/app/').send(example.apps).expect(200);
+                await req.post('/api/v1/app/').send(example.apps).expect(200);
 
-                const responseRoute = await request.post('/api/v1/route/').send(example.appRoutes).expect(200);
+                const responseRoute = await req.post('/api/v1/route/').send(example.appRoutes).expect(200);
                 routeId = responseRoute.body.id;
 
-                const responseRouteWithDomain = await request.post('/api/v1/route/').send({
+                const responseRouteWithDomain = await req.post('/api/v1/route/').send({
                     ...example.appRoutes,
                     orderPos: 123,
                     domainId: routerDomainsId,
                 }).expect(200);
                 routeIdWithDomain = responseRouteWithDomain.body.id;
 
-                await request.post('/api/v1/shared_props/').send(example.sharedProps).expect(200);
+                await req.post('/api/v1/shared_props/').send(example.sharedProps).expect(200);
 
-                await request.post('/api/v1/shared_libs/').send(example.sharedLibs).expect(200);
+                await req.post('/api/v1/shared_libs/').send(example.sharedLibs).expect(200);
 
-                const response = await request.get('/api/v1/config')
+                const response = await req.get('/api/v1/config')
                 .expect(200);
 
                 expect(response.text).to.be.a('string');
@@ -141,20 +150,20 @@ describe('Tests /api/v1/config', () => {
                     [example.sharedLibs.name]: example.sharedLibs.spaBundle,
                 });
             } finally {
-                routeId && await request.delete('/api/v1/route/' + routeId);
-                routeIdWithDomain && await request.delete('/api/v1/route/' + routeIdWithDomain);
-                routerDomainsId && await request.delete('/api/v1/router_domains/' + routerDomainsId);
-                await request.delete('/api/v1/template/' + example.templates.name);
-                await request.delete('/api/v1/app/' + encodeURIComponent(example.apps.name));
-                await request.delete('/api/v1/shared_props/' + example.sharedProps.name);
-                await request.delete('/api/v1/shared_libs/' + example.sharedLibs.name);
+                routeId && await req.delete('/api/v1/route/' + routeId);
+                routeIdWithDomain && await req.delete('/api/v1/route/' + routeIdWithDomain);
+                routerDomainsId && await req.delete('/api/v1/router_domains/' + routerDomainsId);
+                await req.delete('/api/v1/template/' + example.templates.name);
+                await req.delete('/api/v1/app/' + encodeURIComponent(example.apps.name));
+                await req.delete('/api/v1/shared_props/' + example.sharedProps.name);
+                await req.delete('/api/v1/shared_libs/' + example.sharedLibs.name);
             }
         })
     });
 
     describe('Authentication / Authorization', () => {
         it('should be accessible w/o authentication', async () => {
-            await requestWithAuth.get('/api/v1/config')
+            await reqWithAuth.get('/api/v1/config')
                 .expect(200);
         });
     });

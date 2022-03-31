@@ -2,8 +2,8 @@ import supertest from 'supertest';
 import app from '../server/app';
 import {dbFactory as dbFactoryOrig} from '../server/db';
 
-export const request = supertest(app(false));
-export const requestWithAuth = supertest(app(true));
+export const request = async () => supertest(await app(false));
+export const requestWithAuth = async () => supertest(await app(true));
 
 export function dbFactory() {
     return dbFactoryOrig({
