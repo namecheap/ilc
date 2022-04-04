@@ -16,7 +16,7 @@ Unlike simple routes that use composition with the help of the `Next` property, 
 
 ![ILC registry error slot](../assets/routes/error-slot.png)
 
-More information about the 404 error is available in the [Global error handling page](../global_errors_handling.md#404-error-not-found).
+More information about the 404 error is available in the [Global error handling page](../global_error_handling.md#404-error-not-found).
 
 ## '5XX' errors
 
@@ -36,4 +36,4 @@ To assign different error templates to domains, you must specify the template wh
 
     For example: `http://ilc-demo.namecheap.technology/_ilc/500` is the preview route for the demo website.
 
-More information about the 5xx errors handling is available in the [Global error handling page](../global_errors_handling.md#5xx-errors-unexpected-errors).
+More information about the 5xx errors handling is available in the [Global error handling page](../global_error_handling.md#5xx-errors-unexpected-errors).
