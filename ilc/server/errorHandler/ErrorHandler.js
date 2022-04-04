@@ -56,11 +56,14 @@ module.exports = class ErrorHandler {
         try {
             this.noticeError(err, {
                 reqId: req.id,
-                errorId
+                errorId,
+                domain: req.hostname,
+                url: req.url
             }, { reportError: !req.ldeRelated });
 
             const currentDomain = req.hostname;
-            let data = await this.#registryService.getTemplate('500', currentDomain);
+            const locale = req.raw.ilcState.locale;
+            let data = await this.#registryService.getTemplate('500', currentDomain, locale);
             data = data.data.content.replace('%ERRORID%', `Error ID: ${errorId}`);
 
             nres.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -75,6 +78,7 @@ module.exports = class ErrorHandler {
                     errorId,
                 }
             });
+
             this.#logger.error(e);
 
             nres.statusCode = 500;

@@ -8,4 +8,9 @@
         customClientJsWrapper: 'NR_CUSTOM_CLIENT_JS_WRAPPER',
     },
     overrideConfigTrustedOrigins: 'OVERRIDE_CONFIG_TRUSTED_ORIGINS',
+    logger: {
+        accessLog: {
+            ignoreUrls: 'LOGGER_ACCESSLOG_IGNOREURLS'
+        }
+    }
 }

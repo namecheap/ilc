@@ -50,14 +50,14 @@ module.exports = class Registry {
             name: 'registry_getTemplate',
         });
 
-        this.getTemplate = async (templateName, forDomain) => {
+        this.getTemplate = async (templateName, forDomain, locale) => {
             if (templateName === '500' && forDomain) {
                 const routerDomains = await this.getRouterDomains();
                 const redefined500 = routerDomains.data.find(item => item.domainName === forDomain)?.template500;
                 templateName = redefined500 || templateName;
             }
 
-            return await getTemplateMemo(templateName);
+            return await getTemplateMemo(templateName, locale);
         };
     }
 
@@ -99,10 +99,10 @@ module.exports = class Registry {
         return res.data;
     };
 
-    #getTemplate = async (templateName) => {
+    #getTemplate = async (templateName, locale) => {
         this.#logger.debug('Calling get template registry endpoint...');
-
-        const tplUrl = urljoin(this.#address, 'api/v1/template', templateName, 'rendered');
+        const queryString = locale ? `?locale=${locale}` : '';
+        const tplUrl = urljoin(this.#address, 'api/v1/template', templateName, 'rendered') + queryString;
         let res;
         try {
             res = await axios.get(tplUrl, { responseType: 'json' });

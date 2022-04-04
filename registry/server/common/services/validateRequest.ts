@@ -28,6 +28,8 @@ const validateRequestFactory = (validationConfig: ValidationConfig[]) => async (
     } catch (e) {
         res.status(422);
         if (e instanceof Joi.ValidationError) {
+            // TODO: this basically makes from an readable object just a text, which seems not very useful for API consumer
+            // need to think how to introduce good validation responses, without breaking changes
             res.send(joiErrorToResponse(e));
         } else {
             console.error(e);

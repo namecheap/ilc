@@ -6,10 +6,11 @@ import Joi from 'joi';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import Template, {
+import {
     templateNameSchema,
     partialTemplateSchema,
 } from '../interfaces';
+import { readTemplateWithAllVersions, upsertLocalizedVersions } from '../services/templatesRepository';
 
 type UpdateTemplateRequestParams = {
     name: string
@@ -29,7 +30,9 @@ const validateRequestBeforeUpdateTemplate = validateRequestFactory([
 ]);
 
 const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Response): Promise<void> => {
-    const template = req.body;
+    const template = {
+        content: req.body.content
+    };
     const templateName = req.params.name;
 
     const templatesToUpdate = await db('templates').where({ name: templateName });
@@ -38,12 +41,13 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
         return;
     }
 
+    const localizedVersions = req.body.localizedVersions || {};
     await db.versioning(req.user, {type: 'templates', id: templateName}, async (trx) => {
         await db('templates').where({ name: templateName }).update(template).transacting(trx);
+        await upsertLocalizedVersions(templateName, localizedVersions, trx);
     });
 
-    const [updatedTemplate] = await db.select().from<Template>('templates').where('name', templateName);
-
+    const updatedTemplate = await readTemplateWithAllVersions(templateName);
     res.status(200).send(updatedTemplate);
 };
 

@@ -24,19 +24,26 @@ nav:
     - Contributing: CONTRIBUTING.md
   - Demo website: http://ilc-demo.namecheap.technology
   - Documentation:
-    - Installation: docs/installation_guide.md
-    - Micro-frontend Types: docs/microfrontend-types.md
-    - App deployments with ILC: docs/stepbystep/index.md
-    - ILC to App interface: docs/ilc_app_interface.md
-    - ILC Registry: docs/registry.md
-    - Animation during reroute: docs/animation_during_reroute.md
-    - Global error handling: docs/global_error_handling.md
-    - Internationalization: docs/i18n.md
-    - Develop at Production: docs/develop_at_production.md
-    - Compatibility with legacy UMD bundles: docs/umd_bundles_compatibility.md
-    - Global API: docs/global_api.md
-    - ILC transition hooks: docs/transition_hooks.md
-    - Multi-domains: docs/multi-domains.md
+    - Overview: docs/overview.md
+    - Fundamentals:
+      - Micro-frontend Types: docs/microfrontend-types.md
+      - ILC to App interface: docs/ilc_app_interface.md
+      - ILC Registry: docs/registry.md
+      - Global API: docs/global_api.md
+    - Working with ILC:
+      - Animation during reroute: docs/animation_during_reroute.md
+      - Global error handling: docs/global_errors_handling.md
+      - Internationalization: docs/i18n.md
+      - Develop at Production: docs/develop_at_production.md
+      - Compatibility with legacy UMD bundles: docs/umd_bundles_compatibility.md
+      - ILC transition hooks: docs/transition_hooks.md
+      - Multi-domains: docs/multi-domains.md
+      - How-to Guides:
+          - App deploy with React + ILC:
+            - Lesson 1: docs/stepbystep/react/lesson1.md
+            - Lesson 2: docs/stepbystep/react/lesson2.md
+            - Lesson 3: docs/stepbystep/react/lesson3.md
+            - Lesson 4: docs/stepbystep/react/lesson4.md
     - Routing:
       - Introduction: docs/routing/introduction.md
       - Route configuration: docs/routing/route_configuration_options.md
@@ -48,12 +55,6 @@ nav:
       - Parcels: docs/parcels.md
       - Plugins: https://github.com/namecheap/ilc-plugins-sdk
       - App Wrappers: docs/app_wrappers.md
-    - How-to Guides:
-        - App deploy with React + ILC:
-          - Lesson 1: docs/stepbystep/react/lesson1.md
-          - Lesson 2: docs/stepbystep/react/lesson2.md
-          - Lesson 3: docs/stepbystep/react/lesson3.md
-          - Lesson 4: docs/stepbystep/react/lesson4.md
     - External resources:
       - Demo applications used in quick start: https://github.com/namecheap/ilc-demo-apps
       - SDK for ILC plugins development: https://github.com/namecheap/ilc-plugins-sdk

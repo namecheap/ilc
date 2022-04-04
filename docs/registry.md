@@ -1,39 +1,41 @@
 # ILC Registry
 
-The registry provides a Rest API and UI to publish, update, and retrieve micro frontends, templates and
-routes configuration. 
+The Registry provides UI and REST API to publish, update, and retrieve micro frontends, templates, and routes configuration.
 
-It's available at `4001` port by default (use http://127.0.0.1:4001 for locally launched ILC).
+The Registry is available at the `4001` port by default (use http://127.0.0.1:4001 for a locally launched ILC).
 
-## Authentication / Authorization
+## Authentication and authorization
 
-Currently Registry supports authentication only, all authenticated entities will receive all permissions possible.
+Currently, Registry supports authentication only. All authenticated entities will receive a full set of permissions.
 
-As for now we support 3 authentication providers:
+The following authentication providers are supported:
 
-- OpenID Connect. **Turned off by default.**
-- Locally configured login/password. **Default credentials:** root / pwd
-- Locally configured Bearer token for API machine-to-machine access. 
-**Default credentials:** `Bearer cm9vdF9hcGlfdG9rZW4=:dG9rZW5fc2VjcmV0` (after base64 decode it's `Bearer root_api_token:token_secret`).
+- **OpenID Connect**. Turned **off** by default.
+- **Locally configured login/password**. Default credentials: `root` / `pwd`.
+- **Locally configured Bearer token** for API machine-to-machine access. Default credentials: `Bearer cm9vdF9hcGlfdG9rZW4=:dG9rZW5fc2VjcmV0` or `Bearer root_api_token:token_secret` after base64 decoding.
 
-Default credentials can be changed via "Auth entities" page through UI (or via API).
+You can change default credentials via Registry UI, in the `Auth entities` page, or via API.
 
 ### OpenID Configuration
 
-See `auth.openid.*` keys at "Settings" page in Registry to configure OpenID.
+To configure OpenID:
 
-Sample configuration (_note that values are JSON encoded_):
+1. Open Registry UI.
+1. Go to the Settings page.
+1. Find keys that start with `auth.openid.*`.
 
-| key | value |
-|---|---|
-|`baseUrl`| `"https://ilc-registry.example.com/"`|
-|`auth.openid.enabled`| `true`|
-|`auth.openid.discoveryUrl`| `"https://adfs.example.com/adfs/"`|
-|`auth.openid.clientId`| `"ba34c345-e543-6554-b0be-3e1097ddd32d"`|
-|`auth.openid.clientSecret`| `"XXXXXX"`|
+Sample configuration (values are JSON-encoded):
 
-> Attention:
-  OpenID Connect returnURL should be specified at provider as follows: `{baseUrl}/auth/openid/return`
+| key                            | value                                   |
+|--------------------------------|-----------------------------------------|
+| **`baseUrl`**                  | `"https://ilc-registry.example.com/"`   |
+| **`auth.openid.enabled`**      | `true`                                  |
+| **`auth.openid.discoveryUrl`** | `"https://adfs.example.com/adfs/"`      |
+| **`auth.openid.clientId`**     | `"ba34c345-e543-6554-b0be-3e1097ddd32d"`|
+| **`auth.openid.clientSecret`** | `"XXXXXX"`                              |
+
+!!! warning ""
+    OpenID Connect returnURL should be specified at provider in the following format: `{baseUrl}/auth/openid/return`
 
 ## User Interface
 
@@ -41,32 +43,33 @@ Sample configuration (_note that values are JSON encoded_):
 
 ## API
 
-Currently there is no documentation for each API endpoint. However you can use network tab to see how UI
-communicates with API or feel free to explore code starting from here `/registry/server/app.ts` 
+Currently there is no documentation for API endpoints. As an alternative, you can use Network tab in your browser's developer tools
+to see how UI communicates with API. You can also explore code starting from the `/registry/server/app.ts` file.
 
+## Updating JS/CSS URLs during micro frontends deployment
 
-## Update of the JS/CSS URLs during micro-frontends deployment
+It is a common practice to store JS/CSS files of the micro frontend apps at CDN using unique URLs. For example,
+`https://site.com/layoutfragments-ui/app.80de7d4e36eae32662d2.js`.
 
-It's a usual pattern to store JS/CSS files of the micro-frontend apps at CDN using unique URLs 
-(ex: `https://nc-img.com/layoutfragments-ui/app.80de7d4e36eae32662d2.js`). While following this approach we need to update 
-links to the JS/CSS bundles in registry after every deployment.
+By following this this approach, you need to update 
+links to the JS/CSS bundles in the Registry after each deployment.
 
-To do so we have at least 3 options:
-* Manually via UI (_not recommended_)
-* Using Registry API (see API endpoints for more info)
-* **Using App Assets Discovery mechanism**
+To do this, there are the following options (at least):
 
-While registering micro-frontend in _ILC Registry_ it's possible to set "Assets discovery url" which will be examined periodically 
-by Registry. The idea is that this file will contain actual references to the JS/CSS bundles and updated at CDN **right after** every deploy.
+- Manually via UI (_not recommended_)
+- Using Registry API (see [API](#api) section above)
+- **Using App Assets discovery mechanism**
 
-Example file: 
-```json5
-// https://nc-img.com/layoutfragments-ui/assets-discovery.json
-{
-  "spaBundle": "https://nc-img.com/layoutfragments-ui/app.80de7d4e36eae32662d2.js",
-  "cssBundle": "./app.81340a47f3122508fd76.css", //It's possible to use relative links which will be resolved against manifest URL
-  "dependencies": {
-    "react": "https://unpkg.com/react@16.13.1/umd/react.production.min.js"
-  }
-}
-```
+When registering micro frontend in the ILC Registry, it is possible to set a file for the "Assets discovery url" that will be periodically fetched
+by the Registry. The idea is that this file will contain actual references to JS/CSS bundles and be updated on CDN **right after** every deployment.
+
+!!! example "`https://site.com/layoutfragments-ui/assets-discovery.json`"
+    ```json
+    {
+      "spaBundle": "https://site.com/layoutfragments-ui/app.80de7d4e36eae32662d2.js",
+      "cssBundle": "./app.81340a47f3122508fd76.css", // It is possible to use relative links that will be resolved against the manifest URL
+      "dependencies": {
+        "react": "https://unpkg.com/react@16.13.1/umd/react.production.min.js"
+      }
+    }
+    ```

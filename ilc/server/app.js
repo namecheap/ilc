@@ -19,16 +19,47 @@ module.exports = (registryService, pluginManager) => {
     const guardManager = new GuardManager(pluginManager);
 
     const app = fastify(Object.assign(
-        {trustProxy: false}, // TODO: should be configurable via Registry,
+        {
+            trustProxy: false, // TODO: should be configurable via Registry,
+            disableRequestLogging: true,
+        },
         _.omit(_.pick(pluginManager.getReportingPlugin(), ['logger', 'requestIdLogLabel', 'genReqId']), _.isEmpty),
     ));
 
     app.addHook('onRequest', async (req, reply) => {
+
+        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
+        const currentUrl = req.raw.url;
+
+        if(!ignoredUrls.includes(currentUrl)) {
+            req.log.info({ url: req.raw.url, id: req.id, domain: req.hostname }, "received request");
+        }
+
         req.raw.ilcState = {};
         const registryConfig = (await registryService.getConfig()).data;
         const i18nOnRequest = i18n.onRequestFactory(registryConfig.settings.i18n, pluginManager.getI18nParamsDetectionPlugin());
 
         await i18nOnRequest(req, reply);
+    });
+
+    app.addHook("onResponse", (req, reply, done) => {
+
+        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
+        const currentUrl = req.raw.url;
+
+        if(!ignoredUrls.includes(currentUrl)) {
+            req.log.info(
+                {
+                    url: req.raw.url,
+                    statusCode: reply.statusCode,
+                    domain: req.hostname,
+                    responseTime: reply.getResponseTime(),
+                },
+                "request completed"
+            );
+        }
+
+        done();
     });
 
     const tailor = tailorFactory(
@@ -45,7 +76,8 @@ module.exports = (registryService, pluginManager) => {
 
     app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
         const currentDomain = req.hostname;
-        const data = await registryService.getTemplate(req.params.templateName, currentDomain);
+        const locale = req.raw.ilcState.locale;
+        const data = await registryService.getTemplate(req.params.templateName, currentDomain, locale);
         res.status(200).send(data.data.content);
     });
 
@@ -59,7 +91,6 @@ module.exports = (registryService, pluginManager) => {
         const url = req.raw.url;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
         const processedUrl = urlProcessor.process(url);
-
         if (processedUrl !== url) {
             res.redirect(processedUrl);
             return;

@@ -6,8 +6,8 @@
     "main": "index.html",
     "scripts": {
         "start": "webpack-dev-server --progress --color --hot --watch --mode development",
-        "build": "NODE_ENV=production webpack-cli --mode production --color --hide-modules true",
-        "build:watch": "NODE_ENV=development webpack-cli --color --hide-modules true --watch --mode development"
+        "build": "cross-env NODE_ENV=production webpack-cli --mode production --color --hide-modules true",
+        "build:watch": "cross-env NODE_ENV=development webpack-cli --color --hide-modules true --watch --mode development"
     },
     "devDependencies": {
         "@babel/cli": "^7.12.10",
@@ -38,6 +38,7 @@
         "@material-ui/core": "^4.11.2",
         "@material-ui/icons": "^4.11.2",
         "brace": "^0.11.1",
+        "cross-env": "^7.0.3",
         "js-cookie": "^2.2.1",
         "jsoneditor": "^8.6.4",
         "jsoneditor-react": "^3.0.0",
