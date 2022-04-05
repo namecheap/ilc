@@ -31,7 +31,7 @@ process.on('exit', () => {
 concurrently(commands, {
     prefix: 'name',
     killOthers: ['failure', 'success'],
-}).then(() => {
+}).result.then(() => {
     console.log('concurrently was finished successfully');
     process.exit(0);
 }, (err) => {
