@@ -2,27 +2,27 @@ import fs from 'fs';
 import assert from 'assert';
 import querystring from 'querystring';
 import tk from 'timekeeper';
-import express, {NextFunction, Request, Response} from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import sinon from 'sinon';
-import supertest, {agent as supertestAgent} from 'supertest';
+import supertest, { agent as supertestAgent } from 'supertest';
 import settingsService from '../server/settings/services/SettingsService';
 
 import db from '../server/db';
 import auth from '../server/auth';
-import {SettingKeys} from "../server/settings/interfaces";
+import { SettingKeys } from "../server/settings/interfaces";
 import nock from "nock";
 import * as bcrypt from 'bcrypt';
 import { muteConsole, unmuteConsole } from './utils/console';
 
 const generateResp403 = (username: string) => ({ message: `Access denied. "${username}" has "readonly" access.` });
 
-const getApp = () => {
+const getApp = async () => {
     const app = express();
 
     app.use(bodyParser.json());
 
-    app.use(auth(app, settingsService, {
+    app.use(await auth(app, settingsService, {
         session: { secret: 'testSecret' }
     }));
 
@@ -47,8 +47,8 @@ describe('Authentication / Authorization', () => {
         nock.enableNetConnect();
     });
 
-    describe('Common', () => {
-        const request = supertest(getApp());
+    describe('Common', async () => {
+        const request = supertest(await getApp());
 
         it('should return 401 for non-authenticated requests', async () => {
             await request.get('/protected')
@@ -56,8 +56,8 @@ describe('Authentication / Authorization', () => {
         });
     });
 
-    describe('Bearer token', () => {
-        const request = supertest(getApp());
+    describe('Bearer token', async () => {
+        const request = supertest(await getApp());
 
         const userIdentifier = 'root_api_token';
 
@@ -128,7 +128,11 @@ describe('Authentication / Authorization', () => {
     });
 
     describe('Local login/password', () => {
-        const agent = supertestAgent(getApp());
+        let agent: ReturnType<typeof supertestAgent>;
+
+        beforeEach(async () => {
+            agent = supertestAgent(await getApp());
+        })
 
         afterEach(async () => {
             await agent.get('/auth/logout');
@@ -218,7 +222,11 @@ describe('Authentication / Authorization', () => {
     });
 
     describe('OpenID Connect', () => {
-        const agent = supertestAgent(getApp());
+        let agent: supertest.SuperTest<supertest.Test>;
+
+        beforeEach(async () => {
+            agent = supertestAgent(await getApp());
+        })
 
         beforeEach(() => {
             const oidcServer = nock('https://ad.example.doesnotmatter.com/');

@@ -3,13 +3,22 @@ import urlJoin from 'url-join';
 
 import {request, requestWithAuth} from './common';
 import {SettingKeys, TrailingSlashValues, Scope, SettingTypes} from '../server/settings/interfaces';
+import supertest from 'supertest';
 
 const url = '/api/v1/settings';
 
 describe(url, () => {
+    let req: supertest.SuperTest<supertest.Test>;
+    let reqWithAuth: supertest.SuperTest<supertest.Test>;
+
+    beforeEach(async () => {
+        req = await request();
+        reqWithAuth = await requestWithAuth();
+    })
+
     describe('when a user trying to get information', () => {
         it('should return settings and exclude values from secret records', async () => {
-            const response = await request.get('/api/v1/settings').expect(200);
+            const response = await req.get('/api/v1/settings').expect(200);
 
             const returnedKVs = (response.body as any[]).reduce((acc, v) => {
                 acc[v.key] = v.value;
@@ -119,7 +128,7 @@ describe(url, () => {
         });
 
         it('should return a setting and exclude a value from a secret record', async () => {
-            const response = await request.get(urlJoin('/api/v1/settings', SettingKeys.AuthOpenIdClientSecret)).expect(200);
+            const response = await req.get(urlJoin('/api/v1/settings', SettingKeys.AuthOpenIdClientSecret)).expect(200);
 
             chai.expect(response.body).to.deep.equal({
                 key: SettingKeys.AuthOpenIdClientSecret,
@@ -132,7 +141,7 @@ describe(url, () => {
         });
 
         it('should return a setting', async () => {
-            const response = await request.get(urlJoin('/api/v1/settings', SettingKeys.TrailingSlash)).expect(200);
+            const response = await req.get(urlJoin('/api/v1/settings', SettingKeys.TrailingSlash)).expect(200);
 
             chai.expect(response.body).to.deep.equal({
                 key: SettingKeys.TrailingSlash,
@@ -152,15 +161,15 @@ describe(url, () => {
         });
 
         it('should deny access when a user is not authorized', async () => {
-            await requestWithAuth.get(url).expect(401);
-            await requestWithAuth.get(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode)).expect(401);
+            await reqWithAuth.get(url).expect(401);
+            await reqWithAuth.get(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode)).expect(401);
         });
     });
 
     describe('when a user trying to update information', () => {
         it('should update a setting', async () => {
             try {
-                let response = await request.put(urlJoin(url, SettingKeys.BaseUrl)).send({
+                let response = await req.put(urlJoin(url, SettingKeys.BaseUrl)).send({
                     key: SettingKeys.BaseUrl,
                     value: 'http://spec.com',
                 }).expect(200);
@@ -176,7 +185,7 @@ describe(url, () => {
                     },
                 });
             } finally {
-                await request.put(urlJoin(url, SettingKeys.BaseUrl)).send({
+                await req.put(urlJoin(url, SettingKeys.BaseUrl)).send({
                     key: SettingKeys.BaseUrl,
                     value: 'http://localhost:4001/',
                 }).expect(200);
@@ -185,7 +194,7 @@ describe(url, () => {
 
         it('should not update a setting if would be provided extra props despite key and value props', async () => {
             try {
-                let response = await request.put(urlJoin(url, SettingKeys.BaseUrl)).send({
+                let response = await req.put(urlJoin(url, SettingKeys.BaseUrl)).send({
                     key: SettingKeys.BaseUrl,
                     value: 'http://spec.com',
                     default: 'http://localhost:4001/',
@@ -204,7 +213,7 @@ describe(url, () => {
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
-                await request.put(urlJoin(url, SettingKeys.BaseUrl)).send({
+                await req.put(urlJoin(url, SettingKeys.BaseUrl)).send({
                     key: SettingKeys.BaseUrl,
                     value: 'http://localhost:4001/',
                 }).expect(200);
@@ -213,7 +222,7 @@ describe(url, () => {
 
         it('should update a setting that is secret and return a record without the value', async () => {
             try {
-                let response = await request.put(urlJoin(url, SettingKeys.AuthOpenIdClientSecret)).send({
+                let response = await req.put(urlJoin(url, SettingKeys.AuthOpenIdClientSecret)).send({
                     key: SettingKeys.AuthOpenIdClientSecret,
                     value: '********',
                 }).expect(200);
@@ -227,7 +236,7 @@ describe(url, () => {
                     },
                 });
             } finally {
-                await request.put(urlJoin(url, SettingKeys.AuthOpenIdClientSecret)).send({
+                await req.put(urlJoin(url, SettingKeys.AuthOpenIdClientSecret)).send({
                     key: SettingKeys.AuthOpenIdClientSecret,
                     value: '',
                 }).expect(200);
@@ -236,14 +245,14 @@ describe(url, () => {
 
         it(`should not update ${SettingKeys.BaseUrl} if the value is wrong`, async () => {
             try {
-                const response = await request.put(urlJoin(url, SettingKeys.BaseUrl)).send({
+                const response = await req.put(urlJoin(url, SettingKeys.BaseUrl)).send({
                     key: SettingKeys.BaseUrl,
                     value: 'ftp://spec:3000/',
                 }).expect(422, '"value" must be a valid uri with a scheme matching the https? pattern');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
-                await request.put(urlJoin(url, SettingKeys.BaseUrl)).send({
+                await req.put(urlJoin(url, SettingKeys.BaseUrl)).send({
                     key: SettingKeys.BaseUrl,
                     value: 'http://localhost:4001/',
                 }).expect(200);
@@ -252,14 +261,14 @@ describe(url, () => {
 
         it(`should not update ${SettingKeys.AuthOpenIdDiscoveryUrl} if the value is wrong`, async () => {
             try {
-                const response = await request.put(urlJoin(url, SettingKeys.AuthOpenIdDiscoveryUrl)).send({
+                const response = await req.put(urlJoin(url, SettingKeys.AuthOpenIdDiscoveryUrl)).send({
                     key: SettingKeys.AuthOpenIdDiscoveryUrl,
                     value: 'www.spec:3000',
                 }).expect(422, '"value" must be a valid uri with a scheme matching the https? pattern');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
-                await request.put(urlJoin(url, SettingKeys.AuthOpenIdDiscoveryUrl)).send({
+                await req.put(urlJoin(url, SettingKeys.AuthOpenIdDiscoveryUrl)).send({
                     key: SettingKeys.AuthOpenIdDiscoveryUrl,
                     value: '',
                 }).expect(200);
@@ -268,14 +277,14 @@ describe(url, () => {
 
         it(`should not update ${SettingKeys.AmdDefineCompatibilityMode} if the value is not valid`, async () => {
             try {
-                const response = await request.put(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode)).send({
+                const response = await req.put(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode)).send({
                     key: SettingKeys.AmdDefineCompatibilityMode,
                     value: 'true',
                 }).expect(422, '"value" must be a boolean');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
-                await request.put(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode)).send({
+                await req.put(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode)).send({
                     key: SettingKeys.AmdDefineCompatibilityMode,
                     value: false,
                 }).expect(200);
@@ -284,14 +293,14 @@ describe(url, () => {
 
         it(`should not update ${SettingKeys.TrailingSlash} if the value is not valid`, async () => {
             try {
-                const response = await request.put(urlJoin(url, SettingKeys.TrailingSlash)).send({
+                const response = await req.put(urlJoin(url, SettingKeys.TrailingSlash)).send({
                     key: SettingKeys.TrailingSlash,
                     value: 'something',
                 }).expect(422, '"value" must be one of [doNothing, redirectToNonTrailingSlash, redirectToTrailingSlash]');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
-                await request.put(urlJoin(url, SettingKeys.TrailingSlash)).send({
+                await req.put(urlJoin(url, SettingKeys.TrailingSlash)).send({
                     key: SettingKeys.TrailingSlash,
                     value: TrailingSlashValues.DoNothing,
                 }).expect(200);
@@ -300,14 +309,14 @@ describe(url, () => {
 
         it(`should not update ${SettingKeys.AuthOpenIdEnabled} if the value is not valid`, async () => {
             try {
-                const response = await request.put(urlJoin(url, SettingKeys.AuthOpenIdEnabled)).send({
+                const response = await req.put(urlJoin(url, SettingKeys.AuthOpenIdEnabled)).send({
                     key: SettingKeys.AuthOpenIdEnabled,
                     value: 'true',
                 }).expect(422, '"value" must be a boolean');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
-                await request.put(urlJoin(url, SettingKeys.AuthOpenIdEnabled)).send({
+                await req.put(urlJoin(url, SettingKeys.AuthOpenIdEnabled)).send({
                     key: SettingKeys.AuthOpenIdEnabled,
                     value: false,
                 }).expect(200);
@@ -315,7 +324,7 @@ describe(url, () => {
         });
 
         it('should deny access when a user is not authorized', async () => {
-            await requestWithAuth.put(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode)).send({
+            await reqWithAuth.put(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode)).send({
                 key: SettingKeys.AmdDefineCompatibilityMode,
                 value: true,
             }).expect(401);
