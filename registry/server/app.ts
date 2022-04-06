@@ -25,7 +25,7 @@ export default async (withAuth: boolean = true) => {
 
     app.get('/ping', pong);
 
-    app.use('/', serveStatic('client/dist'));
+    app.use('/', serveStatic('client/dist') as any);
 
     let authMw: RequestHandler[] = [(req, res, next) => next()];
     if (withAuth) {
