@@ -32,7 +32,7 @@ nav:
       - Global API: docs/global_api.md
     - Working with ILC:
       - Animation during reroute: docs/animation_during_reroute.md
-      - Global error handling: docs/global_errors_handling.md
+      - Global error handling: docs/global_error_handling.md
       - Internationalization: docs/i18n.md
       - Develop at Production: docs/develop_at_production.md
       - Compatibility with legacy UMD bundles: docs/umd_bundles_compatibility.md
