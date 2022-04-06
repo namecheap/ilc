@@ -62,7 +62,7 @@ const bootstrap = async () => {
                 resources,
                 timeout: 10 * 60 * 1000,
                 interval: 1000,
-                verbose,
+                verbose: false,
             }).then(resolve).catch(reject);
         });
     } catch (error) {
