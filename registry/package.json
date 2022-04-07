@@ -32,11 +32,9 @@
         "@types/express-serve-static-core": "4.17.28",
         "@types/express-session": "^1.17.4",
         "@types/is-valid-domain": "0.0.1",
-        "@types/joi": "^17.2.2",
         "@types/lodash": "^4.14.181",
         "@types/mocha": "^9.1.0",
         "@types/newrelic": "^7.0.3",
-        "@types/nock": "^11.1.0",
         "@types/node": "^14.18.12",
         "@types/passport": "^1.0.7",
         "@types/passport-http-bearer": "^1.0.37",
@@ -82,5 +80,9 @@
         "@vscode/sqlite3": "^5.0.8",
         "url-join": "^4.0.1",
         "uuid": "^8.3.2"
-    }
+    },
+    "engines": {
+        "node": ">16 <17"
+    },
+    "engineStrict": true
 }

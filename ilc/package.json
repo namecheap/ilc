@@ -82,5 +82,9 @@
     "webpack-dev-middleware": "^3.7.2",
     "wget-improved": "^3.3.1",
     "wrapper-webpack-plugin": "^2.1.0"
-  }
+  },
+  "engines": {
+    "node": ">16 <17"
+  },
+  "engineStrict": true
 }
