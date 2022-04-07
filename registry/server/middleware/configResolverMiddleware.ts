@@ -7,11 +7,10 @@ export const configResolverMiddleware: RequestHandler = (
     (request: Request, response: Response, next: NextFunction): void => {
         const { data } = response.locals;
         const domain = request.hostname;
-        const filters = new Map();
-        filters.set(RoutesFilter.accessPath, RoutesFilter);
-        filters.set(SpecialRoutesFilter.accessPath, SpecialRoutesFilter);
-        const configFilter = new ConfigFilter(data, filters);
-        const result = configFilter.filter(domain);
+        const configFilter = new ConfigFilter(data);
+        const result = configFilter.filter([
+            RoutesFilter, SpecialRoutesFilter
+        ].map(Ctor => new Ctor(domain)));
         response.json(result);
         next();
     }
