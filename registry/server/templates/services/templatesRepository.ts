@@ -10,11 +10,11 @@ export async function readTemplateWithAllVersions(templateName: string) {
         return undefined;
     }
 
-    const localizedTemplates = await db.select().from<LocalizedTemplate>(tables.templatesLocalized).where('templateName', templateName);
+    const localizedTemplates: LocalizedTemplate[] = await db.select().from<LocalizedTemplate>(tables.templatesLocalized).where('templateName', templateName);
     template.localizedVersions = localizedTemplates.reduce((acc, item) => {
         acc[item.locale] = { content: item.content };
         return acc;
-    }, {});
+    }, {} as Record<string, object>);
 
     return template;
 }

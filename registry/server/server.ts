@@ -33,6 +33,10 @@ function onError(error: any) {
     }
 
     const addr = server.address();
+    if (addr == null) {
+        throw error;
+    }
+
     const bind = typeof addr === 'string' ? 'Pipe ' + addr : 'Port ' + addr.port;
 
     // handle specific listen errors with friendly messages

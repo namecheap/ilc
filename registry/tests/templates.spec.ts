@@ -197,7 +197,7 @@ describe(`Tests ${example.url}`, () => {
                                           headers,
                                       },
                                   },
-                              }) => scope.log(console.log).persist().get(route).delay(delay).reply(status, data, headers));
+                              }) => scope.persist().get(route).delay(delay).reply(status, data, headers));
 
             try {
                 await req.post(example.url).send(template).expect(200);

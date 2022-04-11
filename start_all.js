@@ -13,7 +13,7 @@ if (myCmd.includes('--no-watch')) {
 }
 
 const commands = [
-    { command: `cd ./ilc/ && ${noWatch ? 'NODE_ENV=production' : ''} npm run ${noWatch ? 'start' : 'dev'}`, name: 'ilc' },
+    { command: `cd ./ilc/ && ${noWatch ? 'npx cross-env NODE_ENV=production' : ''} npm run ${noWatch ? 'start' : 'dev'}`, name: 'ilc' },
     { command: `cd ./registry/ && npm run ${noWatch ? 'start' : 'dev'}`, name: 'registry' },
 ];
 
@@ -31,7 +31,7 @@ process.on('exit', () => {
 concurrently(commands, {
     prefix: 'name',
     killOthers: ['failure', 'success'],
-}).then(() => {
+}).result.then(() => {
     console.log('concurrently was finished successfully');
     process.exit(0);
 }, (err) => {
