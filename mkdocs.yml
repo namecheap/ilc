@@ -39,11 +39,11 @@ nav:
       - ILC transition hooks: docs/transition_hooks.md
       - Multi-domains: docs/multi-domains.md
       - How-to Guides:
-          - App deploy with React + ILC:
-            - Lesson 1: docs/stepbystep/react/lesson1.md
-            - Lesson 2: docs/stepbystep/react/lesson2.md
-            - Lesson 3: docs/stepbystep/react/lesson3.md
-            - Lesson 4: docs/stepbystep/react/lesson4.md
+          - React app + ILC:
+            - Lesson 1: docs/how-to-guides/react/lesson1.md
+            - Lesson 2: docs/how-to-guides/react/lesson2.md
+            - Lesson 3: docs/how-to-guides/react/lesson3.md
+            - Lesson 4: docs/how-to-guides/react/lesson4.md
     - Routing:
       - Introduction: docs/routing/introduction.md
       - Route configuration: docs/routing/route_configuration_options.md
