@@ -7,11 +7,13 @@ export class RoutesFilter extends BaseNodeFilter {
         const accum: [Node[], Node[]] = [[], []];
         const [ withDomain, withoutDomain ] = node.reduce(
             ([ left, right ], { domain, ...rest }) => {
-                if(!domain) {
+                if(typeof domain !== 'string') {
                     right.push(rest);
                 }
 
-                if(this.predicate === domain) {
+                const option = domain as string;
+
+                if(super.canResolve(option)) {
                     left.push(rest);
                 }
 

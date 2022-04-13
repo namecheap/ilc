@@ -11,8 +11,8 @@ export class SpecialRoutesFilter extends BaseNodeFilter {
         const [ withDomain, withoutDomain ] = node.reduce(
             ([ left, right ], { domain, specialRole, ...rest }) => {
                 if(isString(specialRole)) {
-                    !domain ? right[specialRole] = rest : (
-                        domain === this.predicate ? left[specialRole] = rest : null
+                    typeof domain !== 'string' ? right[specialRole] = rest : (
+                        super.canResolve(domain) ? left[specialRole] = rest : null
                     )
                 }
 

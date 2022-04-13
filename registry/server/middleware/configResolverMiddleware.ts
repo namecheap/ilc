@@ -6,11 +6,19 @@ import { SpecialRoutesFilter } from "../config/filters/SpecialRoutesFilter";
 export const configResolverMiddleware: RequestHandler = (
     (request: Request, response: Response, next: NextFunction): void => {
         const { data } = response.locals;
+        if(!data) throw new Error(
+            'Data is not provided through middleware'
+        );
+
         const domain = request.hostname;
-        const configFilter = new ConfigFilter(data);
-        const result = configFilter.filter([
+        const filters = [
             RoutesFilter, SpecialRoutesFilter
-        ].map(Ctor => new Ctor(domain)));
+        ] as const;
+        const configFilter = new ConfigFilter(data);
+        const result = configFilter.filter(
+            filters.map(Ctor => new Ctor([domain]))
+        );
+
         response.json(result);
         next();
     }

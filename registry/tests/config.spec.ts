@@ -94,7 +94,6 @@ describe('Tests /api/v1/config', () => {
 
                 expect(response.text).to.be.a('string');
                 expect(response.body).to.be.an('object');
-
                 expect(response.body.apps).to.be.an('object');
                 expect(response.body.templates).to.be.an('array');
                 expect(response.body.routes).to.be.an('array');
@@ -106,6 +105,10 @@ describe('Tests /api/v1/config', () => {
                     routeId,
                     ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
                 });
+
+                response.body.routes.map((item: Record<string, unknown>) => (
+                    item.domain && expect(item).to.have.property('domain')
+                ));
 
                 response.body.specialRoutes.map((item: Record<string, unknown>) => (
                     item.domain && expect(item).to.have.property('domain')
