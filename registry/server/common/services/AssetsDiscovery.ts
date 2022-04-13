@@ -1,5 +1,4 @@
 import axios, {AxiosResponse} from 'axios';
-import _ from 'lodash';
 import urljoin from 'url-join';
 
 import knex from '../../db';
