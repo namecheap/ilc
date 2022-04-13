@@ -75,7 +75,7 @@ router.get('/', async (req, res, next) => {
             routeData = Object.assign({
                 slots: {},
                 meta: {},
-            }, _.omitBy(_.pick(routeItem, ['routeId', 'route', 'next', 'template', 'specialRole']), _.isNull));
+            }, _.omitBy(_.pick(routeItem, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain']), _.isNull));
 
             currentRoutesList.push(routeData);
         }
