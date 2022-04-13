@@ -104,7 +104,7 @@ module.exports = class Router {
             } else if (v.route.match(/\/\*$/) !== null) {
                 const basePath = route.substring(0, route.length - 3);
 
-                routeExp = new RegExp(`^(${basePath})/?.*`);
+                routeExp = new RegExp(`^(${basePath})(?:$|/.*)`);
             } else {
                 let basePath = route;
 
