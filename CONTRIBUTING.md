@@ -9,7 +9,7 @@
 1. Run `npm start`
 1. Open your browser and navigate to ILC or Registry UI:
     * `ILC`: http://localhost:8233/
-    * `Registry UI`: http://localhost:4001/
+    * `Registry UI`: http://localhost:4001/ 21312
 
 !!! tip "Dev mode for demo applications"
     With the commands above, you start ILC with a [set of demo applications](https://github.com/namecheap/ilc-demo-apps) running inside the Docker container. It is OK when you work with ILC. However, when you need to develop those applications alongside ILC, you should switch them into dev mode.
