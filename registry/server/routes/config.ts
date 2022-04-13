@@ -65,15 +65,17 @@ router.get('/', async (req, res, next) => {
             routeItem.next = !!routeItem.next;
             routeItem.template = routeItem.templateName;
 
-            routeItem.domain = routeItem.domainId === null
-                ? null
-                : routerDomains.find(({ id }) => id === routeItem.domainId)?.domainName || null;
+            const domain = routeItem.domainId ? routerDomains.find(
+                ({ id }) => id === routeItem.domainId
+            )?.domainName : null;
+
+            routeItem.domain = domain || '*';
             delete routeItem.domainId;
 
             routeData = Object.assign({
                 slots: {},
                 meta: {},
-            }, _.omitBy(_.pick(routeItem, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain']), _.isNull));
+            }, _.omitBy(_.pick(routeItem, ['routeId', 'route', 'next', 'template', 'specialRole']), _.isNull));
 
             currentRoutesList.push(routeData);
         }

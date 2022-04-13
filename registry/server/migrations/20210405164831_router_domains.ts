@@ -4,7 +4,7 @@ import { Knex } from "knex";
 export async function up(knex: Knex): Promise<any> {
     return knex.schema.createTable('router_domains', table => {
         table.increments('id');
-        table.string('domainName', 255).notNullable();
+        table.string('domainName', 255).notNullable().defaultTo('*');
         table.string('template500', 50).notNullable().references('templates.name')
     });
 }
