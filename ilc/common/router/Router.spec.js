@@ -390,8 +390,7 @@ describe('Router', () => {
             });
         });
 
-        // test looks strange but previously we had this bug that caused problems
-        it('should not match route if it has `/*` at the end and request url has same not defined text at the end of the route', () => {
+        describe('when a route has `/*` at the end', () => {
             const routeWithTrailingSlashAndAsterisk = Object.freeze({
                 route: '/launchpad/*',
                 next: false,
@@ -416,21 +415,65 @@ describe('Router', () => {
                 ],
             });
 
-            const router = new Router(registryConfigWithRouteThatHasTrailingSlashAndAsterisk);
-            const reqUrl = '/launchpad-SOME_TRAILING_TEXT_FOO_BAR_BAZ';
+            it('should match request url without "/" at the end', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAndAsterisk);
+                const reqUrl = '/launchpad';
 
-            chai.expect(router.match(reqUrl)).to.be.eql({
-                route: '/404',
-                basePath: '/',
-                reqUrl,
-                template: 'errorsTemplate',
-                specialRole: 404,
-                slots: {
-                    ...registryConfig.specialRoutes['404'].slots,
-                },
-                meta: {
-                    ...registryConfig.specialRoutes['404'].meta,
-                },
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/launchpad/*',
+                    basePath: '/launchpad',
+                    reqUrl,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeWithTrailingSlashAndAsterisk.slots,
+                    meta: {},
+                });
+            });
+
+            it('should match request url with "/" at the end', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAndAsterisk);
+                const reqUrl = '/launchpad/';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/launchpad/*',
+                    basePath: '/launchpad',
+                    reqUrl,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeWithTrailingSlashAndAsterisk.slots,
+                    meta: {},
+                });
+            });
+
+            it('should match request url with "/some_sub_route" at the end', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAndAsterisk);
+                const reqUrl = '/launchpad/some_sub_route';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/launchpad/*',
+                    basePath: '/launchpad',
+                    reqUrl,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeWithTrailingSlashAndAsterisk.slots,
+                    meta: {},
+                });
+            });
+
+            // test looks strange but previously we had this bug that caused problems
+            it('should not match route if request url has same not defined text at the end of the route', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAndAsterisk);
+                const reqUrl = '/launchpad-SOME_TRAILING_TEXT_FOO_BAR_BAZ';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/404',
+                    basePath: '/',
+                    reqUrl,
+                    template: 'errorsTemplate',
+                    specialRole: 404,
+                    slots: registryConfig.specialRoutes['404'].slots,
+                    meta: registryConfig.specialRoutes['404'].meta,
+                });
             });
         });
     });
