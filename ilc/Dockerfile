@@ -9,6 +9,7 @@ WORKDIR /codebase
 
 COPY package-lock.json package.json /codebase/
 RUN npm ci --no-package-lock --ignore-scripts
+RUN npm rebuild @newrelic/native-metrics
 
 COPY ./ /codebase
 
