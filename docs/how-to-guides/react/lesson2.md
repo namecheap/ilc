@@ -1,116 +1,144 @@
-# Step by step apps creation with ILC, React, Lesson 2
+# React application + ILC. Lesson 2
 
-This article is the continuation of the [first one that can be found here](./lesson1.md). 
-However if you're an experienced developer – feel free to start from this one.
+Hello everyone!
 
-In this part we'll showcase how to turn an app that uses [React router](https://reactrouter.com/web/guides/quick-start) 
-into Micro Frontend that works with _Isomorphic Layout Composer_.
+In the [first tutorial](lesson1.md), you created a React application from scratch and integrated it into a "production" instance of ILC on-the-fly.
 
-A bit of theory...
-================
+In this tutorial, you will get familiar with the routing and turn your application (from the previous tutorial) into a micro-frontend that works with ILC.
 
-One of the first questions that you need to solve when applying micro frontends architecture is routing. 
-It comes from the fact that you no longer have a single React/Vue.js/etc app that handles all the route transitions. 
-Now you have multiple apps working simultaneously on the web page, and you somehow need to understand which apps should 
-be active on the page for the current URL.
+Let's get started 🚀
 
-We, in _Isomorphic Layout Composer_ (ILC), solve this by using so-called "2-tiered routing" approach.
+## Overview
+
+Routing is one of the hard questions to solve when applying the micro-frontend architecture. The problem is that you no longer have a single application that handles all the route transitions. Instead, you have multiple applications working simultaneously on the web page, and you need to know what application should be active at one time or another for the current URL.
+
+ILC uses **two-tiered routing** to solve this problem.
 
 !["2-tiered routing" approach](../../assets/2_tiered_routing.png)
 
-In this example the user opened a page at `/news/latest` URL. It correlates to the `/news/*` route configured in ILC, 
-this route contains information about apps that should be loaded on the page and props they need to receive. 
-When we load and mount the application to its container DOM node  – we also pass `basePath` property which should be 
-used by application's router during its work.
+In this example, when the user opens a URL (`/news/latest`), this URL matches the route configured in ILC (`/news/*`). The route contains information about the applications that should be loaded on the page and the props they need to receive.
+When ILC loads and mounts the application to its DOM node container, it also passes the `basePath` property to instruct the application on what routing it should use.
 
-But enough theory – let's see some real code.
+!!! info ""
+    You can find more information about routing in the [Introduction](../../routing/introduction.md) page.
 
-Starting point
-==============
+## Get your React application ready
 
-We'll start from the sample React app that has 3 internal routes: Home, Tic-Tac-Toe game and Snake game.
+For this tutorial, you need the [React application](lesson1.md) with the following internal routes: Home, Tic-Tac-Toe, and Snake games.
 
-Please go and grab it here: <https://github.com/StyleT/ilc-learning-react/tree/step_2-Router> 
-(you need to use `step_2-Router` branch). After git clone, run `npm i && npm start`.
+To make things easier, you can [clone the sample](https://github.com/StyleT/ilc-learning-react/tree/step_2-Router) that we've prepared for you (and then checkout to the `step_2-Router` branch), or start with this application [running in the cloud](https://codesandbox.io/s/github/StyleT/ilc-learning-react/tree/step_2-Router). For the sake of simplicity, it is recommended to use the cloud version.
 
-Or you can use [codesandbox.io](https://codesandbox.io/s/github/StyleT/ilc-learning-react/tree/step_2-Router) to have 
-it running for you in the cloud. 
-I would recommend to use [codesandbox.io](https://codesandbox.io/s/github/StyleT/ilc-learning-react/tree/step_2-Router) 
-to eliminate all the local environment related issues that may appear as we move forward.
+!!! hint ""
+    Don't forget to play around with links, games, and check the [diff with the `master` branch](https://github.com/StyleT/ilc-learning-react/compare/step_2-Router?diff=split) before we actually get started 😎
 
-As soon as you started the app  – try to go through the links in the menu, disable JavaScript execution to see SSR output, etc...
 
-If you just finished the [1st lesson](./lesson1.md) – look at the diff between `master` branch and `step_2-Router`. See what was changed.
+![Image](../assets/lesson-2-ttt-game.png)
 
-![Image](../../assets/react_l2_i1.png)
+## Adapt the application to ILC
 
-Adapting the app to ILC
-=======================
+To make the application work correctly with ILC, you need to make it compliant with the [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html).
 
-To make our React app play together with ILC – we need to make it compliant with [ILC to App interface](https://github.com/namecheap/ilc/blob/b4622ee06f6c3e52a045d156ba346eeb90b51237/docs/ilc_app_interface.md). Fortunately that's pretty easy, go through the source code and resolve all the `//TODO:` comments I placed for you there.
+To do this, go through the source code and resolve **all** the `//TODO:` comments that were placed there for you (Hint: there are still 4 of them 😉)
 
-As soon as you're finished with this – restart the app and try to open `/microfrontend` route. You should get `200 OK` response code & some SSR markup.
+Once you're done, restart the application and navigate to the `/microfrontend` route. You should get a `200 OK` response code and SSR markup as a result.
 
-> Note: in case of any troubles – try to switch to the `step_2-Router_ILC_integrated` branch in the repo  – it has all the changes already done for you.
+!!! hint ""
+    If you are facing troubles during this step, feel free to switch to the `step_2-Router_ILC_integrated` branch which has all the required changes already made for you.
 
-Configuring ILC to handle new app
-=================================
+## Configure ILC to handle the application
 
-In this step we're gonna use our public demo website and "[Develop right at "production"](../../develop_at_production.md)" ILC feature to complete the task. We will do it for the sake of simplicity only. However you can achieve pretty the same results using ILC that you run locally.
+In this step, you will use the public demo website and the "[Develop at "production"](../../develop_at_production.md)" feature again to complete the task.
 
-More info about how to determine public & SSR paths for your particular case – you can find [in the previous lesson](./lesson1.md).
+!!! note ""
+    If you want more control over the process, you may want to use ILC locally
 
-Now let's open [ilc-demo.namecheap.technology/nosuchpath](http://ilc-demo.namecheap.technology/nosuchpath) and by setting "magic cookie" in our browser  – let's change ILC config on the fly:
+To configure your micro-frontend:
 
-```javascript
-var publicPath = 'https://abcde.sse.codesandbox.io/public/';
-var ssrPath = 'https://abcde.sse.codesandbox.io/microfrontend';
+1. Determine your `publicPath` and `ssrPath`:
 
-var overrideConfig = encodeURIComponent(JSON.stringify({
-    apps: {
-        '@portal/myapp': {
-            spaBundle: publicPath + 'client.js',
-            cssBundle: publicPath + 'style.css',
-            ssr: {
-                src: ssrPath,
-                timeout: 10000,
+    1. For `codesandbox.io`:
+        * **`publicPath`**: `https://xxxxx.sse.codesandbox.io/public/`
+        * **`ssrPath`**: `https://xxxxx.sse.codesandbox.io/microfrontend`
+
+        where `xxxxx` are random alphanumeric characters. Check the address bar of your virtual browser.
+    
+    1. For local instance:
+        * **`publicPath`**: `http://127.0.0.1:5000/public/`
+        * **`ssrPath`**: `http://<white_ip_address>:5000/microfrontend`
+        
+        where `<white_ip_address>` is the real IP address of your machine or the one generated via services like [ngrok](https://ngrok.com/).
+
+        !!! hint ""
+
+            To work with ILC via `ngrok`, you need to create a free account at [ngrok.com](https://dashboard.ngrok.com/signup) and obtain an `authtoken`.
+
+
+    ??? example "Examples of `publicPath` and `ssrPath`"
+
+        === "codesandbox.io"
+
+            * **`publicPath`**: `https://1a2b3.sse.codesandbox.io/public/`
+            * **`ssrPath`**: `https://1a2b3.sse.codesandbox.io/microfrontend`
+
+        === "local instance"
+
+            * **`publicPath`**: `http://127.0.0.1:5000/public/`
+            * **`ssrPath`**: `http://123.456.78.90:5000/microfrontend`
+
+            If you're using `ngrok`, assuming it is launched via `ngrok http 5000`
+
+            * **`publicPath`**: `http://127.0.0.1:5000/public/`
+            * **`ssrPath`**: `http://14de-77-120-151-199.ngrok.io/microfrontend`
+
+1. Update the ILC configuration:
+    1. Navigate to the http://ilc-demo.namecheap.technology/nosuchpath
+    1. Execute the code below in the browser console (Developer tools):
+
+        ```js
+        var publicPath = 'https://xxxxx.sse.codesandbox.io/public/';
+        var ssrPath = 'https://xxxxx.sse.codesandbox.io/microfrontend';
+
+        var overrideConfig = encodeURIComponent(JSON.stringify({
+            apps: {
+                '@portal/myapp': {
+                    spaBundle: publicPath + 'client.js',
+                    cssBundle: publicPath + 'style.css',
+                    ssr: {
+                        src: ssrPath,
+                        timeout: 10000,
+                    },
+                    props: { publicPath },
+                    kind: 'primary',
+                },
             },
-            props: { publicPath },
-            kind: 'primary',
-        },
-    },
-    routes: [{
-        routeId: 555,
-        route: '/nosuchpath/*',
-        slots: {
-            body: {
-                appName: '@portal/myapp'
-            }
-        }
-    }]
-}));
+            routes: [{
+                routeId: 555,
+                route: '/nosuchpath/*',
+                slots: {
+                    body: {
+                        appName: '@portal/myapp'
+                    }
+                }
+            }]
+        }));
 
-document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`
-```
+        document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`
+        ```
 
-Refresh the page after code execution. If you did everything correctly – you should be able to see your app running inside a public ILC demo website.
+1. Refresh the page after code execution.
 
-> If it doesn't work for you  – ensure that `ssrPath` is accessible not only from your machine (use <https://reqbin.com/>) and JS/CSS links are actually working from your machine.
+    You should see your application running inside the public ILC demo website.
 
-Exploring the results
-=====================
+    ![React app in ILC](../assets/lesson-2-ttt-game-in-ilc.png)
 
-![Image for post](../../assets/react_l2_i2.png)
+    If you can't - check both `publicPath` and `ssrPath`, and ensure that links to JS/CSS resources are correct.
 
-Now you can try to play some Tic-Tac-Toe and Snake games by following the links to the corresponding pages within your own Micro Frontend 😎
+## Explore the results
 
-Pay attention to the "Demo News app" link. Even despite the fact that it's a regular `<a>` tag  – it doesn't cause page reload and smoothly loads another app. This is one of the features of the ILC that help to make it work with legacy monolithic apps.
+When checking how your application works on the public ILC demo website, pay attention to the `Demo News app` link. As you can see from the source code (or via the Developer Tools), it is a regular link - `<a>` tag, but it doesn't trigger a page reload and loads another application smoothly. It is one of the ILC's cool features that help make ILC work with legacy monolithic applications.
 
-Also try to disable JS execution and go through the links again. See that all of the pages look exactly as with JS enabled (apart from the fact that you can't play games now).
+You can also try disabling JavaScript and go through the links again. You should admit that all the pages look the same as before (except that you can't play games now).
 
-Summary
-=======
+## Summary
 
-In a matter of a half an hour we turned the simplest React-router based app into a Micro Frontend and I hope it went nice and easy for you.
-
-Micro Frontends architecture is quite complex when you start to work with it. But a proper toolchain that [Isomorphic Layout Composer](https://github.com/namecheap/ilc) delivers  – can simplify things a lot.
+Congratulations! 🎉 In just half an hour, you turned a simple React router-based application into a micro-frontend. We hope it was nice and smooth for you.
