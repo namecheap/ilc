@@ -279,7 +279,7 @@ describe('Router', () => {
         });
 
         describe('when a route has `/` at the end', () => {
-            const routeThatHasTrailingSlashAtTheEnd = Object.freeze({
+            const routeWithTrailingSlash = Object.freeze({
                 route: '/launchpad/',
                 next: false,
                 template: 'launchpadTemplate',
@@ -295,40 +295,40 @@ describe('Router', () => {
                 },
             });
 
-            const registryConfigWithRouteThatHasTrailingSlashAtTheEnd = Object.freeze({
+            const registryConfigWithRouteThatHasTrailingSlash = Object.freeze({
                 ...registryConfig,
                 routes: [
-                    routeThatHasTrailingSlashAtTheEnd,
+                    routeWithTrailingSlash,
                     ...registryConfig.routes
                 ],
             });
 
             it('should return a matched route by a request url that does not have `/` at the end', () => {
-                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAtTheEnd);
-                const reqUrlThatDoesNotHaveTrailingSlashAtTheEnd = '/launchpad';
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlash);
+                const reqUrl = '/launchpad';
 
-                chai.expect(router.match(reqUrlThatDoesNotHaveTrailingSlashAtTheEnd)).to.be.eql({
+                chai.expect(router.match(reqUrl)).to.be.eql({
                     route: '/launchpad/',
                     basePath: '/launchpad',
-                    reqUrl: reqUrlThatDoesNotHaveTrailingSlashAtTheEnd,
+                    reqUrl,
                     template: 'launchpadTemplate',
                     specialRole: null,
-                    slots: routeThatHasTrailingSlashAtTheEnd.slots,
+                    slots: routeWithTrailingSlash.slots,
                     meta: {},
                 });
             });
 
             it('should return a matched route by a request url that has `/` at the end', () => {
-                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAtTheEnd);
-                const reqUrlThatHasTrailingSlashAtTheEnd = '/launchpad/';
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlash);
+                const reqUrl = '/launchpad/';
 
-                chai.expect(router.match(reqUrlThatHasTrailingSlashAtTheEnd)).to.be.eql({
+                chai.expect(router.match(reqUrl)).to.be.eql({
                     route: '/launchpad/',
                     basePath: '/launchpad',
-                    reqUrl: reqUrlThatHasTrailingSlashAtTheEnd,
+                    reqUrl,
                     template: 'launchpadTemplate',
                     specialRole: null,
-                    slots: routeThatHasTrailingSlashAtTheEnd.slots,
+                    slots: routeWithTrailingSlash.slots,
                     meta: {},
                 });
             });
@@ -371,7 +371,7 @@ describe('Router', () => {
             });
 
             it('should return 404 route when a router does not match a route by a requested url that has something after `/`', () => {
-                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAtTheEnd);
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlash);
                 const reqUrl = '/launchpad/something';
 
                 chai.expect(router.match(reqUrl)).to.be.eql({
@@ -380,12 +380,8 @@ describe('Router', () => {
                     reqUrl,
                     template: 'errorsTemplate',
                     specialRole: 404,
-                    slots: {
-                        ...registryConfigWithRouteThatHasTrailingSlashAtTheEnd.specialRoutes['404'].slots,
-                    },
-                    meta: {
-                        ...registryConfigWithRouteThatHasTrailingSlashAtTheEnd.specialRoutes['404'].meta,
-                    },
+                    slots: registryConfig.specialRoutes['404'].slots,
+                    meta: registryConfig.specialRoutes['404'].meta,
                 });
             });
         });
