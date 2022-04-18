@@ -1,43 +1,46 @@
-# Wrapper for Applications
+# Wrapper for applications
 
-> Note: This is an advanced feature of ILC. In most of the cases you won't need it.
+## Overview
 
-This feature is useful if you want to extract some bootstrap, loading or authorization functionality from different apps 
-and being able to control it from a single place. 
+!!! warning ""
+    This is an advanced feature of ILC. In most cases, you won't need it.
+
+Application wrapper is useful when you want to extract some bootstrap, loading or authorization functionality from different applications, and control them from a single place.
+
+For example, if you are building a store where product pages are developed by different teams. As a result, these pages will reside on different Micro Frontends. In this case, the business logic that checks whether the product has already been purchased by the customer can be extracted into a standalone application. This application would perform the check and render the corresponding UI for purchase, if necessary.
+
+## High-level diagram
 
 ![App Wrappers Diagram](./assets/app_wrappers_diagram.svg)
 
-This is useful if you're building a store where pages for different products will be developed by different teams and so
-will reside in different Micro Frontends. In this case you may want to extract logic that check if product has been already 
-purchased by the customer to standalone app which would perform the check and render some UI for purchase if necessary.
-
 ## Registry configuration
 
-To use this feature you need to have ILC Registry configured in the following way:
+To use this feature, you need to configure the ILC Registry as follows:
 
-1. Register App Wrapper app in Registry and set it's `kind` property to `wrapper`.
-1. For the apps that you want to wrap with Wrapper - set `wrappedWith` property to the name of the app from the 1st step.
+1. For the registered App Wrapper application, set the `kind` property to `wrapper`.
+1. For the applications that you want to wrap with Wrapper, set `wrappedWith` property according to the name of the application, registered in the previous step.
 
-> Notes: 
-> - It's impossible to use apps with `kind = wrapper` in routes directly.
-> - If Wrapper App doesn't support SSR - it's will be ignored for all wrapped apps. So remember: if you need to create 
-> wrapper for apps with SRR - wrapper also should be SSR capable.
+!!! warning ""
+
+    - You cannot use applications with `kind = wrapper` in routes directly.
+    - If you need to wrap applications with SSR, make sure that the Wrapper (new or existing one) supports SSR as well. Otherwise, SSR support will be ignored for all wrapped applications.
 
 
-## How to build App Wrapper
+## Build App Wrapper
 
-Essentially App Wrapper is a regular ILC application which receives extra property which allows to render target application 
-with optional extra props when needed. Look at the [demo wrapper for reference implementation](https://github.com/namecheap/ilc-demo-apps/tree/master/apps/wrapper).
-To see it in action [go to our demo website](http://ilc-demo.namecheap.technology/wrapper/).
+Essentially App Wrapper is a regular ILC application that receives extra property to allow the rendering of the target application 
+with additional properties when needed.
 
-### Client side API
+Check the [demo wrapper for reference implementation](https://github.com/namecheap/ilc-demo-apps/tree/master/apps/wrapper){: target=_blank} :octicons-link-external-16:, or [check it in action](http://ilc-demo.namecheap.technology/wrapper/){: target=_blank} :octicons-link-external-16:
 
-At client side Wrapper App receives an additional property `renderApp` via [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html).
+### Client-side API
 
-### Server side API
+On the client-side, Wrapper App receives an additional `renderApp` property via [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html){: target=_blank} :octicons-link-external-16:
 
-At server side application should be using [IlcAppWrapperSdk](https://namecheap.github.io/ilc-sdk/classes/_server_ilcappwrappersdk_.ilcappwrappersdk.html) 
-from [ilc-sdk](https://github.com/namecheap/ilc-sdk) instead of the regular [IlcSdk](https://namecheap.github.io/ilc-sdk/classes/_server_ilcsdk_.ilcsdk.html) class.
+### Server-side API
 
-It exposes additional `forwardRequest` method which can be used to forward SSR request to target app and so render it 
-immediately at client side w/o even executing App Wrapper's code during initial CSR on page load.
+On the server-side, an application should use [IlcAppWrapperSdk](https://namecheap.github.io/ilc-sdk/classes/_server_ilcappwrappersdk_.ilcappwrappersdk.html){: target=_blank} :octicons-link-external-16:
+from [ilc-sdk](https://github.com/namecheap/ilc-sdk) instead of the regular [IlcSdk](https://namecheap.github.io/ilc-sdk/classes/_server_ilcsdk_.ilcsdk.html){: target=_blank} :octicons-link-external-16: class
+
+It exposes an additional `forwardRequest` method that can be used to forward SSR request to the target application and render it 
+immediately on the client-side without executing App Wrapper's code during the initial CSR on page load.
