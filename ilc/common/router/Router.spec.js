@@ -140,199 +140,147 @@ describe('Router', () => {
             chai.expect(router.match.bind(router, reqUrl)).to.throw(router.errors.NoBaseTemplateMatchError);
         });
 
-        it('should return matched route by request url', () => {
-            const router = new Router(registryConfig);
-            const reqUrl = '/hero/apps?prop=value';
+        describe('when a route equals "*"', () => {
+            it('should return matched route by request url', () => {
+                const router = new Router(registryConfig);
+                const reqUrl = '/hero/apps?prop=value';
 
-            chai.expect(router.match(reqUrl)).to.be.eql({
-                route: '/hero/apps',
-                basePath: '/hero/apps',
-                reqUrl,
-                template: 'heroTemplate',
-                specialRole: null,
-                slots: {
-                    ...registryConfig.routes[0].slots,
-                    ...registryConfig.routes[1].slots,
-                    ...registryConfig.routes[2].slots,
-                },
-                meta: {
-                    ...registryConfig.routes[0].meta,
-                    ...registryConfig.routes[1].meta,
-                    ...registryConfig.routes[2].meta,
-                },
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/hero/apps',
+                    basePath: '/hero/apps',
+                    reqUrl,
+                    template: 'heroTemplate',
+                    specialRole: null,
+                    slots: {
+                        ...registryConfig.routes[0].slots,
+                        ...registryConfig.routes[1].slots,
+                        ...registryConfig.routes[2].slots,
+                    },
+                    meta: {
+                        ...registryConfig.routes[0].meta,
+                        ...registryConfig.routes[1].meta,
+                        ...registryConfig.routes[2].meta,
+                    },
+                });
             });
-        });
 
-        it('should return matched route with correct basePath if exists only route="*" as final point', () => {
-            const independentRouteStar = registryConfig.routes.find(n => n.route === '*');
+            it('should return matched route with correct basePath if exists only route="*" as final point', () => {
+                const independentRouteStar = registryConfig.routes.find(n => n.route === '*');
 
-            const router = new Router({
-                ...registryConfig,
-                routes: [{
+                const router = new Router({
+                    ...registryConfig,
+                    routes: [{
+                        ...independentRouteStar,
+                        next: false,
+                    }],
+                });
+                const reqUrl = '/hero/apps?prop=value';
+
+                const result = {
                     ...independentRouteStar,
-                    next: false,
-                }],
+                    reqUrl,
+                    specialRole: null,
+                    basePath: '/',
+                };
+                delete result.next;
+
+                chai.expect(router.match(reqUrl)).to.be.eql(result);
             });
-            const reqUrl = '/hero/apps?prop=value';
 
-            const result = {
-                ...independentRouteStar,
-                reqUrl,
-                specialRole: null,
-                basePath: '/',
-            };
-            delete result.next;
+            it('should return 404 route when a router does not match any route', () => {
+                const router = new Router(registryConfig);
+                const reqUrl = '/nonexistent?prop=value';
 
-            chai.expect(router.match(reqUrl)).to.be.eql(result);
-        });
-
-        it('should return 404 route when a router does not match any route', () => {
-            const router = new Router(registryConfig);
-            const reqUrl = '/nonexistent?prop=value';
-
-            chai.expect(router.match(reqUrl)).to.be.eql({
-                route: '/404',
-                basePath: '/',
-                reqUrl,
-                template: 'errorsTemplate',
-                specialRole: 404,
-                slots: {
-                    ...registryConfig.specialRoutes['404'].slots,
-                },
-                meta: {
-                    ...registryConfig.specialRoutes['404'].meta,
-                },
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/404',
+                    basePath: '/',
+                    reqUrl,
+                    template: 'errorsTemplate',
+                    specialRole: 404,
+                    slots: {
+                        ...registryConfig.specialRoutes['404'].slots,
+                    },
+                    meta: {
+                        ...registryConfig.specialRoutes['404'].meta,
+                    },
+                });
             });
-        });
 
-        it('should merge slot props when necessary', () => {
-            const router = new Router({
-                routes: [{
-                    route: '*',
-                    next: true,
+            it('should merge slot props when necessary', () => {
+                const router = new Router({
+                    routes: [{
+                        route: '*',
+                        next: true,
+                        template: 'test',
+                        slots: {
+                            navbar: {
+                                appName: 'navbar',
+                                props: {
+                                    a: '1',
+                                },
+                                kind: 'essential',
+                            },
+                            body: {
+                                appName: 'someApp',
+                                props: {
+                                    c: '3',
+                                },
+                                kind: 'primary',
+                            },
+                        },
+                        meta: {},
+                    }, {
+                        route: '/hero/*',
+                        slots: {
+                            navbar: {
+                                appName: 'navbar',
+                                props: {
+                                    b: '2',
+                                },
+                            },
+                            body: {
+                                appName: 'anotherApp',
+                                props: {
+                                    d: '4',
+                                },
+                                kind: 'primary',
+                            },
+                        },
+                        meta: {},
+                    }],
+                    specialRoutes: {},
+                });
+                const reqUrl = '/hero/test';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/hero/*',
+                    basePath: '/hero',
+                    reqUrl,
                     template: 'test',
+                    specialRole: null,
                     slots: {
                         navbar: {
                             appName: 'navbar',
-                            props: {
+                            props: { // Props here are merged from both routes
                                 a: '1',
+                                b: '2',
                             },
                             kind: 'essential',
                         },
                         body: {
-                            appName: 'someApp',
-                            props: {
-                                c: '3',
-                            },
-                            kind: 'primary',
-                        },
-                    },
-                    meta: {},
-                }, {
-                    route: '/hero/*',
-                    slots: {
-                        navbar: {
-                            appName: 'navbar',
-                            props: {
-                                b: '2',
-                            },
-                        },
-                        body: {
                             appName: 'anotherApp',
-                            props: {
+                            props: { // Props here are taken from last route only
                                 d: '4',
                             },
                             kind: 'primary',
                         },
                     },
                     meta: {},
-                }],
-                specialRoutes: {},
-            });
-            const reqUrl = '/hero/test';
-
-            chai.expect(router.match(reqUrl)).to.be.eql({
-                route: '/hero/*',
-                basePath: '/hero',
-                reqUrl,
-                template: 'test',
-                specialRole: null,
-                slots: {
-                    navbar: {
-                        appName: 'navbar',
-                        props: { // Props here are merged from both routes
-                            a: '1',
-                            b: '2',
-                        },
-                        kind: 'essential',
-                    },
-                    body: {
-                        appName: 'anotherApp',
-                        props: { // Props here are taken from last route only
-                            d: '4',
-                        },
-                        kind: 'primary',
-                    },
-                },
-                meta: {},
+                });
             });
         });
 
-        describe('when a route has `/` at the end', () => {
-            const routeThatHasTrailingSlashAtTheEnd = Object.freeze({
-                route: '/launchpad/',
-                next: false,
-                template: 'launchpadTemplate',
-                slots: {
-                    launchpad: {
-                        appName: 'launchpad',
-                        props: {
-                            firstHeroSlotProp: 'firstLaunchpadSlotProp',
-                            secondHeroSlotProp: 'secondLaunchpadSlotProp',
-                        },
-                        kind: 'primary',
-                    },
-                },
-            });
-
-            const registryConfigWithRouteThatHasTrailingSlashAtTheEnd = Object.freeze({
-                ...registryConfig,
-                routes: [
-                    routeThatHasTrailingSlashAtTheEnd,
-                    ...registryConfig.routes
-                ],
-            });
-
-            it('should return a matched route by a request url that does not have `/` at the end', () => {
-                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAtTheEnd);
-                const reqUrlThatDoesNotHaveTrailingSlashAtTheEnd = '/launchpad';
-
-                chai.expect(router.match(reqUrlThatDoesNotHaveTrailingSlashAtTheEnd)).to.be.eql({
-                    route: '/launchpad/',
-                    basePath: '/launchpad',
-                    reqUrl: reqUrlThatDoesNotHaveTrailingSlashAtTheEnd,
-                    template: 'launchpadTemplate',
-                    specialRole: null,
-                    slots: routeThatHasTrailingSlashAtTheEnd.slots,
-                    meta: {},
-                });
-            });
-
-            it('should return a matched route by a request url that has `/` at the end', () => {
-                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAtTheEnd);
-                const reqUrlThatHasTrailingSlashAtTheEnd = '/launchpad/';
-
-                chai.expect(router.match(reqUrlThatHasTrailingSlashAtTheEnd)).to.be.eql({
-                    route: '/launchpad/',
-                    basePath: '/launchpad',
-                    reqUrl: reqUrlThatHasTrailingSlashAtTheEnd,
-                    template: 'launchpadTemplate',
-                    specialRole: null,
-                    slots: routeThatHasTrailingSlashAtTheEnd.slots,
-                    meta: {},
-                });
-            });
-
+        describe('when a route equals "/"', () => {
             it('should return a matched route when a requested url is `/`', () => {
                 const routeThatEqualsTrailingSlash = Object.freeze({
                     route: '/',
@@ -369,9 +317,65 @@ describe('Router', () => {
                     meta: {},
                 });
             });
+        });
 
-            it('should return 404 route when a router does not match a route by a requested url that has something after `/`', () => {
-                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAtTheEnd);
+        describe('when a route without trailing slash', () => {
+            const routeWithoutTrailingSlash = Object.freeze({
+                route: '/launchpad',
+                next: false,
+                template: 'launchpadTemplate',
+                slots: {
+                    launchpad: {
+                        appName: 'launchpad',
+                        props: {
+                            firstHeroSlotProp: 'firstLaunchpadSlotProp',
+                            secondHeroSlotProp: 'secondLaunchpadSlotProp',
+                        },
+                        kind: 'primary',
+                    },
+                },
+            });
+
+            const registryConfigWithRouteWithoutTrailingSlash = Object.freeze({
+                ...registryConfig,
+                routes: [
+                    routeWithoutTrailingSlash,
+                    ...registryConfig.routes
+                ],
+            });
+
+            it('should match request url without trailing slash', () => {
+                const router = new Router(registryConfigWithRouteWithoutTrailingSlash);
+                const reqUrl = '/launchpad';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/launchpad',
+                    basePath: '/launchpad',
+                    reqUrl,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeWithoutTrailingSlash.slots,
+                    meta: {},
+                });
+            });
+
+            it('should match request url with trailing slash', () => {
+                const router = new Router(registryConfigWithRouteWithoutTrailingSlash);
+                const reqUrl = '/launchpad/';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/launchpad',
+                    basePath: '/launchpad',
+                    reqUrl,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeWithoutTrailingSlash.slots,
+                    meta: {},
+                });
+            });
+
+            it('should return 404 when requested url has sub route', () => {
+                const router = new Router(registryConfigWithRouteWithoutTrailingSlash);
                 const reqUrl = '/launchpad/something';
 
                 chai.expect(router.match(reqUrl)).to.be.eql({
@@ -380,12 +384,166 @@ describe('Router', () => {
                     reqUrl,
                     template: 'errorsTemplate',
                     specialRole: 404,
-                    slots: {
-                        ...registryConfigWithRouteThatHasTrailingSlashAtTheEnd.specialRoutes['404'].slots,
+                    slots: registryConfig.specialRoutes['404'].slots,
+                    meta: registryConfig.specialRoutes['404'].meta,
+                });
+            });
+        });
+
+        describe('when a route has `/` at the end', () => {
+            const routeWithTrailingSlash = Object.freeze({
+                route: '/launchpad/',
+                next: false,
+                template: 'launchpadTemplate',
+                slots: {
+                    launchpad: {
+                        appName: 'launchpad',
+                        props: {
+                            firstHeroSlotProp: 'firstLaunchpadSlotProp',
+                            secondHeroSlotProp: 'secondLaunchpadSlotProp',
+                        },
+                        kind: 'primary',
                     },
-                    meta: {
-                        ...registryConfigWithRouteThatHasTrailingSlashAtTheEnd.specialRoutes['404'].meta,
+                },
+            });
+
+            const registryConfigWithRouteThatHasTrailingSlash = Object.freeze({
+                ...registryConfig,
+                routes: [
+                    routeWithTrailingSlash,
+                    ...registryConfig.routes
+                ],
+            });
+
+            it('should return a matched route by a request url that does not have `/` at the end', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlash);
+                const reqUrl = '/launchpad';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/launchpad/',
+                    basePath: '/launchpad',
+                    reqUrl,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeWithTrailingSlash.slots,
+                    meta: {},
+                });
+            });
+
+            it('should return a matched route by a request url that has `/` at the end', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlash);
+                const reqUrl = '/launchpad/';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/launchpad/',
+                    basePath: '/launchpad',
+                    reqUrl,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeWithTrailingSlash.slots,
+                    meta: {},
+                });
+            });
+
+            it('should return 404 route when a router does not match a route by a requested url that has something after `/`', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlash);
+                const reqUrl = '/launchpad/something';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/404',
+                    basePath: '/',
+                    reqUrl,
+                    template: 'errorsTemplate',
+                    specialRole: 404,
+                    slots: registryConfig.specialRoutes['404'].slots,
+                    meta: registryConfig.specialRoutes['404'].meta,
+                });
+            });
+        });
+
+        describe('when a route has `/*` at the end', () => {
+            const routeWithTrailingSlashAndAsterisk = Object.freeze({
+                route: '/launchpad/*',
+                next: false,
+                template: 'launchpadTemplate',
+                slots: {
+                    launchpad: {
+                        appName: 'launchpad',
+                        props: {
+                            firstHeroSlotProp: 'firstLaunchpadSlotProp',
+                            secondHeroSlotProp: 'secondLaunchpadSlotProp',
+                        },
+                        kind: 'primary',
                     },
+                },
+            });
+
+            const registryConfigWithRouteThatHasTrailingSlashAndAsterisk = Object.freeze({
+                ...registryConfig,
+                routes: [
+                    routeWithTrailingSlashAndAsterisk,
+                    ...registryConfig.routes
+                ],
+            });
+
+            it('should match request url without trailing slash', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAndAsterisk);
+                const reqUrl = '/launchpad';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/launchpad/*',
+                    basePath: '/launchpad',
+                    reqUrl,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeWithTrailingSlashAndAsterisk.slots,
+                    meta: {},
+                });
+            });
+
+            it('should match request url with trailing slash', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAndAsterisk);
+                const reqUrl = '/launchpad/';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/launchpad/*',
+                    basePath: '/launchpad',
+                    reqUrl,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeWithTrailingSlashAndAsterisk.slots,
+                    meta: {},
+                });
+            });
+
+            it('should match request url with sub route', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAndAsterisk);
+                const reqUrl = '/launchpad/some_sub_route';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/launchpad/*',
+                    basePath: '/launchpad',
+                    reqUrl,
+                    template: 'launchpadTemplate',
+                    specialRole: null,
+                    slots: routeWithTrailingSlashAndAsterisk.slots,
+                    meta: {},
+                });
+            });
+
+            // test looks strange but previously we had this bug that caused problems
+            it('should not match route if request url has same not defined text at the end of the route', () => {
+                const router = new Router(registryConfigWithRouteThatHasTrailingSlashAndAsterisk);
+                const reqUrl = '/launchpad-SOME_TRAILING_TEXT_FOO_BAR_BAZ';
+
+                chai.expect(router.match(reqUrl)).to.be.eql({
+                    route: '/404',
+                    basePath: '/',
+                    reqUrl,
+                    template: 'errorsTemplate',
+                    specialRole: 404,
+                    slots: registryConfig.specialRoutes['404'].slots,
+                    meta: registryConfig.specialRoutes['404'].meta,
                 });
             });
         });
