@@ -4,8 +4,14 @@ const {intlSchema} = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" im
 
 const i18nCookie = require('../common/i18nCookie');
 
+const isStaticFile = url => {
+    const extensions = ['.js', '.js.map'];
+
+    return extensions.some(ext => url.endsWith(ext));
+};
+
 const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, reply) => {
-    if (!i18nConfig.enabled || req.raw.url === '/ping') {
+    if (!i18nConfig.enabled || req.raw.url === '/ping' || isStaticFile(req.raw.url)) {
         return; // Excluding system routes
     }
 
