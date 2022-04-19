@@ -18,6 +18,12 @@ const parseOverrideConfig = require('./tailor/parse-override-config');
 module.exports = (registryService, pluginManager) => {
     const guardManager = new GuardManager(pluginManager);
 
+    const shouldUrlBeLogged = url => {
+        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
+
+        return !ignoredUrls.includes(url);
+    };
+
     const app = fastify(Object.assign(
         {
             trustProxy: false, // TODO: should be configurable via Registry,
@@ -27,12 +33,8 @@ module.exports = (registryService, pluginManager) => {
     ));
 
     app.addHook('onRequest', async (req, reply) => {
-
-        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
-        const currentUrl = req.raw.url;
-
-        if(!ignoredUrls.includes(currentUrl)) {
-            req.log.info({ url: req.raw.url, id: req.id, domain: req.hostname }, "received request");
+        if (shouldUrlBeLogged(req.raw.url)) {
+            req.log.info({ url: req.raw.url, id: req.id, domain: req.hostname }, 'received request');
         }
 
         req.raw.ilcState = {};
@@ -42,12 +44,8 @@ module.exports = (registryService, pluginManager) => {
         await i18nOnRequest(req, reply);
     });
 
-    app.addHook("onResponse", (req, reply, done) => {
-
-        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
-        const currentUrl = req.raw.url;
-
-        if(!ignoredUrls.includes(currentUrl)) {
+    app.addHook('onResponse', (req, reply, done) => {
+        if (shouldUrlBeLogged(req.raw.url)) {
             req.log.info(
                 {
                     url: req.raw.url,
@@ -55,7 +53,7 @@ module.exports = (registryService, pluginManager) => {
                     domain: req.hostname,
                     responseTime: reply.getResponseTime(),
                 },
-                "request completed"
+                'request completed'
             );
         }
 
