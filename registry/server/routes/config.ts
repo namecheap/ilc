@@ -5,7 +5,7 @@ import knex from '../db';
 import {Setting, Scope} from '../settings/interfaces';
 import preProcessResponse from '../settings/services/preProcessResponse';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
-import { configResolverMiddleware } from '../middleware'
+import { configResolverMiddleware } from '../middleware/configResolver'
 const router = express.Router();
 
 router.get('/', async (req, res, next) => {

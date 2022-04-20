@@ -10,7 +10,7 @@ import errorHandler from './errorHandler';
 import serveStatic from 'serve-static';
 import auth from './auth';
 import settingsService from './settings/services/SettingsService';
-import { configResolverMiddleware } from "./middleware";
+import { configResolverMiddleware } from "./middleware/configResolver";
 
 export default async (withAuth: boolean = true) => {
     // As in production there can be 2+ instances of the ILC registry
