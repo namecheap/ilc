@@ -1,4 +1,4 @@
-import { ConfigAccessor } from "../ConfigAccessor";
+import { ConfigAccessor } from "../../../config";
 import { BaseNodeFilter, Node } from "./BaseNodeFilter";
 
 export class ConfigFilter {

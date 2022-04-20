@@ -3,6 +3,7 @@ export type Node = Record<string, unknown>;
 export abstract class BaseNodeFilter {
     public abstract accessPath: string;
     public readonly predicates: Array<string>;
+
     protected readonly rootDomain = '*' as const;
 
     constructor(predicates: Array<string>) {

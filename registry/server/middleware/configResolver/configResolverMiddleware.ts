@@ -1,7 +1,5 @@
 import { RequestHandler, NextFunction, Request, Response } from 'express';
-import { ConfigFilter } from '../config';
-import { RoutesFilter } from "../config/filters/RoutesFilter";
-import { SpecialRoutesFilter } from "../config/filters/SpecialRoutesFilter";
+import { ConfigFilter, RoutesFilter, SpecialRoutesFilter } from './filters';
 
 export const configResolverMiddleware: RequestHandler = (
     (request: Request, response: Response, next: NextFunction): void => {
