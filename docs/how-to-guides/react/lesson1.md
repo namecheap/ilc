@@ -28,7 +28,7 @@ Once you're done, restart the application and navigate to the `/microfrontend` r
 
 ## Configure ILC to handle the application
 
-In this step, you will use the public demo website and the "[Develop at "production"](../../develop_at_production.md)" feature to complete the task.
+In this step, you will use the public demo website and the "[Develop in "production"](../../develop_in_production.md)" feature to complete the task.
 
 !!! note ""
     If you want more control over the process, you may want to use ILC locally

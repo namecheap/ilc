@@ -34,7 +34,7 @@ nav:
       - Animation during reroute: docs/animation_during_reroute.md
       - Global error handling: docs/global_error_handling.md
       - Internationalization: docs/i18n.md
-      - Develop at Production: docs/develop_at_production.md
+      - Develop in Production: docs/develop_in_production.md
       - Compatibility with legacy UMD bundles: docs/umd_bundles_compatibility.md
       - ILC transition hooks: docs/transition_hooks.md
       - Multi-domains: docs/multi-domains.md
