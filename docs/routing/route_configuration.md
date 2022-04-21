@@ -1,8 +1,8 @@
-# Route configuration options
+# Route configuration
 
 ## Route domains
 
-ILC can handle requests coming from multiple domains, so you can use a single ILC instance to handle them instead of rolling out individual instances for every domain.
+ILC can handle requests from multiple domains, so you can use a single ILC instance to handle them instead of rolling out individual instances for every domain.
 
 ILC checks the exact match of domain names. It means that `secure.example.com` is not equal to `example.com`, and you may need to add the necessary subdomains to handle this case properly.
 
@@ -39,9 +39,10 @@ Template is an HTML file that is used to build the structure of your page. If it
 !!! warning "Important note"
     There must be at least one template in the routing chain.
 
-To create a template, go to the **Templates** section in the sidebar.
-
-![ILC registry template menu](../assets/routes/template-create.png)
+    ??? tip "Create a template"
+        To create a template, go to the **Templates** section in the sidebar.
+        
+        ![ILC registry template menu](../assets/routes/template-create.png)
 
 ## Route metadata
 
@@ -68,10 +69,10 @@ More information about the Transition hooks plugin is available in the [ILC tran
 
 Slot configuration defines the main settings of a route:
 
-- application;
-- where the application should be displayed;
-- how critical this application is for our siteъ
-- create/change application properties
+- Application.
+- Where the application should be displayed.
+- How critical the application is for the site.
+- Create/change application properties.
 
 ![ILC slot configuration](../assets/routes/slot-configuration1.png)
 ![ILC slot configuration](../assets/routes/slot-configuration2.png)
@@ -101,12 +102,12 @@ Slot configuration defines the main settings of a route:
 
 1. **App type**
 
-     There are the following app types:
+    There are the following app types:
      
-     - **Primary**: set for the vital applications of your **site**. If the application crashes on the server side, ILC won't render it on the client side, and will immediately render an error.
-     - **Essential**: set for the vital applications for the **user** (for example, header). If the application crashes on the server side, ILC will try to render it on the client side. It will render an error only if the application crashes on both server and client sides.
-     - **Regular**: set for non-critical applications (for example, footer). If the application crashes on both server and client sides, ILC won't render it on the client side and will ignore errors from it.
+    - **Primary**: set for the vital applications of your **site**. If the application crashes on the server side, ILC won't render it on the client side, and will immediately render an error.
+    - **Essential**: set for the vital applications for the **user** (for example, header). If the application crashes on the server side, ILC will try to render it on the client side. It will render an error only if the application crashes on both server and client sides.
+    - **Regular**: set for non-critical applications (for example, footer). If the application crashes on both server and client sides, ILC won't render it on the client side and will ignore errors from it.
 
 1. **Props field**
 
-     Props allow you to configure the application separately for each route. With props, you can override the props specified when creating the application in the **Apps** section in the sidebar.
+    Props allow you to configure the application separately for each route. With props, you can override the props specified when creating the application in the **Apps** section in the sidebar.

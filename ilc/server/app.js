@@ -28,11 +28,11 @@ module.exports = (registryService, pluginManager) => {
 
     app.addHook('onRequest', async (req, reply) => {
 
-        const ignoredUrls = config.get('logger.accessLog.ignoreUrls');
+        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
         const currentUrl = req.raw.url;
 
         if(!ignoredUrls.includes(currentUrl)) {
-            req.log.info({ url: req.raw.url, id: req.id }, "received request");
+            req.log.info({ url: req.raw.url, id: req.id, domain: req.hostname }, "received request");
         }
 
         req.raw.ilcState = {};
@@ -44,7 +44,7 @@ module.exports = (registryService, pluginManager) => {
 
     app.addHook("onResponse", (req, reply, done) => {
 
-        const ignoredUrls = config.get('logger.accessLog.ignoreUrls');
+        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
         const currentUrl = req.raw.url;
 
         if(!ignoredUrls.includes(currentUrl)) {
@@ -52,6 +52,7 @@ module.exports = (registryService, pluginManager) => {
                 {
                     url: req.raw.url,
                     statusCode: reply.statusCode,
+                    domain: req.hostname,
                     responseTime: reply.getResponseTime(),
                 },
                 "request completed"
@@ -75,7 +76,8 @@ module.exports = (registryService, pluginManager) => {
 
     app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
         const currentDomain = req.hostname;
-        const data = await registryService.getTemplate(req.params.templateName, currentDomain);
+        const locale = req.raw.ilcState.locale;
+        const data = await registryService.getTemplate(req.params.templateName, currentDomain, locale);
         res.status(200).send(data.data.content);
     });
 
@@ -89,7 +91,6 @@ module.exports = (registryService, pluginManager) => {
         const url = req.raw.url;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
         const processedUrl = urlProcessor.process(url);
-
         if (processedUrl !== url) {
             res.redirect(processedUrl);
             return;

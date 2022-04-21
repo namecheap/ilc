@@ -231,7 +231,7 @@ export default class ClientRouter extends EventEmitter {
                 }
             });
 
-            window.addEventListener(singleSpaEvents.APP_CHANGE, () => {
+            window.addEventListener(ilcEvents.PAGE_READY, () => {
                 if (appsToForceRerender.length) {
                     this.#logger.log(`ILC: Triggering app re-mount for [${appsToForceRerender}] due to changed props.`);
 

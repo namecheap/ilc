@@ -1,7 +1,7 @@
-import _ from 'lodash';
 import { request, requestWithAuth, expect } from './common';
 
 import db from '../server/db';
+import supertest from 'supertest';
 
 const basePath = '/api/v1/versioning';
 const dataStub = [{
@@ -23,6 +23,14 @@ const dataStub = [{
 }];
 
 describe(`Tests ${basePath}`, () => {
+    let req: supertest.SuperTest<supertest.Test>;
+    let reqWithAuth: supertest.SuperTest<supertest.Test>;
+
+    beforeEach(async () => {
+        req = await request();
+        reqWithAuth = await requestWithAuth();
+    })
+
     before(async () => {
         await db('versioning').truncate();
         await db('versioning').insert(dataStub);
@@ -30,7 +38,7 @@ describe(`Tests ${basePath}`, () => {
 
     describe('Read', () => {
         it('should successfully return all existed records sorted by created_at desc', async () => {
-            const response = await request.get(basePath)
+            const response = await req.get(basePath)
             .expect(200);
 
             expect(response.body).to.be.an('array').that.is.not.empty;
@@ -40,7 +48,7 @@ describe(`Tests ${basePath}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth.get(basePath)
+                await reqWithAuth.get(basePath)
                     .expect(401);
             });
         });
@@ -49,27 +57,27 @@ describe(`Tests ${basePath}`, () => {
 
     describe('Revert', () => {
         it('should successfully revert operations', async () => {
-            const resp = await request.post(`${basePath}/${dataStub[0].id}/revert`)
+            const resp = await req.post(`${basePath}/${dataStub[0].id}/revert`)
                 .expect(200);
 
             try {
                 expect(resp.body.status).to.equal('ok');
                 expect(resp.body).to.haveOwnProperty('versionId');
 
-                const listResp = await request.get(basePath)
+                const listResp = await req.get(basePath)
                     .expect(200);
 
                 // Had 2, should become 3
                 expect(listResp.body).to.be.an('array').with.lengthOf(3);
             } finally {
-                await request.post(`${basePath}/${resp.body.versionId}/revert`)
+                await req.post(`${basePath}/${resp.body.versionId}/revert`)
                     .expect(200);
             }
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth.post(`${basePath}/${dataStub[0].id}/revert`)
+                await reqWithAuth.post(`${basePath}/${dataStub[0].id}/revert`)
                     .expect(401);
             });
         });

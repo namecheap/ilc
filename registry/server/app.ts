@@ -11,7 +11,7 @@ import serveStatic from 'serve-static';
 import auth from './auth';
 import settingsService from './settings/services/SettingsService';
 
-export default (withAuth: boolean = true) => {
+export default async (withAuth: boolean = true) => {
     // As in production there can be 2+ instances of the ILC registry
     // AssetsDiscovery should be run separately via "npm run assetsdiscovery"
     !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAssetsDiscovery');
@@ -25,12 +25,12 @@ export default (withAuth: boolean = true) => {
 
     app.get('/ping', pong);
 
-    app.use('/', serveStatic('client/dist'));
+    app.use('/', serveStatic('client/dist') as any);
 
     let authMw: RequestHandler[] = [(req, res, next) => next()];
     if (withAuth) {
-        authMw = auth(app, settingsService, {
-            session: {secret: config.get('auth.sessionSecret')}
+        authMw = await auth(app, settingsService, {
+            session: { secret: config.get('auth.sessionSecret') }
         });
     }
 

@@ -19,11 +19,11 @@
     "author": "",
     "license": "Apache-2.0",
     "engines": {
-        "node": ">= 14.0.0",
+        "node": ">=16 <17",
         "npm": ">= 6.0.0"
     },
     "dependencies": {},
     "devDependencies": {
-        "concurrently": "^5.0.0"
+        "concurrently": "^7.1.0"
     }
 }

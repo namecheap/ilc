@@ -1,20 +1,14 @@
-# Compatibility with legacy UMD bundles
+When adding ILC to the legacy website, you may have an issue when the code that is loaded via regular `<script>` tags works incorrectly.
+This happens when you load external libraries packed as UMD bundles.
 
-When adding ILC to the legacy website - sometimes you may face an issue when code that you still 
-load via regular `<script>` tags may work incorrectly. This happens when you load external libraries packed as UMD bundles.
+By default, ILC exposes the `window.define` variable that forces all UMD bundles to be registered within ILC (via System.js). While this approach is convenient for the new projects, it may break things for the legacy ones. 
+The reason is that without ILC and System.js running, the content of the UMD bundle is to be registered as a `window` variable.
 
-By default, ILC exposes `window.define` variable - which forces all UMD bundles to be registered within ILC (through System.js).
-While this approach is convenient for the new projects - it may break things on the legacy ones. 
-As without ILC and System.js running you expect content of the UMD bundle to be registered as window variable.
+To fix the issue, you need to enable the `amdDefineCompatibilityMode=true` on the Settings page in the ILC Registry. It removes the `window.define` variable, so all your libraries will use `window.ILC.define` instead.
 
-In order to fix the issue - you need to enable the following flag on Registry Settings page:
-`amdDefineCompatibilityMode=true`.
+If you use webpack, you can force the usage of `window.ILC.define` when building applications for ILC:
 
-This will remove `window.define` variable so all your libs should instead use `window.ILC.define`.
-
-When using webpack - here is how you can force usage of `window.ILC.define` while building the apps for ILC:
-
-```javascript
+```js
 const ilcWebpackPluginsFactory = require('ilc-sdk').WebpackPluginsFactory;
 
 module.exports = {
@@ -26,8 +20,4 @@ module.exports = {
     module: { /* ... */ },
     plugins: ilcWebpackPluginsFactory().client,
 };
-
-
 ```
-
- 

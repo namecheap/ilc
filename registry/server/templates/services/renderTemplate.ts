@@ -43,7 +43,7 @@ async function renderTemplate(template: string): Promise<RenderTemplateResult> {
             `The current template has next duplicate includes sources or ids as follows: \n` +
             `${Array.from(new Set(duplicateIncludesAttributes.map(({ id, src }: IncludeAttributes) => (id || src)))).join(',\n')}`
         );
-    };
+    }
 
     const fetchedIncludes = await fetchIncludes(includesAttributes);
 
@@ -55,7 +55,7 @@ async function renderTemplate(template: string): Promise<RenderTemplateResult> {
     result.styleRefs = uniqueArray(result.styleRefs);
 
     return result;
-};
+}
 
 function matchIncludesAttributes(template: string): IncludesAttributes {
     const includesRegExp = /<include(?:\s*\w*="[^"]*"\s*)*\s*(?:\/>|>\s*.*\s*<\/include>)/gmi;

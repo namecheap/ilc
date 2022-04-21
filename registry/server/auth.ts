@@ -21,12 +21,84 @@ export interface User {
     role: string;
 }
 
-export default (app: Express, settingsService: SettingsService, config: any): RequestHandler[] => {
+async function registerOpenIdStrategy(settingsService: SettingsService, callerId: string) {
+    const authDiscoveryUrl = await settingsService.get(SettingKeys.AuthOpenIdDiscoveryUrl, callerId);
+    if (typeof authDiscoveryUrl === 'undefined') {
+        console.log(`Skipping registering oauth strategy due to missing setting ${SettingKeys.AuthOpenIdDiscoveryUrl}`)
+        return;
+    }
+
+    const issuer = await OIDCIssuer.discover(authDiscoveryUrl); // => Promise
+
+    //console.log('Discovered issuer %s %O', issuer.issuer, issuer.metadata);
+    const client = new issuer.Client({
+        client_id: await settingsService.get(SettingKeys.AuthOpenIdClientId, callerId),
+        client_secret: await settingsService.get(SettingKeys.AuthOpenIdClientSecret, callerId),
+        redirect_uris: [urljoin(await settingsService.get(SettingKeys.BaseUrl, callerId), '/auth/openid/return')],
+        response_types: ['code'],
+    });
+
+    passport.use('openid', new OIDCStrategy(
+        {
+            client,
+            params: {
+                scope: await settingsService.get(SettingKeys.AuthOpenIdRequestedScopes, callerId),
+                response_mode: await settingsService.get(SettingKeys.AuthOpenIdResponseMode, callerId),
+            }
+        },
+        async function (tokenSet: TokenSet/*, userinfo: UserinfoResponse*/, done: any) {
+            try {
+                if (tokenSet.expired()) {
+                    return done(null, false, { message: 'Expired OpenID token' });
+                }
+
+                const claims = tokenSet.claims();
+                const idClaimName = await settingsService.get(SettingKeys.AuthOpenIdIdentifierClaimName, callerId);
+                const uidClaimName = await settingsService.get(SettingKeys.AuthOpenIdUniqueIdentifierClaimName, callerId);
+
+                let identifiers: string[] = claims[idClaimName] as any;
+                if (!identifiers) {
+                    return done(null, false, { message: 'Can\'t find user identifier using IdentityClaimName' });
+                } else if (!Array.isArray(identifiers)) {
+                    identifiers = [identifiers];
+                }
+
+                let user: User | null = null;
+                for (let id of identifiers) {
+                    const entity = await getEntityWithCreds('openid', id, null);
+                    if (!entity) {
+                        continue;
+                    }
+
+                    user = entity;
+
+                    // we may have case when user exists for a few identifiers, so we try find the most permissive role
+                    if (entity.role === AuthRoles.admin) {
+                        break;
+                    }
+                }
+
+                if (!user) {
+                    return done(null, false, { message: `Can\'t find presented identifiers "${identifiers.toString()}" in auth entities list` });
+                }
+                if (uidClaimName && claims[uidClaimName]) {
+                    user.identifier = claims[uidClaimName] as string;
+                }
+
+                return done(null, user);
+            } catch (e) {
+                return done(e);
+            }
+        })
+    );
+}
+
+export default async (app: Express, settingsService: SettingsService, config: any): Promise<RequestHandler[]> => {
     const SessionKnex = sessionKnex(session);
     const sessionConfig = Object.assign({
         resave: false,
         saveUninitialized: false,
-        cookie: {httpOnly: true, secure: false},
+        cookie: { httpOnly: true, secure: false },
         store: new SessionKnex({
             knex: db,
             createTable: false,
@@ -42,7 +114,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
     app.use(session(sessionConfig));
 
 
-    passport.use(new LocalStrategy(async function(username, password, done) {
+    passport.use(new LocalStrategy(async function (username, password, done) {
         try {
             const user = await getEntityWithCreds('local', username, password);
             if (!user) {
@@ -54,7 +126,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
             return done(e);
         }
     }));
-    passport.use(new BearerStrategy(async function(token, done) {
+    passport.use(new BearerStrategy(async function (token, done) {
         try {
             const tokenParts = token.split(':');
             if (tokenParts.length !== 2) {
@@ -76,11 +148,11 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
     }));
 
     // This can be used to keep a smaller payload
-    passport.serializeUser(function(user: Express.User, done) {
+    passport.serializeUser(function (user: Express.User, done) {
         done(null, user);
     });
 
-    passport.deserializeUser(function(user: Express.User, done) {
+    passport.deserializeUser(function (user: Express.User, done) {
         done(null, user);
     });
 
@@ -88,7 +160,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
     app.use(passport.initialize());
     app.use(passport.session());
 
-
+    await registerOpenIdStrategy(settingsService, 'auth')
 
     // Accept the OpenID identifier and redirect the user to their OpenID
     // provider for authentication.  When complete, the provider will redirect
@@ -114,71 +186,8 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
         ];
         if (await settingsService.hasChanged(callerId, keysToWatch)) {
             console.log('Change of the OpenID authentication config detected. Reinitializing auth backend...');
-            passport.unuse('openid');
 
-            const issuer = await OIDCIssuer.discover(await settingsService.get(SettingKeys.AuthOpenIdDiscoveryUrl, callerId)); // => Promise
-
-            //console.log('Discovered issuer %s %O', issuer.issuer, issuer.metadata);
-            const client = new issuer.Client({
-                client_id: await settingsService.get(SettingKeys.AuthOpenIdClientId, callerId),
-                client_secret: await settingsService.get(SettingKeys.AuthOpenIdClientSecret, callerId),
-                redirect_uris: [urljoin(await settingsService.get(SettingKeys.BaseUrl, callerId), '/auth/openid/return')],
-                response_types: ['code'],
-            });
-
-            passport.use('openid', new OIDCStrategy(
-                {
-                    client,
-                    params: {
-                        scope: await settingsService.get(SettingKeys.AuthOpenIdRequestedScopes, callerId),
-                        response_mode: await settingsService.get(SettingKeys.AuthOpenIdResponseMode, callerId),
-                    }
-                },
-                async function(tokenSet: TokenSet/*, userinfo: UserinfoResponse*/, done: any) {
-                    try {
-                        if (tokenSet.expired()) {
-                            return done(null, false, { message: 'Expired OpenID token' });
-                        }
-
-                        const claims = tokenSet.claims();
-                        const idClaimName = await settingsService.get(SettingKeys.AuthOpenIdIdentifierClaimName, callerId);
-                        const uidClaimName = await settingsService.get(SettingKeys.AuthOpenIdUniqueIdentifierClaimName, callerId);
-
-                        let identifiers: string[] = claims[idClaimName] as any;
-                        if (!identifiers) {
-                            return done(null, false, { message: 'Can\'t find user identifier using IdentityClaimName' });
-                        } else if (!Array.isArray(identifiers)) {
-                            identifiers = [identifiers];
-                        }
-
-                        let user: User | null = null;
-                        for (let id of identifiers) {
-                            const entity = await getEntityWithCreds('openid', id, null);
-                            if (!entity) {
-                                continue;
-                            }
-
-                            user = entity;
-
-                            // we may have case when user exists for a few identifiers, so we try find the most permissive role
-                            if (entity.role === AuthRoles.admin) {
-                                break;
-                            }
-                        }
-
-                        if (!user) {
-                            return done(null, false, { message: `Can\'t find presented identifiers "${identifiers.toString()}" in auth entities list` });
-                        }
-                        if (uidClaimName && claims[uidClaimName]) {
-                            user.identifier = claims[uidClaimName] as string;
-                        }
-
-                        return done(null, user);
-                    } catch (e) {
-                        return done(e);
-                    }
-                })
-            );
+            await registerOpenIdStrategy(settingsService, callerId);
         }
 
         next();
@@ -194,7 +203,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
             res.sendStatus(404);
         },
         (req, res, next) => {
-            passport.authenticate('openid', function(err, user, info) {
+            passport.authenticate('openid', function (err, user, info) {
                 if (err) {
                     return next(err);
                 }
@@ -203,7 +212,7 @@ export default (app: Express, settingsService: SettingsService, config: any): Re
                     res.header('Content-type', 'text/html');
                     return res.end(`<pre>${info.message}</pre><br><a href="/">Go to main page</a>`);
                 }
-                req.logIn(user, function(err) {
+                req.logIn(user, function (err) {
                     if (err) {
                         return next(err);
                     }

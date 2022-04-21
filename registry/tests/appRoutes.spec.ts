@@ -2,6 +2,7 @@ import _ from 'lodash';
 import {request, expect, requestWithAuth} from './common';
 import db from '../server/db';
 import { makeSpecialRoute } from '../server/appRoutes/services/transformSpecialRoutes';
+import supertest from 'supertest';
 
 let example = <any>{
     template: {
@@ -104,22 +105,25 @@ example = {
 };
 
 const createRouterDomain = async (routerDomain: typeof example.routerDomain) => {
-    const response = await request.post(routerDomain.url).send(routerDomain.correct);
+    const app = await request();
+    const response = await app.post(routerDomain.url).send(routerDomain.correct);
 
     return response.body.id;
 };
 
 describe(`Tests ${example.url}`, () => {
+    let req: ReturnType<typeof supertest>;
     before(async () => {
-        await request.post(example.template.url).send(example.template.correct);
-        await request.post(example.app.url).send(example.app.correct);
-        await request.post(example.appWrapper.url).send(example.appWrapper.correct);
+        req = await request();
+        await req.post(example.template.url).send(example.template.correct);
+        await req.post(example.app.url).send(example.app.correct);
+        await req.post(example.appWrapper.url).send(example.appWrapper.correct);
     });
 
     after(async () => {
-        await request.delete(example.template.url + example.template.correct.name);
-        await request.delete(example.app.url + encodeURIComponent(example.app.correct.name));
-        await request.delete(example.appWrapper.url + encodeURIComponent(example.appWrapper.correct.name));
+        await req.delete(example.template.url + example.template.correct.name);
+        await req.delete(example.app.url + encodeURIComponent(example.app.correct.name));
+        await req.delete(example.appWrapper.url + encodeURIComponent(example.appWrapper.correct.name));
     });
 
     describe('Create', () => {
@@ -127,7 +131,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url)
+                let response = await req.post(example.url)
                     .send(example.correct)
                     .expect(200);
 
@@ -139,12 +143,12 @@ describe(`Tests ${example.url}`, () => {
                 };
                 expect(response.body).deep.equal(expectedRoute);
 
-                response = await request.get(example.url + routeId)
+                response = await req.get(example.url + routeId)
                     .expect(200);
 
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -152,7 +156,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                const response = await request.post(example.url)
+                const response = await req.post(example.url)
                     .send(_.omit(example.correct, ['route', 'slots', 'next']));
 
                 if (response.body.id) {
@@ -166,7 +170,7 @@ describe(`Tests ${example.url}`, () => {
                 );
                 expect(response.body).deep.equal({});
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -174,7 +178,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                const response = await request.post(example.url)
+                const response = await req.post(example.url)
                     .send({
                         ..._.omit(example.correct404, ['slots']),
                         orderPos: 122,
@@ -195,7 +199,7 @@ describe(`Tests ${example.url}`, () => {
                 );
                 expect(response.body).deep.equal({});
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -203,7 +207,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                const response = await request.post(example.url)
+                const response = await req.post(example.url)
                 .send({
                     ...example.correct,
                     orderPos: 'ncTestRouteIncorrectOrderPos',
@@ -229,7 +233,7 @@ describe(`Tests ${example.url}`, () => {
                 );
                 expect(response.body).deep.equal({});
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -237,7 +241,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                const response = await request.post(example.url)
+                const response = await req.post(example.url)
                     .send({
                         ...example.correct404,
                         specialRole: 'ncTestRouteIncorrectSpecialRole',
@@ -259,7 +263,7 @@ describe(`Tests ${example.url}`, () => {
                 );
                 expect(response.body).deep.equal({});
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -267,10 +271,10 @@ describe(`Tests ${example.url}`, () => {
             let routeId1, routeId2;
 
             try {
-                let response1 = await request.post(example.url).send(example.correct).expect(200);
+                let response1 = await req.post(example.url).send(example.correct).expect(200);
                 routeId1 = response1.body.id;
 
-                const response2 = await request.post(example.url)
+                const response2 = await req.post(example.url)
                     .send({...example.correct, route: '/someOtherRoute'});
 
                 if (response2.body.id) {
@@ -280,8 +284,8 @@ describe(`Tests ${example.url}`, () => {
                 expect(response2.status).equal(422);
                 expect(response2.text).to.include('Specified "orderPos" value already exists for routes with provided "domainId"');
             } finally {
-                routeId1 && await request.delete(example.url + routeId1);
-                routeId2 && await request.delete(example.url + routeId2);
+                routeId1 && await req.delete(example.url + routeId1);
+                routeId2 && await req.delete(example.url + routeId2);
             }
         });
 
@@ -289,7 +293,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                const response = await request.post(example.url)
+                const response = await req.post(example.url)
                 .send({
                     ...example.correct,
                     templateName: 'ncTestNonExistingTemplateName',
@@ -302,7 +306,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(500);
                 expect(response.text).to.include('FOREIGN KEY constraint failed');
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -310,7 +314,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                const response = await request.post(example.url)
+                const response = await req.post(example.url)
                     .send({
                         ...example.correct,
                         domainId: 1111111,
@@ -323,7 +327,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(500);
                 expect(response.text).to.include('FOREIGN KEY constraint failed');
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -332,7 +336,7 @@ describe(`Tests ${example.url}`, () => {
 
             try {
                 const appName = '@portal/ncTestNonExistingAppName';
-                const response = await request.post(example.url)
+                const response = await req.post(example.url)
                 .send({
                     ...example.correct,
                     slots: {
@@ -347,7 +351,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(422);
                 expect(response.text).to.include(`Non-existing app name "${appName}" specified.`);
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -356,7 +360,7 @@ describe(`Tests ${example.url}`, () => {
 
             try {
                 const appName = example.appWrapper.correct.name;
-                const response = await request.post(example.url)
+                const response = await req.post(example.url)
                     .send({
                         ...example.correct,
                         slots: {
@@ -371,7 +375,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(422);
                 expect(response.text).to.include(`It's forbidden to use wrappers in routes.`);
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -379,7 +383,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                const response = await request.post(example.url)
+                const response = await req.post(example.url)
                 .send({
                     ...example.correct,
                     slots: {
@@ -396,7 +400,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(422);
                 expect(response.text).to.include(`"slots.ncTestRouteSlotNavbar.appName" is required`);
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -411,10 +415,10 @@ describe(`Tests ${example.url}`, () => {
                     domainId,
                 };
 
-                const response1 = await request.post(example.url).send(exampleWithExistedDomainId);
+                const response1 = await req.post(example.url).send(exampleWithExistedDomainId);
                 routeId1 = response1.body.id;
 
-                const response2 = await request.post(example.url).send(exampleWithExistedDomainId);
+                const response2 = await req.post(example.url).send(exampleWithExistedDomainId);
                 if (response2.body.id) {
                     routeId2 = response2.body.id;
                 }
@@ -422,9 +426,9 @@ describe(`Tests ${example.url}`, () => {
                 expect(response2.status).equal(422);
                 expect(response2.text).to.include(`"specialRole" "404" for provided "domainId" already exists`);
             } finally {
-                routeId1 && await request.delete(example.url + routeId1);
-                routeId2 && await request.delete(example.url + routeId2);
-                domainId && await request.delete(example.routerDomain.url + domainId);
+                routeId1 && await req.delete(example.url + routeId1);
+                routeId2 && await req.delete(example.url + routeId2);
+                domainId && await req.delete(example.routerDomain.url + domainId);
             }
         });
 
@@ -439,7 +443,7 @@ describe(`Tests ${example.url}`, () => {
                     domainId,
                 };
 
-                let response = await request.post(example.url)
+                let response = await req.post(example.url)
                     .send(exampleWithExistedDomainId)
                 .expect(200);
 
@@ -451,13 +455,13 @@ describe(`Tests ${example.url}`, () => {
                 };
                 expect(response.body).deep.equal(expectedRoute);
 
-                response = await request.get(example.url + routeId)
+                response = await req.get(example.url + routeId)
                     .expect(200);
 
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                routeId && await request.delete(example.url + routeId);
-                domainId && await request.delete(example.routerDomain.url + domainId);
+                routeId && await req.delete(example.url + routeId);
+                domainId && await req.delete(example.routerDomain.url + domainId);
             }
         });
 
@@ -472,7 +476,7 @@ describe(`Tests ${example.url}`, () => {
                     domainId,
                 };
 
-                let response = await request.post(example.url)
+                let response = await req.post(example.url)
                     .send(exampleWithExistedDomainId)
                     .expect(200);
 
@@ -485,13 +489,13 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(expectedRoute);
 
-                response = await request.get(example.url + routeId)
+                response = await req.get(example.url + routeId)
                     .expect(200);
 
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                routeId && await request.delete(example.url + routeId);
-                domainId && await request.delete(example.routerDomain.url + domainId);
+                routeId && await req.delete(example.url + routeId);
+                domainId && await req.delete(example.routerDomain.url + domainId);
             }
         });
 
@@ -499,7 +503,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url).send(example.correctWithMetadata).expect(200);
+                let response = await req.post(example.url).send(example.correctWithMetadata).expect(200);
                 routeId = response.body.id;
 
                 const expectedRoute = {
@@ -511,11 +515,11 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(expectedRoute);
 
-                response = await request.get(example.url + routeId).expect(200);
+                response = await req.get(example.url + routeId).expect(200);
 
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -523,7 +527,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url)
+                let response = await req.post(example.url)
                     .send(_.omit(example.correct, 'orderPos'))
                     .expect(200);
 
@@ -531,24 +535,24 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body.orderPos).to.be.above(0);
 
-                await request.get(example.url + routeId)
+                await req.get(example.url + routeId)
                     .expect(200);
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth.post(example.url).send(example.correct)
-                    .expect(401);
+                await requestWithAuth().then(req => req.post(example.url).send(example.correct)
+                    .expect(401));
             });
         });
     });
 
     describe('Read', () => {
         it('should return 404 for non-existing id', async () => {
-            const response = await request.get(example.url + 123123123123123123)
+            const response = await req.get(example.url + 123123123123123123)
             .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
@@ -558,10 +562,10 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url).send(example.correct).expect(200);
+                let response = await req.post(example.url).send(example.correct).expect(200);
                 routeId = response.body.id;
 
-                response = await request.get(example.url + routeId)
+                response = await req.get(example.url + routeId)
                     .expect(200);
 
                 const expectedRoute = {
@@ -570,17 +574,17 @@ describe(`Tests ${example.url}`, () => {
                 };
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
         it('should successfully return all existed records', async () => {
             let routeId;
             try {
-                let response = await request.post(example.url).send(example.correct).expect(200);
+                let response = await req.post(example.url).send(example.correct).expect(200);
                 routeId = response.body.id;
 
-                response = await request.get(example.url).expect(200);
+                response = await req.get(example.url).expect(200);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
                 const expectedRoute = {
@@ -590,7 +594,7 @@ describe(`Tests ${example.url}`, () => {
                 };
                 expect(response.body).to.deep.include(expectedRoute);
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -604,14 +608,14 @@ describe(`Tests ${example.url}`, () => {
                     domainId,
                 };
 
-                let response = await request.post(example.url)
+                let response = await req.post(example.url)
                     .send(exampleWithExistedDomainId)
                     .expect(200);
 
                 routeId = response.body.id;
 
                 const queryFilter = encodeURIComponent(JSON.stringify({ domainId }));
-                response = await request.get(`${example.url}?filter=${queryFilter}`).expect(200);
+                response = await req.get(`${example.url}?filter=${queryFilter}`).expect(200);
 
                 expect(response.body).to.be.an('array').with.lengthOf(1);
                 const expectedRoute = {
@@ -622,17 +626,18 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).to.deep.include(expectedRoute);
             } finally {
-                routeId && await request.delete(example.url + routeId);
-                domainId && await request.delete(example.routerDomain.url + domainId);
+                routeId && await req.delete(example.url + routeId);
+                domainId && await req.delete(example.routerDomain.url + domainId);
             }
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth.get(example.url)
+                const reqAuth = await requestWithAuth();
+                await reqAuth.get(example.url)
                     .expect(401);
 
-                await requestWithAuth.get(example.url + 123)
+                await reqAuth.get(example.url + 123)
                     .expect(401);
             });
         });
@@ -640,7 +645,7 @@ describe(`Tests ${example.url}`, () => {
 
     describe('Update', () => {
         it('should not update any record if record doesn\'t exist', async () => {
-            const response = await request.put(example.url + 123123123123123123)
+            const response = await req.put(example.url + 123123123123123123)
             .send(example.correct)
             .expect(404, 'Not found');
 
@@ -651,10 +656,10 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url).send(example.correct).expect(200);
+                let response = await req.post(example.url).send(example.correct).expect(200);
                 routeId = response.body.id;
 
-                response = await request.put(example.url + routeId)
+                response = await req.put(example.url + routeId)
                     .send({
                         ...example.correct,
                         specialRole: 'ncTestRouteIncorrectSpecialRole',
@@ -678,7 +683,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -686,24 +691,24 @@ describe(`Tests ${example.url}`, () => {
             let routeId1, routeId2;
 
             try {
-                let response = await request.post(example.url)
+                let response = await req.post(example.url)
                     .send({ ...example.correct, orderPos: 100000, })
                     .expect(200);
                 routeId1 = response.body.id;
 
-                response = await request.post(example.url)
+                response = await req.post(example.url)
                     .send({ ...example.correct, route: '/someDiffRoute', orderPos: 200000, })
                     .expect(200);
                 routeId2 = response.body.id;
 
-                response = await request.put(example.url + routeId1)
+                response = await req.put(example.url + routeId1)
                     .send({ ...example.correct, orderPos: 200000, })
                     .expect(500);
 
                 expect(response.text).to.include('Internal server error occurred.');
             } finally {
-                routeId1 && await request.delete(example.url + routeId1);
-                routeId2 && await request.delete(example.url + routeId2);
+                routeId1 && await req.delete(example.url + routeId1);
+                routeId2 && await req.delete(example.url + routeId2);
             }
         });
 
@@ -711,10 +716,10 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url).send(example.correct).expect(200);
+                let response = await req.post(example.url).send(example.correct).expect(200);
                 routeId = response.body.id;
 
-                response = await request.put(example.url + routeId)
+                response = await req.put(example.url + routeId)
                     .send({
                         ...example.correct,
                         templateName: 'ncTestNonExistingTemplateName',
@@ -723,7 +728,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.text).to.include('Internal server error occurred.');
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -733,10 +738,10 @@ describe(`Tests ${example.url}`, () => {
             try {
                 domainId = await createRouterDomain(example.routerDomain);
 
-                let response = await request.post(example.url).send({ ...example.correct, domainId }).expect(200);
+                let response = await req.post(example.url).send({ ...example.correct, domainId }).expect(200);
                 routeId = response.body.id;
 
-                response = await request.put(example.url + routeId)
+                response = await req.put(example.url + routeId)
                     .send({
                         ...example.correct,
                         domainId: 1111111,
@@ -745,8 +750,8 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.text).to.include('Internal server error occurred.');
             } finally {
-                routeId && await request.delete(example.url + routeId);
-                domainId && await request.delete(example.routerDomain.url + domainId);
+                routeId && await req.delete(example.url + routeId);
+                domainId && await req.delete(example.routerDomain.url + domainId);
             }
         });
 
@@ -754,12 +759,12 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url).send(example.correct).expect(200);
+                let response = await req.post(example.url).send(example.correct).expect(200);
                 routeId = response.body.id;
 
                 const appName = '@portal/ncTestNonExistingAppName';
 
-                response = await request.put(example.url + routeId)
+                response = await req.put(example.url + routeId)
                     .send({
                         ...example.correct,
                         slots: {
@@ -770,7 +775,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.text).to.include(`Non-existing app name "${appName}" specified.`);
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -778,10 +783,10 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url).send(example.correct).expect(200);
+                let response = await req.post(example.url).send(example.correct).expect(200);
                 routeId = response.body.id;
 
-                response = await request.put(example.url + routeId)
+                response = await req.put(example.url + routeId)
                     .send({
                         ...example.correct,
                         slots: {
@@ -792,7 +797,7 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(422, '"slots.ncTestRouteSlotNavbar.appName" is required');
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -800,10 +805,10 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url).send(example.correct).expect(200);
+                let response = await req.post(example.url).send(example.correct).expect(200);
                 routeId = response.body.id;
 
-                response = await request.put(example.url + routeId)
+                response = await req.put(example.url + routeId)
                     .send(example.updated)
                     .expect(200);
 
@@ -812,7 +817,7 @@ describe(`Tests ${example.url}`, () => {
                     id: routeId,
                 });
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
@@ -823,10 +828,10 @@ describe(`Tests ${example.url}`, () => {
                 domainId1 = await createRouterDomain(example.routerDomain);
                 domainId2 = await createRouterDomain(example.routerDomain);
 
-                let response = await request.post(example.url).send({ ...example.correct, domainId: domainId1 }).expect(200);
+                let response = await req.post(example.url).send({ ...example.correct, domainId: domainId1 }).expect(200);
                 routeId = response.body.id;
 
-                response = await request.put(example.url + routeId)
+                response = await req.put(example.url + routeId)
                     .send({
                         ...example.updated,
                         domainId: domainId2,
@@ -839,9 +844,9 @@ describe(`Tests ${example.url}`, () => {
                     domainId: domainId2,
                 });
             } finally {
-                routeId && await request.delete(example.url + routeId);
-                domainId1 && await request.delete(example.routerDomain.url + domainId1);
-                domainId2 && await request.delete(example.routerDomain.url + domainId2);
+                routeId && await req.delete(example.url + routeId);
+                domainId1 && await req.delete(example.routerDomain.url + domainId1);
+                domainId2 && await req.delete(example.routerDomain.url + domainId2);
             }
         });
 
@@ -849,32 +854,32 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await request.post(example.url).send(example.correctWithMetadata).expect(200);
+                let response = await req.post(example.url).send(example.correctWithMetadata).expect(200);
                 routeId = response.body.id;
 
-                response = await request.put(example.url + routeId).send(example.updatedWithMetadata).expect(200);
+                response = await req.put(example.url + routeId).send(example.updatedWithMetadata).expect(200);
 
                 expect(response.body).deep.equal({
                     ...example.updatedWithMetadata,
                     id: routeId,
                 });
             } finally {
-                routeId && await request.delete(example.url + routeId);
+                routeId && await req.delete(example.url + routeId);
             }
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth.put(example.url + 123)
+                await requestWithAuth().then(r => r.put(example.url + 123)
                     .send(example.updated)
-                    .expect(401);
+                    .expect(401));
             });
         });
     });
 
     describe('Delete', () => {
         it('should not delete any record if record doesn\'t exist', async () => {
-            const response = await request.delete(example.url + 123123123123123123)
+            const response = await req.delete(example.url + 123123123123123123)
             .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
@@ -886,7 +891,7 @@ describe(`Tests ${example.url}`, () => {
                 let [default404] = await db.select().from('routes').where({ route: makeSpecialRoute('404'), domainId: null });
 
                 if (!default404) {
-                    const response = await request.post(example.url).send(example.correct404);
+                    const response = await req.post(example.url).send(example.correct404);
 
                     default404 = response.body;
 
@@ -897,7 +902,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const idDefault404 = default404.id;
 
-                const response = await request.delete(example.url + idDefault404)
+                const response = await req.delete(example.url + idDefault404)
                     .expect(500, 'Default 404 error can\'t be deleted');
 
                 expect(response.body).deep.equal({});
@@ -910,10 +915,10 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully delete record', async () => {
-            let response = await request.post(example.url).send(example.correct).expect(200);
+            let response = await req.post(example.url).send(example.correct).expect(200);
             const id = response.body.id;
 
-            response = await request.delete(example.url + id)
+            response = await req.delete(example.url + id)
             .expect(204, '');
 
             expect(response.body).deep.equal({});
@@ -921,8 +926,8 @@ describe(`Tests ${example.url}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth.delete(example.url + 123)
-                    .expect(401);
+                await requestWithAuth().then(r => r.delete(example.url + 123)
+                    .expect(401));
             });
         });
     });

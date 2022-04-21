@@ -1,4 +1,4 @@
-FROM node:14-alpine
+FROM node:16-alpine
 
 RUN apk update && apk add --no-cache bash git openssh python3 make g++ findutils
 
@@ -9,6 +9,7 @@ WORKDIR /codebase
 
 COPY package-lock.json package.json /codebase/
 RUN npm ci --no-package-lock --ignore-scripts
+RUN npm rebuild @newrelic/native-metrics
 
 COPY ./ /codebase
 
