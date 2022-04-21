@@ -69,7 +69,7 @@ router.get('/', async (req, res, next) => {
                 ({ id }) => id === routeItem.domainId
             )?.domainName : null;
 
-            routeItem.domain = domain || '*';
+            routeItem.domain = domain;
             delete routeItem.domainId;
 
             routeData = Object.assign({

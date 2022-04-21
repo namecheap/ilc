@@ -1,24 +1,25 @@
-import { isEmpty, isString } from 'lodash';
 import { BaseNodeFilter, Node } from "./BaseNodeFilter";
-
-type Result = Record<string, Partial<Node>>;
 
 export class SpecialRoutesFilter extends BaseNodeFilter {
     public readonly accessPath = 'specialRoutes' as const;
 
-    public filter(node: Array<Node>): Result {
-        const accum: [Result, Result] = [{}, {}];
+    public filter(node: Array<Node>): Array<Node> {
+        const accum: [Node[], Node[]] = [[], []];
         const [ withDomain, withoutDomain ] = node.reduce(
-            ([ left, right ], { domain, specialRole, ...rest }) => {
-                if(isString(specialRole)) {
-                    typeof domain !== 'string' ? right[specialRole] = rest : (
-                        super.canResolve(domain) ? left[specialRole] = rest : null
-                    )
+            ([ left, withoutDomain ], { domain, ...rest }) => {
+                if(typeof domain !== 'string') {
+                    withoutDomain.push(rest);
                 }
 
-                return [ left, right ];
+                const option = domain as string;
+
+                if(super.canResolve(option)) {
+                    left.push(rest);
+                }
+
+                return [ left, withoutDomain ];
             }, accum);
 
-        return !isEmpty(withDomain) ? withDomain : withoutDomain;
+        return withDomain.length ? withDomain : withoutDomain;
     }
 }
