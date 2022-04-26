@@ -3,7 +3,6 @@ import supertest from 'supertest';
 
 import {SettingKeys, TrailingSlashValues, OnPropsUpdateValues} from '../server/settings/interfaces';
 import {request, expect, requestWithAuth} from './common';
-import {SuperAgentRequest} from "superagent";
 
 describe('Tests /api/v1/config', () => {
     let req: supertest.SuperTest<supertest.Test>;

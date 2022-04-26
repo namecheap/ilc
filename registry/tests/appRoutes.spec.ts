@@ -111,7 +111,7 @@ const createRouterDomain = async (routerDomain: typeof example.routerDomain) => 
     return response.body.id;
 };
 
-describe(`Tests 1${example.url}`, () => {
+describe(`Tests ${example.url}`, () => {
     let req: ReturnType<typeof supertest>;
     before(async () => {
         req = await request();
@@ -589,7 +589,7 @@ describe(`Tests 1${example.url}`, () => {
 
             expect(domains).not.includes(originalHost);
             expect(domains).not.oneOf([ undefined, null ]);
-            expect(domains).includes('*');
+            expect(domains).includes.oneOf(['*', host]);
         });
 
         it('should return 403 in case domain is not equal', async () => {
