@@ -2,15 +2,18 @@ import _ from 'lodash';
 import { request, expect, requestWithAuth } from './common';
 import supertest from 'supertest';
 
+const domainName = '127.0.0.1';
+const template500 = 'testTemplate500';
+
 const example = {
     url: '/api/v1/router_domains/',
     correct: Object.freeze({
-        domainName: 'domainNameCorrect.com',
-        template500: 'testTemplate500',
+        domainName,
+        template500,
     }),
     updated: Object.freeze({
-        domainName: 'domainNameUpdated.com',
-        template500: 'testTemplate500',
+        domainName,
+        template500
     }),
 };
 
@@ -29,7 +32,7 @@ describe(`Tests ${example.url}`, () => {
 
     afterEach(async () => {
         await req.delete('/api/v1/template/' + example.correct.template500);
-    })
+    });
     describe('Create', () => {
         it('should not create record without a required fields', async () => {
             await req.post(example.url)
@@ -77,6 +80,7 @@ describe(`Tests ${example.url}`, () => {
                 });
 
                 const responseFetching = await req.get(example.url + routerDomainsId)
+                    .set('Host', domainName)
                     .expect(200);
 
                 expect(responseFetching.body).deep.equal({
@@ -104,15 +108,42 @@ describe(`Tests ${example.url}`, () => {
                 .expect(404, 'Not found');
         });
 
-        it('should successfully return record', async () => {
-            let routerDomainsId;
+        it('should restrict access, in case of different domain', async () => {
+            const host = '127.1.1.1';
+            let domainId;
 
             try {
-                const responseCreation = await req.post(example.url).send(example.correct).expect(200);
+                let response = await req.get(example.url)
+                    .expect(200)
+                    .set('Host', host);
 
+                expect(response?.body).to.be.an('array').with.lengthOf(0);
+
+                response = await req.post(example.url)
+                    .send(example.correct).expect(200);
+
+                domainId = response?.body?.id;
+                await req.get(example.url + domainId)
+                    .expect(403)
+                    .set('Host', host);
+
+            } finally {
+                domainId && await req.delete(example.url + domainId);
+            }
+        });
+
+        it('should successfully return record', async () => {
+            let routerDomainsId;
+            const host = '127.0.0.1';
+
+            try {
+                const responseCreation = await req.post(example.url)
+                    .send(example.correct).expect(200);
                 routerDomainsId = responseCreation.body.id;
 
-                const responseFetching = await req.get(example.url + routerDomainsId).expect(200);
+                const responseFetching = await req.get(example.url + routerDomainsId)
+                    .set('Host', host)
+                    .expect(200);
 
                 expect(responseFetching.body).deep.equal({
                     id: routerDomainsId,
@@ -125,6 +156,7 @@ describe(`Tests ${example.url}`, () => {
 
         it('should successfully return all existed records', async () => {
             let routerDomainsId1, routerDomainsId2;
+            const host = '127.0.0.1';
 
             try {
                 const responseCreation1 = await req.post(example.url).send(example.correct).expect(200);
@@ -134,6 +166,7 @@ describe(`Tests ${example.url}`, () => {
                 routerDomainsId2 = responseCreation2.body.id;
 
                 const responseFetchingAll = await req.get(example.url)
+                    .set('Host', host)
                     .expect(200);
 
                 expect(responseFetchingAll.body).to.be.an('array').that.is.not.empty;
@@ -151,11 +184,12 @@ describe(`Tests ${example.url}`, () => {
             }
         });
         it('should successfully return paginated list', async () => {
-            const rangeStart = (await req.get(example.url)).body.length;
+            const host = `127.0.0.1`;
+            const rangeStart = (await req.get(example.url).set('Host', host)).body.length;
 
             const routerDomainsList: { id?: number; domainName: string; template500: string }[] = [...Array(5)].map((n, i) => ({
                 ...example.correct,
-                domainName: `domainNameCorrect${i}.com`,
+                domainName: host,
             }));
 
             const promises = routerDomainsList.map(data => req.post(example.url).send(data));
@@ -166,10 +200,12 @@ describe(`Tests ${example.url}`, () => {
                 responses.forEach((response, i) => {
                     routerDomainsList[i].id = response.body.id;
                 });
-
-                const responseFetching01 = await req.get(`${example.url}?range=${encodeURIComponent(`[${rangeStart + 0},${rangeStart + 1}]`)}`);
-                const responseFetching24 = await req.get(`${example.url}?range=${encodeURIComponent(`[${rangeStart + 2},${rangeStart + 4}]`)}`);
-                const responseFetching13 = await req.get(`${example.url}?range=${encodeURIComponent(`[${rangeStart + 1},${rangeStart + 3}]`)}`);
+                const first = `${example.url}?range=${encodeURIComponent(`[${rangeStart + 0},${rangeStart + 1}]`)}`;
+                const second = `${example.url}?range=${encodeURIComponent(`[${rangeStart + 2},${rangeStart + 4}]`)}`;
+                const third = `${example.url}?range=${encodeURIComponent(`[${rangeStart + 1},${rangeStart + 3}]`)}`;
+                const responseFetching01 = await req.get(first).set('Host', host);
+                const responseFetching24 = await req.get(second).set('Host', host);
+                const responseFetching13 = await req.get(third).set('Host', host);
 
                 expect(
                     responseFetching01.header['content-range'] === responseFetching24.header['content-range'] &&

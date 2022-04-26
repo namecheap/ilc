@@ -23,7 +23,7 @@ let example = <any>{
     routerDomain: {
         url: '/api/v1/router_domains/',
         correct: Object.freeze({
-            domainName: 'testDomainName.com',
+            domainName: '127.0.0.1',
             template500: 'ncTestTemplateName',
         }),
     },
@@ -111,7 +111,7 @@ const createRouterDomain = async (routerDomain: typeof example.routerDomain) => 
     return response.body.id;
 };
 
-describe(`Tests ${example.url}`, () => {
+describe(`Tests 1${example.url}`, () => {
     let req: ReturnType<typeof supertest>;
     before(async () => {
         req = await request();
@@ -127,8 +127,11 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Create', () => {
+        const host = '127.0.0.1';
+
         it('should successfully create record', async () => {
             let routeId;
+            const host = '127.0.0.1';
 
             try {
                 let response = await req.post(example.url)
@@ -141,12 +144,15 @@ describe(`Tests ${example.url}`, () => {
                     id: routeId,
                     ..._.omitBy(example.correct, _.isNil),
                 };
+
                 expect(response.body).deep.equal(expectedRoute);
 
                 response = await req.get(example.url + routeId)
+                    .set('Host', host)
                     .expect(200);
 
-                expect(response.body).deep.equal(expectedRoute);
+                const domainName = '*';
+                expect(response.body).deep.equal({ domainName, ...expectedRoute });
             } finally {
                 routeId && await req.delete(example.url + routeId);
             }
@@ -453,12 +459,15 @@ describe(`Tests ${example.url}`, () => {
                     id: routeId,
                     ..._.omitBy(exampleWithExistedDomainId, _.isNil),
                 };
-                expect(response.body).deep.equal(expectedRoute);
+
+                const domainName = '127.0.0.1';
+                expect(response.body).deep.equal({ ...expectedRoute });
 
                 response = await req.get(example.url + routeId)
+                    .set('Host', host)
                     .expect(200);
 
-                expect(response.body).deep.equal(expectedRoute);
+                expect(response.body).deep.equal({ ...expectedRoute, domainName });
             } finally {
                 routeId && await req.delete(example.url + routeId);
                 domainId && await req.delete(example.routerDomain.url + domainId);
@@ -490,9 +499,11 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal(expectedRoute);
 
                 response = await req.get(example.url + routeId)
+                    .set('Host', host)
                     .expect(200);
 
-                expect(response.body).deep.equal(expectedRoute);
+                const domainName = '127.0.0.1';
+                expect(response.body).deep.equal({ ...expectedRoute, domainName });
             } finally {
                 routeId && await req.delete(example.url + routeId);
                 domainId && await req.delete(example.routerDomain.url + domainId);
@@ -515,9 +526,12 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(expectedRoute);
 
-                response = await req.get(example.url + routeId).expect(200);
+                response = await req.get(example.url + routeId)
+                    .set('Host', host)
+                    .expect(200);
 
-                expect(response.body).deep.equal(expectedRoute);
+                const domainName = '*';
+                expect(response.body).deep.equal({ domainName, ...expectedRoute });
             } finally {
                 routeId && await req.delete(example.url + routeId);
             }
@@ -536,6 +550,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body.orderPos).to.be.above(0);
 
                 await req.get(example.url + routeId)
+                    .set('Host', host)
                     .expect(200);
             } finally {
                 routeId && await req.delete(example.url + routeId);
@@ -558,18 +573,110 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).deep.equal({});
         });
 
+        it('should not return routes which contain diff domain', async () => {
+            const originalHost = '127.0.0.1';
+            const host = '127.0.0.2';
+
+            let response = await req.get(example.url)
+                .set('Host', host)
+                .expect(200);
+
+            expect(response?.body).to.be.an('array');
+
+            const domains = response?.body.map(
+                ((r: Record<string, unknown>) => r.domainName)
+            );
+
+            expect(domains).not.includes(originalHost);
+            expect(domains).not.oneOf([ undefined, null ]);
+            expect(domains).includes('*');
+        });
+
+        it('should return 403 in case domain is not equal', async () => {
+            const originalHost = '127.0.0.1:8080';
+            const host = '127.0.0.2:3000';
+
+            const { routerDomain } = example;
+            const domainName = originalHost;
+            const data = { ...routerDomain.correct, domainName };
+
+            const app = await request();
+            let response = await app.post(routerDomain.url).send(data);
+
+            const domainId = response.body?.id;
+
+            response = await req.post(example.url)
+                .send({ ...example.correct, domainId })
+                .expect(200);
+
+            const routeId = response.body.id;
+
+            await req.get(
+                example.url + routeId
+            ).set('Host', host).expect(403);
+
+            routeId && await req.delete(example.url + routeId);
+            domainId && await req.delete(routerDomain.url + domainId);
+        });
+
+        it('should allow to read routes in case when domain the same', async () => {
+            const host = '127.0.0.1:8080';
+
+            const { routerDomain } = example;
+            const data = {
+                ...routerDomain.correct,
+                domainName: host
+            };
+
+            let response = await req.post(routerDomain.url).send(data);
+
+            const domainId = response.body?.id;
+
+            response = await req.post(example.url)
+                .send({ ...example.correct, domainId })
+                .expect(200);
+
+            const routeId = response.body.id;
+
+            response = await req.get(`${example.url}${routeId}`)
+                .set('Host', host)
+                .expect(200);
+
+            expect(response?.body).has.own.property('id');
+
+            response = await req.get(example.url)
+                .set('Host', host)
+                .expect(200);
+
+            const routes = response?.body.map(
+                (r: Record<string, unknown>) => r.id
+            );
+
+            expect(routes).includes(routeId);
+
+            routeId && await req.delete(example.url + routeId);
+            domainId && await req.delete(routerDomain.url + domainId);
+        })
+
         it('should successfully return record', async () => {
             let routeId;
 
+            const host = '127.0.0.1:8080';
             try {
-                let response = await req.post(example.url).send(example.correct).expect(200);
+                let response = await req.post(example.url)
+                    .send(example.correct)
+                    .expect(200);
+
                 routeId = response.body.id;
 
                 response = await req.get(example.url + routeId)
+                    .set('Host', host)
                     .expect(200);
 
+                const domainName = '*';
                 const expectedRoute = {
                     id: routeId,
+                    domainName,
                     ..._.omitBy(example.correct, _.isNil),
                 };
                 expect(response.body).deep.equal(expectedRoute);
@@ -580,15 +687,22 @@ describe(`Tests ${example.url}`, () => {
 
         it('should successfully return all existed records', async () => {
             let routeId;
+
+            const host = '127.0.0.1:8080';
             try {
                 let response = await req.post(example.url).send(example.correct).expect(200);
                 routeId = response.body.id;
 
-                response = await req.get(example.url).expect(200);
+                response = await req.get(example.url)
+                    .set('Host', host)
+                    .expect(200);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
+                const domainName = '*';
+
                 const expectedRoute = {
                     id: routeId,
+                    domainName,
                     ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
                     meta: example.correct.meta,
                 };
@@ -601,7 +715,9 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully return all existed records with filter: domainId', async () => {
             let domainId, routeId;
             try {
-                domainId = await createRouterDomain(example.routerDomain);
+                const domainName = '127.0.0.1:3000'
+                const correct = { ...example.routerDomain.correct, domainName };
+                domainId = await createRouterDomain({ ...example.routerDomain, correct });
 
                 const exampleWithExistedDomainId = {
                     ...example.correct,
@@ -613,13 +729,15 @@ describe(`Tests ${example.url}`, () => {
                     .expect(200);
 
                 routeId = response.body.id;
-
                 const queryFilter = encodeURIComponent(JSON.stringify({ domainId }));
-                response = await req.get(`${example.url}?filter=${queryFilter}`).expect(200);
+                response = await req.get(`${example.url}?filter=${queryFilter}`)
+                    .set('Host', '127.0.0.1')
+                    .expect(200);
 
                 expect(response.body).to.be.an('array').with.lengthOf(1);
                 const expectedRoute = {
                     id: routeId,
+                    domainName,
                     ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
                     domainId,
                 };
@@ -646,8 +764,8 @@ describe(`Tests ${example.url}`, () => {
     describe('Update', () => {
         it('should not update any record if record doesn\'t exist', async () => {
             const response = await req.put(example.url + 123123123123123123)
-            .send(example.correct)
-            .expect(404, 'Not found');
+                .send(example.correct)
+                .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
@@ -686,7 +804,6 @@ describe(`Tests ${example.url}`, () => {
                 routeId && await req.delete(example.url + routeId);
             }
         });
-
         it('should not update record with the same orderPos', async () => {
             let routeId1, routeId2;
 
