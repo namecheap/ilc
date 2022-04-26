@@ -1,5 +1,5 @@
 import { BaseNodeFilter, Node } from './BaseNodeFilter';
-import {extractHost} from "../../../appRoutes/guards";
+import {extractHost} from "../guards";
 
 export class RoutesFilter extends BaseNodeFilter {
     public readonly accessPath = 'routes' as const;
