@@ -10,7 +10,7 @@ export abstract class BaseNodeFilter {
         this.predicates = [ ...predicates, this.rootDomain ];
     }
 
-    public abstract filter(data: Readonly<Node[]>): Node | Node[];
+    public abstract filter(data: Readonly<Node[]>): object;
 
     protected canResolve(property: string): boolean {
         return this.predicates.includes(property);

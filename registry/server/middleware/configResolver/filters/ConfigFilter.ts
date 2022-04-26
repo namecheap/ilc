@@ -6,7 +6,9 @@ export class ConfigFilter {
 
     constructor(
         data: Node | Node[] | object,
-    ) { this.accessor = new ConfigAccessor(data); }
+    ) {
+        this.accessor = new ConfigAccessor(data);
+    }
 
     filter(filters: BaseNodeFilter[]): Node | Node[] | object  {
         filters.forEach(handler => {

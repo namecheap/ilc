@@ -1,20 +1,22 @@
 import { BaseNodeFilter, Node } from './BaseNodeFilter';
+import {extractHost} from "../../../appRoutes/guards";
 
 export class RoutesFilter extends BaseNodeFilter {
     public readonly accessPath = 'routes' as const;
 
-    public filter(node: Array<Node>): Array<Node> {
+    public filter(node: Array<Node>): object {
         const accum: [Node[], Node[]] = [[], []];
         const [ withDomain, withoutDomain ] = node.reduce(
-            ([ left, right ], { domain, ...rest }) => {
-                if(typeof domain !== 'string') {
+            ([ left, right ], data) => {
+                const { domainName, ...rest } = data;
+                if(typeof domainName !== 'string') {
                     right.push(rest);
                 }
 
-                const option = domain as string;
+                const option = extractHost(domainName as string);
 
                 if(super.canResolve(option)) {
-                    left.push(rest);
+                    left.push(data);
                 }
 
                 return [ left, right ];

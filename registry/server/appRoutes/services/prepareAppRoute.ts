@@ -36,6 +36,7 @@ const prepareRoutesWithSlotsToRespond = _.compose(
         };
 
         const slots = { ...prevSavedAppRouteSlots };
+
         if (name) {
             slots[name] = preProcessResponse(nextAppRouteSlot);
         }

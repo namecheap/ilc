@@ -7,7 +7,6 @@ export const configResolverMiddleware: RequestHandler = (
         if(!data) throw new Error(
             'Data is not provided through middleware'
         );
-
         const domain = request.hostname;
         const filters = [
             RoutesFilter, SpecialRoutesFilter
