@@ -3,9 +3,18 @@ const IlcIntl = require('ilc-sdk/app').IlcIntl;
 const {intlSchema} = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
 
 const i18nCookie = require('../common/i18nCookie');
+const { parseUrl } = require('../common/utils');
+
+const isStaticFile = url => {
+    const extensions = ['.js', '.js.map'];
+
+    return extensions.some(ext => url.endsWith(ext));
+};
 
 const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, reply) => {
-    if (!i18nConfig.enabled || req.raw.url === '/ping') {
+    const parsedUrl = parseUrl(req.raw.url);
+
+    if (!i18nConfig.enabled || req.raw.url === '/ping' || isStaticFile(parsedUrl.pathname)) {
         return; // Excluding system routes
     }
 

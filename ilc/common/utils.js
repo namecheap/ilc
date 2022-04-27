@@ -30,6 +30,9 @@ const uniqueArray = array => [...new Set(array)];
 const encodeHtmlEntities = value => value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const decodeHtmlEntities = value => value.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
 
+const fakeBaseInCasesWhereUrlIsRelative = 'http://hack';
+const parseUrl = (url) => new URL(url, fakeBaseInCasesWhereUrlIsRelative);
+
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
@@ -37,4 +40,5 @@ module.exports = {
     uniqueArray,
     encodeHtmlEntities,
     decodeHtmlEntities,
+    parseUrl,
 }
