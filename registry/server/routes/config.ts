@@ -5,8 +5,7 @@ import knex from '../db';
 import {Setting, Scope} from '../settings/interfaces';
 import preProcessResponse from '../settings/services/preProcessResponse';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
-import { patchRoute } from "../appRoutes/services/dataPatch";
-import { ConfigFilter, RoutesFilter, SpecialRoutesFilter } from "../middleware/configResolver/filters";
+import { RoutesFilter, SpecialRoutesFilter } from "../appRoutes/filters";
 import {extractHost} from "../appRoutes/guards";
 
 const router = express.Router();
@@ -107,8 +106,7 @@ router.get('/', async (req, res, next) => {
            return acc;
        }, {});
 
-       const domain = extractHost(req.hostname);
-
+       const domain = extractHost(req);
        const [specialRoutesFilter, routesFilter] = [
            SpecialRoutesFilter, RoutesFilter
        ].map(Ctor => new Ctor([domain]));

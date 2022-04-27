@@ -14,7 +14,7 @@ export class RoutesFilter extends BaseNodeFilter {
                 }
 
                 const option = extractHost(domainName as string);
-
+                console.log('RoutesFilter', option);
                 if(super.canResolve(option)) {
                     left.push(data);
                 }

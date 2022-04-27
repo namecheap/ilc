@@ -696,7 +696,7 @@ describe(`Tests ${example.url}`, () => {
                 response = await req.get(example.url)
                     .set('Host', host)
                     .expect(200);
-
+                console.log('details', response);
                 expect(response.body).to.be.an('array').that.is.not.empty;
                 const domainName = '*';
 

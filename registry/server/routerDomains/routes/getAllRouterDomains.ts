@@ -7,11 +7,12 @@ import {
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { domainRestrictionGuard } from "../../appRoutes/guards";
+import { extractHost } from "../../appRoutes/guards";
 
 const getAllRouterDomains = (
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        const domainName = req.hostname;
-
+        const domainName = extractHost(req);
+        console.log('getAllRouterDomains', domainName);
         const query = db.select().from('router_domains');
         const routerDomains = await query.range(req.query.range as string | undefined);
 

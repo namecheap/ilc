@@ -9,7 +9,7 @@ import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 import RouterDomains, { routerDomainIdSchema } from '../interfaces';
-import { domainRestrictionGuard } from "../../appRoutes/guards";
+import {domainRestrictionGuard, extractHost} from "../../appRoutes/guards";
 
 type RequestParams = {
     id: string
@@ -30,15 +30,17 @@ const getRouterDomains = (
 
         if (!routerDomains) {
             res.status(404).send('Not found');
-        } else {
-            const guard = domainRestrictionGuard(req.hostname);
-            const prepared = preProcessResponse(routerDomains);
-            const isAllowed = guard(prepared);
-
-            isAllowed ? res.status(200).send(prepared) : (
-                res.status(403).send('Forbidden')
-            );
+            return next();
         }
+
+        const host = extractHost(req);
+        const guard = domainRestrictionGuard(host);
+        const prepared = preProcessResponse(routerDomains);
+        const isAllowed = guard(prepared);
+
+        isAllowed ? res.status(200).send(prepared) : (
+            res.status(403).send('Forbidden')
+        );
 
         next();
     }

@@ -75,8 +75,9 @@ Scenario('Renders (CSR) global 404 page for non-existing News resource', ({I, ne
     I.seeInSource(common.text404NotFound);
 
     //After 404 page ILC continues normal operation
-    I.wait(5); //Hack to fix issue with the Vue Router
+    I.wait(10); //Hack to fix issue with the Vue Router
     I.click(newsPage.linkWithUrl(newsPage.url.main));
+    I.wait(1);
     I.waitForElement(newsPage.newsSources, 10);
     I.see('Pick a news source', newsPage.bannerHeadline);
 });
@@ -91,6 +92,7 @@ Scenario('Renders (CSR) overridden 404 page for non-existing News resource', ({I
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingResourceWithOverride), 10);
     I.click(newsPage.linkWithUrl(newsPage.url.nonExistingResourceWithOverride));
+    I.wait(1)
     I.seeInSource(common.text404NotFoundVue);
 });
 //endregion 404 page for non-existing News resource
