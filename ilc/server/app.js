@@ -82,6 +82,14 @@ module.exports = (registryService, pluginManager) => {
     // Route to test 500 page appearance
     app.get('/_ilc/500', async () => { throw new Error('500 page test error') });
 
+    // Route to test page for unsupported browser
+    app.get('/_ilc/unsupported_browser', async (req, res) => {
+        let { data } = await registryService.getTemplate('browser-not-supported');
+
+        res.header('Content-Type', 'text/html');
+        res.status(200).send(data.content);
+    });
+
     app.all('*', async (req, res) => {
         const currentDomain = req.hostname;
         let registryConfig = (await registryService.getConfig({ filter: { domain: currentDomain } })).data;
