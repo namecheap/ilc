@@ -12,7 +12,7 @@ import { extractHost } from "../../appRoutes/guards";
 const getAllRouterDomains = (
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         const domainName = extractHost(req);
-        console.log('getAllRouterDomains', domainName);
+
         const query = db.select().from('router_domains');
         const routerDomains = await query.range(req.query.range as string | undefined);
 

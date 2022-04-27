@@ -573,7 +573,7 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).deep.equal({});
         });
 
-        it('should not return routes which contain diff domain', async () => {
+        it('should not return routes with diff domain', async () => {
             const originalHost = '127.0.0.1';
             const host = '127.0.0.2';
 
@@ -589,7 +589,6 @@ describe(`Tests ${example.url}`, () => {
 
             expect(domains).not.includes(originalHost);
             expect(domains).not.oneOf([ undefined, null ]);
-            expect(domains).includes.oneOf(['*', host]);
         });
 
         it('should return 403 in case domain is not equal', async () => {
@@ -696,7 +695,7 @@ describe(`Tests ${example.url}`, () => {
                 response = await req.get(example.url)
                     .set('Host', host)
                     .expect(200);
-                console.log('details', response);
+
                 expect(response.body).to.be.an('array').that.is.not.empty;
                 const domainName = '*';
 
