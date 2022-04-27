@@ -84,7 +84,8 @@ module.exports = (registryService, pluginManager) => {
 
     // Route to test page for unsupported browser
     app.get('/_ilc/unsupported_browser', async (req, res) => {
-        let { data } = await registryService.getTemplate('browser-not-supported');
+        const locale = req.raw.ilcState.locale;
+        let { data } = await registryService.getTemplate('unsupported_browser', null, locale);
 
         res.header('Content-Type', 'text/html');
         res.status(200).send(data.content);
