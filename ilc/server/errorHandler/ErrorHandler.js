@@ -63,7 +63,7 @@ module.exports = class ErrorHandler {
 
             const currentDomain = req.hostname;
             const locale = req.raw.ilcState.locale;
-            let data = await this.#registryService.getTemplate('500', currentDomain, locale);
+            let data = await this.#registryService.getTemplate('500', { locale, currentDomain });
             data = data.data.content.replace('%ERRORID%', `Error ID: ${errorId}`);
 
             nres.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');

@@ -75,7 +75,7 @@ module.exports = (registryService, pluginManager) => {
     app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
         const currentDomain = req.hostname;
         const locale = req.raw.ilcState.locale;
-        const data = await registryService.getTemplate(req.params.templateName, currentDomain, locale);
+        const data = await registryService.getTemplate(req.params.templateName, { locale, currentDomain });
         res.status(200).send(data.data.content);
     });
 
@@ -122,7 +122,7 @@ module.exports = (registryService, pluginManager) => {
         const isRouteWithoutSlots = !Object.keys(route.slots).length;
         if (isRouteWithoutSlots) {
             const locale = req.raw.ilcState.locale;
-            let { data } = await registryService.getTemplate(route.template, null, locale);
+            let { data } = await registryService.getTemplate(route.template, { locale });
 
             res.header('Content-Type', 'text/html');
             res.status(200).send(data.content);
