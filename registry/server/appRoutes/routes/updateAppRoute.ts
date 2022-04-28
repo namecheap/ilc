@@ -9,6 +9,7 @@ import { stringifyJSON } from '../../common/services/json';
 import { partialAppRouteSchema } from '../interfaces';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
+import { getRoutesById } from './common';
 
 type UpdateAppRouteRequestParams = {
     id: string
@@ -33,7 +34,7 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
         ...appRouteData
     } = req.body;
 
-    const appRouteId = req.params.id;
+    const appRouteId = +req.params.id;
     const appRoute = transformSpecialRoutesForDB(appRouteData);
 
     const countToUpdate = await db('routes').where('id', appRouteId);
@@ -58,13 +59,7 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
         }
     });
 
-    const updatedAppRoute = await db
-        .select('routes.id as routeId', 'route_slots.id as routeSlotId', 'routes.*', 'route_slots.*')
-        .from('routes')
-        .where('routeId', appRouteId)
-        .join('route_slots', {
-            'route_slots.routeId': 'routes.id'
-        });
+    const updatedAppRoute = await getRoutesById(appRouteId);
 
     res.status(200).send(prepareAppRouteToRespond(updatedAppRoute));
 };

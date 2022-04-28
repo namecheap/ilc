@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
 
-import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import { prepareAppRouteToRespond } from '../services/prepareAppRoute';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForConsumer } from '../services/transformSpecialRoutes';
+import { getRoutesById } from './common';
 
 type GetAppRouteRequestParams = {
     id: string
@@ -19,13 +19,7 @@ const validateRequestBeforeGetAppRoute = validateRequestFactory([{
 }]);
 
 export const retrieveAppRouteFromDB = async (appRouteId: number) => {
-    const appRoutes = await db
-        .select('routes.id as routeId', 'route_slots.id as routeSlotId', 'routes.*', 'route_slots.*')
-        .from('routes')
-        .where('routeId', appRouteId)
-        .join('route_slots', {
-            'route_slots.routeId': 'routes.id'
-        });
+    const appRoutes = await getRoutesById(appRouteId);
 
     if (!appRoutes.length) {
         return;
