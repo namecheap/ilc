@@ -165,8 +165,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.status).equal(422);
                 expect(response.text).equal(
-                    '"route" is required\n' +
-                    '"slots" is required'
+                    '"route" is required'
                 );
                 expect(response.body).deep.equal({});
             } finally {
@@ -194,8 +193,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.text).equal(
                     '"orderPos" is not allowed\n' +
                     '"route" is not allowed\n' +
-                    '"next" is not allowed\n' +
-                    '"slots" is required'
+                    '"next" is not allowed'
                 );
                 expect(response.body).deep.equal({});
             } finally {
