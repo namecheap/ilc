@@ -118,6 +118,17 @@ module.exports = (registryService, pluginManager) => {
             return;
         }
 
+        const route = req.raw.router.getRoute();
+        const isRouteWithoutSlots = !Object.keys(route.slots).length;
+        if (isRouteWithoutSlots) {
+            const locale = req.raw.ilcState.locale;
+            let { data } = await registryService.getTemplate(route.template, null, locale);
+
+            res.header('Content-Type', 'text/html');
+            res.status(200).send(data.content);
+            return;
+        }
+
         res.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
         tailor.requestHandler(req.raw, res.res);
     });
