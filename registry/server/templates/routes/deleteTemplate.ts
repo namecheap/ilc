@@ -7,9 +7,7 @@ import * as httpErrors from '../../errorHandler/httpErrors';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import {
-    templateNameSchema,
-} from '../interfaces';
+import { templateNameSchema } from './validation';
 
 type DeleteTemplateRequestParams = {
     name: string

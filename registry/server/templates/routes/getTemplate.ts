@@ -4,11 +4,9 @@ import {
 } from 'express';
 import Joi from 'joi';
 
-import {
-    templateNameSchema,
-} from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
 import { readTemplateWithAllVersions } from '../services/templatesRepository';
+import { templateNameSchema } from './validation';
 
 type GetTemplateRequestParams = {
     name: string
