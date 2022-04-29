@@ -6,11 +6,8 @@ import Joi from 'joi';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import {
-    templateNameSchema,
-    partialTemplateSchema,
-} from '../interfaces';
 import { readTemplateWithAllVersions, upsertLocalizedVersions } from '../services/templatesRepository';
+import { partialTemplateSchema, templateNameSchema, validateLocalesAreSupported } from './validation';
 
 type UpdateTemplateRequestParams = {
     name: string
@@ -42,6 +39,11 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
     }
 
     const localizedVersions = req.body.localizedVersions || {};
+    const localesAreValid = await validateLocalesAreSupported(Object.keys(localizedVersions), res);
+    if (!localesAreValid) {
+        return;
+    }
+
     await db.versioning(req.user, {type: 'templates', id: templateName}, async (trx) => {
         await db('templates').where({ name: templateName }).update(template).transacting(trx);
         await upsertLocalizedVersions(templateName, localizedVersions, trx);

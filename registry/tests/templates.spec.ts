@@ -1,8 +1,10 @@
 import _ from 'lodash';
 import nock from 'nock';
 
-import { request, expect, requestWithAuth } from './common';
+import { expect, request, requestWithAuth } from './common';
 import supertest from 'supertest';
+import { SettingKeys } from '../server/settings/interfaces';
+import { withSetting } from './utils/withSetting';
 
 const example = {
     url: '/api/v1/template/',
@@ -95,9 +97,20 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should create localized versions of template', async () => {
-            let response = await req.post(example.url)
-                .send(example.correctLocalized);
-            expect(response.status).to.eq(200, response.text);
+            await withSetting(SettingKeys.I18nSupportedLocales, Object.keys(example.correctLocalized.localizedVersions), async () => {
+                let response = await req.post(example.url)
+                    .send(example.correctLocalized);
+                expect(response.status).to.eq(200, response.text);
+            });
+        });
+
+        it('should not accept not supported languages', async () => {
+            await withSetting(SettingKeys.I18nSupportedLocales, ['es-MX', 'ch-CH'], async () => {
+                let response = await req.post(example.url)
+                    .send(example.correctLocalized);
+                expect(response.status).to.eq(422, response.text);
+                expect(response.text).to.contain('locales are not supported');
+            });
         });
 
         describe('Authentication / Authorization', () => {
@@ -128,7 +141,9 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should return localized versions of the template', async () => {
-            await req.post(example.url).send(example.correctLocalized).expect(200);
+            await withSetting(SettingKeys.I18nSupportedLocales, Object.keys(example.correctLocalized.localizedVersions), async () => {
+                await req.post(example.url).send(example.correctLocalized).expect(200);
+            })
 
             const response = await reqWithAuth.get(example.url + example.correctLocalized.name)
                 .expect(200);
@@ -234,7 +249,9 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should return localized version of rendered template', async () => {
-            await req.post(example.url).send(example.correctLocalized).expect(200);
+            await withSetting(SettingKeys.I18nSupportedLocales, Object.keys(example.correctLocalized.localizedVersions), async () => {
+                await req.post(example.url).send(example.correctLocalized).expect(200);
+            });
 
             const response = await req.get(example.url + example.correctLocalized.name + '/rendered?locale=' + 'es-MX');
 
@@ -306,13 +323,16 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should successfully update localized versions of the template', async () => {
-            await req.post(example.url).send(example.correctLocalized).expect(200);
+            let allLangs = Object.keys(example.correctLocalized.localizedVersions).concat(Object.keys(example.updatedLocalized.localizedVersions));
+            await withSetting(SettingKeys.I18nSupportedLocales, allLangs, async () => {
+                await req.post(example.url).send(example.correctLocalized).expect(200);
 
-            const response = await req.put(example.url + example.correctLocalized.name)
-                .send(_.omit(example.updatedLocalized, 'name'))
-                .expect(200);
+                const response = await req.put(example.url + example.correctLocalized.name)
+                    .send(_.omit(example.updatedLocalized, 'name'))
+                    .expect(200);
 
-            expect(response.body).deep.equal({ name: example.correctLocalized.name, ...example.updatedLocalized });
+                expect(response.body).deep.equal({ name: example.correctLocalized.name, ...example.updatedLocalized });
+            });
         });
 
         describe('Authentication / Authorization', () => {

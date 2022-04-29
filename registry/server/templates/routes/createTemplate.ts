@@ -6,11 +6,11 @@ import {
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import Template, {
-    LocalizedTemplate,
-    templateSchema,
+    LocalizedTemplate
 } from '../interfaces';
 import { tables } from '../../db/structure';
 import { readTemplateWithAllVersions } from '../services/templatesRepository';
+import { templateSchema, validateLocalesAreSupported } from './validation';
 
 const validateRequestBeforeCreateTemplate = validateRequestFactory([{
     schema: templateSchema,
@@ -24,11 +24,16 @@ const createTemplate = async (req: Request, res: Response): Promise<void> => {
         content: request.content
     }
 
+    const locales = Object.keys(request.localizedVersions || {});
+    let localesAreValid = await validateLocalesAreSupported(locales, res);
+    if (!localesAreValid) {
+        return;
+    }
+
     await db.versioning(req.user, {type: 'templates', id: template.name}, async (trx) => {
         await db('templates').insert(template).transacting(trx);
     });
 
-    const locales = Object.keys(request.localizedVersions || {});
     if (locales.length > 0) {
         await insertLocalizedVersions(locales, template, request);
     }

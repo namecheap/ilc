@@ -1,5 +1,6 @@
 import db from '../../db';
 import {SettingKeys} from '../interfaces';
+import { User } from '../../auth';
 
 export class SettingsService {
     private changesTracking: any = {};
@@ -35,8 +36,13 @@ export class SettingsService {
         return false;
     }
 
-    async set(key: SettingKeys, value: any) {
-        //TODO
+    async set(settingKey: SettingKeys, value: any, user: User) {
+        await db.versioning(user, {type: 'settings', id: settingKey}, async (trx) => {
+            await db('settings')
+                .where('key', settingKey)
+                .update('value', JSON.stringify(value))
+                .transacting(trx);
+        });
     }
 
     private async getVal(key: SettingKeys): Promise<any> {

@@ -1,8 +1,8 @@
 import Joi from 'joi';
 import isValidDomain from 'is-valid-domain';
 
-import { templateNameSchema } from '../../templates/interfaces';
 import { getJoiErr } from "../../util/helpers";
+import { templateNameSchema } from '../../templates/routes/validation';
 
 export default interface RouterDomains {
     id: number,
@@ -17,7 +17,7 @@ const commonRouterDomainsSchema = {
         if (value.match(/^(localhost|127\.0\.0\.1)(:\d{4})?$/) || isValidDomain(value)) {
             return;
         }
-        
+
         throw getJoiErr('domainName', 'Specified "domainName" is not valid.');
     }),
     template500: templateNameSchema.required(),

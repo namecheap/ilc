@@ -36,7 +36,10 @@ class InputForm extends React.Component {
         }
 
         return (<>
-            <AddLocale open={this.state.addLocaleOpened} onLocaleAdded={onLocaleAdded} onCancel={() => this.setState({ addLocaleOpened: false }) }/>
+            <AddLocale open={this.state.addLocaleOpened}
+                       currentLocales={this.state.locales}
+                       onLocaleAdded={onLocaleAdded}
+                       onCancel={() => this.setState({addLocaleOpened: false})}/>
             <SimpleForm {...props}>
                 {mode === 'edit'
                     ? <TextField source="name"/>

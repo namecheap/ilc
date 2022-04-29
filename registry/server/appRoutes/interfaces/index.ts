@@ -1,13 +1,11 @@
 import JoiDefault from 'joi';
 
 import {
-    templateNameSchema,
-} from '../../templates/interfaces';
-import {
     appNameSchema,
 } from '../../apps/interfaces';
 import db from "../../db";
 import {getJoiErr} from "../../util/helpers";
+import { templateNameSchema } from '../../templates/routes/validation';
 
 const Joi = JoiDefault.defaults(schema => {
     return schema.empty(null)

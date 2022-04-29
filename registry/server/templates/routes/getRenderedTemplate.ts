@@ -8,13 +8,13 @@ import _ from 'lodash/fp';
 import noticeError from '../../errorHandler/noticeError';
 import db from '../../db';
 import Template, {
-    LocalizedTemplate,
-    templateNameSchema,
+    LocalizedTemplate
 } from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
 import renderTemplate from '../services/renderTemplate';
 import errors from '../errors';
 import { tables } from '../../db/structure';
+import { templateNameSchema } from './validation';
 
 type GetTemplateRenderedRequestParams = {
     name: string
