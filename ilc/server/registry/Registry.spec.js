@@ -107,7 +107,7 @@ describe('Registry', () => {
     const forDomain = 'this';
 
     const registry = new Registry(address, mockGetTemplate, logger);
-    const getTemplate = await registry.getTemplate(templateName, forDomain);
+    const getTemplate = await registry.getTemplate(templateName, { forDomain });
 
     await chai.expect(getTemplate).to.be.eql({
       data: [
@@ -135,7 +135,7 @@ describe('Registry', () => {
     const forDomain = 'this';
 
     const registry = new Registry(address, mockGetTemplate, logger);
-    const getTemplate = await registry.getTemplate(templateName, forDomain);
+    const getTemplate = await registry.getTemplate(templateName, { forDomain });
 
     await chai.expect(getTemplate).to.be.eql({
       data: [

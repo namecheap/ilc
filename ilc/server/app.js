@@ -75,7 +75,7 @@ module.exports = (registryService, pluginManager) => {
     app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
         const currentDomain = req.hostname;
         const locale = req.raw.ilcState.locale;
-        const data = await registryService.getTemplate(req.params.templateName, { locale, currentDomain });
+        const data = await registryService.getTemplate(req.params.templateName, { locale, forDomain: currentDomain });
         res.status(200).send(data.data.content);
     });
 
