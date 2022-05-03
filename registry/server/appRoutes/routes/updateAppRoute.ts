@@ -9,7 +9,7 @@ import { stringifyJSON } from '../../common/services/json';
 import { partialAppRouteSchema } from '../interfaces';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
-import { getRoutesById } from './common';
+import { getRoutesById } from './routesRepository';
 
 type UpdateAppRouteRequestParams = {
     id: string
