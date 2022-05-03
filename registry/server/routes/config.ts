@@ -113,8 +113,8 @@ router.get('/', async (req, res, next) => {
 
        const specialRoutes = specialRoutesFilter.filter(data.specialRoutes);
        const filteredRoutes = routesFilter.filter(data.routes);
-       const draft = { specialRoutes, routes: filteredRoutes };
-       Object.assign(data, draft);
+       const draft = { routes: filteredRoutes };
+       Object.assign(data, { specialRoutes, ...draft });
 
        res.send(data);
        return next();
