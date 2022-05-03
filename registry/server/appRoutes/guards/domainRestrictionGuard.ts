@@ -2,10 +2,11 @@ import { Guard } from "./guard";
 import { Request } from "express";
 import { isString } from 'lodash';
 
-export const extractHost = (input: string | Request): string => {
+export const extractHostname = (input: string | Request): string => {
     const extract = (host: string): string => {
-        const protocol = 'http://';
-        const includes = host.includes(protocol);
+        const protocol = 'https://';
+        const pattern = new RegExp(/https?:\/\//g);
+        const includes = pattern.test(host);
         const draft = !includes ? protocol + host : host;
         const url = new URL(draft);
         return url.hostname
@@ -14,7 +15,7 @@ export const extractHost = (input: string | Request): string => {
     if(!isString(input)) {
         const { headers, hostname } = input;
         const outer = headers.host || headers['x-request-host'];
-        const host = isString(outer) ? outer : hostname;
+        const host = isString(outer) && Boolean(outer.length) ? outer : hostname;
         return extract(host);
     }
 
@@ -26,7 +27,7 @@ export const extractHost = (input: string | Request): string => {
 }
 
 export const domainComparator = (current: string, required: string): boolean => (
-    extractHost(current) === extractHost(required)
+    extractHostname(current) === extractHostname(required)
 );
 
 export const domainRestrictionGuard: Guard = (predicate: string) => (

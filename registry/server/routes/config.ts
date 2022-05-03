@@ -6,7 +6,7 @@ import {Setting, Scope} from '../settings/interfaces';
 import preProcessResponse from '../settings/services/preProcessResponse';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 import { RoutesFilter, SpecialRoutesFilter } from "../appRoutes/filters";
-import {extractHost} from "../appRoutes/guards";
+import {extractHostname} from "../appRoutes/guards";
 
 const router = express.Router();
 
@@ -106,7 +106,7 @@ router.get('/', async (req, res, next) => {
            return acc;
        }, {});
 
-       const domain = extractHost(req);
+       const domain = extractHostname(req);
        const [specialRoutesFilter, routesFilter] = [
            SpecialRoutesFilter, RoutesFilter
        ].map(Ctor => new Ctor([domain]));

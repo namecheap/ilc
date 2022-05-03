@@ -7,7 +7,7 @@ import { prepareAppRouteToRespond } from '../services/prepareAppRoute';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForConsumer } from '../services/transformSpecialRoutes';
 import { patchRoute } from "../services/dataPatch";
-import {domainRestrictionGuard, extractHost} from '../guards';
+import {domainRestrictionGuard, extractHostname} from '../guards';
 
 type GetAppRouteRequestParams = {
     id: string
@@ -52,7 +52,7 @@ const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response
     }
 
     try {
-        const domainName = extractHost(req);
+        const domainName = extractHostname(req);
         const route = await patchRoute(data);
         const guard = domainRestrictionGuard(domainName);
         const isAllowed = guard(route);

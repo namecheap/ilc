@@ -2,7 +2,7 @@ import {NextFunction, Request, Response} from 'express';
 import db from '../../db';
 import { prepareAppRoutesToRespond } from '../services/prepareAppRoute';
 import { transformSpecialRoutesForConsumer, SPECIAL_PREFIX} from '../services/transformSpecialRoutes';
-import {domainRestrictionGuard, extractHost} from "../guards";
+import {domainRestrictionGuard, extractHostname} from "../guards";
 import { patchRoute } from "../services/dataPatch";
 
 const getAppRoutes = async (req: Request, res: Response, next: NextFunction) => {
@@ -40,7 +40,7 @@ const getAppRoutes = async (req: Request, res: Response, next: NextFunction) => 
     res.setHeader('Content-Range', appRoutes.pagination.total); //Stub for future pagination capabilities
 
     try {
-        const domainName = extractHost(req);
+        const domainName = extractHostname(req);
         const prepared = prepareAppRoutesToRespond(appRoutes.data);
         const guard = domainRestrictionGuard(domainName);
         const processed = await Promise.all(

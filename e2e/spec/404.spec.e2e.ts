@@ -16,6 +16,7 @@ Scenario('Renders (CSR) global 404 page for non-existing ILC route for domain "l
 
 Scenario('Renders (SSR) global 404 page for non-existing ILC route for domain "127.0.0.1:8233"', ({I, common: common}) => {
     I.amOnPage(common.url.localhostAsIPv4 + '/nonexistent-path');
+    I.wait(1);
     I.seeInSource(common.text404NotFoundForLocalhostAsIPv4);
 });
 Scenario('Renders (CSR) global 404 page for non-existing ILC route for domain "127.0.0.1:8233"', ({I, peoplePage, common: common}) => {
@@ -24,6 +25,7 @@ Scenario('Renders (CSR) global 404 page for non-existing ILC route for domain "1
     I.amOnPage(common.url.localhostAsIPv4 + peoplePage.peopleUrl);
     I.waitForElement(notFoundPageLink, 30);
     I.click(notFoundPageLink);
+    I.wait(1);
     I.seeInSource(common.text404NotFoundForLocalhostAsIPv4);
 });
 //endregion 404 page for non-existing ILC route
@@ -64,6 +66,7 @@ Scenario('Renders (CSR) overridden 404 page for non-existing News app route', ({
 //region 404 page for non-existing News resource
 Scenario('Renders (SSR) global 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
     I.amOnPage(newsPage.url.nonExistingResource);
+    I.wait(1);
     I.seeInSource(common.text404NotFound);
 });
 
@@ -72,6 +75,7 @@ Scenario('Renders (CSR) global 404 page for non-existing News resource', ({I, ne
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingResource), 10);
     I.click(newsPage.linkWithUrl(newsPage.url.nonExistingResource));
+    I.wait(1);
     I.seeInSource(common.text404NotFound);
 
     //After 404 page ILC continues normal operation

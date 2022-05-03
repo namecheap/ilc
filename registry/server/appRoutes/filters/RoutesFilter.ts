@@ -1,5 +1,5 @@
 import { BaseNodeFilter, Node } from './BaseNodeFilter';
-import {extractHost} from "../guards";
+import {extractHostname} from "../guards";
 
 export class RoutesFilter extends BaseNodeFilter {
     public readonly accessPath = 'routes' as const;
@@ -13,7 +13,7 @@ export class RoutesFilter extends BaseNodeFilter {
                     right.push(rest);
                 }
 
-                const option = extractHost(domainName as string);
+                const option = extractHostname(domainName as string);
 
                 if(super.canResolve(option)) {
                     left.push(data);

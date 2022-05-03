@@ -4,7 +4,7 @@ import supertest from 'supertest';
 import {SettingKeys, TrailingSlashValues, OnPropsUpdateValues} from '../server/settings/interfaces';
 import {request, expect, requestWithAuth} from './common';
 
-describe('Tests 1/api/v1/config', () => {
+describe('Tests /api/v1/config', () => {
     let req: supertest.SuperTest<supertest.Test>;
     let reqWithAuth: supertest.SuperTest<supertest.Test>;
     const templateName = 'ncTestTemplateName';
