@@ -64,7 +64,7 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
                             <JsonFieldShow source="meta" label="Metadata" />
                         </Tab>
                         <Tab label="Slots">
-                            <ListArrayFields source="slots">
+                            <ListArrayFields source="slots" emptyText="There are no slots for this route">
                                 <TextField source="key" label="Slot name" />
                                 <ReferenceField reference="app"
                                     filter={{ kind: APP_KINDS.map(v => v.id) }}

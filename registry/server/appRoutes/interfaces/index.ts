@@ -54,7 +54,6 @@ const conditionSpecialRole = { is: Joi.exist(), then: Joi.forbidden(), otherwise
 
 export const appRouteSchema = Joi.object({
     ...commonAppRoute,
-    slots: commonAppRoute.slots.required(),
     orderPos: commonAppRoute.orderPos.when('specialRole', {
         is: Joi.exist(),
         then: Joi.forbidden(),

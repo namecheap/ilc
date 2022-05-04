@@ -34,6 +34,14 @@ const example = {
             third: 'value',
         },
     }),
+    appRoutesWithoutSlots: Object.freeze({
+        orderPos: 124,
+        route: '/routeWithoutSlots/',
+        next: false,
+        slots: {},
+        meta: {},
+        templateName,
+    }),
     templates: Object.freeze({
         name: templateName,
         content: 'ncTestTemplateContent'
@@ -66,7 +74,7 @@ describe('Tests /api/v1/config', () => {
 
     describe('Read', () => {
         it('should successfully return config', async () => {
-            let routeId, routerDomainsId, routeIdWithDomain;
+            let routeId, routerDomainsId, routeIdWithDomain, routeIdWithoutSlots;
 
             try {
                 await req.post('/api/v1/template/').send(example.templates).expect(200);
@@ -84,6 +92,9 @@ describe('Tests /api/v1/config', () => {
                     domainId: routerDomainsId,
                 }).expect(200);
                 routeIdWithDomain = responseRouteWithDomain.body.id;
+
+                const responseRouteWithoutSlots = await req.post('/api/v1/route/').send(example.appRoutesWithoutSlots).expect(200);
+                routeIdWithoutSlots = responseRouteWithoutSlots.body.id;
 
                 await req.post('/api/v1/shared_props/').send(example.sharedProps).expect(200);
 
@@ -111,6 +122,11 @@ describe('Tests /api/v1/config', () => {
                     routeId: routeIdWithDomain,
                     ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
                     domain: example.routerDomains.domainName,
+                });
+
+                expect(response.body.routes).to.deep.include({
+                    ..._.omit(example.appRoutesWithoutSlots, ['orderPos', 'templateName']),
+                    template: example.appRoutesWithoutSlots.templateName,
                 });
 
                 expect(response.body.apps[example.apps.name])
@@ -153,6 +169,7 @@ describe('Tests /api/v1/config', () => {
                 routeId && await req.delete('/api/v1/route/' + routeId);
                 routeIdWithDomain && await req.delete('/api/v1/route/' + routeIdWithDomain);
                 routerDomainsId && await req.delete('/api/v1/router_domains/' + routerDomainsId);
+                routeIdWithoutSlots && await req.delete('/api/v1/route/' + routeIdWithoutSlots);
                 await req.delete('/api/v1/template/' + example.templates.name);
                 await req.delete('/api/v1/app/' + encodeURIComponent(example.apps.name));
                 await req.delete('/api/v1/shared_props/' + example.sharedProps.name);

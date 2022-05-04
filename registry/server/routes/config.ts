@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
         knex.select()
             .orderBy('orderPos', 'ASC')
             .from('routes')
-            .join('route_slots', 'route_slots.routeId', 'routes.id'),
+            .leftJoin('route_slots', 'route_slots.routeId', 'routes.id'),
         knex.select().from('shared_props'),
         knex.select().from('settings').where('scope', Scope.Ilc),
         knex.select().from('router_domains'),

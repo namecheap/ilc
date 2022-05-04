@@ -50,7 +50,7 @@ module.exports = class Registry {
             name: 'registry_getTemplate',
         });
 
-        this.getTemplate = async (templateName, forDomain, locale) => {
+        this.getTemplate = async (templateName, { locale, forDomain } = {}) => {
             if (templateName === '500' && forDomain) {
                 const routerDomains = await this.getRouterDomains();
                 const redefined500 = routerDomains.data.find(item => item.domainName === forDomain)?.template500;

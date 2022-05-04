@@ -1,10 +1,19 @@
 import React from 'react';
 import { Labeled } from 'react-admin';
+import Typography from '@material-ui/core/Typography';
 
-const ListArrayFields = ({ record, source, children, ...rest }) => {
+const ListArrayFields = ({ record, source, children, emptyText, ...rest }) => {
     const list = record[source];
 
     if (!list || !list.length) {
+        if (emptyText) {
+            return (
+                <Typography component="center" variant="h4">
+                    {emptyText}
+                </Typography>
+            );
+        }
+
         return null;
     }
 
