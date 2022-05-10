@@ -52,6 +52,9 @@ In ILC, as mentioned before, the transition between applications occurs via the 
 
 If one of the above points is not met, ILC ignores the processing of the clicks on the link.
 
+### Handling routes with different HTML templates
+Generally it's not recommended way to use a few templates for one website and you should avoid it and try to use only one, but some times can be necessary to create some exceptional route with own template. And it's allowed, inspite the fact that it's not recommended. During transition between routes with different templates happens "hard navigation", it means that the page will be fully refreshed (SSR + CSR).
+
 ### Conclusion
 
 ILC acts as a wrapper for other applications making all the transitions soft. Furthermore, it uses two-level routing so that teams can configure routing inside their application as they need to. In ILC, you only need to specify the path to the application.
