@@ -74,6 +74,7 @@ Slot configuration defines the main settings of a route:
 - How critical the application is for the site.
 - Create/change application properties.
 
+NB: If HTML template which is used for current route doesn't have `ilc-slot` tags, and you want to render the page as plain html, without slots - then you can left this tab empty.
 ![ILC slot configuration](../assets/routes/slot-configuration1.png)
 ![ILC slot configuration](../assets/routes/slot-configuration2.png)
 
