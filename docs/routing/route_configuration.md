@@ -77,6 +77,9 @@ Slot configuration defines the main settings of a route:
 ![ILC slot configuration](../assets/routes/slot-configuration1.png)
 ![ILC slot configuration](../assets/routes/slot-configuration2.png)
 
+!!! tip ""
+    If you want to render a page as plain HTML, leave the slot properties empty and ensure that the current route uses the HTML template with no `ilc-slot` tags.
+
 ### Configuration
 
 1. **Slot name**
