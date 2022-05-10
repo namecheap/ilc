@@ -52,8 +52,11 @@ In ILC, as mentioned before, the transition between applications occurs via the 
 
 If one of the above points is not met, ILC ignores the processing of the clicks on the link.
 
-### Handling routes with different HTML templates
-Generally it's not recommended way to use a few templates for one website and you should avoid it and try to use only one, but some times can be necessary to create some exceptional route with own template. And it's allowed, inspite the fact that it's not recommended. During transition between routes with different templates happens "hard navigation", it means that the page will be fully refreshed (SSR + CSR).
+### Handle routes with different HTML templates
+
+Using multiple templates for a single website is generally not recommended, avoid it when possible.
+
+However, you may use this approach for cases when you need to create a specific route with its own template. In those cases, there will be "hard navigation" (full page refresh, SSR + CSR) when transiting between routes with different templates.
 
 ### Conclusion
 
