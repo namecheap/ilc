@@ -369,12 +369,9 @@ describe('client router', () => {
                 location.pathname = registryConfig.routes[3].route;
                 location.search = '?throw=error';
 
-                chai.expect(eventName).to.be.eql(singleSpaBeforeRoutingEventName);
-                chai.expect(eventListener).to.throw(
-                    'Base template was changed.\n' +
-                    'Currently, ILC does not handle it.\n' +
-                    'Please open an issue if you need this functionality.'
-                );
+                eventListener();
+
+                chai.expect(location.href).to.be.eql(registryConfig.routes[3].route + '?throw=error');
             } finally {
                 addEventListener.restore();
             }
