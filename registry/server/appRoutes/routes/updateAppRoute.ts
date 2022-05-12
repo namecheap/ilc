@@ -46,17 +46,15 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
     await db.versioning(req.user, {type: 'routes', id: appRouteId}, async (transaction) => {
         await db('routes').where('id', appRouteId).update(prepareAppRouteToSave(appRoute)).transacting(transaction);
 
-        if (!_.isEmpty(appRouteSlots)) {
-            await db('route_slots').where('routeId', appRouteId).delete().transacting(transaction);
-            await db.batchInsert('route_slots', _.compose(
-                _.map((appRouteSlotName) => _.compose(
-                    stringifyJSON(['props']),
-                    _.assign({ name: appRouteSlotName, routeId: appRouteId }),
-                    _.get(appRouteSlotName)
-                )(appRouteSlots)),
-                _.keys,
-            )(appRouteSlots)).transacting(transaction);
-        }
+        await db('route_slots').where('routeId', appRouteId).delete().transacting(transaction);
+        await db.batchInsert('route_slots', _.compose(
+            _.map((appRouteSlotName) => _.compose(
+                stringifyJSON(['props']),
+                _.assign({ name: appRouteSlotName, routeId: appRouteId }),
+                _.get(appRouteSlotName)
+            )(appRouteSlots)),
+            _.keys,
+        )(appRouteSlots)).transacting(transaction);
     });
 
     const updatedAppRoute = await getRoutesById(appRouteId);

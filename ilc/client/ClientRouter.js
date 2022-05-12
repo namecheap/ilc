@@ -195,17 +195,10 @@ export default class ClientRouter extends EventEmitter {
             this.#currentUrl = newUrl;
         }
 
-        if (this.#currentRoute && this.#prevRoute.template !== this.#currentRoute.template) {
-            throw new this.errors.RouterError({
-                message:
-                    'Base template was changed.\n' +
-                    'Currently, ILC does not handle it.\n' +
-                    'Please open an issue if you need this functionality.',
-                data: {
-                    prevTemplate: this.#prevRoute.template,
-                    currentTemplate: this.#currentRoute.template
-                },
-            });
+        const isBaseTemplateChanged = this.#currentRoute && this.#prevRoute.template !== this.#currentRoute.template;
+        if (isBaseTemplateChanged) {
+            this.#location.href = this.#currentUrl;
+            return;
         }
 
         this.#activeApps.prev = this.#createActiveAppsObject(this.#prevRoute.slots);
