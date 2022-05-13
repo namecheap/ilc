@@ -57,7 +57,7 @@ module.exports = class Registry {
                 templateName = redefined500 || templateName;
             }
 
-            return await getTemplateMemo(templateName, locale);
+            return await getTemplateMemo(templateName, locale, forDomain);
         };
     }
 
@@ -99,10 +99,21 @@ module.exports = class Registry {
         return res.data;
     };
 
-    #getTemplate = async (templateName, locale) => {
+    #getTemplate = async (templateName, locale, domain) => {
         this.#logger.debug('Calling get template registry endpoint...');
-        const queryString = locale ? `?locale=${locale}` : '';
-        const tplUrl = urljoin(this.#address, 'api/v1/template', templateName, 'rendered') + queryString;
+
+        const params = new Map();
+        if (locale) {
+            params.set('locale', locale);
+        }
+
+        if (domain) {
+            params.set('domain', domain);
+        }
+
+        const queryString = params.size > 0 ? `?${new URLSearchParams(params).toString()}` : '';
+        const tplUrl = urljoin(this.#address, 'api/v1/template', templateName, 'rendered', queryString);
+
         let res;
         try {
             res = await axios.get(tplUrl, { responseType: 'json' });

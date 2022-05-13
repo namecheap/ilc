@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import nock from 'nock';
-
-import { expect, request, requestWithAuth } from './common';
 import supertest from 'supertest';
+import app from '../server/app';
+import { expect, getServerAddress } from './common';
 import { SettingKeys } from '../server/settings/interfaces';
 import { withSetting } from './utils/withSetting';
 
@@ -37,10 +37,22 @@ describe(`Tests ${example.url}`, () => {
     let req: supertest.SuperTest<supertest.Test>;
     let reqWithAuth: supertest.SuperTest<supertest.Test>;
 
+    let reqAddress = '';
+    let reqWithAuthAddress = '';
+
     beforeEach(async () => {
-        req = await request();
-        reqWithAuth = await requestWithAuth();
-    })
+        const appInstance = await app(false);
+        const appWithAuthInstance = await app(true);
+
+        const appServer = appInstance.listen(0);
+        const appWithAuthServer = appWithAuthInstance.listen(0);
+
+        reqAddress = getServerAddress(appServer);
+        reqWithAuthAddress = getServerAddress(appWithAuthServer);
+
+        req = supertest(appServer);
+        reqWithAuth = supertest(appWithAuthServer);
+    });
 
     afterEach(async () => {
         await req.delete(example.url + example.correctLocalized.name);
@@ -276,6 +288,98 @@ describe(`Tests ${example.url}`, () => {
 
             expect(response.body).to.be.an('array').that.is.not.empty;
             expect(response.body).to.deep.include(example.correct);
+        });
+
+        describe('template with domain', () => {
+            let domainId: string;
+            let routeId: string;
+
+            let example = <any>{
+                app: {
+                    url: '/api/v1/app/',
+                    correct: {
+                        name: '@portal/ncTestAppName',
+                        spaBundle: 'http://localhost:1234/ncTestAppName.js',
+                        kind: 'primary',
+                    },
+                },
+                template: {
+                    url: '/api/v1/template/',
+                    correct: {
+                        name: 'ncTestTemplateName',
+                        content: 'ncTestTemplateContent'
+                    },
+                    noRoute: {
+                        name: 'ncTestNoRouteTemplateName',
+                        content: 'ncTestNoRouteTemplateContent'
+                    },
+                },
+                routerDomain: {
+                    url: '/api/v1/router_domains/',
+                    correct: {
+                        domainName: '',
+                        template500: '500ForLocalhostAsIPv4',
+                    },
+                },
+            };
+
+            example = {
+                ...example,
+                route: {
+                    url: '/api/v1/route/',
+                    correct: Object.freeze({
+                        specialRole: undefined,
+                        orderPos: 122,
+                        route: '/ncTestRoute/*',
+                        next: false,
+                        templateName: example.template.correct.name,
+                        slots: {
+                            ncTestRouteSlotName: {
+                                appName: example.app.correct.name,
+                                props: { ncTestProp: 1 },
+                                kind: 'regular',
+                            },
+                        },
+                    }),
+                }
+            };
+
+            beforeEach(async () => {
+                await req.post(example.app.url).send(example.app.correct).expect(200);
+
+                const routerDomainResponse = await req.post(example.routerDomain.url).send({
+                    ...example.routerDomain.correct,
+                    domainName: reqAddress,
+                }).expect(200);
+
+                domainId = routerDomainResponse.body.id;
+
+                await req.post(example.template.url).send(example.template.correct);
+                await req.post(example.template.url).send(example.template.noRoute);
+
+                const routeResponse = await req.post(example.route.url).send({
+                    ...example.route.correct,
+                    domainId,
+                }).expect(200);
+
+                routeId = routeResponse.body.id;
+            });
+
+            afterEach(async () => {
+                domainId && await req.delete(example.routerDomain.url + domainId);
+                routeId && await req.delete(example.route.url + routeId);
+
+                await req.delete(example.app.url + encodeURIComponent(example.app.correct.name));
+                await req.delete(example.template.url + example.template.correct.name);
+                await req.delete(example.template.url + example.template.correct.noRoute);
+            });
+
+            it('Should return template for given domain', async () => {
+                const templateResponse = await req.get(example.template.url + example.template.correct.name + '/rendered');
+                const templateWithDomainResponse = await req.get(example.template.url + example.template.correct.name + '/rendered?locale=' + 'es-MX' + '&domain=' +  reqAddress);
+
+                expect(templateResponse.body).to.deep.equal(templateWithDomainResponse.body);
+            });
         });
     });
 
