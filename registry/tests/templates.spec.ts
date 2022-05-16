@@ -37,9 +37,7 @@ const example = {
 describe(`Tests ${example.url}`, () => {
     let req: supertest.SuperTest<supertest.Test>;
     let reqWithAuth: supertest.SuperTest<supertest.Test>;
-
     let reqAddress = '';
-    let reqWithAuthAddress = '';
 
     beforeEach(async () => {
         const appInstance = await app(false);
@@ -49,8 +47,6 @@ describe(`Tests ${example.url}`, () => {
         const appWithAuthServer = appWithAuthInstance.listen(0);
 
         reqAddress = getServerAddress(appServer);
-        reqWithAuthAddress = getServerAddress(appWithAuthServer);
-
         req = supertest(appServer);
         reqWithAuth = supertest(appWithAuthServer);
     });
@@ -307,19 +303,23 @@ describe(`Tests ${example.url}`, () => {
                 template: {
                     url: '/api/v1/template/',
                     correct: {
-                        name: 'ncTestTemplateName',
+                        name: 'ncTestTemplateDomainName',
                         content: 'ncTestTemplateContent'
                     },
                     noRoute: {
                         name: 'ncTestNoRouteTemplateName',
                         content: 'ncTestNoRouteTemplateContent'
                     },
+                    template500: {
+                        name: 'ncTest500TemplateName',
+                        content: 'ncTest500TemplateContent'
+                    },
                 },
                 routerDomain: {
                     url: '/api/v1/router_domains/',
                     correct: {
                         domainName: '',
-                        template500: '500ForLocalhostAsIPv4',
+                        template500: 'ncTest500TemplateName',
                     },
                 },
             };
@@ -347,14 +347,14 @@ describe(`Tests ${example.url}`, () => {
 
             beforeEach(async () => {
                 await req.post(example.app.url).send(example.app.correct).expect(200);
+                await req.post(example.template.url).send(example.template.template500);
 
-                await req.post(example.routerDomain.url).send({
+                const routerDomainResponse = await req.post(example.routerDomain.url).send({
                     ...example.routerDomain.correct,
                     domainName: reqAddress,
                 });
-
-                const routerDomains = await req.get(example.routerDomain.url);
-                const { id: domainId } = routerDomains.body.find((routerDomain: RouterDomains) => routerDomain.domainName === reqAddress);
+            
+                const { id: domainId } = routerDomainResponse.body;
 
                 await req.post(example.template.url).send(example.template.correct);
                 await req.post(example.template.url).send(example.template.noRoute);
@@ -373,7 +373,8 @@ describe(`Tests ${example.url}`, () => {
 
                 await req.delete(example.app.url + encodeURIComponent(example.app.correct.name));
                 await req.delete(example.template.url + example.template.correct.name);
-                await req.delete(example.template.url + example.template.correct.noRoute);
+                await req.delete(example.template.url + example.template.noRoute.name);
+            // await req.delete(example.template.url + example.template.template500.name);
             });
 
             it('Should return template for given domain', async () => {
