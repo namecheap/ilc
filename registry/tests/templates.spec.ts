@@ -350,7 +350,9 @@ describe(`Tests ${example.url}`, () => {
                 const routerDomainResponse = await req.post(example.routerDomain.url).send({
                     ...example.routerDomain.correct,
                     domainName: reqAddress,
-                }).expect(200);
+                });
+
+                console.log('routerDomainResponse', routerDomainResponse.body);
 
                 domainId = routerDomainResponse.body.id;
 
