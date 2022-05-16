@@ -352,7 +352,7 @@ describe(`Tests ${example.url}`, () => {
                     domainName: reqAddress,
                 });
 
-                console.log('routerDomainResponse', routerDomainResponse.body);
+                console.log('routerDomainResponse', routerDomainResponse.text);
 
                 domainId = routerDomainResponse.body.id;
 
