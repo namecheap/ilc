@@ -5,6 +5,7 @@ import app from '../server/app';
 import { expect, getServerAddress } from './common';
 import { SettingKeys } from '../server/settings/interfaces';
 import { withSetting } from './utils/withSetting';
+import RouterDomains from '../server/routerDomains/interfaces';
 
 const example = {
     url: '/api/v1/template/',
@@ -347,14 +348,13 @@ describe(`Tests ${example.url}`, () => {
             beforeEach(async () => {
                 await req.post(example.app.url).send(example.app.correct).expect(200);
 
-                const routerDomainResponse = await req.post(example.routerDomain.url).send({
+                await req.post(example.routerDomain.url).send({
                     ...example.routerDomain.correct,
                     domainName: reqAddress,
                 });
 
-                console.log('routerDomainResponse', routerDomainResponse.text);
-
-                domainId = routerDomainResponse.body.id;
+                const routerDomains = await req.get(example.routerDomain.url);
+                const { id: domainId } = routerDomains.body.find((routerDomain: RouterDomains) => routerDomain.domainName === reqAddress);
 
                 await req.post(example.template.url).send(example.template.correct);
                 await req.post(example.template.url).send(example.template.noRoute);
