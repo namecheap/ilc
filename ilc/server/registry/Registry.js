@@ -57,7 +57,7 @@ module.exports = class Registry {
                 templateName = redefined500 || templateName;
             }
 
-            return await getTemplateMemo(templateName, locale, forDomain);
+            return await getTemplateMemo(templateName, { locale, domain: forDomain});
         };
     }
 
@@ -99,10 +99,10 @@ module.exports = class Registry {
         return res.data;
     };
 
-    #getTemplate = async (templateName, locale, domain) => {
+    #getTemplate = async (templateName, { locale, domain }) => {
         this.#logger.debug('Calling get template registry endpoint...');
 
-        const params = new Map();
+        const params = new URLSearchParams();
         if (locale) {
             params.set('locale', locale);
         }
@@ -111,8 +111,8 @@ module.exports = class Registry {
             params.set('domain', domain);
         }
 
-        const queryString = params.size > 0 ? `?${new URLSearchParams(params).toString()}` : '';
-        const tplUrl = urljoin(this.#address, 'api/v1/template', templateName, 'rendered', queryString);
+        const queryString = params.toString(); 
+        const tplUrl = urljoin(this.#address, 'api/v1/template', templateName, 'rendered', queryString.length > 0 ? '?' + queryString : '');
 
         let res;
         try {

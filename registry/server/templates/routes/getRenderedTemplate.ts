@@ -38,7 +38,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     const { locale, domain } = req.query;
 
     if (domain) {
-        const [domainItem] = await db.select('id').from<RouterDomains>('router_domains').where('domainName', domain as string);
+        const [domainItem] = await db.select('id').from<RouterDomains>('router_domains').where('domainName', String(domain));
 
         if (domainItem) {
             [defaultTemplate] = await db.select('templates.*').from<Template>('templates')
