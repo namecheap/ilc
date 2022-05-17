@@ -15,6 +15,7 @@ import renderTemplate from '../services/renderTemplate';
 import errors from '../errors';
 import { tables } from '../../db/structure';
 import { templateNameSchema } from './validation';
+import RouterDomains from '../../routerDomains/interfaces';
 
 type GetTemplateRenderedRequestParams = {
     name: string
@@ -28,13 +29,30 @@ const validateRequestBeforeGetTemplateRendered = validateRequestFactory([{
 }]);
 
 async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams>, res: Response): Promise<void> {
+    let defaultTemplate;
+
     const {
         name: templateName,
     } = req.params;
 
-    const { locale } = req.query;
+    const { locale, domain } = req.query;
 
-    const [defaultTemplate] = await db.select().from<Template>('templates').where('name', templateName);
+    if (domain) {
+        const [domainItem] = await db.select('id').from<RouterDomains>('router_domains').where('domainName', String(domain));
+
+        if (domainItem) {
+            [defaultTemplate] = await db.select('templates.*').from<Template>('templates')
+                .join('routes', 'templates.name', 'routes.templateName')
+                .where({
+                    domainId: domainItem.id,
+                    name: templateName,
+                });
+        }
+    }
+
+    if (!defaultTemplate) {
+        [defaultTemplate] = await db.select().from<Template>('templates').where('name', templateName);
+    }
 
     if (!defaultTemplate) {
         res.status(404).send('Not found');
@@ -47,6 +65,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
             .from<LocalizedTemplate>(tables.templatesLocalized)
             .where('templateName', templateName)
             .andWhere('locale', locale as string);
+
         if (localizedTemplate) {
             content = localizedTemplate.content;
         }
