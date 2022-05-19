@@ -383,6 +383,13 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(templateResponse.body).to.deep.equal(templateWithDomainResponse.body);
             });
+
+            it('Should return template by name if no given domain found', async () => {
+                const templateResponse = await req.get(example.template.url + example.template.correct.name + '/rendered');
+                const templateWithDomainResponse = await req.get(example.template.url + example.template.correct.name + '/rendered?locale=' + 'es-MX' + '&domain=128.0.0.1');
+
+                expect(templateResponse.body).to.deep.equal(templateWithDomainResponse.body);
+            });
         });
     });
 

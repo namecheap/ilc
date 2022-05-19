@@ -28,8 +28,12 @@ const validateRequestBeforeGetTemplateRendered = validateRequestFactory([{
     selector: 'params',
 }]);
 
-async function getTemplateByDomain(domain: string, templateName: string): Promise<Template | undefined> {
+async function getTemplateByDomain(domain: string, templateName: string): Promise<Template | null> {
     const [domainItem] = await db.select('id').from<RouterDomains>('router_domains').where('domainName', String(domain));
+
+    if (!domainItem) {
+        return null;
+    }
 
     const [template] = await db.select('templates.*').from<Template>('templates')
                 .join('routes', 'templates.name', 'routes.templateName')
