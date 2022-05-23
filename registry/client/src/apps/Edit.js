@@ -57,6 +57,9 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     choices={APP_KINDS_WITH_WRAPPER}
                     validate={validators.required}
                 />
+                <ReferenceInput source="enforceDomain" reference="router_domains">
+                    <SelectInput resettable optionText="domainName" />
+                </ReferenceInput>
                 <FormDataConsumer>
                     {({ formData, ...rest }) => formData.kind !== 'wrapper' &&
                         <ReferenceInput
