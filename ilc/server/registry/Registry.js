@@ -162,36 +162,94 @@ module.exports = class Registry {
         const clonedConfig = cloneDeep(config);
 
         if (filter.domain) {
-            const routesForCurrentDomain = [];
-            const routesWithoutDomain = [];
-
-            clonedConfig.routes.forEach((route) => {
-                const { domain: routeDomain, ...routeData } = route; // remove property "domain" since it's unnecessary
-
-                if (routeDomain === undefined) {
-                    routesWithoutDomain.push(routeData);
-                } else if (routeDomain === filter.domain) {
-                    routesForCurrentDomain.push(routeData);
-                }
-            });
-
-            clonedConfig.routes = routesForCurrentDomain.length ? routesForCurrentDomain : routesWithoutDomain;
+            clonedConfig.routes = this.#filterRoutesByDomain(clonedConfig.routes, filter.domain);
         }
 
+        clonedConfig.specialRoutes = this.#filterSpecialRoutesByDomain(clonedConfig.specialRoutes, filter.domain);
+
+        if (filter.domain) {
+            const routesRelatedToDomain = [ ...clonedConfig.routes, ...Object.values(clonedConfig.specialRoutes)];
+            const allRoutes = config.routes;
+            const allApps = config.apps;
+
+            clonedConfig.apps = this.#getAppsFromRoutes(routesRelatedToDomain, filter.domain, allRoutes, allApps);
+        }
+
+        return clonedConfig;
+    };
+
+    #filterRoutesByDomain = (routes, domain) => {
+        const routesForCurrentDomain = [];
+        const routesWithoutDomain = [];
+
+        routes.forEach((route) => {
+            const { domain: routeDomain, ...routeData } = route; // remove property "domain" since it's unnecessary
+
+            if (routeDomain === undefined) {
+                routesWithoutDomain.push(routeData);
+            } else if (routeDomain === domain) {
+                routesForCurrentDomain.push(routeData);
+            }
+        });
+
+        return routesForCurrentDomain.length ? routesForCurrentDomain : routesWithoutDomain;
+    };
+
+    #filterSpecialRoutesByDomain = (specialRoutes, domain) => {
         const specialRoutesWithoutDomain = {};
         const specialRoutesForCurrentDomain = {};
-        clonedConfig.specialRoutes.forEach((route) => {
+
+        specialRoutes.forEach((route) => {
             const { domain: routeDomain, specialRole, ...routeData } = route; // remove properties "domain" and "specialRole" since it's unnecessary
 
             if (routeDomain === undefined) {
                 specialRoutesWithoutDomain[specialRole] = routeData;
-            } else if (filter.domain && routeDomain === filter.domain) {
+            } else if (domain && routeDomain === domain) {
                 specialRoutesForCurrentDomain[specialRole] = routeData;
             }
         });
 
-        clonedConfig.specialRoutes = Object.keys(specialRoutesForCurrentDomain).length ? specialRoutesForCurrentDomain : specialRoutesWithoutDomain;
+        return Object.keys(specialRoutesForCurrentDomain).length ? specialRoutesForCurrentDomain : specialRoutesWithoutDomain;
+    };
 
-        return clonedConfig;
+    #getAppsFromRoutes = (routesRelatedToDomain, domain, allRoutes, allApps) => {
+        // apps which are used by routes related to current domain
+        const appsRelatedToDomain = new Set();
+        routesRelatedToDomain.forEach(({ slots }) => {
+            Object.values(slots).map(({ appName }) => {
+                appsRelatedToDomain.add(appName);
+            });
+        });
+
+        // apps which aren't associated with any route
+        const appsWithoutRoutes = Object.keys(allApps);
+        allRoutes.forEach(({ slots }) => {
+            Object.values(slots).map(({ appName }) => {
+                const index = appsWithoutRoutes.indexOf(appName);
+                if (index !== -1) {
+                    appsWithoutRoutes.splice(index, 1);
+                }
+            });
+        });
+
+        const allowedAppNames = [...appsRelatedToDomain, ...appsWithoutRoutes];
+
+        const apps = {};
+        for (const [appName, appData] of Object.entries(allApps)) {
+            if (appData.enforceDomain) {
+                if (appData.enforceDomain === domain) {
+                    delete appData.enforceDomain;
+
+                    apps[appName] = appData;
+                }
+                continue;
+            }
+            
+            if (allowedAppNames.includes(appName)) {
+                apps[appName] = appData;
+            }
+        }
+
+        return apps;
     };
 };
