@@ -45,9 +45,10 @@ router.get('/', async (req, res) => {
                 }
             });
         }
+        v.enforceDomain = v.enforceDomain && (routerDomains.find(({ id }) => id === v.enforceDomain)?.domainName || null);
 
         v = _.omitBy(v, v => v === null || (typeof v === 'object' && Object.keys(v).length === 0));
-        acc[v.name] = _.pick(v, ['kind', 'ssr', 'dependencies', 'props', 'ssrProps', 'spaBundle', 'cssBundle', 'wrappedWith']);
+        acc[v.name] = _.pick(v, ['kind', 'ssr', 'dependencies', 'props', 'ssrProps', 'spaBundle', 'cssBundle', 'wrappedWith', 'enforceDomain']);
 
         return acc;
     }, {});
