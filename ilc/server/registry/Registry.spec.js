@@ -68,6 +68,7 @@ describe('Registry', () => {
               someData: '2',
             }
           ],
+          apps: {},
         },
       })
     };
@@ -86,7 +87,8 @@ describe('Registry', () => {
           'roleTwo': {
             someData: '2',
           },
-        }
+        },
+        apps: {},
       },
     });
   })

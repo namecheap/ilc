@@ -216,6 +216,10 @@ module.exports = class Registry {
         // apps which are used by routes related to current domain
         const appsRelatedToDomain = new Set();
         routesRelatedToDomain.forEach(({ slots }) => {
+            if (!slots) {
+                return;
+            }
+
             Object.values(slots).map(({ appName }) => {
                 appsRelatedToDomain.add(appName);
             });
@@ -224,6 +228,10 @@ module.exports = class Registry {
         // apps which aren't associated with any route
         const appsWithoutRoutes = Object.keys(allApps);
         allRoutes.forEach(({ slots }) => {
+            if (!slots) {
+                return;
+            }
+
             Object.values(slots).map(({ appName }) => {
                 const index = appsWithoutRoutes.indexOf(appName);
                 if (index !== -1) {
