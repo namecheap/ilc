@@ -42,55 +42,129 @@ describe('Registry', () => {
     });
   })
 
-  it('filter in getConfig should work correctly', async () => {
-    const mockGetConfigWithFilter = () => {
-      return () => ({
-        data: {
-          routes: [
-            {
-              domain: '1',
-              someData: '1',
+  it('should return filtered config by domain', async () => {
+    const IlcConfig = {
+      routes: [
+        {
+          domain: 'foo.com',
+          route: '*',
+          slots: {
+            body: {
+              appName: '@portal/homeFoo',
             },
-            {
-              domain: '2',
-              someData: '2',
-            }
-          ],
-          specialRoutes: [
-            {
-              domain: '1',
-              specialRole: 'roleOne',
-              someData: '1',
-            },
-            {
-              domain: '2',
-              specialRole: 'roleTwo',
-              someData: '2',
-            }
-          ],
-          apps: {},
+          },
         },
-      })
+        {
+          domain: 'bar.com',
+          route: '*',
+          slots: {
+            body: {
+              appName: '@portal/homeBar',
+            },
+          },
+        }
+      ],
+      specialRoutes: [
+        {
+          domain: 'foo.com',
+          specialRole: '404',
+          slots: {
+            navbar: { appName: '@portal/navbar' },
+            body: { appName: '@portal/foo404' },
+          },
+        },
+        {
+          domain: 'bar.com',
+          specialRole: '404',
+          slots: {
+            navbar: { appName: '@portal/navbar' },
+            body: { appName: '@portal/bar404' },
+          },
+        },
+      ],
+      apps: {
+        // apps with routes
+        '@portal/homeFoo': {
+          spaBundle: 'http://cdn.com/foo.js',
+        },
+        '@portal/homeBar': {
+          spaBundle: 'http://cdn.com/bar.js',
+        },
+
+        // apps for special 404
+        '@portal/navbar': {
+          spaBundle: 'http://cdn.com/navbar.js',
+        },
+        '@portal/foo404': {
+          spaBundle: 'http://cdn.com/foo404.js',
+        },
+        '@portal/bar404': {
+          spaBundle: 'http://cdn.com/bar404.js',
+        },
+
+        // apps without routes
+        '@portal/enforcedForFoo': {
+          enforceDomain: 'foo.com',
+          spaBundle: 'http://cdn.com/enforcedForFoo.js',
+        },
+        '@portal/enforcedForBar': {
+          enforceDomain: 'bar.com',
+          spaBundle: 'http://cdn.com/enforcedForBar.js',
+        },
+        '@portal/homeless': {
+          spaBundle: 'http://cdn.com/homeless.js',
+        },
+      },
     };
 
-    const registry = new Registry(address, mockGetConfigWithFilter, logger);
-    const getConfig = await registry.getConfig({ filter: { domain: '2' } });
-
-    await chai.expect(getConfig).to.be.eql({
+    const expectedConfig = {
       data: {
         routes: [
           {
-            someData: '2',
-          }
+            route: '*',
+            slots: {
+              body: {
+                appName: '@portal/homeFoo',
+              },
+            },
+          },
         ],
         specialRoutes: {
-          'roleTwo': {
-            someData: '2',
+          '404': {
+            slots: {
+              navbar: { appName: '@portal/navbar' },
+              body: { appName: '@portal/foo404' },
+            },
           },
         },
-        apps: {},
+        apps: {
+          '@portal/homeFoo': {
+            spaBundle: 'http://cdn.com/foo.js',
+          },
+          '@portal/navbar': {
+            spaBundle: 'http://cdn.com/navbar.js',
+          },
+          '@portal/foo404': {
+            spaBundle: 'http://cdn.com/foo404.js',
+          },
+
+          '@portal/enforcedForFoo': {
+            spaBundle: 'http://cdn.com/enforcedForFoo.js',
+          },
+          '@portal/homeless': {
+            spaBundle: 'http://cdn.com/homeless.js',
+          },
+        },
       },
-    });
+    };
+
+    const currentDomain = 'foo.com';
+
+    const mockGetConfigWithFilter = () => () => ({ data: IlcConfig });
+    const registry = new Registry(address, mockGetConfigWithFilter, logger);
+    const getConfig = await registry.getConfig({ filter: { domain: currentDomain } });
+
+    await chai.expect(getConfig).to.be.eql(expectedConfig);
   })
 
   it('getTemplate should return right value if template name equal 500', async () => {
