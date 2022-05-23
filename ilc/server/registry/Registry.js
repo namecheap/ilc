@@ -169,7 +169,7 @@ module.exports = class Registry {
 
         if (filter.domain) {
             const routesRelatedToDomain = [ ...clonedConfig.routes, ...Object.values(clonedConfig.specialRoutes)];
-            const allRoutes = config.routes;
+            const allRoutes = [...config.routes, ...Object.values(config.specialRoutes)];
             const allApps = config.apps;
 
             clonedConfig.apps = this.#getAppsFromRoutes(routesRelatedToDomain, filter.domain, allRoutes, allApps);
@@ -243,20 +243,20 @@ module.exports = class Registry {
         const allowedAppNames = [...appsRelatedToDomain, ...appsWithoutRoutes];
 
         const apps = {};
-        for (const [appName, appData] of Object.entries(allApps)) {
+        Object.entries(allApps).forEach(([appName, appData]) => {
             if (appData.enforceDomain) {
                 if (appData.enforceDomain === domain) {
                     delete appData.enforceDomain;
 
                     apps[appName] = appData;
                 }
-                continue;
+                return;
             }
             
             if (allowedAppNames.includes(appName)) {
                 apps[appName] = appData;
             }
-        }
+        });
 
         return apps;
     };
