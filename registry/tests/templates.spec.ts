@@ -1,10 +1,11 @@
 import _ from 'lodash';
 import nock from 'nock';
-
-import { expect, request, requestWithAuth } from './common';
 import supertest from 'supertest';
+import app from '../server/app';
+import { expect, getServerAddress } from './common';
 import { SettingKeys } from '../server/settings/interfaces';
 import { withSetting } from './utils/withSetting';
+import RouterDomains from '../server/routerDomains/interfaces';
 
 const example = {
     url: '/api/v1/template/',
@@ -36,11 +37,19 @@ const example = {
 describe(`Tests ${example.url}`, () => {
     let req: supertest.SuperTest<supertest.Test>;
     let reqWithAuth: supertest.SuperTest<supertest.Test>;
+    let reqAddress = '';
 
     beforeEach(async () => {
-        req = await request();
-        reqWithAuth = await requestWithAuth();
-    })
+        const appInstance = await app(false);
+        const appWithAuthInstance = await app(true);
+
+        const appServer = appInstance.listen(0);
+        const appWithAuthServer = appWithAuthInstance.listen(0);
+
+        reqAddress = getServerAddress(appServer);
+        req = supertest(appServer);
+        reqWithAuth = supertest(appWithAuthServer);
+    });
 
     afterEach(async () => {
         await req.delete(example.url + example.correctLocalized.name);
@@ -276,6 +285,111 @@ describe(`Tests ${example.url}`, () => {
 
             expect(response.body).to.be.an('array').that.is.not.empty;
             expect(response.body).to.deep.include(example.correct);
+        });
+
+        describe('template with domain', () => {
+            let domainId: string;
+            let routeId: string;
+
+            let example = <any>{
+                app: {
+                    url: '/api/v1/app/',
+                    correct: {
+                        name: '@portal/ncTestAppName',
+                        spaBundle: 'http://localhost:1234/ncTestAppName.js',
+                        kind: 'primary',
+                    },
+                },
+                template: {
+                    url: '/api/v1/template/',
+                    correct: {
+                        name: 'ncTestTemplateDomainName',
+                        content: 'ncTestTemplateContent'
+                    },
+                    noRoute: {
+                        name: 'ncTestNoRouteTemplateName',
+                        content: 'ncTestNoRouteTemplateContent'
+                    },
+                    template500: {
+                        name: 'ncTest500TemplateName',
+                        content: 'ncTest500TemplateContent'
+                    },
+                },
+                routerDomain: {
+                    url: '/api/v1/router_domains/',
+                    correct: {
+                        domainName: '',
+                        template500: 'ncTest500TemplateName',
+                    },
+                },
+            };
+
+            example = {
+                ...example,
+                route: {
+                    url: '/api/v1/route/',
+                    correct: Object.freeze({
+                        specialRole: undefined,
+                        orderPos: 122,
+                        route: '/ncTestRoute/*',
+                        next: false,
+                        templateName: example.template.correct.name,
+                        slots: {
+                            ncTestRouteSlotName: {
+                                appName: example.app.correct.name,
+                                props: { ncTestProp: 1 },
+                                kind: 'regular',
+                            },
+                        },
+                    }),
+                }
+            };
+
+            beforeEach(async () => {
+                await req.post(example.app.url).send(example.app.correct).expect(200);
+                await req.post(example.template.url).send(example.template.template500);
+
+                const routerDomainResponse = await req.post(example.routerDomain.url).send({
+                    ...example.routerDomain.correct,
+                    domainName: reqAddress,
+                });
+            
+                const { id: domainId } = routerDomainResponse.body;
+
+                await req.post(example.template.url).send(example.template.correct);
+                await req.post(example.template.url).send(example.template.noRoute);
+
+                const routeResponse = await req.post(example.route.url).send({
+                    ...example.route.correct,
+                    domainId,
+                }).expect(200);
+
+                routeId = routeResponse.body.id;
+            });
+
+            afterEach(async () => {
+                domainId && await req.delete(example.routerDomain.url + domainId);
+                routeId && await req.delete(example.route.url + routeId);
+
+                await req.delete(example.app.url + encodeURIComponent(example.app.correct.name));
+                await req.delete(example.template.url + example.template.correct.name);
+                await req.delete(example.template.url + example.template.noRoute.name);
+                await req.delete(example.template.url + example.template.template500.name);
+            });
+
+            it('Should return template for given domain', async () => {
+                const templateResponse = await req.get(example.template.url + example.template.correct.name + '/rendered');
+                const templateWithDomainResponse = await req.get(example.template.url + example.template.correct.name + '/rendered?locale=' + 'es-MX' + '&domain=' +  reqAddress);
+
+                expect(templateResponse.body).to.deep.equal(templateWithDomainResponse.body);
+            });
+
+            it('Should return template by name if no given domain found', async () => {
+                const templateResponse = await req.get(example.template.url + example.template.correct.name + '/rendered');
+                const templateWithDomainResponse = await req.get(example.template.url + example.template.correct.name + '/rendered?locale=' + 'es-MX' + '&domain=128.0.0.1');
+
+                expect(templateResponse.body).to.deep.equal(templateWithDomainResponse.body);
+            });
         });
     });
 

@@ -14,7 +14,7 @@ export const routerDomainIdSchema = Joi.string().trim().required();
 
 const commonRouterDomainsSchema = {
     domainName: Joi.string().trim().min(1).required().external(value => {
-        if (value.match(/^(localhost|127\.0\.0\.1)(:\d{4})?$/) || isValidDomain(value)) {
+        if (value.match(/^(localhost|127\.0\.0\.1)(:\d{5})?$/) || isValidDomain(value)) {
             return;
         }
 

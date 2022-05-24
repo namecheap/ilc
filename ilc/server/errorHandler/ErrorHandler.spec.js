@@ -13,10 +13,16 @@ describe('ErrorHandler', () => {
 
     let app;
     let server;
+    let address;
 
     before(async () => {
         app = createApp(helpers.getRegistryMock(), helpers.getPluginManagerMock());
         await app.ready();
+        app.server.listen(0);
+
+        const { port } = app.server.address();
+        address = `127.0.0.1:${port}`;
+
         server = supertest(app.server);
     });
 
@@ -30,7 +36,7 @@ describe('ErrorHandler', () => {
 
     it('should show 500 error page with an error id', async () => {
         nock(config.get('registry').address).get('/api/v1/router_domains').reply(200, []);
-        nock(config.get('registry').address).get(`/api/v1/template/500/rendered?locale=en-US`).reply(200, {
+        nock(config.get('registry').address).get(`/api/v1/template/500/rendered?locale=en-US&domain=${address}`).reply(200, {
             content:
                 '<html>' +
                 '<body>' +

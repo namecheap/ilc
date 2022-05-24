@@ -1,7 +1,7 @@
 require('./util/express-promise');
 
 import config from 'config';
-import express, {RequestHandler} from 'express';
+import express, {RequestHandler, Application} from 'express';
 import bodyParser from 'body-parser';
 
 import pong from './util/ping';
@@ -11,7 +11,7 @@ import serveStatic from 'serve-static';
 import auth from './auth';
 import settingsService from './settings/services/SettingsService';
 
-export default async (withAuth: boolean = true) => {
+export default async (withAuth: boolean = true): Promise<Application> => {
     // As in production there can be 2+ instances of the ILC registry
     // AssetsDiscovery should be run separately via "npm run assetsdiscovery"
     !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAssetsDiscovery');
