@@ -148,14 +148,13 @@ describe(`Tests ${example.url}`, () => {
 
         it('should create record with existed enforceDomain', async () => {
             let domainId;
+            const templateName = 'templateName';
 
             try {
+                await req.post('/api/v1/template/').send({ name: templateName, content: 'foo bar' }).expect(200);
+
                 const responseRouterDomains = await req.post('/api/v1/router_domains/')
-                    .send({
-                        domainName: 'foo.com',
-                        template500: '500',
-                    })
-                    .expect(200);
+                    .send({ domainName: 'foo.com', template500: templateName }).expect(200);
                 domainId = responseRouterDomains.body.id;
 
                 const appConfig = { ...example.correct, enforceDomain: domainId };
@@ -171,6 +170,7 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 await req.delete(example.url + example.encodedName);
                 domainId && await req.delete('/api/v1/router_domains/' + domainId);
+                await req.delete('/api/v1/template/' + templateName);
             }
         });
 
@@ -375,14 +375,13 @@ describe(`Tests ${example.url}`, () => {
 
         it('should successfully update record with enforceDomain', async () => {
             let domainId;
+            const templateName = 'templateName';
 
             try {
+                await req.post('/api/v1/template/').send({ name: templateName, content: 'foo bar' }).expect(200);
+
                 const responseRouterDomains = await req.post('/api/v1/router_domains/')
-                    .send({
-                        domainName: 'foo.com',
-                        template500: '500',
-                    })
-                    .expect(200);
+                    .send({ domainName: 'foo.com', template500: templateName }).expect(200);
                 domainId = responseRouterDomains.body.id;
 
                 const appConfig = { ...example.correct,  };
@@ -400,6 +399,7 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 await req.delete(example.url + example.encodedName);
                 domainId && await req.delete('/api/v1/router_domains/' + domainId);
+                await req.delete('/api/v1/template/' + templateName);
             }
         });
 
