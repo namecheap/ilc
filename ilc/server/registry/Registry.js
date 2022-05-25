@@ -172,7 +172,7 @@ module.exports = class Registry {
             const allRoutes = [...config.routes, ...Object.values(config.specialRoutes)];
             const allApps = config.apps;
 
-            clonedConfig.apps = this.#getAppsFromRoutes(routesRelatedToDomain, filter.domain, allRoutes, allApps);
+            clonedConfig.apps = this.#getAppsByDomain(routesRelatedToDomain, allRoutes, allApps, filter.domain);
         }
 
         return clonedConfig;
@@ -212,7 +212,7 @@ module.exports = class Registry {
         return Object.keys(specialRoutesForCurrentDomain).length ? specialRoutesForCurrentDomain : specialRoutesWithoutDomain;
     };
 
-    #getAppsFromRoutes = (routesRelatedToDomain, domain, allRoutes, allApps) => {
+    #getAppsByDomain = (routesRelatedToDomain, allRoutes, allApps, domain) => {
         // apps which are used by routes related to current domain
         const appsRelatedToDomain = new Set();
         routesRelatedToDomain.forEach(({ slots }) => {

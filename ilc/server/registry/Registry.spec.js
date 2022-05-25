@@ -111,8 +111,8 @@ describe('Registry', () => {
           enforceDomain: 'bar.com',
           spaBundle: 'http://cdn.com/enforcedForBar.js',
         },
-        '@portal/homeless': {
-          spaBundle: 'http://cdn.com/homeless.js',
+        '@portal/appWithoutRouteAndWithoutEnforceDomain': {
+          spaBundle: 'http://cdn.com/appWithoutRouteAndWithoutEnforceDomain.js',
         },
       },
     };
@@ -151,8 +151,8 @@ describe('Registry', () => {
           '@portal/enforcedForFoo': {
             spaBundle: 'http://cdn.com/enforcedForFoo.js',
           },
-          '@portal/homeless': {
-            spaBundle: 'http://cdn.com/homeless.js',
+          '@portal/appWithoutRouteAndWithoutEnforceDomain': {
+            spaBundle: 'http://cdn.com/appWithoutRouteAndWithoutEnforceDomain.js',
           },
         },
       },
