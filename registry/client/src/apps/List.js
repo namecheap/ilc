@@ -41,6 +41,9 @@ const PostList = props => {
                     <ReferenceField source="configSelector" reference="shared_props" emptyText="-" sortable={false}>
                         <ChipField source="name" />
                     </ReferenceField>
+                    <ReferenceField source="enforceDomain" reference="router_domains" emptyText="-" sortable={false}>
+                        <TextField source="domainName" />
+                    </ReferenceField>
                     <ListActionsToolbar>
                         <EditButton />
                     </ListActionsToolbar>

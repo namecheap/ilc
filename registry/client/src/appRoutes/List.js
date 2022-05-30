@@ -73,13 +73,9 @@ const ListGrid = ({ routerDomain, ...props }) => {
             <ReferenceField label="Template Name" source="templateName" reference="template" emptyText="-" sortable={false}>
                 <TextField source="name" />
             </ReferenceField>
-            {
-                routerDomain.length
-                ? <ReferenceField label="Domain Name" source="domainId" reference="router_domains" emptyText="-" sortable={false}>
-                    <TextField source="domainName" />
-                </ReferenceField>
-                : null
-            }
+            <ReferenceField label="Domain Name" source="domainId" reference="router_domains" emptyText="-" sortable={false}>
+                <TextField source="domainName" />
+            </ReferenceField>
 
             <ListActionsToolbar>
                 <EditButton />

@@ -54,6 +54,7 @@ const commonApp = {
     }),
     discoveryMetadata: Joi.object().default({}),
     adminNotes: Joi.string().trim().default(null),
+    enforceDomain: Joi.number().default(null),
 };
 
 export const partialAppSchema = Joi.object({

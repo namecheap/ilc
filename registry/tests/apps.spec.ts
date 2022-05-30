@@ -98,6 +98,7 @@ describe(`Tests ${example.url}`, () => {
                 props: 789,
                 discoveryMetadata: 111,
                 adminNotes: 222,
+                enforceDomain: 'foo',
             };
 
             let response = await req.post(example.url)
@@ -116,6 +117,7 @@ describe(`Tests ${example.url}`, () => {
                 '"ssr" must be of type object\n' +
                 '"discoveryMetadata" must be of type object\n' +
                 '"adminNotes" must be a string\n' +
+                '"enforceDomain" must be a number\n' +
                 '"name" must be a string'
                 );
 
@@ -139,6 +141,47 @@ describe(`Tests ${example.url}`, () => {
                     .expect(200);
 
                 expect(response.body).deep.equal(example.correct);
+            } finally {
+                await req.delete(example.url + example.encodedName);
+            }
+        });
+
+        it('should create record with existed enforceDomain', async () => {
+            let domainId;
+            const templateName = 'templateName';
+
+            try {
+                await req.post('/api/v1/template/').send({ name: templateName, content: 'foo bar' }).expect(200);
+
+                const responseRouterDomains = await req.post('/api/v1/router_domains/')
+                    .send({ domainName: 'foo.com', template500: templateName }).expect(200);
+                domainId = responseRouterDomains.body.id;
+
+                const appConfig = { ...example.correct, enforceDomain: domainId };
+
+                let response = await req.post(example.url).send(appConfig).expect(200);
+
+                expect(response.body).deep.equal(appConfig);
+
+                response = await req.get(example.url + example.encodedName)
+                    .expect(200);
+
+                expect(response.body).deep.equal(appConfig);
+            } finally {
+                await req.delete(example.url + example.encodedName);
+                domainId && await req.delete('/api/v1/router_domains/' + domainId);
+                await req.delete('/api/v1/template/' + templateName);
+            }
+        });
+
+        it('should not create record with non-existed enforceDomain', async () => {
+            try {
+                let response = await req.post(example.url)
+                    .send({ ...example.correct, enforceDomain: 9999999 })
+                    .expect(500);
+
+                response = await req.get(example.url + example.encodedName)
+                    .expect(404);
             } finally {
                 await req.delete(example.url + example.encodedName);
             }
@@ -288,6 +331,7 @@ describe(`Tests ${example.url}`, () => {
                     kind: 'origin',
                     discoveryMetadata: 111,
                     adminNotes: 222,
+                    enforceDomain: 'foo',
                 };
 
                 const response = await req.put(example.url + example.encodedName)
@@ -306,7 +350,8 @@ describe(`Tests ${example.url}`, () => {
                         '"ssr" must be of type object\n' +
                         '"kind" must be one of [primary, essential, regular, wrapper]\n' +
                         '"discoveryMetadata" must be of type object\n' +
-                        '"adminNotes" must be a string'
+                        '"adminNotes" must be a string\n' +
+                        '"enforceDomain" must be a number'
                     );
                 expect(response.body).deep.equal({});
             } finally {
@@ -323,6 +368,51 @@ describe(`Tests ${example.url}`, () => {
                     .expect(200);
 
                 expect(response.body).deep.equal(example.updated);
+            } finally {
+                await req.delete(example.url + example.encodedName);
+            }
+        });
+
+        it('should successfully update record with enforceDomain', async () => {
+            let domainId;
+            const templateName = 'templateName';
+
+            try {
+                await req.post('/api/v1/template/').send({ name: templateName, content: 'foo bar' }).expect(200);
+
+                const responseRouterDomains = await req.post('/api/v1/router_domains/')
+                    .send({ domainName: 'foo.com', template500: templateName }).expect(200);
+                domainId = responseRouterDomains.body.id;
+
+                const appConfig = { ...example.correct,  };
+
+                await req.post(example.url).send(example.correct).expect(200);
+
+                const response = await req.put(example.url + example.encodedName)
+                    .send({
+                        ..._.omit(example.updated, 'name'),
+                        enforceDomain: domainId,
+                    })
+                    .expect(200);
+
+                expect(response.body).deep.equal({ ...example.updated, enforceDomain: domainId });
+            } finally {
+                await req.delete(example.url + example.encodedName);
+                domainId && await req.delete('/api/v1/router_domains/' + domainId);
+                await req.delete('/api/v1/template/' + templateName);
+            }
+        });
+
+        it('should not update record with non-existed enforceDomain', async () => {
+            try {
+                await req.post(example.url).send(example.correct).expect(200);
+
+                const response = await req.put(example.url + example.encodedName)
+                    .send({
+                        ..._.omit(example.updated, 'name'),
+                        enforceDomain: 999999,
+                    })
+                    .expect(500);
             } finally {
                 await req.delete(example.url + example.encodedName);
             }

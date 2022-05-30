@@ -10,7 +10,8 @@ import {
     ReferenceArrayField,
     SingleFieldList,
     ChipField,
-    SelectField
+    SelectField,
+    ReferenceField,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 
 import { JsonFieldShow } from '../JsonField';
@@ -28,6 +29,12 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
                         source="kind"
                         choices={APP_KINDS_WITH_WRAPPER}
                     />
+                    <ReferenceField
+                        source="enforceDomain"
+                        reference="router_domains"
+                        emptyText={EMPTY_TEXT}>
+                        <TextField source="domainName" />
+                    </ReferenceField>
                     <TextField source="wrappedWith" emptyText={EMPTY_TEXT} />
                     <JsonFieldShow
                         source="discoveryMetadata"
