@@ -112,6 +112,21 @@ describe('Versioning Unit', () => {
             expect(changeData.created_by).to.equal(testUser.identifier);
         });
 
+        it('Should NOT log entity modification which does not have actual changes', async () => {
+            const entityId = '@portal/navbar';
+            const entityType = 'apps';
+            const changeSetWithTheSameExistedData = { kind: 'essential' };
+
+            const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
+                await db(entityType)
+                    .where({ name: entityId })
+                    .update(changeSetWithTheSameExistedData)
+                    .transacting(trx);
+            });
+
+            expect(changeId).to.be.undefined;
+        });
+
         it('Should log entity deletion', async () => {
             const entityId = '@portal/fetchWithCache';
             const entityType = 'apps';
