@@ -53,11 +53,18 @@ export class Versioning {
                 throw new errors.VersioningError({m: `Unable to determine changeset for entity type "${conf.type}" & ID "${conf.id}"`});
             }
 
+            const data = currentData === null ? null : JSON.stringify(currentData);
+            const data_after = newData === null ? null : JSON.stringify(newData);
+
+            if (data === data_after) {
+                return;
+            }
+
             const logRecord: interfaces.VersionRowData = {
                 entity_type: conf.type,
                 entity_id: conf.id as string,
-                data: currentData === null ? null : JSON.stringify(currentData),
-                data_after: newData === null ? null : JSON.stringify(newData),
+                data,
+                data_after,
                 created_by: user ? (user as User).identifier : 'unauthenticated',
                 created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
             };
