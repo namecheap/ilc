@@ -179,14 +179,12 @@ function handlePopState(event) {
     callCapturedEventListeners(arguments);
 }
 
-addEventListener('hashchange', handlePopState);
 addEventListener('popstate', handlePopState);
 
 window.addEventListener = patchedAddEventListener;
 window.removeEventListener = patchedRemoveEventListener;
 
 // We will trigger an app change for any routing events
-window.addEventListener('hashchange', fireRoutingEvent);
 window.addEventListener('popstate', fireRoutingEvent);
 
 window.history.pushState = patchedUpdateState(window.history.pushState);
