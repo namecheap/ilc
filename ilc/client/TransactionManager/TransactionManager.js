@@ -167,6 +167,7 @@ export class TransactionManager {
         this.#hiddenSlots.length = 0;
         
         this.#removeGlobalSpinner();
+        document.body.removeAttribute('name');
 
         if (window.location.hash) {
             const anchorElement = document.querySelector(window.location.hash);
@@ -176,8 +177,7 @@ export class TransactionManager {
         } else {
             window.scroll(0, 0);
         }
-        
-        document.body.removeAttribute('name');
+
         window.dispatchEvent(new CustomEvent(ilcEvents.PAGE_READY));
     };
 
@@ -266,9 +266,16 @@ export class TransactionManager {
 
         const isOnlySpinnerBlockerLeft = this.#transactionBlockers.size() === 1
             && this.#transactionBlockers.findById(this.#forceShowSpinnerBlockerId) !== undefined;
+
+        const removingNotSpinnerBlockerAsLastOne = this.#transactionBlockers.size() === 0
+            && blockerId !== this.#forceShowSpinnerBlockerId;
         
-        if (isOnlySpinnerBlockerLeft) {
-            this.#transactionBlockers.findById(this.#forceShowSpinnerBlockerId).destroy();
+        if (this.#transactionBlockers.size() === 0) {
+            this.#onPageReady();
+        }
+
+        if (isOnlySpinnerBlockerLeft || removingNotSpinnerBlockerAsLastOne) {
+            window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
         }
     };
 
@@ -288,11 +295,10 @@ export class TransactionManager {
     };
 
     #onRouteChange = () => {
-        Promise.allSettled(this.#transactionBlockers.promises())
-            .then(() => {
-                this.#onPageReady();
-                window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
-            });
+        if (this.#transactionBlockers.size() === 0) {
+            this.#onPageReady();
+            window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
+        }
     };
 }
 
