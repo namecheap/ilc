@@ -13,8 +13,8 @@ const ConfigsInjector = require('./configs-injector');
 const processFragmentResponse = require('./process-fragment-response');
 const requestFragment = require('./request-fragment');
 
-module.exports = function (registryService, cdnUrl, nrCustomClientJsWrapper = null) {
-    const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper);
+module.exports = function (registryService, cdnUrl, nrCustomClientJsWrapper = null, nrAutomaticallyInjectClientScript = true) {
+    const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper, nrAutomaticallyInjectClientScript);
 
     const tailor = new Tailor({
         fetchContext: async function (request) {

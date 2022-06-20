@@ -64,6 +64,7 @@ module.exports = (registryService, pluginManager) => {
         registryService,
         config.get('cdnUrl'),
         config.get('newrelic.customClientJsWrapper'),
+        config.get('newrelic.automaticallyInjectBrowserMonitoring')
     );
 
     if (config.get('cdnUrl') === null) {

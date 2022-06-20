@@ -5,14 +5,16 @@ const { uniqueArray, encodeHtmlEntities } = require('../../common/utils');
 module.exports = class ConfigsInjector {
     #newrelic;
     #nrCustomClientJsWrapper;
+    #nrAutomaticallyInjectClientScript;
     #cdnUrl;
     #jsInjectionPlaceholder = '<!-- ILC_JS -->';
     #cssInjectionPlaceholder = '<!-- ILC_CSS -->';
 
-    constructor(newrelic, cdnUrl = null, nrCustomClientJsWrapper = null) {
+    constructor(newrelic, cdnUrl = null, nrCustomClientJsWrapper = null, nrAutomaticallyInjectClientScript = true) {
         this.#newrelic = newrelic;
         this.#cdnUrl = cdnUrl;
         this.#nrCustomClientJsWrapper = nrCustomClientJsWrapper;
+        this.#nrAutomaticallyInjectClientScript = nrAutomaticallyInjectClientScript;
     }
 
     inject(request, template, slots) {
@@ -162,7 +164,7 @@ module.exports = class ConfigsInjector {
 
         let settings = registryConfig.settings;
         const customHTML = registryConfig.settings?.globalSpinner?.customHTML;
-        
+
         if (customHTML) {
             settings = {
                 ...registryConfig.settings,
@@ -211,15 +213,22 @@ module.exports = class ConfigsInjector {
 
     #wrapWithIgnoreDuringParsing = (...content) => `<!-- TailorX: Ignore during parsing START -->${content.join('')}<!-- TailorX: Ignore during parsing END -->`;
 
+    // TODO(bc): this method should be removed next Major release,
+    //  because this code contradicts multiple domains feature, where you usually expects having multiple NR apps on multiple domains
+    //  and right now NR script is injected below other scripts, which is not recommended by NR. They recommend to inject as up as possible.
+    //  So it is much easier to achieve needed outcome by modifying template.
+    // Right now gently backward compatibility is maintained, so everyone who expects NR to be injected in browser will get it.
     #getNewRelicScript = () => {
-        let nrCode = this.#newrelic.getBrowserTimingHeader();
+        if (!this.#nrAutomaticallyInjectClientScript) {
+            return '';
+        }
 
+        let nrCode = this.#newrelic.getBrowserTimingHeader();
         if (this.#nrCustomClientJsWrapper === null || !nrCode) {
             return nrCode;
         }
 
         nrCode = nrCode.replace(/<script.*?>(.*)<\/script\s*>/s, '$1');
-
         return this.#nrCustomClientJsWrapper.replace('%CONTENT%', nrCode);
     }
 };
