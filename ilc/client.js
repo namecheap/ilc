@@ -23,11 +23,11 @@ import GuardManager from './client/GuardManager';
 import ParcelApi from './client/ParcelApi';
 import bundleLoaderFactory from './client/BundleLoader';
 import registerSpaApps from './client/registerSpaApps';
-import transactionManagerFactory from './client/TransactionManager/TransactionManager';
+import transitionManagerFactory from './client/TransitionManager/TransitionManager';
 
 const registryConf = getIlcConfig();
 const state = initIlcState();
-const transactionManager = transactionManagerFactory();
+const transitionManager = transitionManagerFactory();
 
 const appErrorHandlerFactory = (appName, slotName) => {
     return fragmentErrorHandlerFactory(registryConf, router.getRelevantAppKind.bind(router), appName, slotName);
@@ -37,7 +37,7 @@ const pluginManager = new PluginManager(require.context('./node_modules', true, 
 const i18n = registryConf.settings.i18n.enabled
     ? new I18n(registryConf.settings.i18n, {...singleSpa, triggerAppChange}, appErrorHandlerFactory)
     : null;
-const router = new Router(registryConf, state, i18n ? i18n : undefined, singleSpa, transactionManager.handlePageTransaction);
+const router = new Router(registryConf, state, i18n ? i18n : undefined, singleSpa, transitionManager.handlePageTransaction);
 const guardManager = new GuardManager(router, pluginManager, internalErrorHandler);
 const urlProcessor = new UrlProcessor(registryConf.settings.trailingSlash);
 const bundleLoader = bundleLoaderFactory(registryConf);
@@ -79,7 +79,7 @@ window.ILC.getAllSharedLibNames = async () => Object.keys(registryConf.sharedLib
 // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
 
 registerSpaApps(registryConf, router, appErrorHandlerFactory, bundleLoader);
-setupErrorHandlers(registryConf, router.getRelevantAppKind.bind(router), setNavigationErrorHandler, transactionManager);
+setupErrorHandlers(registryConf, router.getRelevantAppKind.bind(router), setNavigationErrorHandler, transitionManager);
 setupPerformanceMonitoring(router.getCurrentRoute);
 
 singleSpa.setBootstrapMaxTime(5000, false);

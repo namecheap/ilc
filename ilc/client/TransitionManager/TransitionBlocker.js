@@ -1,5 +1,5 @@
 
-export default class TransactionBlocker {
+export default class TransitionBlocker {
     _promise;
     _onDestroyCallback;
 

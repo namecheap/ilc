@@ -1,7 +1,7 @@
 import { IlcIntl } from 'ilc-sdk/app';
 import Cookies from 'js-cookie';
 
-import transactionManagerFactory from './TransactionManager/TransactionManager';
+import transitionManagerFactory from './TransitionManager/TransitionManager';
 import {appIdToNameAndSlot} from '../common/utils';
 import i18nCookie from '../common/i18nCookie';
 import dispatchSynchronizedEvent from './dispatchSynchronizedEvent';
@@ -12,7 +12,7 @@ export default class I18n {
     #config;
     #singleSpa;
     #appErrorHandlerFactory;
-    #transactionManager;
+    #transitionManager;
 
     #prevConfig;
 
@@ -20,12 +20,12 @@ export default class I18n {
         config,
         singleSpa,
         appErrorHandlerFactory,
-        transactionManager = undefined
+        transitionManager = undefined
     ) {
         this.#config = config;
         this.#singleSpa = singleSpa;
         this.#appErrorHandlerFactory = appErrorHandlerFactory;
-        this.#transactionManager = transactionManager || transactionManagerFactory();
+        this.#transitionManager = transitionManager || transitionManagerFactory();
 
         this.#prevConfig = this.#get();
 
@@ -101,7 +101,7 @@ export default class I18n {
             }
         );
 
-        this.#transactionManager.handleAsyncAction(changeFlow);
+        this.#transitionManager.handleAsyncAction(changeFlow);
     };
 
     #get = () => i18nCookie.decode(Cookies.get(i18nCookie.name));

@@ -21,7 +21,7 @@ describe('I18n', () => {
         navigateToUrl: sinon.spy(singleSpaMock),
         triggerAppChange: sinon.spy(singleSpaMock),
     };
-    const transactionManager = {
+    const transitionManager = {
         handleAsyncAction: sinon.spy(),
     }
     const defaultConfig = Object.freeze({
@@ -42,7 +42,7 @@ describe('I18n', () => {
 
         Cookies.set(i18nCookie.name, i18nCookie.encode(defaultConfig.default), i18nCookie.getOpts());
 
-        defaultIntl = new I18n({...defaultConfig}, singleSpa, appErrorHandlerFactory, transactionManager);
+        defaultIntl = new I18n({...defaultConfig}, singleSpa, appErrorHandlerFactory, transitionManager);
     });
 
     afterEach(() => {
