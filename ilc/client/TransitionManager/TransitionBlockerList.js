@@ -1,6 +1,6 @@
-export default class TransactionBlockerList {
+export default class TransitionBlockerList {
 
-    /** @type TransactionBlocker[] */
+    /** @type TransitionBlocker[] */
     #items = [];
 
     add(item) {

@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import html from 'nanohtml';
 
 import ClientRouter from './ClientRouter';
-import { slotWillBe } from './TransactionManager/TransactionManager';
+import { slotWillBe } from './TransitionManager/TransitionManager';
 import singleSpaEvents from './constants/singleSpaEvents';
 import ilcEvents from './constants/ilcEvents';
 

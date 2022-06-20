@@ -1,10 +1,10 @@
 import { getSlotElement } from '../utils';
 import getIlcConfig from '../ilcConfig';
-import TransactionBlocker from './TransactionBlocker';
-import NamedTransactionBlocker from './NamedTransactionBlocker';
+import TransitionBlocker from './TransitionBlocker';
+import NamedTransactionBlocker from './NamedTransitionBlocker';
 import singleSpaEvents from '../constants/singleSpaEvents';
 import ilcEvents from '../constants/ilcEvents';
-import TransactionBlockerList from './TransactionBlockerList';
+import TransitionBlockerList from './TransitionBlockerList';
 
 export const slotWillBe = {
     rendered: 'rendered',
@@ -13,7 +13,7 @@ export const slotWillBe = {
     default: null,
 };
 
-export class TransactionManager {
+export class TransitionManager {
     #logger;
     #spinnerConfig;
     #globalSpinner;
@@ -26,8 +26,8 @@ export class TransactionManager {
     #hiddenSlots = [];
     #windowEventHandlers = {};
 
-    /** @type TransactionBlockerList */
-    #transactionBlockers = new TransactionBlockerList();
+    /** @type TransitionBlockerList */
+    #transactionBlockers = new TransitionBlockerList();
 
     constructor(logger, spinnerConfig = {enabled: true, customHTML: ''}) {
         this.#logger = logger;
@@ -41,7 +41,7 @@ export class TransactionManager {
         }
 
         this.#runGlobalSpinner();
-        this.#addTransactionBlocker(new TransactionBlocker(promise));
+        this.#addTransactionBlocker(new TransitionBlocker(promise));
     }
 
     handlePageTransaction = (slotName, willBe) => {
@@ -304,12 +304,12 @@ export class TransactionManager {
 
 let defaultInstance = null;
 /**
- * @return {TransactionManager}
+ * @return {TransitionManager}
  */
 export default function defaultFactory() {
     if (defaultInstance === null) {
         const ilcSettings = getIlcConfig().settings;
-        defaultInstance = new TransactionManager(window.console, ilcSettings && ilcSettings.globalSpinner);
+        defaultInstance = new TransitionManager(window.console, ilcSettings && ilcSettings.globalSpinner);
     }
 
     return defaultInstance;

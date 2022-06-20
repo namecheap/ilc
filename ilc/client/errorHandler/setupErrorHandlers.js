@@ -10,7 +10,7 @@ import navigationErrors from '../navigationEvents/errors';
 
 const System = window.System;
 
-export default function (registryConf, getRelevantAppKind, setNavigationErrorHandler, transactionManager) {
+export default function (registryConf, getRelevantAppKind, setNavigationErrorHandler, transitionManager) {
     setNavigationErrorHandler((error, errorInfo = {}) => {
         internalErrorHandler(new navigationErrors.NavigationError({
             data: errorInfo,
@@ -22,7 +22,7 @@ export default function (registryConf, getRelevantAppKind, setNavigationErrorHan
         const {appName, slotName} = appIdToNameAndSlot(error.appOrParcelName);
         const fragmentErrorHandler = fragmentErrorHandlerFactory(registryConf, getRelevantAppKind, appName, slotName);
 
-        transactionManager.reportSlotRenderingError(slotName);
+        transitionManager.reportSlotRenderingError(slotName);
 
         fragmentErrorHandler(error);
     });

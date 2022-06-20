@@ -1,6 +1,6 @@
-import TransactionBlocker from "./TransactionBlocker";
+import TransitionBlocker from "./TransitionBlocker";
 
-export default class NamedTransactionBlocker extends TransactionBlocker {
+export default class NamedTransitionBlocker extends TransitionBlocker {
     #externalId;
   
     constructor(externalId, blockerExecutor) {

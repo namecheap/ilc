@@ -5,10 +5,10 @@ import ilcEvents from '../constants/ilcEvents';
 
 import {
     slotWillBe,
-    TransactionManager
-} from './TransactionManager';
+    TransitionManager
+} from './TransitionManager';
 
-describe('TransactionManager', () => {
+describe('TransitionManager', () => {
     const locationHash = 'i-am-location-hash';
 
     const logger = {
@@ -79,12 +79,12 @@ describe('TransactionManager', () => {
     beforeEach(() => {
         window.location.hash = locationHash;
 
-        const transactionManager = new TransactionManager(logger, {
+        const transitionManager = new TransitionManager(logger, {
             enabled: true,
             customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`
         });
-        handlePageTransaction = transactionManager.handlePageTransaction.bind(transactionManager);
-        removePageTransactionListeners = transactionManager.removeEventListeners.bind(transactionManager);
+        handlePageTransaction = transitionManager.handlePageTransaction.bind(transitionManager);
+        removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
 
         slots.resetRef();
         applications.body.resetRef();
@@ -591,14 +591,14 @@ describe('TransactionManager', () => {
     it('should run scripts in customHTML', async () => {
         const expectedClass = 'iAmSetFromCustomHTML';
 
-        const transactionManager = new TransactionManager(logger, {
+        const transitionManager = new TransitionManager(logger, {
             enabled: true,
             customHTML: `
                 <div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>
                 <script>document.querySelector('#${spinner.id}').classList.add('${expectedClass}')</script>
             `
         });
-        const handlePageTransaction = transactionManager.handlePageTransaction.bind(transactionManager);
+        const handlePageTransaction = transitionManager.handlePageTransaction.bind(transitionManager);
 
         applications.navbar.appendApplication();
         applications.body.appendApplication();

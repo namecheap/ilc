@@ -8,7 +8,7 @@ import { isSpecialUrl } from 'ilc-sdk/app';
 import { triggerAppChange } from './navigationEvents';
 import { appIdToNameAndSlot } from '../common/utils';
 import { FRAGMENT_KIND } from '../common/constants';
-import { slotWillBe } from './TransactionManager/TransactionManager';
+import { slotWillBe } from './TransitionManager/TransitionManager';
 import singleSpaEvents from './constants/singleSpaEvents';
 import ilcEvents from './constants/ilcEvents';
 
