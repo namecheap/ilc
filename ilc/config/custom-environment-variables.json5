@@ -6,6 +6,7 @@
     newrelic: {
         licenseKey: 'NR_LICENSE_KEY',
         customClientJsWrapper: 'NR_CUSTOM_CLIENT_JS_WRAPPER',
+        automaticallyInjectBrowserMonitoring: 'NR_CUSTOM_CLIENT_AUTO_INJECT'
     },
     overrideConfigTrustedOrigins: 'OVERRIDE_CONFIG_TRUSTED_ORIGINS',
     logger: {

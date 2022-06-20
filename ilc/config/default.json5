@@ -11,6 +11,7 @@
          * Usage example: <script type="text/javascript">(function mygdprWrapper(){ %CONTENT% })()</script>
          */
         customClientJsWrapper: null,
+        automaticallyInjectBrowserMonitoring: true
     },
     overrideConfigTrustedOrigins: null,
     logger: {
