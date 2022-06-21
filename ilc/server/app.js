@@ -60,10 +60,15 @@ module.exports = (registryService, pluginManager) => {
         done();
     });
 
+    const autoInjectNrMonitoringConfig = config.get('newrelic.automaticallyInjectBrowserMonitoring');
+    const autoInjectNrMonitoring = typeof autoInjectNrMonitoringConfig === 'boolean'
+        ? autoInjectNrMonitoringConfig
+        : autoInjectNrMonitoringConfig !== 'false';
     const tailor = tailorFactory(
         registryService,
         config.get('cdnUrl'),
         config.get('newrelic.customClientJsWrapper'),
+        autoInjectNrMonitoring
     );
 
     if (config.get('cdnUrl') === null) {
