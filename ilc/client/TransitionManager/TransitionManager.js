@@ -27,7 +27,7 @@ export class TransitionManager {
     #windowEventHandlers = {};
 
     /** @type TransitionBlockerList */
-    #transactionBlockers = new TransitionBlockerList();
+    #transitionBlockers = new TransitionBlockerList();
 
     constructor(logger, spinnerConfig = {enabled: true, customHTML: ''}) {
         this.#logger = logger;
@@ -41,7 +41,7 @@ export class TransitionManager {
         }
 
         this.#runGlobalSpinner();
-        this.#addTransactionBlocker(new TransitionBlocker(promise));
+        this.#addTransitionBlocker(new TransitionBlocker(promise));
     }
 
     handlePageTransaction = (slotName, willBe) => {
@@ -82,11 +82,11 @@ export class TransitionManager {
     };
 
     reportSlotRenderingError(slotName) {
-        this.#removeTransactionBlocker(slotName);
+        this.#removeTransitionBlocker(slotName);
     }
 
     #addContentListener = slotName => {
-        if (this.#transactionBlockerExists(slotName)) {
+        if (this.#transitionBlockerExists(slotName)) {
             return;
         }
 
@@ -132,9 +132,13 @@ export class TransitionManager {
             this.#hiddenSlots.push(targetNode);
             observer.observe(targetNode, { childList: true, subtree: true, attributeFilter: ['style'] });
         })
-        .onDestroy(() => observer.disconnect());
+        .onDestroy(() => {
+            if (observer) {
+                observer.disconnect();
+            }
+        });
 
-        this.#addTransactionBlocker(contentListenerBlocker);
+        this.#addTransitionBlocker(contentListenerBlocker);
     };
 
     #renderFakeSlot = slotName => {
@@ -206,7 +210,7 @@ export class TransitionManager {
         }
 
         this.#spinnerTimeout = setTimeout(() => {
-            this.#addTransactionBlocker(this.#getForceShowSpinnerBlocker());
+            this.#addTransitionBlocker(this.#getForceShowSpinnerBlocker());
 
             const spinnerClass = 'ilcSpinnerWrapper';
 
@@ -245,32 +249,32 @@ export class TransitionManager {
         this.#spinnerTimeout = null;
     };
 
-    #addTransactionBlocker = (transactionBlocker) => {
-        transactionBlocker.finally(() => this.#removeTransactionBlocker(transactionBlocker.getId()));
-        this.#transactionBlockers.add(transactionBlocker);
+    #addTransitionBlocker = (transactionBlocker) => {
+        transactionBlocker.finally(() => this.#removeTransitionBlocker(transactionBlocker.getId()));
+        this.#transitionBlockers.add(transactionBlocker);
     }
 
-    #transactionBlockerExists = (blockerId) => {
-        return this.#transactionBlockers.findById(blockerId) !== undefined;
+    #transitionBlockerExists = (blockerId) => {
+        return this.#transitionBlockers.findById(blockerId) !== undefined;
     }
 
-    #removeTransactionBlocker = (blockerId) => {
-        const blocker = this.#transactionBlockers.findById(blockerId);
+    #removeTransitionBlocker = (blockerId) => {
+        const blocker = this.#transitionBlockers.findById(blockerId);
 
         if (!blocker) {
             return;
         }
 
         blocker.destroy();
-        this.#transactionBlockers.remove(blocker);
+        this.#transitionBlockers.remove(blocker);
 
-        const isOnlySpinnerBlockerLeft = this.#transactionBlockers.size() === 1
-            && this.#transactionBlockers.findById(this.#forceShowSpinnerBlockerId) !== undefined;
+        const isOnlySpinnerBlockerLeft = this.#transitionBlockers.size() === 1
+            && this.#transitionBlockers.findById(this.#forceShowSpinnerBlockerId) !== undefined;
 
-        const removingNotSpinnerBlockerAsLastOne = this.#transactionBlockers.size() === 0
+        const removingNotSpinnerBlockerAsLastOne = this.#transitionBlockers.size() === 0
             && blockerId !== this.#forceShowSpinnerBlockerId;
         
-        if (this.#transactionBlockers.size() === 0) {
+        if (this.#transitionBlockers.size() === 0) {
             this.#onPageReady();
         }
 
@@ -295,7 +299,7 @@ export class TransitionManager {
     };
 
     #onRouteChange = () => {
-        if (this.#transactionBlockers.size() === 0) {
+        if (this.#transitionBlockers.size() === 0) {
             this.#onPageReady();
             window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
         }
