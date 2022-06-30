@@ -247,7 +247,7 @@ export class TransitionManager {
                     oldScript.remove();
                 });
             }
-        }, this.spinnerConfig.showAfter);
+        }, this.#spinnerConfig.showAfter);
     };
 
     #removeGlobalSpinner = () => {
