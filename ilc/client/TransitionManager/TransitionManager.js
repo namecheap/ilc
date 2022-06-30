@@ -29,9 +29,17 @@ export class TransitionManager {
     /** @type TransitionBlockerList */
     #transitionBlockers = new TransitionBlockerList();
 
-    constructor(logger, spinnerConfig = {enabled: true, customHTML: ''}) {
+    constructor(logger, spinnerConfig) {
+        const defaultSpinnerConfig = {
+            enabled: true,
+            customHTML: '',
+            showAfter: 300,
+            minimumVisible: 500,
+        };
+
         this.#logger = logger;
-        this.#spinnerConfig = spinnerConfig;
+        this.#spinnerConfig = Object.assign({}, defaultSpinnerConfig, spinnerConfig);
+        
         this.#addEventListeners();
     }
 
@@ -173,11 +181,14 @@ export class TransitionManager {
         this.#removeGlobalSpinner();
         document.body.removeAttribute('name');
 
+        let scrollToElement;
+
         if (window.location.hash) {
-            const anchorElement = document.querySelector(window.location.hash);
-            if (anchorElement) {
-                anchorElement.scrollIntoView();
-            }
+            scrollToElement = document.querySelector(window.location.hash);
+        }
+
+        if (scrollToElement) {
+            scrollToElement.scrollIntoView();
         } else {
             window.scroll(0, 0);
         }
@@ -185,15 +196,15 @@ export class TransitionManager {
         window.dispatchEvent(new CustomEvent(ilcEvents.PAGE_READY));
     };
 
-    // if spinner appeared in 300ms, then show it at least 500ms, to avoid flashing it like a glitch
-    #getForceShowSpinnerBlocker = () => {
+    // if spinner appeared in showAfter ms, then show it at least minimumVisible time, to avoid flashing it like a glitch
+    #getVisbilitySpinnerBlocker = () => {
         let timer;
         let forceResolve;
 
         const spinnerBlocker = new NamedTransactionBlocker(this.#forceShowSpinnerBlockerId, (resolve) => {
             timer = setTimeout(() => {
                 resolve();
-            }, 500);
+            }, this.#spinnerConfig.minimumVisible);
             
             forceResolve = resolve;
         }).onDestroy(() => {
@@ -210,7 +221,7 @@ export class TransitionManager {
         }
 
         this.#spinnerTimeout = setTimeout(() => {
-            this.#addTransitionBlocker(this.#getForceShowSpinnerBlocker());
+            this.#addTransitionBlocker(this.#getVisbilitySpinnerBlocker());
 
             const spinnerClass = 'ilcSpinnerWrapper';
 
@@ -236,7 +247,7 @@ export class TransitionManager {
                     oldScript.remove();
                 });
             }
-        }, 300);
+        }, this.spinnerConfig.showAfter);
     };
 
     #removeGlobalSpinner = () => {
@@ -306,15 +317,15 @@ export class TransitionManager {
     };
 }
 
-let defaultInstance = null;
+let defaultTransitionManagerInstance = null;
 /**
  * @return {TransitionManager}
  */
 export default function defaultFactory() {
-    if (defaultInstance === null) {
+    if (defaultTransitionManagerInstance === null) {
         const ilcSettings = getIlcConfig().settings;
-        defaultInstance = new TransitionManager(window.console, ilcSettings && ilcSettings.globalSpinner);
+        defaultTransitionManagerInstance = new TransitionManager(window.console, ilcSettings && ilcSettings.globalSpinner);
     }
 
-    return defaultInstance;
+    return defaultTransitionManagerInstance;
 }
