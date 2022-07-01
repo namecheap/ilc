@@ -1,10 +1,10 @@
 import { getSlotElement } from '../utils';
 import getIlcConfig from '../ilcConfig';
-import TransactionBlocker from './TransactionBlocker';
+import TransitionBlocker from './TransitionBlocker';
+import NamedTransactionBlocker from './NamedTransitionBlocker';
 import singleSpaEvents from '../constants/singleSpaEvents';
 import ilcEvents from '../constants/ilcEvents';
-
-import scrollRestorer from '@mapbox/scroll-restorer';
+import TransitionBlockerList from './TransitionBlockerList';
 
 export const slotWillBe = {
     rendered: 'rendered',
@@ -13,7 +13,7 @@ export const slotWillBe = {
     default: null,
 };
 
-export class TransactionManager {
+export class TransitionManager {
     #logger;
     #spinnerConfig;
     #globalSpinner;
@@ -24,13 +24,22 @@ export class TransactionManager {
 
     #fakeSlots = [];
     #hiddenSlots = [];
-    /** @type TransactionBlocker[] */
-    #transactionBlockers = [];
     #windowEventHandlers = {};
 
-    constructor(logger, spinnerConfig = {enabled: true, customHTML: ''}) {
+    /** @type TransitionBlockerList */
+    #transitionBlockers = new TransitionBlockerList();
+
+    constructor(logger, spinnerConfig) {
+        const defaultSpinnerConfig = {
+            enabled: true,
+            customHTML: '',
+            showAfter: 300,
+            minimumVisible: 500,
+        };
+
         this.#logger = logger;
-        this.#spinnerConfig = spinnerConfig;
+        this.#spinnerConfig = Object.assign({}, defaultSpinnerConfig, spinnerConfig);
+        
         this.#addEventListeners();
     }
 
@@ -40,10 +49,7 @@ export class TransactionManager {
         }
 
         this.#runGlobalSpinner();
-        this.#transactionBlockers.push(new TransactionBlocker(promise));
-
-        const afterPromise = () => this.#removeTransactionBlocker(promise);
-        promise.then(afterPromise).catch(afterPromise)
+        this.#addTransitionBlocker(new TransitionBlocker(promise));
     }
 
     handlePageTransaction = (slotName, willBe) => {
@@ -84,56 +90,63 @@ export class TransactionManager {
     };
 
     reportSlotRenderingError(slotName) {
-        this.#removeTransactionBlocker(slotName);
+        this.#removeTransitionBlocker(slotName);
     }
 
     #addContentListener = slotName => {
-        if (this.#transactionBlockerExists(slotName)) {
+        if (this.#transitionBlockerExists(slotName)) {
             return;
         }
 
-        this.#runGlobalSpinner();
+        let observer;
 
-        if (window.location.hash) {
-            document.body.setAttribute('name', window.location.hash.slice(1));
-        }
+        const contentListenerBlocker = new NamedTransactionBlocker(slotName, (resolve) => {
+            this.#runGlobalSpinner();
 
-        const status = {
-            hasAddedNodes: false,
-            hasTextOrOpticNodes: false,
-            isAnyChildVisible: false,
-        };
-
-        const observer = new MutationObserver((mutationsList) => {
-            if (!status.hasAddedNodes) {
-                status.hasAddedNodes = !!mutationsList.find(mutation => mutation.addedNodes.length);
+            if (window.location.hash) {
+                document.body.setAttribute('name', window.location.hash.slice(1));
             }
 
-            // if we have rendered MS to DOM but meaningful content isn't rendered, e.g. due to essential data preload
-            if (!status.hasTextOrOpticNodes) {
-                const hasText = !!targetNode.innerText.trim().length
-                const hasOpticNodes = !!targetNode.querySelector(':not(div):not(span)');
-                status.hasTextOrOpticNodes = hasText || hasOpticNodes;
+            const status = {
+                hasAddedNodes: false,
+                hasTextOrOpticNodes: false,
+                isAnyChildVisible: false,
+            };
+
+            observer = new MutationObserver((mutationsList) => {
+                if (!status.hasAddedNodes) {
+                    status.hasAddedNodes = !!mutationsList.find(mutation => mutation.addedNodes.length);
+                }
+
+                // if we have rendered MS to DOM but meaningful content isn't rendered, e.g. due to essential data preload
+                if (!status.hasTextOrOpticNodes) {
+                    const hasText = !!targetNode.innerText.trim().length
+                    const hasOpticNodes = !!targetNode.querySelector(':not(div):not(span)');
+                    status.hasTextOrOpticNodes = hasText || hasOpticNodes;
+                }
+
+                // if we have rendered MS to DOM but temporary hide it for some reason, e.g. to fetch data
+                if (!status.isAnyChildVisible) {
+                    status.isAnyChildVisible = Array.from(targetNode.children).some(node => node.style.display !== 'none');
+                }
+
+                if (Object.values(status).some(n => !n)) return;
+
+                resolve();
+            });
+
+            const targetNode = getSlotElement(slotName);
+            targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
+            this.#hiddenSlots.push(targetNode);
+            observer.observe(targetNode, { childList: true, subtree: true, attributeFilter: ['style'] });
+        })
+        .onDestroy(() => {
+            if (observer) {
+                observer.disconnect();
             }
-
-            // if we have rendered MS to DOM but temporary hide it for some reason, e.g. to fetch data
-            if (!status.isAnyChildVisible) {
-                status.isAnyChildVisible = Array.from(targetNode.children).some(node => node.style.display !== 'none');
-            }
-
-            if (Object.values(status).some(n => !n)) return;
-
-            this.#removeTransactionBlocker(slotName);
         });
 
-        this.#transactionBlockers.push(new TransactionBlocker(slotName).setDestroyFn(() => {
-            observer.disconnect();
-        }));
-
-        const targetNode = getSlotElement(slotName);
-        targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
-        this.#hiddenSlots.push(targetNode);
-        observer.observe(targetNode, { childList: true, subtree: true, attributeFilter: ['style'] });
+        this.#addTransitionBlocker(contentListenerBlocker);
     };
 
     #renderFakeSlot = slotName => {
@@ -164,22 +177,42 @@ export class TransactionManager {
             node.hasAttribute('ilc-fake-slot-rendered') && node.removeAttribute('ilc-fake-slot-rendered')
         });
         this.#hiddenSlots.length = 0;
+        
         this.#removeGlobalSpinner();
         document.body.removeAttribute('name');
-        scrollRestorer.restoreScroll(window.history.state ? window.history : {state: {scroll: {x: 0, y: 0}}});
+
+        let scrollToElement;
+
+        if (window.location.hash) {
+            scrollToElement = document.querySelector(window.location.hash);
+        }
+
+        if (scrollToElement) {
+            scrollToElement.scrollIntoView();
+        } else {
+            window.scroll(0, 0);
+        }
 
         window.dispatchEvent(new CustomEvent(ilcEvents.PAGE_READY));
     };
 
-    // if spinner appeared in 300ms, then show it at least 500ms, to avoid flashing it like a glitch
-    #getForceShowSpinnerBlocker = () => {
-        const timer = setTimeout(() => {
-            this.#removeTransactionBlocker(this.#forceShowSpinnerBlockerId);
-        }, 500);
+    // if spinner appeared in showAfter ms, then show it at least minimumVisible time, to avoid flashing it like a glitch
+    #getVisbilitySpinnerBlocker = () => {
+        let timer;
+        let forceResolve;
 
-        return new TransactionBlocker(this.#forceShowSpinnerBlockerId).setDestroyFn(() => {
+        const spinnerBlocker = new NamedTransactionBlocker(this.#forceShowSpinnerBlockerId, (resolve) => {
+            timer = setTimeout(() => {
+                resolve();
+            }, this.#spinnerConfig.minimumVisible);
+            
+            forceResolve = resolve;
+        }).onDestroy(() => {
             timer && clearTimeout(timer);
-        })
+            forceResolve();
+        });
+
+        return spinnerBlocker;
     }
 
     #runGlobalSpinner = () => {
@@ -188,7 +221,7 @@ export class TransactionManager {
         }
 
         this.#spinnerTimeout = setTimeout(() => {
-            this.#transactionBlockers.push(this.#getForceShowSpinnerBlocker());
+            this.#addTransitionBlocker(this.#getVisbilitySpinnerBlocker());
 
             const spinnerClass = 'ilcSpinnerWrapper';
 
@@ -214,7 +247,7 @@ export class TransactionManager {
                     oldScript.remove();
                 });
             }
-        }, 300);
+        }, this.#spinnerConfig.showAfter);
     };
 
     #removeGlobalSpinner = () => {
@@ -227,37 +260,41 @@ export class TransactionManager {
         this.#spinnerTimeout = null;
     };
 
-    #transactionBlockerExists = (blockerId) => {
-        return this.#transactionBlockers.find(v => v.getId() === blockerId) !== undefined
+    #addTransitionBlocker = (transactionBlocker) => {
+        transactionBlocker.finally(() => this.#removeTransitionBlocker(transactionBlocker.getId()));
+        this.#transitionBlockers.add(transactionBlocker);
     }
 
-    #removeTransactionBlocker = (blockerId) => {
-        const blockerIdx = this.#transactionBlockers.findIndex(v => v.getId() === blockerId);
-        if (blockerIdx === -1) {
-            return; // No blocker - no actions
+    #transitionBlockerExists = (blockerId) => {
+        return this.#transitionBlockers.findById(blockerId) !== undefined;
+    }
+
+    #removeTransitionBlocker = (blockerId) => {
+        const blocker = this.#transitionBlockers.findById(blockerId);
+
+        if (!blocker) {
+            return;
         }
-        /** @type TransactionBlocker */
-        const blockerEl = this.#transactionBlockers[blockerIdx];
 
-        blockerEl.destroy();
-        this.#transactionBlockers.splice(blockerIdx, 1);
+        blocker.destroy();
+        this.#transitionBlockers.remove(blocker);
 
-        const isOnlySpinnerBlockerLeft = this.#transactionBlockers.length === 1
-            && this.#transactionBlockers[0].getId() === this.#forceShowSpinnerBlockerId;
-        const removingNotSpinnerBlockerAsLastOne = this.#transactionBlockers.length === 0 && blockerId !== this.#forceShowSpinnerBlockerId;
+        const isOnlySpinnerBlockerLeft = this.#transitionBlockers.size() === 1
+            && this.#transitionBlockers.findById(this.#forceShowSpinnerBlockerId) !== undefined;
+
+        const removingNotSpinnerBlockerAsLastOne = this.#transitionBlockers.size() === 0
+            && blockerId !== this.#forceShowSpinnerBlockerId;
+        
+        if (this.#transitionBlockers.size() === 0) {
+            this.#onPageReady();
+        }
 
         if (isOnlySpinnerBlockerLeft || removingNotSpinnerBlockerAsLastOne) {
             window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
         }
-
-        if (!this.#transactionBlockers.length) {
-            this.#onPageReady();
-        }
     };
 
     #addEventListeners = () => {
-        scrollRestorer.start({ autoRestore: false, captureScrollDebounce: 150 });
-
         this.#windowEventHandlers[ilcEvents.CRASH] = this.#removeGlobalSpinner;
         this.#windowEventHandlers[singleSpaEvents.ROUTING_EVENT] = this.#onRouteChange;
 
@@ -267,30 +304,28 @@ export class TransactionManager {
     };
 
     removeEventListeners = () => {
-        scrollRestorer.end();
-
         for (const eventName in this.#windowEventHandlers) {
             window.removeEventListener(eventName, this.#windowEventHandlers[eventName]);
         }
     };
 
     #onRouteChange = () => {
-        if (this.#transactionBlockers.length === 0) {
+        if (this.#transitionBlockers.size() === 0) {
             this.#onPageReady();
             window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
         }
     };
 }
 
-let defaultInstance = null;
+let defaultTransitionManagerInstance = null;
 /**
- * @return {TransactionManager}
+ * @return {TransitionManager}
  */
 export default function defaultFactory() {
-    if (defaultInstance === null) {
+    if (defaultTransitionManagerInstance === null) {
         const ilcSettings = getIlcConfig().settings;
-        defaultInstance = new TransactionManager(window.console, ilcSettings && ilcSettings.globalSpinner);
+        defaultTransitionManagerInstance = new TransitionManager(window.console, ilcSettings && ilcSettings.globalSpinner);
     }
 
-    return defaultInstance;
+    return defaultTransitionManagerInstance;
 }

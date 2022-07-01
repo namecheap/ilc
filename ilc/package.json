@@ -20,7 +20,6 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@mapbox/scroll-restorer": "1.0.0",
     "@namecheap/error-extender": "^1.2.0",
     "@newrelic/native-metrics": "^8.0.0",
     "agentkeepalive": "^4.2.1",

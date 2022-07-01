@@ -1,5 +1,5 @@
 import {flattenFnArray} from './utils';
-import transactionManager, {slotWillBe} from './TransactionManager/TransactionManager';
+import transitionManager, {slotWillBe} from './TransitionManager/TransitionManager';
 import {appIdToNameAndSlot} from '../common/utils';
 
 const APP_STATES = {
@@ -13,14 +13,14 @@ export default class WrapApp {
     #wrapperConf;
     #appRenderedAtSsr = false;
     #appExtraProps = {};
-    #transactionManager;
+    #transitionManager;
 
     #appState = 0;
     #wrapperState = 0;
 
     constructor(wrapperConf, ssrOverrideProps) {
         this.#wrapperConf = wrapperConf;
-        this.#transactionManager = transactionManager();
+        this.#transitionManager = transitionManager();
 
         if (ssrOverrideProps) {
             this.#appExtraProps = ssrOverrideProps;
@@ -89,7 +89,7 @@ export default class WrapApp {
         this.#appExtraProps = extraProps;
 
         const {slotName} = appIdToNameAndSlot(props.appId);
-        this.#transactionManager.handlePageTransaction(slotName, slotWillBe.rerendered);
+        this.#transitionManager.handlePageTransaction(slotName, slotWillBe.rerendered);
 
         await wrapperCallbacks.unmount(props);
 
