@@ -6,6 +6,7 @@ const expect = chai.expect;
 import { getRegistryMock } from '../tests/helpers'
 
 import { BundleLoader } from './BundleLoader';
+import { CssTrackedApp } from './CssTrackedApp';
 
 const fnCallbacks = {
     bootstrap: async () => 'bootstrap',
@@ -182,7 +183,7 @@ describe('BundleLoader', () => {
             SystemJs.import.resolves(fnCallbacks);
 
             const callbacks = await loader.loadAppWithCss(appName);
-            expect(callbacks).to.equal(fnCallbacks);
+            expect(callbacks).to.be.instanceof(CssTrackedApp);
 
             sinon.assert.calledWith(SystemJs.import, appName);
             sinon.assert.calledWith(SystemJs.import, registry.apps[appName].cssBundle);
