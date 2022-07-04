@@ -94,9 +94,7 @@ describe('CssTrackedApp', function () {
 
     it('application remount restores CSS into DOM', async () => {
         const originalApp = createOriginalAppFake(Promise.resolve('does_not_matter'));
-        // const cssLink = 'https://mycdn.me/styles.css';
         const cssLink = 'data:text/css,<style>div { border: 1px solid red; }</style>';
-        // const cssLink = 'https://spaceship-cdn.com/helperwidgets/app.f1bf9f7b735685b38f3f.css';
 
         // Scenario from real life:
         //   app is rendered on page via SSR, CSS link has come with the response
