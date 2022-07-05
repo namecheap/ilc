@@ -1,4 +1,5 @@
 import crashIlc from './errorHandler/crashIlc';
+import { CssTrackedApp } from './CssTrackedApp';
 
 export class BundleLoader {
 
@@ -32,7 +33,10 @@ export class BundleLoader {
         const app = this.#getApp(appName);
 
         return this.#systemJs.import(appName)
-            .then(appBundle => this.#getAppSpaCallbacks(appBundle, app.props))
+            .then(appBundle => {
+                const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props);
+                return typeof app.cssBundle === 'string' ? new CssTrackedApp(rawCallbacks, app.cssBundle) : rawCallbacks;
+            })
     }
 
     loadAppWithCss(appName) {
