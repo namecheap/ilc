@@ -1,28 +1,31 @@
 export class CssTrackedApp {
     #originalApp;
     #cssLinkUri;
+    #delayCssRemoval;
 
     parcels;
-
     static linkUsagesAttribute = 'data-ilc-usages';
+    static markedForRemovalAttribute = 'data-ilc-remove';
 
     /**
      * @param {{unmount?: () => Promise, update: () => Promise, bootstrap: () => Promise, mount: () => Promise, parcels?: any}} originalApp
      * @param {string} cssLink
+     * @param {Boolean} delayCssRemoval
      */
-    constructor(originalApp, cssLink) {
+    constructor(originalApp, cssLink, delayCssRemoval) {
         this.#originalApp = originalApp;
         // this assumes that we always have 1 link to CSS from one application
         // real life might differ at some time
         this.#cssLinkUri = cssLink;
+        this.#delayCssRemoval = delayCssRemoval;
         this.parcels = originalApp.parcels;
     }
 
-    bootstrap = async(...args) => {
+    bootstrap = async (...args) => {
         return this.#originalApp.bootstrap(...args);
     }
 
-    mount = async(...args) => {
+    mount = async (...args) => {
         const link = this.#findLink();
         if (link === null) {
             await this.#appendCssLink();
@@ -34,11 +37,10 @@ export class CssTrackedApp {
         return await this.#originalApp.mount(...args);
     }
 
-    unmount = async(...args) => {
+    unmount = async (...args) => {
         try {
             return this.#originalApp.unmount(...args);
-        }
-        finally {
+        } finally {
             const link = this.#findLink();
             if (link != null) {
                 this.#decrementOrRemoveCssUsages(link);
@@ -46,12 +48,17 @@ export class CssTrackedApp {
         }
     }
 
-    update = async(...args) => {
+    update = async (...args) => {
         if (!this.#originalApp.update) {
             return undefined;
         }
 
         return this.#originalApp.update(...args);
+    }
+
+    static removeAllNodesPendingRemoval() {
+        const allNodes = document.querySelectorAll(`link[${CssTrackedApp.markedForRemovalAttribute}]`);
+        Array.from(allNodes).forEach(node => node.remove());
     }
 
     #appendCssLink() {
@@ -69,7 +76,12 @@ export class CssTrackedApp {
     #decrementOrRemoveCssUsages(link) {
         const numberOfUsages = this.#getNumberOfLinkUsages(link);
         if (numberOfUsages <= 1) {
-            link.remove();
+            if (this.#delayCssRemoval) {
+                link.removeAttribute(CssTrackedApp.linkUsagesAttribute);
+                link.setAttribute(CssTrackedApp.markedForRemovalAttribute, 'true');
+            } else {
+                link.remove();
+            }
         } else {
             link.setAttribute(CssTrackedApp.linkUsagesAttribute, (numberOfUsages - 1).toString());
         }
