@@ -183,7 +183,9 @@ describe('BundleLoader', () => {
             SystemJs.import.resolves(fnCallbacks);
 
             const callbacks = await loader.loadAppWithCss(appName);
-            expect(callbacks).to.be.instanceof(CssTrackedApp);
+            Object.keys(fnCallbacks).forEach(key => {
+                expect(callbacks[key]).not.to.be.undefined;
+            })
 
             sinon.assert.calledWith(SystemJs.import, appName);
             sinon.assert.calledWith(SystemJs.import, registry.apps[appName].cssBundle);
