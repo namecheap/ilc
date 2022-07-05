@@ -7,6 +7,7 @@ import {
     slotWillBe,
     TransitionManager
 } from './TransitionManager';
+import { CssTrackedApp } from '../CssTrackedApp';
 
 describe('TransitionManager', () => {
     const locationHash = 'i-am-location-hash';
@@ -241,6 +242,7 @@ describe('TransitionManager', () => {
 
         chai.expect(spinner.getRef()).to.be.null;
     });
+
 
     // can be case when rendering is triggered before removing and vise versa, but the result should be always the same
     describe('should render a fake slot and listen to slot content changes', () => {
@@ -555,6 +557,39 @@ describe('TransitionManager', () => {
         document.getElementById(newBodyApplication.id).style.display = '';
         await clock.runAllAsync();
         chai.expect(spinner.getRef()).to.be.null;
+    });
+
+    it('should remove CSS that is marked as non used when all fragments contain visible nodes', async () => {
+        const newBodyApplication = {
+            id: 'new-body-application',
+            class: 'new-body-spa',
+        };
+
+        const link = html`<link rel="stylesheet" href="data:text/css,<style>div { border: 1px solid red; }</style>" ${CssTrackedApp.markedForRemovalAttribute}="true" />`;
+        document.head.appendChild(link);
+
+        newBodyApplication.ref = html`
+            <div id="${newBodyApplication.id}" class="${newBodyApplication.class}" style="display: none;">
+                Hello! I am hidden MS, so spinner is still visible
+            </div>
+        `;
+
+        applications.navbar.appendApplication();
+        applications.body.appendApplication();
+
+        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+
+        applications.body.removeApplication();
+        await clock.runAllAsync();
+        chai.expect(document.querySelectorAll(`link[${CssTrackedApp.markedForRemovalAttribute}]`).length).to.equal(1);
+
+        slots.body.ref.appendChild(newBodyApplication.ref);
+        await clock.runAllAsync();
+        chai.expect(document.querySelectorAll(`link[${CssTrackedApp.markedForRemovalAttribute}]`).length).to.equal(1);
+
+        document.getElementById(newBodyApplication.id).style.display = '';
+        await clock.runAllAsync();
+        chai.expect(document.querySelectorAll(`link[${CssTrackedApp.markedForRemovalAttribute}]`).length).to.equal(0);
     });
 
     it('should destroy spinner in at least 300ms if it is appeared', async () => {

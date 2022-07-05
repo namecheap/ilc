@@ -5,6 +5,7 @@ import NamedTransactionBlocker from './NamedTransitionBlocker';
 import singleSpaEvents from '../constants/singleSpaEvents';
 import ilcEvents from '../constants/ilcEvents';
 import TransitionBlockerList from './TransitionBlockerList';
+import { CssTrackedApp } from '../CssTrackedApp';
 
 export const slotWillBe = {
     rendered: 'rendered',
@@ -39,7 +40,7 @@ export class TransitionManager {
 
         this.#logger = logger;
         this.#spinnerConfig = Object.assign({}, defaultSpinnerConfig, spinnerConfig);
-        
+
         this.#addEventListeners();
     }
 
@@ -171,13 +172,14 @@ export class TransitionManager {
 
     #onPageReady = () => {
         this.#fakeSlots.forEach(node => node.remove());
+        CssTrackedApp.removeAllNodesPendingRemoval();
         this.#fakeSlots.length = 0;
         this.#hiddenSlots.forEach(node => {
             node.style.display = '';
             node.hasAttribute('ilc-fake-slot-rendered') && node.removeAttribute('ilc-fake-slot-rendered')
         });
         this.#hiddenSlots.length = 0;
-        
+
         this.#removeGlobalSpinner();
         document.body.removeAttribute('name');
 
@@ -205,7 +207,7 @@ export class TransitionManager {
             timer = setTimeout(() => {
                 resolve();
             }, this.#spinnerConfig.minimumVisible);
-            
+
             forceResolve = resolve;
         }).onDestroy(() => {
             timer && clearTimeout(timer);
@@ -284,7 +286,7 @@ export class TransitionManager {
 
         const removingNotSpinnerBlockerAsLastOne = this.#transitionBlockers.size() === 0
             && blockerId !== this.#forceShowSpinnerBlockerId;
-        
+
         if (this.#transitionBlockers.size() === 0) {
             this.#onPageReady();
         }

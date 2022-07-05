@@ -6,9 +6,15 @@ export class BundleLoader {
     #cache = new WeakMap();
     #registryApps;
     #systemJs;
+    #delayCssRemoval;
 
     constructor(registryConf, systemJs) {
         this.#registryApps = registryConf.apps;
+        this.#delayCssRemoval = registryConf.settings && registryConf.settings.globalSpinner && registryConf.settings.globalSpinner.enabled;
+        if (typeof this.#delayCssRemoval === 'undefined') {
+            this.#delayCssRemoval = true;
+        }
+
         this.#systemJs = systemJs;
     }
 
@@ -31,11 +37,10 @@ export class BundleLoader {
 
     loadApp(appName) {
         const app = this.#getApp(appName);
-
         return this.#systemJs.import(appName)
             .then(appBundle => {
                 const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props);
-                return typeof app.cssBundle === 'string' ? new CssTrackedApp(rawCallbacks, app.cssBundle) : rawCallbacks;
+                return typeof app.cssBundle === 'string' ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval) : rawCallbacks;
             })
     }
 
