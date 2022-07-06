@@ -21,8 +21,13 @@ export class CssTrackedApp {
         this.parcels = originalApp.parcels;
     }
 
-    bootstrap = async (...args) => {
-        return this.#originalApp.bootstrap(...args);
+    getDecoratedApp = () => {
+        return {
+            ...this.#originalApp,
+            mount: this.mount,
+            unmount: this.unmount,
+            update: this.update
+        };
     }
 
     mount = async (...args) => {

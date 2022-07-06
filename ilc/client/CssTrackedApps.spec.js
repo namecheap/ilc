@@ -33,7 +33,7 @@ describe('CssTrackedApp', function () {
         const returnValue = Math.random();
         const originalApp = createOriginalAppFake(Promise.resolve(returnValue))
 
-        const cssWrap = new CssTrackedApp(originalApp, 'data:text/css,<style>div { border: 1px solid red; }</style>', false);
+        const cssWrap = new CssTrackedApp(originalApp, 'data:text/css,<style>div { border: 1px solid red; }</style>', false).getDecoratedApp();
 
         await Promise.all(Object.keys(originalApp).map(async method => {
             const actualReturnValue = await cssWrap[method]();
@@ -48,7 +48,7 @@ describe('CssTrackedApp', function () {
         const cssLink = 'https://mycdn.me/styles.css';
         const link = appendCssToPage(cssLink);
 
-        const cssWrap = new CssTrackedApp(originalApp, cssLink, false);
+        const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
 
         await cssWrap.mount();
         expect(link.getAttribute(CssTrackedApp.linkUsagesAttribute)).to.equal('1');
@@ -63,7 +63,7 @@ describe('CssTrackedApp', function () {
         const link = appendCssToPage(cssLink);
         link.setAttribute(CssTrackedApp.linkUsagesAttribute, '4');
 
-        const cssWrap = new CssTrackedApp(originalApp, cssLink, false);
+        const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
         await cssWrap.unmount();
 
         expect(link.getAttribute(CssTrackedApp.linkUsagesAttribute)).to.equal('3');
@@ -75,7 +75,7 @@ describe('CssTrackedApp', function () {
         const link = appendCssToPage(cssLink);
         link.setAttribute(CssTrackedApp.linkUsagesAttribute, '1');
 
-        const cssWrap = new CssTrackedApp(originalApp, cssLink, false);
+        const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
         await cssWrap.unmount();
 
         expect(link.parentNode).to.equal(null);
@@ -86,7 +86,7 @@ describe('CssTrackedApp', function () {
         const cssLink = 'https://mycdn.me/styles.css';
         const link = appendCssToPage(cssLink);
 
-        const cssWrap = new CssTrackedApp(originalApp, cssLink, false);
+        const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
         await cssWrap.unmount();
 
         expect(link.parentNode).to.equal(null);
@@ -99,7 +99,7 @@ describe('CssTrackedApp', function () {
         // Scenario from real life:
         //   app is rendered on page via SSR, CSS link has come with the response
         appendCssToPage(cssLink);
-        const cssWrap = new CssTrackedApp(originalApp, cssLink, false);
+        const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
         await cssWrap.mount();
 
         //   route is changed and app is unmounted and CSS is removed
@@ -122,7 +122,7 @@ describe('CssTrackedApp', function () {
 
         const cssLink = 'data:text/css,<style>div { border: 1px solid red; }</style>';
 
-        const cssWrap = new CssTrackedApp(originalApp, cssLink, false);
+        const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
 
         expect(cssWrap.parcels).to.equal(originalApp.parcels);
     });
@@ -133,7 +133,7 @@ describe('CssTrackedApp', function () {
             const cssLink = 'data:text/css,<style>div { border: 1px solid red; }</style>';
             const link = appendCssToPage(cssLink);
 
-            const cssWrap = new CssTrackedApp(originalApp, cssLink, true);
+            const cssWrap = new CssTrackedApp(originalApp, cssLink, true).getDecoratedApp();
             await cssWrap.unmount();
 
             expect(link.parentNode).to.equal(document.body);

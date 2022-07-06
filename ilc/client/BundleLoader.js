@@ -40,7 +40,7 @@ export class BundleLoader {
         return this.#systemJs.import(appName)
             .then(appBundle => {
                 const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props);
-                return typeof app.cssBundle === 'string' ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval) : rawCallbacks;
+                return typeof app.cssBundle === 'string' ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval).getDecoratedApp() : rawCallbacks;
             })
     }
 
