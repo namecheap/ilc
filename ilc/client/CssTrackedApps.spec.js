@@ -43,6 +43,45 @@ describe('CssTrackedApp', function () {
         }));
     });
 
+    describe('createNew', () => {
+        it('should return original instance if createNew is not IlcAdapter', async () => {
+            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()))
+            originalApp.createNew = () => Promise.resolve(1);
+
+            const cssWrap = new CssTrackedApp(originalApp, 'data:text/css,<style></style>', false).getDecoratedApp();
+            const newInstance = await cssWrap.createNew();
+
+            expect(newInstance).to.equal(1);
+        })
+
+        it('should return original instance if createNew does not return Promise', async () => {
+            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()))
+            originalApp.createNew = () => 1;
+
+            const cssWrap = new CssTrackedApp(originalApp, 'data:text/css,<style></style>', false).getDecoratedApp();
+            const newInstance = cssWrap.createNew();
+
+            expect(newInstance).to.equal(1);
+        });
+
+        it('should delegate calls to original app if app is created via createNew', async () => {
+            const returnValue = Math.random();
+            const appOnCreateNew = createOriginalAppFake(Promise.resolve(returnValue))
+            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()))
+            originalApp.createNew = () => Promise.resolve(appOnCreateNew);
+
+            const cssWrap = new CssTrackedApp(originalApp, 'data:text/css,<style>div { border: 1px solid red; }</style>', false).getDecoratedApp();
+            const newApp = await cssWrap.createNew();
+
+            await Promise.all(Object.keys(appOnCreateNew).map(async method => {
+                const actualReturnValue = await newApp[method]();
+
+                expect(appOnCreateNew[method].calledOnce).to.equal(true, `${method} is not called`);
+                expect(actualReturnValue).to.equal(returnValue, method);
+            }));
+        });
+    });
+
     it('should add counter to css on mount', async () => {
         const originalApp = createOriginalAppFake(Promise.resolve('does_not_matter'));
         const cssLink = 'https://mycdn.me/styles.css';
@@ -139,5 +178,5 @@ describe('CssTrackedApp', function () {
             expect(link.parentNode).to.equal(document.body);
             expect(link.getAttribute(CssTrackedApp.markedForRemovalAttribute)).to.equal('true');
         });
-    })
+    });
 });
