@@ -3,12 +3,11 @@ export class CssTrackedApp {
     #cssLinkUri;
     #delayCssRemoval;
 
-    parcels;
     static linkUsagesAttribute = 'data-ilc-usages';
     static markedForRemovalAttribute = 'data-ilc-remove';
 
     /**
-     * @param {{unmount?: () => Promise, update: () => Promise, bootstrap: () => Promise, mount: () => Promise, parcels?: any}} originalApp
+     * @param {{unmount?: () => Promise, update: () => Promise, bootstrap: () => Promise, mount: () => Promise, createNew?: () => Promise}} originalApp
      * @param {string} cssLink
      * @param {Boolean} delayCssRemoval
      */
@@ -18,16 +17,37 @@ export class CssTrackedApp {
         // real life might differ at some time
         this.#cssLinkUri = cssLink;
         this.#delayCssRemoval = delayCssRemoval;
-        this.parcels = originalApp.parcels;
     }
 
     getDecoratedApp = () => {
         return {
             ...this.#originalApp,
+            createNew: typeof this.#originalApp.createNew === 'function' ? this.createNew : this.#originalApp.createNew,
             mount: this.mount,
             unmount: this.unmount,
             update: this.update
         };
+    }
+
+    createNew = (...args) => {
+        if (!this.#originalApp.createNew) {
+            return undefined;
+        }
+
+        const newInstanceResult = this.#originalApp.createNew(...args);
+        // if createNew does not return Promise it is not expected for dynamic apps
+        if (typeof newInstanceResult.then !== 'function') {
+            return newInstanceResult;
+        }
+
+        return newInstanceResult.then(newInstance => {
+            const isIlcAdapter = ['mount', 'unmount', 'bootstrap'].every(m => typeof newInstance[m] === 'function');
+            if (!isIlcAdapter) {
+                return newInstance;
+            }
+
+            return new CssTrackedApp(newInstance, this.#cssLinkUri, false).getDecoratedApp();
+        });
     }
 
     mount = async (...args) => {
