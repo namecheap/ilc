@@ -62,7 +62,7 @@ module.exports = class ErrorHandler {
             }, { reportError: !req.ldeRelated });
 
             const currentDomain = req.hostname;
-            const locale = req.raw.ilcState.locale;
+            const locale = (req.raw || req).ilcState.locale;
             let data = await this.#registryService.getTemplate('500', { locale, forDomain: currentDomain });
             data = data.data.content.replace('%ERRORID%', `Error ID: ${errorId}`);
 
