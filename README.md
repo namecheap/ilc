@@ -58,7 +58,7 @@ This is where ILC comes into play.
 To quickstart with ILC locally, follow the steps below:
 
 1. Clone the [namecheap/ilc](https://github.com/namecheap/ilc/) repository.
-1. Run 'npm install'
+1. Run `npm install`
 1. Run `docker compose up -d`. Wait for the process to complete:
 
     ```
