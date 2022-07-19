@@ -1,12 +1,14 @@
 'use strict';
 
 const _ = require('lodash');
-const parseLinkHeader = require('tailorx/lib/parse-link-header');
+const parseLinkHeader = require('@namecheap/tailorx/lib/parse-link-header');
 
 const { appIdToNameAndSlot } = require('../../common/utils');
 
 function insertStart(stream, attributes, headers) {
     const bundleVersionOverrides = _.pick(attributes, ['wrapperPropsOverride']);
+
+    console.log(headers);
 
     if (headers.link) {
         const refs = parseLinkHeader(headers.link);

@@ -3,7 +3,7 @@
 const _ = require('lodash');
 const newrelic = require('newrelic');
 
-const Tailor = require('tailorx');
+const Tailor = require('@namecheap/tailorx');
 const fetchTemplate = require('./fetch-template');
 const filterHeaders = require('./filter-headers');
 const errorHandlingService = require('../errorHandler/factory');
