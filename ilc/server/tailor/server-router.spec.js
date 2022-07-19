@@ -8,6 +8,7 @@ const ServerRouter = require('./server-router.js');
 describe('server router', () => {
     const logger = {
         warn: sinon.spy(),
+        debug: sinon.spy(),
     };
 
     afterEach(() => {

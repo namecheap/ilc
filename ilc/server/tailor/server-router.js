@@ -36,7 +36,7 @@ module.exports = class ServerRouter {
             return res + `<fragment id="${row.appId}" slot="${row.name}"></fragment>`;
         }, '');
 
-        this.#logger.debug({ url: req.raw.url, id: req.id, domain: req.hostname, fragmentsTpl }, 'getFragmentsTpl');
+        this.#logger.debug({ fragmentsTpl }, 'getFragmentsTpl');
 
         return fragmentsTpl;
     }
@@ -86,7 +86,7 @@ module.exports = class ServerRouter {
             return res;
         }, {});
 
-        this.#logger.debug({ url: req.raw.url, id: req.id, domain: req.hostname, fragmentsContext }, 'getFragmentsContext');
+        this.#logger.debug({ fragmentsContext }, 'getFragmentsContext');
 
         return fragmentsContext;
     }
