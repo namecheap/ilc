@@ -32,9 +32,13 @@ module.exports = class ServerRouter {
     getFragmentsTpl() {
         const route = this.getRoute();
 
-        return _.reduce(this.#getSsrSlotsList(route.slots, this.#registryConfig.apps), (res, row) => {
+        const fragmentsTpl = _.reduce(this.#getSsrSlotsList(route.slots, this.#registryConfig.apps), (res, row) => {
             return res + `<fragment id="${row.appId}" slot="${row.name}"></fragment>`;
         }, '');
+
+        this.#logger.debug({ fragmentsTpl }, 'getFragmentsTpl');
+
+        return fragmentsTpl;
     }
 
     getFragmentsContext() {
@@ -42,7 +46,7 @@ module.exports = class ServerRouter {
         const apps = this.#registryConfig.apps;
         let primarySlotDetected = false;
 
-        return _.reduce(this.#getSsrSlotsList(route.slots, apps), (res, row) => {
+        const fragmentsContext = _.reduce(this.#getSsrSlotsList(route.slots, apps), (res, row) => {
             const appId = row.appId;
             const appInfo = row.appInfo;
 
@@ -81,6 +85,10 @@ module.exports = class ServerRouter {
 
             return res;
         }, {});
+
+        this.#logger.debug({ fragmentsContext }, 'getFragmentsContext');
+
+        return fragmentsContext;
     }
 
     getRoute() {
