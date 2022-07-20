@@ -41,7 +41,6 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
         const currRoute = request.router.getRoute();
 
         if (attributes.wrapperConf) {
-            logger.debug('Wrapper fragment Processing. Initialization started');
             const wrapperConf = attributes.wrapperConf;
             const reqUrl = makeFragmentUrl({
                 route: currRoute,
@@ -50,6 +49,14 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                 props: wrapperConf.props,
                 ignoreBasePath: true
             });
+
+            logger.debug({
+                url: reqUrl,
+                detailsJSON: JSON.stringify({
+                    attributes
+                }),
+            },'Request Fragment. Init processing for wrapper');
+
 
             const fragmentRequest = makeRequest(
                 reqUrl,
@@ -60,10 +67,17 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
 
             fragmentRequest.on('response', response => {
                 try {
-                    logger.debug('Wrapper fragment Processing. Response processing started');
+                    logger.debug({
+                        url: reqUrl,
+                        detailsJSON: JSON.stringify({
+                            statusCode: response.statusCode,
+                            'x-props-override': response.headers['x-props-override'],
+                        }),
+                    }, 'Request Fragment. Wrapper Fragment Response');
+
+
                     // Wrapper says that we need to request wrapped application
                     if (response.statusCode === 210) {
-                        logger.debug('Wrapper fragment Processing.  Status code is 210');
                         const propsOverride = response.headers['x-props-override'];
                         attributes.wrapperPropsOverride = {};
                         if (propsOverride) {
@@ -73,7 +87,12 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                         }
                         attributes.wrapperConf = null;
 
-                        logger.debug({attributes}, 'Wrapper fragment Processing. attributes');
+                        logger.debug({
+                            url: reqUrl,
+                            detailsJSON: JSON.stringify({
+                                attributes
+                            }),
+                        }, 'Request Fragment. Wrapper Fragment Processing. Attribute overriding');
 
                         resolve(requestFragment(fragmentUrl, attributes, request));
 
@@ -89,23 +108,20 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                         })
                     );
                 } catch (e) {
-                    logger.debug('Wrapper fragment Processing. Fragment Response Processing Error');
+                    logger.debug( {
+                        url: reqUrl,
+                    }, 'Request Fragment. Wrapper Fragment Processing. Fragment Response Processing Error');
                     reject(e);
                 }
             });
             fragmentRequest.on('error', error => {
-                logger.debug('Wrapper fragment Processing. Fragment Request Error');
+                logger.debug( {
+                    url: reqUrl,
+                }, 'Request Fragment. Wrapper Fragment Processing. Fragment Request Error');
                 reject(new errors.FragmentRequestError({message: `Error during SSR request to fragment wrapper at URL: ${fragmentUrl}`, cause: error}));
             });
             fragmentRequest.end();
         } else {
-
-            logger.debug({
-                route: currRoute,
-                baseUrl: fragmentUrl,
-                appId: attributes.id,
-                props: attributes.appProps,
-            }, 'Fragment Processing.');
 
             const reqUrl = makeFragmentUrl({
                 route: currRoute,
@@ -113,6 +129,17 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                 appId: attributes.id,
                 props: attributes.appProps,
             });
+
+            logger.debug({
+                url: reqUrl,
+                detailsJSON: JSON.stringify({
+                    route: currRoute,
+                    baseUrl: fragmentUrl,
+                    appId: attributes.id,
+                    props: attributes.appProps,
+                }),
+            }, 'Request Fragment. Fragment Processing.');
+
 
             const startTime = process.hrtime();
             const fragmentRequest = makeRequest(
@@ -131,7 +158,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                             fragmentAttributes: attributes,
                         })
                     );
-                    logger.debug('Fragment Processing. Finished');
+                    logger.debug({url: reqUrl}, 'Fragment Processing. Finished');
                 } catch (e) {
                     reject(e);
                 }
