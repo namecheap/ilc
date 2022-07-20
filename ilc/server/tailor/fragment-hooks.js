@@ -56,7 +56,7 @@ function insertStart(logger, stream, attributes, headers) {
         logger.debug({
             detailsJSON: JSON.stringify({
                 attributes
-            });
+            })
         }, 'insert start. Creating spa-config-override tag');
         stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
     }
