@@ -82,6 +82,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
 
                     // Wrapper says that we need to request wrapped application
                     if (response.statusCode === 210) {
+                        logger.debug({ url: currRoute.route }, 'Request Fragment. Wrapper Fragment Response. ForwardRequest');
                         const propsOverride = response.headers['x-props-override'];
                         attributes.wrapperPropsOverride = {};
                         if (propsOverride) {
@@ -104,6 +105,8 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
 
                         return;
                     }
+
+                    logger.debug({ url: currRoute.route }, 'Request Fragment. Wrapper Fragment Response. Using App Wrapper.');
 
                     resolve(
                         processFragmentResponse(response, {
