@@ -11,8 +11,10 @@ function insertStart(logger, stream, attributes, headers) {
     if (headers.link) {
         const refs = parseLinkHeader(headers.link);
         logger.debug({
-            refs
-        }, 'insertStart. refs');
+            detailsJSON: JSON.stringify({
+                attributes
+            })
+        }, 'insertStart. Links detected. Debug Attributes');
         const { async: isAsync, id } = attributes;
 
         refs.forEach(ref => {
@@ -51,7 +53,11 @@ function insertStart(logger, stream, attributes, headers) {
             bundleVersionOverrides.appName = appIdToNameAndSlot(appId).appName;
         }
 
-        logger.debug({bundleVersionOverrides}, 'insert start. Form spa-config-override');
+        logger.debug({
+            detailsJSON: JSON.stringify({
+                attributes
+            });
+        }, 'insert start. Creating spa-config-override tag');
         stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
     }
 }
