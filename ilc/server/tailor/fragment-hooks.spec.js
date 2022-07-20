@@ -17,6 +17,12 @@ describe('fragment-hooks', () => {
     });
 
     describe('insertStart', () => {
+
+        const logger = {
+            warn: () => {},
+            debug: () => {},
+        };
+
         it('should write a script tag with wrapper overrides', () => {
             const mockStream = new PassThrough();
             const fragmentAttrs = getFragmentAttributes({
@@ -27,7 +33,7 @@ describe('fragment-hooks', () => {
             });
             const headers = {};
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -43,7 +49,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/app.css>; rel="stylesheet"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -62,7 +68,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/app.css>; rel="stylesheet"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -82,7 +88,7 @@ describe('fragment-hooks', () => {
 
             const resultingUrl = `${fragmentAttrs.spaBundleUrl.replace(/[^\\/]+\/[^\\/]+$/, '')}app.test.css`;
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -101,7 +107,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/app.css>; rel="stylesheet"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -118,7 +124,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/single_spa.js>; rel="fragment-script"; as="script"; crossorigin="anonymous"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
             chai.expect(streamData).to.be.instanceOf(Buffer);
@@ -133,7 +139,7 @@ describe('fragment-hooks', () => {
             };
             const resultingUrl = `${fragmentAttrs.spaBundleUrl.replace(/[^\\/]+$/, '')}single_spa.tst.js`;
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
             chai.expect(streamData).to.be.instanceOf(Buffer);
@@ -156,7 +162,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/single_spa.js>; rel="fragment-script"; as="script"; crossorigin="anonymous"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
             chai.expect(streamData).to.be.instanceOf(Buffer);
@@ -170,7 +176,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/single_spa.js>; rel="fragment-dependency"; name="dep_name"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -185,7 +191,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/single_spa.js>; rel="fragment-dependency"; name="dep_name", <https://domain2.com/single_spa2.js>; rel="fragment-dependency"; name="dep_name2"',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 
@@ -200,7 +206,7 @@ describe('fragment-hooks', () => {
                 link: '<https://domain.com/single_spa.js>; rel="fragment-script"; as="script"; crossorigin="anonymous", <https://domain.com/single_spa.js>; rel="fragment-dependency";',
             };
 
-            insertStart(mockStream, fragmentAttrs, headers);
+            insertStart(logger, mockStream, fragmentAttrs, headers);
 
             const streamData = mockStream.read();
 

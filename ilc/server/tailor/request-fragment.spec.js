@@ -25,9 +25,10 @@ describe('request-fragment', () => {
 
     const logger = {
         warn: () => {},
+        debug: () => {},
     };
 
-    const requestFragment = requestFragmentSetup(filterHeadersMock, processFragmentResponseMock);
+    const requestFragment = requestFragmentSetup(filterHeadersMock, processFragmentResponseMock, logger);
 
     afterEach(() => {
         processFragmentResponseMock.resetHistory();

@@ -32,7 +32,7 @@ const kaAgentHttps = new HttpsAgent();
  * @param {Object} request - HTTP request stream
  * @returns {Promise} Response from the fragment server
  */
-module.exports = (filterHeaders, processFragmentResponse) => function requestFragment(
+module.exports = (filterHeaders, processFragmentResponse, logger) => function requestFragment(
     fragmentUrl,
     attributes,
     request
@@ -41,6 +41,7 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
         const currRoute = request.router.getRoute();
 
         if (attributes.wrapperConf) {
+            logger.debug('Wrapper fragment Processing. Initialization started');
             const wrapperConf = attributes.wrapperConf;
             const reqUrl = makeFragmentUrl({
                 route: currRoute,
@@ -59,8 +60,10 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
 
             fragmentRequest.on('response', response => {
                 try {
+                    logger.debug('Wrapper fragment Processing. Response processing started');
                     // Wrapper says that we need to request wrapped application
                     if (response.statusCode === 210) {
+                        logger.debug('Wrapper fragment Processing.  Status code is 210');
                         const propsOverride = response.headers['x-props-override'];
                         attributes.wrapperPropsOverride = {};
                         if (propsOverride) {
@@ -69,6 +72,8 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                             attributes.wrapperPropsOverride = props;
                         }
                         attributes.wrapperConf = null;
+
+                        logger.debug({attributes}, 'Wrapper fragment Processing. attributes');
 
                         resolve(requestFragment(fragmentUrl, attributes, request));
 
@@ -84,14 +89,24 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                         })
                     );
                 } catch (e) {
+                    logger.debug('Wrapper fragment Processing. Fragment Response Processing Error');
                     reject(e);
                 }
             });
             fragmentRequest.on('error', error => {
+                logger.debug('Wrapper fragment Processing. Fragment Request Error');
                 reject(new errors.FragmentRequestError({message: `Error during SSR request to fragment wrapper at URL: ${fragmentUrl}`, cause: error}));
             });
             fragmentRequest.end();
         } else {
+
+            logger.debug({
+                route: currRoute,
+                baseUrl: fragmentUrl,
+                appId: attributes.id,
+                props: attributes.appProps,
+            }, 'Fragment Processing.');
+
             const reqUrl = makeFragmentUrl({
                 route: currRoute,
                 baseUrl: fragmentUrl,
@@ -116,6 +131,7 @@ module.exports = (filterHeaders, processFragmentResponse) => function requestFra
                             fragmentAttributes: attributes,
                         })
                     );
+                    logger.debug('Fragment Processing. Finished');
                 } catch (e) {
                     reject(e);
                 }

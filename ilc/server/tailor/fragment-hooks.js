@@ -5,11 +5,14 @@ const parseLinkHeader = require('@namecheap/tailorx/lib/parse-link-header');
 
 const { appIdToNameAndSlot } = require('../../common/utils');
 
-function insertStart(stream, attributes, headers) {
+function insertStart(logger, stream, attributes, headers) {
     const bundleVersionOverrides = _.pick(attributes, ['wrapperPropsOverride']);
 
     if (headers.link) {
         const refs = parseLinkHeader(headers.link);
+        logger.debug({
+            refs
+        }, 'insertStart. refs');
         const { async: isAsync, id } = attributes;
 
         refs.forEach(ref => {
@@ -48,6 +51,7 @@ function insertStart(stream, attributes, headers) {
             bundleVersionOverrides.appName = appIdToNameAndSlot(appId).appName;
         }
 
+        logger.debug({bundleVersionOverrides}, 'insert start. Form spa-config-override');
         stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
     }
 }

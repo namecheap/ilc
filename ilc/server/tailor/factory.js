@@ -13,7 +13,7 @@ const ConfigsInjector = require('./configs-injector');
 const processFragmentResponse = require('./process-fragment-response');
 const requestFragment = require('./request-fragment');
 
-module.exports = function (registryService, cdnUrl, nrCustomClientJsWrapper = null, nrAutomaticallyInjectClientScript = true) {
+module.exports = function (registryService, cdnUrl, nrCustomClientJsWrapper = null, nrAutomaticallyInjectClientScript = true, logger) {
     const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper, nrAutomaticallyInjectClientScript);
 
     const tailor = new Tailor({
@@ -25,11 +25,14 @@ module.exports = function (registryService, cdnUrl, nrCustomClientJsWrapper = nu
             newrelic,
             registryService
         ),
-        requestFragment: requestFragment(filterHeaders, processFragmentResponse),
+        requestFragment: requestFragment(filterHeaders, processFragmentResponse, logger),
         processFragmentResponse,
         systemScripts: '',
         filterHeaders,
-        fragmentHooks,
+        fragmentHooks: {
+            insertStart: fragmentHooks.insertStart.bind(null, logger),
+            insertEnd: fragmentHooks.insertEnd,
+        },
         botsGuardEnabled: true,
         getAssetsToPreload: configsInjector.getAssetsToPreload,
         filterResponseHeaders: (attributes, headers) => _.pick(headers, ['set-cookie']),

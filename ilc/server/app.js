@@ -24,12 +24,15 @@ module.exports = (registryService, pluginManager) => {
         return !ignoredUrls.includes(url);
     };
 
+    const fastifyLoggerConfig = _.omit(_.pick(pluginManager.getReportingPlugin(), ['logger', 'requestIdLogLabel', 'genReqId']), _.isEmpty);
+    const { logger } = fastifyLoggerConfig;
+
     const app = fastify(Object.assign(
         {
             trustProxy: false, // TODO: should be configurable via Registry,
             disableRequestLogging: true,
         },
-        _.omit(_.pick(pluginManager.getReportingPlugin(), ['logger', 'requestIdLogLabel', 'genReqId']), _.isEmpty),
+        fastifyLoggerConfig,
     ));
 
     app.addHook('onRequest', async (req, reply) => {
@@ -68,7 +71,8 @@ module.exports = (registryService, pluginManager) => {
         registryService,
         config.get('cdnUrl'),
         config.get('newrelic.customClientJsWrapper'),
-        autoInjectNrMonitoring
+        autoInjectNrMonitoring,
+        logger
     );
 
     if (config.get('cdnUrl') === null) {
