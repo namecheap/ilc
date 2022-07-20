@@ -123,6 +123,13 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
             fragmentRequest.end();
         } else {
 
+            const reqUrl = makeFragmentUrl({
+                route: currRoute,
+                baseUrl: fragmentUrl,
+                appId: attributes.id,
+                props: attributes.appProps,
+            });
+
             logger.debug({
                 url: reqUrl,
                 detailsJSON: JSON.stringify({
@@ -133,12 +140,6 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                 }),
             }, 'Request Fragment. Fragment Processing.');
 
-            const reqUrl = makeFragmentUrl({
-                route: currRoute,
-                baseUrl: fragmentUrl,
-                appId: attributes.id,
-                props: attributes.appProps,
-            });
 
             const startTime = process.hrtime();
             const fragmentRequest = makeRequest(
