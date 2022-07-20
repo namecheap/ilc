@@ -52,6 +52,8 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
 
             logger.debug({
                 url: currRoute.route,
+                id: request.id,
+                domain: request.hostname,
                 detailsJSON: JSON.stringify({
                     attributes
                 }),
@@ -69,6 +71,8 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                 try {
                     logger.debug({
                         url: currRoute.route,
+                        id: request.id,
+                        domain: request.hostname,
                         detailsJSON: JSON.stringify({
                             statusCode: response.statusCode,
                             'x-props-override': response.headers['x-props-override'],
@@ -89,6 +93,8 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
 
                         logger.debug({
                             url: currRoute.route,
+                            id: request.id,
+                            domain: request.hostname,
                             detailsJSON: JSON.stringify({
                                 attributes
                             }),
@@ -110,6 +116,8 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                 } catch (e) {
                     logger.debug( {
                         url: currRoute.route,
+                        id: request.id,
+                        domain: request.hostname,
                     }, 'Request Fragment. Wrapper Fragment Processing. Fragment Response Processing Error');
                     reject(e);
                 }
@@ -117,6 +125,8 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
             fragmentRequest.on('error', error => {
                 logger.debug( {
                     url: currRoute.route,
+                    id: request.id,
+                    domain: request.hostname,
                 }, 'Request Fragment. Wrapper Fragment Processing. Fragment Request Error');
                 reject(new errors.FragmentRequestError({message: `Error during SSR request to fragment wrapper at URL: ${fragmentUrl}`, cause: error}));
             });
@@ -132,6 +142,8 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
 
             logger.debug({
                 url: currRoute.route,
+                id: request.id,
+                domain: request.hostname,
                 detailsJSON: JSON.stringify({
                     route: currRoute,
                     baseUrl: fragmentUrl,
@@ -158,7 +170,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                             fragmentAttributes: attributes,
                         })
                     );
-                    logger.debug({url: currRoute.route}, 'Fragment Processing. Finished');
+                    logger.debug({url: currRoute.route, id: request.id, domain: request.hostname}, 'Fragment Processing. Finished');
                 } catch (e) {
                     reject(e);
                 }
