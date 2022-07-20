@@ -2,11 +2,12 @@ const chai = require('chai');
 const supertest = require('supertest');
 const nock = require('nock');
 const config = require('config');
-
+const defaultErrorPage = require('../../server/errorHandler/defaultErrorPage');
 const localStorage = require('../../common/localStorage');
 const helpers = require('../../tests/helpers');
 
 const createApp = require('../app');
+const sinon = require('sinon');
 
 describe('ErrorHandler', () => {
     const errorIdRegExp = /(?<errorId>[\d\w]{8}-[\d\w]{4}-[\d\w]{4}-[\d\w]{4}-[\d\w]{12})/;
@@ -74,6 +75,31 @@ describe('ErrorHandler', () => {
 
         const response = await server.get('/_ilc/500').expect(500);
 
-        chai.expect(response.text).to.be.eql('Oops! Something went wrong. Pls try to refresh page or contact support.');
+        chai.expect(response.text).to.be.eql(defaultErrorPage);
+    });
+
+    describe('when static error page config is specified', () => {
+        function mockConfigValue(key, value) {
+            const oldGet = config.get.bind(config);
+            sinon.stub(config.constructor.prototype, 'get').callsFake(function(name) {
+                if (name === key) {
+                    return value;
+                }
+
+                return oldGet.call(null, name);
+            });
+        }
+
+        it('should send an error page from static file when showing 500 error page throws an error', async () => {
+            mockConfigValue('staticError.disasterFileContentPath', './tests/fixtures/static-error.html');
+            nock(config.get('registry').address).get('/api/v1/router_domains').reply(200, []);
+            const replyingError = new Error('Something awful happened.');
+
+            nock(config.get('registry').address).get(`/api/v1/template/500/rendered`).replyWithError(replyingError.message);
+
+            const response = await server.get('/_ilc/500').expect(500);
+
+            chai.expect(response.text).to.be.eql('<html><head><title>content from file</title></head></html>\n');
+        });
     });
 });

@@ -1,12 +1,15 @@
 const uuidv4 = require('uuid/v4');
 const extendError = require('@namecheap/error-extender');
-
+const config = require('config');
+const {readFileSync} = require('fs');
 const ErrorHandlingError = extendError('ErrorHandlingError');
+const defaultErrorPage = require('./defaultErrorPage');
 
 module.exports = class ErrorHandler {
     #registryService;
     #errorsService;
     #logger;
+    #staticFileContent = null;
 
     constructor(registryService, errorsService, logger) {
         this.#registryService = registryService;
@@ -80,11 +83,34 @@ module.exports = class ErrorHandler {
             });
 
             this.#logger.error(e);
-
-            nres.statusCode = 500;
-            nres.write('Oops! Something went wrong. Pls try to refresh page or contact support.');
-            nres.end();
+            this.#writeStaticError(nres);
         }
+    }
+
+    #writeStaticError(nres) {
+        nres.statusCode = 500;
+        let content = this.#readStaticErrorPage(defaultErrorPage);
+
+        nres.write(content);
+        nres.end();
+    }
+
+    #readStaticErrorPage(defaultContent) {
+        if (this.#staticFileContent != null) {
+            return this.#staticFileContent;
+        }
+
+        const staticFilePath = config.get('staticError.disasterFileContentPath');
+        try {
+            if (staticFilePath != null) {
+                this.#staticFileContent = readFileSync(staticFilePath).toString();
+                return this.#staticFileContent;
+            }
+        } catch (e) {
+            this.#logger.error(e, 'Unable to read static file content');
+        }
+
+        return defaultContent;
     }
 };
 
