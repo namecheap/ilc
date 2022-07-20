@@ -30,7 +30,7 @@ const kaAgentHttps = new HttpsAgent();
  * @param {string} fragmentUrl - URL of the fragment server
  * @param {Object} attributes - Attributes passed via fragment tags
  * @param {Object} request - HTTP request stream
- * @returns {Promise} Response from theFragment Processing fragment server
+ * @returns {Promise} Response from the fragment server
  */
 module.exports = (filterHeaders, processFragmentResponse, logger) => function requestFragment(
     fragmentUrl,
