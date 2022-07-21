@@ -52,7 +52,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
 
             logger.debug({
                 url: currRoute.route,
-                id: request.id,
+                operationId: request.id,
                 domain: request.hostname,
                 detailsJSON: JSON.stringify({
                     attributes
@@ -71,7 +71,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                 try {
                     logger.debug({
                         url: currRoute.route,
-                        id: request.id,
+                        operationId: request.id,
                         domain: request.hostname,
                         detailsJSON: JSON.stringify({
                             statusCode: response.statusCode,
@@ -82,7 +82,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
 
                     // Wrapper says that we need to request wrapped application
                     if (response.statusCode === 210) {
-                        logger.debug({ url: currRoute.route }, 'Request Fragment. Wrapper Fragment Response. ForwardRequest');
+                        logger.debug({ url: currRoute.route, operationId: request.id }, 'Request Fragment. Wrapper Fragment Response. ForwardRequest');
                         const propsOverride = response.headers['x-props-override'];
                         attributes.wrapperPropsOverride = {};
                         if (propsOverride) {
@@ -94,7 +94,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
 
                         logger.debug({
                             url: currRoute.route,
-                            id: request.id,
+                            operationId: request.id,
                             domain: request.hostname,
                             detailsJSON: JSON.stringify({
                                 attributes
@@ -106,7 +106,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                         return;
                     }
 
-                    logger.debug({ url: currRoute.route }, 'Request Fragment. Wrapper Fragment Response. Using App Wrapper.');
+                    logger.debug({ url: currRoute.route, operationId: request.id }, 'Request Fragment. Wrapper Fragment Response. Using App Wrapper.');
 
                     resolve(
                         processFragmentResponse(response, {
@@ -119,7 +119,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                 } catch (e) {
                     logger.debug( {
                         url: currRoute.route,
-                        id: request.id,
+                        operationId: request.id,
                         domain: request.hostname,
                     }, 'Request Fragment. Wrapper Fragment Processing. Fragment Response Processing Error');
                     reject(e);
@@ -128,7 +128,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
             fragmentRequest.on('error', error => {
                 logger.debug( {
                     url: currRoute.route,
-                    id: request.id,
+                    operationId: request.id,
                     domain: request.hostname,
                 }, 'Request Fragment. Wrapper Fragment Processing. Fragment Request Error');
                 reject(new errors.FragmentRequestError({message: `Error during SSR request to fragment wrapper at URL: ${fragmentUrl}`, cause: error}));
@@ -145,7 +145,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
 
             logger.debug({
                 url: currRoute.route,
-                id: request.id,
+                operationId: request.id,
                 domain: request.hostname,
                 detailsJSON: JSON.stringify({
                     route: currRoute,

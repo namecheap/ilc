@@ -12,7 +12,8 @@ function insertStart(logger, stream, attributes, headers) {
         const refs = parseLinkHeader(headers.link);
         logger.debug({
             detailsJSON: JSON.stringify({
-                attributes
+                attributes,
+                link: headers.link,
             })
         }, 'insertStart. Links detected. Debug Attributes');
         const { async: isAsync, id } = attributes;

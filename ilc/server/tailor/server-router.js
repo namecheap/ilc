@@ -36,7 +36,11 @@ module.exports = class ServerRouter {
             return res + `<fragment id="${row.appId}" slot="${row.name}"></fragment>`;
         }, '');
 
-        this.#logger.debug({ fragmentsTpl }, 'getFragmentsTpl');
+        this.#logger.debug({
+            detailsJSON: JSON.stringify({
+                fragmentsTpl
+            }),
+        }, 'getFragmentsTpl');
 
         return fragmentsTpl;
     }
@@ -86,7 +90,11 @@ module.exports = class ServerRouter {
             return res;
         }, {});
 
-        this.#logger.debug({ fragmentsContext }, 'getFragmentsContext');
+        this.#logger.debug({
+            detailsJSON: JSON.stringify({
+                fragmentsContext
+            }),
+        }, 'getFragmentsContext');
 
         return fragmentsContext;
     }
