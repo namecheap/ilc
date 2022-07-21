@@ -1,5 +1,8 @@
 {
     cdnUrl: 'CDN_URL',
+    staticError: {
+        disasterFileContentPath: 'ILC_DISASTER_FILE_CONTENT_PATH'
+    },
     registry: {
         address: 'REGISTRY_ADDR',
     },
