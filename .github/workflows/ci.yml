@@ -25,7 +25,7 @@ jobs:
       id: buildx
       uses: docker/setup-buildx-action@v1
 
-    - name: Docker ilc auth
+    - name: Docker ILC auth
       run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
     - name: Build the Docker image
@@ -42,10 +42,10 @@ jobs:
           namecheap/ilc_tmp:${{ env.SHA }}
           namecheap/ilc_tmp:latest
 
-    - name: Run sever side tests
+    - name: Run server-side tests
       run: docker run namecheap/ilc_tmp:$SHA npm run test:ci
 
-    - name: Run server side tests coverage
+    - name: Run server-side tests coverage
       run: docker run --volume /artifacts/ilc/.test_output/server:/temporary namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
 
     - uses: actions/upload-artifact@v2
@@ -53,12 +53,12 @@ jobs:
         name: server-side-tests-artifacts
         path: /artifacts/ilc/.test_output/server/
 
-    - name: Build the Docker image to test client side
+    - name: Build the Docker image to test client-side
       run: |
         cd ./ilc/
         DOCKER_BUILDKIT=1 docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=namecheap/ilc_tmp:$SHA
 
-    - name: Run client side tests
+    - name: Run client-side tests
       run: |
         echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
         sudo sysctl -p
@@ -151,7 +151,7 @@ jobs:
       - name: Docker registry auth
         run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
-      - name: Calc tags
+      - name: Calculate tags
         id: tags
         run: |
           BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
