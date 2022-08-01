@@ -37,7 +37,6 @@ export default class WrapApp {
                 await appCallbacks.bootstrap(props);
             } else {
                 this.#appExtraProps = {};
-
                 await wrapperCallbacks.bootstrap(props);
             }
         };
@@ -81,6 +80,9 @@ export default class WrapApp {
         newProps.appId = this.#wrapperConf.appId;
         newProps.getCurrentPathProps = () => this.#wrapperConf.props;
         newProps.getCurrentBasePath = () => '/';
+        newProps.appWrapperData = {
+            appId: this.#wrapperConf.appId,
+        };
 
         return newProps;
     }
@@ -122,7 +124,8 @@ export default class WrapApp {
             if (callbacks[type]) {
                 const cb = flattenFnArray(callbacks, type);
                 acc[type] = async (props) => {
-                    const res = await cb(wrapPropsWith(props))
+                    const wrappedProps = wrapPropsWith(props);
+                    const res = await cb(wrappedProps);
 
                     if (appType === 'wrapper') {
                         this.#wrapperState = stateMap[type];
@@ -133,7 +136,6 @@ export default class WrapApp {
                     return res;
                 };
             }
-
             return acc;
         }, {});
     }
