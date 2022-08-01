@@ -241,6 +241,30 @@ describe('WrapApp', () => {
         chai.expect(wrapperUnmountFuncArgs.appId).to.be.equal(expectedAppId);
     });
 
+
+    it('should forward a correct wrapperAppData wrapper callbacks', async () => {
+        const wrapApp = new WrapApp(
+            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            null,
+        );
+
+        const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
+
+        await bootstrap({ appId: 'wrappedApp__at__body' });
+        await mount({ appId: 'wrappedApp__at__body' });
+        await unmount({ appId: 'wrappedApp__at__body' });
+
+        const wrapperBootstrapFuncArgs = wrapperCallbacksFake.bootstrap.args[0][0];
+        const wrapperMountFuncArgs = wrapperCallbacksFake.mount.args[0][0];
+        const wrapperUnmountFuncArgs = wrapperCallbacksFake.unmount.args[0][0];
+
+        const expectedAppId = 'wrapper__at__body';
+
+        chai.expect(wrapperBootstrapFuncArgs.appWrapperData.appId).to.be.equal(expectedAppId);
+        chai.expect(wrapperMountFuncArgs.appWrapperData.appId).to.be.equal(expectedAppId);
+        chai.expect(wrapperUnmountFuncArgs.appWrapperData.appId).to.be.equal(expectedAppId);
+    });
+
     it('should forward a correct appId for wrapper callbacks [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },

@@ -33,7 +33,6 @@ export default class WrapApp {
         wrapperCallbacks = this.#canonizeCallbacks(wrapperCallbacks, this.#getWrapperProps, 'wrapper');
 
         const bootstrap = async (props) => {
-            debugger;
             if (this.#appRenderedAtSsr) {
                 await appCallbacks.bootstrap(props);
             } else {
@@ -43,7 +42,6 @@ export default class WrapApp {
         };
 
         const mount = async (props) => {
-            debugger;
             props.renderApp = this.#renderAppFactory(props, appCallbacks, wrapperCallbacks);
 
             if (this.#appRenderedAtSsr) {
@@ -83,7 +81,7 @@ export default class WrapApp {
         newProps.getCurrentPathProps = () => this.#wrapperConf.props;
         newProps.getCurrentBasePath = () => '/';
         newProps.appWrapperData = {
-            appId: this.#wrapperConf.appId;
+            appId: this.#wrapperConf.appId,
         };
 
         return newProps;
@@ -115,7 +113,6 @@ export default class WrapApp {
     }
 
     #canonizeCallbacks = (callbacks, wrapPropsWith, appType) => {
-        debugger;
         const stateMap = {
             bootstrap: APP_STATES.bootstrapped,
             mount: APP_STATES.mounted,
