@@ -33,16 +33,17 @@ export default class WrapApp {
         wrapperCallbacks = this.#canonizeCallbacks(wrapperCallbacks, this.#getWrapperProps, 'wrapper');
 
         const bootstrap = async (props) => {
+            debugger;
             if (this.#appRenderedAtSsr) {
                 await appCallbacks.bootstrap(props);
             } else {
                 this.#appExtraProps = {};
-
                 await wrapperCallbacks.bootstrap(props);
             }
         };
 
         const mount = async (props) => {
+            debugger;
             props.renderApp = this.#renderAppFactory(props, appCallbacks, wrapperCallbacks);
 
             if (this.#appRenderedAtSsr) {
@@ -81,6 +82,9 @@ export default class WrapApp {
         newProps.appId = this.#wrapperConf.appId;
         newProps.getCurrentPathProps = () => this.#wrapperConf.props;
         newProps.getCurrentBasePath = () => '/';
+        newProps.appWrapperData = {
+            appId: this.#wrapperConf.appId;
+        };
 
         return newProps;
     }
@@ -111,6 +115,7 @@ export default class WrapApp {
     }
 
     #canonizeCallbacks = (callbacks, wrapPropsWith, appType) => {
+        debugger;
         const stateMap = {
             bootstrap: APP_STATES.bootstrapped,
             mount: APP_STATES.mounted,
@@ -122,7 +127,8 @@ export default class WrapApp {
             if (callbacks[type]) {
                 const cb = flattenFnArray(callbacks, type);
                 acc[type] = async (props) => {
-                    const res = await cb(wrapPropsWith(props))
+                    const wrappedProps = wrapPropsWith(props);
+                    const res = await cb(wrappedProps);
 
                     if (appType === 'wrapper') {
                         this.#wrapperState = stateMap[type];
@@ -133,7 +139,6 @@ export default class WrapApp {
                     return res;
                 };
             }
-
             return acc;
         }, {});
     }
