@@ -96,6 +96,21 @@ describe('CssTrackedApp', function () {
         expect(link.getAttribute(CssTrackedApp.linkUsagesAttribute)).to.equal('2');
     });
 
+    it('should unmark css from removal if app is mounted again and css removal is delayed', async () => {
+        const originalApp = createOriginalAppFake(Promise.resolve('does_not_matter'));
+        const cssLink = 'https://mycdn.me/styles.css';
+        const link = appendCssToPage(cssLink);
+        link.setAttribute(CssTrackedApp.linkUsagesAttribute, '1');
+
+        const cssWrap = new CssTrackedApp(originalApp, cssLink, true).getDecoratedApp();
+        await cssWrap.unmount();
+
+        const cssWrap2 = new CssTrackedApp(originalApp, cssLink, true).getDecoratedApp();
+        await cssWrap2.mount();
+
+        expect(link.getAttribute(CssTrackedApp.markedForRemovalAttribute)).to.be.null;
+    });
+
     it('should decrement counter to css usage on unmount', async () => {
         const originalApp = createOriginalAppFake(Promise.resolve('does_not_matter'));
         const cssLink = 'https://mycdn.me/styles.css';

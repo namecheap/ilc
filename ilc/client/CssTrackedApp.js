@@ -57,6 +57,7 @@ export class CssTrackedApp {
         } else {
             const numberOfUsages = this.#getNumberOfLinkUsages(link);
             link.setAttribute(CssTrackedApp.linkUsagesAttribute, (numberOfUsages + 1).toString());
+            link.removeAttribute(CssTrackedApp.markedForRemovalAttribute);
         }
 
         return await this.#originalApp.mount(...args);
