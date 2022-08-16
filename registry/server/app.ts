@@ -5,7 +5,7 @@ import express, {RequestHandler, Application} from 'express';
 import bodyParser from 'body-parser';
 
 import pong from './util/ping';
-import * as routes from "./routes";
+import * as routes from "./routes/routes";
 import errorHandler from './errorHandler';
 import serveStatic from 'serve-static';
 import auth from './auth';

@@ -36,6 +36,7 @@ router.get('/', async (req, res) => {
         v.dependencies = JSON.parse(v.dependencies);
         v.props = JSON.parse(v.props);
         v.ssrProps = JSON.parse(v.ssrProps);
+
         if (sharedProps.length && v.configSelector !== null) {
             JSON.parse(v.configSelector).forEach((configSelectorName: string) => {
                 const commonConfig = sharedProps.find(n => n.name === configSelectorName);
@@ -48,7 +49,19 @@ router.get('/', async (req, res) => {
         v.enforceDomain = v.enforceDomain && (routerDomains.find(({ id }) => id === v.enforceDomain)?.domainName || null);
 
         v = _.omitBy(v, v => v === null || (typeof v === 'object' && Object.keys(v).length === 0));
-        acc[v.name] = _.pick(v, ['kind', 'ssr', 'dependencies', 'props', 'ssrProps', 'spaBundle', 'cssBundle', 'wrappedWith', 'enforceDomain']);
+
+        acc[v.name] = _.pick(v, [
+            'kind',
+            'ssr',
+            'dependencies',
+            'props',
+            'ssrProps',
+            'spaBundle',
+            'cssBundle',
+            'wrappedWith',
+            'enforceDomain',
+            'l20nManifest',
+        ]);
 
         return acc;
     }, {});

@@ -35,9 +35,9 @@ module.exports = class Registry {
         });
 
         this.getConfig = async (options) => {
-            const res = await getConfigMemo();
-            res.data = this.#filterConfig(res.data, options?.filter);
-            return res;
+            const fullConfig = await getConfigMemo();
+            fullConfig.data = this.#filterConfig(fullConfig.data, options?.filter);
+            return fullConfig;
         };
 
         this.getRouterDomains = wrapFetchWithCache(this.#getRouterDomains, {
@@ -81,22 +81,24 @@ module.exports = class Registry {
         this.#logger.debug('Calling get config registry endpoint...');
 
         const tplUrl = urljoin(this.#address, 'api/v1/config');
-        let res;
+        let fullConfig;
         try {
-            res = await axios.get(tplUrl, { responseType: 'json' });
-        } catch (e) {
+            fullConfig = await axios.get(tplUrl, { responseType: 'json' });
+        } catch (error) {
             throw new errors.RegistryError({
                 message: `Error while requesting config from registry`,
-                cause: e,
+                cause: error,
                 data: {
                     requestedUrl: tplUrl
                 }
             });
         }
 
+        // Looks like a bug because in case of error we should try to heat cache on next iteration
+        // We have already faced an issue with inconsistent cache between different nodes
         this.#cacheHeated.config = true;
 
-        return res.data;
+        return fullConfig.data;
     };
 
     #getTemplate = async (templateName, { locale, domain }) => {
@@ -111,7 +113,7 @@ module.exports = class Registry {
             params.set('domain', domain);
         }
 
-        const queryString = params.toString(); 
+        const queryString = params.toString();
         const tplUrl = urljoin(this.#address, 'api/v1/template', templateName, 'rendered', queryString.length > 0 ? '?' + queryString : '');
 
         let res;
@@ -263,7 +265,7 @@ module.exports = class Registry {
                 }
                 return;
             }
-            
+
             if (allowedAppNames.includes(appName)) {
                 apps[appName] = appData;
             }

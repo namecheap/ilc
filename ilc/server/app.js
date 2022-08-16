@@ -112,6 +112,7 @@ module.exports = (registryService, pluginManager) => {
             req.raw.ldeRelated = true;
             newrelic.getTransaction().ignore();
         }
+
         registryConfig = mergeConfigs(registryConfig, overrideConfigs);
 
         const unlocalizedUrl = i18n.unlocalizeUrl(registryConfig.settings.i18n, url);

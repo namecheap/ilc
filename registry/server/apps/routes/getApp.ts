@@ -28,9 +28,13 @@ const getApp = async (req: Request<GetAppRequestParams>, res: Response): Promise
 
     const [app] = await db.select().from<App>('apps').where('name', appName);
 
+    console.log('app = ');
+    console.log(app);
+
     if (!app) {
         res.status(404).send('Not found');
     } else {
+        console.log(preProcessResponse(app));
         res.status(200).send(preProcessResponse(app));
     }
 };

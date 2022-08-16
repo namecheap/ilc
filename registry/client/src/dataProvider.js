@@ -43,7 +43,9 @@ const myDataProvider = {
         params.id = encodeURIComponent(params.id);
 
         return dataProvider.getOne(resource, params).then(v => {
+            console.log(v);
             transformGetter(resource, v.data);
+            console.log(v);
             return v;
         });
     },
