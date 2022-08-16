@@ -15,6 +15,7 @@ const correct = Object.freeze({
     name: '@portal/ncTestAppReactssr',
     spaBundle: 'http://localhost:1234/ncTestAppReactssr.js',
     cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssr.css',
+    l20nManifest: 'https://localisation.com/manifest.12345678.json',
     configSelector: ['ncTestSharedPropsName'],
     ssr: {
         src: "http://127.0.0.1:1234/fragment",
@@ -46,6 +47,7 @@ const example = <any>{
         name: '@portal/ncTestAppReactssr',
         spaBundle: 'http://localhost:1234/ncTestAppReactssrUpdated.js',
         cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssrUpdated.css',
+        l20nManifest: 'https://localisation.com/manifestUpdated.12345678.json',
         configSelector: ['ncTestSharedPropsNameUpdated'],
         ssr: {
             src: "http://127.0.0.1:1234/fragmentUpdated",

@@ -95,6 +95,7 @@ const InputForm = ({mode = 'edit', ...props}) => {
                                 <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" helperText={assetsDiscoveryUrlWarningText} />
                                 <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl} />
                                 <TextInput fullWidth resettable type="url" source="cssBundle" validate={validators.url} />
+                                <TextInput fullWidth resettable type="url" source="l20nManifest" validate={validators.url} />
                                 <ArrayInput source="dependencies">
                                     <SimpleFormIterator>
                                         <TextInput fullWidth label="Name" source="key" validate={validators.required} />
