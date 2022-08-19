@@ -19,7 +19,7 @@ export default interface App {
     wrappedWith?: string;
     discoveryMetadata?: string; // JSON({ [propName: string]: any })
     adminNotes?: string;
-    l20nManifest?: string;
+    l10nManifest?: string;
 };
 
 export const appNameSchema = Joi.string().trim().min(1);
@@ -56,7 +56,7 @@ const commonApp = {
     discoveryMetadata: Joi.object().default({}),
     adminNotes: Joi.string().trim().default(null),
     enforceDomain: Joi.number().default(null),
-    l20nManifest: Joi.string().max(255).default(null),
+    l10nManifest: Joi.string().max(255).default(null),
 };
 
 export const partialAppSchema = Joi.object({
