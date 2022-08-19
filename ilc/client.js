@@ -13,7 +13,7 @@ import Router from './client/ClientRouter';
 import setupErrorHandlers from './client/errorHandler/setupErrorHandlers';
 import fragmentErrorHandlerFactory from './client/errorHandler/fragmentErrorHandlerFactory';
 import internalErrorHandler from './client/errorHandler/internalErrorHandler';
-import getIlcConfig from './client/ilcConfig';
+import { getIlcConfigRoot }  from './client/configuration/getIlcConfigRoot';
 import initIlcState from './client/initIlcState';
 import setupPerformanceMonitoring from './client/performance';
 import I18n from './client/i18n';
@@ -24,10 +24,18 @@ import ParcelApi from './client/ParcelApi';
 import bundleLoaderFactory from './client/BundleLoader';
 import registerSpaApps from './client/registerSpaApps';
 import transitionManagerFactory from './client/TransitionManager/TransitionManager';
+import { SystemJSImportMap } from  './client/configuration/SystemJSImportMap';
 
-const registryConf = getIlcConfig();
+const ilcConfigRoot = getIlcConfigRoot();
+const registryConf = ilcConfigRoot.getConfig();
 const state = initIlcState();
 const transitionManager = transitionManagerFactory();
+
+const systemJSImportMap = new SystemJSImportMap(
+    ilcConfigRoot.getConfigForApps(),
+    ilcConfigRoot.getConfigForSharedLibs());
+
+systemJSImportMap.configure();
 
 const appErrorHandlerFactory = (appName, slotName) => {
     return fragmentErrorHandlerFactory(registryConf, router.getRelevantAppKind.bind(router), appName, slotName);
@@ -37,7 +45,7 @@ const pluginManager = new PluginManager(require.context('./node_modules', true, 
 const i18n = registryConf.settings.i18n.enabled
     ? new I18n(registryConf.settings.i18n, {...singleSpa, triggerAppChange}, appErrorHandlerFactory)
     : null;
-const router = new Router(registryConf, state, i18n ? i18n : undefined, singleSpa, transitionManager.handlePageTransaction);
+const router = new Router(ilcConfigRoot, state, i18n ? i18n : undefined, singleSpa, transitionManager.handlePageTransaction);
 const guardManager = new GuardManager(router, pluginManager, internalErrorHandler);
 const urlProcessor = new UrlProcessor(registryConf.settings.trailingSlash);
 const bundleLoader = bundleLoaderFactory(registryConf);
@@ -78,7 +86,7 @@ window.ILC.getAllSharedLibNames = async () => Object.keys(registryConf.sharedLib
 // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
 // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
 
-registerSpaApps(registryConf, router, appErrorHandlerFactory, bundleLoader);
+registerSpaApps(ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader);
 setupErrorHandlers(registryConf, router.getRelevantAppKind.bind(router), setNavigationErrorHandler, transitionManager);
 setupPerformanceMonitoring(router.getCurrentRoute);
 

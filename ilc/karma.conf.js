@@ -1,5 +1,5 @@
 const path = require('path');
-const webpackConfig = require('./build/webpack');
+const webpackConfig = require('./build/webpack.dev');
 const nycConfig = require('./nyc.config');
 
 const getThresholds = () => ({
@@ -38,6 +38,7 @@ module.exports = function (config) {
                 flags: ['--no-sandbox'],
             },
         },
+        customContextFile: './tests/karma.index.html',
         frameworks: [
             'parallel',
             'mocha',

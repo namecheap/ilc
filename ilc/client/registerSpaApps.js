@@ -7,14 +7,28 @@ import {getSlotElement, prependSpaCallbacks} from './utils';
 import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
+import { SdkOptions } from '../common/SdkOptions';
 
-export default function (registryConf, router, appErrorHandlerFactory, bundleLoader) {
+export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader) {
     const asyncBootUp = new AsyncBootUp();
+    const registryConf = ilcConfigRoot.getConfig();
 
     composeAppSlotPairsToRegister(registryConf).forEach(pair => {
         const slotName = pair.slotName;
         const appName = pair.appName;
         const appId = pair.appId;
+
+        const appConfig = ilcConfigRoot.getConfigForAppByName(appName);
+        const appL10nManifestPath = appConfig.l20nManifest;
+        const sdkOptions = new SdkOptions( {
+            i18n: {
+                manifestPath: appL10nManifestPath,
+            },
+        });
+
+        console.log('appName = ', appName);
+        console.log('appSdkOptions = ', sdkOptions.toJSON());
+
 
         let lifecycleMethods;
         const updateFragmentManually = () => {
@@ -26,7 +40,7 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
 
         const isUpdatePropsMode = () => lifecycleMethods.update && registryConf.settings.onPropsUpdate === 'update';
 
-        const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId));
+        const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId), sdkOptions.toJSON());
         const onUnmount = async () => {
             if (isUpdatePropsMode()) {
                 router.removeListener(ilcEvents.updateAppInSlot(slotName, appName), updateFragmentManually);
@@ -50,7 +64,9 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
 
         const customProps = {
             domElementGetter: () => getSlotElement(slotName),
-            getCurrentPathProps: () => router.getCurrentRouteProps(appName, slotName),
+            getCurrentPathProps: () => {
+                return router.getCurrentRouteProps(appName, slotName);
+            },
             getCurrentBasePath: () => router.getCurrentRoute().basePath,
             appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
             errorHandler: appErrorHandlerFactory(appName, slotName),
@@ -60,11 +76,11 @@ export default function (registryConf, router, appErrorHandlerFactory, bundleLoa
         singleSpa.registerApplication(
             appId,
             async () => {
-                const appConf = registryConf.apps[appName];
+                const appConf = ilcConfigRoot.getConfigForAppByName(appName);
                 let wrapperConf = null;
                 if (appConf.wrappedWith) {
                     wrapperConf = {
-                        ...registryConf.apps[appConf.wrappedWith],
+                        ...ilcConfigRoot.getConfigForAppByName(appConf.wrappedWith),
                         appId: makeAppId(appConf.wrappedWith, slotName),
                     }
                 }

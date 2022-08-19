@@ -4,7 +4,6 @@ import html from 'nanohtml';
 
 import ClientRouter from './ClientRouter';
 import { slotWillBe } from './TransitionManager/TransitionManager';
-import singleSpaEvents from './constants/singleSpaEvents';
 import ilcEvents from './constants/ilcEvents';
 
 describe('client router', () => {
@@ -743,7 +742,7 @@ describe('client router', () => {
             chai.expect(isActiveHero()).to.be.eql(false);
             sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
             handlePageTransaction.resetHistory();
-            
+
             history.replaceState({}, undefined, '/hero');
             chai.expect(isActiveHero()).to.be.eql(true);
             sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.rendered);

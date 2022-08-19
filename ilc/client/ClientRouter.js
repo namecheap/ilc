@@ -9,7 +9,6 @@ import { triggerAppChange } from './navigationEvents';
 import { appIdToNameAndSlot } from '../common/utils';
 import { FRAGMENT_KIND } from '../common/constants';
 import { slotWillBe } from './TransitionManager/TransitionManager';
-import singleSpaEvents from './constants/singleSpaEvents';
 import ilcEvents from './constants/ilcEvents';
 
 export default class ClientRouter extends EventEmitter {
@@ -20,6 +19,7 @@ export default class ClientRouter extends EventEmitter {
     #location;
     #logger;
     #registryConf;
+    #ilcConfigRoot;
     /** @type Object<Router> */
     #router;
     #prevRoute;
@@ -36,7 +36,7 @@ export default class ClientRouter extends EventEmitter {
     };
 
     constructor(
-        registryConf,
+        ilcConfigRoot,
         state,
         i18n = {
             unlocalizeUrl: (url) => url,
@@ -54,8 +54,9 @@ export default class ClientRouter extends EventEmitter {
         this.#location = location;
         this.#logger = logger;
         this.#i18n = i18n;
-        this.#registryConf = registryConf;
-        this.#router = new Router(registryConf);
+        this.#ilcConfigRoot = ilcConfigRoot;
+        this.#registryConf = this.#ilcConfigRoot.getConfig();
+        this.#router = new Router(this.#registryConf);
         this.#currentUrl = this.#getCurrUrl();
         this.#debug = debug('ILC:ClientRouter');
 
@@ -101,18 +102,22 @@ export default class ClientRouter extends EventEmitter {
     }
 
     #getRouteProps(appName, slotName, route) {
-        if (this.#registryConf.apps[appName] === undefined) {
+        const appConfig = this.#ilcConfigRoot.getConfigForAppByName(appName);
+        const routeConfig = route.slots[slotName];
+
+        if (appConfig === undefined) {
             throw new this.errors.RouterError({message: 'Can not find info about the app.', data: {appName}});
         }
 
-        if (route.slots[slotName] === undefined) {
+        if (routeConfig === undefined) {
             throw new this.errors.RouterError({message: 'Can not find info about the slot.', data: {slotName}});
         }
+        const appProps = appConfig.props || {};
+        const routeProps = routeConfig.props || {};
 
-        const appProps = this.#registryConf.apps[appName].props || {};
-        const routeProps = route.slots[slotName].props || {};
+        const finalRouteProps = deepmerge(appProps, routeProps);
 
-        return deepmerge(appProps, routeProps);
+        return finalRouteProps;
     }
 
     #setInitialRoutes = (state) => {
@@ -248,7 +253,7 @@ export default class ClientRouter extends EventEmitter {
     #getAppsWithDifferentProps(prevSlots, currentSlots) {
         return Object.entries(prevSlots).reduce((acc, [slotName, prevSlotApp]) => {
             const currentSlotApp = currentSlots[slotName];
-            
+
             if (!currentSlotApp) {
                 return acc;
             }
