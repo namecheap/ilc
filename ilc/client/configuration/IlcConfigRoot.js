@@ -1,6 +1,6 @@
 import {decodeHtmlEntities} from '../../common/utils';
 
-class IlcConfigRoot {
+export class IlcConfigRoot {
     constructor() {
         const ilcConfigurationNode = document.querySelector('script[type="ilc-config"]');
 
@@ -8,15 +8,7 @@ class IlcConfigRoot {
             throw new Error('Can\'t find single-spa configuration node. Looks like server side problem occurs.');
         }
 
-        let registryConfiguration;
-
-        try {
-            registryConfiguration = JSON.parse(ilcConfigurationNode.innerHTML);
-        } catch(e) {
-            throw new Error(`Parse: ${ilcConfigurationNode.innerHTML}`);
-        }
-
-
+        const registryConfiguration = JSON.parse(ilcConfigurationNode.innerHTML);
 
         const customHTML = registryConfiguration.settings?.globalSpinner?.customHTML;
         if (customHTML) {

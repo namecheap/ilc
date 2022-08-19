@@ -26,10 +26,6 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
             },
         });
 
-        console.log('appName = ', appName);
-        console.log('appSdkOptions = ', sdkOptions.toJSON());
-
-
         let lifecycleMethods;
         const updateFragmentManually = () => {
             lifecycleMethods.update({
