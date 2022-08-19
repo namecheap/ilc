@@ -33,7 +33,8 @@ const transitionManager = transitionManagerFactory();
 
 const systemJSImportMap = new SystemJSImportMap(
     ilcConfigRoot.getConfigForApps(),
-    ilcConfigRoot.getConfigForSharedLibs());
+    ilcConfigRoot.getConfigForSharedLibs()
+);
 
 systemJSImportMap.configure();
 
