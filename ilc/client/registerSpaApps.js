@@ -19,7 +19,7 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
         const appId = pair.appId;
 
         const appConfig = ilcConfigRoot.getConfigForAppByName(appName);
-        const appL10nManifestPath = appConfig.l20nManifest;
+        const appL10nManifestPath = appConfig.l10nManifest;
         const sdkOptions = new SdkOptions( {
             i18n: {
                 manifestPath: appL10nManifestPath,

@@ -140,11 +140,12 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
         } else {
 
             const { appName } = appIdToNameAndSlot(attributes.id);
+
             const sdkOptions = new SdkOptions({
                 i18n: {
-                    manifestPath: request.registryConfig['apps'][appName].l20nManifest,
+                    manifestPath: request.registryConfig['apps'][appName].l10nManifest,
                 }
-            })
+            });
 
             const reqUrl = makeFragmentUrl({
                 route: currRoute,

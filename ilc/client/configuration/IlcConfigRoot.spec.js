@@ -41,7 +41,7 @@ describe('IlcConfigRoot', () => {
             'dependencies',
             'spaBundle',
             'kind',
-            'l20nManifest'
+            'l10nManifest'
         ]);
     });
 

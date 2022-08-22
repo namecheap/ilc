@@ -30,6 +30,11 @@ function getRegistryMock(overrideConfig = {}) {
                         spaBundle: 'http://localhost/index.js',
                         kind: 'primary',
                         ssr: {src: 'http://apps.test/wrappedApp'}
+                    },
+                    '@portal/wrapperApp': {
+                        spaBundle: 'http://localhost/index.js',
+                        kind: 'primary',
+                        ssr: {src: 'http://apps.test/wrapperApp'}
                     }
                 },
                 templates: ['master'],
