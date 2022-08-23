@@ -166,7 +166,7 @@ module.exports = class ConfigsInjector {
                 'props',
                 'kind',
                 'wrappedWith',
-                'l20nManifest',
+                'l10nManifest',
             ])
         );
 

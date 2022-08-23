@@ -1,5 +1,5 @@
 import { getSlotElement } from '../utils';
-import getIlcConfig from '../ilcConfig';
+import { getIlcConfigRoot } from '../configuration/getIlcConfigRoot';
 import TransitionBlocker from './TransitionBlocker';
 import NamedTransactionBlocker from './NamedTransitionBlocker';
 import singleSpaEvents from '../constants/singleSpaEvents';
@@ -325,8 +325,9 @@ let defaultTransitionManagerInstance = null;
  */
 export default function defaultFactory() {
     if (defaultTransitionManagerInstance === null) {
-        const ilcSettings = getIlcConfig().settings;
-        defaultTransitionManagerInstance = new TransitionManager(window.console, ilcSettings && ilcSettings.globalSpinner);
+        const ilcConfigRoot = getIlcConfigRoot();
+        const ilcConfig = ilcConfigRoot.getConfig();
+        defaultTransitionManagerInstance = new TransitionManager(window.console, ilcConfig && ilcConfig.globalSpinner);
     }
 
     return defaultTransitionManagerInstance;

@@ -4,8 +4,8 @@ import html from 'nanohtml';
 
 import ClientRouter from './ClientRouter';
 import { slotWillBe } from './TransitionManager/TransitionManager';
-import singleSpaEvents from './constants/singleSpaEvents';
 import ilcEvents from './constants/ilcEvents';
+import { getIlcConfigRoot } from './configuration/getIlcConfigRoot';
 
 describe('client router', () => {
     const singleSpa = {
@@ -150,6 +150,9 @@ describe('client router', () => {
         specialRoutes,
     };
 
+    const configRoot = getIlcConfigRoot();
+    configRoot.registryConfiguration = registryConfig;
+
     let router;
 
     afterEach(() => {
@@ -158,6 +161,7 @@ describe('client router', () => {
     });
 
     describe('should set initial routes while client router is initializing', () => {
+
         it('should set initial routes based on location when <base> tag is not defined', () => {
             const location = {
                 pathname: registryConfig.routes[1].route,
@@ -201,7 +205,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, location);
 
             chai.expect(router.getCurrentRoute()).to.be.eql(expectedRoute);
             chai.expect(router.getPrevRoute()).to.be.eql(expectedRoute);
@@ -259,7 +263,7 @@ describe('client router', () => {
                 },
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location, logger);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, location, logger);
 
             chai.expect(mainRef.getElementsByTagName('base')).to.be.empty;
 
@@ -304,7 +308,7 @@ describe('client router', () => {
                 meta: {},
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, location);
 
             location.pathname = registryConfig.routes[2].route;
             location.search = '?see=you';
@@ -345,7 +349,7 @@ describe('client router', () => {
                 meta: {},
             };
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, location);
 
             window.dispatchEvent(singleSpaBeforeRoutingEvent);
 
@@ -362,7 +366,7 @@ describe('client router', () => {
                     search: '?hi=there',
                 };
 
-                router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, location);
+                router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, location);
 
                 const [eventName, eventListener] = addEventListener.getCall(0).args;
 
@@ -386,7 +390,7 @@ describe('client router', () => {
         };
 
         beforeEach(() => {
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction);
             clickEvent = new Event('click', {
                 bubbles: true,
                 cancelable: true,
@@ -568,7 +572,7 @@ describe('client router', () => {
 
     describe('while getting route props', () => {
         beforeEach(() => {
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction);
         });
 
         it('should throw an error when an app is not defined', () => {
@@ -596,7 +600,7 @@ describe('client router', () => {
             i18n.unlocalizeUrl.callsFake((url) => url);
             i18n.localizeUrl.callsFake((url) => url);
 
-            router = new ClientRouter(registryConfig, {}, i18n, singleSpa, handlePageTransaction);
+            router = new ClientRouter(configRoot, {}, i18n, singleSpa, handlePageTransaction);
         });
 
         afterEach(() => {
@@ -646,7 +650,7 @@ describe('client router', () => {
         });
 
         it('should ignore not mounted fragments', () => {
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             const appId = 'not_mounted_app__at__some_place';
 
@@ -663,8 +667,8 @@ describe('client router', () => {
         it('should ignore non-primary fragments', () => {
             const nonPrimaryKind = 'regular';
             const appId = 'mounted_app__at__some_place';
-
-            router = new ClientRouter({
+            const configRoot = getIlcConfigRoot();
+            configRoot.registryConfiguration = {
                 ...registryConfig,
                 apps: {
                     ...registryConfig.apps,
@@ -672,7 +676,9 @@ describe('client router', () => {
                         kind: nonPrimaryKind,
                     }
                 }
-            }, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+            };
+
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             window.dispatchEvent(new CustomEvent(ilcEvents.NOT_FOUND, {
                 detail: { appId },
@@ -688,7 +694,7 @@ describe('client router', () => {
             const beforeRoutingHandler = sinon.spy();
             window.addEventListener(ilcEvents.BEFORE_ROUTING, beforeRoutingHandler);
 
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             const appId = 'hero__at__some_place';
 
@@ -722,7 +728,7 @@ describe('client router', () => {
 
         it('should return false when a slot is going to be removed', () => {
             history.replaceState({}, undefined, '/opponent');
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             history.replaceState({}, undefined, '/hero');
             chai.expect(isActiveHero()).to.be.eql(true);
@@ -737,13 +743,13 @@ describe('client router', () => {
 
         it('should return true when a slot is going to be rendered', () => {
             history.replaceState({}, undefined, '/opponent');
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             history.replaceState({}, undefined, '/opponent');
             chai.expect(isActiveHero()).to.be.eql(false);
             sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
             handlePageTransaction.resetHistory();
-            
+
             history.replaceState({}, undefined, '/hero');
             chai.expect(isActiveHero()).to.be.eql(true);
             sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.rendered);
@@ -752,7 +758,7 @@ describe('client router', () => {
 
         it('should return always true when a slot exists on both routes', () => {
             history.replaceState({}, undefined, '/');
-            router = new ClientRouter(registryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             history.replaceState({}, undefined, '/base');
             chai.expect(isActiveHero()).to.be.eql(true);
@@ -786,8 +792,11 @@ describe('client router', () => {
                 ],
             };
 
+            const configRoot = getIlcConfigRoot();
+            configRoot.registryConfiguration = customRegistryConfig;
+
             history.replaceState({}, undefined, '/');
-            router = new ClientRouter(customRegistryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             history.replaceState({}, undefined, '/base');
 
@@ -836,8 +845,11 @@ describe('client router', () => {
                 ],
             };
 
+            const configRoot = getIlcConfigRoot();
+            configRoot.registryConfiguration = customRegistryConfig;
+
             history.replaceState({}, undefined, '/');
-            router = new ClientRouter(customRegistryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             // mock listening "update" event from hero
             const eventNameUpdateHero = ilcEvents.updateAppInSlot('hero', '@portal/hero');
@@ -893,8 +905,11 @@ describe('client router', () => {
                 ],
             };
 
+            const configRoot = getIlcConfigRoot();
+            configRoot.registryConfiguration = customRegistryConfig;
+
             history.replaceState({}, undefined, '/');
-            router = new ClientRouter(customRegistryConfig, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
             // mock listening "update" event ONLY for hero
             const eventNameUpdateHero = ilcEvents.updateAppInSlot('hero', '@portal/hero');

@@ -60,7 +60,7 @@ router.get('/', async (req, res) => {
             'cssBundle',
             'wrappedWith',
             'enforceDomain',
-            'l20nManifest',
+            'l10nManifest',
         ]);
 
         return acc;

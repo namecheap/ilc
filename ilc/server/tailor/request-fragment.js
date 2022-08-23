@@ -6,6 +6,9 @@ const url = require('url');
 const Agent = require('agentkeepalive');
 const HttpsAgent = require('agentkeepalive').HttpsAgent;
 const deepmerge = require('deepmerge');
+const { appIdToNameAndSlot } = require('../../common/utils');
+const { SdkOptions } = require('../../common/SdkOptions');
+const { objectToBase64 } = require('../objectToBase64');
 
 const errors = require('./errors');
 
@@ -136,11 +139,20 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
             fragmentRequest.end();
         } else {
 
+            const { appName } = appIdToNameAndSlot(attributes.id);
+
+            const sdkOptions = new SdkOptions({
+                i18n: {
+                    manifestPath: request.registryConfig['apps'][appName].l10nManifest,
+                }
+            });
+
             const reqUrl = makeFragmentUrl({
                 route: currRoute,
                 baseUrl: fragmentUrl,
                 appId: attributes.id,
                 props: attributes.appProps,
+                sdkOptions: sdkOptions.toJSON(),
             });
 
             logger.debug({
@@ -195,7 +207,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
     });
 }
 
-function makeFragmentUrl({route, baseUrl, appId, props, ignoreBasePath = false}) {
+function makeFragmentUrl({route, baseUrl, appId, props, ignoreBasePath = false, sdkOptions}) {
     const url = new URL(baseUrl);
 
     const reqProps = {
@@ -204,10 +216,14 @@ function makeFragmentUrl({route, baseUrl, appId, props, ignoreBasePath = false})
         fragmentName: appId,
     };
 
-    url.searchParams.append('routerProps', Buffer.from(JSON.stringify(reqProps)).toString('base64'));
+    url.searchParams.append('routerProps', objectToBase64(reqProps));
 
     if (props) {
-        url.searchParams.append('appProps', Buffer.from(JSON.stringify(props)).toString('base64'));
+        url.searchParams.append('appProps', objectToBase64(props));
+    }
+
+    if (sdkOptions) {
+        url.searchParams.append('sdk', objectToBase64(sdkOptions));
     }
 
     return url.toString();

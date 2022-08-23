@@ -46,7 +46,7 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
                     <UrlField source="assetsDiscoveryUrl" emptyText={EMPTY_TEXT} />
                     <UrlField source="spaBundle" />
                     <UrlField source="cssBundle" emptyText={EMPTY_TEXT} />
-                    <UrlField source="l20nManifest" emptyText={EMPTY_TEXT} />
+                    <UrlField source="l10nManifest" emptyText={EMPTY_TEXT} />
                     <ArrayField source="dependencies">
                         <Datagrid>
                             <TextField label="Name" source="key" />
