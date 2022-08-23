@@ -326,8 +326,8 @@ let defaultTransitionManagerInstance = null;
 export default function defaultFactory() {
     if (defaultTransitionManagerInstance === null) {
         const ilcConfigRoot = getIlcConfigRoot();
-        const ilcConfig = ilcConfigRoot.getConfig();
-        defaultTransitionManagerInstance = new TransitionManager(window.console, ilcConfig && ilcConfig.globalSpinner);
+        const ilcConfigSettings = ilcConfigRoot.getSettings();
+        defaultTransitionManagerInstance = new TransitionManager(window.console, ilcConfigSettings && ilcConfigSettings.globalSpinner);
     }
 
     return defaultTransitionManagerInstance;
