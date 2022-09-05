@@ -34,7 +34,7 @@
     "fast-glob": "^3.2.11",
     "fastify": "^2.15.2",
     "ilc-plugins-sdk": "^1.5.0",
-    "ilc-sdk": "^4.0.0",
+    "ilc-sdk": "^4.0.3",
     "is-url": "^1.2.4",
     "js-cookie": "^2.2.1",
     "lodash": "^4.17.21",
