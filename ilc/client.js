@@ -25,6 +25,7 @@ import bundleLoaderFactory from './client/BundleLoader';
 import registerSpaApps from './client/registerSpaApps';
 import transitionManagerFactory from './client/TransitionManager/TransitionManager';
 import { SystemJSImportMap } from  './client/configuration/SystemJSImportMap';
+import IlcEvents from './client/constants/ilcEvents';
 
 const ilcConfigRoot = getIlcConfigRoot();
 const registryConf = ilcConfigRoot.getConfig();
@@ -43,8 +44,11 @@ const appErrorHandlerFactory = (appName, slotName) => {
 };
 
 const pluginManager = new PluginManager(require.context('./node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/));
-const i18n = registryConf.settings.i18n.enabled
-    ? new I18n(registryConf.settings.i18n, {...singleSpa, triggerAppChange}, appErrorHandlerFactory)
+
+const i18nSettings = ilcConfigRoot.getSettingsByKey('i18n');
+
+const i18n = i18nSettings.enabled
+    ? new I18n(i18nSettings, {...singleSpa, triggerAppChange}, appErrorHandlerFactory)
     : null;
 const router = new Router(ilcConfigRoot, state, i18n ? i18n : undefined, singleSpa, transitionManager.handlePageTransaction);
 const guardManager = new GuardManager(router, pluginManager, internalErrorHandler);
@@ -84,6 +88,20 @@ window.ILC.mountRootParcel = singleSpa.mountRootParcel;
 window.ILC.loadApp = bundleLoader.loadAppWithCss.bind(bundleLoader); // Internal API for Namecheap, not for public use
 window.ILC.importParcelFromApp = parcelApi.importParcelFromApp;
 window.ILC.getAllSharedLibNames = async () => Object.keys(registryConf.sharedLibs);
+window.ILC.onIntlChange = (handler) => {
+
+    if(typeof handler !== 'function') {
+        throw new Error('onIntlChange should pass function handler as first argument');
+    }
+
+    window.addEventListener(IlcEvents.INTL_UPDATE, (event) => {
+        const intlValues = {
+            currency: event.detail.currency,
+            locale: event.detail.locale,
+        }
+        handler(intlValues);
+    });
+}
 // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
 // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
 
