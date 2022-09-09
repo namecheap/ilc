@@ -37,6 +37,10 @@ export class IlcConfigRoot {
     getSettings() {
         return this.registryConfiguration['settings'];
     }
+
+    getSettingsByKey(key) {
+        return this.registryConfiguration['settings'][key];
+    }
 }
 
 export const ilcConfigRoot = new IlcConfigRoot();
