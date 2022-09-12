@@ -90,7 +90,7 @@ jobs:
         run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
 
       - name: Build the Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: "{{defaultContext}}:registry"
           platforms: linux/amd64,linux/arm64
