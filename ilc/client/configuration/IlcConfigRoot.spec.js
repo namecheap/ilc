@@ -60,4 +60,9 @@ describe('IlcConfigRoot', () => {
             'trailingSlash',
         ]);
     });
+
+    it('IlcConfigRoot should return Config For Settings By Key', () => {
+        const configRoot = getIlcConfigRoot();
+        expect(configRoot.getSettingsByKey('i18n')).to.be.an('object');
+    });
 });
