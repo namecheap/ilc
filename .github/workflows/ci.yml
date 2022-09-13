@@ -151,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Docker registry auth
-        run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
+        run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username namecheaprnd --password-stdin
 
       - name: Calculate tags
         id: tags
