@@ -39,8 +39,8 @@ jobs:
         cache-to: |
           type=registry,ref=namecheap/ilc_tmp:buildcache,mode=max
         tags: |
-          namecheap/ilc_tmp:${{ env.SHA }}
-          namecheap/ilc_tmp:latest
+          registry-1.docker.io/namecheap/ilc_tmp:${{ env.SHA }}
+          registry-1.docker.io/namecheap/ilc_tmp:latest
 
     - name: Run server-side tests
       run: docker run namecheap/ilc_tmp:$SHA npm run test:ci
