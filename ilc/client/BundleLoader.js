@@ -1,4 +1,3 @@
-import crashIlc from './errorHandler/crashIlc';
 import { CssTrackedApp } from './CssTrackedApp';
 
 export class BundleLoader {
@@ -95,11 +94,13 @@ export class BundleLoader {
     }
 }
 
-export default (registryConf) => {
+export default (registryConf, errorHandler) => {
     const System = window.System;
     if (System === undefined) {
-        crashIlc();
-        throw new Error('ILC: can\'t find SystemJS on a page, crashing everything');
+        const error = new Error('ILC: can\'t find SystemJS on a page, crashing everything');
+        errorHandler(error);
+
+        throw error;
     }
 
     return new BundleLoader(registryConf, System)
