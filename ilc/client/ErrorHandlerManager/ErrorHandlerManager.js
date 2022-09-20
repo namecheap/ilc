@@ -1,4 +1,6 @@
 import * as uuidv4 from 'uuid/v4';
+import { FRAGMENT_KIND } from '../../common/constants';
+import IlcEvents from '../constants/ilcEvents';
 
 const System = window.System;
 
@@ -105,7 +107,7 @@ export default class ErrorHandlerManager {
                 document.querySelector('html').innerHTML = data;
                 
                 this.#ilcAlreadyCrashed = true;
-                window.dispatchEvent(new CustomEvent(ilcEvents.CRASH));
+                window.dispatchEvent(new CustomEvent(IlcEvents.CRASH));
             })
             .catch((error) => {
                 this.#noticeError(error, {
