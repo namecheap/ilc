@@ -4,17 +4,17 @@ export class BundleLoader {
 
     #cache = new WeakMap();
     #registryApps;
-    #systemJs;
+    #moduleLoader;
     #delayCssRemoval;
 
-    constructor(registryConf, systemJs) {
+    constructor(registryConf, moduleLoader) {
         this.#registryApps = registryConf.apps;
         this.#delayCssRemoval = registryConf.settings && registryConf.settings.globalSpinner && registryConf.settings.globalSpinner.enabled;
         if (typeof this.#delayCssRemoval === 'undefined') {
             this.#delayCssRemoval = true;
         }
 
-        this.#systemJs = systemJs;
+        this.#moduleLoader = moduleLoader;
     }
 
     /**
@@ -27,7 +27,7 @@ export class BundleLoader {
     preloadApp(appName) {
         const app = this.#getApp(appName);
 
-        this.#systemJs.import(app.spaBundle).catch(() => {});
+        this.#moduleLoader.import(app.spaBundle).catch(() => {});
 
         if (app.wrappedWith) {
             this.preloadApp(app.wrappedWith);
@@ -36,7 +36,7 @@ export class BundleLoader {
 
     loadApp(appName) {
         const app = this.#getApp(appName);
-        return this.#systemJs.import(appName)
+        return this.#moduleLoader.import(appName)
             .then(appBundle => {
                 const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props);
                 return typeof app.cssBundle === 'string' ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval).getDecoratedApp() : rawCallbacks;
@@ -55,7 +55,7 @@ export class BundleLoader {
     }
 
     loadCss(url) {
-        return this.#systemJs.import(url).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
+        return this.#moduleLoader.import(url).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
             //TODO: error handling should be improved, need to submit PR with typed errors
             if (typeof err.message !== 'string' || err.message.indexOf('has already been loaded using another way') === -1) {
                 throw err;
@@ -93,15 +93,3 @@ export class BundleLoader {
         }
     }
 }
-
-export default (registryConf, errorHandler) => {
-    const System = window.System;
-    if (System === undefined) {
-        const error = new Error('ILC: can\'t find SystemJS on a page, crashing everything');
-        errorHandler(error);
-
-        throw error;
-    }
-
-    return new BundleLoader(registryConf, System)
-};

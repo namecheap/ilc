@@ -1,8 +1,5 @@
 import * as uuidv4 from 'uuid/v4';
-import { FRAGMENT_KIND } from '../../common/constants';
 import IlcEvents from '../constants/ilcEvents';
-
-const System = window.System;
 
 const msgRegexps = [
     /^Application '.+?' died in status LOADING_SOURCE_CODE: Failed to fetch$/
@@ -20,11 +17,15 @@ function canBeSentToNewRelic(err) {
 }
 
 export default class ErrorHandlerManager {
+
     #ilcAlreadyCrashed = false;
-    
+
+    #logger;
+
     #registryService;
 
-    constructor(registryService) {
+    constructor(logger, registryService) {
+        this.#logger = logger;
         this.#registryService = registryService;
         this.#preheat();
     }
@@ -33,70 +34,45 @@ export default class ErrorHandlerManager {
         // Initializing 500 error page to cache template of this page
         // to avoid a situation when localhost can't return this template in future
         this.#registryService.preheat()
-            .then(() => console.log('ILC: Registry service preheated successfully'))
+            .then(() => this.#logger.log('ILC: Registry service preheated successfully'))
             .catch((err) => {
                 this.#noticeError(err);
             });
     }
 
     internalError(error, errorInfo = {}) {
-        const errorId = uuidv4();
-
         this.#noticeError(error, {
             ...errorInfo,
             type: 'INTERNAL_ERROR',
-            errorId,
         });
 
         this.#crashIlc(errorId);
     }
 
-    runtimeError(event, errorInfo = {}) {
-        const moduleInfo = System.getModuleInfo(event.filename);
-
-        // TODO: Log error anycase with special attribute
-        if (moduleInfo === null) {
-            return;
-        }
-
-        event.preventDefault();
-
-        this.#noticeError(event.error, {
+    runtimeError(error, errorInfo = {}) {
+        this.#noticeError(error, {
             ...errorInfo,
             type: 'MODULE_ERROR',
-            
-            // TODO: Change name to appName
-            moduleName: moduleInfo.name,
-
-            // TODO: Put dependants app name
-            dependants: moduleInfo.dependants,
-            location: {
-                fileName: event.filename,
-                lineNo: event.lineno,
-                colNo: event.colno,
-            },
         });
     }
 
-    fragmentError({ appName, slotName, fragmentKind } = fragmentInfo, error, errorInfo = {}) {      
+    fragmentError(error, errorInfo = {}) {      
+        this.#noticeError(error, {
+            ...errorInfo,
+            type: 'FRAGMENT_ERROR',
+        });
+    }
+
+    criticalFragmentError(error, errorInfo = {}) {
         const errorId = uuidv4();
 
         this.#noticeError(error, {
             ...errorInfo,
-            type: 'FRAGMENT_ERROR',
-            appName,
-            slotName,
             errorId,
+            type: 'CRITICAL_FRAGMENT_ERROR',
         });
 
-        const isEssentialOrPrimaryFragment = [
-            FRAGMENT_KIND.primary,
-            FRAGMENT_KIND.essential
-        ].includes(fragmentKind);
-
-        if (isEssentialOrPrimaryFragment) {
-            this.#crashIlc(errorId);
-        }
+        this.#crashIlc(errorId);
     }
 
     #crashIlc(errorId) {
@@ -123,7 +99,7 @@ export default class ErrorHandlerManager {
     #noticeError(error, errorInfo = {}) {
         // Ignoring all consequent errors after crash
         if (this.#ilcAlreadyCrashed) {
-            console.info(`Ignoring error as we already crashed...\n${error.stack}`);
+            this.#logger.info(`Ignoring error as we already crashed...\n${error.stack}`);
             return;
         }
 
@@ -135,13 +111,13 @@ export default class ErrorHandlerManager {
         if (error.data) {
             Object.assign(infoData, error.data);
         }
-    
+
         // TODO: Move to logger abstraction
         if (window.newrelic && window.newrelic.noticeError && canBeSentToNewRelic(error)) {
             window.newrelic.noticeError(error, infoData);
         }
     
-        console.error(JSON.stringify({
+        this.#logger.error(JSON.stringify({
             type: error.name,
             message: error.message,
             stack: error.stack.split("\n"),

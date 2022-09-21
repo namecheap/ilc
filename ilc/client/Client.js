@@ -24,14 +24,19 @@ import I18n from './i18n';
 
 import GuardManager from './GuardManager';
 import ParcelApi from './ParcelApi';
-import bundleLoaderFactory from './BundleLoader';
+import { BundleLoader } from './BundleLoader';
 import registerSpaApps from './registerSpaApps';
 import { TransitionManager } from './TransitionManager/TransitionManager';
 import IlcEvents from './constants/ilcEvents';
 import ErrorHandlerManager from './ErrorHandlerManager/ErrorHandlerManager';
 
+import { FRAGMENT_KIND } from '../common/constants';
+
 export class Client {
+
     #configRoot;
+
+    #moduleLoader;
 
     #logger;
    
@@ -53,36 +58,47 @@ export class Client {
 
     constructor(config) {
         this.#configRoot = config;
+
+        // TODO: Move to separate module/abstraction
         this.#logger = window.console;
 
-        console.log('GLOBAL SPINNER =', this.#configRoot.getSettingsByKey('globalSpinner'));
-
-        this.#errorHandlerManager = new ErrorHandlerManager(registryService);
+        this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, registryService);
         this.#transitionManager = new TransitionManager(this.#logger, this.#configRoot.getSettingsByKey('globalSpinner'));
-
         this.#pluginManager = new PluginManager(require.context('../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/));
 
         const i18nSettings = this.#configRoot.getSettingsByKey('i18n');
 
         if (i18nSettings.enabled) { 
             this.#i18n = new I18n(i18nSettings, {
-                    ...singleSpa, 
-                    triggerAppChange
+                    ...singleSpa,
+                    triggerAppChange,
                 },
-                this.#errorHandlerFor.bind(this), 
+                this.#errorHandlerFor.bind(this),
                 this.#transitionManager
             );
         }
 
         const ilcState = initIlcState();
-        this.#router = new Router(this.#configRoot, ilcState, this.#i18n, singleSpa, this.#transitionManager.handlePageTransaction);
-        
+        this.#router = new Router(this.#configRoot, ilcState, this.#i18n, singleSpa, this.#transitionManager.handlePageTransition.bind(this.#transitionManager));
         this.#guardManager = new GuardManager(this.#router, this.#pluginManager, this.#onInternalError.bind(this));
         this.#urlProcessor = new UrlProcessor(this.#configRoot.getSettingsByKey('trailingSlash'));
-        this.#bundleLoader = bundleLoaderFactory(this.#configRoot.getConfig(), this.#onInternalError.bind(this));
-    
+
+        this.#moduleLoader = this.#getModuleLoader();
+        this.#bundleLoader = new BundleLoader(this.#configRoot.getConfig(), this.#moduleLoader);
+
         this.#expose();
         this.#configure();
+    }
+
+    #getModuleLoader() {
+        if (window.System === undefined) {
+            const error = new Error('ILC: can\'t find SystemJS on a page, crashing everything');
+            this.#onInternalError(error);
+
+            throw error;
+        }
+
+        return window.System;
     }
 
     #errorHandlerFor(appName, slotName) {
@@ -92,7 +108,23 @@ export class Client {
 
         return (error, errorInfo) => {
             const fragmentKind = this.#router.getRelevantAppKind(appName, slotName);
-            this.#errorHandlerManager.fragmentError({ appName, slotName, fragmentKind }, error, errorInfo);
+
+            const isCriticalError = [
+                FRAGMENT_KIND.primary,
+                FRAGMENT_KIND.essential
+            ].includes(fragmentKind);
+
+            const extendedErrorInfo = {
+                ...errorInfo,
+                appName,
+                slotName,
+            };
+
+            if (isCriticalError) {
+                this.#errorHandlerManager.criticalFragmentError(error, extendedErrorInfo);
+            } else {
+                this.#errorHandlerManager.fragmentError(error, extendedErrorInfo);
+            }
         };
     }
 
@@ -109,8 +141,33 @@ export class Client {
         this.#errorHandlerManager.internalError(error, errorInfo);
     }
 
-    #onRuntimeError(error, errorInfo) {
-        this.#errorHandlerManager.runtimeError(error, errorInfo);
+    #onRuntimeError(event) {
+        event.preventDefault();
+
+        const {
+            error,
+            colno: colNo,
+            lineno: lineNo,
+            filename: fileName,
+        } = event;
+
+        let moduleInfo = this.#moduleLoader.getModuleInfo(fileName);
+
+        if (moduleInfo === null) {
+            moduleInfo = {
+                name: 'UNKNOWN_MODULE',
+                dependants: [],
+            };
+        }
+
+        this.#errorHandlerManager.runtimeError(error, {
+            ...moduleInfo,
+            location: {
+                colNo,
+                lineNo,
+                fileName,
+            },
+        });
     }
 
     #onLifecycleError(error) {
@@ -167,8 +224,8 @@ export class Client {
 
         window.addEventListener(IlcEvents.INTL_UPDATE, (event) => {
             const intlValues = {
-                currency: event.detail.currency,
                 locale: event.detail.locale,
+                currency: event.detail.currency,
             };
 
             handler(intlValues);

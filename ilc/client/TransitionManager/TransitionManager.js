@@ -53,7 +53,7 @@ export class TransitionManager {
         this.#addTransitionBlocker(new TransitionBlocker(promise));
     }
 
-    handlePageTransaction = (slotName, willBe) => {
+    handlePageTransition = (slotName, willBe) => {
         if (this.#spinnerConfig.enabled === false) {
             return;
         }
