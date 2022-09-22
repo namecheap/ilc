@@ -41,8 +41,11 @@ export default class ErrorHandlerManager {
     }
 
     internalError(error, errorInfo = {}) {
+        const errorId = uuidv4();
+
         this.#noticeError(error, {
             ...errorInfo,
+            errorId,
             type: 'INTERNAL_ERROR',
         });
 
@@ -76,12 +79,16 @@ export default class ErrorHandlerManager {
     }
 
     #crashIlc(errorId) {
+        if (this.#ilcAlreadyCrashed) {
+            return;
+        }
+
         this.#registryService.getTemplate('500')
             .then((data) => {
                 data = data.data.replace('%ERRORID%', errorId ? `Error ID: ${errorId}` : '');
 
                 document.querySelector('html').innerHTML = data;
-                
+
                 this.#ilcAlreadyCrashed = true;
                 window.dispatchEvent(new CustomEvent(IlcEvents.CRASH));
             })
@@ -120,7 +127,7 @@ export default class ErrorHandlerManager {
         this.#logger.error(JSON.stringify({
             type: error.name,
             message: error.message,
-            stack: error.stack.split("\n"),
+            stack: error.stack.split('\n'),
             additionalInfo: infoData,
         }), error);
     }
