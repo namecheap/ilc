@@ -29,7 +29,7 @@ export default class ClientRouter extends EventEmitter {
     #i18n;
     #debug;
     render404;
-    #handlePageTransaction;
+    #handlePageTransition;
     #activeApps = {
         prev: {},
         current: {},
@@ -49,7 +49,7 @@ export default class ClientRouter extends EventEmitter {
     ) {
         super();
 
-        this.#handlePageTransaction = handlePageTransaction;
+        this.#handlePageTransition = handlePageTransaction;
         this.#singleSpa = singleSpa;
         this.#location = location;
         this.#logger = logger;
@@ -96,7 +96,7 @@ export default class ClientRouter extends EventEmitter {
         !wasActive && isActive && (willBe = slotWillBe.rendered);
         wasActive && !isActive && (willBe = slotWillBe.removed);
 
-        this.#handlePageTransaction(slotName, willBe);
+        this.#handlePageTransition(slotName, willBe);
 
         return isActive;
     }

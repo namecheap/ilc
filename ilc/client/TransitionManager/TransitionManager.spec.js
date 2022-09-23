@@ -74,7 +74,7 @@ describe('TransitionManager', () => {
     };
 
     let clock;
-    let handlePageTransaction;
+    let handlePageTransition;
     let removePageTransactionListeners;
 
     beforeEach(() => {
@@ -84,7 +84,7 @@ describe('TransitionManager', () => {
             enabled: true,
             customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`
         });
-        handlePageTransaction = transitionManager.handlePageTransaction.bind(transitionManager);
+        handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);
         removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
 
         slots.resetRef();
@@ -107,7 +107,7 @@ describe('TransitionManager', () => {
     });
 
     it('should throw an error when a slot name is not provided', () => {
-        chai.expect(() => handlePageTransaction()).to.throw(
+        chai.expect(() => handlePageTransition()).to.throw(
             'A slot name was not provided!'
         );
     });
@@ -115,7 +115,7 @@ describe('TransitionManager', () => {
     it('should log warning when a non-existing slot name is provided', () => {
         const slotName = 'invalid-slot-name';
         const willBe = slotWillBe.rendered;
-        handlePageTransaction(slotName, willBe);
+        handlePageTransition(slotName, willBe);
 
         sinon.assert.calledWithExactly(
             logger.warn,
@@ -126,19 +126,19 @@ describe('TransitionManager', () => {
     it('should not log warning when a non-existing slot name is provided but the action is default', () => {
         const slotName = 'invalid-slot-name';
         const willBe = slotWillBe.default;
-        handlePageTransaction(slotName, willBe);
+        handlePageTransition(slotName, willBe);
 
         sinon.assert.notCalled(logger.warn);
     });
 
     it('should throw an error when a slot action does not match any possible option to handle', () => {
-        chai.expect(() => handlePageTransaction(slots.body.id, 'undefined')).to.throw(
+        chai.expect(() => handlePageTransition(slots.body.id, 'undefined')).to.throw(
             `The slot action 'undefined' did not match any possible values!`
         );
     });
 
     it('should do nothing when a slot action is default', async () => {
-        handlePageTransaction(slots.body.id, slotWillBe.default);
+        handlePageTransition(slots.body.id, slotWillBe.default);
 
         await clock.runAllAsync();
 
@@ -174,7 +174,7 @@ describe('TransitionManager', () => {
     });
 
     it('should listen to slot content changes when a slot is going to be rendered', async () => {
-        handlePageTransaction(slots.navbar.id, slotWillBe.rendered);
+        handlePageTransition(slots.navbar.id, slotWillBe.rendered);
 
         await clock.runAllAsync();
 
@@ -182,7 +182,7 @@ describe('TransitionManager', () => {
         chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
         chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
 
-        handlePageTransaction(slots.body.id, slotWillBe.rendered);
+        handlePageTransition(slots.body.id, slotWillBe.rendered);
 
         await clock.runAllAsync();
 
@@ -215,7 +215,7 @@ describe('TransitionManager', () => {
         applications.navbar.appendApplication();
         applications.body.appendApplication();
 
-        handlePageTransaction(slots.body.id, slotWillBe.removed);
+        handlePageTransition(slots.body.id, slotWillBe.removed);
 
         await clock.runAllAsync();
 
@@ -261,7 +261,7 @@ describe('TransitionManager', () => {
             applications.navbar.appendApplication();
             applications.body.appendApplication();
 
-            handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+            handlePageTransition(slots.body.id, slotWillBe.rerendered);
 
             await clock.runAllAsync();
 
@@ -315,8 +315,8 @@ describe('TransitionManager', () => {
             applications.navbar.appendApplication();
             applications.body.appendApplication();
 
-            handlePageTransaction(slots.body.id, slotWillBe.removed);
-            handlePageTransaction(slots.body.id, slotWillBe.rendered);
+            handlePageTransition(slots.body.id, slotWillBe.removed);
+            handlePageTransition(slots.body.id, slotWillBe.rendered);
 
             await clock.runAllAsync();
 
@@ -369,8 +369,8 @@ describe('TransitionManager', () => {
             applications.navbar.appendApplication();
             applications.body.appendApplication();
 
-            handlePageTransaction(slots.body.id, slotWillBe.rendered);
-            handlePageTransaction(slots.body.id, slotWillBe.removed);
+            handlePageTransition(slots.body.id, slotWillBe.rendered);
+            handlePageTransition(slots.body.id, slotWillBe.removed);
 
             await clock.runAllAsync();
 
@@ -422,10 +422,10 @@ describe('TransitionManager', () => {
 
             applications.body.appendApplication();
 
-            handlePageTransaction(slots.body.id, slotWillBe.rendered);
-            handlePageTransaction(slots.body.id, slotWillBe.rendered);
-            handlePageTransaction(slots.body.id, slotWillBe.removed);
-            handlePageTransaction(slots.body.id, slotWillBe.removed);
+            handlePageTransition(slots.body.id, slotWillBe.rendered);
+            handlePageTransition(slots.body.id, slotWillBe.rendered);
+            handlePageTransition(slots.body.id, slotWillBe.removed);
+            handlePageTransition(slots.body.id, slotWillBe.removed);
 
             await clock.runAllAsync();
 
@@ -476,7 +476,7 @@ describe('TransitionManager', () => {
         applications.navbar.appendApplication();
         applications.body.appendApplication();
 
-        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+        handlePageTransition(slots.body.id, slotWillBe.rerendered);
 
         applications.body.removeApplication();
         await clock.runAllAsync();
@@ -508,7 +508,7 @@ describe('TransitionManager', () => {
         applications.navbar.appendApplication();
         applications.body.appendApplication();
 
-        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+        handlePageTransition(slots.body.id, slotWillBe.rerendered);
 
         applications.body.removeApplication();
         await clock.runAllAsync();
@@ -542,7 +542,7 @@ describe('TransitionManager', () => {
         applications.navbar.appendApplication();
         applications.body.appendApplication();
 
-        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+        handlePageTransition(slots.body.id, slotWillBe.rerendered);
 
         applications.body.removeApplication();
         await clock.runAllAsync();
@@ -577,7 +577,7 @@ describe('TransitionManager', () => {
         applications.navbar.appendApplication();
         applications.body.appendApplication();
 
-        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+        handlePageTransition(slots.body.id, slotWillBe.rerendered);
 
         applications.body.removeApplication();
         await clock.runAllAsync();
@@ -604,7 +604,7 @@ describe('TransitionManager', () => {
         applications.navbar.appendApplication();
         applications.body.appendApplication();
 
-        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+        handlePageTransition(slots.body.id, slotWillBe.rerendered);
 
         applications.body.removeApplication();
 
@@ -633,12 +633,12 @@ describe('TransitionManager', () => {
                 <script>document.querySelector('#${spinner.id}').classList.add('${expectedClass}')</script>
             `
         });
-        const handlePageTransaction = transitionManager.handlePageTransaction.bind(transitionManager);
+        const handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);
 
         applications.navbar.appendApplication();
         applications.body.appendApplication();
 
-        handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+        handlePageTransition(slots.body.id, slotWillBe.rerendered);
 
         await clock.runAllAsync();
 
@@ -665,7 +665,7 @@ describe('TransitionManager', () => {
             applications.navbar.appendApplication();
             applications.body.appendApplication();
 
-            handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+            handlePageTransition(slots.body.id, slotWillBe.rerendered);
 
             applications.body.removeApplication();
 
@@ -699,7 +699,7 @@ describe('TransitionManager', () => {
             applications.navbar.appendApplication();
             applications.body.appendApplication();
 
-            handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+            handlePageTransition(slots.body.id, slotWillBe.rerendered);
 
             applications.body.removeApplication();
 
@@ -738,7 +738,7 @@ describe('TransitionManager', () => {
             applications.navbar.appendApplication();
             applications.body.appendApplication();
 
-            handlePageTransaction(slots.body.id, slotWillBe.rerendered);
+            handlePageTransition(slots.body.id, slotWillBe.rerendered);
 
             applications.body.removeApplication();
 

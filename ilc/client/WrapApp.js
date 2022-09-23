@@ -91,7 +91,7 @@ export default class WrapApp {
         this.#appExtraProps = extraProps;
 
         const {slotName} = appIdToNameAndSlot(props.appId);
-        this.#transitionManager.handlePageTransaction(slotName, slotWillBe.rerendered);
+        this.#transitionManager.handlePageTransition(slotName, slotWillBe.rerendered);
 
         await wrapperCallbacks.unmount(props);
 
