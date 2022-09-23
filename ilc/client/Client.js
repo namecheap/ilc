@@ -39,7 +39,9 @@ export class Client {
     #moduleLoader;
 
     #logger;
-   
+
+    #registryService;
+
     #errorHandlerManager;
 
     #transitionManager;
@@ -61,8 +63,10 @@ export class Client {
 
         // TODO: Move to separate module/abstraction
         this.#logger = window.console;
+        this.#registryService = registryService;
 
-        this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, registryService);
+        this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, this.#registryService);
+
         this.#transitionManager = new TransitionManager(this.#logger, this.#configRoot.getSettingsByKey('globalSpinner'));
         this.#pluginManager = new PluginManager(require.context('../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/));
 
@@ -80,20 +84,29 @@ export class Client {
 
         const ilcState = initIlcState();
         this.#router = new Router(this.#configRoot, ilcState, this.#i18n, singleSpa, this.#transitionManager.handlePageTransition.bind(this.#transitionManager));
-        this.#guardManager = new GuardManager(this.#router, this.#pluginManager, this.#onInternalError.bind(this));
+        this.#guardManager = new GuardManager(this.#router, this.#pluginManager, this.#onCriticalInternalError.bind(this));
         this.#urlProcessor = new UrlProcessor(this.#configRoot.getSettingsByKey('trailingSlash'));
 
         this.#moduleLoader = this.#getModuleLoader();
         this.#bundleLoader = new BundleLoader(this.#configRoot.getConfig(), this.#moduleLoader);
 
+        this.#preheat();
         this.#expose();
         this.#configure();
+    }
+
+    #preheat() {
+        // Initializing 500 error page to cache template of this page
+        // to avoid a situation when localhost can't return this template in future
+        this.#registryService.preheat()
+            .then(() => this.#logger.log('ILC: Registry service preheated successfully'))
+            .catch((error) => this.#errorHandlerManager.internalError(error));
     }
 
     #getModuleLoader() {
         if (window.System === undefined) {
             const error = new Error('ILC: can\'t find SystemJS on a page, crashing everything');
-            this.#onInternalError(error);
+            this.#onCriticalInternalError(error);
 
             throw error;
         }
@@ -134,11 +147,11 @@ export class Client {
             cause: error,
         });
 
-        this.#onInternalError(navigationError, errorInfo);
+        this.#onCriticalInternalError(navigationError, errorInfo);
     }
 
-    #onInternalError(error, errorInfo) {
-        this.#errorHandlerManager.internalError(error, errorInfo);
+    #onCriticalInternalError(error, errorInfo) {
+        this.#errorHandlerManager.criticalInternalError(error, errorInfo);
     }
 
     #onRuntimeError(event) {

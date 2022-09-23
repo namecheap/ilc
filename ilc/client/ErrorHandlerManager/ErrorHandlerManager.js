@@ -27,26 +27,22 @@ export default class ErrorHandlerManager {
     constructor(logger, registryService) {
         this.#logger = logger;
         this.#registryService = registryService;
-        this.#preheat();
-    }
-
-    #preheat() {
-        // Initializing 500 error page to cache template of this page
-        // to avoid a situation when localhost can't return this template in future
-        this.#registryService.preheat()
-            .then(() => this.#logger.log('ILC: Registry service preheated successfully'))
-            .catch((err) => {
-                this.#noticeError(err);
-            });
     }
 
     internalError(error, errorInfo = {}) {
+        this.#noticeError(error, {
+            ...errorInfo,
+            type: 'INTERNAL_ERROR',
+        });
+    }
+
+    criticalInternalError(error, errorInfo = {}) {
         const errorId = uuidv4();
 
         this.#noticeError(error, {
             ...errorInfo,
             errorId,
-            type: 'INTERNAL_ERROR',
+            type: 'CRITICAL_INTERNAL_ERROR',
         });
 
         this.#crashIlc(errorId);

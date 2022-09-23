@@ -18,8 +18,7 @@ describe('ErrorHandlerManager', () => {
     const registryService = {
         getTemplate: sinon.stub().returns(Promise.resolve({
             data: '%ERRORID%',
-        })),
-        preheat: sinon.stub().returns(Promise.resolve()),
+        }))
     };
 
     const logger = {
@@ -40,42 +39,6 @@ describe('ErrorHandlerManager', () => {
         clock.restore();
     });
 
-    it('should call registry service preheat', async () => {
-        new ErrorHandlerManager(logger, registryService);
-        expect(registryService.preheat.called).to.be.true;
-
-        await clock.runAllAsync();
-
-        expect(logger.log.calledWith('ILC: Registry service preheated successfully')).to.be.true;
-    });
-
-    it('should error if preheat failed', async() => {
-        const preheatError = new Error('Preheat error');
-
-        const registryService = {
-            preheat: sinon.stub().returns(Promise.reject(preheatError)),
-        };
-
-        new ErrorHandlerManager(logger, registryService);
-        await clock.runAllAsync();
-
-        const noticeErrorArgs = noticeError.getCall(0).args;
-
-        expect(noticeErrorArgs[0]).to.equal(preheatError);
-        expect(noticeErrorArgs[1].errorId).to.be.a('string');
-
-        const logErrorArgs = logger.error.getCall(0).args;
-
-        const parsedLogArgs = JSON.parse(logErrorArgs[0]);
-        expect(parsedLogArgs).to.include({
-            type: 'Error',
-            message: 'Preheat error',
-        });
-
-        expect(parsedLogArgs.stack).deep.equal(preheatError.stack.split('\n'));
-        expect(logErrorArgs[1]).to.be.eql(preheatError);
-    });
-
     describe('methods', () => {
         let errorHandlerManager;
 
@@ -83,20 +46,48 @@ describe('ErrorHandlerManager', () => {
             errorHandlerManager = new ErrorHandlerManager(logger, registryService);
         });
 
-        describe('internal error', () => {
+        it('internal error should correctly log and notice', async () => {
+            const error = new Error('I am internal error');
+            const info = {
+                blah: 'test'
+            };
+
+            errorHandlerManager.internalError(error, info);
+
+            const noticeErrorArgs = noticeError.getCall(0).args;
+
+            expect(noticeErrorArgs[0]).to.equal(error);
+            expect(noticeErrorArgs[1].errorId).to.be.a('string');
+            expect(noticeErrorArgs[1].type).to.equal('INTERNAL_ERROR');
+            expect(noticeErrorArgs[1].blah).to.equal('test');
+
+            const logErrorArgs = logger.error.getCall(0).args;
+            const parsedLogArgs = JSON.parse(logErrorArgs[0]);
+    
+            expect(parsedLogArgs).to.include({
+                type: 'Error',
+                message: 'I am internal error',
+            });
+
+            expect(parsedLogArgs.stack).deep.equal(error.stack.split('\n'));
+
+            expect(logErrorArgs[1]).to.be.eql(error);
+        });
+
+        describe('critical internal error', () => {
             it('should correctly log and notice', () => {
                 const error = new Error('I am internal error');
                 const info = {
                     blah: 'test'
                 };
 
-                errorHandlerManager.internalError(error, info);
+                errorHandlerManager.criticalInternalError(error, info);
 
                 const noticeErrorArgs = noticeError.getCall(0).args;
 
                 expect(noticeErrorArgs[0]).to.equal(error);
                 expect(noticeErrorArgs[1].errorId).to.be.a('string');
-                expect(noticeErrorArgs[1].type).to.equal('INTERNAL_ERROR');
+                expect(noticeErrorArgs[1].type).to.equal('CRITICAL_INTERNAL_ERROR');
                 expect(noticeErrorArgs[1].blah).to.equal('test');
 
                 const logErrorArgs = logger.error.getCall(0).args;
@@ -121,7 +112,7 @@ describe('ErrorHandlerManager', () => {
                     blah: 'test'
                 };
 
-                errorHandlerManager.internalError(error, info);
+                errorHandlerManager.criticalInternalError(error, info);
                 await clock.runAllAsync();
 
                 expect( document.querySelector('html').innerHTML).to.have.string('Error ID: ');
@@ -137,10 +128,10 @@ describe('ErrorHandlerManager', () => {
                     blah: 'test'
                 };
 
-                errorHandlerManager.internalError(error, info);
+                errorHandlerManager.criticalInternalError(error, info);
                 await clock.runAllAsync();
 
-                errorHandlerManager.internalError(error, info);
+                errorHandlerManager.criticalInternalError(error, info);
                 await clock.runAllAsync();
 
                 expect(noticeError.getCalls().length).to.equal(1);
@@ -172,7 +163,7 @@ describe('ErrorHandlerManager', () => {
                     blah: 'test'
                 };
 
-                errorHandlerManager.internalError(error, info);
+                errorHandlerManager.criticalInternalError(error, info);
                 await clock.runAllAsync();
                 await clock.runAllAsync();
 
