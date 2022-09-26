@@ -12,6 +12,8 @@ import {
     addNavigationHook,
 } from './navigationEvents/setupEvents';
 
+import errors from './errors';
+
 import { triggerAppChange } from './navigationEvents';
 import navigationErrors from './navigationEvents/errors';
 
@@ -157,11 +159,13 @@ export class Client {
     #onRuntimeError(event) {
         event.preventDefault();
 
+        let { error } = event; 
+
         const {
-            error,
             colno: colNo,
             lineno: lineNo,
             filename: fileName,
+            message,
         } = event;
 
         let moduleInfo = this.#moduleLoader.getModuleInfo(fileName);
@@ -171,6 +175,12 @@ export class Client {
                 name: 'UNKNOWN_MODULE',
                 dependants: [],
             };
+        }
+
+        if (!error && lineNo === 0 && colNo === 0) {
+            error = new errors.CorsError({
+                message,
+            });
         }
 
         this.#errorHandlerManager.runtimeError(error, {
