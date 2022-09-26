@@ -12,6 +12,8 @@ import {
     addNavigationHook,
 } from './navigationEvents/setupEvents';
 
+import { CorsError } from './errors';
+
 import { triggerAppChange } from './navigationEvents';
 import navigationErrors from './navigationEvents/errors';
 
@@ -154,16 +156,24 @@ export class Client {
         this.#errorHandlerManager.criticalInternalError(error, errorInfo);
     }
 
+    #isCorsError(event) {
+        const { error, colno, lineno } = event;
+
+        return (!error && lineno === 0 && colno === 0);
+    }
+
     #onRuntimeError(event) {
         event.preventDefault();
 
-        const {
-            error,
-            colno: colNo,
-            lineno: lineNo,
-            filename: fileName,
-        } = event;
+        let { error } = event;
 
+        if (this.#isCorsError(event)) {
+            error = new CorsError({
+                message: event.message
+            });
+        }
+
+        const { filename: fileName } = event;
         let moduleInfo = this.#moduleLoader.getModuleInfo(fileName);
 
         if (moduleInfo === null) {
@@ -176,9 +186,9 @@ export class Client {
         this.#errorHandlerManager.runtimeError(error, {
             ...moduleInfo,
             location: {
-                colNo,
-                lineNo,
                 fileName,
+                colNo: event.colno,
+                lineNo: event.lineno,
             },
         });
     }
