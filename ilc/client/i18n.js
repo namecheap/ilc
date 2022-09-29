@@ -1,7 +1,6 @@
 import { IlcIntl } from 'ilc-sdk/app';
 import Cookies from 'js-cookie';
 
-import transitionManagerFactory from './TransitionManager/TransitionManager';
 import {appIdToNameAndSlot} from '../common/utils';
 import i18nCookie from '../common/i18nCookie';
 import dispatchSynchronizedEvent from './dispatchSynchronizedEvent';
@@ -25,7 +24,7 @@ export default class I18n {
         this.#config = config;
         this.#singleSpa = singleSpa;
         this.#appErrorHandlerFactory = appErrorHandlerFactory;
-        this.#transitionManager = transitionManager || transitionManagerFactory();
+        this.#transitionManager = transitionManager;
 
         this.#prevConfig = this.#get();
 

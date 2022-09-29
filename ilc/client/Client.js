@@ -74,7 +74,7 @@ export class Client {
 
         const i18nSettings = this.#configRoot.getSettingsByKey('i18n');
 
-        if (i18nSettings.enabled) { 
+        if (i18nSettings.enabled) {
             this.#i18n = new I18n(i18nSettings, {
                     ...singleSpa,
                     triggerAppChange,
@@ -206,7 +206,7 @@ export class Client {
 
         // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
         // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
-        registerSpaApps(this.#configRoot, this.#router, this.#errorHandlerFor.bind(this), this.#bundleLoader);
+        registerSpaApps(this.#configRoot, this.#router, this.#errorHandlerFor.bind(this), this.#bundleLoader, this.#transitionManager);
 
         setNavigationErrorHandler(this.#onNavigationError.bind(this));
         window.addEventListener('error', this.#onRuntimeError.bind(this));
@@ -261,7 +261,7 @@ export class Client {
         if (!this.#configRoot.getConfig().settings.amdDefineCompatibilityMode) {
             window.define = window.ILC.define;
         }
-        
+
         const parcelApi = new ParcelApi(this.#configRoot.getConfig(), this.#bundleLoader, this.#getAppSdkAdapter.bind(this));
 
         Object.assign(window.ILC, {
