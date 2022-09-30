@@ -10,10 +10,6 @@ export class BundleLoader {
     constructor(configRoot, moduleLoader) {
         this.#registryApps = configRoot.getConfigForApps();
         this.#delayCssRemoval = configRoot.isGlobalSpinnerEnabled();
-        if (typeof this.#delayCssRemoval === 'undefined') {
-            this.#delayCssRemoval = true;
-        }
-
         this.#moduleLoader = moduleLoader;
     }
 
