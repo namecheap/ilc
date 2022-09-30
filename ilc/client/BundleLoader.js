@@ -13,8 +13,6 @@ export class BundleLoader {
         this.#moduleLoader = moduleLoader;
     }
 
-    #enableDelayCssre
-
     /**
      * Speculative preload of the JS bundle.
      * We don't care about result as we do it only to heat up browser HTTP cache
