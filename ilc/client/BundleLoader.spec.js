@@ -6,8 +6,7 @@ const expect = chai.expect;
 import { getRegistryMock } from '../tests/helpers'
 
 import { BundleLoader } from './BundleLoader';
-import { CssTrackedApp } from './CssTrackedApp';
-import {getIlcConfigRoot} from "./configuration/getIlcConfigRoot";
+import { getIlcConfigRoot } from "./configuration/getIlcConfigRoot";
 
 const fnCallbacks = {
     bootstrap: async () => 'bootstrap',

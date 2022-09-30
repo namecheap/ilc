@@ -33,7 +33,7 @@ import IlcEvents from './constants/ilcEvents';
 import ErrorHandlerManager from './ErrorHandlerManager/ErrorHandlerManager';
 
 import { FRAGMENT_KIND } from '../common/constants';
-import {SdkFactory} from "./Sdk/SdkFactory";
+import { SdkFactory } from "./Sdk/SdkFactory";
 
 export class Client {
 
