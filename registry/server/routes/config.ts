@@ -29,6 +29,7 @@ router.get('/', async (req, res) => {
         specialRoutes: [] as any[],
         settings: {},
         sharedLibs: {},
+        dynamicLibs: {},
     };
 
     data.apps = apps.reduce((acc, v) => {
@@ -114,6 +115,13 @@ router.get('/', async (req, res) => {
         acc[name] = spaBundle;
         return acc;
     }, {});
+
+    data.dynamicLibs = sharedLibs.reduce((acc, { name, spaBundle, l10nManifest }) => {
+        acc[name] = { spaBundle, l10nManifest };
+        return acc;
+    }, {});
+
+    console.log(data);
 
     return res.send(data);
 });

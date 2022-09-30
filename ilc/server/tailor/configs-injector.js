@@ -189,6 +189,7 @@ module.exports = class ConfigsInjector {
             specialRoutes: _.mapValues(registryConfig.specialRoutes, v => _.omit(v, ['routeId'])),
             settings,
             sharedLibs: registryConfig.sharedLibs,
+            dynamicLibs: registryConfig.dynamicLibs,
         });
 
         return `<script type="ilc-config">${spaConfig}</script>`;
