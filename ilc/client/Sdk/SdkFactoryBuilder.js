@@ -2,7 +2,7 @@ import { SdkOptions } from '../../common/SdkOptions';
 import IlcAppSdk from 'ilc-sdk/app';
 import { SdkAdapterFactory } from './SdkAdapterFactory';
 
-export class SdkFactory {
+export class SdkFactoryBuilder {
 
     #configRoot;
     #sdkAdapterFactory
@@ -12,7 +12,7 @@ export class SdkFactory {
         this.#sdkAdapterFactory = new SdkAdapterFactory(i18n, router);
     }
 
-    getSdkInstanceFactoryByApplicationName(applicationName) {
+    getSdkFactoryByApplicationName(applicationName) {
         const {  l10nManifest} = this.#configRoot.getConfigForAppByName(applicationName);
         const sdkOptions = new SdkOptions( {
             i18n: {

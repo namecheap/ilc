@@ -8,14 +8,14 @@ export class BundleLoader {
     #moduleLoader;
     #delayCssRemoval;
     #configRoot;
-    #sdkFactory;
+    #sdkFactoryBuilder;
 
-    constructor(configRoot, moduleLoader, sdkFactory) {
+    constructor(configRoot, moduleLoader, sdkFactoryBuilder) {
         this.#registryApps = configRoot.getConfigForApps();
         this.#delayCssRemoval = configRoot.isGlobalSpinnerEnabled();
         this.#moduleLoader = moduleLoader;
         this.#configRoot = configRoot;
-        this.#sdkFactory = sdkFactory;
+        this.#sdkFactoryBuilder = sdkFactoryBuilder;
     }
 
     /**
@@ -39,7 +39,7 @@ export class BundleLoader {
         const app = this.#getApp(appName);
         return this.#moduleLoader.import(appName)
             .then(appBundle => {
-                const sdkInstanceFactory = this.#sdkFactory.getSdkInstanceFactoryByApplicationName(appName);
+                const sdkInstanceFactory = this.#sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
                 const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props, { sdkFactory: sdkInstanceFactory });
                 return typeof app.cssBundle === 'string' ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval).getDecoratedApp() : rawCallbacks;
             })

@@ -33,7 +33,7 @@ import IlcEvents from './constants/ilcEvents';
 import ErrorHandlerManager from './ErrorHandlerManager/ErrorHandlerManager';
 
 import { FRAGMENT_KIND } from '../common/constants';
-import { SdkFactory } from "./Sdk/SdkFactory";
+import { SdkFactoryBuilder } from "./Sdk/SdkFactoryBuilder";
 
 export class Client {
 
@@ -61,7 +61,7 @@ export class Client {
 
     #bundleLoader;
 
-    #sdkFactory;
+    #sdkFactoryBuilder;
 
     constructor(config) {
         this.#configRoot = config;
@@ -93,8 +93,8 @@ export class Client {
         this.#urlProcessor = new UrlProcessor(this.#configRoot.getSettingsByKey('trailingSlash'));
 
         this.#moduleLoader = this.#getModuleLoader();
-        this.#sdkFactory = new SdkFactory(this.#configRoot, this.#i18n, this.#router);
-        this.#bundleLoader = new BundleLoader(this.#configRoot, this.#moduleLoader, this.#sdkFactory);
+        this.#sdkFactoryBuilder = new SdkFactoryBuilder(this.#configRoot, this.#i18n, this.#router);
+        this.#bundleLoader = new BundleLoader(this.#configRoot, this.#moduleLoader, this.#sdkFactoryBuilder);
 
 
 
@@ -218,7 +218,7 @@ export class Client {
             this.#errorHandlerFor.bind(this),
             this.#bundleLoader,
             this.#transitionManager,
-            this.#sdkFactory
+            this.#sdkFactoryBuilder
         );
 
         setNavigationErrorHandler(this.#onNavigationError.bind(this));
@@ -258,7 +258,7 @@ export class Client {
         const parcelApi = new ParcelApi(
             this.#configRoot.getConfig(),
             this.#bundleLoader,
-            this.#sdkFactory.getSdkAdapterInstance.bind(this.#sdkFactory)
+            this.#sdkFactoryBuilder.getSdkAdapterInstance.bind(this.#sdkFactoryBuilder)
         );
 
         Object.assign(window.ILC, {
@@ -273,9 +273,9 @@ export class Client {
             // It leads to situation when fragment creates dependency to ilc-sdk
             // Ilc has ilc-sdk dependency as well
             // So we are not protected from deps version mismatch :(
-            // To solve it we created SdkFactory that allow to create AppSdk instances and passing it to the app
+            // To solve it we created SdkFactoryBuilder that allow to create AppSdk instances and passing it to the app
             // So global 'getAppSdkAdapter' has no sence any more. We will remove it in next major release.
-            getAppSdkAdapter: this.#sdkFactory.getSdkAdapterInstance.bind(this.#sdkFactory),
+            getAppSdkAdapter: this.#sdkFactoryBuilder.getSdkAdapterInstance.bind(this.#sdkFactoryBuilder),
         });
     }
 

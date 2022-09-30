@@ -6,7 +6,7 @@ import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
 
-export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader, transitionManager, sdkFactory) {
+export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader, transitionManager, sdkFactoryBuilder) {
     const asyncBootUp = new AsyncBootUp();
     const registryConf = ilcConfigRoot.getConfig();
 
@@ -15,7 +15,7 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
         const slotName = pair.slotName;
         const appName = pair.appName;
         const appId = pair.appId;
-        const sdkInstanceFactory = sdkFactory.getSdkInstanceFactoryByApplicationName(appName);
+        const sdkInstanceFactory = sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
 
         let lifecycleMethods;
         const updateFragmentManually = () => {
