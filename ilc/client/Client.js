@@ -33,6 +33,7 @@ import IlcEvents from './constants/ilcEvents';
 import ErrorHandlerManager from './ErrorHandlerManager/ErrorHandlerManager';
 
 import { FRAGMENT_KIND } from '../common/constants';
+import { SdkFactoryBuilder } from "./Sdk/SdkFactoryBuilder";
 
 export class Client {
 
@@ -59,6 +60,8 @@ export class Client {
     #urlProcessor;
 
     #bundleLoader;
+
+    #sdkFactoryBuilder;
 
     constructor(config) {
         this.#configRoot = config;
@@ -90,7 +93,10 @@ export class Client {
         this.#urlProcessor = new UrlProcessor(this.#configRoot.getSettingsByKey('trailingSlash'));
 
         this.#moduleLoader = this.#getModuleLoader();
-        this.#bundleLoader = new BundleLoader(this.#configRoot.getConfig(), this.#moduleLoader);
+        this.#sdkFactoryBuilder = new SdkFactoryBuilder(this.#configRoot, this.#i18n, this.#router);
+        this.#bundleLoader = new BundleLoader(this.#configRoot, this.#moduleLoader, this.#sdkFactoryBuilder);
+
+
 
         this.#preheat();
         this.#expose();
@@ -206,7 +212,14 @@ export class Client {
 
         // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
         // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
-        registerSpaApps(this.#configRoot, this.#router, this.#errorHandlerFor.bind(this), this.#bundleLoader, this.#transitionManager);
+        registerSpaApps(
+            this.#configRoot,
+            this.#router,
+            this.#errorHandlerFor.bind(this),
+            this.#bundleLoader,
+            this.#transitionManager,
+            this.#sdkFactoryBuilder
+        );
 
         setNavigationErrorHandler(this.#onNavigationError.bind(this));
         window.addEventListener('error', this.#onRuntimeError.bind(this));
@@ -218,26 +231,6 @@ export class Client {
         singleSpa.setMountMaxTime(5000, false);
         singleSpa.setUnmountMaxTime(3000, false);
         singleSpa.setUnloadMaxTime(3000, false);
-    }
-
-    /**
-    * @param appId
-    * @return ilc-sdk/app/AppSdkAdapter
-    */
-    #getAppSdkAdapter(appId) {
-        return {
-            appId,
-            intl: this.#i18n ? this.#i18n.getAdapter() : null,
-            trigger404Page: (withCustomContent) => {
-                if (withCustomContent) {
-                    return;
-                }
-
-                this.#router.render404({
-                    detail: { appId },
-                });
-            },
-        };
     }
 
     #addIntlChangeHandler(handler) {
@@ -262,16 +255,27 @@ export class Client {
             window.define = window.ILC.define;
         }
 
-        const parcelApi = new ParcelApi(this.#configRoot.getConfig(), this.#bundleLoader, this.#getAppSdkAdapter.bind(this));
+        const parcelApi = new ParcelApi(
+            this.#configRoot.getConfig(),
+            this.#bundleLoader,
+            this.#sdkFactoryBuilder.getSdkAdapterInstance.bind(this.#sdkFactoryBuilder)
+        );
 
         Object.assign(window.ILC, {
             loadApp: this.#bundleLoader.loadAppWithCss.bind(this.#bundleLoader), // Internal API for Namecheap, not for public use
             navigate: this.#router.navigateToUrl.bind(this.#router),
             onIntlChange: this.#addIntlChangeHandler.bind(this),
             mountRootParcel: singleSpa.mountRootParcel.bind(singleSpa),
-            getAppSdkAdapter: this.#getAppSdkAdapter.bind(this),
             importParcelFromApp: parcelApi.importParcelFromApp.bind(this),
             getAllSharedLibNames: () => Promise.resolve(Object.keys(this.#configRoot.getConfig().sharedLibs)),
+            // @Deprecated
+            // This method was designed to allow to create an app w/o singleSPA invocation (Case for dynamically loaded application)
+            // It leads to situation when fragment creates dependency to ilc-sdk
+            // Ilc has ilc-sdk dependency as well
+            // So we are not protected from deps version mismatch :(
+            // To solve it we created SdkFactoryBuilder that allow to create AppSdk instances and passing it to the app
+            // So global 'getAppSdkAdapter' has no sence any more. We will remove it in next major release.
+            getAppSdkAdapter: this.#sdkFactoryBuilder.getSdkAdapterInstance.bind(this.#sdkFactoryBuilder),
         });
     }
 

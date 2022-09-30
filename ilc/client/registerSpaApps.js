@@ -1,30 +1,21 @@
-import IlcAppSdk from 'ilc-sdk/app';
 import * as singleSpa from 'single-spa';
-
 import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
 import {makeAppId} from '../common/utils';
 import {getSlotElement, prependSpaCallbacks} from './utils';
 import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
-import { SdkOptions } from '../common/SdkOptions';
 
-export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader, transitionManager) {
+export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader, transitionManager, sdkFactoryBuilder) {
     const asyncBootUp = new AsyncBootUp();
     const registryConf = ilcConfigRoot.getConfig();
+
 
     composeAppSlotPairsToRegister(registryConf).forEach(pair => {
         const slotName = pair.slotName;
         const appName = pair.appName;
         const appId = pair.appId;
-
-        const appConfig = ilcConfigRoot.getConfigForAppByName(appName);
-        const appL10nManifestPath = appConfig.l10nManifest;
-        const sdkOptions = new SdkOptions( {
-            i18n: {
-                manifestPath: appL10nManifestPath,
-            },
-        });
+        const sdkInstanceFactory = sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
 
         let lifecycleMethods;
         const updateFragmentManually = () => {
@@ -36,7 +27,7 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
 
         const isUpdatePropsMode = () => lifecycleMethods.update && registryConf.settings.onPropsUpdate === 'update';
 
-        const appSdk = new IlcAppSdk(window.ILC.getAppSdkAdapter(appId), sdkOptions.toJSON());
+        const appSdk = sdkInstanceFactory(appId);
         const onUnmount = async () => {
             if (isUpdatePropsMode()) {
                 router.removeListener(ilcEvents.updateAppInSlot(slotName, appName), updateFragmentManually);
