@@ -90,7 +90,7 @@ export class Client {
         this.#urlProcessor = new UrlProcessor(this.#configRoot.getSettingsByKey('trailingSlash'));
 
         this.#moduleLoader = this.#getModuleLoader();
-        this.#bundleLoader = new BundleLoader(this.#configRoot.getConfig(), this.#moduleLoader);
+        this.#bundleLoader = new BundleLoader(this.#configRoot.getConfig(), this.#moduleLoader, this.#configRoot);
 
         this.#preheat();
         this.#expose();

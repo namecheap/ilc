@@ -7,15 +7,17 @@ export class BundleLoader {
     #moduleLoader;
     #delayCssRemoval;
 
-    constructor(registryConf, moduleLoader) {
-        this.#registryApps = registryConf.apps;
-        this.#delayCssRemoval = registryConf.settings && registryConf.settings.globalSpinner && registryConf.settings.globalSpinner.enabled;
+    constructor(configRoot, moduleLoader) {
+        this.#registryApps = configRoot.getConfigForApps();
+        this.#delayCssRemoval = configRoot.isGlobalSpinnerEnabled();
         if (typeof this.#delayCssRemoval === 'undefined') {
             this.#delayCssRemoval = true;
         }
 
         this.#moduleLoader = moduleLoader;
     }
+
+    #enableDelayCssre
 
     /**
      * Speculative preload of the JS bundle.
