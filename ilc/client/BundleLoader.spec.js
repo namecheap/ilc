@@ -7,6 +7,7 @@ import { getRegistryMock } from '../tests/helpers'
 
 import { BundleLoader } from './BundleLoader';
 import { CssTrackedApp } from './CssTrackedApp';
+import {getIlcConfigRoot} from "./configuration/getIlcConfigRoot";
 
 const fnCallbacks = {
     bootstrap: async () => 'bootstrap',
@@ -19,6 +20,16 @@ describe('BundleLoader', () => {
         import: sinon.stub(),
     };
     let registry;
+    const configRoot = getIlcConfigRoot();
+
+    const mockFactoryFn = () => {};
+
+    const sdkFactory = {
+        getSdkInstanceFactoryByApplicationName() {
+            return mockFactoryFn;
+        },
+        getSdkAdapterInstance() {},
+    };
 
     beforeEach(() => {
         registry = getRegistryMock({
@@ -37,7 +48,11 @@ describe('BundleLoader', () => {
                 },
             }
         }).getConfig().data;
+
+        configRoot.registryConfiguration = registry;
     })
+
+
 
     afterEach(() => {
         SystemJs.import.reset();
@@ -45,7 +60,7 @@ describe('BundleLoader', () => {
 
     describe('preloadApp()', () => {
         it('preloads app by spaBundle URL directly instead of name and ignores all errors', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const appName = '@portal/primary';
 
             SystemJs.import.rejects();
@@ -54,7 +69,7 @@ describe('BundleLoader', () => {
         });
 
         it('preloads app and it\'s wrapper', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const appName = '@portal/withWrapper';
 
             SystemJs.import.rejects();
@@ -68,7 +83,7 @@ describe('BundleLoader', () => {
 
     describe('loadApp()', () => {
         it('loads app and returns callbacks from mainSpa and calls it once', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const appName = '@portal/primary';
 
             const mainSpa = sinon.stub().returns(fnCallbacks);
@@ -90,7 +105,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads app and returns callbacks from mainSpa exported as default and calls it once', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const appName = '@portal/primary';
 
             const mainSpa = sinon.stub().returns(fnCallbacks);
@@ -108,11 +123,11 @@ describe('BundleLoader', () => {
             sinon.assert.calledTwice(SystemJs.import);
 
             sinon.assert.calledOnce(mainSpa);
-            sinon.assert.calledWith(mainSpa, registry.apps[appName].props);
+            sinon.assert.calledWith(mainSpa, registry.apps[appName].props, { sdkFactory: mockFactoryFn });
         });
 
         it('loads app and returns callbacks', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const appName = '@portal/primary';
 
             SystemJs.import.resolves(fnCallbacks);
@@ -124,7 +139,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads app and returns callbacks from default export', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const appName = '@portal/primary';
 
             SystemJs.import.resolves({default: fnCallbacks});
@@ -138,7 +153,7 @@ describe('BundleLoader', () => {
 
     describe('loadCss()', () => {
         it('loads CSS', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const cssUrl = 'http://127.0.0.1/my.css';
 
             SystemJs.import.resolves('CSS');
@@ -147,7 +162,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads CSS and ignores error caused by double loading', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const cssUrl = 'http://127.0.0.1/my.css';
 
             SystemJs.import.rejects(new Error('has already been loaded using another way'));
@@ -155,7 +170,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads CSS and forwards errors', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const cssUrl = 'http://127.0.0.1/my.css';
 
             SystemJs.import.rejects(new Error('other err'));
@@ -165,7 +180,7 @@ describe('BundleLoader', () => {
 
     describe('loadAppWithCss()', () => {
         it('loads app without CSS bundle', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const appName = '@portal/primary';
 
             SystemJs.import.resolves(fnCallbacks);
@@ -177,7 +192,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads app with CSS bundle', async () => {
-            const loader = new BundleLoader(registry, SystemJs);
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactory);
             const appName = '@portal/appWithCss';
 
             SystemJs.import.resolves(fnCallbacks);

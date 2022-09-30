@@ -8,12 +8,14 @@ export class BundleLoader {
     #moduleLoader;
     #delayCssRemoval;
     #configRoot;
+    #sdkFactory;
 
-    constructor(configRoot, moduleLoader) {
+    constructor(configRoot, moduleLoader, sdkFactory) {
         this.#registryApps = configRoot.getConfigForApps();
         this.#delayCssRemoval = configRoot.isGlobalSpinnerEnabled();
         this.#moduleLoader = moduleLoader;
         this.#configRoot = configRoot;
+        this.#sdkFactory = sdkFactory;
     }
 
     /**
@@ -33,24 +35,12 @@ export class BundleLoader {
         }
     }
 
-    #getAppSdkOptions(appName) {
-        const appConfig = this.#configRoot.getConfigForAppByName(appName);
-        const appL10nManifestPath = appConfig.l10nManifest;
-        const sdkOptions = new SdkOptions( {
-            i18n: {
-                manifestPath: appL10nManifestPath,
-            },
-        });
-
-        return sdkOptions;
-    }
-
     loadApp(appName) {
         const app = this.#getApp(appName);
         return this.#moduleLoader.import(appName)
             .then(appBundle => {
-                const sdkConfig = this.#getAppSdkOptions(appName);
-                const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props, sdkConfig);
+                const sdkInstanceFactory = this.#sdkFactory.getSdkInstanceFactoryByApplicationName(appName);
+                const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props, { sdkFactory: sdkInstanceFactory });
                 return typeof app.cssBundle === 'string' ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval).getDecoratedApp() : rawCallbacks;
             })
     }
@@ -84,7 +74,7 @@ export class BundleLoader {
         return app;
     }
 
-    #getAppSpaCallbacks = (appBundle, props = {}, sdkConfig) => {
+    #getAppSpaCallbacks = (appBundle, props = {}, { sdkFactory }) => {
         // We do this to make sure that mainSpa function will be called only once
         if (this.#cache.has(appBundle)) {
             return this.#cache.get(appBundle);
@@ -93,7 +83,7 @@ export class BundleLoader {
         const mainSpa = appBundle.mainSpa || appBundle.default && appBundle.default.mainSpa;
 
         if (mainSpa !== undefined && typeof mainSpa === 'function') {
-            const res = mainSpa(props, sdkConfig);
+            const res = mainSpa(props, { sdkFactory });
             this.#cache.set(appBundle, res);
             return res;
         } else {
