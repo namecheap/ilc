@@ -255,7 +255,11 @@ export class Client {
             window.define = window.ILC.define;
         }
 
-        const parcelApi = new ParcelApi(this.#configRoot.getConfig(), this.#bundleLoader, this.#getAppSdkAdapter.bind(this));
+        const parcelApi = new ParcelApi(
+            this.#configRoot.getConfig(),
+            this.#bundleLoader,
+            this.#sdkFactory.getSdkAdapterInstance.bind(this.#sdkFactory)
+        );
 
         Object.assign(window.ILC, {
             loadApp: this.#bundleLoader.loadAppWithCss.bind(this.#bundleLoader), // Internal API for Namecheap, not for public use
