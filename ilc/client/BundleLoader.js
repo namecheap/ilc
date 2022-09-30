@@ -1,4 +1,5 @@
 import { CssTrackedApp } from './CssTrackedApp';
+import { SdkOptions } from '../common/SdkOptions';
 
 export class BundleLoader {
 
@@ -6,11 +7,13 @@ export class BundleLoader {
     #registryApps;
     #moduleLoader;
     #delayCssRemoval;
+    #configRoot;
 
     constructor(configRoot, moduleLoader) {
         this.#registryApps = configRoot.getConfigForApps();
         this.#delayCssRemoval = configRoot.isGlobalSpinnerEnabled();
         this.#moduleLoader = moduleLoader;
+        this.#configRoot = configRoot;
     }
 
     /**
@@ -30,11 +33,24 @@ export class BundleLoader {
         }
     }
 
+    #getAppSdkOptions(appName) {
+        const appConfig = this.#configRoot.getConfigForAppByName(appName);
+        const appL10nManifestPath = appConfig.l10nManifest;
+        const sdkOptions = new SdkOptions( {
+            i18n: {
+                manifestPath: appL10nManifestPath,
+            },
+        });
+
+        return sdkOptions;
+    }
+
     loadApp(appName) {
         const app = this.#getApp(appName);
         return this.#moduleLoader.import(appName)
             .then(appBundle => {
-                const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props);
+                const sdkConfig = this.#getAppSdkOptions(appName);
+                const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props, sdkConfig);
                 return typeof app.cssBundle === 'string' ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval).getDecoratedApp() : rawCallbacks;
             })
     }
@@ -60,7 +76,7 @@ export class BundleLoader {
     }
 
     #getApp = (appName) => {
-        const app = this.#registryApps[appName];
+        const app = this.#configRoot.getConfigForAppByName(appName);
         if (!app) {
             throw new Error(`Unable to find requested app "${appName}" in Registry`);
         }
@@ -68,7 +84,7 @@ export class BundleLoader {
         return app;
     }
 
-    #getAppSpaCallbacks = (appBundle, props = {}) => {
+    #getAppSpaCallbacks = (appBundle, props = {}, sdkConfig) => {
         // We do this to make sure that mainSpa function will be called only once
         if (this.#cache.has(appBundle)) {
             return this.#cache.get(appBundle);
@@ -77,7 +93,7 @@ export class BundleLoader {
         const mainSpa = appBundle.mainSpa || appBundle.default && appBundle.default.mainSpa;
 
         if (mainSpa !== undefined && typeof mainSpa === 'function') {
-            const res = mainSpa(props);
+            const res = mainSpa(props, sdkConfig);
             this.#cache.set(appBundle, res);
             return res;
         } else {
