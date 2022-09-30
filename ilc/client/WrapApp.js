@@ -1,5 +1,5 @@
 import {flattenFnArray} from './utils';
-import transitionManager, {slotWillBe} from './TransitionManager/TransitionManager';
+import {slotWillBe} from './TransitionManager/TransitionManager';
 import {appIdToNameAndSlot} from '../common/utils';
 
 const APP_STATES = {
@@ -18,9 +18,9 @@ export default class WrapApp {
     #appState = 0;
     #wrapperState = 0;
 
-    constructor(wrapperConf, ssrOverrideProps) {
+    constructor(wrapperConf, ssrOverrideProps, transitionManager) {
         this.#wrapperConf = wrapperConf;
-        this.#transitionManager = transitionManager();
+        this.#transitionManager = transitionManager;
 
         if (ssrOverrideProps) {
             this.#appExtraProps = ssrOverrideProps;

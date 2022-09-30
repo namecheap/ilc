@@ -9,7 +9,7 @@ import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
 import { SdkOptions } from '../common/SdkOptions';
 
-export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader) {
+export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader, transitionManager) {
     const asyncBootUp = new AsyncBootUp();
     const registryConf = ilcConfigRoot.getConfig();
 
@@ -99,7 +99,7 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
 
                 lifecycleMethods = await Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {
                     if (wrapperConf !== null) {
-                        const wrapper = new WrapApp(wrapperConf, overrides.wrapperPropsOverride);
+                        const wrapper = new WrapApp(wrapperConf, overrides.wrapperPropsOverride, transitionManager);
 
                         spaCallbacks = wrapper.wrapWith(spaCallbacks, wrapperSpaCallbacks);
                     }

@@ -623,7 +623,18 @@ describe('TransitionManager', () => {
         chai.expect(spinner.getRef()).to.be.null;
     });
 
+    it('should throw error in case of double subscription to single SPA events', function () {
+        chai.expect(function() {
+            new TransitionManager(logger, {
+                enabled: true,
+                customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`
+            });
+        }).to.throw();
+    });
+
     it('should run scripts in customHTML', async () => {
+        removePageTransactionListeners();
+
         const expectedClass = 'iAmSetFromCustomHTML';
 
         const transitionManager = new TransitionManager(logger, {
@@ -633,6 +644,8 @@ describe('TransitionManager', () => {
                 <script>document.querySelector('#${spinner.id}').classList.add('${expectedClass}')</script>
             `
         });
+
+        removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
         const handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);
 
         applications.navbar.appendApplication();
