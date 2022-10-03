@@ -1,5 +1,6 @@
 import * as uuidv4 from 'uuid/v4';
 import IlcEvents from '../constants/ilcEvents';
+import defaultErrorTransformer from './defaultErrorTransformer';
 
 const msgRegexps = [
     /^Application '.+?' died in status LOADING_SOURCE_CODE: Failed to fetch$/
@@ -22,11 +23,21 @@ export default class ErrorHandlerManager {
 
     #logger;
 
+    #registryConfig;
+
     #registryService;
 
-    constructor(logger, registryService) {
+    #errorTransformers;
+
+    constructor(registryConfig, logger, registryService) {
         this.#logger = logger;
+        this.#registryConfig = registryConfig;
         this.#registryService = registryService;
+        this.#errorTransformers = [defaultErrorTransformer];
+    }
+
+    addErrorTransformer(handler) {
+        this.#errorTransformers.push(handler);
     }
 
     internalError(error, errorInfo = {}) {
@@ -99,6 +110,25 @@ export default class ErrorHandlerManager {
             });
     }
 
+    #runErrorTransformers(error, errorInfo = {}) {
+        return this.#errorTransformers.reduce(({ error, errorInfo }, transformer) => {
+            try {
+                return transformer({
+                    error,
+                    errorInfo,
+                    config: this.#registryConfig,
+                });
+            } catch(e) {
+                this.#logger.error('Error transfromer failed to transform error', {
+                    error: e,
+                    originalError: error,
+                });
+
+                return { error, errorInfo };
+            }
+        }, { error, errorInfo });
+    }
+
     #noticeError(error, errorInfo = {}) {
         // Ignoring all consequent errors after crash
         if (this.#ilcAlreadyCrashed) {
@@ -106,25 +136,29 @@ export default class ErrorHandlerManager {
             return;
         }
 
-        const infoData = {
+        errorInfo = {
             errorId: uuidv4(),
             ...errorInfo,
         };
-        
+
         if (error.data) {
-            Object.assign(infoData, error.data);
+            Object.assign(errorInfo, error.data);
         }
+
+        const transformResult = this.#runErrorTransformers(error, errorInfo);
+        error = transformResult.error;
+        errorInfo = transformResult.errorInfo;
 
         // TODO: Move to logger abstraction
         if (window.newrelic && window.newrelic.noticeError && canBeSentToNewRelic(error)) {
-            window.newrelic.noticeError(error, infoData);
+            window.newrelic.noticeError(error, errorInfo);
         }
     
         this.#logger.error(JSON.stringify({
             type: error.name,
             message: error.message,
             stack: error.stack.split('\n'),
-            additionalInfo: infoData,
+            additionalInfo: errorInfo,
         }), error);
     }
 }

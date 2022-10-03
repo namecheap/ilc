@@ -67,8 +67,7 @@ export class Client {
         this.#logger = window.console;
         this.#registryService = registryService;
 
-        this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, this.#registryService);
-
+        this.#errorHandlerManager = new ErrorHandlerManager(this.#configRoot.getConfig(), this.#logger, this.#registryService);
         this.#transitionManager = new TransitionManager(this.#logger, this.#configRoot.getSettingsByKey('globalSpinner'));
         this.#pluginManager = new PluginManager(require.context('../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/));
 
@@ -272,6 +271,7 @@ export class Client {
             getAppSdkAdapter: this.#getAppSdkAdapter.bind(this),
             importParcelFromApp: parcelApi.importParcelFromApp.bind(this),
             getAllSharedLibNames: () => Promise.resolve(Object.keys(this.#configRoot.getConfig().sharedLibs)),
+            addErrorTransformer: this.#errorHandlerManager.addErrorTransformer.bind(this.errorHandlerManager),
         });
     }
 
