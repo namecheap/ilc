@@ -1,6 +1,8 @@
 import WrapApp from './WrapApp';
 import chai from 'chai';
 import sinon from 'sinon';
+import { getIlcConfigRoot } from './configuration/getIlcConfigRoot';
+import { TransitionManager } from './TransitionManager/TransitionManager';
 
 describe('WrapApp', () => {
     const appCallbacksFake = {
@@ -116,9 +118,15 @@ describe('WrapApp', () => {
         }
     }
 
+    let transitionManager;
+
     beforeEach(() => {
         initFakeIlcConfig();
         initFakeSlot('body');
+
+        const ilcConfigRoot = getIlcConfigRoot();
+        const ilcConfigSettings = ilcConfigRoot.getSettings();
+        transitionManager = new TransitionManager(window.console, ilcConfigSettings && ilcConfigSettings.globalSpinner);
     });
 
     afterEach(() => {
@@ -126,12 +134,14 @@ describe('WrapApp', () => {
         wrapperCallbacksFakeResetHistory();
         appCallbacksFakeArrayResetHistory();
         wrapperCallbacksFakeArrayResetHistory();
+        transitionManager.removeEventListeners();
     });
 
     it('should bootstrap wrapper', async () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -146,6 +156,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -160,6 +171,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -175,6 +187,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -190,6 +203,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -206,6 +220,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -222,6 +237,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -246,6 +262,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -269,6 +286,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -298,6 +316,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -321,6 +340,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -350,6 +370,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -373,6 +394,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -402,6 +424,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
+            transitionManager,
         );
 
         const { bootstrap } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -416,6 +439,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
+            transitionManager,
         );
 
         const { bootstrap } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -445,6 +469,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
+            transitionManager,
         );
 
         const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -460,6 +485,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -476,6 +502,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -492,6 +519,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -515,6 +543,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -546,6 +575,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -571,6 +601,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -596,6 +627,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -617,6 +649,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -638,6 +671,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -676,6 +710,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount, unmount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);
@@ -726,6 +761,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFake, wrapperCallbacksFake);
@@ -751,6 +787,7 @@ describe('WrapApp', () => {
         const wrapApp = new WrapApp(
             { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
             null,
+            transitionManager,
         );
 
         const { bootstrap, mount } = wrapApp.wrapWith(appCallbacksFakeArray, wrapperCallbacksFakeArray);

@@ -1,5 +1,4 @@
 import { getSlotElement } from '../utils';
-import { getIlcConfigRoot } from '../configuration/getIlcConfigRoot';
 import TransitionBlocker from './TransitionBlocker';
 import NamedTransactionBlocker from './NamedTransitionBlocker';
 import singleSpaEvents from '../constants/singleSpaEvents';
@@ -13,6 +12,11 @@ export const slotWillBe = {
     rerendered: 'rerendered',
     default: null,
 };
+
+// This is a small workaround to ensure that Transition Manager and subscription will be created only when it is possible
+// it is added for a quick fix
+// but in future TransitionManager has to be refactored, so the unsafe operations are performed outside this class and be strongly controlled
+let unsafeEventSubscriptionHappened = false;
 
 export class TransitionManager {
     #logger;
@@ -300,15 +304,23 @@ export class TransitionManager {
         this.#windowEventHandlers[ilcEvents.CRASH] = this.#removeGlobalSpinner;
         this.#windowEventHandlers[singleSpaEvents.ROUTING_EVENT] = this.#onRouteChange;
 
+        if (unsafeEventSubscriptionHappened) {
+            throw new Error('There is an attempt to subscribe on SPA routing twice, which is unsafe and will spin additional events of ILC lifecycle. Most probably it is an internal ILC error.')
+        }
+
         for (const eventName in this.#windowEventHandlers) {
             window.addEventListener(eventName, this.#windowEventHandlers[eventName]);
         }
+
+        unsafeEventSubscriptionHappened = true
     };
 
     removeEventListeners = () => {
         for (const eventName in this.#windowEventHandlers) {
             window.removeEventListener(eventName, this.#windowEventHandlers[eventName]);
         }
+
+        unsafeEventSubscriptionHappened = false;
     };
 
     #onRouteChange = () => {
@@ -317,18 +329,4 @@ export class TransitionManager {
             window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
         }
     };
-}
-
-let defaultTransitionManagerInstance = null;
-/**
- * @return {TransitionManager}
- */
-export default function defaultFactory() {
-    if (defaultTransitionManagerInstance === null) {
-        const ilcConfigRoot = getIlcConfigRoot();
-        const ilcConfigSettings = ilcConfigRoot.getSettings();
-        defaultTransitionManagerInstance = new TransitionManager(window.console, ilcConfigSettings && ilcConfigSettings.globalSpinner);
-    }
-
-    return defaultTransitionManagerInstance;
 }
