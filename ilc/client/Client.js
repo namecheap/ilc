@@ -96,8 +96,6 @@ export class Client {
         this.#sdkFactoryBuilder = new SdkFactoryBuilder(this.#configRoot, this.#i18n, this.#router);
         this.#bundleLoader = new BundleLoader(this.#configRoot, this.#moduleLoader, this.#sdkFactoryBuilder);
 
-
-
         this.#preheat();
         this.#expose();
         this.#configure();
@@ -169,14 +167,14 @@ export class Client {
     }
 
     #onRuntimeError(event) {
-        event.preventDefault();
-
         let { error } = event;
 
         if (this.#isCorsError(event)) {
             error = new CorsError({
                 message: event.message
             });
+        } else {
+            event.preventDefault();
         }
 
         const { filename: fileName } = event;
