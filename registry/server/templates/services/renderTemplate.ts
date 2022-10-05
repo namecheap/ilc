@@ -177,7 +177,7 @@ function wrapWithStylesheetLink(styleRef: string): string {
 }
 
 function wrapWithScriptTag(url: string): string {
-    return `<script src="${url}"></script>`;
+    return `<script src="${url}" crossorigin="anonymous"></script>`;
 }
 
 function wrapWithComments(id: string, data: string): string {

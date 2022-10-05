@@ -239,7 +239,7 @@ describe(`Tests ${example.url}`, () => {
                         ${`<!-- Template include "${includes[0].attributes.id}" START -->\n` +
                     '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
                     includes[0].api.response.data + '\n' +
-                    '<script src="https://my.awesome.server/my-awesome-script.js"></script>\n' +
+                    '<script src="https://my.awesome.server/my-awesome-script.js" crossorigin="anonymous"></script>\n' +
                     `<!-- Template include "${includes[0].attributes.id}" END -->`
                     }
                         <script>window.console.log('Something...')</script>

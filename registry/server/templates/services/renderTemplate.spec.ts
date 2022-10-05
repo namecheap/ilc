@@ -168,7 +168,7 @@ describe('renderTemplate', () => {
                     `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
                     '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">' +
                     includes[0].api.response.data + '\n' +
-                    '<script src="https://my.awesome.server/my-awesome-script.js"></script>\n' +
+                    '<script src="https://my.awesome.server/my-awesome-script.js" crossorigin="anonymous"></script>\n' +
                     `<!-- Template include "${includes[0].attributes.id}" END -->`
                 }
                 ${
@@ -181,7 +181,7 @@ describe('renderTemplate', () => {
                     `<!-- Template include "${includes[2].attributes.id}" START -->\n` +
                     '<link rel="stylesheet" href="https://my.amazing.server/my-amazing-stylesheet.css">' +
                     includes[2].api.response.data + '\n' +
-                    '<script src="https://my.amazing.server/my-awesome-script.js"></script>\n' +
+                    '<script src="https://my.amazing.server/my-awesome-script.js" crossorigin="anonymous"></script>\n' +
                     `<!-- Template include "${includes[2].attributes.id}" END -->`
                 }
             </head>
