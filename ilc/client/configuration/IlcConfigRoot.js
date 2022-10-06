@@ -41,6 +41,12 @@ export class IlcConfigRoot {
     getSettingsByKey(key) {
         return this.registryConfiguration['settings'][key];
     }
+
+    isGlobalSpinnerEnabled() {
+        const globalSpinnerConfig = this.getSettingsByKey('globalSpinner');
+        const isEnabled = globalSpinnerConfig && globalSpinnerConfig.enabled;
+        return !!isEnabled;
+    }
 }
 
 export const ilcConfigRoot = new IlcConfigRoot();
