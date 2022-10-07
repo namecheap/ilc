@@ -121,8 +121,6 @@ router.get('/', async (req, res) => {
         return acc;
     }, {});
 
-    console.log(data);
-
     return res.send(data);
 });
 
