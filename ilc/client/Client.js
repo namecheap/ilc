@@ -266,6 +266,9 @@ export class Client {
             mountRootParcel: singleSpa.mountRootParcel.bind(singleSpa),
             importParcelFromApp: parcelApi.importParcelFromApp.bind(this),
             getAllSharedLibNames: () => Promise.resolve(Object.keys(this.#configRoot.getConfig().sharedLibs)),
+            getSharedLibConfigByName: (name) => {
+                return Promise.resolve(this.#configRoot.getConfigForSharedLibsByName(name));
+            },
             // @Deprecated
             // This method was designed to allow to create an app w/o singleSPA invocation (Case for dynamically loaded application)
             // It leads to situation when fragment creates dependency to ilc-sdk
