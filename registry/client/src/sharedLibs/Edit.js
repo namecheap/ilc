@@ -82,6 +82,7 @@ const InputForm = ({mode = 'edit', ...props}) => {
                             <Fragment>
                                 <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" helperText={assetsDiscoveryUrlWarningText} />
                                 <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl} />
+                                <TextInput fullWidth resettable type="url" source="l10nManifest" validate={validators.url} />
                             </Fragment>
                         );
                     }}

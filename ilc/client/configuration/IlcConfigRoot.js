@@ -30,8 +30,14 @@ export class IlcConfigRoot {
         return this.registryConfiguration['apps'][name];
     }
 
+    // @Deprecated. Config for shared lib was desinged in non extensible format.
+    // Next Major release it will require breaking change to return configuration object
     getConfigForSharedLibs() {
         return this.registryConfiguration['sharedLibs'];
+    }
+
+    getConfigForSharedLibsByName(name) {
+        return this.registryConfiguration['dynamicLibs'][name];
     }
 
     getSettings() {

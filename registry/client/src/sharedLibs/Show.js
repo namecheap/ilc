@@ -26,6 +26,7 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
                 <Tab label="Assets">
                     <UrlField source="assetsDiscoveryUrl" emptyText={EMPTY_TEXT} />
                     <UrlField source="spaBundle" />
+                    <UrlField source="l10nManifest" emptyText={EMPTY_TEXT} />
                 </Tab>
             </TabbedShowLayout>
         </Show>
