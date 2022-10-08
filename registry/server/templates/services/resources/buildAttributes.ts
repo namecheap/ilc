@@ -1,3 +1,5 @@
+import escapeHtml from 'escape-html';
+
 export const buildAttributes = (values: { [key: string]: string }): string => {
     return Object.keys(values)
         .reduce((stringified, propertyName, index) => {
@@ -7,7 +9,7 @@ export const buildAttributes = (values: { [key: string]: string }): string => {
             let attribute = propertyName;
 
             if (propertyName !== propertyValue) {
-                attribute += '="' + propertyValue + '"';
+                attribute += '="' + escapeHtml(propertyValue) + '"';
             }
 
             return stringified + space + attribute;
