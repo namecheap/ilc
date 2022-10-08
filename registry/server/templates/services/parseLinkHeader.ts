@@ -27,22 +27,21 @@ function parseLinkHeader(linkHeader: string): ParsedLink[] {
         .split(/,\s*</)
         .reduce<ParsedLink[]>((result, link: string) => {
             const match = link.match(/<?([^>]*)>(.*)/);
-            
+
             if (!match) {
                 return result;
             }
 
-            const linkUrl = match[1];
-            
-            result.push({
-                uri: linkUrl,
-                rel: getRelValue(match[2]),
-                params: getParams(match[2])
-            });
+            const uri = match[1];
+            const rel = getRelValue(match[2]);
+            const params = getParams(match[2]);
+
+            if (rel !== null) {
+                result.push({ uri, rel, params });
+            }
 
             return result;
-        }, [])
-        .filter((v) => v.rel != null);
+        }, []);
 };
 
 /**
