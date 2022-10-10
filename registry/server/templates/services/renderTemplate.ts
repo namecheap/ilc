@@ -1,8 +1,12 @@
 import axios from 'axios';
 
-import parseLinkHeader from './parseLinkHeader';
 import errors from '../errors';
 import { uniqueArray } from '../../util/helpers';
+import { ResourceLinkParser } from './resources/ResourceLinkParser';
+import { Resource } from './resources/Resource';
+import { ResourceStylesheet } from './resources/ResourceStylesheet';
+import { ResourceScript } from './resources/ResourceScript';
+import { ResourcePreload } from './resources/ResourcePreload';
 
 interface IncludeAttributes {
     id: string,
@@ -128,11 +132,22 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Fe
             let styleRefs: Array<string> = [];
 
             if (link) {
-                const refs = selectStyleAndScriptRefs(link);
-                styleRefs = refs.styles;
-                const stylesheets = refs.styles.map(wrapWithStylesheetLink);
-                const scripts = refs.scripts.map(wrapWithScriptTag);
-                data = stylesheets.join('\n') + data;
+                const resources: Resource[] = ResourceLinkParser.parse(link);
+                
+                const scripts = resources.filter(resource => resource instanceof ResourceScript);
+                const preloads = resources.filter(resource => resource instanceof ResourcePreload);
+                const styles = resources.filter(resource => resource instanceof ResourceStylesheet);
+
+                styleRefs = styles.map(style => style.uri);
+               
+                if (styles.length) {
+                    data = styles.join('\n') + '\n' + data;
+                }
+                 
+                if (preloads.length) {
+                    data = preloads.join('\n') + '\n' + data;
+                }
+
                 if (scripts.length) {
                     data += '\n' + scripts.join('\n');
                 }
@@ -150,34 +165,9 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Fe
                 data: {
                     include: includeHtmlTag,
                 }
-            })
+            });
         }
     }));
-}
-
-function selectStyleAndScriptRefs(link: string) {
-    const includeLinkHeader = parseLinkHeader(link);
-
-    return includeLinkHeader.reduce((acc: Record<'styles' | 'scripts', string[]>, attributes: any) => {
-        if (attributes.rel === 'stylesheet') {
-            acc.styles.push(attributes.uri);
-        } else if (attributes.rel === 'script') {
-            acc.scripts.push(attributes.uri);
-        }
-
-        return acc;
-    }, {
-        styles: [],
-        scripts: [],
-    });
-}
-
-function wrapWithStylesheetLink(styleRef: string): string {
-    return `<link rel="stylesheet" href="${styleRef}">`;
-}
-
-function wrapWithScriptTag(url: string): string {
-    return `<script src="${url}"></script>`;
 }
 
 function wrapWithComments(id: string, data: string): string {

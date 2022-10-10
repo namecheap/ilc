@@ -1,5 +1,13 @@
 // TODO Copied from tailorX, need to move this into a library
 
+export type ParsedLink = {
+    params: {
+        [key: string]: string;
+    },
+    rel: string | null;
+    uri: string;   
+};
+
 /**
  * Parse link headers
  * '<http://example.com/script.js>; rel="fragment-script"'
@@ -14,22 +22,26 @@
  * Based on code from parse-link-header!
  * https://github.com/thlorenz/parse-link-header/blob/master/index.js
  */
-function parseLinkHeader(linkHeader: string) {
+function parseLinkHeader(linkHeader: string): ParsedLink[] {
     return fixLink(linkHeader)
         .split(/,\s*</)
-        .map((link: string) => {
+        .reduce<ParsedLink[]>((result, link: string) => {
             const match = link.match(/<?([^>]*)>(.*)/);
+
             if (!match) {
-                return null;
+                return result;
             }
-            const linkUrl = match[1];
-            return {
-                uri: linkUrl,
-                rel: getRelValue(match[2]),
-                params: getParams(match[2])
-            };
-        })
-        .filter((v) => v && v.rel != null);
+
+            const uri = match[1];
+            const rel = getRelValue(match[2]);
+            const params = getParams(match[2]);
+
+            if (rel !== null) {
+                result.push({ uri, rel, params });
+            }
+
+            return result;
+        }, []);
 };
 
 /**
