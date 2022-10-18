@@ -1,5 +1,10 @@
-import * as uuidv4 from 'uuid/v4';
 import IlcEvents from '../constants/ilcEvents';
+import {
+    BaseError,
+    InternalError,
+    FetchTemplateError,
+    CriticalInternalError,
+} from '../errors';
 
 const msgRegexps = [
     /^Application '.+?' died in status LOADING_SOURCE_CODE: Failed to fetch$/
@@ -29,52 +34,23 @@ export default class ErrorHandlerManager {
         this.#registryService = registryService;
     }
 
-    internalError(error, errorInfo = {}) {
-        this.#noticeError(error, {
-            ...errorInfo,
-            type: 'INTERNAL_ERROR',
-        });
+    handleError(error) {        
+        if (!(error instanceof BaseError)) {
+            error = new InternalError({
+                cause: error,
+            });
+        }
+
+        this.#noticeError(error);
+
+        if (error instanceof CriticalInternalError) {
+            this.#crashIlc(error);
+        }
     }
 
-    criticalInternalError(error, errorInfo = {}) {
-        const errorId = uuidv4();
+    #crashIlc(error) {
+        const { errorId } = error.data;
 
-        this.#noticeError(error, {
-            ...errorInfo,
-            errorId,
-            type: 'CRITICAL_INTERNAL_ERROR',
-        });
-
-        this.#crashIlc(errorId);
-    }
-
-    runtimeError(error, errorInfo = {}) {
-        this.#noticeError(error, {
-            ...errorInfo,
-            type: 'MODULE_ERROR',
-        });
-    }
-
-    fragmentError(error, errorInfo = {}) {      
-        this.#noticeError(error, {
-            ...errorInfo,
-            type: 'FRAGMENT_ERROR',
-        });
-    }
-
-    criticalFragmentError(error, errorInfo = {}) {
-        const errorId = uuidv4();
-
-        this.#noticeError(error, {
-            ...errorInfo,
-            errorId,
-            type: 'CRITICAL_FRAGMENT_ERROR',
-        });
-
-        this.#crashIlc(errorId);
-    }
-
-    #crashIlc(errorId) {
         if (this.#ilcAlreadyCrashed) {
             return;
         }
@@ -89,42 +65,37 @@ export default class ErrorHandlerManager {
                 window.dispatchEvent(new CustomEvent(IlcEvents.CRASH));
             })
             .catch((error) => {
-                this.#noticeError(error, {
-                    type: 'FETCH_PAGE_ERROR',
-                    name: error.toString(),
-                    fragmentErrorId: errorId,
+                const fetchTemplateError = new FetchTemplateError({
+                    message: 'Failed to get 500 error template',
+                    cause: error,
+                    data: {
+                        fragmentErrorId: errorId,
+                    }
                 });
+
+                this.#noticeError(fetchTemplateError);
 
                 alert('Something went wrong! Please try to reload page or contact support.');
             });
     }
 
-    #noticeError(error, errorInfo = {}) {
+    #noticeError(error) {
         // Ignoring all consequent errors after crash
         if (this.#ilcAlreadyCrashed) {
             this.#logger.info(`Ignoring error as we already crashed...\n${error.stack}`);
             return;
         }
 
-        const infoData = {
-            errorId: uuidv4(),
-            ...errorInfo,
-        };
-        
-        if (error.data) {
-            Object.assign(infoData, error.data);
-        }
-
         // TODO: Move to logger abstraction
         if (window.newrelic && window.newrelic.noticeError && canBeSentToNewRelic(error)) {
-            window.newrelic.noticeError(error, infoData);
+            window.newrelic.noticeError(error, error.data);
         }
     
         this.#logger.error(JSON.stringify({
             type: error.name,
             message: error.message,
             stack: error.stack.split('\n'),
-            additionalInfo: infoData,
+            additionalInfo: error.data,
         }), error);
     }
 }
