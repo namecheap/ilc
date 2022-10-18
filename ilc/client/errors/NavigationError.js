@@ -4,5 +4,7 @@ import { CriticalInternalError } from './CriticalInternalError';
 
 export const NavigationError = extendError('NavigationError', {
     parent: CriticalInternalError,
-    code: ErrorCodes.NAVIGATION_ERROR
+    defaultData: {
+        code: ErrorCodes.NAVIGATION_ERROR, 
+    },
 });
