@@ -1,3 +1,5 @@
 import { RuntimeError } from './RuntimeError';
 
-export class CorsError extends RuntimeError {};
+export class CorsError extends RuntimeError {
+    name = 'CorsError';
+};

@@ -2,6 +2,8 @@ import * as uuidv4 from 'uuid/v4';
 
 export class BaseError extends Error {
 
+    name = 'BaseError';
+
     data = {};
 
     errorId = uuidv4();
@@ -11,8 +13,6 @@ export class BaseError extends Error {
     constructor({ message, data, cause } = {}) {
         super(message);
 
-        this.name = this.constructor.name;
-       
         if (typeof data !== 'undefined') {
             this.data = data;
         }

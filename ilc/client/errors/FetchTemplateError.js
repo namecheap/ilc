@@ -1,3 +1,5 @@
 import { InternalError } from './InternalError';
 
-export class FetchTemplateError extends InternalError {};
+export class FetchTemplateError extends InternalError {
+    name = 'FetchTemplateError';
+};
