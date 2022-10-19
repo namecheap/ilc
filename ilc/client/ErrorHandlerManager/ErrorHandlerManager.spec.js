@@ -9,6 +9,7 @@ import ErrorHandlerManager from './ErrorHandlerManager';
 
 import {
     InternalError,
+    UnhandledError,
     FetchTemplateError,
     CriticalRuntimeError,
     CriticalInternalError,
@@ -91,15 +92,17 @@ describe('ErrorHandlerManager', () => {
             const noticeErrorArgs = noticeError.getCall(0).args;
             const [noticedError, noticedData] = noticeErrorArgs;
 
-            expect(noticedError).to.be.an.instanceof(InternalError);
+            expect(noticedError).to.be.an.instanceof(UnhandledError);
+            expect(noticedError.message).to.equal('I am internal error');
             expect(noticedData.errorId).to.be.a('string');
-            expect(noticedData.code).to.equal('internal');
+            expect(noticedData.code).to.equal('runtime.unhandled');
 
             const [loggedString, loggedError]  = logger.error.getCall(0).args;
             const parsedLogArgs = JSON.parse(loggedString);
     
             expect(parsedLogArgs).to.include({
-                type: 'InternalError',
+                type: 'UnhandledError',
+                message: 'I am internal error',
             });
 
             expect(parsedLogArgs.stack).deep.equal(noticedError.stack.split('\n'));
