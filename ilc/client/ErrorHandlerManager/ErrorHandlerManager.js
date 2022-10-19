@@ -1,7 +1,7 @@
 import IlcEvents from '../constants/ilcEvents';
 import {
     BaseError,
-    InternalError,
+    UnhandledError,
     FetchTemplateError,
     CriticalRuntimeError,
     CriticalInternalError,
@@ -37,7 +37,8 @@ export default class ErrorHandlerManager {
 
     handleError(error) {        
         if (!(error instanceof BaseError)) {
-            error = new InternalError({
+            error = new UnhandledError({
+                message: error.message,
                 cause: error,
             });
         }
