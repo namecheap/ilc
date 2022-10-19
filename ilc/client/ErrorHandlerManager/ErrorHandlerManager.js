@@ -3,6 +3,7 @@ import {
     BaseError,
     InternalError,
     FetchTemplateError,
+    CriticalRuntimeError,
     CriticalInternalError,
 } from '../errors';
 
@@ -43,21 +44,23 @@ export default class ErrorHandlerManager {
 
         this.#noticeError(error);
 
-        if (error instanceof CriticalInternalError) {
+        if (this.#isCriticalError(error)) {
             this.#crashIlc(error);
         }
     }
 
-    #crashIlc(error) {
-        const { errorId } = error.data;
+    #isCriticalError(error) {
+        return (error instanceof CriticalInternalError || error instanceof CriticalRuntimeError);
+    }
 
+    #crashIlc(error) {
         if (this.#ilcAlreadyCrashed) {
             return;
         }
 
         this.#registryService.getTemplate('500')
             .then((data) => {
-                data = data.data.replace('%ERRORID%', errorId ? `Error ID: ${errorId}` : '');
+                data = data.data.replace('%ERRORID%', error.errorId ? `Error ID: ${error.errorId}` : '');
 
                 document.querySelector('html').innerHTML = data;
 
@@ -69,7 +72,7 @@ export default class ErrorHandlerManager {
                     message: 'Failed to get 500 error template',
                     cause: error,
                     data: {
-                        fragmentErrorId: errorId,
+                        fragmentErrorId: error.errorId,
                     }
                 });
 
@@ -88,14 +91,22 @@ export default class ErrorHandlerManager {
 
         // TODO: Move to logger abstraction
         if (window.newrelic && window.newrelic.noticeError && canBeSentToNewRelic(error)) {
-            window.newrelic.noticeError(error, error.data);
+            window.newrelic.noticeError(error, {
+                ...error.data,
+                code: error.code,
+                errorId: error.errorId,
+            });
         }
     
         this.#logger.error(JSON.stringify({
             type: error.name,
             message: error.message,
             stack: error.stack.split('\n'),
-            additionalInfo: error.data,
+            additionalInfo: {
+                ...error.data,
+                code: error.code,
+                errorId: error.errorId,
+            },
         }), error);
     }
 }

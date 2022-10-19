@@ -7,3 +7,4 @@ export { NavigationError } from './NavigationError';
 export { FetchTemplateError } from './FetchTemplateError';
 export { CriticalFragmentError } from './CriticalFragmentError';
 export { CriticalInternalError } from './CriticalInternalError';
+export { CriticalRuntimeError } from './CriticalRuntimeError'; 

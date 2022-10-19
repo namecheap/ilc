@@ -1,9 +1,3 @@
-import extendError from '@namecheap/error-extender';
+import { RuntimeError } from './RuntimeError';
 
-import { BaseError } from './BaseError';
-import { ErrorCodes } from './ErrorCodes';
-
-export const CorsError = extendError('CorsError', {
-    parent: BaseError,
-    code: ErrorCodes.CORS_ERROR,
-});
+export class CorsError extends RuntimeError {};

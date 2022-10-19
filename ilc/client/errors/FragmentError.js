@@ -1,11 +1,3 @@
-import extendError from '@namecheap/error-extender';
+import { RuntimeError } from './RuntimeError';
 
-import { ErrorCodes } from './ErrorCodes';
-import { InternalError } from './InternalError';
-
-export const FragmentError = extendError('FragmentError', {
-    parent: InternalError,
-    defaultData: {
-        code: ErrorCodes.FRAGMENT_ERROR,
-    },
-});
+export class FragmentError extends RuntimeError {};
