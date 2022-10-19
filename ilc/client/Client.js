@@ -149,6 +149,7 @@ export class Client {
 
             const errorParams = {
                 cause: error,
+                message: error.message,
                 data: {
                     ...errorInfo,
                     appName,
@@ -163,6 +164,7 @@ export class Client {
 
     #onNavigationError(error, errorInfo) {
         const navigationError = new NavigationError({
+            message: error.message,
             data: errorInfo,
             cause: error,
         });
@@ -172,6 +174,7 @@ export class Client {
 
     #onCriticalInternalError(error, errorInfo) {
         const criticalError = new CriticalInternalError({
+            message: error.message,
             data: errorInfo,
             cause: error,
         });
@@ -190,7 +193,7 @@ export class Client {
 
         if (this.#isCorsError(event)) {
             error = new CorsError({
-                message: event.message
+                message: error.message,
             });
         } else {
             event.preventDefault();
@@ -207,6 +210,7 @@ export class Client {
         }
 
         const runtimeError = new RuntimeError({
+            message: error.message,
             cause: error,
             data: {
                 ...moduleInfo,
