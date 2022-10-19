@@ -1,6 +1,7 @@
 /* eslint-env node */
 const fs = require('fs');
 const path = require('path');
+const TerserPlugin = require('terser-webpack-plugin');
 const WrapperPlugin = require('wrapper-webpack-plugin');
 const {ResolveIlcDefaultPluginsWebpackPlugin} = require('ilc-plugins-sdk/webpack');
 
@@ -11,6 +12,18 @@ module.exports = {
         path: path.resolve(__dirname, '../public'),
     },
     mode: 'production',
+    optimization: {
+        minimizer: [
+          new TerserPlugin({
+            cache: true,
+            parallel: true,
+            sourceMap: true,
+            terserOptions: {
+              keep_classnames: /.*(Error|error)$/,
+            },
+          }),
+        ],
+    },
     module: {
         rules: [
             { parser: { System: false } },
