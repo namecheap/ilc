@@ -12,10 +12,17 @@ import {
     addNavigationHook,
 } from './navigationEvents/setupEvents';
 
-import { CorsError } from './errors';
+import {
+    CorsError,
+    RuntimeError,
+    InternalError,
+    NavigationError,
+    FragmentError,
+    CriticalFragmentError,
+    CriticalInternalError,
+} from './errors';
 
 import { triggerAppChange } from './navigationEvents';
-import navigationErrors from './navigationEvents/errors';
 
 import registryService from './registry/factory';
 
@@ -106,7 +113,14 @@ export class Client {
         // to avoid a situation when localhost can't return this template in future
         this.#registryService.preheat()
             .then(() => this.#logger.log('ILC: Registry service preheated successfully'))
-            .catch((error) => this.#errorHandlerManager.internalError(error));
+            .catch((error) => {
+                const preheatError = new InternalError({
+                    cause: error,
+                    message: 'Failed to preheat registry service', 
+                });
+
+                this.#errorHandlerManager.handleError(preheatError);
+            });
     }
 
     #getModuleLoader() {
@@ -133,31 +147,36 @@ export class Client {
                 FRAGMENT_KIND.essential
             ].includes(fragmentKind);
 
-            const extendedErrorInfo = {
-                ...errorInfo,
-                appName,
-                slotName,
+            const errorParams = {
+                cause: error,
+                data: {
+                    ...errorInfo,
+                    appName,
+                    slotName,
+                }
             };
 
-            if (isCriticalError) {
-                this.#errorHandlerManager.criticalFragmentError(error, extendedErrorInfo);
-            } else {
-                this.#errorHandlerManager.fragmentError(error, extendedErrorInfo);
-            }
+            const fragmentError = isCriticalError ? new CriticalFragmentError(errorParams) : new FragmentError(errorParams);
+            this.#errorHandlerManager.handleError(fragmentError);
         };
     }
 
     #onNavigationError(error, errorInfo) {
-        const navigationError = new navigationErrors.NavigationError({
+        const navigationError = new NavigationError({
             data: errorInfo,
             cause: error,
         });
 
-        this.#onCriticalInternalError(navigationError, errorInfo);
+        this.#errorHandlerManager.handleError(navigationError);
     }
 
     #onCriticalInternalError(error, errorInfo) {
-        this.#errorHandlerManager.criticalInternalError(error, errorInfo);
+        const criticalError = new CriticalInternalError({
+            data: errorInfo,
+            cause: error,
+        });
+
+        this.#errorHandlerManager.handleError(criticalError);
     }
 
     #isCorsError(event) {
@@ -187,14 +206,19 @@ export class Client {
             };
         }
 
-        this.#errorHandlerManager.runtimeError(error, {
-            ...moduleInfo,
-            location: {
-                fileName,
-                colNo: event.colno,
-                lineNo: event.lineno,
+        const runtimeError = new RuntimeError({
+            cause: error,
+            data: {
+                ...moduleInfo,
+                location: {
+                    fileName,
+                    colNo: event.colno,
+                    lineNo: event.lineno,
+                },
             },
         });
+
+        this.#errorHandlerManager.handleError(runtimeError);
     }
 
     #onLifecycleError(error) {
