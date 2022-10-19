@@ -20,6 +20,7 @@ module.exports = {
             sourceMap: true,
             terserOptions: {
               keep_classnames: /.*(Error|error)$/,
+              keep_fnames: /.*(Error|error)$/,
             },
           }),
         ],
