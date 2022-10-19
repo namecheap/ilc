@@ -21,6 +21,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@namecheap/error-extender": "^1.2.0",
+    "@namecheap/tailorx": "^7.0.1",
     "@newrelic/native-metrics": "^8.0.0",
     "agentkeepalive": "^4.2.1",
     "axios": "^0.21.4",
@@ -44,7 +45,6 @@
     "single-spa": "5.6.0",
     "systemjs": "6.10.1",
     "systemjs-css-extra": "^1.0.2",
-    "@namecheap/tailorx": "^7.0.1",
     "url-join": "^4.0.1",
     "uuid": "^3.4.0"
   },
@@ -81,6 +81,7 @@
     "rimraf": "^3.0.2",
     "sinon": "^8.1.1",
     "supertest": "^4.0.2",
+    "terser-webpack-plugin": "^1.4.5",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-middleware": "^3.7.2",
