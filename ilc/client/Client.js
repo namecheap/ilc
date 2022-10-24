@@ -193,7 +193,7 @@ export class Client {
 
         if (this.#isCorsError(event)) {
             error = new CorsError({
-                message: error.message,
+                message: event.message,
             });
         } else {
             event.preventDefault();
