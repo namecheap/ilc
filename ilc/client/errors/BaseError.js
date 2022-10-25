@@ -1,18 +1,35 @@
 import * as uuidv4 from 'uuid/v4';
 
 export class BaseError extends Error {
-
     data = {};
 
+    name = 'BaseError';
+
     errorId = uuidv4();
-    
+
+    static errorCode = 'base';
+
     static #codePattern = 'Error';
+
+    static extend(name) {
+        const child = {
+            [name]: class extends this {
+                name = name;
+            }
+        };
+
+        child[name].setErrorCode(BaseError.#classNameToErrorCode(name));
+
+        return child[name];
+    }
+
+    static setErrorCode(errorCode) {
+        this.errorCode = errorCode;
+    }
 
     constructor({ message, data, cause } = {}) {
         super(message);
 
-        this.name = this.constructor.name;
-       
         if (typeof data !== 'undefined') {
             this.data = data;
         }
@@ -33,25 +50,24 @@ export class BaseError extends Error {
         let prototypeValue = Reflect.getPrototypeOf(this);
 
         if (prototypeValue === BaseError.prototype) {
-            return BaseError.#convertCtorName(BaseError.prototype.constructor.name);
+            return BaseError.errorCode;
         }
 
         while ((prototypeValue !== BaseError.prototype && prototypeValue !== null)) {
-            const lowerCaseCtorName = BaseError.#convertCtorName(prototypeValue.constructor.name);
-            codeContainer.push(lowerCaseCtorName);
+            codeContainer.push(prototypeValue.constructor.errorCode);
             prototypeValue = Reflect.getPrototypeOf(prototypeValue);
         }
 
         return codeContainer.reverse().join(codeSeparator);
     }
 
-    static #convertCtorName(toLowerCase) {
-        let ctorName = toLowerCase.charAt(0).toLowerCase() + toLowerCase.slice(1);
+    static #classNameToErrorCode(toLowerCase) {
+        let errorCode = toLowerCase.charAt(0).toLowerCase() + toLowerCase.slice(1);
 
-        if (ctorName.endsWith(this.#codePattern)) {
-            ctorName = ctorName.slice(0, -Math.abs(this.#codePattern.length));
+        if (errorCode.endsWith(this.#codePattern)) {
+            errorCode = errorCode.slice(0, -Math.abs(this.#codePattern.length));
         }
 
-        return ctorName;
+        return errorCode;
     }
 }

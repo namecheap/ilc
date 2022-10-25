@@ -12,18 +12,6 @@ module.exports = {
         path: path.resolve(__dirname, '../public'),
     },
     mode: 'production',
-    optimization: {
-        minimizer: [
-          new TerserPlugin({
-            cache: true,
-            parallel: true,
-            sourceMap: true,
-            terserOptions: {
-              keep_classnames: /.*(Error|error)$/,
-            },
-          }),
-        ],
-    },
     module: {
         rules: [
             { parser: { System: false } },

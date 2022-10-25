@@ -1,3 +1,3 @@
 import { CriticalRuntimeError } from './CriticalRuntimeError';
 
-export class CriticalFragmentError extends CriticalRuntimeError {};
+export const CriticalFragmentError = CriticalRuntimeError.extend('CriticalFragmentError');

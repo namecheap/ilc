@@ -1,3 +1,3 @@
 import { RuntimeError } from './RuntimeError';
 
-export class FragmentError extends RuntimeError {};
+export const FragmentError = RuntimeError.extend('FragmentError');

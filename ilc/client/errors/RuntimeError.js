@@ -1,3 +1,3 @@
 import { BaseError } from './BaseError';
 
-export class RuntimeError extends BaseError {};
+export const RuntimeError = BaseError.extend('RuntimeError');

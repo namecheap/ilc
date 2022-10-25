@@ -1,3 +1,3 @@
 import { InternalError } from './InternalError';
 
-export class FetchTemplateError extends InternalError {};
+export const FetchTemplateError = InternalError.extend('FetchTemplateError');
