@@ -1,5 +1,3 @@
 import { InternalError } from './InternalError';
 
-export class CriticalInternalError extends InternalError {
-    name = 'CriticalInternalError';
-};
+export const CriticalInternalError = InternalError.extend('CriticalInternalError');

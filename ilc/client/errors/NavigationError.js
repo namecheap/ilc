@@ -1,4 +1,3 @@
 import { CriticalRuntimeError } from './CriticalRuntimeError';
-export class NavigationError extends CriticalRuntimeError {
-    name = 'NavigationError';
-};
+
+export const NavigationError = CriticalRuntimeError.extend('NavigationError');

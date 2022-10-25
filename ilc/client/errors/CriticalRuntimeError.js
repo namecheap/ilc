@@ -1,5 +1,3 @@
 import { RuntimeError } from './RuntimeError';
 
-export class CriticalRuntimeError extends RuntimeError {
-    name = 'CriticalRuntimeError';
-};
+export const CriticalRuntimeError = RuntimeError.extend('CriticalRuntimeError');

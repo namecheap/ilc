@@ -1,5 +1,3 @@
 import { BaseError } from './BaseError';
 
-export class InternalError extends BaseError {
-    name = 'InternalError';
-};
+export const InternalError = BaseError.extend('InternalError');
