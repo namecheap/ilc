@@ -115,15 +115,18 @@ describe('request-fragment', () => {
 
         const expectedRouterProps = { basePath: '/', reqUrl: '/wrapper', 'fragmentName': 'wrapper__at__primary' };
         const expectedAppProps = { param1: 'value1' };
+        const wrappedAppProps = { page: 'wrapped' };
 
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
+        const expectedWrappedAppPropsEncoded = Buffer.from(JSON.stringify(wrappedAppProps)).toString('base64');
 
         const mockRequestScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/wrapper')
             .query({
                 routerProps: expectedRouterPropsEncoded,
                 appProps: expectedAppPropsEncoded,
+                wrappedProps: expectedWrappedAppPropsEncoded,
             })
             .reply(200);
 
@@ -169,16 +172,19 @@ describe('request-fragment', () => {
         const expectedWrapperRouterProps = { basePath: '/', reqUrl: '/wrapper', 'fragmentName': 'wrapper__at__primary' };
         const expectedWrapperAppProps = { param1: 'value1' };
         const wrapperPropsOverride = { param2: 'value2' };
+        const wrappedAppProps = { page: 'wrapped' };
 
         const expectedWrapperRouterPropsEncoded = Buffer.from(JSON.stringify(expectedWrapperRouterProps)).toString('base64');
         const expectedWrapperAppPropsEncoded = Buffer.from(JSON.stringify(expectedWrapperAppProps)).toString('base64');
         const wrapperPropsOverrideEncoded = Buffer.from(JSON.stringify(wrapperPropsOverride)).toString('base64');
+        const expectedWrappedAppPropsEncoded = Buffer.from(JSON.stringify(wrappedAppProps)).toString('base64');
 
         const mockRequestWrapperScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/wrapper')
             .query({
                 routerProps: expectedWrapperRouterPropsEncoded,
                 appProps: expectedWrapperAppPropsEncoded,
+                wrappedProps: expectedWrappedAppPropsEncoded,
             })
             .reply(210, '', { 'x-props-override': wrapperPropsOverrideEncoded });
 
