@@ -69,6 +69,9 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
                     wrapperConf = {
                         ...ilcConfigRoot.getConfigForAppByName(appConf.wrappedWith),
                         appId: makeAppId(appConf.wrappedWith, slotName),
+                        ...{
+                            wrappedAppConf: appConf,
+                        }
                     }
                 }
 

@@ -50,7 +50,8 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
                 baseUrl: wrapperConf.src,
                 appId: wrapperConf.appId,
                 props: wrapperConf.props,
-                ignoreBasePath: true
+                ignoreBasePath: true,
+                wrappedAppProps: attributes.appProps
             });
 
             logger.debug({
@@ -207,7 +208,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) => function re
     });
 }
 
-function makeFragmentUrl({route, baseUrl, appId, props, ignoreBasePath = false, sdkOptions}) {
+function makeFragmentUrl({route, baseUrl, appId, props, ignoreBasePath = false, sdkOptions, wrappedAppProps}) {
     const url = new URL(baseUrl);
 
     const reqProps = {
@@ -224,6 +225,10 @@ function makeFragmentUrl({route, baseUrl, appId, props, ignoreBasePath = false, 
 
     if (sdkOptions) {
         url.searchParams.append('sdk', objectToBase64(sdkOptions));
+    }
+
+    if (wrappedAppProps) {
+        url.searchParams.append('wrappedProps', objectToBase64(wrappedAppProps));
     }
 
     return url.toString();

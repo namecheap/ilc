@@ -79,6 +79,7 @@ export default class WrapApp {
         const newProps = Object.assign({}, props);
         newProps.appId = this.#wrapperConf.appId;
         newProps.getCurrentPathProps = () => this.#wrapperConf.props;
+        newProps.getWrappedAppProps = () => this.#wrapperConf.wrappedAppConf?.props;
         newProps.getCurrentBasePath = () => '/';
         newProps.appWrapperData = {
             appId: this.#wrapperConf.appId,
