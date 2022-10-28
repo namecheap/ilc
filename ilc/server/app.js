@@ -11,6 +11,7 @@ const UrlProcessor = require('../common/UrlProcessor');
 const ServerRouter = require('./tailor/server-router');
 const mergeConfigs = require('./tailor/merge-configs');
 const parseOverrideConfig = require('./tailor/parse-override-config');
+const { SlotCollection } = require('../common/Slot/SlotCollection');
 
 /**
  * @param {Registry} registryService
@@ -115,6 +116,8 @@ module.exports = (registryService, pluginManager) => {
 
         registryConfig = mergeConfigs(registryConfig, overrideConfigs);
 
+        registryConfig.routes[3].slots.body.appName = 'incorrect';
+
         const unlocalizedUrl = i18n.unlocalizeUrl(registryConfig.settings.i18n, url);
         req.raw.registryConfig = registryConfig;
         req.raw.router = new ServerRouter(req.log, req.raw, unlocalizedUrl);
@@ -138,6 +141,11 @@ module.exports = (registryService, pluginManager) => {
             res.status(200).send(data.content);
             return;
         }
+
+
+        console.log(route.slots);
+        const slotCollection = new SlotCollection(route.slots, registryConfig);
+        slotCollection.isValid();
 
         res.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
         tailor.requestHandler(req.raw, res.res);
