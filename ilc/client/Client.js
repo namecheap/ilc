@@ -252,7 +252,8 @@ export class Client {
             this.#errorHandlerFor.bind(this),
             this.#bundleLoader,
             this.#transitionManager,
-            this.#sdkFactoryBuilder
+            this.#sdkFactoryBuilder,
+            this.#errorHandlerManager
         );
 
         setNavigationErrorHandler(this.#onNavigationError.bind(this));

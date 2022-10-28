@@ -6,7 +6,29 @@ import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
 
-export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader, transitionManager, sdkFactoryBuilder) {
+const getCustomProps = (slot, router, appErrorHandlerFactory) => {
+    const appName = slot.getApplicationName();
+    const appId = slot.getApplicationId();
+    const slotName = slot.getSlotName();
+
+    const sdkInstanceFactory = sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
+    const appSdk = sdkInstanceFactory(appId);
+
+    const customProps = {
+        domElementGetter: () => getSlotElement(slotName),
+        getCurrentPathProps: () => {
+            return router.getCurrentRouteProps(appName, slotName);
+        },
+        getCurrentBasePath: () => router.getCurrentRoute().basePath,
+        appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
+        errorHandler: appErrorHandlerFactory(appName, slotName),
+        appSdk,
+    };
+
+    return customProps;
+};
+
+export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader, transitionManager, sdkFactoryBuilder, errorHandlerManager) {
     const asyncBootUp = new AsyncBootUp();
     const registryConf = ilcConfigRoot.getConfig();
 
@@ -18,19 +40,16 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
         const appName = slot.getApplicationName();
         const appId = slot.getApplicationId();
 
-        const sdkInstanceFactory = sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
-        const appSdk = sdkInstanceFactory(appId);
+        let customProps;
 
-        const customProps = {
-            domElementGetter: () => getSlotElement(slotName),
-            getCurrentPathProps: () => {
-                return router.getCurrentRouteProps(appName, slotName);
-            },
-            getCurrentBasePath: () => router.getCurrentRoute().basePath,
-            appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
-            errorHandler: appErrorHandlerFactory(appName, slotName),
-            appSdk,
-        };
+        try {
+            customProps = getCustomProps(slot, router, appErrorHandlerFactory, sdkFactoryBuilder);
+        } catch (error) {
+            errorHandlerManager.handleError(error);
+            // In case of runtime error we should not fail registration of SPA applications
+            return;
+        }
+
 
 
         let lifecycleMethods;
