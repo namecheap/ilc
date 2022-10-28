@@ -116,8 +116,6 @@ module.exports = (registryService, pluginManager) => {
 
         registryConfig = mergeConfigs(registryConfig, overrideConfigs);
 
-        registryConfig.routes[3].slots.body.appName = 'incorrect';
-
         const unlocalizedUrl = i18n.unlocalizeUrl(registryConfig.settings.i18n, url);
         req.raw.registryConfig = registryConfig;
         req.raw.router = new ServerRouter(req.log, req.raw, unlocalizedUrl);
