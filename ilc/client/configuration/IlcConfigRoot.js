@@ -68,12 +68,8 @@ export class IlcConfigRoot {
      * @return {object}
      */
     getConfigForSpecialRoutesByKey(key) {
-        const specialRouteByKey = this.getConfigForSpecialRoutes()[key];
-        if(!specialRouteByKey){
-            throw new Error(`IlcConfigRoot config error. ${key} is not exists in specialRoute`);
-        }
-
-        return specialRouteByKey;
+        const specialRoute = this.getConfigForSpecialRoutes();
+        return specialRoute[key];
     }
 }
 

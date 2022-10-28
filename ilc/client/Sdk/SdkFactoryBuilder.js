@@ -13,7 +13,6 @@ export class SdkFactoryBuilder {
     }
 
     getSdkFactoryByApplicationName(applicationName) {
-        // const {  l10nManifest } = this.#configRoot.getConfigForAppByName(applicationName);
         const appConfig = this.#configRoot.getConfigForAppByName(applicationName);
 
         const manifestPath = appConfig?.l10nManifest;

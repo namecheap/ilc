@@ -62,8 +62,6 @@ module.exports = class ConfigsInjector {
             document = document.replace('</head>', ilcJsScripts + '</head>');
         }
 
-
-
         request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, slots, template.styleRefs);
 
         return document;
@@ -191,7 +189,7 @@ module.exports = class ConfigsInjector {
 
         let spaConfig = JSON.stringify({
             apps,
-            routes: [...routes],
+            routes,
             specialRoutes: _.mapValues(registryConfig.specialRoutes, v => _.omit(v, ['routeId'])),
             settings,
             sharedLibs: registryConfig.sharedLibs,

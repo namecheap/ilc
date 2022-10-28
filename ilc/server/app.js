@@ -142,8 +142,6 @@ module.exports = (registryService, pluginManager) => {
             return;
         }
 
-
-        console.log(route.slots);
         const slotCollection = new SlotCollection(route.slots, registryConfig);
         slotCollection.isValid();
 
