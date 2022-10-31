@@ -14,11 +14,13 @@ export class SpaSlot {
      * @param {{slotName: string, appName: string, appId: string}} slotName
      * @param {IlcConfigRoot} rootConfig
      */
-    constructor({applicationId, applicationName, slotName}, configRoot) {
+    constructor(rawSlot, configRoot) {
 
-        assert(applicationId !== 'string', 'SpaSlot instance can not be initiated without applicationId');
-        assert(applicationName !== 'string', 'SpaSlot instance can not be initiated without applicationName');
-        assert(slotName !== 'string', 'SpaSlot instance can not be initiated without slotName');
+        const {applicationId, applicationName, slotName} = rawSlot;
+
+        assert(applicationId !== 'string', `SpaSlot instance can not be initiated without applicationId where rawSlot = ${JSON.stringify(rawSlot)}`);
+        assert(applicationName !== 'string', `SpaSlot instance can not be initiated without applicationName where rawSlot = ${JSON.stringify(rawSlot)}`);
+        assert(slotName !== 'string', `SpaSlot instance can not be initiated without slotName where rawSlot = ${JSON.stringify(rawSlot)}`);
 
         this.#applicationId = applicationId;
         this.#applicationName = applicationName;
