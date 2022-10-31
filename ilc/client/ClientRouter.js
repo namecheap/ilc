@@ -78,7 +78,10 @@ export default class ClientRouter extends EventEmitter {
     getRelevantAppKind(appName, slotName) {
         const app = this.#registryConf.apps[appName];
 
-        // ToDo: app could not exists
+        if(!app) {
+            throw new this.errors.RouterError({message: 'Can not find info about the app.', data: {appName}});
+        }
+
         const appKind = app.kind;
 
         const currentRoute = this.getCurrentRoute();

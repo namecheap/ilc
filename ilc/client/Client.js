@@ -147,12 +147,16 @@ export class Client {
             if (!isAppExists) {
                 isCriticalError = true;
             } else {
-                const fragmentKind = this.#router.getRelevantAppKind(appName, slotName);
+                try {
+                    const fragmentKind = this.#router.getRelevantAppKind(appName, slotName);
 
-                isCriticalError = [
-                    FRAGMENT_KIND.primary,
-                    FRAGMENT_KIND.essential
-                ].includes(fragmentKind);
+                    isCriticalError = [
+                        FRAGMENT_KIND.primary,
+                        FRAGMENT_KIND.essential
+                    ].includes(fragmentKind);
+                } catch (error) {
+                    isCriticalError = true;
+                }
             }
 
             const errorParams = {
