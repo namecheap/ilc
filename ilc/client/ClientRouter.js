@@ -76,7 +76,13 @@ export default class ClientRouter extends EventEmitter {
     navigateToUrl = (url) => this.#singleSpa.navigateToUrl(this.#i18n.localizeUrl(url));
 
     getRelevantAppKind(appName, slotName) {
-        const appKind = this.#registryConf.apps[appName].kind;
+        const app = this.#registryConf.apps[appName];
+
+        if(!app) {
+            throw new this.errors.RouterError({message: 'Can not find info about the app.', data: {appName}});
+        }
+
+        const appKind = app.kind;
 
         const currentRoute = this.getCurrentRoute();
         const slotKindCurr = currentRoute.slots[slotName] && currentRoute.slots[slotName].kind;
@@ -92,6 +98,8 @@ export default class ClientRouter extends EventEmitter {
         let isActive = this.#activeApps.current[slotName] === appName;
         const wasActive = this.#activeApps.prev[slotName] === appName;
 
+
+        //Todo: side effect have to be removed from getter
         let willBe = slotWillBe.default;
         !wasActive && isActive && (willBe = slotWillBe.rendered);
         wasActive && !isActive && (willBe = slotWillBe.removed);
@@ -200,6 +208,8 @@ export default class ClientRouter extends EventEmitter {
             this.#currentUrl = newUrl;
         }
 
+
+        // In case if base template was changes we expect not SPA navigation
         const isBaseTemplateChanged = this.#currentRoute && this.#prevRoute.template !== this.#currentRoute.template;
         if (isBaseTemplateChanged) {
             this.#location.href = this.#currentUrl;

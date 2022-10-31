@@ -55,3 +55,14 @@ export function smellsLikeAPromise(promise) {
         typeof promise.catch === "function"
     );
 }
+
+/**
+ *
+ * @param {boolean} condition
+ * @param {string} message
+ */
+export function assert(condition, message) {
+    if (!condition) {
+        throw new Error(message || 'Assertion failed');
+    }
+}

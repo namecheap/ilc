@@ -1,6 +1,7 @@
 import chai from 'chai';
 import { getRegistryMock } from '../tests/helpers';
 import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
+import {getIlcConfigRoot} from './configuration/getIlcConfigRoot';
 
 describe('select slots to register', () => {
     it('should select slots without any duplicated apps of slots from provided routes', () => {
@@ -99,10 +100,14 @@ describe('select slots to register', () => {
             'routeExp': {},
         }];
 
+        const configRoot = getIlcConfigRoot();
         const registryConf = getRegistryMock().getConfig().data;
         registryConf.routes = routes;
+        configRoot.registryConfiguration = registryConf;
 
-        chai.expect(composeAppSlotPairsToRegister(registryConf)).to.be.eql([
+        const composedAppsJsonified = composeAppSlotPairsToRegister(configRoot).map((item) => item.toJSON());
+
+            chai.expect(composedAppsJsonified).to.be.eql([
             {
                 appId: 'navbar__at__navbar',
                 appName: '@portal/navbar',

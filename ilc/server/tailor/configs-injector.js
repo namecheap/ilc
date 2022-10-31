@@ -35,6 +35,7 @@ module.exports = class ConfigsInjector {
         }
 
         const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);
+
         const ilcCss = this.#wrapWithIgnoreDuringParsing(
             ...routeAssets.stylesheetLinks,
         );
@@ -75,6 +76,7 @@ module.exports = class ConfigsInjector {
 
     #getRouteStyleRefsToPreload = (apps, slots, templateStyleRefs) => {
         const routeStyleRefs = _.reduce(slots, (styleRefs, slotData) => {
+
             const appInfo = apps[slotData.appName];
 
             if (appInfo.cssBundle && !styleRefs.includes(appInfo.cssBundle)) {
@@ -183,9 +185,11 @@ module.exports = class ConfigsInjector {
             };
         }
 
+        const routes = registryConfig.routes.map(v => _.omit(v, ['routeId']));
+
         let spaConfig = JSON.stringify({
             apps,
-            routes: registryConfig.routes.map(v => _.omit(v, ['routeId'])),
+            routes,
             specialRoutes: _.mapValues(registryConfig.specialRoutes, v => _.omit(v, ['routeId'])),
             settings,
             sharedLibs: registryConfig.sharedLibs,

@@ -116,7 +116,7 @@ export class Client {
             .catch((error) => {
                 const preheatError = new InternalError({
                     cause: error,
-                    message: 'Failed to preheat registry service', 
+                    message: 'Failed to preheat registry service',
                 });
 
                 this.#errorHandlerManager.handleError(preheatError);
@@ -140,12 +140,24 @@ export class Client {
         }
 
         return (error, errorInfo) => {
-            const fragmentKind = this.#router.getRelevantAppKind(appName, slotName);
 
-            const isCriticalError = [
-                FRAGMENT_KIND.primary,
-                FRAGMENT_KIND.essential
-            ].includes(fragmentKind);
+            let isCriticalError = false;
+            const isAppExists = !!this.#configRoot.getConfigForAppByName(appName);
+
+            if (!isAppExists) {
+                isCriticalError = true;
+            } else {
+                try {
+                    const fragmentKind = this.#router.getRelevantAppKind(appName, slotName);
+
+                    isCriticalError = [
+                        FRAGMENT_KIND.primary,
+                        FRAGMENT_KIND.essential
+                    ].includes(fragmentKind);
+                } catch (error) {
+                    isCriticalError = true;
+                }
+            }
 
             const errorParams = {
                 cause: error,
@@ -244,7 +256,8 @@ export class Client {
             this.#errorHandlerFor.bind(this),
             this.#bundleLoader,
             this.#transitionManager,
-            this.#sdkFactoryBuilder
+            this.#sdkFactoryBuilder,
+            this.#errorHandlerManager
         );
 
         setNavigationErrorHandler(this.#onNavigationError.bind(this));

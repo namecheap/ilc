@@ -53,6 +53,24 @@ export class IlcConfigRoot {
         const isEnabled = globalSpinnerConfig && globalSpinnerConfig.enabled;
         return !!isEnabled;
     }
+
+    getConfigForRoutes() {
+        return this.registryConfiguration['routes'];
+    }
+
+    getConfigForSpecialRoutes() {
+        return this.registryConfiguration['specialRoutes'] || {};
+    }
+
+    /**
+     *
+     * @param {string} key
+     * @return {object}
+     */
+    getConfigForSpecialRoutesByKey(key) {
+        const specialRoute = this.getConfigForSpecialRoutes();
+        return specialRoute[key];
+    }
 }
 
 export const ilcConfigRoot = new IlcConfigRoot();

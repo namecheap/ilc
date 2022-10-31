@@ -6,16 +6,52 @@ import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
 
-export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader, transitionManager, sdkFactoryBuilder) {
+const getCustomProps = (slot, router, appErrorHandlerFactory, sdkFactoryBuilder) => {
+    const appName = slot.getApplicationName();
+    const appId = slot.getApplicationId();
+    const slotName = slot.getSlotName();
+
+    const sdkInstanceFactory = sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
+    const appSdk = sdkInstanceFactory(appId);
+
+    const customProps = {
+        domElementGetter: () => getSlotElement(slotName),
+        getCurrentPathProps: () => {
+            return router.getCurrentRouteProps(appName, slotName);
+        },
+        getCurrentBasePath: () => router.getCurrentRoute().basePath,
+        appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
+        errorHandler: appErrorHandlerFactory(appName, slotName),
+        appSdk,
+    };
+
+    return customProps;
+};
+
+export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader, transitionManager, sdkFactoryBuilder, errorHandlerManager) {
     const asyncBootUp = new AsyncBootUp();
     const registryConf = ilcConfigRoot.getConfig();
 
+    const appSlotsList = composeAppSlotPairsToRegister(ilcConfigRoot);
 
-    composeAppSlotPairsToRegister(registryConf).forEach(pair => {
-        const slotName = pair.slotName;
-        const appName = pair.appName;
-        const appId = pair.appId;
-        const sdkInstanceFactory = sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
+
+    appSlotsList.forEach(slot => {
+        const slotName = slot.getSlotName();
+        const appName = slot.getApplicationName();
+        const appId = slot.getApplicationId();
+
+        let customProps;
+
+        try {
+            customProps = getCustomProps(slot, router, appErrorHandlerFactory, sdkFactoryBuilder);
+        } catch (error) {
+            errorHandlerManager.handleError(error);
+            // In case of runtime error we should not fail registration of SPA applications
+            return;
+        }
+
+        const { appSdk } = customProps;
+
 
         let lifecycleMethods;
         const updateFragmentManually = () => {
@@ -27,7 +63,7 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
 
         const isUpdatePropsMode = () => lifecycleMethods.update && registryConf.settings.onPropsUpdate === 'update';
 
-        const appSdk = sdkInstanceFactory(appId);
+
         const onUnmount = async () => {
             if (isUpdatePropsMode()) {
                 router.removeListener(ilcEvents.updateAppInSlot(slotName, appName), updateFragmentManually);
@@ -49,21 +85,15 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
             }
         };
 
-        const customProps = {
-            domElementGetter: () => getSlotElement(slotName),
-            getCurrentPathProps: () => {
-                return router.getCurrentRouteProps(appName, slotName);
-            },
-            getCurrentBasePath: () => router.getCurrentRoute().basePath,
-            appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
-            errorHandler: appErrorHandlerFactory(appName, slotName),
-            appSdk,
-        };
-
         singleSpa.registerApplication(
             appId,
             async () => {
+                if(!slot.isValid()){
+                    throw new Error(`Can not find application - ${appName}`);
+                }
+
                 const appConf = ilcConfigRoot.getConfigForAppByName(appName);
+
                 let wrapperConf = null;
                 if (appConf.wrappedWith) {
                     wrapperConf = {
