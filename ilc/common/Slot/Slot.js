@@ -24,6 +24,7 @@ class Slot {
     isValid() {
         return !!this.#rawApps[this.#rawSlot.appName];
     }
+
     /**
      * @method
      * @description Return application's name
@@ -31,6 +32,15 @@ class Slot {
      */
     getApplicationName() {
         return this.#rawSlot.appName;
+    }
+
+    /**
+     * @method
+     * @description Return slot's name
+     * @return {string}
+     */
+    getSlotName() {
+        return this.#rawSlot.slotName;
     }
 
 }

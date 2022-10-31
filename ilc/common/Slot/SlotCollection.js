@@ -15,6 +15,9 @@ class SlotCollection {
      * @param {Object} registryConfig
      */
     constructor(slots, { apps }) {
+
+        console.log(slots);
+
         this.#slotCollection = Object.keys(slots).map((key) => {
             return new Slot({
                 ...slots[key],
@@ -30,7 +33,7 @@ class SlotCollection {
     isValid() {
         this.#slotCollection.forEach((slot) => {
             if(!slot.isValid()) {
-                throw new Error(`Can not find application - ${slot.getApplicationName()}`);
+                throw new Error(`Can not find application - ${slot.getApplicationName()} for slot - ${slot.getSlotName()}`);
             }
         });
 
