@@ -6,7 +6,7 @@ import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
 
-const getCustomProps = (slot, router, appErrorHandlerFactory) => {
+const getCustomProps = (slot, router, appErrorHandlerFactory, sdkFactoryBuilder) => {
     const appName = slot.getApplicationName();
     const appId = slot.getApplicationId();
     const slotName = slot.getSlotName();
@@ -50,6 +50,7 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
             return;
         }
 
+        const { appSdk } = customProps;
 
 
         let lifecycleMethods;
