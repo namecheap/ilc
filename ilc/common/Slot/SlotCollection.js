@@ -15,9 +15,6 @@ class SlotCollection {
      * @param {Object} registryConfig
      */
     constructor(slots, { apps }) {
-
-        console.log(slots);
-
         this.#slotCollection = Object.keys(slots).map((key) => {
             return new Slot({
                 ...slots[key],
