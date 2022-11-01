@@ -241,7 +241,7 @@ export default class ClientRouter extends EventEmitter {
 
             window.addEventListener(ilcEvents.PAGE_READY, () => {
                 if (appsToForceRerender.length) {
-                    this.#logger.log(`ILC: Triggering app re-mount for [${appsToForceRerender}] due to changed props.`);
+                    this.#logger.info(`ILC: Triggering app re-mount for [${appsToForceRerender}] due to changed props.`);
 
                     triggerAppChange();
                 }
@@ -335,7 +335,7 @@ export default class ClientRouter extends EventEmitter {
             );
         }
 
-        this.#logger.log(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
+        this.#logger.info(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
 
         this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl(true)};
 

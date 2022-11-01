@@ -40,7 +40,7 @@ describe('GuardManager', () => {
     });
 
     const logger = {
-        log: sinon.spy(),
+        info: sinon.spy(),
     };
 
     beforeEach(() => {
@@ -59,7 +59,7 @@ describe('GuardManager', () => {
         pluginManager.getTransitionHooksPlugin.reset();
         transitionHooksPlugin.getTransitionHooks.reset();
 
-        logger.log.resetHistory();
+        logger.info.resetHistory();
     });
 
     describe('should have access to a provided URL', () => {
@@ -155,7 +155,7 @@ describe('GuardManager', () => {
             const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
 
             chai.expect(guardManager.hasAccessTo(url)).to.be.false;
-            sinon.assert.calledOnceWithExactly(logger.log, `ILC: Stopped navigation due to the Route Guard with index #${1}`);
+            sinon.assert.calledOnceWithExactly(logger.info, `ILC: Stopped navigation due to the Route Guard with index #${1}`);
 
             for (const hook of [hooks[0], hooks[1]]) {
                 sinon.assert.calledOnceWithExactly(hook, {
@@ -201,7 +201,7 @@ describe('GuardManager', () => {
 
             await clock.runAllAsync();
 
-            sinon.assert.calledWithExactly(logger.log, `ILC: Redirect from "${route.reqUrl}" to "${url}" due to the Route Guard with index #${1}`);
+            sinon.assert.calledWithExactly(logger.info, `ILC: Redirect from "${route.reqUrl}" to "${url}" due to the Route Guard with index #${1}`);
             sinon.assert.calledWithExactly(router.navigateToUrl, url);
         });
     });
