@@ -72,16 +72,17 @@ export class Client {
 
     constructor(config) {
         this.#configRoot = config;
-
-        // TODO: Move to separate module/abstraction
-        this.#logger = window.console;
         this.#registryService = registryService;
 
-        this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, this.#registryService);
-
-        this.#transitionManager = new TransitionManager(this.#logger, this.#configRoot.getSettingsByKey('globalSpinner'));
         this.#pluginManager = new PluginManager(require.context('../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/));
+        const reportingPlugin = this.#pluginManager.getReportingPlugin();
+        reportingPlugin.setConfig(this.#configRoot);
 
+        this.#logger = reportingPlugin.logger;
+
+        this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, this.#registryService);
+        this.#transitionManager = new TransitionManager(this.#logger, this.#configRoot.getSettingsByKey('globalSpinner'));
+        
         const i18nSettings = this.#configRoot.getSettingsByKey('i18n');
 
         if (i18nSettings.enabled) {
@@ -112,7 +113,7 @@ export class Client {
         // Initializing 500 error page to cache template of this page
         // to avoid a situation when localhost can't return this template in future
         this.#registryService.preheat()
-            .then(() => this.#logger.log('ILC: Registry service preheated successfully'))
+            .then(() => this.#logger.info('ILC: Registry service preheated successfully'))
             .catch((error) => {
                 const preheatError = new InternalError({
                     cause: error,

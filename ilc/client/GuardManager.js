@@ -45,7 +45,7 @@ export default class GuardManager {
                 });
 
                 if (action.type === actionTypes.stopNavigation) {
-                    this.#logger.log(`ILC: Stopped navigation due to the Route Guard with index #${hooks.indexOf(hook)}`);
+                    this.#logger.info(`ILC: Stopped navigation due to the Route Guard with index #${hooks.indexOf(hook)}`);
                     return false;
                 }
 
@@ -53,7 +53,7 @@ export default class GuardManager {
                     // Need to add redirect callback to queued tasks
                     // because it should be executed after micro tasks that can be added after the end of this method
                     setTimeout(() => {
-                        this.#logger.log(`ILC: Redirect from "${route.reqUrl}" to "${action.newLocation}" due to the Route Guard with index #${hooks.indexOf(hook)}`);
+                        this.#logger.info(`ILC: Redirect from "${route.reqUrl}" to "${action.newLocation}" due to the Route Guard with index #${hooks.indexOf(hook)}`);
                         this.#router.navigateToUrl(action.newLocation);
                     });
                     return false;

@@ -636,7 +636,7 @@ describe('client router', () => {
 
     describe(`should listen to "${ilcEvents.NOT_FOUND}"`, () => {
         const logger = {
-            log: sinon.spy(),
+            info: sinon.spy(),
             warn: sinon.spy(),
         };
 
@@ -645,7 +645,7 @@ describe('client router', () => {
         };
 
         afterEach(() => {
-            logger.log.resetHistory();
+            logger.info.resetHistory();
             logger.warn.resetHistory();
         });
 
@@ -703,7 +703,7 @@ describe('client router', () => {
             }));
 
             sinon.assert.calledWithExactly(
-                logger.log,
+                logger.info,
                 `ILC: Special route "404" was triggered by "${appId}" app. Performing rerouting...`
             );
             sinon.assert.calledOnce(beforeRoutingHandler);
@@ -715,7 +715,7 @@ describe('client router', () => {
 
         const handlePageTransaction = sinon.spy();
         const logger = {
-            log: sinon.spy(),
+            info: sinon.spy(),
         };
 
         const isActiveHero = () => router.isAppWithinSlotActive('@portal/hero', 'hero');
@@ -723,7 +723,7 @@ describe('client router', () => {
 
         afterEach(() => {
             handlePageTransaction.resetHistory();
-            logger.log.resetHistory();
+            logger.info.resetHistory();
         });
 
         it('should return false when a slot is going to be removed', () => {
@@ -819,7 +819,7 @@ describe('client router', () => {
             handlePageTransaction.resetHistory();
 
             sinon.assert.calledWithExactly(
-                logger.log,
+                logger.info,
                 `ILC: Triggering app re-mount for [@portal/hero] due to changed props.`
             );
         });
@@ -870,7 +870,7 @@ describe('client router', () => {
             sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
             handlePageTransaction.resetHistory();
 
-            sinon.assert.notCalled(logger.log);
+            sinon.assert.notCalled(logger.info);
             sinon.assert.notCalled(eventHandlerUpdateHero);
 
             dispatchIlcPageReadyEvent();
@@ -921,14 +921,14 @@ describe('client router', () => {
             chai.expect(isActiveHero()).to.be.eql(true);
             sinon.assert.notCalled(eventHandlerUpdateHero);
             chai.expect(isActiveOpponent()).to.be.eql(false);
-            sinon.assert.notCalled(logger.log);
+            sinon.assert.notCalled(logger.info);
 
             dispatchIlcPageReadyEvent();
 
             chai.expect(isActiveHero()).to.be.eql(true);
             sinon.assert.calledOnce(eventHandlerUpdateHero);
             chai.expect(isActiveOpponent()).to.be.eql(true);
-            sinon.assert.calledOnceWithExactly(logger.log, 'ILC: Triggering app re-mount for [@portal/opponent] due to changed props.');
+            sinon.assert.calledOnceWithExactly(logger.info, 'ILC: Triggering app re-mount for [@portal/opponent] due to changed props.');
         });
     });
 });
