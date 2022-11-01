@@ -16,13 +16,6 @@ import {
 } from '../errors';
 
 describe('ErrorHandlerManager', () => {
-
-    const noticeError = sinon.stub();
-
-    window.newrelic = {
-        noticeError,
-    };
-
     const registryService = {
         getTemplate: sinon.stub().returns(Promise.resolve({
             data: '%ERRORID%',
@@ -30,9 +23,9 @@ describe('ErrorHandlerManager', () => {
     };
 
     const logger = {
-        log: sinon.spy(),
         info: sinon.spy(),
-        error: sinon.spy()
+        error: sinon.spy(),
+        fatal: sinon.spy(),
     };
 
     let clock;
@@ -49,12 +42,13 @@ describe('ErrorHandlerManager', () => {
 
     describe('handleError', () => {
         let errorHandlerManager;
+        let alertStub = sinon.stub(window, 'alert');
 
         beforeEach(() => {
             errorHandlerManager = new ErrorHandlerManager(logger, registryService);
         });
 
-        it('should correctly log and notice if error is instance of BaseError', async () => {
+        it('should log error if error is instance of BaseError', async () => {
             const internalError = new InternalError({
                 message: 'I am internal error',
                 data: {
@@ -63,50 +57,19 @@ describe('ErrorHandlerManager', () => {
             });
 
             errorHandlerManager.handleError(internalError);
-
-            const noticeErrorArgs = noticeError.getCall(0).args;
-            const [noticedError, noticedData] = noticeErrorArgs;
-
-            expect(noticedError).to.equal(internalError);
-            expect(noticedData.errorId).to.be.a('string');
-            expect(noticedData.code).to.equal('internal');
-            expect(noticedData.blah).to.equal('test');
-
-            const [loggedString, loggedError]  = logger.error.getCall(0).args;
-            const parsedLogArgs = JSON.parse(loggedString);
-    
-            expect(parsedLogArgs).to.include({
-                type: 'InternalError',
-                message: 'I am internal error',
-            });
-
-            expect(parsedLogArgs.stack).deep.equal(internalError.stack.split('\n'));
-            expect(loggedError).to.be.eql(internalError);
+            expect(logger.error.calledOnceWithExactly('I am internal error', internalError)).to.be.true;
         });
 
-        it('should wrap and correctly log and notice if error is not instance of BaseError', async () => {
+        it('should wrap and log error if error is not instance of BaseError', async () => {
             const error = new Error('I am internal error');
 
             errorHandlerManager.handleError(error);
 
-            const noticeErrorArgs = noticeError.getCall(0).args;
-            const [noticedError, noticedData] = noticeErrorArgs;
+            const [loggedMessage, loggedError]  = logger.error.getCall(0).args;
 
-            expect(noticedError).to.be.an.instanceof(UnhandledError);
-            expect(noticedError.message).to.equal('I am internal error');
-            expect(noticedData.errorId).to.be.a('string');
-            expect(noticedData.code).to.equal('runtime.unhandled');
-
-            const [loggedString, loggedError]  = logger.error.getCall(0).args;
-            const parsedLogArgs = JSON.parse(loggedString);
-    
-            expect(parsedLogArgs).to.include({
-                type: 'UnhandledError',
-                message: 'I am internal error',
-            });
-
-            expect(parsedLogArgs.stack).deep.equal(noticedError.stack.split('\n'));
-            expect(loggedError).to.be.eql(noticedError);
+            expect(loggedMessage).to.equal('I am internal error');
+            expect(loggedError.cause).to.equal(error);
+            expect(loggedError).to.be.instanceOf(UnhandledError);
         });
 
         describe('critical internal error', () => {
@@ -121,28 +84,9 @@ describe('ErrorHandlerManager', () => {
                 });
             });
 
-            it('should correctly log and notice if error is instance of CriticalInternalError', () => {
+            it('should log fatal if error is instance of CriticalInternalError', () => {
                 errorHandlerManager.handleError(criticalError);
-
-                const noticeErrorArgs = noticeError.getCall(0).args;
-                const [noticedError, noticedData] = noticeErrorArgs;
-
-                expect(noticedError).to.equal(criticalError);
-                expect(noticedData.errorId).to.be.a('string');
-                expect(noticedData.code).to.equal('internal.criticalInternal');
-                expect(noticedData.blah).to.equal('test');
-
-                const [loggedString, loggedError]  = logger.error.getCall(0).args;
-                const parsedLogArgs = JSON.parse(loggedString);
-        
-                expect(parsedLogArgs).to.include({
-                    type: 'CriticalInternalError',
-                    message: 'I am internal error',
-                });
-
-                expect(parsedLogArgs.stack).deep.equal(criticalError.stack.split('\n'));
-
-                expect(loggedError).to.be.eql(criticalError);
+                expect(logger.fatal.calledOnceWithExactly('I am internal error', criticalError)).to.be.true;
             });
 
             it('should crash ilc', async () => {
@@ -152,7 +96,7 @@ describe('ErrorHandlerManager', () => {
                 errorHandlerManager.handleError(criticalError);
                 await clock.runAllAsync();
 
-                expect( document.querySelector('html').innerHTML).to.have.string('Error ID: ');
+                expect(document.querySelector('html').innerHTML).to.have.string('Error ID: ');
                 expect(handler.called).to.be.true;
             });
 
@@ -163,16 +107,15 @@ describe('ErrorHandlerManager', () => {
                 errorHandlerManager.handleError(criticalError);
                 await clock.runAllAsync();
 
+                expect(logger.fatal.calledOnceWithExactly('I am internal error', criticalError)).to.be.true;
+
                 errorHandlerManager.handleError(criticalError);
                 await clock.runAllAsync();
-
-                expect(noticeError.getCalls().length).to.equal(1);
-                expect(logger.error.getCalls().length).to.equal(1);
 
                 expect(logger.info.getCalls().length).to.equal(1);
                 expect(logger.info.getCall(0).args[0]).to.have.string('Ignoring error as we already crashed...');
 
-                expect( document.querySelector('html').innerHTML).to.have.string('Error ID: ');
+                expect(document.querySelector('html').innerHTML).to.have.string('Error ID: ');
                 expect(handler.called).to.be.true;
                 expect(handler.getCalls().length).to.equal(1);
             });
@@ -194,30 +137,17 @@ describe('ErrorHandlerManager', () => {
                 await clock.runAllAsync();
                 await clock.runAllAsync();
 
-                expect(noticeError.getCalls().length).to.equal(2);
-                expect(logger.error.getCalls().length).to.equal(2);
+                const [loggedMessage, loggedError] = logger.error.getCall(0).args;
+                expect(loggedMessage).to.equal('Failed to get 500 error template');
 
-                const noticeErrorArgs = noticeError.getCall(1).args;
-                const [noticedError, noticedData] = noticeErrorArgs;
-
-                expect(noticedError).to.be.an.instanceof(FetchTemplateError);
-                expect(noticedError.cause).to.be.equal(fetchError);
-
-                expect(noticedData.errorId).to.be.a('string');
-                expect(noticedData.code).to.equal('internal.fetchTemplate');
-
-                const [loggedString]  = logger.error.getCall(1).args;
-                const parsedLogArgs = JSON.parse(loggedString);
-
-                expect(parsedLogArgs).to.include({
-                    type: 'FetchTemplateError',
-                    message: 'Failed to get 500 error template',
-                });
-
-                expect(parsedLogArgs.stack).deep.equal(noticedError.stack.split('\n'));
+                expect(loggedError.message).to.equal('Failed to get 500 error template');
+                expect(loggedError.cause).to.equal(fetchError);
+                expect(loggedError).to.be.instanceOf(FetchTemplateError);
 
                 expect(document.querySelector('html').innerHTML).not.to.have.string('Error ID: ');
                 expect(handler.called).to.be.false;
+
+                expect(alertStub.calledOnceWithExactly('Something went wrong! Please try to reload page or contact support.'));
             });
         });
 
@@ -233,28 +163,9 @@ describe('ErrorHandlerManager', () => {
                 });
             });
 
-            it('should correctly log and notice if error is instance of CriticalRuntimeError', () => {
+            it('should log error if error is instance of CriticalRuntimeError', () => {
                 errorHandlerManager.handleError(criticalError);
-
-                const noticeErrorArgs = noticeError.getCall(0).args;
-                const [noticedError, noticedData] = noticeErrorArgs;
-
-                expect(noticedError).to.equal(criticalError);
-                expect(noticedData.errorId).to.be.a('string');
-                expect(noticedData.code).to.equal('runtime.criticalRuntime');
-                expect(noticedData.blah).to.equal('test');
-
-                const [loggedString, loggedError]  = logger.error.getCall(0).args;
-                const parsedLogArgs = JSON.parse(loggedString);
-        
-                expect(parsedLogArgs).to.include({
-                    type: 'CriticalRuntimeError',
-                    message: 'I am internal error',
-                });
-
-                expect(parsedLogArgs.stack).deep.equal(criticalError.stack.split('\n'));
-
-                expect(loggedError).to.be.eql(criticalError);
+                expect(logger.fatal.calledOnceWithExactly('I am internal error', criticalError)).to.be.true;
             });
 
             it('should crash ilc', async () => {
@@ -264,7 +175,7 @@ describe('ErrorHandlerManager', () => {
                 errorHandlerManager.handleError(criticalError);
                 await clock.runAllAsync();
 
-                expect( document.querySelector('html').innerHTML).to.have.string('Error ID: ');
+                expect(document.querySelector('html').innerHTML).to.have.string('Error ID: ');
                 expect(handler.called).to.be.true;
             });
 
@@ -275,16 +186,15 @@ describe('ErrorHandlerManager', () => {
                 errorHandlerManager.handleError(criticalError);
                 await clock.runAllAsync();
 
+                expect(logger.fatal.getCalls().length).to.equal(1);
+
                 errorHandlerManager.handleError(criticalError);
                 await clock.runAllAsync();
-
-                expect(noticeError.getCalls().length).to.equal(1);
-                expect(logger.error.getCalls().length).to.equal(1);
 
                 expect(logger.info.getCalls().length).to.equal(1);
                 expect(logger.info.getCall(0).args[0]).to.have.string('Ignoring error as we already crashed...');
 
-                expect( document.querySelector('html').innerHTML).to.have.string('Error ID: ');
+                expect(document.querySelector('html').innerHTML).to.have.string('Error ID: ');
                 expect(handler.called).to.be.true;
                 expect(handler.getCalls().length).to.equal(1);
             });
@@ -306,30 +216,17 @@ describe('ErrorHandlerManager', () => {
                 await clock.runAllAsync();
                 await clock.runAllAsync();
 
-                expect(noticeError.getCalls().length).to.equal(2);
-                expect(logger.error.getCalls().length).to.equal(2);
+                const [loggedMessage, loggedError] = logger.error.getCall(0).args;
+                expect(loggedMessage).to.equal('Failed to get 500 error template');
 
-                const noticeErrorArgs = noticeError.getCall(1).args;
-                const [noticedError, noticedData] = noticeErrorArgs;
-
-                expect(noticedError).to.be.an.instanceof(FetchTemplateError);
-                expect(noticedError.cause).to.be.equal(fetchError);
-
-                expect(noticedData.errorId).to.be.a('string');
-                expect(noticedData.code).to.equal('internal.fetchTemplate');
-
-                const [loggedString]  = logger.error.getCall(1).args;
-                const parsedLogArgs = JSON.parse(loggedString);
-
-                expect(parsedLogArgs).to.include({
-                    type: 'FetchTemplateError',
-                    message: 'Failed to get 500 error template',
-                });
-
-                expect(parsedLogArgs.stack).deep.equal(noticedError.stack.split('\n'));
+                expect(loggedError.message).to.equal('Failed to get 500 error template');
+                expect(loggedError.cause).to.equal(fetchError);
+                expect(loggedError).to.be.instanceOf(FetchTemplateError);
 
                 expect(document.querySelector('html').innerHTML).not.to.have.string('Error ID: ');
                 expect(handler.called).to.be.false;
+
+                expect(alertStub.calledOnceWithExactly('Something went wrong! Please try to reload page or contact support.'));
             });
         });
     });
