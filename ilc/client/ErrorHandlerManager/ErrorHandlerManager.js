@@ -7,21 +7,6 @@ import {
     CriticalInternalError,
 } from '../errors';
 
-const msgRegexps = [
-    /^Application '.+?' died in status LOADING_SOURCE_CODE: Failed to fetch$/
-];
-
-// The goal here is to ignore some errors that are "OK". And may happen due to conditions that we cannot change.
-function canBeSentToNewRelic(err) {
-    for (let regex of msgRegexps) {
-        if (regex.test(err.message)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 export default class ErrorHandlerManager {
 
     #ilcAlreadyCrashed = false;
@@ -43,11 +28,20 @@ export default class ErrorHandlerManager {
             });
         }
 
-        this.#noticeError(error);
+        // Ignoring all consequent errors after crash
+        if (this.#ilcAlreadyCrashed) {
+            this.#logger.info(`Ignoring error as we already crashed...\n${error.stack}`);
+            return;
+        }
 
         if (this.#isCriticalError(error)) {
+            this.#logger.fatal(error.message, error);
             this.#crashIlc(error);
+        
+            return;
         }
+
+        this.#logger.error(error.message, error);
     }
 
     #isCriticalError(error) {
@@ -55,10 +49,6 @@ export default class ErrorHandlerManager {
     }
 
     #crashIlc(error) {
-        if (this.#ilcAlreadyCrashed) {
-            return;
-        }
-
         this.#registryService.getTemplate('500')
             .then((data) => {
                 data = data.data.replace('%ERRORID%', error.errorId ? `Error ID: ${error.errorId}` : '');
@@ -77,37 +67,8 @@ export default class ErrorHandlerManager {
                     }
                 });
 
-                this.#noticeError(fetchTemplateError);
-
+                this.#logger.error(fetchTemplateError.message, fetchTemplateError);
                 alert('Something went wrong! Please try to reload page or contact support.');
             });
-    }
-
-    #noticeError(error) {
-        // Ignoring all consequent errors after crash
-        if (this.#ilcAlreadyCrashed) {
-            this.#logger.info(`Ignoring error as we already crashed...\n${error.stack}`);
-            return;
-        }
-
-        // TODO: Move to logger abstraction
-        if (window.newrelic && window.newrelic.noticeError && canBeSentToNewRelic(error)) {
-            window.newrelic.noticeError(error, {
-                ...error.data,
-                code: error.code,
-                errorId: error.errorId,
-            });
-        }
-    
-        this.#logger.error(JSON.stringify({
-            type: error.name,
-            message: error.message,
-            stack: error.stack.split('\n'),
-            additionalInfo: {
-                ...error.data,
-                code: error.code,
-                errorId: error.errorId,
-            },
-        }), error);
     }
 }
