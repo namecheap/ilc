@@ -165,7 +165,7 @@ export class Client {
                 message: error.message,
                 data: {
                     ...errorInfo,
-                    appName,
+                    name: appName,
                     slotName,
                 }
             };
