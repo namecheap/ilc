@@ -60,7 +60,7 @@ describe(`Entries`, () => {
 
     it('should return 422 when entry is not exist', async () => {
         const incorrect = { name: 123 };
-        const response = await reqWithAuth.patch(example.incorrectUrl)
+        const response = await req.patch(example.incorrectUrl)
             .expect(422, 'Fully qualified resource name 123 is not exist');
     });
 

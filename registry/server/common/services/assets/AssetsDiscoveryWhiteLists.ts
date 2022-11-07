@@ -1,4 +1,4 @@
-const AssetsDiscoveryWhiteLists: Record<'shared_libs' | 'apps', string[]> = {
+const AssetsDiscoveryWhiteLists: Record<string, string[]> = {
     shared_libs: ['spaBundle'],
     apps: ['spaBundle', 'cssBundle', 'dependencies'],
 };

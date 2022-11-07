@@ -1,6 +1,4 @@
 import {
-    SharedLibAssetsManifest,
-    ApplicationAssetsManifest,
     AssetsManifestReader,
     AssetsManifest
 } from './AssetsManifestReader';

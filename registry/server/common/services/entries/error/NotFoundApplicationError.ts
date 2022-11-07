@@ -1,7 +1,7 @@
 import {NotFoundFqrnError} from './NotFoundFqrnError';
 
-export class NotFoundSharedLibraryError extends NotFoundFqrnError {
-    constructor(libraryName: string) {
-        super(`Shared library with name "${libraryName}" is not exist`);
+export class NotFoundApplicationError extends NotFoundFqrnError {
+    constructor(appName: string) {
+        super(`Application with name "${appName}" is not exist`);
     }
 }

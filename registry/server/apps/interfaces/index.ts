@@ -1,6 +1,7 @@
 import JoiDefault from 'joi';
 import db from "../../db";
 import {getJoiErr} from "../../util/helpers";
+import SharedLib from '../../sharedLibs/interfaces';
 
 const Joi = JoiDefault.defaults(schema => {
     return schema.empty(null)
@@ -41,7 +42,7 @@ const commonApp = {
         is: 'wrapper',
         then: Joi.any().custom(() => null),
         otherwise: Joi.string().trim().default(null).external(async (value) => {
-            if (value === null) {
+            if (!value) {
                 return null;
             }
 
@@ -59,12 +60,12 @@ const commonApp = {
     l10nManifest: Joi.string().max(255).default(null),
 };
 
-export const partialAppSchema = Joi.object({
+export const partialAppSchema = Joi.object<App>({
     ...commonApp,
     name: appNameSchema.forbidden(),
 });
 
-export const appSchema = Joi.object({
+export const appSchema = Joi.object<App>({
     ...commonApp,
     name: appNameSchema.required(),
     spaBundle: Joi.when('assetsDiscoveryUrl', {

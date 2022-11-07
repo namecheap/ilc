@@ -1,22 +1,25 @@
-import express from 'express';
+import express, {
+    Request,
+    Response,
+} from 'express';
 import Joi from 'joi';
-import {FqrnFactory} from './services/FqrnFactory';
-import {IncorrectFqrnError} from './services/error/IncorrectFqrnError';
-import {NotFoundFqrnError} from './services/error/NotFoundFqrnError';
+import {EntryFactory} from '../common/services/entries/EntryFactory';
+import {IncorrectFqrnError} from '../common/services/entries/error/IncorrectFqrnError';
+import {NotFoundFqrnError} from '../common/services/entries/error/NotFoundFqrnError';
 import preProcessResponse from '../common/services/preProcessResponse';
-import {ValidationFqrnError} from './services/error/ValidationFqrnError';
+import {ValidationFqrnError} from '../common/services/entries/error/ValidationFqrnError';
 import {joiErrorToResponse} from '../util/helpers';
 import {AssetsManifestError} from '../common/services/assets/errors/AssetsManifestError';
 
 const EntriesRouter = express.Router();
 
-EntriesRouter.patch('/:fqrn', async (request, response) => {
+EntriesRouter.patch('/:fqrn', async (request: Request<{fqrn: string}>, response: Response) => {
     const fqrn = request.params.fqrn;
     const params = request.body;
     let entryService;
 
     try {
-        entryService = FqrnFactory.getFqrnInstance(fqrn);
+        entryService = EntryFactory.getFqrnInstance(fqrn);
     } catch (error) {
         if(error instanceof IncorrectFqrnError) {
             return response.status(error.code).send(error.message);

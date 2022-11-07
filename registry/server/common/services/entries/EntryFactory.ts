@@ -3,7 +3,7 @@ import {SharedLibEntry} from './SharedLibEntry';
 import {FqrnError} from './error/FqrnError';
 import {ApplicationEntry} from './ApplicationEntry';
 
-export class FqrnFactory {
+export class EntryFactory {
     private static resourceIdentifiers = {
         SHARED_LIB: '@sharedLibrary/',
         APP: '@portal/',

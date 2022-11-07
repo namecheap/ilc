@@ -1,7 +1,7 @@
 import axios, {AxiosResponse} from 'axios';
 import urljoin from 'url-join';
 
-import knex from '../../db';
+import knex from '../../../db';
 import manifestProcessor from './assetsManifestProcessor';
 import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 

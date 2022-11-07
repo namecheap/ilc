@@ -21,7 +21,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     app.use(bodyParser.json({
         limit: config.get<string>('http.requestLimit'),
     }));
-    app.use(bodyParser.urlencoded());
+    app.use(bodyParser.urlencoded({ extended: true }));
 
     app.get('/ping', pong);
 
@@ -45,6 +45,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     app.use('/api/v1/router_domains', routes.routerDomains(authMw));
     app.use('/api/v1/shared_libs', authMw, routes.sharedLibs);
     app.use('/api/v1/public', routes.public);
+    app.use('/api/v1/entries', authMw, routes.entries);
 
     app.use(errorHandler);
 

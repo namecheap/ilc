@@ -1,6 +1,6 @@
 import { expect } from './common';
 
-import processor from '../server/common/services/assetsManifestProcessor'
+import processor from '../server/common/services/assets/assetsManifestProcessor'
 
 describe('assetsManifestProcessor', () => {
     it('perform basic link resolution & cleanup non white listed properties', () => {

@@ -1,14 +1,16 @@
 import db from '../../../db';
 import SharedLib from '../../../sharedLibs/interfaces';
-import {partialSharedLibSchema} from '../../../sharedLibs/interfaces';
 import {ValidationFqrnError} from './error/ValidationFqrnError';
-import {NotFoundSharedLibraryError} from './error/NotFoundSharedLibraryError';
 import {AssetsDiscoveryProcessor} from '../assets/AssetsDiscoveryProcessor';
 import {AssetsValidator} from '../assets/AssetsValidator';
+import App, {partialAppSchema} from '../../../apps/interfaces';
+import {Entry} from './Entry';
+import {stringifyJSON} from '../json';
+import {NotFoundApplicationError} from './error/NotFoundApplicationError';
 
-export class SharedLibEntry {
+export class ApplicationEntry implements Entry{
 
-    private entityName = 'shared_libs' as const;
+    private entityName = 'apps' as const;
 
     constructor(private identifier?: string) {
     }
@@ -21,47 +23,59 @@ export class SharedLibEntry {
 
         await this.verifyExistence(this.identifier);
 
-        const sharedLibDTO = await partialSharedLibSchema.validateAsync(params, {
+        const appDTO = await partialAppSchema.validateAsync(params, {
             noDefaults: true,
             abortEarly: true,
             presence: 'optional'
         });
 
-        if(!Object.keys(sharedLibDTO).length) {
+        if(!Object.keys(appDTO).length) {
             throw new ValidationFqrnError('Patch does not contain any items to update');
         }
 
-        const  sharedLibraryManifest = await this.getManifest(sharedLibDTO.assetsDiscoveryUrl);
+        const  appManifest = await this.getManifest(appDTO.assetsDiscoveryUrl);
 
-        const sharedLibEntity = {
-            ...sharedLibDTO,
-            ...sharedLibraryManifest,
+        const appEntity = {
+            ...appDTO,
+            ...appManifest,
         };
 
-        await db.versioning(user, { type: this.entityName, id: this.identifier }, async (trx) => {
-            await db(this.entityName).where({ name: this.identifier }).update(sharedLibEntity).transacting(trx);
+        await db.versioning(user, {type: this.entityName, id: this.identifier}, async (trx) => {
+            await db(this.entityName)
+                .where({ name: this.identifier })
+                .update(stringifyJSON([
+                    'dependencies',
+                    'props',
+                    'ssrProps',
+                    'ssr',
+                    'configSelector',
+                    'discoveryMetadata'
+                ], appEntity))
+                .transacting(trx);
         });
 
-        const [updatedSharedLib] = await db.select().from<SharedLib>(this.entityName).where('name', this.identifier);
+        const [updatedApp] = await db.select().from<App>(this.entityName).where('name', this.identifier);
 
-        return updatedSharedLib;
+        return updatedApp;
     }
 
-    public async create(sharedLibDTO: SharedLib, { user }: { user: any }) {
-        const  sharedLibraryManifest = await this.getManifest(sharedLibDTO.assetsDiscoveryUrl);
+    public async create(appDTO: App, { user }: { user: any }) {
+        const  appManifest = await this.getManifest(appDTO.assetsDiscoveryUrl);
 
-        const sharedLibEntity = {
-            ...sharedLibDTO,
-            ...sharedLibraryManifest,
+        const appEntity = {
+            ...appDTO,
+            ...appManifest,
         };
 
-        await db.versioning(user, { type: this.entityName, id: sharedLibEntity.name }, async (trx) => {
-            await db(this.entityName).insert(sharedLibEntity).transacting(trx);
+        await db.versioning(user, {type: 'apps', id: appEntity.name}, async (trx) => {
+            await db('apps')
+                .insert(stringifyJSON(['dependencies', 'props', 'ssrProps', 'ssr', 'configSelector', 'discoveryMetadata'], appEntity))
+                .transacting(trx);
         });
 
-        const [savedSharedLib] = await db.select().from<SharedLib>(this.entityName).where('name', sharedLibEntity.name);
+        const [savedApp] = await db.select().from<App>(this.entityName).where('name', appEntity.name);
 
-        return savedSharedLib;
+        return savedApp;
     }
 
     private async getManifest(assetsDiscoveryUrl: string | undefined) {
@@ -70,15 +84,15 @@ export class SharedLibEntry {
         }
 
         const assetsManifest = await AssetsDiscoveryProcessor.process(assetsDiscoveryUrl);
-        const sharedLibraryManifest = await AssetsValidator.maybeSharedLib(assetsManifest);
+        const appManifest = await AssetsValidator.maybeApp(assetsManifest);
 
-        return  sharedLibraryManifest;
+        return  appManifest;
     }
 
     private async verifyExistence(identifier: string) {
-        const countToUpdate = await db('shared_libs').where({ name: this.identifier });
+        const countToUpdate = await db(this.entityName).where({ name: this.identifier });
         if (countToUpdate.length === 0) {
-            throw new NotFoundSharedLibraryError(identifier);
+            throw new NotFoundApplicationError(identifier);
         }
     }
 }

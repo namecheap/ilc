@@ -8,21 +8,21 @@ export class AssetsValidator {
         allowUnknown: false,
     };
 
-    public static forSharedLib(maybeSharedLibAssetsmanifest: AssetsManifest): Promise<SharedLibAssetsManifest> {
+    public static maybeSharedLib(maybeSharedLibAssetsManifest: AssetsManifest): Promise<SharedLibAssetsManifest> {
         const schema = Joi.object<SharedLibAssetsManifest>({
             spaBundle: Joi.string().uri().required(),
         });
 
-        return schema.validateAsync(maybeSharedLibAssetsmanifest, this.validationOptions);
+        return schema.validateAsync(maybeSharedLibAssetsManifest, this.validationOptions);
     }
 
-    public static forApp(maybeAppAssetsmanifest: AssetsManifest): Promise<ApplicationAssetsManifest> {
+    public static maybeApp(maybeAppAssetsManifest: AssetsManifest): Promise<ApplicationAssetsManifest> {
         const schema = Joi.object<ApplicationAssetsManifest>({
             spaBundle: Joi.string().uri().required(),
             cssBundle: Joi.string().uri().optional(),
             dependencies: Joi.object().pattern(Joi.string(), Joi.string()).optional(),
         });
 
-        return schema.validateAsync(maybeAppAssetsmanifest, this.validationOptions);
+        return schema.validateAsync(maybeAppAssetsManifest, this.validationOptions);
     }
 }

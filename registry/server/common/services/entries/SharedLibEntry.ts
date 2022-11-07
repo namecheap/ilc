@@ -1,12 +1,13 @@
-import db from '../../db';
-import SharedLib from '../../sharedLibs/interfaces';
-import {partialSharedLibSchema} from '../../sharedLibs/interfaces';
+import db from '../../../db';
+import SharedLib from '../../../sharedLibs/interfaces';
+import {partialSharedLibSchema} from '../../../sharedLibs/interfaces';
 import {ValidationFqrnError} from './error/ValidationFqrnError';
 import {NotFoundSharedLibraryError} from './error/NotFoundSharedLibraryError';
-import {AssetsDiscoveryProcessor} from '../../common/services/assets/AssetsDiscoveryProcessor';
-import {AssetsValidator} from '../../common/services/assets/AssetsValidator';
+import {AssetsDiscoveryProcessor} from '../assets/AssetsDiscoveryProcessor';
+import {AssetsValidator} from '../assets/AssetsValidator';
+import {Entry} from './Entry';
 
-export class SharedLibEntry {
+export class SharedLibEntry implements Entry {
 
     private entityName = 'shared_libs' as const;
 

@@ -21,7 +21,7 @@ const commonSharedLib = {
     l10nManifest: Joi.string().max(255).default(null),
 };
 
-export const partialSharedLibSchema = Joi.object({
+export const partialSharedLibSchema = Joi.object<SharedLib>({
     ...commonSharedLib,
     name: sharedLibNameSchema.forbidden(),
 });
