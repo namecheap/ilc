@@ -4,8 +4,8 @@ import {ApplicationAssetsManifest, AssetsManifest, SharedLibAssetsManifest} from
 export class AssetsValidator {
 
     private static validationOptions = {
-        abortEarly: true,
         allowUnknown: false,
+        stripUnknown: true,
     };
 
     public static maybeSharedLib(maybeSharedLibAssetsManifest: AssetsManifest): Promise<SharedLibAssetsManifest> {

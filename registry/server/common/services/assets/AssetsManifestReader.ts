@@ -35,8 +35,8 @@ export class AssetsManifestReader {
 
     private static async validate(assetsManifestContent: unknown): Promise<AssetsManifest> {
         const assetsManifestContentValidator = Joi.object<AssetsManifest>({
-            spaBundle: Joi.string().uri().required(),
-            cssBundle: Joi.string().uri().optional(),
+            spaBundle: Joi.string().required(),
+            cssBundle: Joi.string().optional(),
             dependencies: Joi.object().pattern(Joi.string(), Joi.string()).optional(),
         });
 
