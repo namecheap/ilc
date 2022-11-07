@@ -199,7 +199,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .post(example.url)
                     .send(example.correctWithAssetsDiscoveryUrl)
-                    .expect(422, `"assetsDiscoveryUrl" is not available. Check the url via browser manually.`);
+                    .expect(422, `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`);
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -299,7 +299,7 @@ describe(`Tests ${example.url}`, () => {
         it('should not update any record if record doesn\'t exist', async () => {
             const incorrect = { name: 123 };
             const response = await req.put(example.url + incorrect.name)
-            .expect(404, 'Not found');
+            .expect(404, `Application with name "${incorrect.name}" is not exist`);
 
             expect(response.body).deep.equal({});
         });
@@ -431,7 +431,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req.put(example.url + example.encodedName)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
-                    .expect(422, `"assetsDiscoveryUrl" is not available. Check the url via browser manually.`);
+                    .expect(422, `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`);
 
                 expect(response.body).deep.equal({});
             } finally {

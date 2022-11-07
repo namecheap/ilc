@@ -104,7 +104,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .post(example.url)
                     .send(example.correctWithAssetsDiscoveryUrl)
-                    .expect(422, `"assetsDiscoveryUrl" is not available. Check the url via browser manually.`);
+                    .expect(422, `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`);
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -204,8 +204,10 @@ describe(`Tests ${example.url}`, () => {
     describe('Update', () => {
         it('should not update any record if record doesn\'t exist', async () => {
             const incorrect = { name: 123 };
-            const response = await req.put(example.url + incorrect.name)
-            .expect(404, 'Not found');
+            const response = await req
+                .put(example.url + incorrect.name)
+                .send(_.omit(example.updated, 'name'))
+            .expect(404, 'Shared library with name "123" is not exist');
 
             expect(response.body).deep.equal({});
         });
@@ -276,7 +278,9 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req.put(example.url + example.correct.name)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
-                    .expect(422, `"assetsDiscoveryUrl" is not available. Check the url via browser manually.`);
+                    .expect(422, `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`);
+
+                console.log(response.body);
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -312,10 +316,12 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req.put(example.url + example.correct.name)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'));
 
-                expect(response.body).deep.equal({
+                const expected = {
                     ...example.correctWithAssetsDiscoveryUrl,
                     ...example.manifest,
-                });
+                }
+
+                expect(response.body).deep.equal(expected);
             } finally {
                 await req.delete(example.url + example.correct.name);
             }
