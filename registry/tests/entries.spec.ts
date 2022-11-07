@@ -17,7 +17,7 @@ const example = <any>{
         spaBundle: 'http://127.0.0.1:8239/dist/single_spa.js',
     },
     correct: Object.freeze({
-        name: '@sharedLibrary/testNameSharedLibEntry',
+        name: 'testNameSharedLibEntry',
         spaBundle: 'http://localhost:1234/testSpaBundleSharedLib.js',
         adminNotes: 'Lorem ipsum admin notes dolor sit',
     }),
@@ -95,7 +95,7 @@ describe(`Entries`, () => {
     it('should return 404 when resource is not exists', async () => {
         const response = await req.patch(example.url)
             .send({l10nManifest: 'https://google.com'})
-            .expect(404, 'Shared library with name "@sharedLibrary/testNameSharedLibEntry" is not exist');
+            .expect(404, 'Shared library with name "testNameSharedLibEntry" is not exist');
     });
 
     it('should patch shared library resource', async () => {

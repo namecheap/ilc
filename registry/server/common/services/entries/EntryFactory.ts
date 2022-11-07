@@ -33,6 +33,11 @@ export class EntryFactory {
             throw new FqrnError(`Can not get entity identifier of ${identifier} using resource entity ${resourceIdentifiers}`);
         }
 
+        // @sharedLibrary prefix is not a part of name entity in db
+        if(resourceIdentifiers === this.resourceIdentifiers.SHARED_LIB){
+            return identifier.substring(resourceIdentifiers.length);
+        }
+
         return identifier;
     }
 }
