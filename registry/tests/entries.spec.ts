@@ -17,12 +17,12 @@ const example = <any>{
         spaBundle: 'http://127.0.0.1:8239/dist/single_spa.js',
     },
     correct: Object.freeze({
-        name: 'testNameSharedLibEntry',
+        name: '@sharedLibrary/testNameSharedLibEntry',
         spaBundle: 'http://localhost:1234/testSpaBundleSharedLib.js',
         adminNotes: 'Lorem ipsum admin notes dolor sit',
     }),
     correctApp: {
-        name: 'TestAppReactssrEntry',
+        name: '@portal/TestAppReactssrEntry',
         spaBundle: 'http://localhost:1234/ncTestAppReactssr.js',
         cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssr.css',
         l10nManifest: 'https://localisation.com/manifest.12345678.json',
@@ -74,7 +74,7 @@ describe(`Entries`, () => {
                 .send(invalidPatch)
                 .expect(422, '"invalidProp" is not allowed');
         } finally {
-            await req.delete(example.urlSharedLib + example.correct.name);
+            await req.delete(`${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
         }
     });
 
@@ -88,14 +88,14 @@ describe(`Entries`, () => {
                 .send(emptyPatch)
                 .expect(422, 'Patch does not contain any items to update');
         } finally {
-            await req.delete(example.urlSharedLib + example.correct.name);
+            await req.delete(`${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
         }
     });
 
     it('should return 404 when resource is not exists', async () => {
         const response = await req.patch(example.url)
             .send({l10nManifest: 'https://google.com'})
-            .expect(404, 'Shared library with name "testNameSharedLibEntry" is not exist');
+            .expect(404, 'Shared library with name "@sharedLibrary/testNameSharedLibEntry" is not exist');
     });
 
     it('should patch shared library resource', async () => {
@@ -142,7 +142,7 @@ describe(`Entries`, () => {
             });
 
         } finally {
-            await req.delete(example.urlSharedLib + example.correct.name);
+            await req.delete(`${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
         }
     });
 

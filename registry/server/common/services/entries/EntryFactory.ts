@@ -33,6 +33,6 @@ export class EntryFactory {
             throw new FqrnError(`Can not get entity identifier of ${identifier} using resource entity ${resourceIdentifiers}`);
         }
 
-        return identifier.substring(resourceIdentifiers.length);
+        return identifier;
     }
 }
