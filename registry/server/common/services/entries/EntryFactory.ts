@@ -15,9 +15,9 @@ export class EntryFactory {
         } else if (identifier.startsWith(this.resourceIdentifiers.APP)) {
             const entityIdentifier = this.getEntityIdentifier(identifier, this.resourceIdentifiers.APP);
             return this.getAppInstance(entityIdentifier);
-        } else {
-            throw new IncorrectEntryError(identifier);
         }
+
+        throw new IncorrectEntryError(identifier);
     }
 
     public static getSharedLibInstance(identifier?: string) {
