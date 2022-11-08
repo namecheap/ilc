@@ -27,7 +27,7 @@ export class ApplicationEntry implements Entry{
             noDefaults: true,
             abortEarly: true,
             presence: 'optional'
-        });
+        }) as Omit<App, 'name'>;
 
         if(!Object.keys(appDTO).length) {
             throw new ValidationFqrnError('Patch does not contain any items to update');
@@ -43,20 +43,24 @@ export class ApplicationEntry implements Entry{
         await db.versioning(user, {type: this.entityName, id: this.identifier}, async (trx) => {
             await db(this.entityName)
                 .where({ name: this.identifier })
-                .update(stringifyJSON([
-                    'dependencies',
-                    'props',
-                    'ssrProps',
-                    'ssr',
-                    'configSelector',
-                    'discoveryMetadata'
-                ], appEntity))
+                .update(this.stringifyEntityValues(appEntity))
                 .transacting(trx);
         });
 
         const [updatedApp] = await db.select().from<App>(this.entityName).where('name', this.identifier);
 
         return updatedApp;
+    }
+
+    private stringifyEntityValues(object: Record<string, any>) {
+        return stringifyJSON([
+            'dependencies',
+            'props',
+            'ssrProps',
+            'ssr',
+            'configSelector',
+            'discoveryMetadata'
+        ], object);
     }
 
     public async create(appDTO: App, { user }: { user: any }) {
@@ -69,7 +73,7 @@ export class ApplicationEntry implements Entry{
 
         await db.versioning(user, {type: 'apps', id: appEntity.name}, async (trx) => {
             await db('apps')
-                .insert(stringifyJSON(['dependencies', 'props', 'ssrProps', 'ssr', 'configSelector', 'discoveryMetadata'], appEntity))
+                .insert(this.stringifyEntityValues(appEntity))
                 .transacting(trx);
         });
 
