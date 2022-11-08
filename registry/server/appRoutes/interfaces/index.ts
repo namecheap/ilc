@@ -1,24 +1,22 @@
 import JoiDefault from 'joi';
 
-import {
-    appNameSchema,
-} from '../../apps/interfaces';
-import db from "../../db";
-import {getJoiErr} from "../../util/helpers";
+import { appNameSchema } from '../../apps/interfaces';
+import db from '../../db';
+import { getJoiErr } from '../../util/helpers';
 import { templateNameSchema } from '../../templates/routes/validation';
 
-const Joi = JoiDefault.defaults(schema => {
-    return schema.empty(null)
+const Joi = JoiDefault.defaults((schema) => {
+    return schema.empty(null);
 });
 
 const commonAppRouteSlot = {
     name: Joi.string().trim().min(1).max(255),
-    appName: appNameSchema.external(async value => {
+    appName: appNameSchema.external(async (value) => {
         const wrapperApp = await db('apps').first('kind').where({ name: value });
         if (!wrapperApp) {
             throw getJoiErr('appName', `Non-existing app name "${value}" specified.`);
         } else if (wrapperApp.kind === 'wrapper') {
-            throw getJoiErr('appName', 'It\'s forbidden to use wrappers in routes.');
+            throw getJoiErr('appName', "It's forbidden to use wrappers in routes.");
         }
 
         return value;
@@ -50,7 +48,11 @@ export const partialAppRouteSchema = Joi.object({
     ...commonAppRoute,
 });
 
-const conditionSpecialRole = { is: Joi.exist(), then: Joi.forbidden(), otherwise: Joi.required() };
+const conditionSpecialRole = {
+    is: Joi.exist(),
+    then: Joi.forbidden(),
+    otherwise: Joi.required(),
+};
 
 export const appRouteSchema = Joi.object({
     ...commonAppRoute,
@@ -64,12 +66,12 @@ export const appRouteSchema = Joi.object({
         is: Joi.exist(),
         then: Joi.forbidden(),
     }),
-}).external(async value => {
+}).external(async (value) => {
     if (value.orderPos === null) {
         const lastRoute = await db('routes')
             .first('orderPos')
             .where(function () {
-                this.where({domainId: value.domainId});
+                this.where({ domainId: value.domainId });
                 this.whereNotNull('orderPos');
             })
             .orderBy('orderPos', 'desc');

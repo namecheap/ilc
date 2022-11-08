@@ -1,4 +1,4 @@
-import {NotFoundFqrnError} from './NotFoundFqrnError';
+import { NotFoundFqrnError } from './NotFoundFqrnError';
 
 export class NotFoundSharedLibraryError extends NotFoundFqrnError {
     constructor(libraryName: string) {

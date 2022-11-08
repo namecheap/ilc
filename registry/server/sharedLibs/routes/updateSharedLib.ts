@@ -1,23 +1,17 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import SharedLib, {
-    sharedLibNameSchema,
-    partialSharedLibSchema,
-} from '../interfaces';
-import {EntryFactory} from '../../common/services/entries/EntryFactory';
-import {NotFoundFqrnError} from '../../common/services/entries/error/NotFoundFqrnError';
-import {ValidationFqrnError} from '../../common/services/entries/error/ValidationFqrnError';
-import {joiErrorToResponse} from '../../util/helpers';
-import {AssetsManifestError} from '../../common/services/assets/errors/AssetsManifestError';
+import SharedLib, { sharedLibNameSchema, partialSharedLibSchema } from '../interfaces';
+import { EntryFactory } from '../../common/services/entries/EntryFactory';
+import { NotFoundFqrnError } from '../../common/services/entries/error/NotFoundFqrnError';
+import { ValidationFqrnError } from '../../common/services/entries/error/ValidationFqrnError';
+import { joiErrorToResponse } from '../../util/helpers';
+import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';
 
 type UpdateSharedLibRequestParams = {
-    name: string
+    name: string;
 };
 
 const validateRequestBeforeUpdateSharedLib = validateRequestFactory([
@@ -29,7 +23,7 @@ const validateRequestBeforeUpdateSharedLib = validateRequestFactory([
     },
     {
         schema: partialSharedLibSchema,
-        selector: 'body'
+        selector: 'body',
     },
 ]);
 
@@ -44,13 +38,13 @@ const updateSharedLib = async (req: Request<UpdateSharedLibRequestParams>, res: 
     try {
         results = await sharedLibEntry.patch(sharedLib, { user: req.user });
     } catch (error) {
-        if(error instanceof NotFoundFqrnError) {
+        if (error instanceof NotFoundFqrnError) {
             return res.status(error.code).send(error.message);
-        }else if(error instanceof ValidationFqrnError) {
+        } else if (error instanceof ValidationFqrnError) {
             return res.status(error.code).send(error.message);
-        }else if(error instanceof Joi.ValidationError) {
+        } else if (error instanceof Joi.ValidationError) {
             return res.status(422).send(joiErrorToResponse(error));
-        }else if(error instanceof AssetsManifestError) {
+        } else if (error instanceof AssetsManifestError) {
             return res.status(error.code).send(error.message);
         }
         throw error;

@@ -3,9 +3,9 @@
 export type ParsedLink = {
     params: {
         [key: string]: string;
-    },
+    };
     rel: string | null;
-    uri: string;   
+    uri: string;
 };
 
 /**
@@ -42,7 +42,7 @@ function parseLinkHeader(linkHeader: string): ParsedLink[] {
 
             return result;
         }, []);
-};
+}
 
 /**
  * Get the value of rel attribute
@@ -62,8 +62,8 @@ function getRelValue(parts: string): string | null {
  *
  * rel="fragment-script" -> ["rel", "fragment-script"]
  */
-function getParams(parts: string): {[key: string]: string} {
-    return parts.split(';').reduce((acc: {[key: string]: string}, attribute) => {
+function getParams(parts: string): { [key: string]: string } {
+    return parts.split(';').reduce((acc: { [key: string]: string }, attribute) => {
         let [key, value] = attribute.trim().split('=');
         key = key.trim();
 
@@ -83,19 +83,15 @@ function getParams(parts: string): {[key: string]: string} {
 function fixLink(headerLink: string): string {
     return headerLink
         .split(',')
-        .map(link => {
+        .map((link) => {
             return link
                 .split(';')
                 .map((attribute, index) => {
                     if (index) {
                         const [key, value] = attribute.trim().split('=');
-                        return !value || value.trim().startsWith('"')
-                            ? attribute
-                            : `${key}="${value}"`;
+                        return !value || value.trim().startsWith('"') ? attribute : `${key}="${value}"`;
                     } else {
-                        return !attribute || attribute.trim().startsWith('<')
-                            ? attribute
-                            : `<${attribute}>`;
+                        return !attribute || attribute.trim().startsWith('<') ? attribute : `<${attribute}>`;
                     }
                 })
                 .join(';');

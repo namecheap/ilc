@@ -1,4 +1,4 @@
-import {EntityTypes} from './interfaces';
+import { EntityTypes } from './interfaces';
 
 interface RelatedEntities {
     type: string;
@@ -8,8 +8,8 @@ interface RelatedEntities {
 
 interface EntityConf {
     idColumn: string;
-    related: RelatedEntities[],
-    omitColumns?: string[],
+    related: RelatedEntities[];
+    omitColumns?: string[];
 }
 
 const versioningConf: Record<EntityTypes | keyof typeof EntityTypes, EntityConf> = {

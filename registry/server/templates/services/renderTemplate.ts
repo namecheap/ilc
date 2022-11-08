@@ -9,12 +9,12 @@ import { ResourceScript } from './resources/ResourceScript';
 import { ResourcePreload } from './resources/ResourcePreload';
 
 interface IncludeAttributes {
-    id: string,
-    src: string,
-    timeout?: string,
+    id: string;
+    src: string;
+    timeout?: string;
 }
 interface IncludesAttributes {
-    [include: string]: IncludeAttributes
+    [include: string]: IncludeAttributes;
 }
 
 type FetchedIncludes = {
@@ -45,7 +45,9 @@ async function renderTemplate(template: string): Promise<RenderTemplateResult> {
     if (!!duplicateIncludesAttributes.length) {
         throw new Error(
             `The current template has next duplicate includes sources or ids as follows: \n` +
-            `${Array.from(new Set(duplicateIncludesAttributes.map(({ id, src }: IncludeAttributes) => (id || src)))).join(',\n')}`
+                `${Array.from(
+                    new Set(duplicateIncludesAttributes.map(({ id, src }: IncludeAttributes) => id || src)),
+                ).join(',\n')}`,
         );
     }
 
@@ -62,8 +64,8 @@ async function renderTemplate(template: string): Promise<RenderTemplateResult> {
 }
 
 function matchIncludesAttributes(template: string): IncludesAttributes {
-    const includesRegExp = /<include(?:\s*\w*="[^"]*"\s*)*\s*(?:\/>|>\s*.*\s*<\/include>)/gmi;
-    const includesAttributesRegExp = /\w*="[^"]*"/gmi;
+    const includesRegExp = /<include(?:\s*\w*="[^"]*"\s*)*\s*(?:\/>|>\s*.*\s*<\/include>)/gim;
+    const includesAttributesRegExp = /\w*="[^"]*"/gim;
 
     const matchedIncludes = Array.from(template.matchAll(includesRegExp));
 
@@ -73,20 +75,14 @@ function matchIncludesAttributes(template: string): IncludesAttributes {
 
     const includes = matchedIncludes.map(([include]: any) => include);
 
-    return includes.reduce((
-        includes: any,
-        include: any,
-    ) => {
+    return includes.reduce((includes: any, include: any) => {
         const matchedAttributes = Array.from(include.matchAll(includesAttributesRegExp));
         const attributes = matchedAttributes.map(([attribute]: any) => attribute);
 
-        includes[include] = attributes.reduce((
-            attributes: any,
-            attribute: any,
-        ) => {
+        includes[include] = attributes.reduce((attributes: any, attribute: any) => {
             const key = attribute.split('=', 1)[0];
             const value = attribute.substring(attribute.indexOf('=') + 1);
-            attributes[key] = value.split('\"').join('');
+            attributes[key] = value.split('"').join('');
             return attributes;
         }, {});
 
@@ -95,13 +91,13 @@ function matchIncludesAttributes(template: string): IncludesAttributes {
 }
 
 function selectDuplicateIncludesAttributes(includesAttributes: IncludesAttributes): Array<IncludeAttributes> {
-    return Object.values(includesAttributes).filter((
-        currentAttributes: IncludeAttributes,
-        index,
-        attributes
-    ) =>
-        (currentAttributes.id || currentAttributes.src) &&
-        attributes.findIndex(({ id, src }: IncludeAttributes) => id === currentAttributes.id || src === currentAttributes.src) !== index);
+    return Object.values(includesAttributes).filter(
+        (currentAttributes: IncludeAttributes, index, attributes) =>
+            (currentAttributes.id || currentAttributes.src) &&
+            attributes.findIndex(
+                ({ id, src }: IncludeAttributes) => id === currentAttributes.id || src === currentAttributes.src,
+            ) !== index,
+    );
 }
 
 async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<FetchedIncludes> {
@@ -111,63 +107,63 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Fe
         return [];
     }
 
-    return Promise.all(includeHtmlTags.map(async (includeHtmlTag: string) => {
-        const parsedHtmlTag = includesAttributes[includeHtmlTag];
-        const { id, src, timeout = 10000 } = parsedHtmlTag;
+    return Promise.all(
+        includeHtmlTags.map(async (includeHtmlTag: string) => {
+            const parsedHtmlTag = includesAttributes[includeHtmlTag];
+            const { id, src, timeout = 10000 } = parsedHtmlTag;
 
-        try {
-            if (!id || !src) {
-                throw new Error(`Necessary attribute src or id was not provided by ${includeHtmlTag}!`);
+            try {
+                if (!id || !src) {
+                    throw new Error(`Necessary attribute src or id was not provided by ${includeHtmlTag}!`);
+                }
+
+                let {
+                    data,
+                    headers: { link },
+                } = await axios.get(src, {
+                    timeout: +timeout,
+                });
+
+                let styleRefs: Array<string> = [];
+
+                if (link) {
+                    const resources: Resource[] = ResourceLinkParser.parse(link);
+
+                    const scripts = resources.filter((resource) => resource instanceof ResourceScript);
+                    const preloads = resources.filter((resource) => resource instanceof ResourcePreload);
+                    const styles = resources.filter((resource) => resource instanceof ResourceStylesheet);
+
+                    styleRefs = styles.map((style) => style.uri);
+
+                    if (styles.length) {
+                        data = styles.join('\n') + '\n' + data;
+                    }
+
+                    if (preloads.length) {
+                        data = preloads.join('\n') + '\n' + data;
+                    }
+
+                    if (scripts.length) {
+                        data += '\n' + scripts.join('\n');
+                    }
+                }
+
+                return {
+                    includeHtmlTag,
+                    includeResult: wrapWithComments(id, data),
+                    styleRefs,
+                };
+            } catch (e: any) {
+                throw new errors.FetchIncludeError({
+                    message: `Failed to fetch include with ID "${id}" due to: ${e.message}`,
+                    cause: e,
+                    data: {
+                        include: includeHtmlTag,
+                    },
+                });
             }
-
-            let {
-                data,
-                headers: {
-                    link,
-                },
-            } = await axios.get(src, {
-                timeout: +timeout,
-            });
-
-            let styleRefs: Array<string> = [];
-
-            if (link) {
-                const resources: Resource[] = ResourceLinkParser.parse(link);
-                
-                const scripts = resources.filter(resource => resource instanceof ResourceScript);
-                const preloads = resources.filter(resource => resource instanceof ResourcePreload);
-                const styles = resources.filter(resource => resource instanceof ResourceStylesheet);
-
-                styleRefs = styles.map(style => style.uri);
-               
-                if (styles.length) {
-                    data = styles.join('\n') + '\n' + data;
-                }
-                 
-                if (preloads.length) {
-                    data = preloads.join('\n') + '\n' + data;
-                }
-
-                if (scripts.length) {
-                    data += '\n' + scripts.join('\n');
-                }
-            }
-
-            return {
-                includeHtmlTag,
-                includeResult: wrapWithComments(id, data),
-                styleRefs,
-            };
-        } catch (e: any) {
-            throw new errors.FetchIncludeError({
-                message: `Failed to fetch include with ID "${id}" due to: ${e.message}`,
-                cause: e,
-                data: {
-                    include: includeHtmlTag,
-                }
-            });
-        }
-    }));
+        }),
+    );
 }
 
 function wrapWithComments(id: string, data: string): string {

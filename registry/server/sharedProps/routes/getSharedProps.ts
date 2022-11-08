@@ -1,7 +1,4 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import db from '../../db';
@@ -10,15 +7,17 @@ import validateRequestFactory from '../../common/services/validateRequest';
 import SharedProps, { sharedPropsNameSchema } from '../interfaces';
 
 type RequestParams = {
-    name: string
+    name: string;
 };
 
-const validateRequest = validateRequestFactory([{
-    schema: Joi.object({
-        name: sharedPropsNameSchema.required(),
-    }),
-    selector: 'params',
-}]);
+const validateRequest = validateRequestFactory([
+    {
+        schema: Joi.object({
+            name: sharedPropsNameSchema.required(),
+        }),
+        selector: 'params',
+    },
+]);
 
 const getSharedProps = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const [sharedProps] = await db.select().from<SharedProps>('shared_props').where('name', req.params.name);

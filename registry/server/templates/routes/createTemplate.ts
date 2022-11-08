@@ -1,28 +1,25 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import Template, {
-    LocalizedTemplate
-} from '../interfaces';
+import Template, { LocalizedTemplate } from '../interfaces';
 import { tables } from '../../db/structure';
 import { readTemplateWithAllVersions } from '../services/templatesRepository';
 import { templateSchema, validateLocalesAreSupported } from './validation';
 
-const validateRequestBeforeCreateTemplate = validateRequestFactory([{
-    schema: templateSchema,
-    selector: 'body',
-}]);
+const validateRequestBeforeCreateTemplate = validateRequestFactory([
+    {
+        schema: templateSchema,
+        selector: 'body',
+    },
+]);
 
 const createTemplate = async (req: Request, res: Response): Promise<void> => {
     const request = req.body;
     const template: Template = {
         name: request.name,
-        content: request.content
-    }
+        content: request.content,
+    };
 
     const locales = Object.keys(request.localizedVersions || {});
     let localesAreValid = await validateLocalesAreSupported(locales, res);
@@ -30,7 +27,7 @@ const createTemplate = async (req: Request, res: Response): Promise<void> => {
         return;
     }
 
-    await db.versioning(req.user, {type: 'templates', id: template.name}, async (trx) => {
+    await db.versioning(req.user, { type: 'templates', id: template.name }, async (trx) => {
         await db('templates').insert(template).transacting(trx);
     });
 
@@ -43,15 +40,17 @@ const createTemplate = async (req: Request, res: Response): Promise<void> => {
 };
 
 function insertLocalizedVersions(locales: string[], template: Template, request: Record<string, any>) {
-    return Promise.all(locales.map(locale => {
-        const localizedTemplate: LocalizedTemplate = {
-            templateName: template.name,
-            content: request.localizedVersions[locale].content,
-            locale: locale
-        }
+    return Promise.all(
+        locales.map((locale) => {
+            const localizedTemplate: LocalizedTemplate = {
+                templateName: template.name,
+                content: request.localizedVersions[locale].content,
+                locale: locale,
+            };
 
-        return db(tables.templatesLocalized).insert(localizedTemplate);
-    }));
+            return db(tables.templatesLocalized).insert(localizedTemplate);
+        }),
+    );
 }
 
 export default [validateRequestBeforeCreateTemplate, createTemplate];

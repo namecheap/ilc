@@ -1,6 +1,5 @@
-import { Knex } from "knex";
-import isMySQL from "../util/isMySQL";
-
+import { Knex } from 'knex';
+import isMySQL from '../util/isMySQL';
 
 export async function up(knex: Knex): Promise<void> {
     if (!isMySQL(knex)) {
@@ -11,10 +10,8 @@ export async function up(knex: Knex): Promise<void> {
     }
 }
 
-
 export async function down(knex: Knex): Promise<void> {
     if (!isMySQL(knex)) {
         throw new Error('Not implemented');
     }
 }
-

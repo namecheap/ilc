@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import supertest from 'supertest';
 
-import {SettingKeys, TrailingSlashValues, OnPropsUpdateValues} from '../server/settings/interfaces';
-import {request, expect, requestWithAuth} from './common';
+import { SettingKeys, TrailingSlashValues, OnPropsUpdateValues } from '../server/settings/interfaces';
+import { request, expect, requestWithAuth } from './common';
 
 const templateName = 'ncTestTemplateName';
 const example = {
@@ -12,7 +12,7 @@ const example = {
         cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssr.css',
         configSelector: ['ncTestSharedPropsName'],
         ssr: {
-            src: "http://127.0.0.1:1234/fragment",
+            src: 'http://127.0.0.1:1234/fragment',
             timeout: 1000,
         },
         kind: 'primary',
@@ -44,13 +44,13 @@ const example = {
     }),
     templates: Object.freeze({
         name: templateName,
-        content: 'ncTestTemplateContent'
+        content: 'ncTestTemplateContent',
     }),
     sharedProps: Object.freeze({
         name: 'ncTestSharedPropsName',
         props: {
             ncTestSharedPropsPropName: 'ncTestSharedPropsPropValue',
-        }
+        },
     }),
     routerDomains: Object.freeze({
         domainName: 'domainNameCorrect.com',
@@ -70,7 +70,7 @@ describe('Tests /api/v1/config', () => {
     beforeEach(async () => {
         req = await request();
         reqWithAuth = await requestWithAuth();
-    })
+    });
 
     describe('Read', () => {
         it('should successfully return config', async () => {
@@ -78,7 +78,10 @@ describe('Tests /api/v1/config', () => {
 
             try {
                 await req.post('/api/v1/template/').send(example.templates).expect(200);
-                const responseRouterDomains = await req.post('/api/v1/router_domains/').send(example.routerDomains).expect(200);
+                const responseRouterDomains = await req
+                    .post('/api/v1/router_domains/')
+                    .send(example.routerDomains)
+                    .expect(200);
                 routerDomainsId = responseRouterDomains.body.id;
 
                 await req.post('/api/v1/app/').send(example.apps).expect(200);
@@ -86,22 +89,27 @@ describe('Tests /api/v1/config', () => {
                 const responseRoute = await req.post('/api/v1/route/').send(example.appRoutes).expect(200);
                 routeId = responseRoute.body.id;
 
-                const responseRouteWithDomain = await req.post('/api/v1/route/').send({
-                    ...example.appRoutes,
-                    orderPos: 123,
-                    domainId: routerDomainsId,
-                }).expect(200);
+                const responseRouteWithDomain = await req
+                    .post('/api/v1/route/')
+                    .send({
+                        ...example.appRoutes,
+                        orderPos: 123,
+                        domainId: routerDomainsId,
+                    })
+                    .expect(200);
                 routeIdWithDomain = responseRouteWithDomain.body.id;
 
-                const responseRouteWithoutSlots = await req.post('/api/v1/route/').send(example.appRoutesWithoutSlots).expect(200);
+                const responseRouteWithoutSlots = await req
+                    .post('/api/v1/route/')
+                    .send(example.appRoutesWithoutSlots)
+                    .expect(200);
                 routeIdWithoutSlots = responseRouteWithoutSlots.body.id;
 
                 await req.post('/api/v1/shared_props/').send(example.sharedProps).expect(200);
 
                 await req.post('/api/v1/shared_libs/').send(example.sharedLibs).expect(200);
 
-                const response = await req.get('/api/v1/config')
-                .expect(200);
+                const response = await req.get('/api/v1/config').expect(200);
 
                 expect(response.text).to.be.a('string');
                 expect(response.body).to.be.an('object');
@@ -129,15 +137,14 @@ describe('Tests /api/v1/config', () => {
                     template: example.appRoutesWithoutSlots.templateName,
                 });
 
-                expect(response.body.apps[example.apps.name])
-                .deep.equal(
+                expect(response.body.apps[example.apps.name]).deep.equal(
                     _.omit(
                         {
                             ...example.apps,
-                            props: example.sharedProps.props
+                            props: example.sharedProps.props,
                         },
-                        ['name', 'configSelector']
-                    )
+                        ['name', 'configSelector'],
+                    ),
                 );
 
                 expect(response.body.templates).to.include(example.templates.name);
@@ -145,7 +152,7 @@ describe('Tests /api/v1/config', () => {
                     [SettingKeys.TrailingSlash]: TrailingSlashValues.DoNothing,
                     [SettingKeys.AmdDefineCompatibilityMode]: false,
                     globalSpinner: {
-                        enabled: true
+                        enabled: true,
                     },
                     i18n: {
                         default: {
@@ -155,7 +162,7 @@ describe('Tests /api/v1/config', () => {
                         enabled: true,
                         supported: {
                             currency: ['USD', 'UAH'],
-                            locale: ['en-US', 'ua-UA']
+                            locale: ['en-US', 'ua-UA'],
                         },
                         routingStrategy: 'prefix_except_default',
                     },
@@ -166,22 +173,21 @@ describe('Tests /api/v1/config', () => {
                     [example.sharedLibs.name]: example.sharedLibs.spaBundle,
                 });
             } finally {
-                routeId && await req.delete('/api/v1/route/' + routeId);
-                routeIdWithDomain && await req.delete('/api/v1/route/' + routeIdWithDomain);
-                routerDomainsId && await req.delete('/api/v1/router_domains/' + routerDomainsId);
-                routeIdWithoutSlots && await req.delete('/api/v1/route/' + routeIdWithoutSlots);
+                routeId && (await req.delete('/api/v1/route/' + routeId));
+                routeIdWithDomain && (await req.delete('/api/v1/route/' + routeIdWithDomain));
+                routerDomainsId && (await req.delete('/api/v1/router_domains/' + routerDomainsId));
+                routeIdWithoutSlots && (await req.delete('/api/v1/route/' + routeIdWithoutSlots));
                 await req.delete('/api/v1/template/' + example.templates.name);
                 await req.delete('/api/v1/app/' + encodeURIComponent(example.apps.name));
                 await req.delete('/api/v1/shared_props/' + example.sharedProps.name);
                 await req.delete('/api/v1/shared_libs/' + example.sharedLibs.name);
             }
-        })
+        });
     });
 
     describe('Authentication / Authorization', () => {
         it('should be accessible w/o authentication', async () => {
-            await reqWithAuth.get('/api/v1/config')
-                .expect(200);
+            await reqWithAuth.get('/api/v1/config').expect(200);
         });
     });
 });

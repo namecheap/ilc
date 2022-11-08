@@ -1,5 +1,4 @@
-import { Knex } from "knex";
-
+import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<any> {
     return knex.schema.createTable('sessions', function (table) {
@@ -14,10 +13,8 @@ export async function up(knex: Knex): Promise<any> {
     });
 }
 
-
-export async function down(knex: Knex): Promise<any> {
-}
+export async function down(knex: Knex): Promise<any> {}
 
 function isMySQL(knex: Knex) {
-    return ["mysql", "mariasql", "mariadb"].indexOf(knex.client.dialect) > -1;
+    return ['mysql', 'mariasql', 'mariadb'].indexOf(knex.client.dialect) > -1;
 }

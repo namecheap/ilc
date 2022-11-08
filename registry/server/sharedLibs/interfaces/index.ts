@@ -1,7 +1,7 @@
 import JoiDefault from 'joi';
 
-const Joi = JoiDefault.defaults(schema => {
-    return schema.empty(null)
+const Joi = JoiDefault.defaults((schema) => {
+    return schema.empty(null);
 });
 
 export default interface SharedLib {
@@ -10,7 +10,7 @@ export default interface SharedLib {
     assetsDiscoveryUrl?: string;
     adminNotes?: string;
     l10nManifest?: string;
-};
+}
 
 export const sharedLibNameSchema = Joi.string().trim().min(1);
 

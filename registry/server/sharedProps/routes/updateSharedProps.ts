@@ -1,20 +1,14 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { stringifyJSON } from '../../common/services/json';
-import SharedProps, {
-    sharedPropsNameSchema,
-    partialSharedPropsSchema,
-} from '../interfaces';
+import SharedProps, { sharedPropsNameSchema, partialSharedPropsSchema } from '../interfaces';
 
 type RequestParams = {
-    name: string
+    name: string;
 };
 
 const validateRequest = validateRequestFactory([
@@ -26,7 +20,7 @@ const validateRequest = validateRequestFactory([
     },
     {
         schema: partialSharedPropsSchema,
-        selector: 'body'
+        selector: 'body',
     },
 ]);
 
@@ -34,13 +28,15 @@ const updateSharedProps = async (req: Request<RequestParams>, res: Response): Pr
     const sharedProps = req.body;
     const sharedPropsName = req.params.name;
 
-    const countToUpdate = await db('shared_props').where({ name: sharedPropsName })
+    const countToUpdate = await db('shared_props').where({
+        name: sharedPropsName,
+    });
     if (!countToUpdate.length) {
         res.status(404).send('Not found');
         return;
     }
 
-    await db.versioning(req.user, {type: 'shared_props', id: sharedPropsName}, async (trx) => {
+    await db.versioning(req.user, { type: 'shared_props', id: sharedPropsName }, async (trx) => {
         await db('shared_props')
             .where({ name: sharedPropsName })
             .update(stringifyJSON(['props', 'ssrProps'], sharedProps))

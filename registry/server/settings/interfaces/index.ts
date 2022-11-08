@@ -50,7 +50,6 @@ export const enum SettingTypes {
     Password = 'password',
 }
 
-
 export enum OnPropsUpdateValues {
     Remount = 'remount',
     Update = 'update',
@@ -59,59 +58,67 @@ export enum OnPropsUpdateValues {
 type SettingValue = string | boolean | TrailingSlashValues | string[];
 
 export interface Setting {
-    key: SettingKeys,
-    value: SettingValue,
-    default: SettingValue,
-    scope: Scope,
-    secret: boolean,
+    key: SettingKeys;
+    value: SettingValue;
+    default: SettingValue;
+    scope: Scope;
+    secret: boolean;
     meta: {
-        type: SettingTypes,
-        choices?: any[],
-    },
+        type: SettingTypes;
+        choices?: any[];
+    };
 }
 
-export const keySchema = Joi.string().min(1).max(50).valid(...Object.values(SettingKeys));
+export const keySchema = Joi.string()
+    .min(1)
+    .max(50)
+    .valid(...Object.values(SettingKeys));
 
 const valueSchema = Joi.alternatives().conditional('key', {
     switch: [
         {
             is: Joi.valid(SettingKeys.TrailingSlash),
-            then: Joi.string().valid(
-                TrailingSlashValues.DoNothing,
-                TrailingSlashValues.redirectToNonTrailingSlash,
-                TrailingSlashValues.redirectToTrailingSlash,
-            ).required(),
+            then: Joi.string()
+                .valid(
+                    TrailingSlashValues.DoNothing,
+                    TrailingSlashValues.redirectToNonTrailingSlash,
+                    TrailingSlashValues.redirectToTrailingSlash,
+                )
+                .required(),
         },
         {
             is: Joi.valid(SettingKeys.I18nRoutingStrategy),
-            then: Joi.string().valid(...Object.values(RoutingStrategyValues)).required(),
+            then: Joi.string()
+                .valid(...Object.values(RoutingStrategyValues))
+                .required(),
         },
         {
             is: Joi.valid(
                 SettingKeys.AmdDefineCompatibilityMode,
                 SettingKeys.AuthOpenIdEnabled,
                 SettingKeys.GlobalSpinnerEnabled,
-                SettingKeys.I18nEnabled
+                SettingKeys.I18nEnabled,
             ),
             then: Joi.boolean().strict().sensitive().required(),
         },
         {
-            is: Joi.valid(
-                SettingKeys.I18nSupportedCurrencies,
-                SettingKeys.I18nSupportedLocales,
-            ),
+            is: Joi.valid(SettingKeys.I18nSupportedCurrencies, SettingKeys.I18nSupportedLocales),
             then: Joi.array().items(Joi.string()),
         },
         {
             is: Joi.valid(SettingKeys.BaseUrl, SettingKeys.AuthOpenIdDiscoveryUrl),
-            then: Joi.string().uri({
-                scheme: [/https?/],
-                allowRelative: false,
-            }).allow(''),
+            then: Joi.string()
+                .uri({
+                    scheme: [/https?/],
+                    allowRelative: false,
+                })
+                .allow(''),
         },
         {
             is: Joi.valid(SettingKeys.OnPropsUpdate),
-            then: Joi.string().valid(...Object.values(OnPropsUpdateValues)).required(),
+            then: Joi.string()
+                .valid(...Object.values(OnPropsUpdateValues))
+                .required(),
         },
     ],
     otherwise: Joi.string().allow(''),

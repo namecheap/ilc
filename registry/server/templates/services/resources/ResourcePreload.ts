@@ -3,7 +3,20 @@ import { AllowedAttributes, Resource } from './Resource';
 
 export class ResourcePreload extends Resource {
     protected static allowedAttributes: AllowedAttributes = {
-        as: ['audio', 'document', 'embed', 'fetch', 'font', 'image', 'object', 'script', 'style', 'track', 'video', 'work'],
+        as: [
+            'audio',
+            'document',
+            'embed',
+            'fetch',
+            'font',
+            'image',
+            'object',
+            'script',
+            'style',
+            'track',
+            'video',
+            'work',
+        ],
         type: null,
         media: null,
         hreflang: null,

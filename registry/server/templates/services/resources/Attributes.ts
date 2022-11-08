@@ -1,4 +1,4 @@
-const crossorigin = { 
+const crossorigin = {
     crossorigin: ['anonymous', 'use-credentials'],
 };
 

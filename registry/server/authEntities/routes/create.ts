@@ -1,7 +1,4 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -10,10 +7,12 @@ import AuthEntity, { createSchema } from '../interfaces';
 
 import * as bcrypt from 'bcrypt';
 
-const validateRequest = validateRequestFactory([{
-    schema: createSchema,
-    selector: 'body',
-}]);
+const validateRequest = validateRequestFactory([
+    {
+        schema: createSchema,
+        selector: 'body',
+    },
+]);
 
 const createSharedProps = async (req: Request, res: Response): Promise<void> => {
     const input: AuthEntity = req.body;
@@ -23,7 +22,7 @@ const createSharedProps = async (req: Request, res: Response): Promise<void> => 
     }
 
     let recordId: number;
-    await db.versioning(req.user, {type: 'auth_entities'}, async (trx) => {
+    await db.versioning(req.user, { type: 'auth_entities' }, async (trx) => {
         [recordId] = await db('auth_entities').insert(req.body).transacting(trx);
         return recordId;
     });

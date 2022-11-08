@@ -1,4 +1,3 @@
-
 export enum EntityTypes {
     apps = 'apps',
     routes = 'routes',
@@ -12,7 +11,7 @@ export enum EntityTypes {
 
 export interface OperationConf {
     type: EntityTypes | keyof typeof EntityTypes;
-    id?: string|number;
+    id?: string | number;
 }
 
 interface VersionRowBase {
@@ -23,8 +22,8 @@ interface VersionRowBase {
 }
 
 export interface VersionRowData extends VersionRowBase {
-    data: string|null;
-    data_after: string|null;
+    data: string | null;
+    data_after: string | null;
 }
 export interface VersionRow extends VersionRowData {
     id: string;
@@ -32,6 +31,6 @@ export interface VersionRow extends VersionRowData {
 
 export interface VersionRowParsed extends VersionRowBase {
     id: string;
-    data: {data: object, related: Record<string, object[]>}|null;
-    data_after: {data: object, related: Record<string, object[]>}|null;
+    data: { data: object; related: Record<string, object[]> } | null;
+    data_after: { data: object; related: Record<string, object[]> } | null;
 }

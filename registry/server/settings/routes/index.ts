@@ -1,4 +1,4 @@
-import express, {RequestHandler} from 'express';
+import express, { RequestHandler } from 'express';
 
 import getSettings from './getSettings';
 import getSetting from './getSetting';

@@ -1,8 +1,7 @@
 import * as Joi from 'joi';
-import {ApplicationAssetsManifest, AssetsManifest, SharedLibAssetsManifest} from './AssetsManifestReader';
+import { ApplicationAssetsManifest, AssetsManifest, SharedLibAssetsManifest } from './AssetsManifestReader';
 
 export class AssetsValidator {
-
     private static validationOptions = {
         allowUnknown: false,
         stripUnknown: true,

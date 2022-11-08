@@ -1,4 +1,4 @@
-import {NotFoundFqrnError} from './NotFoundFqrnError';
+import { NotFoundFqrnError } from './NotFoundFqrnError';
 
 export class NotFoundApplicationError extends NotFoundFqrnError {
     constructor(appName: string) {

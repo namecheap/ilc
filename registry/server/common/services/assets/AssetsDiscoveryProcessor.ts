@@ -1,11 +1,7 @@
-import {
-    AssetsManifestReader,
-    AssetsManifest
-} from './AssetsManifestReader';
+import { AssetsManifestReader, AssetsManifest } from './AssetsManifestReader';
 
 export class AssetsDiscoveryProcessor {
     public static async process(assetsDiscoveryUrl: string) {
-
         const assetsManifest = await AssetsManifestReader.read(assetsDiscoveryUrl);
 
         const processedManifest = this.processManifest(assetsDiscoveryUrl, assetsManifest);
@@ -14,7 +10,6 @@ export class AssetsDiscoveryProcessor {
     }
 
     private static processManifest(baseUrl: string, manifest: AssetsManifest): AssetsManifest {
-
         let data: AssetsManifest = {
             spaBundle: this.toURL(baseUrl, manifest.spaBundle),
         };
@@ -25,7 +20,7 @@ export class AssetsDiscoveryProcessor {
 
         if (manifest.dependencies !== undefined) {
             data.dependencies = Object.keys(manifest.dependencies).reduce<typeof manifest.dependencies>((acc, key) => {
-                if(!manifest.dependencies) {
+                if (!manifest.dependencies) {
                     return acc;
                 }
 

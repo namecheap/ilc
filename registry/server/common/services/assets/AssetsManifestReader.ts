@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as Joi from 'joi';
-import {AssetsManifestError} from './errors/AssetsManifestError';
+import { AssetsManifestError } from './errors/AssetsManifestError';
 
 interface BasicAssetsManifest {
     spaBundle: string;
@@ -25,9 +25,10 @@ export class AssetsManifestReader {
             });
 
             assetsManifestContent = response.data;
-
         } catch (error) {
-            throw new AssetsManifestError(`"assetsDiscoveryUrl" ${assetsManifestUrl} is not available. Check the url via browser manually.`);
+            throw new AssetsManifestError(
+                `"assetsDiscoveryUrl" ${assetsManifestUrl} is not available. Check the url via browser manually.`,
+            );
         }
 
         return this.validate(assetsManifestContent);
@@ -42,8 +43,10 @@ export class AssetsManifestReader {
 
         try {
             return await assetsManifestContentValidator.validateAsync(assetsManifestContent);
-        } catch(error) {
-            throw new AssetsManifestError('"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually');
+        } catch (error) {
+            throw new AssetsManifestError(
+                '"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually',
+            );
         }
     }
 }

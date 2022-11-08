@@ -1,8 +1,7 @@
-import { Knex } from "knex";
-
+import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<any> {
-    return knex.schema.createTable('auth_entities', table => {
+    return knex.schema.createTable('auth_entities', (table) => {
         table.increments('id').primary();
         table.string('identifier', 255).notNullable();
         table.string('secret', 255);
@@ -14,7 +13,4 @@ export async function up(knex: Knex): Promise<any> {
     });
 }
 
-
-export async function down(knex: Knex): Promise<any> {
-}
-
+export async function down(knex: Knex): Promise<any> {}

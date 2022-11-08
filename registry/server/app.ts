@@ -1,11 +1,11 @@
 require('./util/express-promise');
 
 import config from 'config';
-import express, {RequestHandler, Application} from 'express';
+import express, { RequestHandler, Application } from 'express';
 import bodyParser from 'body-parser';
 
 import pong from './util/ping';
-import * as routes from "./routes/routes";
+import * as routes from './routes/routes';
 import errorHandler from './errorHandler';
 import serveStatic from 'serve-static';
 import auth from './auth';
@@ -18,9 +18,11 @@ export default async (withAuth: boolean = true): Promise<Application> => {
 
     const app = express();
 
-    app.use(bodyParser.json({
-        limit: config.get<string>('http.requestLimit'),
-    }));
+    app.use(
+        bodyParser.json({
+            limit: config.get<string>('http.requestLimit'),
+        }),
+    );
     app.use(bodyParser.urlencoded({ extended: true }));
 
     app.get('/ping', pong);
@@ -30,7 +32,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     let authMw: RequestHandler[] = [(req, res, next) => next()];
     if (withAuth) {
         authMw = await auth(app, settingsService, {
-            session: { secret: config.get('auth.sessionSecret') }
+            session: { secret: config.get('auth.sessionSecret') },
         });
     }
 
@@ -52,4 +54,4 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     app.disable('x-powered-by');
 
     return app;
-}
+};

@@ -9,34 +9,37 @@ import { appRouteSchema } from '../interfaces';
 import * as httpErrors from '../../errorHandler/httpErrors';
 import { retrieveAppRouteFromDB } from './getAppRoute';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
-import {getJoiErr, joiErrorToResponse} from '../../util/helpers';
+import { getJoiErr, joiErrorToResponse } from '../../util/helpers';
 
-const validateRequestBeforeCreateAppRoute = validateRequestFactory([{
-    schema: appRouteSchema,
-    selector: 'body',
-}]);
+const validateRequestBeforeCreateAppRoute = validateRequestFactory([
+    {
+        schema: appRouteSchema,
+        selector: 'body',
+    },
+]);
 
 const createAppRoute = async (req: Request, res: Response) => {
-    const {
-        slots: appRouteSlots,
-        ...appRouteData
-    } = req.body;
+    const { slots: appRouteSlots, ...appRouteData } = req.body;
 
     const appRoute = transformSpecialRoutesForDB(appRouteData);
 
     if (appRouteData.specialRole) {
-        const existingRoute = await db
-            .first()
-            .from('routes')
-            .where({
-                route: appRoute.route,
-                domainId: appRoute.domainId,
-            });
+        const existingRoute = await db.first().from('routes').where({
+            route: appRoute.route,
+            domainId: appRoute.domainId,
+        });
 
         if (existingRoute !== undefined) {
-            return res.status(422).send(joiErrorToResponse(
-                getJoiErr('specialRole', `"specialRole" "${appRouteData.specialRole}" for provided "domainId" already exists`)
-            ));
+            return res
+                .status(422)
+                .send(
+                    joiErrorToResponse(
+                        getJoiErr(
+                            'specialRole',
+                            `"specialRole" "${appRouteData.specialRole}" for provided "domainId" already exists`,
+                        ),
+                    ),
+                );
         }
     }
 
@@ -46,14 +49,24 @@ const createAppRoute = async (req: Request, res: Response) => {
         await db.versioning(req.user, { type: 'routes' }, async (transaction) => {
             [savedAppRouteId] = await db('routes').insert(prepareAppRouteToSave(appRoute)).transacting(transaction);
 
-            await db.batchInsert('route_slots', _.compose(
-                _.map((appRouteSlotName) => _.compose(
-                    stringifyJSON(['props']),
-                    _.assign({ name: appRouteSlotName, routeId: savedAppRouteId }),
-                    _.get(appRouteSlotName)
-                )(appRouteSlots)),
-                _.keys,
-            )(appRouteSlots)).transacting(transaction);
+            await db
+                .batchInsert(
+                    'route_slots',
+                    _.compose(
+                        _.map((appRouteSlotName) =>
+                            _.compose(
+                                stringifyJSON(['props']),
+                                _.assign({
+                                    name: appRouteSlotName,
+                                    routeId: savedAppRouteId,
+                                }),
+                                _.get(appRouteSlotName),
+                            )(appRouteSlots),
+                        ),
+                        _.keys,
+                    )(appRouteSlots),
+                )
+                .transacting(transaction);
 
             return savedAppRouteId;
         });
@@ -66,13 +79,15 @@ const createAppRoute = async (req: Request, res: Response) => {
 
         if (message.includes(sqliteErrorOrderPos) || message.includes(mysqlErrorOrderPos)) {
             res.status(422);
-            return res.send(joiErrorToResponse(
-                getJoiErr('route', `Specified "orderPos" value already exists for routes with provided "domainId"`)
-            ));
+            return res.send(
+                joiErrorToResponse(
+                    getJoiErr('route', `Specified "orderPos" value already exists for routes with provided "domainId"`),
+                ),
+            );
         }
 
-        if (['foreign key constraint fails', 'FOREIGN KEY constraint failed'].some(v => message.includes(v))) {
-            throw new httpErrors.DBError({ message })
+        if (['foreign key constraint fails', 'FOREIGN KEY constraint failed'].some((v) => message.includes(v))) {
+            throw new httpErrors.DBError({ message });
         }
 
         throw e;

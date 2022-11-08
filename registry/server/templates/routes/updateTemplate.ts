@@ -1,7 +1,4 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import db from '../../db';
@@ -10,7 +7,7 @@ import { readTemplateWithAllVersions, upsertLocalizedVersions } from '../service
 import { partialTemplateSchema, templateNameSchema, validateLocalesAreSupported } from './validation';
 
 type UpdateTemplateRequestParams = {
-    name: string
+    name: string;
 };
 
 const validateRequestBeforeUpdateTemplate = validateRequestFactory([
@@ -28,11 +25,13 @@ const validateRequestBeforeUpdateTemplate = validateRequestFactory([
 
 const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Response): Promise<void> => {
     const template = {
-        content: req.body.content
+        content: req.body.content,
     };
     const templateName = req.params.name;
 
-    const templatesToUpdate = await db('templates').where({ name: templateName });
+    const templatesToUpdate = await db('templates').where({
+        name: templateName,
+    });
     if (!templatesToUpdate.length) {
         res.status(404).send('Not found');
         return;
@@ -44,7 +43,7 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
         return;
     }
 
-    await db.versioning(req.user, {type: 'templates', id: templateName}, async (trx) => {
+    await db.versioning(req.user, { type: 'templates', id: templateName }, async (trx) => {
         await db('templates').where({ name: templateName }).update(template).transacting(trx);
         await upsertLocalizedVersions(templateName, localizedVersions, trx);
     });

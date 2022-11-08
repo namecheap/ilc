@@ -16,15 +16,17 @@
 
 const PACKAGE = require('express/package.json');
 if (parseInt(PACKAGE.version.match(/^\d+/)[0]) !== 4) {
-    throw new Error('This patch could be applied only for Express 4. '
-        + "Express 5 will get it's own Promise handling.");
+    throw new Error(
+        'This patch could be applied only for Express 4. ' + "Express 5 will get it's own Promise handling.",
+    );
 }
 
 const Layer = require('express/lib/router/layer');
 
 if (!Layer.prototype.handle_request) {
-    throw new Error('Something terribly wrong just happened, '
-        + 'there are no `Layer.prototype.handle_request` to apply patch to.');
+    throw new Error(
+        'Something terribly wrong just happened, ' + 'there are no `Layer.prototype.handle_request` to apply patch to.',
+    );
 }
 
 Layer.prototype.handle_request = function handle(req: any, res: any, next: any) {

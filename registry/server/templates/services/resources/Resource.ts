@@ -2,14 +2,15 @@ import { Attributes } from './Attributes';
 import { filterObject } from './filterObject';
 import { buildAttributes } from './buildAttributes';
 
-export type Params = { [key: string]: string; };
+export type Params = { [key: string]: string };
 
 export type AllowedAttributeValues = string[];
 
-export type AllowedAttributes = { [key: string]: AllowedAttributeValues | null };
+export type AllowedAttributes = {
+    [key: string]: AllowedAttributeValues | null;
+};
 
 export abstract class Resource {
-
     protected params: Params;
 
     protected static allowedAttributes: AllowedAttributes = {
@@ -26,7 +27,7 @@ export abstract class Resource {
     protected buildAttributes(params: Params): string {
         const attributes = buildAttributes(params);
 
-        return `${attributes.length ? ' ': ''}${attributes}`;
+        return `${attributes.length ? ' ' : ''}${attributes}`;
     }
 
     protected getAttributesValues(allowedAttributes: AllowedAttributes): Params {

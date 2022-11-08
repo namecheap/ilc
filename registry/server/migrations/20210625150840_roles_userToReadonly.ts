@@ -1,10 +1,10 @@
-import { Knex } from "knex";
+import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<any> {
     return Promise.resolve()
         .then(() => knex('auth_entities').select())
         .then((rows) => {
-            const promises = rows.map(row => {
+            const promises = rows.map((row) => {
                 if (row.role !== 'user') {
                     return;
                 }
@@ -18,12 +18,11 @@ export async function up(knex: Knex): Promise<any> {
         });
 }
 
-
 export async function down(knex: Knex): Promise<any> {
     return Promise.resolve()
         .then(() => knex('auth_entities').select())
         .then((rows) => {
-            const promises = rows.map(row => {
+            const promises = rows.map((row) => {
                 if (row.role !== 'readonly') {
                     return;
                 }

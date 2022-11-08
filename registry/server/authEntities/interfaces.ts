@@ -14,12 +14,12 @@ export enum AuthRoles {
 const AuthRolesVals = Object.values(AuthRoles);
 
 export default interface AuthEntity {
-    id: number|null,
-    identifier: string,
-    secret: string|null,
-    provider: AuthProviders,
-    role: AuthRoles
-};
+    id: number | null;
+    identifier: string;
+    secret: string | null;
+    provider: AuthProviders;
+    role: AuthRoles;
+}
 
 const commonSchema = {
     identifier: Joi.string().min(1).max(255),

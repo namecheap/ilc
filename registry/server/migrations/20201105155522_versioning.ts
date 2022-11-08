@@ -1,8 +1,7 @@
-import { Knex } from "knex";
-
+import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<any> {
-    return knex.schema.createTable('versioning', table => {
+    return knex.schema.createTable('versioning', (table) => {
         table.increments('id');
         table.string('entity_type').notNullable();
         table.string('entity_id').notNullable();
@@ -13,8 +12,6 @@ export async function up(knex: Knex): Promise<any> {
     });
 }
 
-
 export async function down(knex: Knex): Promise<any> {
     return knex.schema.dropTable('versioning');
 }
-

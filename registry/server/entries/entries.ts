@@ -1,19 +1,16 @@
-import express, {
-    Request,
-    Response,
-} from 'express';
+import express, { Request, Response } from 'express';
 import Joi from 'joi';
-import {EntryFactory} from '../common/services/entries/EntryFactory';
-import {IncorrectFqrnError} from '../common/services/entries/error/IncorrectFqrnError';
-import {NotFoundFqrnError} from '../common/services/entries/error/NotFoundFqrnError';
+import { EntryFactory } from '../common/services/entries/EntryFactory';
+import { IncorrectFqrnError } from '../common/services/entries/error/IncorrectFqrnError';
+import { NotFoundFqrnError } from '../common/services/entries/error/NotFoundFqrnError';
 import preProcessResponse from '../common/services/preProcessResponse';
-import {ValidationFqrnError} from '../common/services/entries/error/ValidationFqrnError';
-import {joiErrorToResponse} from '../util/helpers';
-import {AssetsManifestError} from '../common/services/assets/errors/AssetsManifestError';
+import { ValidationFqrnError } from '../common/services/entries/error/ValidationFqrnError';
+import { joiErrorToResponse } from '../util/helpers';
+import { AssetsManifestError } from '../common/services/assets/errors/AssetsManifestError';
 
 const EntriesRouter = express.Router();
 
-EntriesRouter.patch('/:fqrn', async (request: Request<{fqrn: string}>, response: Response) => {
+EntriesRouter.patch('/:fqrn', async (request: Request<{ fqrn: string }>, response: Response) => {
     const fqrn = request.params.fqrn;
     const params = request.body;
     let entryService;
@@ -21,7 +18,7 @@ EntriesRouter.patch('/:fqrn', async (request: Request<{fqrn: string}>, response:
     try {
         entryService = EntryFactory.getFqrnInstance(fqrn);
     } catch (error) {
-        if(error instanceof IncorrectFqrnError) {
+        if (error instanceof IncorrectFqrnError) {
             return response.status(error.code).send(error.message);
         }
         throw error;
@@ -31,13 +28,14 @@ EntriesRouter.patch('/:fqrn', async (request: Request<{fqrn: string}>, response:
     try {
         results = await entryService.patch(params, { user: request.user });
     } catch (error) {
-        if(error instanceof NotFoundFqrnError) {
+        if (error instanceof NotFoundFqrnError) {
             return response.status(error.code).send(error.message);
-        }else if(error instanceof ValidationFqrnError) {
+        } else if (error instanceof ValidationFqrnError) {
             return response.status(error.code).send(error.message);
-        }else if(error instanceof Joi.ValidationError) {
+        } else if (error instanceof Joi.ValidationError) {
             return response.status(422).send(joiErrorToResponse(error));
-        } if(error instanceof AssetsManifestError) {
+        }
+        if (error instanceof AssetsManifestError) {
             return response.status(error.code).send(error.message);
         }
         throw error;

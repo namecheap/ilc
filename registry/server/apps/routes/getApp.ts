@@ -1,27 +1,24 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 import _ from 'lodash/fp';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
-import App, {
-    appNameSchema,
-} from '../interfaces';
+import App, { appNameSchema } from '../interfaces';
 
 type GetAppRequestParams = {
-    name: string
+    name: string;
 };
 
-const validateRequestBeforeGetApp = validateRequestFactory([{
-    schema: Joi.object({
-        name: appNameSchema.required(),
-    }),
-    selector: 'params',
-}]);
+const validateRequestBeforeGetApp = validateRequestFactory([
+    {
+        schema: Joi.object({
+            name: appNameSchema.required(),
+        }),
+        selector: 'params',
+    },
+]);
 
 const getApp = async (req: Request<GetAppRequestParams>, res: Response): Promise<void> => {
     const appName = req.params.name;

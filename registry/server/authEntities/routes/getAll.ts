@@ -1,14 +1,11 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 
 const getSharedProps = async (req: Request, res: Response): Promise<void> => {
     let sharedProps = await db.select().from('auth_entities');
-    sharedProps = sharedProps.map(v => {
+    sharedProps = sharedProps.map((v) => {
         delete v.secret;
         return v;
     });

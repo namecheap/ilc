@@ -1,4 +1,4 @@
-import axios, {AxiosResponse} from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import urljoin from 'url-join';
 
 import knex from '../../../db';
@@ -19,9 +19,13 @@ export default class AssetsDiscovery {
     }
 
     start(delay: number = 1000) {
-        this.timerId = setInterval(() => this.iteration().catch(err => {
-            console.error('Error during refresh of the assets info:', err);
-        }), delay);
+        this.timerId = setInterval(
+            () =>
+                this.iteration().catch((err) => {
+                    console.error('Error during refresh of the assets info:', err);
+                }),
+            delay,
+        );
     }
 
     stop() {
@@ -32,11 +36,12 @@ export default class AssetsDiscovery {
         const now = Math.floor(Date.now() / 1000);
         const updateAfter = now - this.intervalSeconds;
 
-        const entities = await knex.select().from(this.tableName)
+        const entities = await knex
+            .select()
+            .from(this.tableName)
             .whereNotNull('assetsDiscoveryUrl')
             .andWhere(function () {
-                this.whereNull('assetsDiscoveryUpdatedAt')
-                    .orWhere('assetsDiscoveryUpdatedAt', '<', updateAfter);
+                this.whereNull('assetsDiscoveryUpdatedAt').orWhere('assetsDiscoveryUpdatedAt', '<', updateAfter);
             });
 
         for (const entity of entities) {
@@ -51,7 +56,7 @@ export default class AssetsDiscovery {
 
             let res: AxiosResponse;
             try {
-                res = await axios.get(reqUrl, {responseType: 'json'});
+                res = await axios.get(reqUrl, { responseType: 'json' });
             } catch (err: any) {
                 //TODO: add exponential back-off
                 console.warn(`Can't refresh assets for "${entity[this.tableId]}". Error: ${err.toString()}`);
@@ -60,9 +65,13 @@ export default class AssetsDiscovery {
 
             let data = manifestProcessor(reqUrl, res.data, AssetsDiscoveryWhiteLists[this.tableName]);
 
-            await knex(this.tableName).where(this.tableId, entity[this.tableId]).update(Object.assign({}, data, {
-                assetsDiscoveryUpdatedAt: now,
-            }));
+            await knex(this.tableName)
+                .where(this.tableId, entity[this.tableId])
+                .update(
+                    Object.assign({}, data, {
+                        assetsDiscoveryUpdatedAt: now,
+                    }),
+                );
         }
     }
 }

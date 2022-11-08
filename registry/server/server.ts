@@ -7,7 +7,6 @@ import config from 'config';
 require('http-shutdown').extend();
 const http = require('http');
 
-
 /**
  * Create HTTP server.
  */

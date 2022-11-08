@@ -8,15 +8,17 @@ import { transformSpecialRoutesForConsumer } from '../services/transformSpecialR
 import { getRoutesById } from './routesRepository';
 
 type GetAppRouteRequestParams = {
-    id: string
+    id: string;
 };
 
-const validateRequestBeforeGetAppRoute = validateRequestFactory([{
-    schema: Joi.object({
-        id: appRouteIdSchema,
-    }),
-    selector: 'params',
-}]);
+const validateRequestBeforeGetAppRoute = validateRequestFactory([
+    {
+        schema: Joi.object({
+            id: appRouteIdSchema,
+        }),
+        selector: 'params',
+    },
+]);
 
 export const retrieveAppRouteFromDB = async (appRouteId: number) => {
     const appRoutes = await getRoutesById(appRouteId);
@@ -42,7 +44,6 @@ const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response
     } else {
         res.status(404).send('Not found');
     }
-
 };
 
 export default [validateRequestBeforeGetAppRoute, getAppRoute];

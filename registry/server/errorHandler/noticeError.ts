@@ -5,12 +5,14 @@ function noticeError(error: Error, errorInfo = {}): void {
 
     newrelic.noticeError(error, additionalInfo);
 
-    console.error(JSON.stringify({
-        type: error.name,
-        message: error.message,
-        stack: (error?.stack ?? '').split('\n'),
-        additionalInfo,
-    }));
-};
+    console.error(
+        JSON.stringify({
+            type: error.name,
+            message: error.message,
+            stack: (error?.stack ?? '').split('\n'),
+            additionalInfo,
+        }),
+    );
+}
 
 export default noticeError;

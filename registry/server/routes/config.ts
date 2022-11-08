@@ -2,7 +2,7 @@ import _ from 'lodash';
 import express from 'express';
 
 import knex from '../db';
-import {Setting, Scope} from '../settings/interfaces';
+import { Setting, Scope } from '../settings/interfaces';
 import preProcessResponse from '../settings/services/preProcessResponse';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 
@@ -12,7 +12,8 @@ router.get('/', async (req, res) => {
     const [apps, templates, routes, sharedProps, settings, routerDomains, sharedLibs] = await Promise.all([
         knex.select().from('apps'),
         knex.select('name').from('templates'),
-        knex.select()
+        knex
+            .select()
             .orderBy('orderPos', 'ASC')
             .from('routes')
             .leftJoin('route_slots', 'route_slots.routeId', 'routes.id'),
@@ -40,16 +41,17 @@ router.get('/', async (req, res) => {
 
         if (sharedProps.length && v.configSelector !== null) {
             JSON.parse(v.configSelector).forEach((configSelectorName: string) => {
-                const commonConfig = sharedProps.find(n => n.name === configSelectorName);
+                const commonConfig = sharedProps.find((n) => n.name === configSelectorName);
                 if (commonConfig) {
                     v.props = _.merge({}, JSON.parse(commonConfig.props), v.props);
                     v.ssrProps = _.merge({}, JSON.parse(commonConfig.ssrProps), v.ssrProps);
                 }
             });
         }
-        v.enforceDomain = v.enforceDomain && (routerDomains.find(({ id }) => id === v.enforceDomain)?.domainName || null);
+        v.enforceDomain =
+            v.enforceDomain && (routerDomains.find(({ id }) => id === v.enforceDomain)?.domainName || null);
 
-        v = _.omitBy(v, v => v === null || (typeof v === 'object' && Object.keys(v).length === 0));
+        v = _.omitBy(v, (v) => v === null || (typeof v === 'object' && Object.keys(v).length === 0));
 
         acc[v.name] = _.pick(v, [
             'kind',
@@ -67,9 +69,9 @@ router.get('/', async (req, res) => {
         return acc;
     }, {});
 
-    data.templates = templates.map(({name}) => name);
+    data.templates = templates.map(({ name }) => name);
 
-    routes.forEach(routeItem => {
+    routes.forEach((routeItem) => {
         routeItem = transformSpecialRoutesForConsumer(routeItem);
 
         const currentRoutesList = routeItem.specialRole ? data.specialRoutes : data.routes;
@@ -80,15 +82,22 @@ router.get('/', async (req, res) => {
             routeItem.next = !!routeItem.next;
             routeItem.template = routeItem.templateName;
 
-            routeItem.domain = routeItem.domainId === null
-                ? null
-                : routerDomains.find(({ id }) => id === routeItem.domainId)?.domainName || null;
+            routeItem.domain =
+                routeItem.domainId === null
+                    ? null
+                    : routerDomains.find(({ id }) => id === routeItem.domainId)?.domainName || null;
             delete routeItem.domainId;
 
-            routeData = Object.assign({
-                slots: {},
-                meta: {},
-            }, _.omitBy(_.pick(routeItem, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain']), _.isNull));
+            routeData = Object.assign(
+                {
+                    slots: {},
+                    meta: {},
+                },
+                _.omitBy(
+                    _.pick(routeItem, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain']),
+                    _.isNull,
+                ),
+            );
 
             currentRoutesList.push(routeData);
         }
@@ -106,7 +115,7 @@ router.get('/', async (req, res) => {
         }
     });
 
-    data.settings = preProcessResponse(settings).reduce((acc: {[key: string]: any}, setting: Setting) => {
+    data.settings = preProcessResponse(settings).reduce((acc: { [key: string]: any }, setting: Setting) => {
         _.set(acc, setting.key, setting.value);
         return acc;
     }, {});

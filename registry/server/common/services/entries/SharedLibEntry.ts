@@ -1,22 +1,19 @@
 import db from '../../../db';
 import SharedLib from '../../../sharedLibs/interfaces';
-import {partialSharedLibSchema} from '../../../sharedLibs/interfaces';
-import {ValidationFqrnError} from './error/ValidationFqrnError';
-import {NotFoundSharedLibraryError} from './error/NotFoundSharedLibraryError';
-import {AssetsDiscoveryProcessor} from '../assets/AssetsDiscoveryProcessor';
-import {AssetsValidator} from '../assets/AssetsValidator';
-import {Entry} from './Entry';
+import { partialSharedLibSchema } from '../../../sharedLibs/interfaces';
+import { ValidationFqrnError } from './error/ValidationFqrnError';
+import { NotFoundSharedLibraryError } from './error/NotFoundSharedLibraryError';
+import { AssetsDiscoveryProcessor } from '../assets/AssetsDiscoveryProcessor';
+import { AssetsValidator } from '../assets/AssetsValidator';
+import { Entry } from './Entry';
 
 export class SharedLibEntry implements Entry {
-
     private entityName = 'shared_libs' as const;
 
-    constructor(private identifier?: string) {
-    }
+    constructor(private identifier?: string) {}
 
     public async patch(params: unknown, { user }: { user: any }) {
-
-        if(!this.identifier) {
+        if (!this.identifier) {
             throw new ValidationFqrnError('Patch does not invoked because instance was initialized w/o identifier');
         }
 
@@ -25,14 +22,14 @@ export class SharedLibEntry implements Entry {
         const sharedLibDTO = await partialSharedLibSchema.validateAsync(params, {
             noDefaults: true,
             abortEarly: true,
-            presence: 'optional'
+            presence: 'optional',
         });
 
-        if(!Object.keys(sharedLibDTO).length) {
+        if (!Object.keys(sharedLibDTO).length) {
             throw new ValidationFqrnError('Patch does not contain any items to update');
         }
 
-        const  sharedLibraryManifest = await this.getManifest(sharedLibDTO.assetsDiscoveryUrl);
+        const sharedLibraryManifest = await this.getManifest(sharedLibDTO.assetsDiscoveryUrl);
 
         const sharedLibEntity = {
             ...sharedLibDTO,
@@ -49,7 +46,7 @@ export class SharedLibEntry implements Entry {
     }
 
     public async create(sharedLibDTO: SharedLib, { user }: { user: any }) {
-        const  sharedLibraryManifest = await this.getManifest(sharedLibDTO.assetsDiscoveryUrl);
+        const sharedLibraryManifest = await this.getManifest(sharedLibDTO.assetsDiscoveryUrl);
 
         const sharedLibEntity = {
             ...sharedLibDTO,
@@ -66,18 +63,20 @@ export class SharedLibEntry implements Entry {
     }
 
     private async getManifest(assetsDiscoveryUrl: string | undefined) {
-        if(!assetsDiscoveryUrl) {
-            return {}
+        if (!assetsDiscoveryUrl) {
+            return {};
         }
 
         const assetsManifest = await AssetsDiscoveryProcessor.process(assetsDiscoveryUrl);
         const sharedLibraryManifest = await AssetsValidator.maybeSharedLib(assetsManifest);
 
-        return  sharedLibraryManifest;
+        return sharedLibraryManifest;
     }
 
     private async verifyExistence(identifier: string) {
-        const countToUpdate = await db('shared_libs').where({ name: this.identifier });
+        const countToUpdate = await db('shared_libs').where({
+            name: this.identifier,
+        });
         if (countToUpdate.length === 0) {
             throw new NotFoundSharedLibraryError(identifier);
         }

@@ -1,20 +1,13 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
-import {
-    SettingKeys,
-    keySchema,
-    partialSettingSchema,
-} from '../interfaces';
+import { SettingKeys, keySchema, partialSettingSchema } from '../interfaces';
 import db from '../../db';
 import preProcessResponse from '../services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 
 type RequestParams = {
-    key: SettingKeys
+    key: SettingKeys;
 };
 
 const validateRequest = validateRequestFactory([
@@ -26,18 +19,15 @@ const validateRequest = validateRequestFactory([
     },
     {
         schema: partialSettingSchema,
-        selector: 'body'
+        selector: 'body',
     },
 ]);
 
 const updateSetting = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const settingKey = req.params.key;
 
-    await db.versioning(req.user, {type: 'settings', id: settingKey}, async (trx) => {
-        await db('settings')
-            .where('key', settingKey)
-            .update('value', JSON.stringify(req.body.value))
-            .transacting(trx);
+    await db.versioning(req.user, { type: 'settings', id: settingKey }, async (trx) => {
+        await db('settings').where('key', settingKey).update('value', JSON.stringify(req.body.value)).transacting(trx);
     });
 
     const [updated] = await db.select().from('settings').where('key', settingKey);

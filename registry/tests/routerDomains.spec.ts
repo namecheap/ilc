@@ -23,19 +23,19 @@ describe(`Tests ${example.url}`, () => {
         reqWithAuth = await requestWithAuth();
         await req.post('/api/v1/template/').send({
             name: example.correct.template500,
-            content: 'ncTestTemplateContent'
+            content: 'ncTestTemplateContent',
         });
-    })
+    });
 
     afterEach(async () => {
         await req.delete('/api/v1/template/' + example.correct.template500);
-    })
+    });
     describe('Create', () => {
         it('should not create record without a required fields', async () => {
-            await req.post(example.url)
+            await req
+                .post(example.url)
                 .send(_.omit(example.correct, ['domainName', 'template500']))
-                .expect(422, '"domainName" is required\n' +
-                    '"template500" is required');
+                .expect(422, '"domainName" is required\n' + '"template500" is required');
         });
 
         it('should not create record with incorrect type of fields', async () => {
@@ -44,14 +44,15 @@ describe(`Tests ${example.url}`, () => {
                 template500: 123,
             };
 
-            await req.post(example.url)
+            await req
+                .post(example.url)
                 .send(incorrect)
-                .expect(422, '"domainName" must be a string\n' +
-                    '"template500" must be a string');
+                .expect(422, '"domainName" must be a string\n' + '"template500" must be a string');
         });
 
         it('should not create record with non-existed template500', async () => {
-            const response = await req.post(example.url)
+            const response = await req
+                .post(example.url)
                 .send({
                     ...example.correct,
                     template500: 'nonExistedTemplate',
@@ -65,9 +66,7 @@ describe(`Tests ${example.url}`, () => {
             let routerDomainsId;
 
             try {
-                const responseCreation = await req.post(example.url)
-                    .send(example.correct)
-                    .expect(200)
+                const responseCreation = await req.post(example.url).send(example.correct).expect(200);
 
                 routerDomainsId = responseCreation.body.id;
 
@@ -76,23 +75,20 @@ describe(`Tests ${example.url}`, () => {
                     ...example.correct,
                 });
 
-                const responseFetching = await req.get(example.url + routerDomainsId)
-                    .expect(200);
+                const responseFetching = await req.get(example.url + routerDomainsId).expect(200);
 
                 expect(responseFetching.body).deep.equal({
                     id: routerDomainsId,
                     ...example.correct,
                 });
             } finally {
-                routerDomainsId && await req.delete(example.url + routerDomainsId);
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.post(example.url)
-                    .send(example.correct)
-                    .expect(401);
+                await reqWithAuth.post(example.url).send(example.correct).expect(401);
             });
         });
     });
@@ -100,8 +96,7 @@ describe(`Tests ${example.url}`, () => {
     describe('Read', () => {
         it('should return 404 for non-existing id', async () => {
             const nonExistingId = 123;
-            await req.get(example.url + nonExistingId)
-                .expect(404, 'Not found');
+            await req.get(example.url + nonExistingId).expect(404, 'Not found');
         });
 
         it('should successfully return record', async () => {
@@ -119,7 +114,7 @@ describe(`Tests ${example.url}`, () => {
                     ...example.correct,
                 });
             } finally {
-                routerDomainsId && await req.delete(example.url + routerDomainsId);
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }
         });
 
@@ -133,8 +128,7 @@ describe(`Tests ${example.url}`, () => {
                 routerDomainsId1 = responseCreation1.body.id;
                 routerDomainsId2 = responseCreation2.body.id;
 
-                const responseFetchingAll = await req.get(example.url)
-                    .expect(200);
+                const responseFetchingAll = await req.get(example.url).expect(200);
 
                 expect(responseFetchingAll.body).to.be.an('array').that.is.not.empty;
                 expect(responseFetchingAll.body).to.deep.include({
@@ -146,19 +140,23 @@ describe(`Tests ${example.url}`, () => {
                     ...example.updated,
                 });
             } finally {
-                routerDomainsId1 && await req.delete(example.url + routerDomainsId1);
-                routerDomainsId2 && await req.delete(example.url + routerDomainsId2);
+                routerDomainsId1 && (await req.delete(example.url + routerDomainsId1));
+                routerDomainsId2 && (await req.delete(example.url + routerDomainsId2));
             }
         });
         it('should successfully return paginated list', async () => {
             const rangeStart = (await req.get(example.url)).body.length;
 
-            const routerDomainsList: { id?: number; domainName: string; template500: string }[] = [...Array(5)].map((n, i) => ({
+            const routerDomainsList: {
+                id?: number;
+                domainName: string;
+                template500: string;
+            }[] = [...Array(5)].map((n, i) => ({
                 ...example.correct,
                 domainName: `domainNameCorrect${i}.com`,
             }));
 
-            const promises = routerDomainsList.map(data => req.post(example.url).send(data));
+            const promises = routerDomainsList.map((data) => req.post(example.url).send(data));
 
             try {
                 const responses = await Promise.all(promises);
@@ -167,13 +165,19 @@ describe(`Tests ${example.url}`, () => {
                     routerDomainsList[i].id = response.body.id;
                 });
 
-                const responseFetching01 = await req.get(`${example.url}?range=${encodeURIComponent(`[${rangeStart + 0},${rangeStart + 1}]`)}`);
-                const responseFetching24 = await req.get(`${example.url}?range=${encodeURIComponent(`[${rangeStart + 2},${rangeStart + 4}]`)}`);
-                const responseFetching13 = await req.get(`${example.url}?range=${encodeURIComponent(`[${rangeStart + 1},${rangeStart + 3}]`)}`);
+                const responseFetching01 = await req.get(
+                    `${example.url}?range=${encodeURIComponent(`[${rangeStart + 0},${rangeStart + 1}]`)}`,
+                );
+                const responseFetching24 = await req.get(
+                    `${example.url}?range=${encodeURIComponent(`[${rangeStart + 2},${rangeStart + 4}]`)}`,
+                );
+                const responseFetching13 = await req.get(
+                    `${example.url}?range=${encodeURIComponent(`[${rangeStart + 1},${rangeStart + 3}]`)}`,
+                );
 
                 expect(
                     responseFetching01.header['content-range'] === responseFetching24.header['content-range'] &&
-                    responseFetching24.header['content-range'] === responseFetching13.header['content-range']
+                        responseFetching24.header['content-range'] === responseFetching13.header['content-range'],
                 ).to.be.true;
 
                 expect(responseFetching01.body).to.be.an('array').with.lengthOf(2);
@@ -184,22 +188,22 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseFetching24.body).to.deep.eq(routerDomainsList.slice(2, 4 + 1));
                 expect(responseFetching13.body).to.deep.eq(routerDomainsList.slice(1, 3 + 1));
             } finally {
-                await Promise.all(routerDomainsList.map(item => req.delete(example.url + item.id)));
+                await Promise.all(routerDomainsList.map((item) => req.delete(example.url + item.id)));
             }
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.get(example.url + 123)
-                    .expect(401);
+                await reqWithAuth.get(example.url + 123).expect(401);
             });
         });
     });
 
     describe('Update', () => {
-        it('should not update any record if record doesn\'t exist', async () => {
+        it("should not update any record if record doesn't exist", async () => {
             const nonExistingId = 123;
-            await req.put(example.url + nonExistingId)
+            await req
+                .put(example.url + nonExistingId)
                 .send(example.updated)
                 .expect(404, 'Not found');
         });
@@ -216,12 +220,12 @@ describe(`Tests ${example.url}`, () => {
                     template500: 456,
                 };
 
-                await req.put(example.url + routerDomainsId)
+                await req
+                    .put(example.url + routerDomainsId)
                     .send(incorrect)
-                    .expect(422, '"domainName" must be a string\n' +
-                        '"template500" must be a string');
+                    .expect(422, '"domainName" must be a string\n' + '"template500" must be a string');
             } finally {
-                routerDomainsId && await req.delete(example.url + routerDomainsId);
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }
         });
 
@@ -232,7 +236,8 @@ describe(`Tests ${example.url}`, () => {
                 const responseCreation = await req.post(example.url).send(example.correct).expect(200);
                 routerDomainsId = responseCreation.body.id;
 
-                const responseUpdating = await req.put(example.url + routerDomainsId)
+                const responseUpdating = await req
+                    .put(example.url + routerDomainsId)
                     .send(example.updated)
                     .expect(200);
 
@@ -241,13 +246,14 @@ describe(`Tests ${example.url}`, () => {
                     ...example.updated,
                 });
             } finally {
-                routerDomainsId && await req.delete(example.url + routerDomainsId);
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.put(example.url + 123)
+                await reqWithAuth
+                    .put(example.url + 123)
                     .send(example.updated)
                     .expect(401);
             });
@@ -255,20 +261,20 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Delete', () => {
-        it('should not delete any record if record doesn\'t exist', async () => {
+        it("should not delete any record if record doesn't exist", async () => {
             const nonExistingId = 123;
-            await req.delete(example.url + nonExistingId)
-                .expect(404, 'Not found');
+            await req.delete(example.url + nonExistingId).expect(404, 'Not found');
         });
 
-        it('should successfully delete record if doesn\'t have any reference from foreign to current primary key', async () => {
+        it("should successfully delete record if doesn't have any reference from foreign to current primary key", async () => {
             const appName = '@portal/ncTestAppName';
 
             try {
                 const responseRouterDomains = await req.post(example.url).send(example.correct).expect(200);
                 const domainId = responseRouterDomains.body.id;
 
-                await req.post('/api/v1/app/')
+                await req
+                    .post('/api/v1/app/')
                     .send({
                         name: appName,
                         spaBundle: 'http://localhost:1234/ncTestAppName.js',
@@ -276,7 +282,8 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(200);
 
-                const responseRoute = await req.post('/api/v1/route/')
+                const responseRoute = await req
+                    .post('/api/v1/route/')
                     .send({
                         specialRole: undefined,
                         orderPos: 122,
@@ -295,17 +302,14 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(200);
 
-                const response = await req.delete(example.url + domainId)
-                    .expect(500);
+                const response = await req.delete(example.url + domainId).expect(500);
                 expect(response.text).to.include('FOREIGN KEY constraint failed');
 
                 await req.delete('/api/v1/route/' + responseRoute.body.id);
 
-                await req.delete(example.url + domainId)
-                    .expect(204, '');
+                await req.delete(example.url + domainId).expect(204, '');
 
-                await req.get(example.url + domainId)
-                    .expect(404, 'Not found');
+                await req.get(example.url + domainId).expect(404, 'Not found');
             } finally {
                 await req.delete('/api/v1/app/' + encodeURIComponent(appName));
             }
@@ -314,14 +318,12 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully delete record', async () => {
             const response = await req.post(example.url).send(example.correct).expect(200);
 
-            await req.delete(example.url + response.body.id)
-                .expect(204, '');
+            await req.delete(example.url + response.body.id).expect(204, '');
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.delete(example.url + 123)
-                    .expect(401);
+                await reqWithAuth.delete(example.url + 123).expect(401);
             });
         });
     });

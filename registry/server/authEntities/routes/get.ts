@@ -1,7 +1,4 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import db from '../../db';
@@ -10,15 +7,17 @@ import validateRequestFactory from '../../common/services/validateRequest';
 import SharedProps from '../interfaces';
 
 type RequestParams = {
-    id: string
+    id: string;
 };
 
-const validateRequest = validateRequestFactory([{
-    schema: Joi.object({
-        id: Joi.number().required(),
-    }),
-    selector: 'params',
-}]);
+const validateRequest = validateRequestFactory([
+    {
+        schema: Joi.object({
+            id: Joi.number().required(),
+        }),
+        selector: 'params',
+    },
+]);
 
 const getSharedProps = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const [record] = await db.select().from<SharedProps>('auth_entities').where('id', req.params.id);

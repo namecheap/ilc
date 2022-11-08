@@ -1,9 +1,9 @@
 import Joi from 'joi';
 
 export default interface SharedProps {
-    name: string,
-    props: string,
-};
+    name: string;
+    props: string;
+}
 
 export const sharedPropsNameSchema = Joi.string().min(1).max(50);
 

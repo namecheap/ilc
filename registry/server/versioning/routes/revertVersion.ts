@@ -1,14 +1,11 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 
-import versioning from "../services/Versioning";
+import versioning from '../services/Versioning';
 
 import * as errors from '../errors';
 
 type RequestParams = {
-    id: string
+    id: string;
 };
 
 const updateApp = async (req: Request<RequestParams>, res: Response): Promise<void> => {
