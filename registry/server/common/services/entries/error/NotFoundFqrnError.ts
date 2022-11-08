@@ -1,5 +1,5 @@
-import { FqrnError } from './FqrnError';
+import { EntryError } from './EntryError';
 
-export class NotFoundFqrnError extends FqrnError {
+export class NotFoundFqrnError extends EntryError {
     public code = 404;
 }

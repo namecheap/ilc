@@ -1,6 +1,6 @@
-import { IncorrectFqrnError } from './error/IncorrectFqrnError';
+import { IncorrectEntryError } from './error/IncorrectEntryError';
 import { SharedLibEntry } from './SharedLibEntry';
-import { FqrnError } from './error/FqrnError';
+import { EntryError } from './error/EntryError';
 import { ApplicationEntry } from './ApplicationEntry';
 
 export class EntryFactory {
@@ -16,7 +16,7 @@ export class EntryFactory {
             const entityIdentifier = this.getEntityIdentifier(identifier, this.resourceIdentifiers.APP);
             return this.getAppInstance(entityIdentifier);
         } else {
-            throw new IncorrectFqrnError(identifier);
+            throw new IncorrectEntryError(identifier);
         }
     }
 
@@ -30,7 +30,7 @@ export class EntryFactory {
 
     private static getEntityIdentifier(identifier: string, resourceIdentifiers: string) {
         if (!identifier.startsWith(resourceIdentifiers)) {
-            throw new FqrnError(
+            throw new EntryError(
                 `Can not get entity identifier of ${identifier} using resource entity ${resourceIdentifiers}`,
             );
         }

@@ -1,5 +1,5 @@
-import { FqrnError } from './FqrnError';
+import { EntryError } from './EntryError';
 
-export class ValidationFqrnError extends FqrnError {
+export class ValidationFqrnError extends EntryError {
     public code = 422;
 }

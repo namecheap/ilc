@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import Joi from 'joi';
 import { EntryFactory } from '../common/services/entries/EntryFactory';
-import { IncorrectFqrnError } from '../common/services/entries/error/IncorrectFqrnError';
+import { IncorrectEntryError } from '../common/services/entries/error/IncorrectEntryError';
 import { NotFoundFqrnError } from '../common/services/entries/error/NotFoundFqrnError';
 import preProcessResponse from '../common/services/preProcessResponse';
 import { ValidationFqrnError } from '../common/services/entries/error/ValidationFqrnError';
@@ -18,7 +18,7 @@ EntriesRouter.patch('/:fqrn', async (request: Request<{ fqrn: string }>, respons
     try {
         entryService = EntryFactory.getFqrnInstance(fqrn);
     } catch (error) {
-        if (error instanceof IncorrectFqrnError) {
+        if (error instanceof IncorrectEntryError) {
             return response.status(error.code).send(error.message);
         }
         throw error;
