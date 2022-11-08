@@ -41,12 +41,6 @@ export class AssetsManifestReader {
             dependencies: Joi.object().pattern(Joi.string(), Joi.string()).optional(),
         });
 
-        try {
-            return await assetsManifestContentValidator.validateAsync(assetsManifestContent);
-        } catch (error) {
-            throw new AssetsManifestError(
-                '"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually',
-            );
-        }
+        return await assetsManifestContentValidator.validateAsync(assetsManifestContent);
     }
 }
