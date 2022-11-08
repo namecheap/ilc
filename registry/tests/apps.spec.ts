@@ -221,10 +221,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .post(example.url)
                     .send(example.correctWithAssetsDiscoveryUrl)
-                    .expect(
-                        422,
-                        `"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually`,
-                    );
+                    .expect(422, `"spaBundle" is required`);
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -466,10 +463,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .put(example.url + example.encodedName)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
-                    .expect(
-                        422,
-                        `"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually`,
-                    );
+                    .expect(422, `"spaBundle" is required`);
 
                 expect(response.body).deep.equal({});
             } finally {
