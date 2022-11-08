@@ -1,15 +1,15 @@
 import passport from 'passport';
-import {Strategy as LocalStrategy} from 'passport-local';
+import { Strategy as LocalStrategy } from 'passport-local';
 import session from 'express-session';
-import {Express, RequestHandler} from 'express';
-import {Strategy as BearerStrategy} from 'passport-http-bearer';
+import { Express, RequestHandler } from 'express';
+import { Strategy as BearerStrategy } from 'passport-http-bearer';
 import * as bcrypt from 'bcrypt';
-import {Issuer as OIDCIssuer, Strategy as OIDCStrategy, TokenSet } from 'openid-client';
+import { Issuer as OIDCIssuer, Strategy as OIDCStrategy, TokenSet } from 'openid-client';
 import { AuthRoles } from './authEntities/interfaces';
 
 import db from './db';
-import {SettingsService} from "./settings/services/SettingsService";
-import {SettingKeys} from "./settings/interfaces";
+import { SettingsService } from './settings/services/SettingsService';
+import { SettingKeys } from './settings/interfaces';
 import urljoin from 'url-join';
 
 // https://github.com/gx0r/connect-session-knex/issues/91
@@ -24,7 +24,7 @@ export interface User {
 async function registerOpenIdStrategy(settingsService: SettingsService, callerId: string) {
     const authDiscoveryUrl = await settingsService.get(SettingKeys.AuthOpenIdDiscoveryUrl, callerId);
     if (typeof authDiscoveryUrl === 'undefined') {
-        console.log(`Skipping registering oauth strategy due to missing setting ${SettingKeys.AuthOpenIdDiscoveryUrl}`)
+        console.log(`Skipping registering oauth strategy due to missing setting ${SettingKeys.AuthOpenIdDiscoveryUrl}`);
         return;
     }
 
@@ -38,73 +38,88 @@ async function registerOpenIdStrategy(settingsService: SettingsService, callerId
         response_types: ['code'],
     });
 
-    passport.use('openid', new OIDCStrategy(
-        {
-            client,
-            params: {
-                scope: await settingsService.get(SettingKeys.AuthOpenIdRequestedScopes, callerId),
-                response_mode: await settingsService.get(SettingKeys.AuthOpenIdResponseMode, callerId),
-            }
-        },
-        async function (tokenSet: TokenSet/*, userinfo: UserinfoResponse*/, done: any) {
-            try {
-                if (tokenSet.expired()) {
-                    return done(null, false, { message: 'Expired OpenID token' });
-                }
-
-                const claims = tokenSet.claims();
-                const idClaimName = await settingsService.get(SettingKeys.AuthOpenIdIdentifierClaimName, callerId);
-                const uidClaimName = await settingsService.get(SettingKeys.AuthOpenIdUniqueIdentifierClaimName, callerId);
-
-                let identifiers: string[] = claims[idClaimName] as any;
-                if (!identifiers) {
-                    return done(null, false, { message: 'Can\'t find user identifier using IdentityClaimName' });
-                } else if (!Array.isArray(identifiers)) {
-                    identifiers = [identifiers];
-                }
-
-                let user: User | null = null;
-                for (let id of identifiers) {
-                    const entity = await getEntityWithCreds('openid', id, null);
-                    if (!entity) {
-                        continue;
+    passport.use(
+        'openid',
+        new OIDCStrategy(
+            {
+                client,
+                params: {
+                    scope: await settingsService.get(SettingKeys.AuthOpenIdRequestedScopes, callerId),
+                    response_mode: await settingsService.get(SettingKeys.AuthOpenIdResponseMode, callerId),
+                },
+            },
+            async function (tokenSet: TokenSet /*, userinfo: UserinfoResponse*/, done: any) {
+                try {
+                    if (tokenSet.expired()) {
+                        return done(null, false, {
+                            message: 'Expired OpenID token',
+                        });
                     }
 
-                    user = entity;
+                    const claims = tokenSet.claims();
+                    const idClaimName = await settingsService.get(SettingKeys.AuthOpenIdIdentifierClaimName, callerId);
+                    const uidClaimName = await settingsService.get(
+                        SettingKeys.AuthOpenIdUniqueIdentifierClaimName,
+                        callerId,
+                    );
 
-                    // we may have case when user exists for a few identifiers, so we try find the most permissive role
-                    if (entity.role === AuthRoles.admin) {
-                        break;
+                    let identifiers: string[] = claims[idClaimName] as any;
+                    if (!identifiers) {
+                        return done(null, false, {
+                            message: "Can't find user identifier using IdentityClaimName",
+                        });
+                    } else if (!Array.isArray(identifiers)) {
+                        identifiers = [identifiers];
                     }
-                }
 
-                if (!user) {
-                    return done(null, false, { message: `Can\'t find presented identifiers "${identifiers.toString()}" in auth entities list` });
-                }
-                if (uidClaimName && claims[uidClaimName]) {
-                    user.identifier = claims[uidClaimName] as string;
-                }
+                    let user: User | null = null;
+                    for (let id of identifiers) {
+                        const entity = await getEntityWithCreds('openid', id, null);
+                        if (!entity) {
+                            continue;
+                        }
 
-                return done(null, user);
-            } catch (e) {
-                return done(e);
-            }
-        })
+                        user = entity;
+
+                        // we may have case when user exists for a few identifiers, so we try find the most permissive role
+                        if (entity.role === AuthRoles.admin) {
+                            break;
+                        }
+                    }
+
+                    if (!user) {
+                        return done(null, false, {
+                            message: `Can\'t find presented identifiers "${identifiers.toString()}" in auth entities list`,
+                        });
+                    }
+                    if (uidClaimName && claims[uidClaimName]) {
+                        user.identifier = claims[uidClaimName] as string;
+                    }
+
+                    return done(null, user);
+                } catch (e) {
+                    return done(e);
+                }
+            },
+        ),
     );
 }
 
 export default async (app: Express, settingsService: SettingsService, config: any): Promise<RequestHandler[]> => {
     const SessionKnex = sessionKnex(session);
-    const sessionConfig = Object.assign({
-        resave: false,
-        saveUninitialized: false,
-        cookie: { httpOnly: true, secure: false },
-        store: new SessionKnex({
-            knex: db,
-            createTable: false,
-            tablename: 'sessions'
-        }),
-    }, config.session);
+    const sessionConfig = Object.assign(
+        {
+            resave: false,
+            saveUninitialized: false,
+            cookie: { httpOnly: true, secure: false },
+            store: new SessionKnex({
+                knex: db,
+                createTable: false,
+                tablename: 'sessions',
+            }),
+        },
+        config.session,
+    );
 
     if (app.get('env') === 'production') {
         app.set('trust proxy', 1); // trust first proxy
@@ -113,39 +128,42 @@ export default async (app: Express, settingsService: SettingsService, config: an
 
     app.use(session(sessionConfig));
 
+    passport.use(
+        new LocalStrategy(async function (username, password, done) {
+            try {
+                const user = await getEntityWithCreds('local', username, password);
+                if (!user) {
+                    return done(null, false);
+                }
 
-    passport.use(new LocalStrategy(async function (username, password, done) {
-        try {
-            const user = await getEntityWithCreds('local', username, password);
-            if (!user) {
-                return done(null, false);
+                return done(null, user);
+            } catch (e) {
+                return done(e);
             }
+        }),
+    );
+    passport.use(
+        new BearerStrategy(async function (token, done) {
+            try {
+                const tokenParts = token.split(':');
+                if (tokenParts.length !== 2) {
+                    return done(null, false);
+                }
 
-            return done(null, user);
-        } catch (e) {
-            return done(e);
-        }
-    }));
-    passport.use(new BearerStrategy(async function (token, done) {
-        try {
-            const tokenParts = token.split(':');
-            if (tokenParts.length !== 2) {
-                return done(null, false);
+                const id = Buffer.from(tokenParts[0], 'base64').toString('utf8');
+                const secret = Buffer.from(tokenParts[1], 'base64').toString('utf8');
+
+                const user = await getEntityWithCreds('bearer', id, secret);
+                if (!user) {
+                    return done(null, false);
+                }
+
+                return done(null, user);
+            } catch (e) {
+                return done(e);
             }
-
-            const id = Buffer.from(tokenParts[0], 'base64').toString('utf8');
-            const secret = Buffer.from(tokenParts[1], 'base64').toString('utf8');
-
-            const user = await getEntityWithCreds('bearer', id, secret);
-            if (!user) {
-                return done(null, false);
-            }
-
-            return done(null, user);
-        } catch (e) {
-            return done(e);
-        }
-    }));
+        }),
+    );
 
     // This can be used to keep a smaller payload
     passport.serializeUser(function (user: Express.User, done) {
@@ -160,43 +178,46 @@ export default async (app: Express, settingsService: SettingsService, config: an
     app.use(passport.initialize());
     app.use(passport.session());
 
-    await registerOpenIdStrategy(settingsService, 'auth')
+    await registerOpenIdStrategy(settingsService, 'auth');
 
     // Accept the OpenID identifier and redirect the user to their OpenID
     // provider for authentication.  When complete, the provider will redirect
     // the user back to the application at:
     //     /auth/openid/return
-    app.get('/auth/openid', async (req, res, next) => {
-        if (await settingsService.get(SettingKeys.AuthOpenIdEnabled) === false) {
-            return res.sendStatus(404);
-        }
-        if (req.user) {
-            return res.redirect('/');
-        }
+    app.get(
+        '/auth/openid',
+        async (req, res, next) => {
+            if ((await settingsService.get(SettingKeys.AuthOpenIdEnabled)) === false) {
+                return res.sendStatus(404);
+            }
+            if (req.user) {
+                return res.redirect('/');
+            }
 
-        const callerId = 'auth';
-        const keysToWatch = [
-            SettingKeys.AuthOpenIdClientId,
-            SettingKeys.AuthOpenIdClientSecret,
-            SettingKeys.BaseUrl,
-            SettingKeys.AuthOpenIdResponseMode,
-            SettingKeys.AuthOpenIdIdentifierClaimName,
-            SettingKeys.AuthOpenIdUniqueIdentifierClaimName,
-            SettingKeys.AuthOpenIdRequestedScopes,
-        ];
-        if (await settingsService.hasChanged(callerId, keysToWatch)) {
-            console.log('Change of the OpenID authentication config detected. Reinitializing auth backend...');
+            const callerId = 'auth';
+            const keysToWatch = [
+                SettingKeys.AuthOpenIdClientId,
+                SettingKeys.AuthOpenIdClientSecret,
+                SettingKeys.BaseUrl,
+                SettingKeys.AuthOpenIdResponseMode,
+                SettingKeys.AuthOpenIdIdentifierClaimName,
+                SettingKeys.AuthOpenIdUniqueIdentifierClaimName,
+                SettingKeys.AuthOpenIdRequestedScopes,
+            ];
+            if (await settingsService.hasChanged(callerId, keysToWatch)) {
+                console.log('Change of the OpenID authentication config detected. Reinitializing auth backend...');
 
-            await registerOpenIdStrategy(settingsService, callerId);
-        }
+                await registerOpenIdStrategy(settingsService, callerId);
+            }
 
-        next();
-    }, passport.authenticate('openid'));
-
+            next();
+        },
+        passport.authenticate('openid'),
+    );
 
     const openidReturnHandlers: RequestHandler[] = [
         async (req, res, next) => {
-            if (await settingsService.get(SettingKeys.AuthOpenIdEnabled) === true) {
+            if ((await settingsService.get(SettingKeys.AuthOpenIdEnabled)) === true) {
                 return next();
             }
 
@@ -221,7 +242,7 @@ export default async (app: Express, settingsService: SettingsService, config: an
                     return res.redirect('/');
                 });
             })(req, res, next);
-        }
+        },
     ];
     // The OpenID provider has redirected the user back to the application.
     // Finish the authentication process by verifying the assertion.  If valid,
@@ -254,7 +275,7 @@ export default async (app: Express, settingsService: SettingsService, config: an
     app.get('/auth/available-methods', async (req, res) => {
         const availableMethods = ['local'];
 
-        if (await settingsService.get(SettingKeys.AuthOpenIdEnabled) === true) {
+        if ((await settingsService.get(SettingKeys.AuthOpenIdEnabled)) === true) {
             availableMethods.push('openid');
         }
 
@@ -263,34 +284,38 @@ export default async (app: Express, settingsService: SettingsService, config: an
 
     const rolesMiddleware = (req: any, res: any, next: any) => {
         if (req.user.role === AuthRoles.readonly && req.method !== 'GET') {
-            return res.status(403).send({ message: `Access denied. "${req.user.identifier}" has "readonly" access.` });
+            return res.status(403).send({
+                message: `Access denied. "${req.user.identifier}" has "readonly" access.`,
+            });
         }
 
         return next();
     };
 
-    return [(req: any, res: any, next: any) => {
-        if (!req.user) {
-            return passport.authenticate('bearer', { session: false })(req, res, next);
-        }
+    return [
+        (req: any, res: any, next: any) => {
+            if (!req.user) {
+                return passport.authenticate('bearer', { session: false })(req, res, next);
+            }
 
-        return next();
-    }, rolesMiddleware];
-}
+            return next();
+        },
+        rolesMiddleware,
+    ];
+};
 
-async function getEntityWithCreds(provider: string, identifier: string, secret: string|null):Promise<User|null> {
-    const user = await db.select().from('auth_entities')
-        .first('identifier', 'id', 'role', 'secret')
-        .where({
-            provider,
-            identifier
-        });
+async function getEntityWithCreds(provider: string, identifier: string, secret: string | null): Promise<User | null> {
+    const user = await db.select().from('auth_entities').first('identifier', 'id', 'role', 'secret').where({
+        provider,
+        identifier,
+    });
     if (!user) {
         return null;
     }
 
-    if (secret !== null || user.secret !== null) { //Support of the password less auth methods, like OpenID Connect
-        if (!await bcrypt.compare(secret, user.secret)) {
+    if (secret !== null || user.secret !== null) {
+        //Support of the password less auth methods, like OpenID Connect
+        if (!(await bcrypt.compare(secret, user.secret))) {
             return null;
         }
     }

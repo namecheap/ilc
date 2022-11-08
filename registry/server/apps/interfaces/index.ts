@@ -1,9 +1,10 @@
 import JoiDefault from 'joi';
-import db from "../../db";
-import {getJoiErr} from "../../util/helpers";
+import db from '../../db';
+import { getJoiErr } from '../../util/helpers';
+import SharedLib from '../../sharedLibs/interfaces';
 
-const Joi = JoiDefault.defaults(schema => {
-    return schema.empty(null)
+const Joi = JoiDefault.defaults((schema) => {
+    return schema.empty(null);
 });
 
 export default interface App {
@@ -20,7 +21,7 @@ export default interface App {
     discoveryMetadata?: string; // JSON({ [propName: string]: any })
     adminNotes?: string;
     l10nManifest?: string;
-};
+}
 
 export const appNameSchema = Joi.string().trim().min(1);
 
@@ -35,23 +36,29 @@ const commonApp = {
     ssr: Joi.object({
         src: Joi.string().trim().uri(),
         timeout: Joi.number(),
-    }).and('src', 'timeout').empty({}).default(null),
+    })
+        .and('src', 'timeout')
+        .empty({})
+        .default(null),
     kind: Joi.string().valid('primary', 'essential', 'regular', 'wrapper'),
     wrappedWith: Joi.when('kind', {
         is: 'wrapper',
         then: Joi.any().custom(() => null),
-        otherwise: Joi.string().trim().default(null).external(async (value) => {
-            if (value === null) {
-                return null;
-            }
+        otherwise: Joi.string()
+            .trim()
+            .default(null)
+            .external(async (value) => {
+                if (!value) {
+                    return null;
+                }
 
-            const wrapperApp = await db('apps').first('kind').where({ name: value });
-            if (!wrapperApp || wrapperApp.kind !== 'wrapper') {
-                throw getJoiErr('wrappedWith', 'Specified wrapper app is not a wrapper.');
-            }
+                const wrapperApp = await db('apps').first('kind').where({ name: value });
+                if (!wrapperApp || wrapperApp.kind !== 'wrapper') {
+                    throw getJoiErr('wrappedWith', 'Specified wrapper app is not a wrapper.');
+                }
 
-            return value;
-        }),
+                return value;
+            }),
     }),
     discoveryMetadata: Joi.object().default({}),
     adminNotes: Joi.string().trim().default(null),
@@ -59,12 +66,12 @@ const commonApp = {
     l10nManifest: Joi.string().max(255).default(null),
 };
 
-export const partialAppSchema = Joi.object({
+export const partialAppSchema = Joi.object<App>({
     ...commonApp,
     name: appNameSchema.forbidden(),
 });
 
-export const appSchema = Joi.object({
+export const appSchema = Joi.object<App>({
     ...commonApp,
     name: appNameSchema.required(),
     spaBundle: Joi.when('assetsDiscoveryUrl', {

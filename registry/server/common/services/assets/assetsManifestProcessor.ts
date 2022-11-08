@@ -12,7 +12,7 @@ export default function processManifest(baseUrl: string, manifest: any, whiteLis
     }
 
     if (data.dependencies !== undefined && _.isPlainObject(data.dependencies)) {
-        data.dependencies = _.mapValues(data.dependencies, v => url.resolve(baseUrl, v));
+        data.dependencies = _.mapValues(data.dependencies, (v) => url.resolve(baseUrl, v));
         data.dependencies = JSON.stringify(data.dependencies);
     } else {
         delete data.dependencies;

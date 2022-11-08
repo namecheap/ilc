@@ -1,15 +1,10 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 import _, { LodashStubString } from 'lodash/fp';
 
 import noticeError from '../../errorHandler/noticeError';
 import db from '../../db';
-import Template, {
-    LocalizedTemplate
-} from '../interfaces';
+import Template, { LocalizedTemplate } from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
 import renderTemplate from '../services/renderTemplate';
 import errors from '../errors';
@@ -18,29 +13,36 @@ import { templateNameSchema } from './validation';
 import RouterDomains from '../../routerDomains/interfaces';
 
 type GetTemplateRenderedRequestParams = {
-    name: string
+    name: string;
 };
 
-const validateRequestBeforeGetTemplateRendered = validateRequestFactory([{
-    schema: Joi.object({
-        name: templateNameSchema.required(),
-    }),
-    selector: 'params',
-}]);
+const validateRequestBeforeGetTemplateRendered = validateRequestFactory([
+    {
+        schema: Joi.object({
+            name: templateNameSchema.required(),
+        }),
+        selector: 'params',
+    },
+]);
 
 async function getTemplateByDomain(domain: string, templateName: string): Promise<Template | null> {
-    const [domainItem] = await db.select('id').from<RouterDomains>('router_domains').where('domainName', String(domain));
+    const [domainItem] = await db
+        .select('id')
+        .from<RouterDomains>('router_domains')
+        .where('domainName', String(domain));
 
     if (!domainItem) {
         return null;
     }
 
-    const [template] = await db.select('templates.*').from<Template>('templates')
-                .join('routes', 'templates.name', 'routes.templateName')
-                .where({
-                    domainId: domainItem.id,
-                    name: templateName,
-                });
+    const [template] = await db
+        .select('templates.*')
+        .from<Template>('templates')
+        .join('routes', 'templates.name', 'routes.templateName')
+        .where({
+            domainId: domainItem.id,
+            name: templateName,
+        });
 
     return template;
 }
@@ -53,9 +55,7 @@ async function getTemplateByName(templateName: string): Promise<Template | undef
 async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams>, res: Response): Promise<void> {
     let template;
 
-    const {
-        name: templateName,
-    } = req.params;
+    const { name: templateName } = req.params;
 
     const { locale, domain } = req.query;
 
@@ -75,7 +75,8 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
 
     let content = template.content;
     if (locale) {
-        const [localizedTemplate] = await db.select()
+        const [localizedTemplate] = await db
+            .select()
             .from<LocalizedTemplate>(tables.templatesLocalized)
             .where('templateName', templateName)
             .andWhere('locale', locale as string);

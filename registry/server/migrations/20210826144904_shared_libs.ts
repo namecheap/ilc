@@ -1,8 +1,7 @@
-import { Knex } from "knex";
-
+import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<any> {
-    return knex.schema.createTable('shared_libs', table => {
+    return knex.schema.createTable('shared_libs', (table) => {
         table.string('name', 50).notNullable().unique();
         table.string('spaBundle', 255).notNullable();
         table.string('assetsDiscoveryUrl', 255).nullable();
@@ -10,7 +9,6 @@ export async function up(knex: Knex): Promise<any> {
         table.text('adminNotes').nullable();
     });
 }
-
 
 export async function down(knex: Knex): Promise<any> {
     return knex.schema.dropTable('shared_libs');

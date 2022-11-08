@@ -37,13 +37,14 @@ describe(`Tests ${example.url}`, () => {
     beforeEach(async () => {
         req = await request();
         reqWithAuth = await requestWithAuth();
-    })
+    });
 
     describe('Create', () => {
         it('should not create record without a required fields', async () => {
-            const response = await req.post(example.url)
-            .send(_.omit(example.correct, ['name', 'spaBundle']))
-            .expect(422, '"spaBundle" is required\n"name" is required');
+            const response = await req
+                .post(example.url)
+                .send(_.omit(example.correct, ['name', 'spaBundle']))
+                .expect(422, '"spaBundle" is required\n"name" is required');
 
             expect(response.body).deep.equal({});
         });
@@ -56,37 +57,34 @@ describe(`Tests ${example.url}`, () => {
                 adminNotes: 444,
             };
 
-            let response = await req.post(example.url)
-            .send({
-                ...example.correct,
-                ...incorrect
-            })
-            .expect(
-                422,
-                '"assetsDiscoveryUrl" must be a string\n' +
-                '"spaBundle" must be a string\n' +
-                '"adminNotes" must be a string\n' +
-                '"name" must be a string'
+            let response = await req
+                .post(example.url)
+                .send({
+                    ...example.correct,
+                    ...incorrect,
+                })
+                .expect(
+                    422,
+                    '"assetsDiscoveryUrl" must be a string\n' +
+                        '"spaBundle" must be a string\n' +
+                        '"adminNotes" must be a string\n' +
+                        '"name" must be a string',
                 );
 
             expect(response.body).deep.equal({});
 
-            response = await req.get(example.url + incorrect.name)
-            .expect(404, 'Not found');
+            response = await req.get(example.url + incorrect.name).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
 
         it('should successfully create record', async () => {
             try {
-                let response = await req.post(example.url)
-                    .send(example.correct)
-                    .expect(200);
+                let response = await req.post(example.url).send(example.correct).expect(200);
 
                 expect(response.body).deep.equal(example.correct);
 
-                response = await req.get(example.url + example.correct.name)
-                    .expect(200);
+                response = await req.get(example.url + example.correct.name).expect(200);
 
                 expect(response.body).deep.equal(example.correct);
             } finally {
@@ -104,7 +102,10 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .post(example.url)
                     .send(example.correctWithAssetsDiscoveryUrl)
-                    .expect(422, `"assetsDiscoveryUrl" is not available. Check the url via browser manually.`);
+                    .expect(
+                        422,
+                        `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`,
+                    );
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -121,7 +122,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .post(example.url)
                     .send(example.correctWithAssetsDiscoveryUrl)
-                    .expect(422, `"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually`);
+                    .expect(422, `"spaBundle" is required`);
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -147,9 +148,7 @@ describe(`Tests ${example.url}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.post(example.url)
-                    .send(example.correct)
-                    .expect(401);
+                await reqWithAuth.post(example.url).send(example.correct).expect(401);
             });
         });
     });
@@ -157,8 +156,7 @@ describe(`Tests ${example.url}`, () => {
     describe('Read', () => {
         it('should return 404 for non-existing "name"', async () => {
             const incorrect = { name: 123 };
-            const response = await req.get(example.url + incorrect.name)
-            .expect(404, 'Not found');
+            const response = await req.get(example.url + incorrect.name).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
@@ -167,8 +165,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct);
 
-                const response = await req.get(example.url + example.correct.name)
-                    .expect(200);
+                const response = await req.get(example.url + example.correct.name).expect(200);
 
                 expect(response.body).deep.equal(example.correct);
             } finally {
@@ -180,8 +177,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const response = await req.get(example.url)
-                    .expect(200);
+                const response = await req.get(example.url).expect(200);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
                 expect(response.body).to.deep.include(example.correct);
@@ -192,20 +188,20 @@ describe(`Tests ${example.url}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.get(example.url)
-                    .expect(401);
+                await reqWithAuth.get(example.url).expect(401);
 
-                await reqWithAuth.get(example.url + 123)
-                    .expect(401);
+                await reqWithAuth.get(example.url + 123).expect(401);
             });
         });
     });
 
     describe('Update', () => {
-        it('should not update any record if record doesn\'t exist', async () => {
+        it("should not update any record if record doesn't exist", async () => {
             const incorrect = { name: 123 };
-            const response = await req.put(example.url + incorrect.name)
-            .expect(404, 'Not found');
+            const response = await req
+                .put(example.url + incorrect.name)
+                .send(_.omit(example.updated, 'name'))
+                .expect(404, 'Shared library with name "123" is not exist');
 
             expect(response.body).deep.equal({});
         });
@@ -214,7 +210,8 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const response = await req.put(example.url + example.correct.name)
+                const response = await req
+                    .put(example.url + example.correct.name)
                     .send(example.updated)
                     .expect(422, '"name" is not allowed');
 
@@ -234,7 +231,8 @@ describe(`Tests ${example.url}`, () => {
                     adminNotes: 222,
                 };
 
-                const response = await req.put(example.url + example.correct.name)
+                const response = await req
+                    .put(example.url + example.correct.name)
                     .send({
                         ..._.omit(example.updated, 'name'),
                         ...incorrect,
@@ -242,8 +240,8 @@ describe(`Tests ${example.url}`, () => {
                     .expect(
                         422,
                         '"spaBundle" must be a string\n' +
-                        '"assetsDiscoveryUrl" must be a string\n' +
-                        '"adminNotes" must be a string'
+                            '"assetsDiscoveryUrl" must be a string\n' +
+                            '"adminNotes" must be a string',
                     );
                 expect(response.body).deep.equal({});
             } finally {
@@ -255,7 +253,8 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const response = await req.put(example.url + example.correct.name)
+                const response = await req
+                    .put(example.url + example.correct.name)
                     .send(_.omit(example.updated, 'name'))
                     .expect(200);
 
@@ -274,9 +273,15 @@ describe(`Tests ${example.url}`, () => {
                 const scope = nock(example.assetsDiscovery.host);
                 scope.get(example.assetsDiscovery.path).delay(0).reply(404);
 
-                const response = await req.put(example.url + example.correct.name)
+                const response = await req
+                    .put(example.url + example.correct.name)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
-                    .expect(422, `"assetsDiscoveryUrl" is not available. Check the url via browser manually.`);
+                    .expect(
+                        422,
+                        `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`,
+                    );
+
+                console.log(response.body);
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -292,9 +297,10 @@ describe(`Tests ${example.url}`, () => {
                 const scope = nock(example.assetsDiscovery.host);
                 scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify({}));
 
-                const response = await req.put(example.url + example.correct.name)
+                const response = await req
+                    .put(example.url + example.correct.name)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
-                    .expect(422, `"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually`);
+                    .expect(422, `"spaBundle" is required`);
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -309,13 +315,16 @@ describe(`Tests ${example.url}`, () => {
                 const scope = nock(example.assetsDiscovery.host);
                 scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
 
-                const response = await req.put(example.url + example.correct.name)
+                const response = await req
+                    .put(example.url + example.correct.name)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'));
 
-                expect(response.body).deep.equal({
+                const expected = {
                     ...example.correctWithAssetsDiscoveryUrl,
                     ...example.manifest,
-                });
+                };
+
+                expect(response.body).deep.equal(expected);
             } finally {
                 await req.delete(example.url + example.correct.name);
             }
@@ -323,7 +332,8 @@ describe(`Tests ${example.url}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.put(example.url + 123)
+                await reqWithAuth
+                    .put(example.url + 123)
                     .send(example.correct)
                     .expect(401);
             });
@@ -331,10 +341,9 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Delete', () => {
-        it('should not delete any record if record doesn\'t exist', async () => {
+        it("should not delete any record if record doesn't exist", async () => {
             const incorrect = { name: 123 };
-            const response = await req.delete(example.url + incorrect.name)
-            .expect(404, 'Not found');
+            const response = await req.delete(example.url + incorrect.name).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
@@ -342,15 +351,15 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully delete record', async () => {
             await req.post(example.url).send(example.correct).expect(200);
 
-            const response = await req.delete(example.url + example.correct.name)
-            .expect(204, '');
+            const response = await req.delete(example.url + example.correct.name).expect(204, '');
 
             expect(response.body).deep.equal({});
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.delete(example.url + 123)
+                await reqWithAuth
+                    .delete(example.url + 123)
                     .send(example.correct)
                     .expect(401);
             });

@@ -14,5 +14,5 @@ module.exports = {
     },
     auth: {
         sessionSecret: 'AUTH_SESSION_SECRET',
-    }
+    },
 };

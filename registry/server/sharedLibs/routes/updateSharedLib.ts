@@ -1,20 +1,17 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
-import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import setDataFromManifest from '../../common/middlewares/setDataFromManifest';
-import SharedLib, {
-    sharedLibNameSchema,
-    partialSharedLibSchema,
-} from '../interfaces';
+import SharedLib, { sharedLibNameSchema, partialSharedLibSchema } from '../interfaces';
+import { EntryFactory } from '../../common/services/entries/EntryFactory';
+import { NotFoundFqrnError } from '../../common/services/entries/error/NotFoundFqrnError';
+import { ValidationFqrnError } from '../../common/services/entries/error/ValidationFqrnError';
+import { joiErrorToResponse } from '../../util/helpers';
+import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';
 
 type UpdateSharedLibRequestParams = {
-    name: string
+    name: string;
 };
 
 const validateRequestBeforeUpdateSharedLib = validateRequestFactory([
@@ -26,34 +23,34 @@ const validateRequestBeforeUpdateSharedLib = validateRequestFactory([
     },
     {
         schema: partialSharedLibSchema,
-        selector: 'body'
+        selector: 'body',
     },
 ]);
 
-const updateSharedLib = async (req: Request<UpdateSharedLibRequestParams>, res: Response): Promise<void> => {
+const updateSharedLib = async (req: Request<UpdateSharedLibRequestParams>, res: Response): Promise<Response> => {
     const sharedLib = req.body;
     const sharedLibName = req.params.name;
 
+    const sharedLibEntry = EntryFactory.getSharedLibInstance(sharedLibName);
+
+    let results;
+
     try {
-        await setDataFromManifest(sharedLib, 'shared_libs');
-    } catch (error: any) {
-        res.status(422).send(error.message);
-        return;
+        results = await sharedLibEntry.patch(sharedLib, { user: req.user });
+    } catch (error) {
+        if (error instanceof NotFoundFqrnError) {
+            return res.status(error.code).send(error.message);
+        } else if (error instanceof ValidationFqrnError) {
+            return res.status(error.code).send(error.message);
+        } else if (error instanceof Joi.ValidationError) {
+            return res.status(422).send(joiErrorToResponse(error));
+        } else if (error instanceof AssetsManifestError) {
+            return res.status(error.code).send(error.message);
+        }
+        throw error;
     }
 
-    const countToUpdate = await db('shared_libs').where({ name: sharedLibName })
-    if (!countToUpdate.length) {
-        res.status(404).send('Not found');
-        return;
-    }
-
-    await db.versioning(req.user, { type: 'shared_libs', id: sharedLibName }, async (trx) => {
-        await db('shared_libs').where({ name: sharedLibName }).update(sharedLib).transacting(trx);
-    });
-
-    const [updatedSharedLib] = await db.select().from<SharedLib>('shared_libs').where('name', sharedLibName);
-
-    res.status(200).send(preProcessResponse(updatedSharedLib));
+    return res.status(200).send(preProcessResponse(results));
 };
 
 export default [validateRequestBeforeUpdateSharedLib, updateSharedLib];

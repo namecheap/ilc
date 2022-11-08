@@ -1,7 +1,7 @@
 import http from 'http';
 import supertest from 'supertest';
 import app from '../server/app';
-import {dbFactory as dbFactoryOrig} from '../server/db';
+import { dbFactory as dbFactoryOrig } from '../server/db';
 
 function isString(value: unknown): value is string {
     return typeof value === 'string';
@@ -17,9 +17,9 @@ export function dbFactory() {
         useNullAsDefault: true,
         pool: {
             afterCreate: (conn: any, done: Function) => {
-                conn.run('PRAGMA foreign_keys = ON;', (err: Error) => done(err, conn))
-            }
-        }
+                conn.run('PRAGMA foreign_keys = ON;', (err: Error) => done(err, conn));
+            },
+        },
     });
 }
 

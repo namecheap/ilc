@@ -6,7 +6,7 @@ declare module 'knex' {
     namespace Knex {
         interface QueryBuilder {
             // See file db.ts for implementation
-            range<TRecord, TResult>(value: string|null|undefined): QueryBuilder<TRecord, TResult>;
+            range<TRecord, TResult>(value: string | null | undefined): QueryBuilder<TRecord, TResult>;
         }
     }
 }

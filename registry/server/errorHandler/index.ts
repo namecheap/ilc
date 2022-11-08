@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import {Request, Response, NextFunction} from 'express';
+import { Request, Response, NextFunction } from 'express';
 import * as httpErrors from './httpErrors';
 
 import noticeError from './noticeError';
@@ -19,12 +19,12 @@ async function errorHandler(error: Error, req: Request, res: Response, next: Nex
 
     noticeError(error, {
         type: 'INTERNAL_SERVER_ERROR',
-        errorId
+        errorId,
     });
 
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.status(500).send(`Internal server error occurred. Error ID: ${errorId}`);
-};
+}
 
 export default errorHandler;

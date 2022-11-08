@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ResourceStylesheet } from "./ResourceStylesheet";
+import { ResourceStylesheet } from './ResourceStylesheet';
 
 describe('ResourceStylesheet', () => {
     it('should correctly render style tag if no attributes provided', () => {
@@ -16,10 +16,14 @@ describe('ResourceStylesheet', () => {
             integrity: 'some',
         });
 
-        expect(stylesheet.toHtml()).to.equal('<link rel="stylesheet" href="http://example.com" crossorigin="anonymous" title="blah" integrity="some">');
-        expect(stylesheet.toString()).to.equal('<link rel="stylesheet" href="http://example.com" crossorigin="anonymous" title="blah" integrity="some">');
+        expect(stylesheet.toHtml()).to.equal(
+            '<link rel="stylesheet" href="http://example.com" crossorigin="anonymous" title="blah" integrity="some">',
+        );
+        expect(stylesheet.toString()).to.equal(
+            '<link rel="stylesheet" href="http://example.com" crossorigin="anonymous" title="blah" integrity="some">',
+        );
     });
-    
+
     it('should skip attribute if value is not allowed provided', () => {
         const stylesheet = new ResourceStylesheet('http://example.com', {
             crossorigin: 'not-allowed',
@@ -37,7 +41,11 @@ describe('ResourceStylesheet', () => {
             notallowed: 'notallowed',
         });
 
-        expect(stylesheet.toHtml()).to.equal('<link rel="stylesheet" href="http://example.com" crossorigin="anonymous" title="blah" integrity="some">');
-        expect(stylesheet.toString()).to.equal('<link rel="stylesheet" href="http://example.com" crossorigin="anonymous" title="blah" integrity="some">');
+        expect(stylesheet.toHtml()).to.equal(
+            '<link rel="stylesheet" href="http://example.com" crossorigin="anonymous" title="blah" integrity="some">',
+        );
+        expect(stylesheet.toString()).to.equal(
+            '<link rel="stylesheet" href="http://example.com" crossorigin="anonymous" title="blah" integrity="some">',
+        );
     });
 });

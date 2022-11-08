@@ -1,17 +1,16 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import RouterDomains, { routerDomainsSchema } from '../interfaces';
 
-const validateRequest = validateRequestFactory([{
-    schema: routerDomainsSchema,
-    selector: 'body',
-}]);
+const validateRequest = validateRequestFactory([
+    {
+        schema: routerDomainsSchema,
+        selector: 'body',
+    },
+]);
 
 const createRouterDomains = async (req: Request, res: Response): Promise<void> => {
     let routerDomainId: number;

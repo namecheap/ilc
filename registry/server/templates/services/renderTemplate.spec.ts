@@ -24,9 +24,10 @@ describe('renderTemplate', () => {
                         headers: {
                             'X-Powered-By': 'JS',
                             'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;media=print;loveyou=3000,' 
-                                + 'https://my.awesome.server/my-awesome-script.js;rel=script;crossorigin=anonymous;loveyou=3000,'
-                                + 'https://my.awesome.server/my-awesome-script.js;rel=preload;as=script',
+                            Link:
+                                'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;media=print;loveyou=3000,' +
+                                'https://my.awesome.server/my-awesome-script.js;rel=script;crossorigin=anonymous;loveyou=3000,' +
+                                'https://my.awesome.server/my-awesome-script.js;rel=preload;as=script',
                         },
                     },
                 },
@@ -52,15 +53,15 @@ describe('renderTemplate', () => {
                         headers: {
                             'X-Powered-By': 'JS',
                             'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=txt;loveyou=3000',
+                            Link: 'https://my.awesome.server/my-awesome-stylesheet.css;rel=txt;loveyou=3000',
                         },
-                    }
+                    },
                 },
                 attributes: {
                     id: 'include-id-2',
                     src: `${includesHost}/get/include/2`,
                     timeout: 100,
-                }
+                },
             },
             {
                 api: {
@@ -79,17 +80,18 @@ describe('renderTemplate', () => {
                         headers: {
                             'X-Powered-By': 'JS',
                             'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.amazing.server/my-amazing-stylesheet.css;rel=stylesheet;media=print;loveyou=3000;,' 
-                                + 'https://my.amazing.server/my-awesome-script.js;rel=script;loveyou=3000;crossorigin=anonymous;,'
-                                + 'https://my.awesome.server/my-awesome-script.js;rel=preload;as=script',
+                            Link:
+                                'https://my.amazing.server/my-amazing-stylesheet.css;rel=stylesheet;media=print;loveyou=3000;,' +
+                                'https://my.amazing.server/my-awesome-script.js;rel=script;loveyou=3000;crossorigin=anonymous;,' +
+                                'https://my.awesome.server/my-awesome-script.js;rel=preload;as=script',
                         },
-                    }
+                    },
                 },
                 attributes: {
                     id: 'include-id-3',
                     src: `${includesHost}/get/include/3`,
                     timeout: 0,
-                }
+                },
             },
             {
                 api: {
@@ -107,28 +109,26 @@ describe('renderTemplate', () => {
                         headers: {
                             'X-Powered-By': 'JS',
                             'X-My-Awesome-Header': 'Awesome',
-                            'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
+                            Link: 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000',
                         },
-                    }
+                    },
                 },
                 attributes: {
                     id: 'include-id-4',
                     src: `${includesHost}/get/include/4`,
-                }
+                },
             },
         ];
 
-        includes.forEach(({
-            api: {
-                route,
-                delay,
-                response: {
-                    status,
-                    data,
-                    headers,
+        includes.forEach(
+            ({
+                api: {
+                    route,
+                    delay,
+                    response: { status, data, headers },
                 },
-            },
-        }) => scope.get(route).delay(delay).reply(status, data, headers));
+            }) => scope.get(route).delay(delay).reply(status, data, headers),
+        );
 
         const template = `
             <html>
@@ -172,7 +172,8 @@ describe('renderTemplate', () => {
                     `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
                     '<link rel="preload" href="https://my.awesome.server/my-awesome-script.js" as="script">\n' +
                     '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css" media="print">\n' +
-                    includes[0].api.response.data + '\n' +
+                    includes[0].api.response.data +
+                    '\n' +
                     '<script src="https://my.awesome.server/my-awesome-script.js" crossorigin="anonymous"></script>\n' +
                     `<!-- Template include "${includes[0].attributes.id}" END -->`
                 }
@@ -186,7 +187,8 @@ describe('renderTemplate', () => {
                     `<!-- Template include "${includes[2].attributes.id}" START -->\n` +
                     '<link rel="preload" href="https://my.awesome.server/my-awesome-script.js" as="script">\n' +
                     '<link rel="stylesheet" href="https://my.amazing.server/my-amazing-stylesheet.css" media="print">\n' +
-                    includes[2].api.response.data + '\n' +
+                    includes[2].api.response.data +
+                    '\n' +
                     '<script src="https://my.amazing.server/my-awesome-script.js" crossorigin="anonymous"></script>\n' +
                     `<!-- Template include "${includes[2].attributes.id}" END -->`
                 }
@@ -230,17 +232,15 @@ describe('renderTemplate', () => {
             },
         ];
 
-        includes.forEach(({
-                              api: {
-                                  route,
-                                  delay,
-                                  response: {
-                                      status,
-                                      data,
-                                      headers,
-                                  },
-                              },
-                          }) => scope.get(route).delay(delay).reply(status, data, headers));
+        includes.forEach(
+            ({
+                api: {
+                    route,
+                    delay,
+                    response: { status, data, headers },
+                },
+            }) => scope.get(route).delay(delay).reply(status, data, headers),
+        );
 
         const template = `
             <html>
@@ -262,8 +262,8 @@ describe('renderTemplate', () => {
         }
 
         chai.expect(catchedError.message).to.be.equal(
-            `Failed to fetch include with ID "${includes[0].attributes.id}" due to: `
-                + `Request failed with status code ${includes[0].api.response.status}`
+            `Failed to fetch include with ID "${includes[0].attributes.id}" due to: ` +
+                `Request failed with status code ${includes[0].api.response.status}`,
         );
     });
 
@@ -295,11 +295,7 @@ describe('renderTemplate', () => {
         };
 
         const {
-            api: {
-                route,
-                delay,
-                response,
-            },
+            api: { route, delay, response },
         } = include;
 
         scope.get(route).delay(delay).reply(response.status, response.data, response.headers);
@@ -309,11 +305,13 @@ describe('renderTemplate', () => {
         const renderedTemplate = await renderTemplate(template);
 
         chai.expect(renderedTemplate.styleRefs).to.be.eqls([]);
-        chai.expect(renderedTemplate.content).to.be.equal(`${
-            `<!-- Template include "${include.attributes.id}" START -->\n` +
-            include.api.response.data +
-            `\n<!-- Template include "${include.attributes.id}" END -->`
-        }`);
+        chai.expect(renderedTemplate.content).to.be.equal(
+            `${
+                `<!-- Template include "${include.attributes.id}" START -->\n` +
+                include.api.response.data +
+                `\n<!-- Template include "${include.attributes.id}" END -->`
+            }`,
+        );
     });
 
     it('should throw an error when a template has duplicate includes sources or ids', async () => {
@@ -350,13 +348,13 @@ describe('renderTemplate', () => {
                                 This include has the same id and src as the include with id 1
                             </div>
                         `,
-                    }
+                    },
                 },
                 attributes: {
                     id: 'include-id-1',
                     src: `${includesHost}/get/include/1`,
                     timeout: 100,
-                }
+                },
             },
             {
                 api: {
@@ -369,13 +367,13 @@ describe('renderTemplate', () => {
                                 This include has the same id as include 1
                             </div>
                         `,
-                    }
+                    },
                 },
                 attributes: {
                     id: 'include-id-1',
                     src: `${includesHost}/get/include/2`,
                     timeout: 100,
-                }
+                },
             },
             {
                 api: {
@@ -388,13 +386,13 @@ describe('renderTemplate', () => {
                                 This include has all necessary attributes
                             </div>
                         `,
-                    }
+                    },
                 },
                 attributes: {
                     id: 'include-id-3',
                     src: `${includesHost}/get/include/3`,
                     timeout: 0,
-                }
+                },
             },
             {
                 api: {
@@ -407,12 +405,12 @@ describe('renderTemplate', () => {
                                 This include has the same source as include 3
                             </div>
                         `,
-                    }
+                    },
                 },
                 attributes: {
                     src: `${includesHost}/get/include/3`,
                     timeout: 100,
-                }
+                },
             },
             {
                 api: {
@@ -426,7 +424,7 @@ describe('renderTemplate', () => {
                                 but have a source
                             </div>
                         `,
-                    }
+                    },
                 },
                 attributes: {
                     src: `${includesHost}/get/include/5`,
@@ -474,8 +472,8 @@ describe('renderTemplate', () => {
 
         chai.expect(catchedError.message).to.be.equal(
             `The current template has next duplicate includes sources or ids as follows: \n` +
-            `${includes[1].attributes.id},\n` +
-            `${includes[3].attributes.src}`
+                `${includes[1].attributes.id},\n` +
+                `${includes[3].attributes.src}`,
         );
     });
 });

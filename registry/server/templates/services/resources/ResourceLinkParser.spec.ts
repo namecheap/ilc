@@ -9,11 +9,12 @@ import { ResourceLinkParser } from './ResourceLinkParser';
 import parseLinkHeader from '../parseLinkHeader';
 
 describe('ResourceLinkParser', () => {
-
-    it('should correctly parse link header to resources', () => {  
-        const resources = ResourceLinkParser.parse('https://example.com/static/main.js; rel=script; crossorigin=anonymous,' 
-            + 'https://example.com/static/main.css;rel=stylesheet;priority=4000,'
-            + 'https://example.com; rel=preload');
+    it('should correctly parse link header to resources', () => {
+        const resources = ResourceLinkParser.parse(
+            'https://example.com/static/main.js; rel=script; crossorigin=anonymous,' +
+                'https://example.com/static/main.css;rel=stylesheet;priority=4000,' +
+                'https://example.com; rel=preload',
+        );
 
         expect(resources).to.have.lengthOf(3);
 
@@ -23,10 +24,12 @@ describe('ResourceLinkParser', () => {
     });
 
     it('should skip unexistent rel', () => {
-        const resources = ResourceLinkParser.parse('https://example.com/static/main.js; rel=script; crossorigin=anonymous,' 
-            + 'https://example.com/static/main.css;rel=stylesheet;priority=4000,'
-            + 'https://example.com; rel=unexist,'
-            + 'https://example.com; rel=preload');
+        const resources = ResourceLinkParser.parse(
+            'https://example.com/static/main.js; rel=script; crossorigin=anonymous,' +
+                'https://example.com/static/main.css;rel=stylesheet;priority=4000,' +
+                'https://example.com; rel=unexist,' +
+                'https://example.com; rel=preload',
+        );
 
         expect(resources).to.have.lengthOf(3);
 
@@ -47,9 +50,10 @@ describe('ResourceLinkParser', () => {
         });
 
         it('when no attributes', () => {
-            const headerLink = 'https://example.com/static/main.js; rel=script,' 
-            + 'https://example.com/static/main.css; rel=stylesheet,'
-            + 'https://example.com; rel=preload';
+            const headerLink =
+                'https://example.com/static/main.js; rel=script,' +
+                'https://example.com/static/main.css; rel=stylesheet,' +
+                'https://example.com; rel=preload';
 
             const resourceScriptStub = sandbox.stub(resourceScript, 'ResourceScript');
             const resourcePreloadStub = sandbox.stub(resourcePreload, 'ResourcePreload');
@@ -67,9 +71,10 @@ describe('ResourceLinkParser', () => {
         });
 
         it('when attributes exists', () => {
-            const headerLink = 'https://example.com/static/main.js; rel=script; crossorigin=anonymous; invalid=blah,' 
-            + 'https://example.com/static/main.css; rel=stylesheet; media=print; invalid=blah,'
-            + 'https://example.com; rel=preload; as=track; invalid=blah,';
+            const headerLink =
+                'https://example.com/static/main.js; rel=script; crossorigin=anonymous; invalid=blah,' +
+                'https://example.com/static/main.css; rel=stylesheet; media=print; invalid=blah,' +
+                'https://example.com; rel=preload; as=track; invalid=blah,';
 
             const resourceScriptStub = sandbox.stub(resourceScript, 'ResourceScript');
             const resourcePreloadStub = sandbox.stub(resourcePreload, 'ResourcePreload');

@@ -10,7 +10,7 @@ const isJSON = (str: string): boolean => {
     str = str.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']');
     str = str.replace(/(?:^|:|,)(?:\s*\[)+/g, '');
 
-    return (/^[\],:{}\s]*$/).test(str);
+    return /^[\],:{}\s]*$/.test(str);
 };
 
 const parse = (value: any): any => {
@@ -19,24 +19,32 @@ const parse = (value: any): any => {
     }
 
     return value;
-}
+};
 
 export function parseJSON(value: any): any {
     return _.cond([
         [_.isArray, _.map(_.mapValues(parseJSON))],
         [_.isObject, _.mapValues(parseJSON)],
-        [_.stubTrue, parse]
+        [_.stubTrue, parse],
     ])(value);
-};
+}
 
-export const stringifyJSON = _.curry((
-    pathes: string[],
-    data: any,
-) => _.reduce(
-    (stringifiedData: any, path: string) => _.cond([
-        [_.has(path), () => _.set(path, _.get(path, data) !== null ? JSON.stringify(_.get(path, data)) : null, stringifiedData)],
-        [_.stubTrue, () => stringifiedData],
-    ])(data),
-    data,
-    pathes
-));
+export const stringifyJSON = _.curry((pathes: string[], data: any) =>
+    _.reduce(
+        (stringifiedData: any, path: string) =>
+            _.cond([
+                [
+                    _.has(path),
+                    () =>
+                        _.set(
+                            path,
+                            _.get(path, data) !== null ? JSON.stringify(_.get(path, data)) : null,
+                            stringifiedData,
+                        ),
+                ],
+                [_.stubTrue, () => stringifiedData],
+            ])(data),
+        data,
+        pathes,
+    ),
+);

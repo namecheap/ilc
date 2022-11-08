@@ -1,26 +1,23 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
-import SharedLib, {
-    sharedLibNameSchema,
-} from '../interfaces';
+import SharedLib, { sharedLibNameSchema } from '../interfaces';
 
 type GetSharedLibRequestParams = {
-    name: string
+    name: string;
 };
 
-const validateRequestBeforeGetSharedLib = validateRequestFactory([{
-    schema: Joi.object({
-        name: sharedLibNameSchema.required(),
-    }),
-    selector: 'params',
-}]);
+const validateRequestBeforeGetSharedLib = validateRequestFactory([
+    {
+        schema: Joi.object({
+            name: sharedLibNameSchema.required(),
+        }),
+        selector: 'params',
+    },
+]);
 
 const getSharedLib = async (req: Request<GetSharedLibRequestParams>, res: Response): Promise<void> => {
     const sharedLibName = req.params.name;

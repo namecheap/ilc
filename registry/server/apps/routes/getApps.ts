@@ -1,7 +1,4 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
@@ -11,7 +8,7 @@ const getApps = async (req: Request, res: Response): Promise<void> => {
 
     const query = db.select().from('apps');
     if (filters.id || filters.name) {
-        query.whereIn('name', [...filters.id || filters.name]);
+        query.whereIn('name', [...(filters.id || filters.name)]);
     }
     if (typeof filters.kind === 'string') {
         query.where('kind', filters.kind);

@@ -5,9 +5,8 @@ export const getRoutesById = (appRouteId: number) => {
         .select('routes.id as _routeId', 'routes.*', 'route_slots.*')
         .from('routes')
         .leftJoin('route_slots', 'route_slots.routeId', 'routes.id')
-        .then(appRoutes => {
-            return appRoutes
-            .reduce((acc, appRoute) => {
+        .then((appRoutes) => {
+            return appRoutes.reduce((acc, appRoute) => {
                 // "where" with alias doesn't work in MySql, and "having" without "groupBy" doesn't work in SQLite
                 // thats why filtering better to do here
                 if (appRoute._routeId === appRouteId) {
@@ -21,6 +20,6 @@ export const getRoutesById = (appRouteId: number) => {
                 }
 
                 return acc;
-            },[]);
+            }, []);
         });
-}
+};

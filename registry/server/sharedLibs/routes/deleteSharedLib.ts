@@ -1,26 +1,23 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 import * as httpErrors from '../../errorHandler/httpErrors';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import {
-    sharedLibNameSchema,
-} from '../interfaces';
+import { sharedLibNameSchema } from '../interfaces';
 
 type DeleteSharedLibRequestParams = {
-    name: string,
+    name: string;
 };
 
-const validateRequestBeforeDeleteSharedLib = validateRequestFactory([{
-    schema: Joi.object({
-        name: sharedLibNameSchema.required(),
-    }),
-    selector: 'params',
-}]);
+const validateRequestBeforeDeleteSharedLib = validateRequestFactory([
+    {
+        schema: Joi.object({
+            name: sharedLibNameSchema.required(),
+        }),
+        selector: 'params',
+    },
+]);
 
 const deleteSharedLib = async (req: Request<DeleteSharedLibRequestParams>, res: Response): Promise<void> => {
     const sharedLibName = req.params.name;
@@ -28,7 +25,7 @@ const deleteSharedLib = async (req: Request<DeleteSharedLibRequestParams>, res: 
     await db.versioning(req.user, { type: 'shared_libs', id: sharedLibName }, async (trx) => {
         const count = await db('shared_libs').where('name', sharedLibName).delete().transacting(trx);
         if (!count) {
-            throw new httpErrors.NotFoundError()
+            throw new httpErrors.NotFoundError();
         }
     });
 

@@ -11,7 +11,7 @@ export class ResourceLinkParser {
         return parsedLinks.reduce((resources: Resource[], parsedLink: ParsedLink) => {
             const { rel, uri, params } = parsedLink;
 
-            switch(rel) {
+            switch (rel) {
                 case 'script':
                     resources.push(new ResourceScript(uri, params));
                     break;

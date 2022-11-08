@@ -1,7 +1,4 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import db from '../../db';
@@ -10,15 +7,17 @@ import validateRequestFactory from '../../common/services/validateRequest';
 import RouterDomains, { routerDomainIdSchema } from '../interfaces';
 
 type RequestParams = {
-    id: string
+    id: string;
 };
 
-const validateRequest = validateRequestFactory([{
-    schema: Joi.object({
-        id: routerDomainIdSchema,
-    }),
-    selector: 'params',
-}]);
+const validateRequest = validateRequestFactory([
+    {
+        schema: Joi.object({
+            id: routerDomainIdSchema,
+        }),
+        selector: 'params',
+    },
+]);
 
 const getRouterDomains = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const [routerDomains] = await db.select().from<RouterDomains>('router_domains').where('id', req.params.id);

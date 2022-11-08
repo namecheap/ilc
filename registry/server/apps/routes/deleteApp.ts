@@ -1,34 +1,31 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 import * as httpErrors from '../../errorHandler/httpErrors';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import {
-    appNameSchema,
-} from '../interfaces';
+import { appNameSchema } from '../interfaces';
 
 type DeleteAppRequestParams = {
-    name: string,
+    name: string;
 };
 
-const validateRequestBeforeDeleteApp = validateRequestFactory([{
-    schema: Joi.object({
-        name: appNameSchema.required(),
-    }),
-    selector: 'params',
-}]);
+const validateRequestBeforeDeleteApp = validateRequestFactory([
+    {
+        schema: Joi.object({
+            name: appNameSchema.required(),
+        }),
+        selector: 'params',
+    },
+]);
 
 const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
     const appName = req.params.name;
 
-    await db.versioning(req.user, {type: 'apps', id: appName}, async (trx) => {
+    await db.versioning(req.user, { type: 'apps', id: appName }, async (trx) => {
         const count = await db('apps').where('name', appName).delete().transacting(trx);
         if (!count) {
-            throw new httpErrors.NotFoundError()
+            throw new httpErrors.NotFoundError();
         }
     });
 

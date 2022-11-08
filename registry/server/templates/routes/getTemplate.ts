@@ -1,7 +1,4 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -9,20 +6,20 @@ import { readTemplateWithAllVersions } from '../services/templatesRepository';
 import { templateNameSchema } from './validation';
 
 type GetTemplateRequestParams = {
-    name: string
+    name: string;
 };
 
-const validateRequestBeforeGetTemplate = validateRequestFactory([{
-    schema: Joi.object({
-        name: templateNameSchema.required(),
-    }),
-    selector: 'params',
-}]);
+const validateRequestBeforeGetTemplate = validateRequestFactory([
+    {
+        schema: Joi.object({
+            name: templateNameSchema.required(),
+        }),
+        selector: 'params',
+    },
+]);
 
 const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response): Promise<void> => {
-    const {
-        name: templateName,
-    } = req.params;
+    const { name: templateName } = req.params;
 
     const template = await readTemplateWithAllVersions(templateName);
 

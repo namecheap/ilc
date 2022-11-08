@@ -1,23 +1,17 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
-import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import setDataFromManifest from '../../common/middlewares/setDataFromManifest';
-import {
-    stringifyJSON,
-} from '../../common/services/json';
-import App, {
-    appNameSchema,
-    partialAppSchema,
-} from '../interfaces';
+import { appNameSchema, partialAppSchema } from '../interfaces';
+import { EntryFactory } from '../../common/services/entries/EntryFactory';
+import { NotFoundFqrnError } from '../../common/services/entries/error/NotFoundFqrnError';
+import { ValidationFqrnError } from '../../common/services/entries/error/ValidationFqrnError';
+import { joiErrorToResponse } from '../../util/helpers';
+import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';
 
 type UpdateAppRequestParams = {
-    name: string
+    name: string;
 };
 
 const validateRequestBeforeUpdateApp = validateRequestFactory([
@@ -29,44 +23,34 @@ const validateRequestBeforeUpdateApp = validateRequestFactory([
     },
     {
         schema: partialAppSchema,
-        selector: 'body'
+        selector: 'body',
     },
 ]);
 
-const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): Promise<void> => {
+const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): Promise<Response> => {
     const app = req.body;
     const appName = req.params.name;
 
+    const sharedLibEntry = EntryFactory.getAppInstance(appName);
+
+    let results;
+
     try {
-        await setDataFromManifest(app, 'apps');
+        results = await sharedLibEntry.patch(app, { user: req.user });
     } catch (error) {
-        res.status(422).send((error as Error).message);
-        return;
+        if (error instanceof NotFoundFqrnError) {
+            return res.status(error.code).send(error.message);
+        } else if (error instanceof ValidationFqrnError) {
+            return res.status(error.code).send(error.message);
+        } else if (error instanceof Joi.ValidationError) {
+            return res.status(422).send(joiErrorToResponse(error));
+        } else if (error instanceof AssetsManifestError) {
+            return res.status(error.code).send(error.message);
+        }
+        throw error;
     }
 
-    const countToUpdate = await db('apps').where({ name: appName })
-    if (!countToUpdate.length) {
-        res.status(404).send('Not found');
-        return;
-    }
-
-    await db.versioning(req.user, {type: 'apps', id: appName}, async (trx) => {
-        await db('apps')
-            .where({ name: appName })
-            .update(stringifyJSON([
-                'dependencies',
-                'props',
-                'ssrProps',
-                'ssr',
-                'configSelector',
-                'discoveryMetadata'
-            ], app))
-            .transacting(trx);
-    });
-
-    const [updatedApp] = await db.select().from<App>('apps').where('name', appName);
-
-    res.status(200).send(preProcessResponse(updatedApp));
+    return res.status(200).send(preProcessResponse(results));
 };
 
 export default [validateRequestBeforeUpdateApp, updateApp];

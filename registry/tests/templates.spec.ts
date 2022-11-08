@@ -11,7 +11,7 @@ const example = {
     url: '/api/v1/template/',
     correct: Object.freeze({
         name: 'ncTestTemplateName',
-        content: 'ncTestTemplateContent'
+        content: 'ncTestTemplateContent',
     }),
     correctLocalized: Object.freeze({
         name: 'localizedTestTemplate' + Math.random() * 10000,
@@ -19,18 +19,18 @@ const example = {
         localizedVersions: {
             'es-MX': { content: 'Espaniol content' },
             'fr-FR': { content: 'French content' },
-        }
+        },
     }),
     updated: Object.freeze({
         name: 'ncTestTemplateName',
-        content: 'ncTestTemplateContentUpdated'
+        content: 'ncTestTemplateContentUpdated',
     }),
     updatedLocalized: Object.freeze({
         content: 'test content',
         localizedVersions: {
             'fr-FR': { content: 'French superior content' },
-            'fr-CA': { content: 'Canada content' }
-        }
+            'fr-CA': { content: 'Canada content' },
+        },
     }),
 };
 
@@ -58,7 +58,8 @@ describe(`Tests ${example.url}`, () => {
 
     describe('Create', () => {
         it('should not create record without a required field: name', async () => {
-            const response = await req.post(example.url)
+            const response = await req
+                .post(example.url)
                 .send(_.omit(example.correct, 'name'))
                 .expect(422, '"name" is required');
 
@@ -66,7 +67,8 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should not create record without a required field: content', async () => {
-            const response = await req.post(example.url)
+            const response = await req
+                .post(example.url)
                 .send(_.omit(example.correct, 'content'))
                 .expect(422, '"content" is required');
 
@@ -76,47 +78,46 @@ describe(`Tests ${example.url}`, () => {
         it('should not create record with incorrect type of field: name', async () => {
             const incorrect = {
                 name: 123,
-                content: 456
+                content: 456,
             };
 
-            let response = await req.post(example.url)
+            let response = await req
+                .post(example.url)
                 .send(incorrect)
                 .expect(422, '"content" must be a string\n"name" must be a string');
 
             expect(response.body).deep.equal({});
 
-            response = await req.get(example.url + incorrect.name)
-                .expect(404, 'Not found');
+            response = await req.get(example.url + incorrect.name).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
 
         it('should successfully create record', async () => {
-            let response = await req.post(example.url)
-                .send(example.correct)
-                .expect(200)
+            let response = await req.post(example.url).send(example.correct).expect(200);
 
             let createdTemplate = { ...example.correct, localizedVersions: {} };
             expect(response.body).deep.equal(createdTemplate);
 
-            response = await req.get(example.url + example.correct.name)
-                .expect(200);
+            response = await req.get(example.url + example.correct.name).expect(200);
 
             expect(response.body).deep.equal(createdTemplate);
         });
 
         it('should create localized versions of template', async () => {
-            await withSetting(SettingKeys.I18nSupportedLocales, Object.keys(example.correctLocalized.localizedVersions), async () => {
-                let response = await req.post(example.url)
-                    .send(example.correctLocalized);
-                expect(response.status).to.eq(200, response.text);
-            });
+            await withSetting(
+                SettingKeys.I18nSupportedLocales,
+                Object.keys(example.correctLocalized.localizedVersions),
+                async () => {
+                    let response = await req.post(example.url).send(example.correctLocalized);
+                    expect(response.status).to.eq(200, response.text);
+                },
+            );
         });
 
         it('should not accept not supported languages', async () => {
             await withSetting(SettingKeys.I18nSupportedLocales, ['es-MX', 'ch-CH'], async () => {
-                let response = await req.post(example.url)
-                    .send(example.correctLocalized);
+                let response = await req.post(example.url).send(example.correctLocalized);
                 expect(response.status).to.eq(422, response.text);
                 expect(response.text).to.contain('locales are not supported');
             });
@@ -124,9 +125,7 @@ describe(`Tests ${example.url}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.post(example.url)
-                    .send(example.correct)
-                    .expect(401);
+                await reqWithAuth.post(example.url).send(example.correct).expect(401);
             });
         });
     });
@@ -134,8 +133,7 @@ describe(`Tests ${example.url}`, () => {
     describe('Read', () => {
         it('should return 404 for non-existing id', async () => {
             const incorrect = { name: 123 };
-            const response = await req.get(example.url + incorrect.name)
-                .expect(404, 'Not found');
+            const response = await req.get(example.url + incorrect.name).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
@@ -143,19 +141,24 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully return record w/o authentication', async () => {
             await req.post(example.url).send(example.correct).expect(200);
 
-            const response = await reqWithAuth.get(example.url + example.correct.name)
-                .expect(200);
+            const response = await reqWithAuth.get(example.url + example.correct.name).expect(200);
 
-            expect(response.body).deep.equal({ ...example.correct, localizedVersions: {} });
+            expect(response.body).deep.equal({
+                ...example.correct,
+                localizedVersions: {},
+            });
         });
 
         it('should return localized versions of the template', async () => {
-            await withSetting(SettingKeys.I18nSupportedLocales, Object.keys(example.correctLocalized.localizedVersions), async () => {
-                await req.post(example.url).send(example.correctLocalized).expect(200);
-            })
+            await withSetting(
+                SettingKeys.I18nSupportedLocales,
+                Object.keys(example.correctLocalized.localizedVersions),
+                async () => {
+                    await req.post(example.url).send(example.correctLocalized).expect(200);
+                },
+            );
 
-            const response = await reqWithAuth.get(example.url + example.correctLocalized.name)
-                .expect(200);
+            const response = await reqWithAuth.get(example.url + example.correctLocalized.name).expect(200);
 
             expect(response.body).deep.equal(example.correctLocalized);
         });
@@ -180,7 +183,7 @@ describe(`Tests ${example.url}`, () => {
                             headers: {
                                 'X-Powered-By': 'JS',
                                 'X-My-Awesome-Header': 'Awesome',
-                                'Link': 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000,https://my.awesome.server/my-awesome-script.js;rel=script;loveyou=3000',
+                                Link: 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000,https://my.awesome.server/my-awesome-script.js;rel=script;loveyou=3000',
                             },
                         },
                     },
@@ -208,20 +211,18 @@ describe(`Tests ${example.url}`, () => {
                         <div id="div-id-2" data-id="data-id-2" />
                     </body>
                     </html>
-                `
+                `,
             };
 
-            includes.forEach(({
-                                  api: {
-                                      route,
-                                      delay,
-                                      response: {
-                                          status,
-                                          data,
-                                          headers,
-                                      },
-                                  },
-                              }) => scope.persist().get(route).delay(delay).reply(status, data, headers));
+            includes.forEach(
+                ({
+                    api: {
+                        route,
+                        delay,
+                        response: { status, data, headers },
+                    },
+                }) => scope.persist().get(route).delay(delay).reply(status, data, headers),
+            );
 
             try {
                 await req.post(example.url).send(template).expect(200);
@@ -236,12 +237,14 @@ describe(`Tests ${example.url}`, () => {
                     <head>
                         <meta charset="utf-8" />
                         <meta name="viewport" content="width=device-width,initial-scale=1"/>
-                        ${`<!-- Template include "${includes[0].attributes.id}" START -->\n` +
-                    '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
-                    includes[0].api.response.data + '\n' +
-                    '<script src="https://my.awesome.server/my-awesome-script.js"></script>\n' +
-                    `<!-- Template include "${includes[0].attributes.id}" END -->`
-                    }
+                        ${
+                            `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
+                            '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
+                            includes[0].api.response.data +
+                            '\n' +
+                            '<script src="https://my.awesome.server/my-awesome-script.js"></script>\n' +
+                            `<!-- Template include "${includes[0].attributes.id}" END -->`
+                        }
                         <script>window.console.log('Something...')</script>
                     </head>
                     <body>
@@ -250,7 +253,7 @@ describe(`Tests ${example.url}`, () => {
                         <div id="div-id-2" data-id="data-id-2" />
                     </body>
                     </html>
-                `
+                `,
                 });
             } finally {
                 await req.delete(example.url + template.name);
@@ -258,9 +261,13 @@ describe(`Tests ${example.url}`, () => {
         });
 
         it('should return localized version of rendered template', async () => {
-            await withSetting(SettingKeys.I18nSupportedLocales, Object.keys(example.correctLocalized.localizedVersions), async () => {
-                await req.post(example.url).send(example.correctLocalized).expect(200);
-            });
+            await withSetting(
+                SettingKeys.I18nSupportedLocales,
+                Object.keys(example.correctLocalized.localizedVersions),
+                async () => {
+                    await req.post(example.url).send(example.correctLocalized).expect(200);
+                },
+            );
 
             const response = await req.get(example.url + example.correctLocalized.name + '/rendered?locale=' + 'es-MX');
 
@@ -270,9 +277,7 @@ describe(`Tests ${example.url}`, () => {
 
         it('should return 404 while requesting a non-existent rendered template', async () => {
             const incorrect = { name: 123 };
-            const response = await req
-                .get(example.url + incorrect.name + '/rendered')
-                .expect(404, 'Not found');
+            const response = await req.get(example.url + incorrect.name + '/rendered').expect(404, 'Not found');
 
             expect(response.body).to.eql({});
         });
@@ -280,8 +285,7 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully return all existed records', async () => {
             await req.post(example.url).send(example.correct).expect(200);
 
-            const response = await req.get(example.url)
-                .expect(200);
+            const response = await req.get(example.url).expect(200);
 
             expect(response.body).to.be.an('array').that.is.not.empty;
             expect(response.body).to.deep.include(example.correct);
@@ -304,15 +308,15 @@ describe(`Tests ${example.url}`, () => {
                     url: '/api/v1/template/',
                     correct: {
                         name: 'ncTestTemplateDomainName',
-                        content: 'ncTestTemplateContent'
+                        content: 'ncTestTemplateContent',
                     },
                     noRoute: {
                         name: 'ncTestNoRouteTemplateName',
-                        content: 'ncTestNoRouteTemplateContent'
+                        content: 'ncTestNoRouteTemplateContent',
                     },
                     template500: {
                         name: 'ncTest500TemplateName',
-                        content: 'ncTest500TemplateContent'
+                        content: 'ncTest500TemplateContent',
                     },
                 },
                 routerDomain: {
@@ -342,7 +346,7 @@ describe(`Tests ${example.url}`, () => {
                             },
                         },
                     }),
-                }
+                },
             };
 
             beforeEach(async () => {
@@ -353,23 +357,26 @@ describe(`Tests ${example.url}`, () => {
                     ...example.routerDomain.correct,
                     domainName: reqAddress,
                 });
-            
+
                 const { id: domainId } = routerDomainResponse.body;
 
                 await req.post(example.template.url).send(example.template.correct);
                 await req.post(example.template.url).send(example.template.noRoute);
 
-                const routeResponse = await req.post(example.route.url).send({
-                    ...example.route.correct,
-                    domainId,
-                }).expect(200);
+                const routeResponse = await req
+                    .post(example.route.url)
+                    .send({
+                        ...example.route.correct,
+                        domainId,
+                    })
+                    .expect(200);
 
                 routeId = routeResponse.body.id;
             });
 
             afterEach(async () => {
-                domainId && await req.delete(example.routerDomain.url + domainId);
-                routeId && await req.delete(example.route.url + routeId);
+                domainId && (await req.delete(example.routerDomain.url + domainId));
+                routeId && (await req.delete(example.route.url + routeId));
 
                 await req.delete(example.app.url + encodeURIComponent(example.app.correct.name));
                 await req.delete(example.template.url + example.template.correct.name);
@@ -378,15 +385,32 @@ describe(`Tests ${example.url}`, () => {
             });
 
             it('Should return template for given domain', async () => {
-                const templateResponse = await req.get(example.template.url + example.template.correct.name + '/rendered');
-                const templateWithDomainResponse = await req.get(example.template.url + example.template.correct.name + '/rendered?locale=' + 'es-MX' + '&domain=' +  reqAddress);
+                const templateResponse = await req.get(
+                    example.template.url + example.template.correct.name + '/rendered',
+                );
+                const templateWithDomainResponse = await req.get(
+                    example.template.url +
+                        example.template.correct.name +
+                        '/rendered?locale=' +
+                        'es-MX' +
+                        '&domain=' +
+                        reqAddress,
+                );
 
                 expect(templateResponse.body).to.deep.equal(templateWithDomainResponse.body);
             });
 
             it('Should return template by name if no given domain found', async () => {
-                const templateResponse = await req.get(example.template.url + example.template.correct.name + '/rendered');
-                const templateWithDomainResponse = await req.get(example.template.url + example.template.correct.name + '/rendered?locale=' + 'es-MX' + '&domain=128.0.0.1');
+                const templateResponse = await req.get(
+                    example.template.url + example.template.correct.name + '/rendered',
+                );
+                const templateWithDomainResponse = await req.get(
+                    example.template.url +
+                        example.template.correct.name +
+                        '/rendered?locale=' +
+                        'es-MX' +
+                        '&domain=128.0.0.1',
+                );
 
                 expect(templateResponse.body).to.deep.equal(templateWithDomainResponse.body);
             });
@@ -394,10 +418,9 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Update', () => {
-        it('should not update any record if record doesn\'t exist', async () => {
+        it("should not update any record if record doesn't exist", async () => {
             const incorrect = { name: 123 };
-            const response = await req.put(example.url + incorrect.name)
-                .expect(404, 'Not found');
+            const response = await req.put(example.url + incorrect.name).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
@@ -405,7 +428,8 @@ describe(`Tests ${example.url}`, () => {
         it('should not update record if forbidden "name" is passed', async () => {
             await req.post(example.url).send(example.correct).expect(200);
 
-            const response = await req.put(example.url + example.correct.name)
+            const response = await req
+                .put(example.url + example.correct.name)
                 .send(example.updated)
                 .expect(422, '"name" is not allowed');
 
@@ -417,10 +441,11 @@ describe(`Tests ${example.url}`, () => {
 
             const incorrect = {
                 name: 123,
-                content: 456
+                content: 456,
             };
 
-            const response = await req.put(example.url + example.correct.name)
+            const response = await req
+                .put(example.url + example.correct.name)
                 .send(_.omit(incorrect, 'name'))
                 .expect(422, '"content" must be a string');
             expect(response.body).deep.equal({});
@@ -429,29 +454,40 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully update record', async () => {
             await req.post(example.url).send(example.correct).expect(200);
 
-            const response = await req.put(example.url + example.correct.name)
+            const response = await req
+                .put(example.url + example.correct.name)
                 .send(_.omit(example.updated, 'name'))
                 .expect(200);
 
-            expect(response.body).deep.equal({ ...example.updated, localizedVersions: {} });
+            expect(response.body).deep.equal({
+                ...example.updated,
+                localizedVersions: {},
+            });
         });
 
         it('should successfully update localized versions of the template', async () => {
-            let allLangs = Object.keys(example.correctLocalized.localizedVersions).concat(Object.keys(example.updatedLocalized.localizedVersions));
+            let allLangs = Object.keys(example.correctLocalized.localizedVersions).concat(
+                Object.keys(example.updatedLocalized.localizedVersions),
+            );
             await withSetting(SettingKeys.I18nSupportedLocales, allLangs, async () => {
                 await req.post(example.url).send(example.correctLocalized).expect(200);
 
-                const response = await req.put(example.url + example.correctLocalized.name)
+                const response = await req
+                    .put(example.url + example.correctLocalized.name)
                     .send(_.omit(example.updatedLocalized, 'name'))
                     .expect(200);
 
-                expect(response.body).deep.equal({ name: example.correctLocalized.name, ...example.updatedLocalized });
+                expect(response.body).deep.equal({
+                    name: example.correctLocalized.name,
+                    ...example.updatedLocalized,
+                });
             });
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.put(example.url + example.correct.name)
+                await reqWithAuth
+                    .put(example.url + example.correct.name)
                     .send(_.omit(example.updated, 'name'))
                     .expect(401);
             });
@@ -459,42 +495,39 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Delete', () => {
-        it('should not delete any record if record doesn\'t exist', async () => {
+        it("should not delete any record if record doesn't exist", async () => {
             const incorrect = { name: 123 };
-            const response = await req.delete(example.url + incorrect.name)
-                .expect(404, 'Not found');
+            const response = await req.delete(example.url + incorrect.name).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
 
-        it('should successfully delete record if doesn\'t have any reference from foreign (routerDomains -> template500) to current primary key', async () => {
+        it("should successfully delete record if doesn't have any reference from foreign (routerDomains -> template500) to current primary key", async () => {
             let routerDomainsId;
 
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const responseRouterDomains = await req.post('/api/v1/router_domains/')
+                const responseRouterDomains = await req
+                    .post('/api/v1/router_domains/')
                     .send({
                         domainName: 'domainNameCorrect.com',
                         template500: example.correct.name,
                     })
-                    .expect(200)
+                    .expect(200);
 
                 routerDomainsId = responseRouterDomains.body.id;
 
-                const response = await req.delete(example.url + example.correct.name)
-                    .expect(500);
+                const response = await req.delete(example.url + example.correct.name).expect(500);
                 expect(response.text).to.include('Internal server error occurred.');
 
                 await req.delete('/api/v1/router_domains/' + routerDomainsId);
 
-                await req.delete(example.url + example.correct.name)
-                    .expect(204, '');
+                await req.delete(example.url + example.correct.name).expect(204, '');
 
-                await req.get(example.url + example.correct.name)
-                    .expect(404, 'Not found');
+                await req.get(example.url + example.correct.name).expect(404, 'Not found');
             } finally {
-                routerDomainsId && await req.delete('/api/v1/router_domains/' + routerDomainsId);
+                routerDomainsId && (await req.delete('/api/v1/router_domains/' + routerDomainsId));
                 await req.delete(example.url + example.correct.name);
             }
         });
@@ -502,16 +535,14 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully delete record', async () => {
             await req.post(example.url).send(example.correct).expect(200);
 
-            const response = await req.delete(example.url + example.correct.name)
-                .expect(204, '');
+            const response = await req.delete(example.url + example.correct.name).expect(204, '');
 
             expect(response.body).deep.equal({});
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.delete(example.url + example.correct.name)
-                    .expect(401);
+                await reqWithAuth.delete(example.url + example.correct.name).expect(401);
             });
         });
     });

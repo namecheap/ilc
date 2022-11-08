@@ -18,7 +18,7 @@ const correct = Object.freeze({
     l10nManifest: 'https://localisation.com/manifest.12345678.json',
     configSelector: ['ncTestSharedPropsName'],
     ssr: {
-        src: "http://127.0.0.1:1234/fragment",
+        src: 'http://127.0.0.1:1234/fragment',
         timeout: 1000,
     },
     kind: 'primary',
@@ -50,7 +50,7 @@ const example = <any>{
         l10nManifest: 'https://localisation.com/manifestUpdated.12345678.json',
         configSelector: ['ncTestSharedPropsNameUpdated'],
         ssr: {
-            src: "http://127.0.0.1:1234/fragmentUpdated",
+            src: 'http://127.0.0.1:1234/fragmentUpdated',
             timeout: 2000,
         },
         kind: 'regular',
@@ -77,13 +77,14 @@ describe(`Tests ${example.url}`, () => {
 
     beforeEach(async () => {
         req = await request();
-    })
+    });
 
     describe('Create', () => {
         it('should not create record without a required field: name', async () => {
-            const response = await req.post(example.url)
-            .send(_.omit(example.correct, ['name', 'spaBundle']))
-            .expect(422, '"spaBundle" is required\n"name" is required');
+            const response = await req
+                .post(example.url)
+                .send(_.omit(example.correct, ['name', 'spaBundle']))
+                .expect(422, '"spaBundle" is required\n"name" is required');
 
             expect(response.body).deep.equal({});
         });
@@ -103,44 +104,41 @@ describe(`Tests ${example.url}`, () => {
                 enforceDomain: 'foo',
             };
 
-            let response = await req.post(example.url)
-            .send({
-                ...example.correct,
-                ...incorrect
-            })
-            .expect(
-                422,
-                '"cssBundle" must be a string\n' +
-                '"assetsDiscoveryUrl" must be a string\n' +
-                '"spaBundle" must be a string\n' +
-                '"dependencies" must be of type object\n' +
-                '"props" must be of type object\n' +
-                '"configSelector" must be an array\n' +
-                '"ssr" must be of type object\n' +
-                '"discoveryMetadata" must be of type object\n' +
-                '"adminNotes" must be a string\n' +
-                '"enforceDomain" must be a number\n' +
-                '"name" must be a string'
+            let response = await req
+                .post(example.url)
+                .send({
+                    ...example.correct,
+                    ...incorrect,
+                })
+                .expect(
+                    422,
+                    '"cssBundle" must be a string\n' +
+                        '"assetsDiscoveryUrl" must be a string\n' +
+                        '"spaBundle" must be a string\n' +
+                        '"dependencies" must be of type object\n' +
+                        '"props" must be of type object\n' +
+                        '"configSelector" must be an array\n' +
+                        '"ssr" must be of type object\n' +
+                        '"discoveryMetadata" must be of type object\n' +
+                        '"adminNotes" must be a string\n' +
+                        '"enforceDomain" must be a number\n' +
+                        '"name" must be a string',
                 );
 
             expect(response.body).deep.equal({});
 
-            response = await req.get(example.url + incorrect.name)
-            .expect(404, 'Not found');
+            response = await req.get(example.url + incorrect.name).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
 
         it('should successfully create record', async () => {
             try {
-                let response = await req.post(example.url)
-                    .send(example.correct)
-                    .expect(200);
+                let response = await req.post(example.url).send(example.correct).expect(200);
 
                 expect(response.body).deep.equal(example.correct);
 
-                response = await req.get(example.url + example.encodedName)
-                    .expect(200);
+                response = await req.get(example.url + example.encodedName).expect(200);
 
                 expect(response.body).deep.equal(example.correct);
             } finally {
@@ -155,35 +153,39 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post('/api/v1/template/').send({ name: templateName, content: 'foo bar' }).expect(200);
 
-                const responseRouterDomains = await req.post('/api/v1/router_domains/')
-                    .send({ domainName: 'foo.com', template500: templateName }).expect(200);
+                const responseRouterDomains = await req
+                    .post('/api/v1/router_domains/')
+                    .send({ domainName: 'foo.com', template500: templateName })
+                    .expect(200);
                 domainId = responseRouterDomains.body.id;
 
-                const appConfig = { ...example.correct, enforceDomain: domainId };
+                const appConfig = {
+                    ...example.correct,
+                    enforceDomain: domainId,
+                };
 
                 let response = await req.post(example.url).send(appConfig).expect(200);
 
                 expect(response.body).deep.equal(appConfig);
 
-                response = await req.get(example.url + example.encodedName)
-                    .expect(200);
+                response = await req.get(example.url + example.encodedName).expect(200);
 
                 expect(response.body).deep.equal(appConfig);
             } finally {
                 await req.delete(example.url + example.encodedName);
-                domainId && await req.delete('/api/v1/router_domains/' + domainId);
+                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
                 await req.delete('/api/v1/template/' + templateName);
             }
         });
 
         it('should not create record with non-existed enforceDomain', async () => {
             try {
-                let response = await req.post(example.url)
+                let response = await req
+                    .post(example.url)
                     .send({ ...example.correct, enforceDomain: 9999999 })
                     .expect(500);
 
-                response = await req.get(example.url + example.encodedName)
-                    .expect(404);
+                response = await req.get(example.url + example.encodedName).expect(404);
             } finally {
                 await req.delete(example.url + example.encodedName);
             }
@@ -199,7 +201,10 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .post(example.url)
                     .send(example.correctWithAssetsDiscoveryUrl)
-                    .expect(422, `"assetsDiscoveryUrl" is not available. Check the url via browser manually.`);
+                    .expect(
+                        422,
+                        `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`,
+                    );
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -216,7 +221,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .post(example.url)
                     .send(example.correctWithAssetsDiscoveryUrl)
-                    .expect(422, `"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually`);
+                    .expect(422, `"spaBundle" is required`);
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -241,9 +246,7 @@ describe(`Tests ${example.url}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth().then(r => r.post(example.url)
-                    .send(example.correct)
-                    .expect(401));
+                await requestWithAuth().then((r) => r.post(example.url).send(example.correct).expect(401));
             });
         });
     });
@@ -251,8 +254,7 @@ describe(`Tests ${example.url}`, () => {
     describe('Read', () => {
         it('should return 404 for non-existing id', async () => {
             const incorrect = { name: 123 };
-            const response = await req.get(example.url + incorrect.name)
-            .expect(404, 'Not found');
+            const response = await req.get(example.url + incorrect.name).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
@@ -261,8 +263,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct);
 
-                const response = await req.get(example.url + example.encodedName)
-                    .expect(200);
+                const response = await req.get(example.url + example.encodedName).expect(200);
 
                 expect(response.body).deep.equal(example.correct);
             } finally {
@@ -274,8 +275,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const response = await req.get(example.url)
-                    .expect(200);
+                const response = await req.get(example.url).expect(200);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
                 expect(response.body).to.deep.include(example.correct);
@@ -286,20 +286,19 @@ describe(`Tests ${example.url}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth().then(r => r.get(example.url)
-                    .expect(401));
+                await requestWithAuth().then((r) => r.get(example.url).expect(401));
 
-                await requestWithAuth().then(r => r.get(example.url + 123)
-                    .expect(401));
+                await requestWithAuth().then((r) => r.get(example.url + 123).expect(401));
             });
         });
     });
 
     describe('Update', () => {
-        it('should not update any record if record doesn\'t exist', async () => {
+        it("should not update any record if record doesn't exist", async () => {
             const incorrect = { name: 123 };
-            const response = await req.put(example.url + incorrect.name)
-            .expect(404, 'Not found');
+            const response = await req
+                .put(example.url + incorrect.name)
+                .expect(404, `Application with name "${incorrect.name}" is not exist`);
 
             expect(response.body).deep.equal({});
         });
@@ -308,7 +307,8 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const response = await req.put(example.url + example.encodedName)
+                const response = await req
+                    .put(example.url + example.encodedName)
                     .send(example.updated)
                     .expect(422, '"name" is not allowed');
 
@@ -336,7 +336,8 @@ describe(`Tests ${example.url}`, () => {
                     enforceDomain: 'foo',
                 };
 
-                const response = await req.put(example.url + example.encodedName)
+                const response = await req
+                    .put(example.url + example.encodedName)
                     .send({
                         ..._.omit(example.updated, 'name'),
                         ...incorrect,
@@ -344,16 +345,16 @@ describe(`Tests ${example.url}`, () => {
                     .expect(
                         422,
                         '"spaBundle" must be a string\n' +
-                        '"cssBundle" must be a string\n' +
-                        '"assetsDiscoveryUrl" must be a string\n' +
-                        '"dependencies" must be of type object\n' +
-                        '"props" must be of type object\n' +
-                        '"configSelector" must be an array\n' +
-                        '"ssr" must be of type object\n' +
-                        '"kind" must be one of [primary, essential, regular, wrapper]\n' +
-                        '"discoveryMetadata" must be of type object\n' +
-                        '"adminNotes" must be a string\n' +
-                        '"enforceDomain" must be a number'
+                            '"cssBundle" must be a string\n' +
+                            '"assetsDiscoveryUrl" must be a string\n' +
+                            '"dependencies" must be of type object\n' +
+                            '"props" must be of type object\n' +
+                            '"configSelector" must be an array\n' +
+                            '"ssr" must be of type object\n' +
+                            '"kind" must be one of [primary, essential, regular, wrapper]\n' +
+                            '"discoveryMetadata" must be of type object\n' +
+                            '"adminNotes" must be a string\n' +
+                            '"enforceDomain" must be a number',
                     );
                 expect(response.body).deep.equal({});
             } finally {
@@ -365,7 +366,8 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const response = await req.put(example.url + example.encodedName)
+                const response = await req
+                    .put(example.url + example.encodedName)
                     .send(_.omit(example.updated, 'name'))
                     .expect(200);
 
@@ -382,25 +384,31 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post('/api/v1/template/').send({ name: templateName, content: 'foo bar' }).expect(200);
 
-                const responseRouterDomains = await req.post('/api/v1/router_domains/')
-                    .send({ domainName: 'foo.com', template500: templateName }).expect(200);
+                const responseRouterDomains = await req
+                    .post('/api/v1/router_domains/')
+                    .send({ domainName: 'foo.com', template500: templateName })
+                    .expect(200);
                 domainId = responseRouterDomains.body.id;
 
-                const appConfig = { ...example.correct,  };
+                const appConfig = { ...example.correct };
 
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const response = await req.put(example.url + example.encodedName)
+                const response = await req
+                    .put(example.url + example.encodedName)
                     .send({
                         ..._.omit(example.updated, 'name'),
                         enforceDomain: domainId,
                     })
                     .expect(200);
 
-                expect(response.body).deep.equal({ ...example.updated, enforceDomain: domainId });
+                expect(response.body).deep.equal({
+                    ...example.updated,
+                    enforceDomain: domainId,
+                });
             } finally {
                 await req.delete(example.url + example.encodedName);
-                domainId && await req.delete('/api/v1/router_domains/' + domainId);
+                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
                 await req.delete('/api/v1/template/' + templateName);
             }
         });
@@ -409,7 +417,8 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const response = await req.put(example.url + example.encodedName)
+                const response = await req
+                    .put(example.url + example.encodedName)
                     .send({
                         ..._.omit(example.updated, 'name'),
                         enforceDomain: 999999,
@@ -429,9 +438,13 @@ describe(`Tests ${example.url}`, () => {
                 const scope = nock(example.assetsDiscovery.host);
                 scope.get(example.assetsDiscovery.path).delay(0).reply(404);
 
-                const response = await req.put(example.url + example.encodedName)
+                const response = await req
+                    .put(example.url + example.encodedName)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
-                    .expect(422, `"assetsDiscoveryUrl" is not available. Check the url via browser manually.`);
+                    .expect(
+                        422,
+                        `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`,
+                    );
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -447,9 +460,10 @@ describe(`Tests ${example.url}`, () => {
                 const scope = nock(example.assetsDiscovery.host);
                 scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify({}));
 
-                const response = await req.put(example.url + example.encodedName)
+                const response = await req
+                    .put(example.url + example.encodedName)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
-                    .expect(422, `"spaBundle" must be specified in the manifest file from provided "assetsDiscoveryUrl" if it was not specified manually`);
+                    .expect(422, `"spaBundle" is required`);
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -464,7 +478,8 @@ describe(`Tests ${example.url}`, () => {
                 const scope = nock(example.assetsDiscovery.host);
                 scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
 
-                const response = await req.put(example.url + example.encodedName)
+                const response = await req
+                    .put(example.url + example.encodedName)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'));
 
                 expect(response.body).deep.equal({
@@ -478,18 +493,22 @@ describe(`Tests ${example.url}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth().then(r => r.put(example.url + 123)
-                    .send(example.correct)
-                    .expect(401));
+                await requestWithAuth().then((r) =>
+                    r
+                        .put(example.url + 123)
+                        .send(example.correct)
+                        .expect(401),
+                );
             });
         });
     });
 
     describe('Delete', () => {
-        it('should not delete any record if record doesn\'t exist', async () => {
+        it("should not delete any record if record doesn't exist", async () => {
             const incorrect = { name: 123 };
-            const response = await req.delete(example.url + encodeURIComponent(incorrect.name))
-            .expect(404, 'Not found');
+            const response = await req
+                .delete(example.url + encodeURIComponent(incorrect.name))
+                .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
@@ -497,17 +516,19 @@ describe(`Tests ${example.url}`, () => {
         it('should successfully delete record', async () => {
             await req.post(example.url).send(example.correct).expect(200);
 
-            const response = await req.delete(example.url + example.encodedName)
-            .expect(204, '');
+            const response = await req.delete(example.url + example.encodedName).expect(204, '');
 
             expect(response.body).deep.equal({});
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await requestWithAuth().then(r => r.delete(example.url + 123)
-                    .send(example.correct)
-                    .expect(401));
+                await requestWithAuth().then((r) =>
+                    r
+                        .delete(example.url + 123)
+                        .send(example.correct)
+                        .expect(401),
+                );
             });
         });
     });

@@ -4,23 +4,27 @@ import db from '../server/db';
 import supertest from 'supertest';
 
 const basePath = '/api/v1/versioning';
-const dataStub = [{
-    id: 1,
-    entity_type: 'templates',
-    entity_id: 'testName',
-    data: '{"data":{"content":"testTemplateContent"},"related":{}}',
-    data_after: null,
-    created_by: 'unauthenticated',
-    created_at: 1605019085
-}, {
-    id: 2,
-    entity_type: 'apps',
-    entity_id: '@portal/ncTestAppName',
-    data: null,
-    data_after: '{"data":{"spaBundle":"http://localhost:1234/ncTestAppName.js","cssBundle":null,"dependencies":null,"ssr":null,"props":null,"assetsDiscoveryUrl":null,"assetsDiscoveryUpdatedAt":null,"kind":"primary","configSelector":null},"related":{}}',
-    created_by: 'unauthenticated',
-    created_at: 1605019085
-}];
+const dataStub = [
+    {
+        id: 1,
+        entity_type: 'templates',
+        entity_id: 'testName',
+        data: '{"data":{"content":"testTemplateContent"},"related":{}}',
+        data_after: null,
+        created_by: 'unauthenticated',
+        created_at: 1605019085,
+    },
+    {
+        id: 2,
+        entity_type: 'apps',
+        entity_id: '@portal/ncTestAppName',
+        data: null,
+        data_after:
+            '{"data":{"spaBundle":"http://localhost:1234/ncTestAppName.js","cssBundle":null,"dependencies":null,"ssr":null,"props":null,"assetsDiscoveryUrl":null,"assetsDiscoveryUpdatedAt":null,"kind":"primary","configSelector":null},"related":{}}',
+        created_by: 'unauthenticated',
+        created_at: 1605019085,
+    },
+];
 
 describe(`Tests ${basePath}`, () => {
     let req: supertest.SuperTest<supertest.Test>;
@@ -29,7 +33,7 @@ describe(`Tests ${basePath}`, () => {
     beforeEach(async () => {
         req = await request();
         reqWithAuth = await requestWithAuth();
-    })
+    });
 
     before(async () => {
         await db('versioning').truncate();
@@ -38,8 +42,7 @@ describe(`Tests ${basePath}`, () => {
 
     describe('Read', () => {
         it('should successfully return all existed records sorted by created_at desc', async () => {
-            const response = await req.get(basePath)
-            .expect(200);
+            const response = await req.get(basePath).expect(200);
 
             expect(response.body).to.be.an('array').that.is.not.empty;
             expect(response.body[0]).to.eql(dataStub[1]);
@@ -48,37 +51,31 @@ describe(`Tests ${basePath}`, () => {
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.get(basePath)
-                    .expect(401);
+                await reqWithAuth.get(basePath).expect(401);
             });
         });
     });
 
-
     describe('Revert', () => {
         it('should successfully revert operations', async () => {
-            const resp = await req.post(`${basePath}/${dataStub[0].id}/revert`)
-                .expect(200);
+            const resp = await req.post(`${basePath}/${dataStub[0].id}/revert`).expect(200);
 
             try {
                 expect(resp.body.status).to.equal('ok');
                 expect(resp.body).to.haveOwnProperty('versionId');
 
-                const listResp = await req.get(basePath)
-                    .expect(200);
+                const listResp = await req.get(basePath).expect(200);
 
                 // Had 2, should become 3
                 expect(listResp.body).to.be.an('array').with.lengthOf(3);
             } finally {
-                await req.post(`${basePath}/${resp.body.versionId}/revert`)
-                    .expect(200);
+                await req.post(`${basePath}/${resp.body.versionId}/revert`).expect(200);
             }
         });
 
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
-                await reqWithAuth.post(`${basePath}/${dataStub[0].id}/revert`)
-                    .expect(401);
+                await reqWithAuth.post(`${basePath}/${dataStub[0].id}/revert`).expect(401);
             });
         });
     });

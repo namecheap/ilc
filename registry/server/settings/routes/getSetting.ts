@@ -1,19 +1,13 @@
-import {
-    Request,
-    Response,
-} from 'express';
+import { Request, Response } from 'express';
 import Joi from 'joi';
 
-import {
-    SettingKeys,
-    keySchema,
-} from '../interfaces';
+import { SettingKeys, keySchema } from '../interfaces';
 import db from '../../db';
 import preProcessResponse from '../services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 
 type RequestParams = {
-    key: SettingKeys
+    key: SettingKeys;
 };
 
 const validateRequest = validateRequestFactory([

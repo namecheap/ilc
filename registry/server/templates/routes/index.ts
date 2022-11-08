@@ -1,7 +1,7 @@
-import express, {RequestHandler} from 'express';
+import express, { RequestHandler } from 'express';
 
 import getTemplate from './getTemplate';
-import getRenderedTemplate from './getRenderedTemplate'
+import getRenderedTemplate from './getRenderedTemplate';
 import getTemplates from './getTemplates';
 import updateTemplate from './updateTemplate';
 import createTemplate from './createTemplate';

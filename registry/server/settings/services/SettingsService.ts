@@ -1,5 +1,5 @@
 import db from '../../db';
-import {SettingKeys} from '../interfaces';
+import { SettingKeys } from '../interfaces';
 import { User } from '../../auth';
 
 export class SettingsService {
@@ -37,11 +37,8 @@ export class SettingsService {
     }
 
     async set(settingKey: SettingKeys, value: any, user: User) {
-        await db.versioning(user, {type: 'settings', id: settingKey}, async (trx) => {
-            await db('settings')
-                .where('key', settingKey)
-                .update('value', JSON.stringify(value))
-                .transacting(trx);
+        await db.versioning(user, { type: 'settings', id: settingKey }, async (trx) => {
+            await db('settings').where('key', settingKey).update('value', JSON.stringify(value)).transacting(trx);
         });
     }
 
