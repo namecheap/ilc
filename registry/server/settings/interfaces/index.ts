@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import {cspSchema} from './cspSchema';
 
 export enum SettingKeys {
     BaseUrl = 'baseUrl',
@@ -22,6 +23,7 @@ export enum SettingKeys {
     I18nRoutingStrategy = 'i18n.routingStrategy',
     OverrideConfigTrustedOrigins = 'overrideConfigTrustedOrigins',
     OnPropsUpdate = 'onPropsUpdate',
+    СspConfig = 'cspConfig',
 }
 
 export const enum TrailingSlashValues {
@@ -48,6 +50,7 @@ export const enum SettingTypes {
     StringArray = 'string[]',
     Enum = 'enum',
     Password = 'password',
+    JSON = 'json',
 }
 
 export enum OnPropsUpdateValues {
@@ -120,6 +123,30 @@ const valueSchema = Joi.alternatives().conditional('key', {
                 .valid(...Object.values(OnPropsUpdateValues))
                 .required(),
         },
+        {
+            is: Joi.valid(SettingKeys.СspConfig),
+            then: Joi.string()
+                .custom((value, helpers) => {
+                    let cspConfig;
+
+                    try {
+                        cspConfig = JSON.parse(value);
+                    } catch (error) {
+                        return helpers.error('СspConfig is not valid JSON');
+                    }
+
+                    const result =  cspSchema.validate(cspConfig);
+
+                    if(result.error) {
+                        return helpers.error('any.invalid');
+                    }
+
+                    return result.value;
+                }, 'cspObject validation')
+                .allow(null)
+                .empty('')
+                .default(null)
+        }
     ],
     otherwise: Joi.string().allow(''),
 });

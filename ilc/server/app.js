@@ -12,6 +12,7 @@ const ServerRouter = require('./tailor/server-router');
 const mergeConfigs = require('./tailor/merge-configs');
 const parseOverrideConfig = require('./tailor/parse-override-config');
 const { SlotCollection } = require('../common/Slot/SlotCollection');
+const CspBuilderService = require('./services/CspBuilderService');
 
 /**
  * @param {Registry} registryService
@@ -95,7 +96,6 @@ module.exports = (registryService, pluginManager) => {
     app.all('*', async (req, res) => {
         const currentDomain = req.hostname;
         let registryConfig = (await registryService.getConfig({ filter: { domain: currentDomain } })).data;
-
         const url = req.raw.url;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
         const processedUrl = urlProcessor.process(url);
@@ -120,6 +120,8 @@ module.exports = (registryService, pluginManager) => {
         req.raw.registryConfig = registryConfig;
         req.raw.router = new ServerRouter(req.log, req.raw, unlocalizedUrl);
 
+        console.log(registryConfig.settings);
+
         const redirectTo = await guardManager.redirectTo(req);
 
         if (redirectTo) {
@@ -130,6 +132,11 @@ module.exports = (registryService, pluginManager) => {
         }
 
         const route = req.raw.router.getRoute();
+        const slotCollection = new SlotCollection(route.slots, registryConfig);
+        const csp = new CspBuilderService(registryConfig.settings.cspConfig);
+
+        res.res = csp.setHeader(res.res);
+
         const isRouteWithoutSlots = !Object.keys(route.slots).length;
         if (isRouteWithoutSlots) {
             const locale = req.raw.ilcState.locale;
@@ -140,7 +147,7 @@ module.exports = (registryService, pluginManager) => {
             return;
         }
 
-        const slotCollection = new SlotCollection(route.slots, registryConfig);
+
         slotCollection.isValid();
 
         res.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
