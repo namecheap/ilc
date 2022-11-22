@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import {cspSchema} from './cspSchema';
+import { cspSchema } from './cspSchema';
 
 export enum SettingKeys {
     BaseUrl = 'baseUrl',
@@ -135,9 +135,9 @@ const valueSchema = Joi.alternatives().conditional('key', {
                         return helpers.error('СspConfig is not valid JSON');
                     }
 
-                    const result =  cspSchema.validate(cspConfig);
+                    const result = cspSchema.validate(cspConfig);
 
-                    if(result.error) {
+                    if (result.error) {
                         return helpers.error('any.invalid');
                     }
 
@@ -145,8 +145,8 @@ const valueSchema = Joi.alternatives().conditional('key', {
                 }, 'cspObject validation')
                 .allow(null)
                 .empty('')
-                .default(null)
-        }
+                .default(null),
+        },
     ],
     otherwise: Joi.string().allow(''),
 });

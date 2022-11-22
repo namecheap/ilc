@@ -404,7 +404,7 @@ describe(url, () => {
                         key: SettingKeys.СspConfig,
                         value: JSON.stringify({
                             defaultSrc: ['https://test.com'],
-                            reportUri: 'a/b'
+                            reportUri: 'a/b',
                         }),
                     })
                     .expect(200);
