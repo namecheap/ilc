@@ -131,7 +131,7 @@ module.exports = (registryService, pluginManager) => {
 
         const route = req.raw.router.getRoute();
 
-        const csp = new CspBuilderService(registryConfig.settings.cspConfig);
+        const csp = new CspBuilderService(registryConfig.settings.cspConfig, !!req.raw.ldeRelated);
 
         try {
             res.res = csp.setHeader(res.res);

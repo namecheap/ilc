@@ -20,14 +20,25 @@ module.exports = class CspBuilderService {
         strict: 'content-security-policy',
         report: 'content-security-policy-report-only',
     }
+    #localEnv = false
+    #localhost = 'https://localhost:*'
 
 
-    constructor(cspJson, isStrict = false) {
+    constructor(cspJson, isStrict = false, localEnv = false) {
         if(cspJson) {
             this.#cspJson = cspJson;
             this.#cspEnabled = true;
             this.#strictCsp = isStrict;
+            this.#localEnv = localEnv;
         }
+    }
+
+    setHeader(res) {
+        if(this.#cspEnabled) {
+            const { name, value } = this.#buildHeader();
+            res.setHeader(name, value);
+        }
+        return res;
     }
 
     #filterOutReportingDirectives(cspDirective) {
@@ -43,7 +54,13 @@ module.exports = class CspBuilderService {
             .filter(this.#filterOutReportingDirectives.bind(this))
             .map((cspDirective) => {
                 const cspDirectiveName = this.#cspDirectiveMap[cspDirective];
-                return `${cspDirectiveName} ${this.#cspJson[cspDirective].join(this.#spaceSeparator)}`
+                const directiveValueArray = this.#cspJson[cspDirective];
+
+                if(this.#localEnv) {
+                    directiveValueArray.push(this.#getLocalhost());
+                }
+
+                return `${cspDirectiveName} ${directiveValueArray.join(this.#spaceSeparator)}`
             }).join(this.#semiColonSeparator);
 
         return value;
@@ -60,11 +77,7 @@ module.exports = class CspBuilderService {
         return { name, value }
     }
 
-    setHeader(res) {
-        if(this.#cspEnabled) {
-            const { name, value } = this.#buildHeader();
-            res.setHeader(name, value);
-        }
-        return res;
+    #getLocalhost() {
+        return this.#localhost;
     }
 }
