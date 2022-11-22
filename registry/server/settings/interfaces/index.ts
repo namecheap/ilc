@@ -132,7 +132,7 @@ const valueSchema = Joi.alternatives().conditional('key', {
                     try {
                         cspConfig = JSON.parse(value);
                     } catch (error) {
-                        return helpers.error('СspConfig is not valid JSON');
+                        return helpers.error('any.invalid');
                     }
 
                     const result = cspSchema.validate(cspConfig);
