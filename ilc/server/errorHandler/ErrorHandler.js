@@ -20,7 +20,7 @@ module.exports = class ErrorHandler {
     /**
      *
      * @param {Error} err
-     * @param {{}} errInfo
+     * @param {any} errInfo
      * @param {Object} options
      * @param {Boolean} options.reportError = true
      */

@@ -120,8 +120,6 @@ module.exports = (registryService, pluginManager) => {
         req.raw.registryConfig = registryConfig;
         req.raw.router = new ServerRouter(req.log, req.raw, unlocalizedUrl);
 
-        console.log(registryConfig.settings);
-
         const redirectTo = await guardManager.redirectTo(req);
 
         if (redirectTo) {
@@ -132,10 +130,16 @@ module.exports = (registryService, pluginManager) => {
         }
 
         const route = req.raw.router.getRoute();
-        const slotCollection = new SlotCollection(route.slots, registryConfig);
+
         const csp = new CspBuilderService(registryConfig.settings.cspConfig);
 
-        res.res = csp.setHeader(res.res);
+        try {
+            res.res = csp.setHeader(res.res);
+        } catch(error) {
+            errorHandlingService.noticeError(error, {
+                message: 'CSP object processing error'
+            });
+        }
 
         const isRouteWithoutSlots = !Object.keys(route.slots).length;
         if (isRouteWithoutSlots) {
@@ -147,7 +151,7 @@ module.exports = (registryService, pluginManager) => {
             return;
         }
 
-
+        const slotCollection = new SlotCollection(route.slots, registryConfig);
         slotCollection.isValid();
 
         res.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
