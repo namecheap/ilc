@@ -11,6 +11,7 @@ import {JsonEditor} from "jsoneditor-react";
 import ace from "brace";
 import 'brace/mode/json';
 import { Labeled } from 'react-admin';
+import { isPlainObject } from '../utils/json';
 
 
 const style = { marginBottom: 22 };
@@ -51,7 +52,11 @@ export default ({
     let jsonVal = {};
     try {
         jsonVal = JSON.parse(value)
-    } catch (e) {}
+    } catch (e) {
+        if(isPlainObject(value)) {
+            jsonVal = value;
+        }
+    }
 
     return (
         <div>

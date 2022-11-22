@@ -15,6 +15,7 @@ import {
 import * as validators from '../validators';
 import { types } from './dataTransform';
 import Title from './Title';
+import JsonField from '../JsonField/index';
 
 const MyToolbar = (props) => {
     return (
@@ -46,6 +47,9 @@ const Input = (props) => {
                     </SimpleFormIterator>
                 </ArrayInput>
             );
+        }
+        case types.json: {
+            return <JsonField source="value" label="CSP configuration JSON" />
         }
         default: {
             return (<TextInput multiline source="value" fullWidth={true} />);

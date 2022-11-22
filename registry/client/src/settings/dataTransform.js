@@ -5,6 +5,7 @@ export const types = {
     stringArray: 'string[]',
     enum: 'enum',
     password: 'password',
+    json: 'json'
 };
 
 export function transformGet(setting) {

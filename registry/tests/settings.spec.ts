@@ -374,6 +374,51 @@ describe(url, () => {
             }
         });
 
+        it(`should not update ${SettingKeys.СspConfig} if the value is not valid`, async () => {
+            try {
+                const response = await req
+                    .put(urlJoin(url, SettingKeys.СspConfig))
+                    .send({
+                        key: SettingKeys.СspConfig,
+                        value: 'true',
+                    })
+                    .expect(422, '"value" contains an invalid value');
+
+                chai.expect(response.body).to.deep.equal({});
+            } finally {
+                await req
+                    .put(urlJoin(url, SettingKeys.СspConfig))
+                    .send({
+                        key: SettingKeys.СspConfig,
+                        value: null,
+                    })
+                    .expect(200);
+            }
+        });
+
+        it(`should update ${SettingKeys.СspConfig} if the value is valid`, async () => {
+            try {
+                await req
+                    .put(urlJoin(url, SettingKeys.СspConfig))
+                    .send({
+                        key: SettingKeys.СspConfig,
+                        value: JSON.stringify({
+                            defaultSrc: ['https://test.com'],
+                            reportUri: 'a/b',
+                        }),
+                    })
+                    .expect(200);
+            } finally {
+                await req
+                    .put(urlJoin(url, SettingKeys.СspConfig))
+                    .send({
+                        key: SettingKeys.СspConfig,
+                        value: null,
+                    })
+                    .expect(200);
+            }
+        });
+
         it('should deny access when a user is not authorized', async () => {
             await reqWithAuth
                 .put(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode))

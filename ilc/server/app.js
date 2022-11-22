@@ -12,6 +12,7 @@ const ServerRouter = require('./tailor/server-router');
 const mergeConfigs = require('./tailor/merge-configs');
 const parseOverrideConfig = require('./tailor/parse-override-config');
 const { SlotCollection } = require('../common/Slot/SlotCollection');
+const CspBuilderService = require('./services/CspBuilderService');
 
 /**
  * @param {Registry} registryService
@@ -95,7 +96,6 @@ module.exports = (registryService, pluginManager) => {
     app.all('*', async (req, res) => {
         const currentDomain = req.hostname;
         let registryConfig = (await registryService.getConfig({ filter: { domain: currentDomain } })).data;
-
         const url = req.raw.url;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
         const processedUrl = urlProcessor.process(url);
@@ -130,6 +130,17 @@ module.exports = (registryService, pluginManager) => {
         }
 
         const route = req.raw.router.getRoute();
+
+        const csp = new CspBuilderService(registryConfig.settings.cspConfig, false, !!req.raw.ldeRelated);
+
+        try {
+            res.res = csp.setHeader(res.res);
+        } catch(error) {
+            errorHandlingService.noticeError(error, {
+                message: 'CSP object processing error'
+            });
+        }
+
         const isRouteWithoutSlots = !Object.keys(route.slots).length;
         if (isRouteWithoutSlots) {
             const locale = req.raw.ilcState.locale;
