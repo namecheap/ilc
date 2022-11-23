@@ -8,6 +8,7 @@ module.exports = class CspBuilderService {
         scriptSrc: 'script-src',
         styleSrc: 'style-src',
         fontSrc: 'font-src',
+        imgSrc: 'img-src',
         workerSrc: 'worker-src',
         frameSrc: 'frame-src',
         reportUri: 'report-uri'
