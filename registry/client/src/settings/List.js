@@ -34,7 +34,7 @@ const SourceValueField = (props) => {
             return secret;
         }
         case types.stringArray: {
-            return (<FunctionField {...props} render={v => v[props.source].join(', ')} />);
+            return (<FunctionField {...props} render={v => v[props.source] ? v[props.source].join(', ') : null} />);
         }
         default: {
             return (<TextField {...props} />);

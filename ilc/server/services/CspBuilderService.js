@@ -22,15 +22,16 @@ module.exports = class CspBuilderService {
         report: 'content-security-policy-report-only',
     }
     #localEnv = false
-    #localhost = 'https://localhost:*'
+    #trustedLocalHosts = [];
 
 
-    constructor(cspJson, isStrict = false, localEnv = false) {
+    constructor(cspJson, isStrict = false, localEnv = false, trustedLocalHosts = []) {
         if(cspJson) {
             this.#cspJson = cspJson;
             this.#cspEnabled = true;
             this.#strictCsp = isStrict;
             this.#localEnv = localEnv;
+            this.#trustedLocalHosts = trustedLocalHosts || [];
         }
     }
 
@@ -55,10 +56,10 @@ module.exports = class CspBuilderService {
             .filter(this.#filterOutReportingDirectives.bind(this))
             .map((cspDirective) => {
                 const cspDirectiveName = this.#cspDirectiveMap[cspDirective];
-                const directiveValueArray = this.#cspJson[cspDirective];
+                let directiveValueArray = this.#cspJson[cspDirective];
 
                 if(this.#localEnv) {
-                    directiveValueArray.push(this.#getLocalhost());
+                    directiveValueArray = directiveValueArray.concat(this.#getLocalhosts());
                 }
 
                 return `${cspDirectiveName} ${directiveValueArray.join(this.#spaceSeparator)}`
@@ -78,7 +79,7 @@ module.exports = class CspBuilderService {
         return { name, value }
     }
 
-    #getLocalhost() {
-        return this.#localhost;
+    #getLocalhosts() {
+        return this.#trustedLocalHosts;
     }
 }
