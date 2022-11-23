@@ -7,6 +7,7 @@ export const cspSchema = Joi.object({
     scriptSrc: cspSrcValidator,
     styleSrc: cspSrcValidator,
     fontSrc: cspSrcValidator,
+    imgSrc: cspSrcValidator,
     workerSrc: cspSrcValidator,
     frameSrc: cspSrcValidator,
     reportUri: Joi.string().required(),
