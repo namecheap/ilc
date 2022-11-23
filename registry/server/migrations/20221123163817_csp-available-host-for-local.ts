@@ -4,8 +4,8 @@ import { Scope, SettingKeys, SettingTypes, OnPropsUpdateValues } from '../settin
 export async function up(knex: Knex): Promise<any> {
     await knex('settings').insert({
         key: SettingKeys.CspTrustedLocalHosts,
-        value: JSON.stringify(["https://localhost"]),
-        default: JSON.stringify(["https://localhost"]),
+        value: JSON.stringify(['https://localhost']),
+        default: JSON.stringify(['https://localhost']),
         scope: Scope.Ilc,
         secret: 0,
         meta: JSON.stringify({

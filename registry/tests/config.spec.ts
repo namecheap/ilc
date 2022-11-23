@@ -154,6 +154,7 @@ describe('Tests /api/v1/config', () => {
                     globalSpinner: {
                         enabled: true,
                     },
+                    cspTrustedLocalHosts: ['https://localhost'],
                     i18n: {
                         default: {
                             currency: 'USD',
