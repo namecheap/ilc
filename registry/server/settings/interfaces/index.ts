@@ -24,6 +24,7 @@ export enum SettingKeys {
     OverrideConfigTrustedOrigins = 'overrideConfigTrustedOrigins',
     OnPropsUpdate = 'onPropsUpdate',
     СspConfig = 'cspConfig',
+    CspTrustedLocalHosts = 'cspTrustedLocalHosts',
 }
 
 export const enum TrailingSlashValues {
@@ -105,7 +106,11 @@ const valueSchema = Joi.alternatives().conditional('key', {
             then: Joi.boolean().strict().sensitive().required(),
         },
         {
-            is: Joi.valid(SettingKeys.I18nSupportedCurrencies, SettingKeys.I18nSupportedLocales),
+            is: Joi.valid(
+                SettingKeys.I18nSupportedCurrencies,
+                SettingKeys.I18nSupportedLocales,
+                SettingKeys.CspTrustedLocalHosts,
+            ),
             then: Joi.array().items(Joi.string()),
         },
         {
