@@ -1,6 +1,5 @@
-import { Knex } from "knex";
-import {Scope, SettingKeys, SettingTypes} from '../settings/interfaces';
-
+import { Knex } from 'knex';
+import { Scope, SettingKeys, SettingTypes } from '../settings/interfaces';
 
 export async function up(knex: Knex): Promise<void> {
     await knex('settings').insert({
@@ -15,7 +14,4 @@ export async function up(knex: Knex): Promise<void> {
     });
 }
 
-
-export async function down(knex: Knex): Promise<void> {
-}
-
+export async function down(knex: Knex): Promise<void> {}
