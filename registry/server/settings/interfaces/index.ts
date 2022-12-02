@@ -25,6 +25,7 @@ export enum SettingKeys {
     OnPropsUpdate = 'onPropsUpdate',
     СspConfig = 'cspConfig',
     CspTrustedLocalHosts = 'cspTrustedLocalHosts',
+    CspEnableStrict = 'cspEnableStrict',
 }
 
 export const enum TrailingSlashValues {
@@ -102,6 +103,7 @@ const valueSchema = Joi.alternatives().conditional('key', {
                 SettingKeys.AuthOpenIdEnabled,
                 SettingKeys.GlobalSpinnerEnabled,
                 SettingKeys.I18nEnabled,
+                SettingKeys.CspEnableStrict,
             ),
             then: Joi.boolean().strict().sensitive().required(),
         },
