@@ -10,6 +10,7 @@ describe('wrapWithCache', () => {
     const createHash = sinon.stub();
     const logger = {
         error: sinon.stub(),
+        info: function (){},
     };
 
     const fnError = new Error('Error message');
