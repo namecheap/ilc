@@ -43,13 +43,13 @@ export default class ClientRouter extends EventEmitter {
             localizeUrl: (url) => url,
         },
         singleSpa,
-        handlePageTransaction,
+        handlePageTransition,
         location = window.location,
         logger = window.console
     ) {
         super();
 
-        this.#handlePageTransition = handlePageTransaction;
+        this.#handlePageTransition = handlePageTransition;
         this.#singleSpa = singleSpa;
         this.#location = location;
         this.#logger = logger;

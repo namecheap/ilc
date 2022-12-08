@@ -41,6 +41,8 @@ import ErrorHandlerManager from './ErrorHandlerManager/ErrorHandlerManager';
 
 import { FRAGMENT_KIND } from '../common/constants';
 import { SdkFactoryBuilder } from "./Sdk/SdkFactoryBuilder";
+import {TransitionHooks} from './TransitionManager/TransitionHooks/TransitionHooks';
+import {PerformanceTransitionHook} from './TransitionManager/TransitionHooks/PerformanceTransitionHook';
 
 export class Client {
 
@@ -82,7 +84,7 @@ export class Client {
 
         this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, this.#registryService);
         this.#transitionManager = new TransitionManager(this.#logger, this.#configRoot.getSettingsByKey('globalSpinner'));
-        
+
         const i18nSettings = this.#configRoot.getSettingsByKey('i18n');
 
         if (i18nSettings.enabled) {
@@ -264,7 +266,13 @@ export class Client {
         setNavigationErrorHandler(this.#onNavigationError.bind(this));
         window.addEventListener('error', this.#onRuntimeError.bind(this));
 
-        setupPerformanceMonitoring(this.#router.getCurrentRoute);
+        // setupPerformanceMonitoring(this.#router.getCurrentRoute);
+
+        const transitionHook = new TransitionHooks();
+        const performanceHook = new PerformanceTransitionHook(this.#router.getCurrentRoute);
+
+        transitionHook.addHook(performanceHook);
+
 
         singleSpa.addErrorHandler(this.#onLifecycleError.bind(this));
         singleSpa.setBootstrapMaxTime(5000, false);
