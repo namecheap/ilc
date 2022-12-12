@@ -35,7 +35,7 @@ describe('TransitionManager', () => {
         body: {
             id: 'body',
             getComputedStyle: () => window.getComputedStyle(slots.body.ref, null),
-            getAttributeName: () => document.body.getAttribute('name'),
+            getAttributeName: () => document.body.getAttribute('ilcTempStoredHash'),
         },
     };
 
