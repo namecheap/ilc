@@ -28,7 +28,6 @@ import registryService from './registry/factory';
 
 import Router from './ClientRouter';
 import initIlcState from './initIlcState';
-import setupPerformanceMonitoring from './performance';
 import I18n from './i18n';
 
 import GuardManager from './GuardManager';
@@ -43,6 +42,7 @@ import { FRAGMENT_KIND } from '../common/constants';
 import { SdkFactoryBuilder } from "./Sdk/SdkFactoryBuilder";
 import {TransitionHooks} from './TransitionManager/TransitionHooks/TransitionHooks';
 import {PerformanceTransitionHook} from './TransitionManager/TransitionHooks/PerformanceTransitionHook';
+import {TitleCheckerTransitionHook} from './TransitionManager/TransitionHooks/TitleCheckerTransitionHook';
 
 export class Client {
 
@@ -266,12 +266,13 @@ export class Client {
         setNavigationErrorHandler(this.#onNavigationError.bind(this));
         window.addEventListener('error', this.#onRuntimeError.bind(this));
 
-        // setupPerformanceMonitoring(this.#router.getCurrentRoute);
-
         const transitionHook = new TransitionHooks();
         const performanceHook = new PerformanceTransitionHook(this.#router.getCurrentRoute);
+        const titleHook = new TitleCheckerTransitionHook(this.#router.getCurrentRoute);
 
         transitionHook.addHook(performanceHook);
+        transitionHook.addHook(titleHook);
+        transitionHook.subscribe();
 
 
         singleSpa.addErrorHandler(this.#onLifecycleError.bind(this));

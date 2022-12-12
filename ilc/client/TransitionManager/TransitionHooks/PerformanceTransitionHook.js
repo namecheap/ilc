@@ -9,11 +9,11 @@ export class PerformanceTransitionHook extends BaseTransitionHook {
         this.#currentPathGetter = currentPathGetter;
     }
 
-    async beforeHandler() {
+    beforeHandler() {
         this.#startRouting = performance.now();
     }
 
-    async afterHandler() {
+    afterHandler() {
         const currentPath = this.#currentPathGetter();
         const endRouting = performance.now();
         const timeMs = parseInt(endRouting - this.#startRouting);

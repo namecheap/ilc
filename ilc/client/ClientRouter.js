@@ -95,7 +95,7 @@ export default class ClientRouter extends EventEmitter {
     }
 
     isAppWithinSlotActive(appName, slotName) {
-        let isActive = this.#activeApps.current[slotName] === appName;
+        const isActive = this.#activeApps.current[slotName] === appName;
         const wasActive = this.#activeApps.prev[slotName] === appName;
 
 

@@ -5,6 +5,9 @@ import singleSpaEvents from '../constants/singleSpaEvents';
 import ilcEvents from '../constants/ilcEvents';
 import TransitionBlockerList from './TransitionBlockerList';
 import { CssTrackedApp } from '../CssTrackedApp';
+import { GlobalSpinner } from './GlobalSpinner/GlobalSpinner';
+import {UrlHashController} from './UrlHashController/UrlHashController';
+import {SlotRenderObserver} from './SlotRenderObserver/SlotRenderObserver';
 
 export const slotWillBe = {
     rendered: 'rendered',
@@ -20,9 +23,7 @@ let unsafeEventSubscriptionHappened = false;
 
 export class TransitionManager {
     #logger;
-    #spinnerConfig;
-    #globalSpinner;
-    #spinnerTimeout;
+    #spinnerController;
 
     // IE 11 backward compatibility
     #forceShowSpinnerBlockerId = window.Symbol ? window.Symbol('forceShowSpinner') : 'FORCE_SHOW_SPINNER';
@@ -33,23 +34,17 @@ export class TransitionManager {
 
     /** @type TransitionBlockerList */
     #transitionBlockers = new TransitionBlockerList();
+    #urlHashController = new UrlHashController();
 
     constructor(logger, spinnerConfig) {
-        const defaultSpinnerConfig = {
-            enabled: true,
-            customHTML: '',
-            showAfter: 300,
-            minimumVisible: 500,
-        };
-
         this.#logger = logger;
-        this.#spinnerConfig = Object.assign({}, defaultSpinnerConfig, spinnerConfig);
+        this.#spinnerController = new GlobalSpinner(spinnerConfig);
 
         this.#addEventListeners();
     }
-
+    // This method is required for switch localisation
     handleAsyncAction(promise) {
-        if (this.#spinnerConfig.enabled === false) {
+        if (!this.#spinnerController.isEnabled()) {
             return;
         }
 
@@ -57,8 +52,9 @@ export class TransitionManager {
         this.#addTransitionBlocker(new TransitionBlocker(promise));
     }
 
+    // This method is required for changing pages
     handlePageTransition = (slotName, willBe) => {
-        if (this.#spinnerConfig.enabled === false) {
+        if (!this.#spinnerController.isEnabled()) {
             return;
         }
 
@@ -98,57 +94,39 @@ export class TransitionManager {
         this.#removeTransitionBlocker(slotName);
     }
 
+    removeEventListeners = () => {
+        for (const eventName in this.#windowEventHandlers) {
+            window.removeEventListener(eventName, this.#windowEventHandlers[eventName]);
+        }
+
+        unsafeEventSubscriptionHappened = false;
+    };
+
     #addContentListener = slotName => {
         if (this.#transitionBlockerExists(slotName)) {
+            // @todo report incorrect behaviour
             return;
         }
 
-        let observer;
+        const observer = new SlotRenderObserver();
 
         const contentListenerBlocker = new NamedTransactionBlocker(slotName, (resolve) => {
             this.#runGlobalSpinner();
-
-            if (window.location.hash) {
-                document.body.setAttribute('name', window.location.hash.slice(1));
-            }
-
-            const status = {
-                hasAddedNodes: false,
-                hasTextOrOpticNodes: false,
-                isAnyChildVisible: false,
-            };
-
-            observer = new MutationObserver((mutationsList) => {
-                if (!status.hasAddedNodes) {
-                    status.hasAddedNodes = !!mutationsList.find(mutation => mutation.addedNodes.length);
-                }
-
-                // if we have rendered MS to DOM but meaningful content isn't rendered, e.g. due to essential data preload
-                if (!status.hasTextOrOpticNodes) {
-                    const hasText = !!targetNode.innerText.trim().length
-                    const hasOpticNodes = !!targetNode.querySelector(':not(div):not(span)');
-                    status.hasTextOrOpticNodes = hasText || hasOpticNodes;
-                }
-
-                // if we have rendered MS to DOM but temporary hide it for some reason, e.g. to fetch data
-                if (!status.isAnyChildVisible) {
-                    status.isAnyChildVisible = Array.from(targetNode.children).some(node => node.style.display !== 'none');
-                }
-
-                if (Object.values(status).some(n => !n)) return;
-
-                resolve();
-            });
+            this.#urlHashController.store();
 
             const targetNode = getSlotElement(slotName);
             targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
             this.#hiddenSlots.push(targetNode);
-            observer.observe(targetNode, { childList: true, subtree: true, attributeFilter: ['style'] });
-        })
-        .onDestroy(() => {
-            if (observer) {
-                observer.disconnect();
-            }
+
+            observer.observe(targetNode, {
+                onSlotReady: function() {
+                    resolve();
+                }
+            });
+        });
+
+        contentListenerBlocker.onDestroy(() => {
+            observer.disconnect();
         });
 
         this.#addTransitionBlocker(contentListenerBlocker);
@@ -185,32 +163,20 @@ export class TransitionManager {
         this.#hiddenSlots.length = 0;
 
         this.#removeGlobalSpinner();
-        document.body.removeAttribute('name');
-
-        let scrollToElement;
-
-        if (window.location.hash) {
-            scrollToElement = document.querySelector(window.location.hash);
-        }
-
-        if (scrollToElement) {
-            scrollToElement.scrollIntoView();
-        } else {
-            window.scroll(0, 0);
-        }
+        this.#urlHashController.restore();
 
         window.dispatchEvent(new CustomEvent(ilcEvents.PAGE_READY));
     };
 
     // if spinner appeared in showAfter ms, then show it at least minimumVisible time, to avoid flashing it like a glitch
-    #getVisbilitySpinnerBlocker = () => {
+    #getVisibilitySpinnerBlocker = (minimumVisibleTime) => {
         let timer;
         let forceResolve;
 
         const spinnerBlocker = new NamedTransactionBlocker(this.#forceShowSpinnerBlockerId, (resolve) => {
             timer = setTimeout(() => {
                 resolve();
-            }, this.#spinnerConfig.minimumVisible);
+            }, minimumVisibleTime);
 
             forceResolve = resolve;
         }).onDestroy(() => {
@@ -222,48 +188,24 @@ export class TransitionManager {
     }
 
     #runGlobalSpinner = () => {
-        if (this.#spinnerConfig.enabled === false || this.#spinnerTimeout) {
+        if(!this.#spinnerController.isEnabled()) {
             return;
         }
 
-        this.#spinnerTimeout = setTimeout(() => {
-            this.#addTransitionBlocker(this.#getVisbilitySpinnerBlocker());
+        if(this.#spinnerController.isInProgress()) {
+            // ToDo: We should not show spinner twice so this condition should report an error
+            return;
+        }
 
-            const spinnerClass = 'ilcSpinnerWrapper';
-
-            if (!this.#spinnerConfig.customHTML) {
-                this.#globalSpinner = document.createElement('dialog');
-                this.#globalSpinner.setAttribute('class', spinnerClass);
-                this.#globalSpinner.innerHTML = 'loading....';
-                document.body.appendChild(this.#globalSpinner);
-                this.#globalSpinner.showModal();
-            } else {
-                this.#globalSpinner = document.createElement('div');
-                this.#globalSpinner.classList.add(spinnerClass);
-                this.#globalSpinner.innerHTML = this.#spinnerConfig.customHTML;
-                document.body.appendChild(this.#globalSpinner);
-
-                // run script tags
-                this.#globalSpinner.querySelectorAll('script').forEach(oldScript => {
-                    const newScript = document.createElement('script');
-
-                    newScript.innerHTML = oldScript.innerHTML;
-
-                    oldScript.parentNode.insertBefore(newScript, oldScript);
-                    oldScript.remove();
-                });
+        this.#spinnerController.start({
+            onBeforeStart: ({ minimumVisibleTime }) => {
+                this.#addTransitionBlocker(this.#getVisibilitySpinnerBlocker(minimumVisibleTime));
             }
-        }, this.#spinnerConfig.showAfter);
+        });
     };
 
     #removeGlobalSpinner = () => {
-        if (this.#globalSpinner) {
-            this.#globalSpinner.remove();
-            this.#globalSpinner = null;
-        }
-
-        clearTimeout(this.#spinnerTimeout);
-        this.#spinnerTimeout = null;
+        this.#spinnerController.stop();
     };
 
     #addTransitionBlocker = (transactionBlocker) => {
@@ -276,6 +218,7 @@ export class TransitionManager {
     }
 
     #removeTransitionBlocker = (blockerId) => {
+
         const blocker = this.#transitionBlockers.findById(blockerId);
 
         if (!blocker) {
@@ -285,15 +228,16 @@ export class TransitionManager {
         blocker.destroy();
         this.#transitionBlockers.remove(blocker);
 
+
+        if (this.#transitionBlockers.isEmpty()) {
+            this.#onPageReady();
+        }
+
         const isOnlySpinnerBlockerLeft = this.#transitionBlockers.size() === 1
             && this.#transitionBlockers.findById(this.#forceShowSpinnerBlockerId) !== undefined;
 
         const removingNotSpinnerBlockerAsLastOne = this.#transitionBlockers.size() === 0
             && blockerId !== this.#forceShowSpinnerBlockerId;
-
-        if (this.#transitionBlockers.size() === 0) {
-            this.#onPageReady();
-        }
 
         if (isOnlySpinnerBlockerLeft || removingNotSpinnerBlockerAsLastOne) {
             window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
@@ -315,18 +259,17 @@ export class TransitionManager {
         unsafeEventSubscriptionHappened = true
     };
 
-    removeEventListeners = () => {
-        for (const eventName in this.#windowEventHandlers) {
-            window.removeEventListener(eventName, this.#windowEventHandlers[eventName]);
-        }
-
-        unsafeEventSubscriptionHappened = false;
-    };
 
     #onRouteChange = () => {
-        if (this.#transitionBlockers.size() === 0) {
+
+        if (this.#transitionBlockers.isEmpty()) {
             this.#onPageReady();
-            window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
+
+            if(!this.#transitionBlockers.isReady()) {
+                this.#transitionBlockers.init();
+                // ilcEvents.ALL_SLOTS_LOADED is dispatched only on first page load here
+                window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
+            }
         }
     };
 }

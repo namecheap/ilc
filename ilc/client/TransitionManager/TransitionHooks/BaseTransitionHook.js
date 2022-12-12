@@ -1,9 +1,9 @@
 export class BaseTransitionHook {
-    async beforeHandler() {
+    beforeHandler() {
         throw new Error('BaseTransitionHook beforeHandler is not implemented');
     }
 
-    async afterHandler() {
+    afterHandler() {
         throw new Error('BaseTransitionHook afterHandler is not implemented');
     }
 }

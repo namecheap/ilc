@@ -2,6 +2,19 @@ export default class TransitionBlockerList {
 
     /** @type TransitionBlocker[] */
     #items = [];
+    #spaTransitionReady = false;
+
+    init() {
+        this.#spaTransitionReady = true;
+    }
+
+    isReady() {
+        return this.#spaTransitionReady;
+    }
+
+    isEmpty() {
+        return this.size() === 0;
+    }
 
     add(item) {
         this.#items.push(item);
@@ -10,7 +23,7 @@ export default class TransitionBlockerList {
     remove(item) {
         const itemId = item.getId();
 
-        const itemIndex = this.#items.findIndex(v => v.getId() === itemId);     
+        const itemIndex = this.#items.findIndex(v => v.getId() === itemId);
         if (itemIndex === -1) {
             return;
         }
