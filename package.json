@@ -15,7 +15,7 @@
         "build:ilc": "cd ./ilc/ && npm run build",
         "build:registry": "cd ./registry/ && npm run build",
         "postinstall": "npm run install-all",
-        "format:registry": "npx prettier --write \"registry/**/*.ts\"",
+        "format:registry": "npx prettier --write \"{registry,ilc}/**/*.ts\"",
         "prepare": "husky install"
     },
     "author": "",
