@@ -1,25 +1,29 @@
 import chai from 'chai';
 
 import TransitionBlocker from './TransitionBlocker';
-import TransitionBlockerList from './TransitionBlockerList'; 
+import TransitionBlockerList from './TransitionBlockerList';
 
 describe('TransitionBlockerList', () => {
     let first, second;
     let transactionBlockerList;
 
     beforeEach(() => {
-        first = new TransitionBlocker((resolve) => { resolve(); });
-        second = new TransitionBlocker((resolve) => { resolve(); });
+        first = new TransitionBlocker((resolve) => {
+            resolve();
+        });
+        second = new TransitionBlocker((resolve) => {
+            resolve();
+        });
 
         transactionBlockerList = new TransitionBlockerList();
     });
 
     it('Should add items to list', () => {
         chai.expect(transactionBlockerList.size()).to.be.equal(0);
-        
+
         transactionBlockerList.add(first);
         chai.expect(transactionBlockerList.size()).to.be.equal(1);
-        
+
         transactionBlockerList.add(second);
         chai.expect(transactionBlockerList.size()).to.be.equal(2);
     });
@@ -103,9 +107,6 @@ describe('TransitionBlockerList', () => {
         transactionBlockerList.add(first);
         transactionBlockerList.add(second);
 
-        chai.expect(transactionBlockerList.promises()).to.have.members([
-            first.promise(),
-            second.promise(),
-        ]);
+        chai.expect(transactionBlockerList.promises()).to.have.members([first.promise(), second.promise()]);
     });
 });

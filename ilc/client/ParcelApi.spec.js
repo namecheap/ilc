@@ -3,7 +3,7 @@ import sinon from 'sinon';
 chai.use(require('chai-as-promised'));
 const expect = chai.expect;
 
-import { getRegistryMock } from '../tests/helpers'
+import { getRegistryMock } from '../tests/helpers';
 
 import ParcelApi from './ParcelApi';
 
@@ -18,22 +18,22 @@ describe('ParcelApi', () => {
     const bundleLoader = {
         loadAppWithCss: sinon.stub(),
     };
-    const getAppSdkAdapter = () => ({intl: null});
+    const getAppSdkAdapter = () => ({ intl: null });
     let registry;
 
     beforeEach(() => {
         registry = getRegistryMock({
             apps: {
                 '@portal/primary': {
-                    props: {prop1: 'hello'}
+                    props: { prop1: 'hello' },
                 },
                 '@portal/withWrapper': {
                     spaBundle: 'http://localhost/withWrapper.js',
-                    wrappedWith: '@portal/primary'
+                    wrappedWith: '@portal/primary',
                 },
-            }
+            },
         }).getConfig().data;
-    })
+    });
 
     afterEach(() => {
         bundleLoader.loadAppWithCss.reset();
@@ -45,11 +45,11 @@ describe('ParcelApi', () => {
         const parcelName = '@portal/primary';
         const parcelId = 'parcel0';
 
-        bundleLoader.loadAppWithCss.resolves({parcels: {[parcelName]: fnCallbacks}});
+        bundleLoader.loadAppWithCss.resolves({ parcels: { [parcelName]: fnCallbacks } });
         const callbacks = await parcelApi.importParcelFromApp(appName, parcelName);
 
         for (const lifecycle of Object.keys(fnCallbacks)) {
-            const receivedProps = await callbacks[lifecycle]({name: parcelId});
+            const receivedProps = await callbacks[lifecycle]({ name: parcelId });
             expect(receivedProps.parcelSdk).to.deep.include({
                 parcelId,
                 registryProps: registry.apps[appName].props,
@@ -64,12 +64,12 @@ describe('ParcelApi', () => {
         const appName = '@portal/primary';
         const parcelName = '@portal/primary';
 
-        bundleLoader.loadAppWithCss.resolves({parcels: {[parcelName]: fnCallbacks}});
+        bundleLoader.loadAppWithCss.resolves({ parcels: { [parcelName]: fnCallbacks } });
         const callbacks = await parcelApi.importParcelFromApp(appName, parcelName);
 
         for (const parcelId of ['parcel0', 'parcel1']) {
             for (const lifecycle of ['bootstrap', 'mount', 'update']) {
-                const receivedProps = await callbacks[lifecycle]({name: parcelId});
+                const receivedProps = await callbacks[lifecycle]({ name: parcelId });
                 expect(receivedProps.parcelSdk).to.deep.include({
                     parcelId,
                     registryProps: registry.apps[appName].props,
@@ -78,19 +78,21 @@ describe('ParcelApi', () => {
         }
     });
 
-    it('throw an error when asked to load app that doesn\'t exists in registry', async () => {
+    it("throw an error when asked to load app that doesn't exists in registry", async () => {
         const parcelApi = new ParcelApi(registry, bundleLoader, getAppSdkAdapter);
 
-        expect(parcelApi.importParcelFromApp('@portal/nonExisting', 'na'))
-            .to.eventually.be.rejectedWith(/Unable to find requested app/);
+        expect(parcelApi.importParcelFromApp('@portal/nonExisting', 'na')).to.eventually.be.rejectedWith(
+            /Unable to find requested app/,
+        );
     });
 
-    it('throw an error when asked to load app doesn\'t contains parcels', async () => {
+    it("throw an error when asked to load app doesn't contains parcels", async () => {
         const parcelApi = new ParcelApi(registry, bundleLoader, getAppSdkAdapter);
 
         bundleLoader.loadAppWithCss.resolves({});
 
-        expect(parcelApi.importParcelFromApp('@portal/primary', 'na'))
-            .to.eventually.be.rejectedWith(/doesn't export requested parcel/);
+        expect(parcelApi.importParcelFromApp('@portal/primary', 'na')).to.eventually.be.rejectedWith(
+            /doesn't export requested parcel/,
+        );
     });
 });

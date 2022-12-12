@@ -1,6 +1,6 @@
 const chai = require('chai');
 const { getFragmentAttributes } = require('../../tests/helpers');
-const processFragmentResponse = require('./process-fragment-response')
+const processFragmentResponse = require('./process-fragment-response');
 const errors = require('./errors');
 
 describe('process-fragment-response', () => {
@@ -12,9 +12,9 @@ describe('process-fragment-response', () => {
             request: {
                 router: {
                     getRoute: () => ({ specialRole: null }),
-                }
-            }
-        }
+                },
+            },
+        };
 
         chai.expect(processFragmentResponse.bind(processFragmentResponse, fakeResponse, fakeContext)).to.not.throw();
         chai.expect(fakeResponse.statusCode).to.be.equal(200);
@@ -28,9 +28,9 @@ describe('process-fragment-response', () => {
             request: {
                 router: {
                     getRoute: () => ({ specialRole: null }),
-                }
-            }
-        }
+                },
+            },
+        };
 
         chai.expect(processFragmentResponse.bind(processFragmentResponse, fakeResponse, fakeContext)).to.not.throw();
     });
@@ -43,11 +43,13 @@ describe('process-fragment-response', () => {
             request: {
                 router: {
                     getRoute: () => ({ specialRole: null }),
-                }
-            }
-        }
+                },
+            },
+        };
 
-        chai.expect(processFragmentResponse.bind(processFragmentResponse, fakeResponse, fakeContext)).to.throw(errors.Fragment404Response);
+        chai.expect(processFragmentResponse.bind(processFragmentResponse, fakeResponse, fakeContext)).to.throw(
+            errors.Fragment404Response,
+        );
     });
 
     it('should return 404 code for primary special route', () => {
@@ -58,9 +60,9 @@ describe('process-fragment-response', () => {
             request: {
                 router: {
                     getRoute: () => ({ specialRole: 404 }),
-                }
-            }
-        }
+                },
+            },
+        };
 
         chai.expect(processFragmentResponse.bind(processFragmentResponse, fakeResponse, fakeContext)).to.not.throw();
         chai.expect(fakeResponse.statusCode).to.be.equal(404);
@@ -74,9 +76,9 @@ describe('process-fragment-response', () => {
             request: {
                 router: {
                     getRoute: () => ({ specialRole: null }),
-                }
-            }
-        }
+                },
+            },
+        };
 
         chai.expect(processFragmentResponse.bind(processFragmentResponse, fakeResponse, fakeContext)).to.throw(Error);
     });
@@ -89,9 +91,9 @@ describe('process-fragment-response', () => {
             request: {
                 router: {
                     getRoute: () => ({ specialRole: null }),
-                }
-            }
-        }
+                },
+            },
+        };
 
         chai.expect(processFragmentResponse.bind(processFragmentResponse, fakeResponse, fakeContext)).to.throw(Error);
     });

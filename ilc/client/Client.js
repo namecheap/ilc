@@ -1,16 +1,11 @@
 import * as singleSpa from 'single-spa';
 
-import {
-    PluginManager,
-} from 'ilc-plugins-sdk/browser';
+import { PluginManager } from 'ilc-plugins-sdk/browser';
 
 import UrlProcessor from '../common/UrlProcessor';
 import { appIdToNameAndSlot } from '../common/utils';
 
-import {
-    setNavigationErrorHandler,
-    addNavigationHook,
-} from './navigationEvents/setupEvents';
+import { setNavigationErrorHandler, addNavigationHook } from './navigationEvents/setupEvents';
 
 import {
     CorsError,
@@ -39,13 +34,12 @@ import IlcEvents from './constants/ilcEvents';
 import ErrorHandlerManager from './ErrorHandlerManager/ErrorHandlerManager';
 
 import { FRAGMENT_KIND } from '../common/constants';
-import { SdkFactoryBuilder } from "./Sdk/SdkFactoryBuilder";
-import {TransitionHooks} from './TransitionManager/TransitionHooks/TransitionHooks';
-import {PerformanceTransitionHook} from './TransitionManager/TransitionHooks/PerformanceTransitionHook';
-import {TitleCheckerTransitionHook} from './TransitionManager/TransitionHooks/TitleCheckerTransitionHook';
+import { SdkFactoryBuilder } from './Sdk/SdkFactoryBuilder';
+import { TransitionHooks } from './TransitionManager/TransitionHooks/TransitionHooks';
+import { PerformanceTransitionHook } from './TransitionManager/TransitionHooks/PerformanceTransitionHook';
+import { TitleCheckerTransitionHook } from './TransitionManager/TransitionHooks/TitleCheckerTransitionHook';
 
 export class Client {
-
     #configRoot;
 
     #moduleLoader;
@@ -76,30 +70,47 @@ export class Client {
         this.#configRoot = config;
         this.#registryService = registryService;
 
-        this.#pluginManager = new PluginManager(require.context('../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/));
+        this.#pluginManager = new PluginManager(
+            require.context('../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/),
+        );
         const reportingPlugin = this.#pluginManager.getReportingPlugin();
         reportingPlugin.setConfig(this.#configRoot);
 
         this.#logger = reportingPlugin.logger;
 
         this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, this.#registryService);
-        this.#transitionManager = new TransitionManager(this.#logger, this.#configRoot.getSettingsByKey('globalSpinner'));
+        this.#transitionManager = new TransitionManager(
+            this.#logger,
+            this.#configRoot.getSettingsByKey('globalSpinner'),
+        );
 
         const i18nSettings = this.#configRoot.getSettingsByKey('i18n');
 
         if (i18nSettings.enabled) {
-            this.#i18n = new I18n(i18nSettings, {
+            this.#i18n = new I18n(
+                i18nSettings,
+                {
                     ...singleSpa,
                     triggerAppChange,
                 },
                 this.#errorHandlerFor.bind(this),
-                this.#transitionManager
+                this.#transitionManager,
             );
         }
 
         const ilcState = initIlcState();
-        this.#router = new Router(this.#configRoot, ilcState, this.#i18n, singleSpa, this.#transitionManager.handlePageTransition.bind(this.#transitionManager));
-        this.#guardManager = new GuardManager(this.#router, this.#pluginManager, this.#onCriticalInternalError.bind(this));
+        this.#router = new Router(
+            this.#configRoot,
+            ilcState,
+            this.#i18n,
+            singleSpa,
+            this.#transitionManager.handlePageTransition.bind(this.#transitionManager),
+        );
+        this.#guardManager = new GuardManager(
+            this.#router,
+            this.#pluginManager,
+            this.#onCriticalInternalError.bind(this),
+        );
         this.#urlProcessor = new UrlProcessor(this.#configRoot.getSettingsByKey('trailingSlash'));
 
         this.#moduleLoader = this.#getModuleLoader();
@@ -114,7 +125,8 @@ export class Client {
     #preheat() {
         // Initializing 500 error page to cache template of this page
         // to avoid a situation when localhost can't return this template in future
-        this.#registryService.preheat()
+        this.#registryService
+            .preheat()
             .then(() => this.#logger.info('ILC: Registry service preheated successfully'))
             .catch((error) => {
                 const preheatError = new InternalError({
@@ -128,7 +140,7 @@ export class Client {
 
     #getModuleLoader() {
         if (window.System === undefined) {
-            const error = new Error('ILC: can\'t find SystemJS on a page, crashing everything');
+            const error = new Error("ILC: can't find SystemJS on a page, crashing everything");
             this.#onCriticalInternalError(error);
 
             throw error;
@@ -143,7 +155,6 @@ export class Client {
         }
 
         return (error, errorInfo) => {
-
             let isCriticalError = false;
             const isAppExists = !!this.#configRoot.getConfigForAppByName(appName);
 
@@ -153,10 +164,7 @@ export class Client {
                 try {
                     const fragmentKind = this.#router.getRelevantAppKind(appName, slotName);
 
-                    isCriticalError = [
-                        FRAGMENT_KIND.primary,
-                        FRAGMENT_KIND.essential
-                    ].includes(fragmentKind);
+                    isCriticalError = [FRAGMENT_KIND.primary, FRAGMENT_KIND.essential].includes(fragmentKind);
                 } catch (error) {
                     isCriticalError = true;
                 }
@@ -169,10 +177,12 @@ export class Client {
                     ...errorInfo,
                     name: appName,
                     slotName,
-                }
+                },
             };
 
-            const fragmentError = isCriticalError ? new CriticalFragmentError(errorParams) : new FragmentError(errorParams);
+            const fragmentError = isCriticalError
+                ? new CriticalFragmentError(errorParams)
+                : new FragmentError(errorParams);
             this.#errorHandlerManager.handleError(fragmentError);
         };
     }
@@ -200,7 +210,7 @@ export class Client {
     #isCorsError(event) {
         const { error, colno, lineno } = event;
 
-        return (!error && lineno === 0 && colno === 0);
+        return !error && lineno === 0 && colno === 0;
     }
 
     #onRuntimeError(event) {
@@ -248,7 +258,7 @@ export class Client {
     }
 
     #configure() {
-        addNavigationHook((url) => this.#guardManager.hasAccessTo(url) ? url : null);
+        addNavigationHook((url) => (this.#guardManager.hasAccessTo(url) ? url : null));
         addNavigationHook((url) => this.#urlProcessor.process(url));
 
         // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
@@ -260,7 +270,7 @@ export class Client {
             this.#bundleLoader,
             this.#transitionManager,
             this.#sdkFactoryBuilder,
-            this.#errorHandlerManager
+            this.#errorHandlerManager,
         );
 
         setNavigationErrorHandler(this.#onNavigationError.bind(this));
@@ -273,7 +283,6 @@ export class Client {
         transitionHook.addHook(performanceHook);
         transitionHook.addHook(titleHook);
         transitionHook.subscribe();
-
 
         singleSpa.addErrorHandler(this.#onLifecycleError.bind(this));
         singleSpa.setBootstrapMaxTime(5000, false);
@@ -307,7 +316,7 @@ export class Client {
         const parcelApi = new ParcelApi(
             this.#configRoot.getConfig(),
             this.#bundleLoader,
-            this.#sdkFactoryBuilder.getSdkAdapterInstance.bind(this.#sdkFactoryBuilder)
+            this.#sdkFactoryBuilder.getSdkAdapterInstance.bind(this.#sdkFactoryBuilder),
         );
 
         Object.assign(window.ILC, {

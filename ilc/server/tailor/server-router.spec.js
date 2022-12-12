@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const _ = require('lodash');
-const {getRegistryMock} = require('../../tests/helpers');
+const { getRegistryMock } = require('../../tests/helpers');
 
 const ServerRouter = require('./server-router.js');
 
@@ -33,12 +33,12 @@ describe('server router', () => {
                 },
             ],
         }).getConfig().data;
-        const request = {registryConfig, ilcState: {}};
+        const request = { registryConfig, ilcState: {} };
 
         const router = new ServerRouter(logger, request, '/no-app');
 
-        chai.expect(() => router.getFragmentsTpl()).to.throw('Can\'t find info about app.');
-        chai.expect(() => router.getFragmentsContext()).to.throw('Can\'t find info about app.');
+        chai.expect(() => router.getFragmentsTpl()).to.throw("Can't find info about app.");
+        chai.expect(() => router.getFragmentsContext()).to.throw("Can't find info about app.");
     });
 
     describe('.getFragmentsContext()', () => {
@@ -46,12 +46,12 @@ describe('server router', () => {
             const registryConfig = getRegistryMock({
                 apps: {
                     '@portal/primary': {
-                        ssr: {src: null}
+                        ssr: { src: null },
                     },
-                }
+                },
             }).getConfig().data;
 
-            const request = {registryConfig, ilcState: {}};
+            const request = { registryConfig, ilcState: {} };
 
             const router = new ServerRouter(logger, request, '/all');
 
@@ -62,12 +62,12 @@ describe('server router', () => {
             const registryConfig = getRegistryMock({
                 apps: {
                     '@portal/regular': {
-                        kind: 'primary'
+                        kind: 'primary',
                     },
-                }
+                },
             }).getConfig().data;
 
-            const request = {registryConfig, ilcState: {}};
+            const request = { registryConfig, ilcState: {} };
 
             const router = new ServerRouter(logger, request, '/all');
 
@@ -75,10 +75,12 @@ describe('server router', () => {
 
             chai.expect(context.primary__at__primary.primary).to.be.true;
             chai.expect(context.regular__at__regular.primary).to.be.undefined;
-            chai.expect(logger.warn.calledOnceWithExactly(
-                `More then one primary slot "regular" found for "/all".\n` +
-                'Make it regular to avoid unexpected behaviour.'
-            )).to.be.true;
+            chai.expect(
+                logger.warn.calledOnceWithExactly(
+                    `More then one primary slot "regular" found for "/all".\n` +
+                        'Make it regular to avoid unexpected behaviour.',
+                ),
+            ).to.be.true;
         });
     });
 
@@ -127,7 +129,7 @@ describe('server router', () => {
                 },
                 kind: 'essential',
             },
-            'contact': {
+            contact: {
                 spaBundle: 'https://somewhere.com/contactSpaBundle.js',
                 cssBundle: 'https://somewhere.com/contactCssBundle.css',
                 dependencies: {
@@ -144,7 +146,7 @@ describe('server router', () => {
                     src: 'https://somewhere.com/contact',
                 },
             },
-            'apps': {
+            apps: {
                 spaBundle: 'https://somewhere.com/appsSpaBundle.js',
                 cssBundle: 'https://somewhere.com/appsCssBundle.css',
                 dependencies: {
@@ -235,7 +237,7 @@ describe('server router', () => {
                 },
                 meta: {
                     firstAppsRouteMetaProp: 'firstAppsRouteMetaProp',
-                }
+                },
             },
             {
                 route: '/news',
@@ -256,7 +258,7 @@ describe('server router', () => {
             routes,
         }).getConfig().data;
 
-        const request = {url: '/hero/apps?prop=value', registryConfig};
+        const request = { url: '/hero/apps?prop=value', registryConfig };
 
         const router = new ServerRouter(logger, request, request.url);
 
@@ -280,29 +282,29 @@ describe('server router', () => {
 
         chai.expect(router.getFragmentsTpl()).to.be.eql(
             `<fragment id="navbar__at__navbar" slot="navbar"></fragment>` +
-            `<fragment id="footer__at__footer" slot="footer"></fragment>` +
-            `<fragment id="contact__at__contact" slot="contact"></fragment>` +
-            `<fragment id="apps__at__apps" slot="apps"></fragment>`
+                `<fragment id="footer__at__footer" slot="footer"></fragment>` +
+                `<fragment id="contact__at__contact" slot="contact"></fragment>` +
+                `<fragment id="apps__at__apps" slot="apps"></fragment>`,
         );
 
         chai.expect(router.getFragmentsContext()).to.eql({
             navbar__at__navbar: {
-                ...apps["@portal/navbar"].ssr,
-                spaBundleUrl: apps["@portal/navbar"].spaBundle,
+                ...apps['@portal/navbar'].ssr,
+                spaBundleUrl: apps['@portal/navbar'].spaBundle,
                 appProps: {
-                    ...apps["@portal/navbar"].props,
+                    ...apps['@portal/navbar'].props,
                     ...routes[0].slots.navbar.props,
                 },
-                wrapperConf: null
+                wrapperConf: null,
             },
             footer__at__footer: {
-                ...apps["@portal/footer"].ssr,
-                spaBundleUrl: apps["@portal/footer"].spaBundle,
+                ...apps['@portal/footer'].ssr,
+                spaBundleUrl: apps['@portal/footer'].spaBundle,
                 primary: true,
                 appProps: {
                     ...routes[0].slots.footer.props,
                 },
-                wrapperConf: null
+                wrapperConf: null,
             },
             contact__at__contact: {
                 ...apps.contact.ssr,
@@ -311,7 +313,7 @@ describe('server router', () => {
                     ...apps.contact.props,
                     ...routes[1].slots.contact.props,
                 },
-                wrapperConf: null
+                wrapperConf: null,
             },
             apps__at__apps: {
                 src: apps.apps.ssr.src,
@@ -322,16 +324,16 @@ describe('server router', () => {
                 wrapperConf: {
                     appId: 'news__at__apps',
                     name: '@portal/news',
-                    ...apps["@portal/news"].ssr,
-                    props: apps["@portal/news"].props
-                }
-            }
+                    ...apps['@portal/news'].ssr,
+                    props: apps['@portal/news'].props,
+                },
+            },
         });
     });
 
     it('should get template info when special route is enforced', () => {
         const apps = {
-            'apps': {
+            apps: {
                 spaBundle: 'https://somewhere.com/appsSpaBundle.js',
                 cssBundle: 'https://somewhere.com/appsCssBundle.css',
                 dependencies: {
@@ -341,7 +343,7 @@ describe('server router', () => {
                 kind: 'primary',
                 ssr: {
                     timeout: 4000,
-                    src: 'https://somewhere.com/apps?prop=value'
+                    src: 'https://somewhere.com/apps?prop=value',
                 },
             },
         };
@@ -349,20 +351,20 @@ describe('server router', () => {
         const registryConfig = getRegistryMock({
             apps,
             specialRoutes: {
-                '404': {
+                404: {
                     slots: {
                         apps: {
                             appName: 'apps',
                         },
-                    }
-                }
+                    },
+                },
             },
         }).getConfig().data;
 
         const request = {
-            ilcState: {forceSpecialRoute: 404},
+            ilcState: { forceSpecialRoute: 404 },
             url: '/all?prop=value',
-            registryConfig
+            registryConfig,
         };
 
         const router = new ServerRouter(logger, request, request.url);
@@ -376,17 +378,15 @@ describe('server router', () => {
             slots: registryConfig.specialRoutes['404'].slots,
             meta: registryConfig.specialRoutes['404'].meta,
         });
-        chai.expect(router.getFragmentsTpl()).to.be.eql(
-            `<fragment id="apps__at__apps" slot="apps"></fragment>`
-        );
+        chai.expect(router.getFragmentsTpl()).to.be.eql(`<fragment id="apps__at__apps" slot="apps"></fragment>`);
         chai.expect(router.getFragmentsContext()).to.eql({
             apps__at__apps: {
                 ...apps.apps.ssr,
                 spaBundleUrl: apps.apps.spaBundle,
                 primary: true,
                 appProps: {},
-                wrapperConf: null
-            }
+                wrapperConf: null,
+            },
         });
     });
 });

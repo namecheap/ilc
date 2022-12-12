@@ -3,17 +3,12 @@ const CIDRMatcher = require('cidr-matcher');
 const isUrl = require('is-url');
 const LZUTF8 = require('lzutf8');
 
-const privateNetworks = new CIDRMatcher([
-    '10.0.0.0/8',
-    '192.168.0.0/16',
-    '172.16.0.0/12',
-    '127.0.0.0/8',
-]);
+const privateNetworks = new CIDRMatcher(['10.0.0.0/8', '192.168.0.0/16', '172.16.0.0/12', '127.0.0.0/8']);
 
-const isPrivateNetwork = link => {
+const isPrivateNetwork = (link) => {
     const matchedIp = link.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/);
     return matchedIp && matchedIp[0] && privateNetworks.contains(matchedIp[0]);
-}
+};
 
 const isTrustedOrigin = (link, trustedOrigins) => {
     if (!trustedOrigins) {
@@ -23,7 +18,7 @@ const isTrustedOrigin = (link, trustedOrigins) => {
 
     const linkWoProtocol = link.trim().replace(/(^\w+:|^)\/\//, '');
 
-    return trustedOrigins.some(trustedOrigin => {
+    return trustedOrigins.some((trustedOrigin) => {
         const isTrustedLink = linkWoProtocol.startsWith(trustedOrigin + '/');
         if (isTrustedLink) {
             return true;
@@ -36,9 +31,9 @@ const isTrustedOrigin = (link, trustedOrigins) => {
 
         const hostname = linkWoProtocol.replace(/(:|\/).*$/, '');
         const levelsOfLink = hostname.split('.');
-        const isTrustedLinkWithSubdomain = trustedOrigin.split('.').every((levelDomain, index) =>
-            levelDomain === '*' || levelDomain === levelsOfLink[index]
-        );
+        const isTrustedLinkWithSubdomain = trustedOrigin
+            .split('.')
+            .every((levelDomain, index) => levelDomain === '*' || levelDomain === levelsOfLink[index]);
         if (isTrustedLinkWithSubdomain) {
             return true;
         }
@@ -50,7 +45,7 @@ const isTrustedOrigin = (link, trustedOrigins) => {
 const sanitizeSpoofedLinks = (obj, trustedOrigins) => {
     Object.entries(obj).forEach(([key, value]) => {
         if (_.isPlainObject(value)) {
-          sanitizeSpoofedLinks(value, trustedOrigins);
+            sanitizeSpoofedLinks(value, trustedOrigins);
         } else if (typeof value === 'string' && isUrl(value.trim())) {
             !isPrivateNetwork(value) && !isTrustedOrigin(value, trustedOrigins) && delete obj[key];
         }
@@ -59,7 +54,8 @@ const sanitizeSpoofedLinks = (obj, trustedOrigins) => {
 
 module.exports = (cookie, trustedOrigins) => {
     try {
-        let overrideConfig = typeof cookie === 'string' && cookie.split(';').find(n => n.trim().startsWith('ILC-overrideConfig'));
+        let overrideConfig =
+            typeof cookie === 'string' && cookie.split(';').find((n) => n.trim().startsWith('ILC-overrideConfig'));
         if (!overrideConfig) {
             return null;
         }
@@ -75,7 +71,8 @@ module.exports = (cookie, trustedOrigins) => {
         }
 
         if (trustedOrigins !== 'all') {
-            const parsedTrustedOrigin = typeof trustedOrigins === 'string' && trustedOrigins.split(',').map(n => n.trim());
+            const parsedTrustedOrigin =
+                typeof trustedOrigins === 'string' && trustedOrigins.split(',').map((n) => n.trim());
 
             if (overrideConfig.apps) {
                 sanitizeSpoofedLinks(overrideConfig.apps, parsedTrustedOrigin);
@@ -105,4 +102,4 @@ module.exports = (cookie, trustedOrigins) => {
     } catch (e) {
         return null;
     }
-}
+};

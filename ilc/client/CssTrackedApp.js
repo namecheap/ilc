@@ -25,9 +25,9 @@ export class CssTrackedApp {
             createNew: typeof this.#originalApp.createNew === 'function' ? this.createNew : this.#originalApp.createNew,
             mount: this.mount,
             unmount: this.unmount,
-            update: this.update
+            update: this.update,
         };
-    }
+    };
 
     createNew = (...args) => {
         if (!this.#originalApp.createNew) {
@@ -40,15 +40,15 @@ export class CssTrackedApp {
             return newInstanceResult;
         }
 
-        return newInstanceResult.then(newInstance => {
-            const isIlcAdapter = ['mount', 'unmount', 'bootstrap'].every(m => typeof newInstance[m] === 'function');
+        return newInstanceResult.then((newInstance) => {
+            const isIlcAdapter = ['mount', 'unmount', 'bootstrap'].every((m) => typeof newInstance[m] === 'function');
             if (!isIlcAdapter) {
                 return newInstance;
             }
 
             return new CssTrackedApp(newInstance, this.#cssLinkUri, this.#delayCssRemoval).getDecoratedApp();
         });
-    }
+    };
 
     mount = async (...args) => {
         const link = this.#findLink();
@@ -61,7 +61,7 @@ export class CssTrackedApp {
         }
 
         return await this.#originalApp.mount(...args);
-    }
+    };
 
     unmount = async (...args) => {
         try {
@@ -72,7 +72,7 @@ export class CssTrackedApp {
                 this.#decrementOrRemoveCssUsages(link);
             }
         }
-    }
+    };
 
     update = async (...args) => {
         if (!this.#originalApp.update) {
@@ -80,11 +80,11 @@ export class CssTrackedApp {
         }
 
         return this.#originalApp.update(...args);
-    }
+    };
 
     static removeAllNodesPendingRemoval() {
         const allNodes = document.querySelectorAll(`link[${CssTrackedApp.markedForRemovalAttribute}]`);
-        Array.from(allNodes).forEach(node => node.remove());
+        Array.from(allNodes).forEach((node) => node.remove());
     }
 
     #appendCssLink() {

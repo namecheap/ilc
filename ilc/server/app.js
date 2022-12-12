@@ -20,22 +20,27 @@ const CspBuilderService = require('./services/CspBuilderService');
 module.exports = (registryService, pluginManager) => {
     const guardManager = new GuardManager(pluginManager);
 
-    const shouldUrlBeLogged = url => {
+    const shouldUrlBeLogged = (url) => {
         const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
 
         return !ignoredUrls.includes(url);
     };
 
-    const fastifyLoggerConfig = _.omit(_.pick(pluginManager.getReportingPlugin(), ['logger', 'requestIdLogLabel', 'genReqId']), _.isEmpty);
+    const fastifyLoggerConfig = _.omit(
+        _.pick(pluginManager.getReportingPlugin(), ['logger', 'requestIdLogLabel', 'genReqId']),
+        _.isEmpty,
+    );
     const { logger } = fastifyLoggerConfig;
 
-    const app = fastify(Object.assign(
-        {
-            trustProxy: false, // TODO: should be configurable via Registry,
-            disableRequestLogging: true,
-        },
-        fastifyLoggerConfig,
-    ));
+    const app = fastify(
+        Object.assign(
+            {
+                trustProxy: false, // TODO: should be configurable via Registry,
+                disableRequestLogging: true,
+            },
+            fastifyLoggerConfig,
+        ),
+    );
 
     app.addHook('onRequest', async (req, reply) => {
         if (shouldUrlBeLogged(req.raw.url)) {
@@ -44,7 +49,10 @@ module.exports = (registryService, pluginManager) => {
 
         req.raw.ilcState = {};
         const registryConfig = (await registryService.getConfig()).data;
-        const i18nOnRequest = i18n.onRequestFactory(registryConfig.settings.i18n, pluginManager.getI18nParamsDetectionPlugin());
+        const i18nOnRequest = i18n.onRequestFactory(
+            registryConfig.settings.i18n,
+            pluginManager.getI18nParamsDetectionPlugin(),
+        );
 
         await i18nOnRequest(req, reply);
     });
@@ -58,7 +66,7 @@ module.exports = (registryService, pluginManager) => {
                     domain: req.hostname,
                     responseTime: reply.getResponseTime(),
                 },
-                'request completed'
+                'request completed',
             );
         }
 
@@ -66,15 +74,16 @@ module.exports = (registryService, pluginManager) => {
     });
 
     const autoInjectNrMonitoringConfig = config.get('newrelic.automaticallyInjectBrowserMonitoring');
-    const autoInjectNrMonitoring = typeof autoInjectNrMonitoringConfig === 'boolean'
-        ? autoInjectNrMonitoringConfig
-        : autoInjectNrMonitoringConfig !== 'false';
+    const autoInjectNrMonitoring =
+        typeof autoInjectNrMonitoringConfig === 'boolean'
+            ? autoInjectNrMonitoringConfig
+            : autoInjectNrMonitoringConfig !== 'false';
     const tailor = tailorFactory(
         registryService,
         config.get('cdnUrl'),
         config.get('newrelic.customClientJsWrapper'),
         autoInjectNrMonitoring,
-        logger
+        logger,
     );
 
     if (config.get('cdnUrl') === null) {
@@ -91,7 +100,9 @@ module.exports = (registryService, pluginManager) => {
     });
 
     // Route to test 500 page appearance
-    app.get('/_ilc/500', async () => { throw new Error('500 page test error') });
+    app.get('/_ilc/500', async () => {
+        throw new Error('500 page test error');
+    });
 
     app.all('*', async (req, res) => {
         const currentDomain = req.hostname;
@@ -107,7 +118,10 @@ module.exports = (registryService, pluginManager) => {
         req.headers['x-request-host'] = req.hostname;
         req.headers['x-request-uri'] = url;
 
-        const overrideConfigs = parseOverrideConfig(req.headers.cookie, registryConfig.settings.overrideConfigTrustedOrigins);
+        const overrideConfigs = parseOverrideConfig(
+            req.headers.cookie,
+            registryConfig.settings.overrideConfigTrustedOrigins,
+        );
         // Excluding LDE related transactions from NewRelic
         if (overrideConfigs !== null) {
             req.raw.ldeRelated = true;
@@ -123,21 +137,30 @@ module.exports = (registryService, pluginManager) => {
         const redirectTo = await guardManager.redirectTo(req);
 
         if (redirectTo) {
-            res.redirect(urlProcessor.process(i18n.localizeUrl(registryConfig.settings.i18n, redirectTo, {
-                locale: req.raw.ilcState.locale,
-            })));
+            res.redirect(
+                urlProcessor.process(
+                    i18n.localizeUrl(registryConfig.settings.i18n, redirectTo, {
+                        locale: req.raw.ilcState.locale,
+                    }),
+                ),
+            );
             return;
         }
 
         const route = req.raw.router.getRoute();
 
-        const csp = new CspBuilderService(registryConfig.settings.cspConfig, !!registryConfig.settings.cspEnableStrict, !!req.raw.ldeRelated, registryConfig.settings.cspTrustedLocalHosts);
+        const csp = new CspBuilderService(
+            registryConfig.settings.cspConfig,
+            !!registryConfig.settings.cspEnableStrict,
+            !!req.raw.ldeRelated,
+            registryConfig.settings.cspTrustedLocalHosts,
+        );
 
         try {
             res.res = csp.setHeader(res.res);
-        } catch(error) {
+        } catch (error) {
             errorHandlingService.noticeError(error, {
-                message: 'CSP object processing error'
+                message: 'CSP object processing error',
             });
         }
 

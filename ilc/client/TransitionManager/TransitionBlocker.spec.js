@@ -22,7 +22,7 @@ describe('TransitionBlocker', () => {
             expect(promise.catch).not.to.equal(undefined);
             expect(promise).to.be.a('promise');
         });
-    
+
         it('Should subscribe success fn on then transition blocker promise', () => {
             return new Promise((resolve) => {
                 transitionBlocker.then(resolve);
@@ -43,7 +43,7 @@ describe('TransitionBlocker', () => {
                 transitionBlockerReject();
             });
         });
-    
+
         it('Should subscribe fn on finally transition blocker promise', () => {
             return Promise.all([
                 new Promise((resolve) => {
@@ -56,11 +56,11 @@ describe('TransitionBlocker', () => {
                 }),
             ]);
         });
-    
+
         it('Should return blocker promise as id', () => {
             expect(transitionBlocker.getId()).to.equal(transitionBlocker.promise());
         });
-    
+
         it('Should set onDestroy callback', () => {
             return new Promise((resolve) => {
                 transitionBlocker.onDestroy(resolve);
@@ -87,7 +87,7 @@ describe('TransitionBlocker', () => {
             expect(promise.catch).not.to.equal(undefined);
             expect(promise).to.be.a('promise');
         });
-    
+
         it('Should subscribe success fn on then transition blocker promise', () => {
             return new Promise((resolve) => {
                 transitionBlocker.then(resolve);
@@ -108,7 +108,7 @@ describe('TransitionBlocker', () => {
                 transitionBlockerReject();
             });
         });
-    
+
         it('Should subscribe fn on finally transition blocker promise', () => {
             return Promise.all([
                 new Promise((resolve) => {
@@ -121,11 +121,11 @@ describe('TransitionBlocker', () => {
                 }),
             ]);
         });
-    
+
         it('Should return blocker promise as id', () => {
             expect(transitionBlocker.getId()).to.equal(transitionBlocker.promise());
         });
-    
+
         it('Should set onDestroy callback', () => {
             return new Promise((resolve) => {
                 transitionBlocker.onDestroy(resolve);

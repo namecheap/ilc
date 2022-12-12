@@ -89,7 +89,7 @@ describe('Router', () => {
             },
         ],
         specialRoutes: {
-            '404': {
+            404: {
                 route: '/404',
                 next: false,
                 template: 'errorsTemplate',
@@ -127,7 +127,7 @@ describe('Router', () => {
                 {
                     route: '/no-template',
                     next: false,
-                    slots: {}
+                    slots: {},
                 },
             ];
 
@@ -165,14 +165,16 @@ describe('Router', () => {
             });
 
             it('should return matched route with correct basePath if exists only route="*" as final point', () => {
-                const independentRouteStar = registryConfig.routes.find(n => n.route === '*');
+                const independentRouteStar = registryConfig.routes.find((n) => n.route === '*');
 
                 const router = new Router({
                     ...registryConfig,
-                    routes: [{
-                        ...independentRouteStar,
-                        next: false,
-                    }],
+                    routes: [
+                        {
+                            ...independentRouteStar,
+                            next: false,
+                        },
+                    ],
                 });
                 const reqUrl = '/hero/apps?prop=value';
 
@@ -208,46 +210,49 @@ describe('Router', () => {
 
             it('should merge slot props when necessary', () => {
                 const router = new Router({
-                    routes: [{
-                        route: '*',
-                        next: true,
-                        template: 'test',
-                        slots: {
-                            navbar: {
-                                appName: 'navbar',
-                                props: {
-                                    a: '1',
+                    routes: [
+                        {
+                            route: '*',
+                            next: true,
+                            template: 'test',
+                            slots: {
+                                navbar: {
+                                    appName: 'navbar',
+                                    props: {
+                                        a: '1',
+                                    },
+                                    kind: 'essential',
                                 },
-                                kind: 'essential',
-                            },
-                            body: {
-                                appName: 'someApp',
-                                props: {
-                                    c: '3',
+                                body: {
+                                    appName: 'someApp',
+                                    props: {
+                                        c: '3',
+                                    },
+                                    kind: 'primary',
                                 },
-                                kind: 'primary',
                             },
+                            meta: {},
                         },
-                        meta: {},
-                    }, {
-                        route: '/hero/*',
-                        slots: {
-                            navbar: {
-                                appName: 'navbar',
-                                props: {
-                                    b: '2',
+                        {
+                            route: '/hero/*',
+                            slots: {
+                                navbar: {
+                                    appName: 'navbar',
+                                    props: {
+                                        b: '2',
+                                    },
+                                },
+                                body: {
+                                    appName: 'anotherApp',
+                                    props: {
+                                        d: '4',
+                                    },
+                                    kind: 'primary',
                                 },
                             },
-                            body: {
-                                appName: 'anotherApp',
-                                props: {
-                                    d: '4',
-                                },
-                                kind: 'primary',
-                            },
+                            meta: {},
                         },
-                        meta: {},
-                    }],
+                    ],
                     specialRoutes: {},
                 });
                 const reqUrl = '/hero/test';
@@ -261,7 +266,8 @@ describe('Router', () => {
                     slots: {
                         navbar: {
                             appName: 'navbar',
-                            props: { // Props here are merged from both routes
+                            props: {
+                                // Props here are merged from both routes
                                 a: '1',
                                 b: '2',
                             },
@@ -269,7 +275,8 @@ describe('Router', () => {
                         },
                         body: {
                             appName: 'anotherApp',
-                            props: { // Props here are taken from last route only
+                            props: {
+                                // Props here are taken from last route only
                                 d: '4',
                             },
                             kind: 'primary',
@@ -299,10 +306,7 @@ describe('Router', () => {
                 });
                 const registryConfigThatHasRouteThatEqualsTrailingSlash = Object.freeze({
                     ...registryConfig,
-                    routes: [
-                        routeThatEqualsTrailingSlash,
-                        ...registryConfig.routes,
-                    ],
+                    routes: [routeThatEqualsTrailingSlash, ...registryConfig.routes],
                 });
                 const router = new Router(registryConfigThatHasRouteThatEqualsTrailingSlash);
                 const reqUrl = '/';
@@ -338,10 +342,7 @@ describe('Router', () => {
 
             const registryConfigWithRouteWithoutTrailingSlash = Object.freeze({
                 ...registryConfig,
-                routes: [
-                    routeWithoutTrailingSlash,
-                    ...registryConfig.routes
-                ],
+                routes: [routeWithoutTrailingSlash, ...registryConfig.routes],
             });
 
             it('should match request url without trailing slash', () => {
@@ -409,10 +410,7 @@ describe('Router', () => {
 
             const registryConfigWithRouteThatHasTrailingSlash = Object.freeze({
                 ...registryConfig,
-                routes: [
-                    routeWithTrailingSlash,
-                    ...registryConfig.routes
-                ],
+                routes: [routeWithTrailingSlash, ...registryConfig.routes],
             });
 
             it('should return a matched route by a request url that does not have `/` at the end', () => {
@@ -480,10 +478,7 @@ describe('Router', () => {
 
             const registryConfigWithRouteThatHasTrailingSlashAndAsterisk = Object.freeze({
                 ...registryConfig,
-                routes: [
-                    routeWithTrailingSlashAndAsterisk,
-                    ...registryConfig.routes
-                ],
+                routes: [routeWithTrailingSlashAndAsterisk, ...registryConfig.routes],
             });
 
             it('should match request url without trailing slash', () => {
@@ -580,7 +575,7 @@ describe('Router', () => {
             const router = new Router({
                 routes: registryConfig.routes,
                 specialRoutes: {
-                    '404': {
+                    404: {
                         route: '/404',
                         next: false,
                         template: '',

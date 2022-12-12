@@ -21,13 +21,13 @@ describe('WrapApp', () => {
         bootstrap: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
         mount: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
         unmount: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
-    }
+    };
 
     const wrapperCallbacksFakeArray = {
         bootstrap: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
         mount: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
         unmount: [sinon.spy(() => Promise.resolve()), sinon.spy(() => Promise.resolve())],
-    }
+    };
 
     /**
      * Reset `appCallbacksFake` callbacks history
@@ -47,14 +47,18 @@ describe('WrapApp', () => {
      * Reset `appCallbacksFakeArray` callbacks history
      */
     function appCallbacksFakeArrayResetHistory() {
-        Object.keys(appCallbacksFakeArray).forEach((key) => appCallbacksFakeArray[key].forEach((func) => func.resetHistory()));
+        Object.keys(appCallbacksFakeArray).forEach((key) =>
+            appCallbacksFakeArray[key].forEach((func) => func.resetHistory()),
+        );
     }
 
     /**
      * Reset `wrapperCallbacksFakeArray` callbacks history
      */
     function wrapperCallbacksFakeArrayResetHistory() {
-        Object.keys(wrapperCallbacksFakeArray).forEach((key) => wrapperCallbacksFakeArray[key].forEach((func) => func.resetHistory()));
+        Object.keys(wrapperCallbacksFakeArray).forEach((key) =>
+            wrapperCallbacksFakeArray[key].forEach((func) => func.resetHistory()),
+        );
     }
 
     /**
@@ -114,7 +118,7 @@ describe('WrapApp', () => {
      */
     function expectCallbacksToNotBeCalled(spiedFunctions) {
         for (const func of spiedFunctions) {
-            chai.expect(func.called).to.be.false
+            chai.expect(func.called).to.be.false;
         }
     }
 
@@ -139,7 +143,12 @@ describe('WrapApp', () => {
 
     it('should bootstrap wrapper', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -154,7 +163,12 @@ describe('WrapApp', () => {
 
     it('should bootstrap wrapper with array of callbacks', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -163,13 +177,18 @@ describe('WrapApp', () => {
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        expectCallbacksToBeCalled([ ...wrapperCallbacksFakeArray.bootstrap ]);
-        expectCallbacksToNotBeCalled([ ...appCallbacksFakeArray.bootstrap ]);
+        expectCallbacksToBeCalled([...wrapperCallbacksFakeArray.bootstrap]);
+        expectCallbacksToNotBeCalled([...appCallbacksFakeArray.bootstrap]);
     });
 
     it('should mount wrapper', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -185,7 +204,12 @@ describe('WrapApp', () => {
 
     it('should mount wrapper [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -195,13 +219,18 @@ describe('WrapApp', () => {
         await bootstrap({ appId: 'wrappedApp__at__body' });
         await mount({ appId: 'wrappedApp__at__body' });
 
-        expectCallbacksToBeCalled([ ...wrapperCallbacksFakeArray.mount ]);
-        expectCallbacksToNotBeCalled([ ...appCallbacksFakeArray.mount ]);
+        expectCallbacksToBeCalled([...wrapperCallbacksFakeArray.mount]);
+        expectCallbacksToNotBeCalled([...appCallbacksFakeArray.mount]);
     });
 
     it('should unmount wrapper', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -218,7 +247,12 @@ describe('WrapApp', () => {
 
     it('should unmount wrapper [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -229,13 +263,18 @@ describe('WrapApp', () => {
         await mount({ appId: 'wrappedApp__at__body' });
         await unmount({ appId: 'wrappedApp__at__body' });
 
-        expectCallbacksToBeCalled([ ...wrapperCallbacksFakeArray.unmount ]);
-        expectCallbacksToNotBeCalled([ ...appCallbacksFakeArray.unmount ]);
+        expectCallbacksToBeCalled([...wrapperCallbacksFakeArray.unmount]);
+        expectCallbacksToNotBeCalled([...appCallbacksFakeArray.unmount]);
     });
 
     it('should forward a correct appId for wrapper callbacks', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -257,10 +296,14 @@ describe('WrapApp', () => {
         chai.expect(wrapperUnmountFuncArgs.appId).to.be.equal(expectedAppId);
     });
 
-
     it('should forward a correct wrapperAppData wrapper callbacks', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -284,7 +327,12 @@ describe('WrapApp', () => {
 
     it('should forward a correct appId for wrapper callbacks [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -314,7 +362,12 @@ describe('WrapApp', () => {
 
     it('should forward a correct current base path for wrapper callbacks', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -338,7 +391,12 @@ describe('WrapApp', () => {
 
     it('should forward a correct current base path for wrapper callbacks [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -368,7 +426,12 @@ describe('WrapApp', () => {
 
     it('should forward a correct props for wrapper callbacks', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -392,7 +455,12 @@ describe('WrapApp', () => {
 
     it('should forward a correct props for wrapper callbacks [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -422,7 +490,12 @@ describe('WrapApp', () => {
 
     it('should bootstrap wrapped app', async () => {
         const wrapApp = new WrapApp(
-            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            {
+                appId: 'wrapper__at__body',
+                kind: 'wrapper',
+                spaBundle: 'http://localhost/client-entry.js',
+                props: { prop: 'value' },
+            },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
             transitionManager,
         );
@@ -437,7 +510,12 @@ describe('WrapApp', () => {
 
     it('should bootstrap wrapped app [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            {
+                appId: 'wrapper__at__body',
+                kind: 'wrapper',
+                spaBundle: 'http://localhost/client-entry.js',
+                props: { prop: 'value' },
+            },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
             transitionManager,
         );
@@ -446,13 +524,18 @@ describe('WrapApp', () => {
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        expectCallbacksToBeCalled([ ...appCallbacksFakeArray.bootstrap ]);
-        expectCallbacksToNotBeCalled([ ...wrapperCallbacksFakeArray.bootstrap ]);
+        expectCallbacksToBeCalled([...appCallbacksFakeArray.bootstrap]);
+        expectCallbacksToNotBeCalled([...wrapperCallbacksFakeArray.bootstrap]);
     });
 
     it('should mount wrapped app', async () => {
         const wrapApp = new WrapApp(
-            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            {
+                appId: 'wrapper__at__body',
+                kind: 'wrapper',
+                spaBundle: 'http://localhost/client-entry.js',
+                props: { prop: 'value' },
+            },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
         );
 
@@ -467,7 +550,12 @@ describe('WrapApp', () => {
 
     it('should mount wrapped app [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            {
+                appId: 'wrapper__at__body',
+                kind: 'wrapper',
+                spaBundle: 'http://localhost/client-entry.js',
+                props: { prop: 'value' },
+            },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
             transitionManager,
         );
@@ -477,13 +565,18 @@ describe('WrapApp', () => {
         await bootstrap({ appId: 'wrappedApp__at__body' });
         await mount({ appId: 'wrappedApp__at__body' });
 
-        expectCallbacksToBeCalled([ ...appCallbacksFakeArray.mount ]);
-        expectCallbacksToNotBeCalled([ ...wrapperCallbacksFakeArray.mount ]);
+        expectCallbacksToBeCalled([...appCallbacksFakeArray.mount]);
+        expectCallbacksToNotBeCalled([...wrapperCallbacksFakeArray.mount]);
     });
 
     it('should unmount wrapped app', async () => {
         const wrapApp = new WrapApp(
-            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            {
+                appId: 'wrapper__at__body',
+                kind: 'wrapper',
+                spaBundle: 'http://localhost/client-entry.js',
+                props: { prop: 'value' },
+            },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
             transitionManager,
         );
@@ -500,7 +593,12 @@ describe('WrapApp', () => {
 
     it('should unmount wrapped app [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            {
+                appId: 'wrapper__at__body',
+                kind: 'wrapper',
+                spaBundle: 'http://localhost/client-entry.js',
+                props: { prop: 'value' },
+            },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
             transitionManager,
         );
@@ -511,13 +609,18 @@ describe('WrapApp', () => {
         await mount({ appId: 'wrappedApp__at__body' });
         await unmount({ appId: 'wrappedApp__at__body' });
 
-        expectCallbacksToBeCalled([ ...appCallbacksFakeArray.unmount ]);
-        expectCallbacksToNotBeCalled([ ...wrapperCallbacksFakeArray.unmount ]);
+        expectCallbacksToBeCalled([...appCallbacksFakeArray.unmount]);
+        expectCallbacksToNotBeCalled([...wrapperCallbacksFakeArray.unmount]);
     });
 
     it('should forward a correct appId for wrapped app callbacks', async () => {
         const wrapApp = new WrapApp(
-            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            {
+                appId: 'wrapper__at__body',
+                kind: 'wrapper',
+                spaBundle: 'http://localhost/client-entry.js',
+                props: { prop: 'value' },
+            },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
             transitionManager,
         );
@@ -541,7 +644,12 @@ describe('WrapApp', () => {
 
     it('should forward a correct props for wrapped app callbacks [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { appId: 'wrapper__at__body', kind: 'wrapper', spaBundle: 'http://localhost/client-entry.js', props: { prop: 'value' } },
+            {
+                appId: 'wrapper__at__body',
+                kind: 'wrapper',
+                spaBundle: 'http://localhost/client-entry.js',
+                props: { prop: 'value' },
+            },
             { fromLocation: 1, propFromWrapper: 'AAAAA' },
             transitionManager,
         );
@@ -573,7 +681,12 @@ describe('WrapApp', () => {
 
     it('should dynamically render wrapped app after wrapper has been rendered', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -582,7 +695,11 @@ describe('WrapApp', () => {
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        const mountProps = {
+            appId: 'wrappedApp__at__body',
+            renderApp: () => {},
+            getCurrentPathProps: () => ({ propMount: 'value' }),
+        };
         await mount(mountProps);
 
         const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
@@ -599,7 +716,12 @@ describe('WrapApp', () => {
 
     it('should dynamically render wrapped app after wrapper has been rendered [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -608,7 +730,11 @@ describe('WrapApp', () => {
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        const mountProps = {
+            appId: 'wrappedApp__at__body',
+            renderApp: () => {},
+            getCurrentPathProps: () => ({ propMount: 'value' }),
+        };
         await mount(mountProps);
 
         const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
@@ -625,7 +751,12 @@ describe('WrapApp', () => {
 
     it('should correctly unmount wrapped app that has been rendered dynamically', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -634,7 +765,11 @@ describe('WrapApp', () => {
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        const mountProps = {
+            appId: 'wrappedApp__at__body',
+            renderApp: () => {},
+            getCurrentPathProps: () => ({ propMount: 'value' }),
+        };
         await mount(mountProps);
 
         const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
@@ -647,7 +782,12 @@ describe('WrapApp', () => {
 
     it('should correctly unmount wrapped app that has been rendered dynamically [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -656,7 +796,11 @@ describe('WrapApp', () => {
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        const mountProps = {
+            appId: 'wrappedApp__at__body',
+            renderApp: () => {},
+            getCurrentPathProps: () => ({ propMount: 'value' }),
+        };
         await mount(mountProps);
 
         const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
@@ -669,7 +813,12 @@ describe('WrapApp', () => {
 
     it('should forward a correct appId upon dynamic mount/unmount of wrapped app', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -678,13 +827,17 @@ describe('WrapApp', () => {
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        const mountProps = {
+            appId: 'wrappedApp__at__body',
+            renderApp: () => {},
+            getCurrentPathProps: () => ({ propMount: 'value' }),
+        };
         await mount(mountProps);
 
         const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
         await mountProps.renderApp(extraPropsFromWrapper);
 
-        await unmount({ appId: 'wrappedApp__at__body'} );
+        await unmount({ appId: 'wrappedApp__at__body' });
 
         const wrapperBootstrapFuncArgs = wrapperCallbacksFake.bootstrap.args[0][0];
         const wrapperMountFuncArgs = wrapperCallbacksFake.mount.args[0][0];
@@ -708,7 +861,12 @@ describe('WrapApp', () => {
 
     it('should forward a correct appId upon dynamic mount/unmount of wrapped app [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -717,13 +875,17 @@ describe('WrapApp', () => {
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        const mountProps = {
+            appId: 'wrappedApp__at__body',
+            renderApp: () => {},
+            getCurrentPathProps: () => ({ propMount: 'value' }),
+        };
         await mount(mountProps);
 
         const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
         await mountProps.renderApp(extraPropsFromWrapper);
 
-        await unmount({ appId: 'wrappedApp__at__body'} );
+        await unmount({ appId: 'wrappedApp__at__body' });
 
         const wrapperBootstrapFunc0Args = wrapperCallbacksFakeArray.bootstrap[0].args[0][0];
         const wrapperBootstrapFunc1Args = wrapperCallbacksFakeArray.bootstrap[1].args[0][0];
@@ -759,7 +921,12 @@ describe('WrapApp', () => {
 
     it('should forward a correct extra props provided upon dynamic render of wrapped app', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -768,7 +935,11 @@ describe('WrapApp', () => {
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        const mountProps = {
+            appId: 'wrappedApp__at__body',
+            renderApp: () => {},
+            getCurrentPathProps: () => ({ propMount: 'value' }),
+        };
         await mount(mountProps);
 
         const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };
@@ -785,7 +956,12 @@ describe('WrapApp', () => {
 
     it('should forward a correct extra props provided upon dynamic render of wrapped app [arrayed callbacks]', async () => {
         const wrapApp = new WrapApp(
-            { spaBundle: 'http://localhost/client-entry.js', kind: 'wrapper', appId: 'wrapper__at__body', props: { prop: 'value' } },
+            {
+                spaBundle: 'http://localhost/client-entry.js',
+                kind: 'wrapper',
+                appId: 'wrapper__at__body',
+                props: { prop: 'value' },
+            },
             null,
             transitionManager,
         );
@@ -794,7 +970,11 @@ describe('WrapApp', () => {
 
         await bootstrap({ appId: 'wrappedApp__at__body' });
 
-        const mountProps = { appId: 'wrappedApp__at__body', renderApp: () => {}, getCurrentPathProps: () => ({ propMount: 'value' }) };
+        const mountProps = {
+            appId: 'wrappedApp__at__body',
+            renderApp: () => {},
+            getCurrentPathProps: () => ({ propMount: 'value' }),
+        };
         await mount(mountProps);
 
         const extraPropsFromWrapper = { propsFromWrapper: 'AAAA', fromClick: 1 };

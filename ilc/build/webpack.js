@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 const WrapperPlugin = require('wrapper-webpack-plugin');
-const {ResolveIlcDefaultPluginsWebpackPlugin} = require('ilc-plugins-sdk/webpack');
+const { ResolveIlcDefaultPluginsWebpackPlugin } = require('ilc-plugins-sdk/webpack');
 
 module.exports = {
     entry: path.resolve(__dirname, '../client.js'),
@@ -23,16 +23,11 @@ module.exports = {
         ],
     },
     resolve: {
-        modules: [
-            __dirname,
-            'node_modules',
-        ],
+        modules: [__dirname, 'node_modules'],
         alias: {
             'single-spa': require.resolve('single-spa/lib/umd/single-spa.min.js'),
         },
-        plugins: [
-            new ResolveIlcDefaultPluginsWebpackPlugin(),
-        ]
+        plugins: [new ResolveIlcDefaultPluginsWebpackPlugin()],
     },
     plugins: [
         new WrapperPlugin({

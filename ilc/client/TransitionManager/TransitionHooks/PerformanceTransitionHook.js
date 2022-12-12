@@ -1,4 +1,4 @@
-import {BaseTransitionHook} from './BaseTransitionHook';
+import { BaseTransitionHook } from './BaseTransitionHook';
 
 export class PerformanceTransitionHook extends BaseTransitionHook {
     #currentPathGetter;
@@ -23,10 +23,9 @@ export class PerformanceTransitionHook extends BaseTransitionHook {
         // ToDo: Show only in dev mode in prod reporting to newRelic
         console.info(`ILC: Client side route change to "${route}" took ${timeMs} milliseconds.`);
 
-
         // ToDo: remove newrelic and use more abstract interface for monitoring tools
         if (window.newrelic && window.newrelic.addPageAction) {
-            window.newrelic.addPageAction('routeChange', { time: timeMs, route })
+            window.newrelic.addPageAction('routeChange', { time: timeMs, route });
         }
     }
 }

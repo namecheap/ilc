@@ -1,5 +1,4 @@
 export class GlobalSpinner {
-
     #spinnerConfig;
     #spinnerTimeout;
     #globalSpinner;
@@ -20,13 +19,13 @@ export class GlobalSpinner {
      * @method start
      * @return void
      */
-    start({onBeforeStart}) {
+    start({ onBeforeStart }) {
         console.log('start .... ');
         this.#spinnerTimeout = setTimeout(() => {
-
-            onBeforeStart && onBeforeStart({
-                minimumVisibleTime: this.#spinnerConfig.minimumVisible
-            });
+            onBeforeStart &&
+                onBeforeStart({
+                    minimumVisibleTime: this.#spinnerConfig.minimumVisible,
+                });
 
             if (!this.#spinnerConfig.customHTML) {
                 this.#runDefaultSpinner();
@@ -77,7 +76,7 @@ export class GlobalSpinner {
         document.body.appendChild(this.#globalSpinner);
 
         // run script tags
-        this.#globalSpinner.querySelectorAll('script').forEach(oldScript => {
+        this.#globalSpinner.querySelectorAll('script').forEach((oldScript) => {
             const newScript = document.createElement('script');
 
             newScript.innerHTML = oldScript.innerHTML;

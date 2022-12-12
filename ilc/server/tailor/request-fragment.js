@@ -17,7 +17,7 @@ const MS_IN_SEC = 1000;
 
 // By default tailor supports gzipped response from fragments
 const requiredHeaders = {
-    'accept-encoding': 'gzip, deflate'
+    'accept-encoding': 'gzip, deflate',
 };
 
 const kaAgent = new Agent();
@@ -35,180 +35,211 @@ const kaAgentHttps = new HttpsAgent();
  * @param {Object} request - HTTP request stream
  * @returns {Promise} Response from the fragment server
  */
-module.exports = (filterHeaders, processFragmentResponse, logger) => function requestFragment(
-    fragmentUrl,
-    attributes,
-    request
-) {
-    return new Promise((resolve, reject) => {
-        const currRoute = request.router.getRoute();
+module.exports = (filterHeaders, processFragmentResponse, logger) =>
+    function requestFragment(fragmentUrl, attributes, request) {
+        return new Promise((resolve, reject) => {
+            const currRoute = request.router.getRoute();
 
-        if (attributes.wrapperConf) {
-            const wrapperConf = attributes.wrapperConf;
-            const reqUrl = makeFragmentUrl({
-                route: currRoute,
-                baseUrl: wrapperConf.src,
-                appId: wrapperConf.appId,
-                props: wrapperConf.props,
-                ignoreBasePath: true,
-                wrappedAppProps: attributes.appProps
-            });
+            if (attributes.wrapperConf) {
+                const wrapperConf = attributes.wrapperConf;
+                const reqUrl = makeFragmentUrl({
+                    route: currRoute,
+                    baseUrl: wrapperConf.src,
+                    appId: wrapperConf.appId,
+                    props: wrapperConf.props,
+                    ignoreBasePath: true,
+                    wrappedAppProps: attributes.appProps,
+                });
 
-            logger.debug({
-                url: currRoute.route,
-                id: request.id,
-                domain: request.hostname,
-                detailsJSON: JSON.stringify({
-                    attributes
-                }),
-            },'Request Fragment. Init processing for wrapper');
-
-
-            const fragmentRequest = makeRequest(
-                reqUrl,
-                {...filterHeaders(attributes, request), ...requiredHeaders},
-                wrapperConf.timeout,
-                attributes.ignoreInvalidSsl || wrapperConf.ignoreInvalidSsl,
-            );
-
-            fragmentRequest.on('response', response => {
-                try {
-                    logger.debug({
+                logger.debug(
+                    {
                         url: currRoute.route,
                         id: request.id,
                         domain: request.hostname,
                         detailsJSON: JSON.stringify({
-                            statusCode: response.statusCode,
-                            'x-props-override': response.headers['x-props-override'],
+                            attributes,
                         }),
-                    }, 'Request Fragment. Wrapper Fragment Response');
+                    },
+                    'Request Fragment. Init processing for wrapper',
+                );
 
+                const fragmentRequest = makeRequest(
+                    reqUrl,
+                    { ...filterHeaders(attributes, request), ...requiredHeaders },
+                    wrapperConf.timeout,
+                    attributes.ignoreInvalidSsl || wrapperConf.ignoreInvalidSsl,
+                );
 
-                    // Wrapper says that we need to request wrapped application
-                    if (response.statusCode === 210) {
-                        logger.debug({ url: currRoute.route, operationId: request.id }, 'Request Fragment. Wrapper Fragment Response. ForwardRequest');
-                        const propsOverride = response.headers['x-props-override'];
-                        attributes.wrapperPropsOverride = {};
-                        if (propsOverride) {
-                            const props = JSON.parse(Buffer.from(propsOverride, 'base64').toString('utf8'));
-                            attributes.appProps = deepmerge(attributes.appProps, props);
-                            attributes.wrapperPropsOverride = props;
+                fragmentRequest.on('response', (response) => {
+                    try {
+                        logger.debug(
+                            {
+                                url: currRoute.route,
+                                id: request.id,
+                                domain: request.hostname,
+                                detailsJSON: JSON.stringify({
+                                    statusCode: response.statusCode,
+                                    'x-props-override': response.headers['x-props-override'],
+                                }),
+                            },
+                            'Request Fragment. Wrapper Fragment Response',
+                        );
+
+                        // Wrapper says that we need to request wrapped application
+                        if (response.statusCode === 210) {
+                            logger.debug(
+                                { url: currRoute.route, operationId: request.id },
+                                'Request Fragment. Wrapper Fragment Response. ForwardRequest',
+                            );
+                            const propsOverride = response.headers['x-props-override'];
+                            attributes.wrapperPropsOverride = {};
+                            if (propsOverride) {
+                                const props = JSON.parse(Buffer.from(propsOverride, 'base64').toString('utf8'));
+                                attributes.appProps = deepmerge(attributes.appProps, props);
+                                attributes.wrapperPropsOverride = props;
+                            }
+                            attributes.wrapperConf = null;
+
+                            logger.debug(
+                                {
+                                    url: currRoute.route,
+                                    id: request.id,
+                                    domain: request.hostname,
+                                    detailsJSON: JSON.stringify({
+                                        attributes,
+                                    }),
+                                },
+                                'Request Fragment. Wrapper Fragment Processing. Attribute overriding',
+                            );
+
+                            resolve(requestFragment(fragmentUrl, attributes, request));
+
+                            return;
                         }
-                        attributes.wrapperConf = null;
 
-                        logger.debug({
+                        logger.debug(
+                            { url: currRoute.route, operationId: request.id },
+                            'Request Fragment. Wrapper Fragment Response. Using App Wrapper.',
+                        );
+
+                        resolve(
+                            processFragmentResponse(response, {
+                                request,
+                                fragmentUrl: currRoute.route,
+                                fragmentAttributes: attributes,
+                                isWrapper: true,
+                            }),
+                        );
+                    } catch (e) {
+                        logger.debug(
+                            {
+                                url: currRoute.route,
+                                id: request.id,
+                                domain: request.hostname,
+                            },
+                            'Request Fragment. Wrapper Fragment Processing. Fragment Response Processing Error',
+                        );
+                        reject(e);
+                    }
+                });
+                fragmentRequest.on('error', (error) => {
+                    logger.debug(
+                        {
                             url: currRoute.route,
                             id: request.id,
                             domain: request.hostname,
-                            detailsJSON: JSON.stringify({
-                                attributes
-                            }),
-                        }, 'Request Fragment. Wrapper Fragment Processing. Attribute overriding');
-
-                        resolve(requestFragment(fragmentUrl, attributes, request));
-
-                        return;
-                    }
-
-                    logger.debug({ url: currRoute.route, operationId: request.id }, 'Request Fragment. Wrapper Fragment Response. Using App Wrapper.');
-
-                    resolve(
-                        processFragmentResponse(response, {
-                            request,
-                            fragmentUrl: currRoute.route,
-                            fragmentAttributes: attributes,
-                            isWrapper: true,
-                        })
+                        },
+                        'Request Fragment. Wrapper Fragment Processing. Fragment Request Error',
                     );
-                } catch (e) {
-                    logger.debug( {
-                        url: currRoute.route,
-                        id: request.id,
-                        domain: request.hostname,
-                    }, 'Request Fragment. Wrapper Fragment Processing. Fragment Response Processing Error');
-                    reject(e);
-                }
-            });
-            fragmentRequest.on('error', error => {
-                logger.debug( {
-                    url: currRoute.route,
-                    id: request.id,
-                    domain: request.hostname,
-                }, 'Request Fragment. Wrapper Fragment Processing. Fragment Request Error');
-                reject(new errors.FragmentRequestError({message: `Error during SSR request to fragment wrapper at URL: ${fragmentUrl}`, cause: error}));
-            });
-            fragmentRequest.end();
-        } else {
+                    reject(
+                        new errors.FragmentRequestError({
+                            message: `Error during SSR request to fragment wrapper at URL: ${fragmentUrl}`,
+                            cause: error,
+                        }),
+                    );
+                });
+                fragmentRequest.end();
+            } else {
+                const { appName } = appIdToNameAndSlot(attributes.id);
 
-            const { appName } = appIdToNameAndSlot(attributes.id);
+                const sdkOptions = new SdkOptions({
+                    i18n: {
+                        manifestPath: request.registryConfig['apps'][appName].l10nManifest,
+                    },
+                });
 
-            const sdkOptions = new SdkOptions({
-                i18n: {
-                    manifestPath: request.registryConfig['apps'][appName].l10nManifest,
-                }
-            });
-
-            const reqUrl = makeFragmentUrl({
-                route: currRoute,
-                baseUrl: fragmentUrl,
-                appId: attributes.id,
-                props: attributes.appProps,
-                sdkOptions: sdkOptions.toJSON(),
-            });
-
-            logger.debug({
-                url: currRoute.route,
-                id: request.id,
-                domain: request.hostname,
-                detailsJSON: JSON.stringify({
+                const reqUrl = makeFragmentUrl({
                     route: currRoute,
                     baseUrl: fragmentUrl,
                     appId: attributes.id,
                     props: attributes.appProps,
-                }),
-            }, 'Request Fragment. Fragment Processing.');
+                    sdkOptions: sdkOptions.toJSON(),
+                });
 
+                logger.debug(
+                    {
+                        url: currRoute.route,
+                        id: request.id,
+                        domain: request.hostname,
+                        detailsJSON: JSON.stringify({
+                            route: currRoute,
+                            baseUrl: fragmentUrl,
+                            appId: attributes.id,
+                            props: attributes.appProps,
+                        }),
+                    },
+                    'Request Fragment. Fragment Processing.',
+                );
 
-            const startTime = process.hrtime();
-            const fragmentRequest = makeRequest(
-                reqUrl,
-                {...filterHeaders(attributes, request), ...requiredHeaders},
-                attributes.timeout,
-                attributes.ignoreInvalidSsl,
-            );
+                const startTime = process.hrtime();
+                const fragmentRequest = makeRequest(
+                    reqUrl,
+                    { ...filterHeaders(attributes, request), ...requiredHeaders },
+                    attributes.timeout,
+                    attributes.ignoreInvalidSsl,
+                );
 
-            fragmentRequest.on('response', response => {
-                try {
-                    resolve(
-                        processFragmentResponse(response, {
-                            request,
-                            fragmentUrl: reqUrl,
-                            fragmentAttributes: attributes,
-                        })
+                fragmentRequest.on('response', (response) => {
+                    try {
+                        resolve(
+                            processFragmentResponse(response, {
+                                request,
+                                fragmentUrl: reqUrl,
+                                fragmentAttributes: attributes,
+                            }),
+                        );
+                        logger.debug(
+                            { url: currRoute.route, id: request.id, domain: request.hostname },
+                            'Fragment Processing. Finished',
+                        );
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+                fragmentRequest.on('timeout', () => {
+                    const endTime = process.hrtime(startTime);
+                    reject(
+                        new errors.FragmentRequestError({
+                            message: `Error during SSR request to fragment at URL: ${fragmentUrl} due to timeout after ${
+                                endTime[0] * MS_IN_SEC + endTime[1] / NS_IN_SEC
+                            }ms`,
+                        }),
                     );
-                    logger.debug({url: currRoute.route, id: request.id, domain: request.hostname}, 'Fragment Processing. Finished');
-                } catch (e) {
-                    reject(e);
-                }
-            });
-            fragmentRequest.on('timeout', () => {
-                const endTime = process.hrtime(startTime);
-                reject(new errors.FragmentRequestError({
-                    message: `Error during SSR request to fragment at URL: ${fragmentUrl} due to timeout after ${endTime[0] * MS_IN_SEC + endTime[1] / NS_IN_SEC}ms`
-                }))
-            });
-            fragmentRequest.on('error', error => {
-                reject(new errors.FragmentRequestError({
-                    message: `Error during SSR request to fragment at URL: ${fragmentUrl}`,
-                    cause: error,
-                }));
-            });
-            fragmentRequest.end();
-        }
-    });
-}
+                });
+                fragmentRequest.on('error', (error) => {
+                    reject(
+                        new errors.FragmentRequestError({
+                            message: `Error during SSR request to fragment at URL: ${fragmentUrl}`,
+                            cause: error,
+                        }),
+                    );
+                });
+                fragmentRequest.end();
+            }
+        });
+    };
 
-function makeFragmentUrl({route, baseUrl, appId, props, ignoreBasePath = false, sdkOptions, wrappedAppProps}) {
+function makeFragmentUrl({ route, baseUrl, appId, props, ignoreBasePath = false, sdkOptions, wrappedAppProps }) {
     const url = new URL(baseUrl);
 
     const reqProps = {
@@ -238,7 +269,7 @@ function makeRequest(reqUrl, headers, timeout, ignoreInvalidSsl = false) {
     const options = {
         headers,
         timeout,
-        ...url.parse(reqUrl)
+        ...url.parse(reqUrl),
     };
 
     const { protocol: reqProtocol } = options;

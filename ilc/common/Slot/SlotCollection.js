@@ -1,13 +1,12 @@
-const {Slot} = require('./Slot');
+const { Slot } = require('./Slot');
 /**
  * @class SlotCollection
  */
 class SlotCollection {
-
     /**
      * @property {Array<Slot>}
      */
-    #slotCollection
+    #slotCollection;
 
     /**
      * @constructor
@@ -16,10 +15,13 @@ class SlotCollection {
      */
     constructor(slots, { apps }) {
         this.#slotCollection = Object.keys(slots).map((key) => {
-            return new Slot({
-                ...slots[key],
-                slotName: key,
-            }, apps);
+            return new Slot(
+                {
+                    ...slots[key],
+                    slotName: key,
+                },
+                apps,
+            );
         });
     }
 
@@ -29,8 +31,10 @@ class SlotCollection {
      */
     isValid() {
         this.#slotCollection.forEach((slot) => {
-            if(!slot.isValid()) {
-                throw new Error(`Can not find application - ${slot.getApplicationName()} for slot - ${slot.getSlotName()}`);
+            if (!slot.isValid()) {
+                throw new Error(
+                    `Can not find application - ${slot.getApplicationName()} for slot - ${slot.getSlotName()}`,
+                );
             }
         });
 
@@ -40,4 +44,4 @@ class SlotCollection {
 
 module.exports = {
     SlotCollection,
-}
+};

@@ -20,7 +20,7 @@ export default class AsyncBootUp {
             this.#markSlotAsReady(id);
         }
 
-        window.ilcApps = {push: id => this.#markSlotAsReady(id)};
+        window.ilcApps = { push: (id) => this.#markSlotAsReady(id) };
         window.addEventListener(singleSpaEvents.ROUTING_EVENT, () => (this.#afterRoutingEvent = true));
     }
 
@@ -35,7 +35,7 @@ export default class AsyncBootUp {
             return res;
         }
 
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
             if (this.#readySlots.includes(slotName)) {
                 return resolve();
             } else if (!this.#pageLoadingIsDone) {
@@ -52,7 +52,9 @@ export default class AsyncBootUp {
 
         const slotEl = document.getElementById(slotName);
         if (slotEl === null) {
-            this.#logger.warn(`Looks like we're missing slot "${slotName}" in template... Ignoring possible config overrides...`);
+            this.#logger.warn(
+                `Looks like we're missing slot "${slotName}" in template... Ignoring possible config overrides...`,
+            );
             return res;
         }
 
@@ -88,7 +90,8 @@ export default class AsyncBootUp {
     #markSlotAsReady = (id) => {
         setTimeout(() => {
             // All slots has been loaded
-            if (id === Infinity) { // Infinity here used as indicator of the end of the slots list
+            if (id === Infinity) {
+                // Infinity here used as indicator of the end of the slots list
                 this.#pageLoadingIsDone = true;
                 for (let slotName in this.#appsWaitingForSlot) {
                     this.#appsWaitingForSlot[slotName]();
@@ -101,5 +104,5 @@ export default class AsyncBootUp {
                 }
             }
         }, 0);
-    }
-};
+    };
+}

@@ -1,5 +1,5 @@
-(function(define){
-    define('named-define-dependency', [], function() {
+(function (define) {
+    define('named-define-dependency', [], function () {
         return {
             hi: 'from named defined dependency module',
         };

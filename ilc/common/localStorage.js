@@ -7,12 +7,12 @@
 // also, there is no persistence
 // TODO persist
 (function () {
-    "use strict";
+    'use strict';
 
     var db;
 
     function LocalStorage() {
-        console.warn('Since localStorage is disabled or unsupported in the current browser we use polyfill')
+        console.warn('Since localStorage is disabled or unsupported in the current browser we use polyfill');
     }
     db = LocalStorage;
 
@@ -57,4 +57,4 @@
     } catch (e) {
         module.exports = new LocalStorage();
     }
-}());
+})();

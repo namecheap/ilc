@@ -19,9 +19,9 @@
 
         const script = document.createElement('script');
         script.type = 'systemjs-importmap';
-        script.text = JSON.stringify({imports: {[id]: url}});
+        script.text = JSON.stringify({ imports: { [id]: url } });
         document.head.append(script);
 
         System.prepareImport(true);
-    }
+    };
 })();

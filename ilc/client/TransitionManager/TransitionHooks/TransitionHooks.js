@@ -2,7 +2,6 @@ import singleSpaEvents from '../../constants/singleSpaEvents';
 import ilcEvents from '../../constants/ilcEvents';
 
 export class TransitionHooks {
-
     #targetHref;
     #subscribed = false;
     #hookList = [];
@@ -12,8 +11,7 @@ export class TransitionHooks {
     }
 
     subscribe() {
-
-        if(this.#subscribed) {
+        if (this.#subscribed) {
             console.warn('ILC: TransitionHooks. Unexpected subscription happened');
             return;
         }
@@ -28,7 +26,7 @@ export class TransitionHooks {
             }
 
             this.#hookList.forEach((hook) => {
-               hook.beforeHandler();
+                hook.beforeHandler();
             });
 
             this.#targetHref = window.location.href;

@@ -2,7 +2,6 @@ import { CssTrackedApp } from './CssTrackedApp';
 import { SdkOptions } from '../common/SdkOptions';
 
 export class BundleLoader {
-
     #cache = new WeakMap();
     #registryApps;
     #moduleLoader;
@@ -37,12 +36,13 @@ export class BundleLoader {
 
     loadApp(appName) {
         const app = this.#getApp(appName);
-        return this.#moduleLoader.import(appName)
-            .then(appBundle => {
-                const sdkInstanceFactory = this.#sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
-                const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props, { sdkFactory: sdkInstanceFactory });
-                return typeof app.cssBundle === 'string' ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval).getDecoratedApp() : rawCallbacks;
-            })
+        return this.#moduleLoader.import(appName).then((appBundle) => {
+            const sdkInstanceFactory = this.#sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
+            const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props, { sdkFactory: sdkInstanceFactory });
+            return typeof app.cssBundle === 'string'
+                ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval).getDecoratedApp()
+                : rawCallbacks;
+        });
     }
 
     loadAppWithCss(appName) {
@@ -53,13 +53,17 @@ export class BundleLoader {
             waitTill.push(this.loadCss(app.cssBundle));
         }
 
-        return Promise.all(waitTill).then(values => values[0]);
+        return Promise.all(waitTill).then((values) => values[0]);
     }
 
     loadCss(url) {
-        return this.#moduleLoader.import(url).catch(err => { //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
+        return this.#moduleLoader.import(url).catch((err) => {
+            //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
             //TODO: error handling should be improved, need to submit PR with typed errors
-            if (typeof err.message !== 'string' || err.message.indexOf('has already been loaded using another way') === -1) {
+            if (
+                typeof err.message !== 'string' ||
+                err.message.indexOf('has already been loaded using another way') === -1
+            ) {
                 throw err;
             }
         });
@@ -72,7 +76,7 @@ export class BundleLoader {
         }
 
         return app;
-    }
+    };
 
     #getAppSpaCallbacks = (appBundle, props = {}, { sdkFactory }) => {
         // We do this to make sure that mainSpa function will be called only once
@@ -80,7 +84,7 @@ export class BundleLoader {
             return this.#cache.get(appBundle);
         }
 
-        const mainSpa = appBundle.mainSpa || appBundle.default && appBundle.default.mainSpa;
+        const mainSpa = appBundle.mainSpa || (appBundle.default && appBundle.default.mainSpa);
 
         if (mainSpa !== undefined && typeof mainSpa === 'function') {
             const res = mainSpa(props, { sdkFactory });
@@ -93,5 +97,5 @@ export class BundleLoader {
 
             return appBundle;
         }
-    }
+    };
 }

@@ -9,10 +9,7 @@ const capturedEventListeners = {
     popstate: [],
 };
 
-const routingEventsListeningTo = [
-    'hashchange',
-    'popstate'
-];
+const routingEventsListeningTo = ['hashchange', 'popstate'];
 
 const addEventListener = window.addEventListener;
 const removeEventListener = window.removeEventListener;
@@ -67,11 +64,15 @@ function fireRoutingEvent() {
 
 export function addNavigationHook(fn) {
     if (typeof fn !== 'function') {
-        throw new Error(`Provided hook "${fn}" is not a function! Please check that you provided a function while calling "addNavigationHook()".`);
+        throw new Error(
+            `Provided hook "${fn}" is not a function! Please check that you provided a function while calling "addNavigationHook()".`,
+        );
     }
 
     if (hooks.includes(fn)) {
-        console.warn(`ILC: Provided hook "${fn}" is already existed! Please provide only a unique hook to "addNavigationHook()".`);
+        console.warn(
+            `ILC: Provided hook "${fn}" is already existed! Please provide only a unique hook to "addNavigationHook()".`,
+        );
         return;
     }
 
@@ -86,11 +87,15 @@ export function removeNavigationHook(fn) {
 
 export function setNavigationErrorHandler(fn) {
     if (typeof fn !== 'function') {
-        throw new Error(`Provided error handler "${fn}" is not a function! Please check that you provided a function while calling "setErrorHandler()".`);
+        throw new Error(
+            `Provided error handler "${fn}" is not a function! Please check that you provided a function while calling "setErrorHandler()".`,
+        );
     }
 
     if (typeof errorHandler === 'function') {
-        console.warn(`ILC: Navigation error handler has been set already! Please check that you set navigation error handler only once.`);
+        console.warn(
+            `ILC: Navigation error handler has been set already! Please check that you set navigation error handler only once.`,
+        );
         return;
     }
 
@@ -113,7 +118,10 @@ function callNavigationHooks(url) {
             const hookIndex = hooks.indexOf(hook);
 
             if (errorHandler === null) {
-                console.error(`ILC: The following error has occurred while executing the transition hook with index #${hookIndex}:`, error);
+                console.error(
+                    `ILC: The following error has occurred while executing the transition hook with index #${hookIndex}:`,
+                    error,
+                );
             } else {
                 errorHandler(error, {
                     hookIndex,

@@ -39,9 +39,9 @@ describe('GuardManager', () => {
 
             const newLocation = '/should/be/this/location';
             const hooks = [
-                sinon.stub().resolves({type: actionTypes.continue}),
-                sinon.stub().resolves({type: actionTypes.redirect, newLocation}),
-                sinon.stub().resolves({type: actionTypes.continue}),
+                sinon.stub().resolves({ type: actionTypes.continue }),
+                sinon.stub().resolves({ type: actionTypes.redirect, newLocation }),
+                sinon.stub().resolves({ type: actionTypes.continue }),
             ];
 
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
@@ -50,7 +50,7 @@ describe('GuardManager', () => {
             const app = createApp(helpers.getRegistryMock(), pluginManager);
 
             try {
-                res = await app.inject({method: 'GET', url: '/all'});
+                res = await app.inject({ method: 'GET', url: '/all' });
             } finally {
                 app.close();
             }
@@ -63,8 +63,8 @@ describe('GuardManager', () => {
             let res;
 
             const hooks = [
-                sinon.stub().resolves({type: actionTypes.continue}),
-                sinon.stub().resolves({type: actionTypes.continue}),
+                sinon.stub().resolves({ type: actionTypes.continue }),
+                sinon.stub().resolves({ type: actionTypes.continue }),
             ];
 
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
@@ -73,7 +73,7 @@ describe('GuardManager', () => {
             app = createApp(helpers.getRegistryMock(), pluginManager);
 
             try {
-                res = await app.inject({method: 'GET', url: '/all'});
+                res = await app.inject({ method: 'GET', url: '/all' });
             } finally {
                 app.close();
             }
@@ -92,12 +92,12 @@ describe('GuardManager', () => {
             reqUrl: '/some/unlocalized/and/processed/url',
         });
         const log = Object.freeze({
-            info: () => { },
-            fatal: () => { },
-            error: () => { },
-            warn: () => { },
-            debug: () => { },
-            trace: () => { },
+            info: () => {},
+            fatal: () => {},
+            error: () => {},
+            warn: () => {},
+            debug: () => {},
+            trace: () => {},
         });
         const rawReq = Object.freeze({
             router: {
@@ -107,7 +107,7 @@ describe('GuardManager', () => {
         const req = {
             raw: rawReq,
             log,
-            hostname: 'test.com'
+            hostname: 'test.com',
         };
 
         describe('should have access to a provided URL', () => {
@@ -132,15 +132,15 @@ describe('GuardManager', () => {
                         getRoute: () => route,
                     },
                 });
-                const redirectTo = await new GuardManager(pluginManager).redirectTo({...req, raw: rawReq});
+                const redirectTo = await new GuardManager(pluginManager).redirectTo({ ...req, raw: rawReq });
 
                 chai.expect(redirectTo).to.be.null;
             });
 
             it(`if none of hooks resolves with "${actionTypes.redirect}" action type`, async () => {
                 const hooks = [
-                    sinon.stub().resolves({type: actionTypes.continue}),
-                    sinon.stub().resolves({type: actionTypes.continue}),
+                    sinon.stub().resolves({ type: actionTypes.continue }),
+                    sinon.stub().resolves({ type: actionTypes.continue }),
                 ];
 
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
@@ -149,11 +149,13 @@ describe('GuardManager', () => {
                 const redirectTo = await new GuardManager(pluginManager).redirectTo(req);
 
                 for (const hook of hooks) {
-                    chai.expect(hook.calledOnceWith({
-                        route: {meta: route.meta, url: route.reqUrl, hostname: req.hostname},
-                        req: rawReq,
-                        log,
-                    })).to.be.true;
+                    chai.expect(
+                        hook.calledOnceWith({
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname },
+                            req: rawReq,
+                            log,
+                        }),
+                    ).to.be.true;
                 }
 
                 chai.expect(redirectTo).to.be.null;
@@ -164,29 +166,33 @@ describe('GuardManager', () => {
             it(`if some of hooks rejects with an error`, async () => {
                 const error = new Error('Hi there! I am an error. So server should redirect to 500 error page.');
                 const hooks = [
-                    sinon.stub().resolves({type: actionTypes.continue}),
+                    sinon.stub().resolves({ type: actionTypes.continue }),
                     sinon.stub().rejects(error),
-                    sinon.stub().resolves({type: actionTypes.continue}),
-                    sinon.stub().resolves({type: actionTypes.continue}),
+                    sinon.stub().resolves({ type: actionTypes.continue }),
+                    sinon.stub().resolves({ type: actionTypes.continue }),
                 ];
 
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
                 transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-                await chai.expect(new GuardManager(pluginManager).redirectTo(req)).to.eventually.be.rejected.then((rejectedError) => {
-                    chai.expect(rejectedError).to.be.instanceOf(errors.GuardTransitionHookError);
-                    chai.expect(rejectedError.data).to.be.eql({
-                        hookIndex: 1,
+                await chai
+                    .expect(new GuardManager(pluginManager).redirectTo(req))
+                    .to.eventually.be.rejected.then((rejectedError) => {
+                        chai.expect(rejectedError).to.be.instanceOf(errors.GuardTransitionHookError);
+                        chai.expect(rejectedError.data).to.be.eql({
+                            hookIndex: 1,
+                        });
+                        chai.expect(rejectedError.cause).to.be.eql(error);
                     });
-                    chai.expect(rejectedError.cause).to.be.eql(error);
-                });
 
                 for (const hook of [hooks[0], hooks[1]]) {
-                    chai.expect(hook.calledOnceWith({
-                        route: {meta: route.meta, url: route.reqUrl, hostname: req.hostname},
-                        req: rawReq,
-                        log,
-                    })).to.be.true;
+                    chai.expect(
+                        hook.calledOnceWith({
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname },
+                            req: rawReq,
+                            log,
+                        }),
+                    ).to.be.true;
                 }
 
                 for (const hook of [hooks[2], hooks[3]]) {
@@ -197,10 +203,10 @@ describe('GuardManager', () => {
             it(`if some of hooks resolves with "${actionTypes.redirect}" action type`, async () => {
                 const newLocation = '/should/be/this/location';
                 const hooks = [
-                    sinon.stub().resolves({type: actionTypes.continue}),
-                    sinon.stub().resolves({type: actionTypes.redirect, newLocation}),
-                    sinon.stub().resolves({type: actionTypes.continue}),
-                    sinon.stub().resolves({type: actionTypes.continue}),
+                    sinon.stub().resolves({ type: actionTypes.continue }),
+                    sinon.stub().resolves({ type: actionTypes.redirect, newLocation }),
+                    sinon.stub().resolves({ type: actionTypes.continue }),
+                    sinon.stub().resolves({ type: actionTypes.continue }),
                 ];
 
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
@@ -209,11 +215,13 @@ describe('GuardManager', () => {
                 const redirectTo = await new GuardManager(pluginManager).redirectTo(req);
 
                 for (const hook of [hooks[0], hooks[1]]) {
-                    chai.expect(hook.calledOnceWith({
-                        route: {meta: route.meta, url: route.reqUrl, hostname: req.hostname},
-                        req: rawReq,
-                        log,
-                    })).to.be.true;
+                    chai.expect(
+                        hook.calledOnceWith({
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname },
+                            req: rawReq,
+                            log,
+                        }),
+                    ).to.be.true;
                 }
 
                 for (const hook of [hooks[2], hooks[3]]) {

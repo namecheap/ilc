@@ -45,7 +45,9 @@ export default class GuardManager {
                 });
 
                 if (action.type === actionTypes.stopNavigation) {
-                    this.#logger.info(`ILC: Stopped navigation due to the Route Guard with index #${hooks.indexOf(hook)}`);
+                    this.#logger.info(
+                        `ILC: Stopped navigation due to the Route Guard with index #${hooks.indexOf(hook)}`,
+                    );
                     return false;
                 }
 
@@ -53,7 +55,11 @@ export default class GuardManager {
                     // Need to add redirect callback to queued tasks
                     // because it should be executed after micro tasks that can be added after the end of this method
                     setTimeout(() => {
-                        this.#logger.info(`ILC: Redirect from "${route.reqUrl}" to "${action.newLocation}" due to the Route Guard with index #${hooks.indexOf(hook)}`);
+                        this.#logger.info(
+                            `ILC: Redirect from "${route.reqUrl}" to "${
+                                action.newLocation
+                            }" due to the Route Guard with index #${hooks.indexOf(hook)}`,
+                        );
                         this.#router.navigateToUrl(action.newLocation);
                     });
                     return false;
@@ -61,14 +67,16 @@ export default class GuardManager {
             } catch (error) {
                 const hookIndex = hooks.indexOf(hook);
 
-                this.#errorHandler(new errors.GuardTransitionHookError({
-                    message: `An error has occurred while executing "${hookIndex}" transition hook for the following URL: "${url}".`,
-                    data: {
-                        hookIndex,
-                        url,
-                    },
-                    cause: error,
-                }));
+                this.#errorHandler(
+                    new errors.GuardTransitionHookError({
+                        message: `An error has occurred while executing "${hookIndex}" transition hook for the following URL: "${url}".`,
+                        data: {
+                            hookIndex,
+                            url,
+                        },
+                        cause: error,
+                    }),
+                );
                 return false;
             }
         }
@@ -76,4 +84,4 @@ export default class GuardManager {
         // If none of the hooks returned "redirect" or "stop-navigation" action
         return true;
     }
-};
+}

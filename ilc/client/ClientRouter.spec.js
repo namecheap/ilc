@@ -14,7 +14,7 @@ describe('client router', () => {
         getMountedApps: () => [],
     };
 
-    const handlePageTransaction = () => { };
+    const handlePageTransaction = () => {};
 
     const apps = {
         '@portal/hero': {
@@ -136,7 +136,7 @@ describe('client router', () => {
     ];
 
     const specialRoutes = {
-        '404': {
+        404: {
             route: '/404',
             next: false,
             template: 'errorsTemplate',
@@ -161,7 +161,6 @@ describe('client router', () => {
     });
 
     describe('should set initial routes while client router is initializing', () => {
-
         it('should set initial routes based on location when <base> tag is not defined', () => {
             const location = {
                 pathname: registryConfig.routes[1].route,
@@ -227,8 +226,10 @@ describe('client router', () => {
             const reqUrl = `${registryConfig.routes[1].route}?hi=there`;
             const mainRef = html`
                 <main>
-                    <div>Hi there! I have a base tag, so client router should initialize based on href of the base tag.</div>
-                    <base href="${reqUrl}">
+                    <div>
+                        Hi there! I have a base tag, so client router should initialize based on href of the base tag.
+                    </div>
+                    <base href="${reqUrl}" />
                 </main>
             `;
 
@@ -273,11 +274,13 @@ describe('client router', () => {
             chai.expect(router.getCurrentRouteProps('@portal/hero', 'hero')).to.be.eql(expectedRouteProps);
             chai.expect(router.getPrevRouteProps('@portal/hero', 'hero')).to.be.eql(expectedRouteProps);
 
-            chai.expect(logger.warn.calledOnceWithExactly(
-                'ILC: <base> tag was used only for initial rendering and removed afterwards.\n' +
-                'Currently, ILC does not support it fully.\n' +
-                'Please open an issue if you need this functionality.'
-            )).to.be.true;
+            chai.expect(
+                logger.warn.calledOnceWithExactly(
+                    'ILC: <base> tag was used only for initial rendering and removed afterwards.\n' +
+                        'Currently, ILC does not support it fully.\n' +
+                        'Please open an issue if you need this functionality.',
+                ),
+            ).to.be.true;
         });
     });
 
@@ -409,8 +412,8 @@ describe('client router', () => {
 
             anchor.ref = html`
                 <a id="${anchor.id}" href="${anchor.href}">
-                    Hi there! I am anchor tag and I have href attribute.
-                    So I should forward you to registered micro front-end page.
+                    Hi there! I am anchor tag and I have href attribute. So I should forward you to registered micro
+                    front-end page.
                 </a>
             `;
 
@@ -429,8 +432,8 @@ describe('client router', () => {
 
             anchor.ref = html`
                 <a id="${anchor.id}" href="${anchor.href}">
-                    Hi there! I am anchor tag and I have href attribute.
-                    So I should forward you to registered micro front-end page.
+                    Hi there! I am anchor tag and I have href attribute. So I should forward you to registered micro
+                    front-end page.
                 </a>
             `;
 
@@ -448,8 +451,8 @@ describe('client router', () => {
 
             anchor.ref = html`
                 <a id="${anchor.id}">
-                    Hi there! I am anchor tag and I do not have href attribute.
-                    So I should not forward you to a registered micro front-end page.
+                    Hi there! I am anchor tag and I do not have href attribute. So I should not forward you to a
+                    registered micro front-end page.
                 </a>
             `;
 
@@ -469,9 +472,9 @@ describe('client router', () => {
             anchor.ref = html`
                 <a href="${anchor.href}">
                     <span id="${anchor.id}">
-                        Hi there! I am span tag and I have the closest anchor tag that has href attribute.
-                        But event click is going to be prevented previously.
-                        So I should not forward you to registered micro front-end page.
+                        Hi there! I am span tag and I have the closest anchor tag that has href attribute. But event
+                        click is going to be prevented previously. So I should not forward you to registered micro
+                        front-end page.
                     </span>
                 </a>
             `;
@@ -492,9 +495,9 @@ describe('client router', () => {
             anchor.ref = html`
                 <a href="${anchor.href}">
                     <span id="${anchor.id}">
-                        Hi there! I am span tag and I have the closest anchor tag that has href attribute.
-                        But event click is going to be prevented previously.
-                        So I should not forward you to registered micro front-end page.
+                        Hi there! I am span tag and I have the closest anchor tag that has href attribute. But event
+                        click is going to be prevented previously. So I should not forward you to registered micro
+                        front-end page.
                     </span>
                 </a>
             `;
@@ -540,11 +543,7 @@ describe('client router', () => {
                     href: registryConfig.routes[2].route,
                 };
 
-                anchor.ref = html`
-                    <a id="${anchor.id}" href="${anchor.href}">
-                        Hi there! I am an anchor tag.
-                    </a>
-                `;
+                anchor.ref = html` <a id="${anchor.id}" href="${anchor.href}"> Hi there! I am an anchor tag. </a> `;
 
                 document.body.appendChild(anchor.ref);
             });
@@ -567,7 +566,6 @@ describe('client router', () => {
                 });
             }
         });
-
     });
 
     describe('while getting route props', () => {
@@ -576,13 +574,21 @@ describe('client router', () => {
         });
 
         it('should throw an error when an app is not defined', () => {
-            chai.expect(router.getCurrentRouteProps.bind(router, '@portal/undefined', 'hero')).to.throw('Can not find info about the app.');
-            chai.expect(router.getPrevRouteProps.bind(router, '@portal/undefined', 'hero')).to.throw('Can not find info about the app.');
+            chai.expect(router.getCurrentRouteProps.bind(router, '@portal/undefined', 'hero')).to.throw(
+                'Can not find info about the app.',
+            );
+            chai.expect(router.getPrevRouteProps.bind(router, '@portal/undefined', 'hero')).to.throw(
+                'Can not find info about the app.',
+            );
         });
 
         it('should throw an error when a slot is not defined', () => {
-            chai.expect(router.getCurrentRouteProps.bind(router, '@portal/hero', 'undefined')).to.throw('Can not find info about the slot');
-            chai.expect(router.getPrevRouteProps.bind(router, '@portal/hero', 'undefined')).to.throw('Can not find info about the slot');
+            chai.expect(router.getCurrentRouteProps.bind(router, '@portal/hero', 'undefined')).to.throw(
+                'Can not find info about the slot',
+            );
+            chai.expect(router.getPrevRouteProps.bind(router, '@portal/hero', 'undefined')).to.throw(
+                'Can not find info about the slot',
+            );
         });
     });
 
@@ -618,7 +624,7 @@ describe('client router', () => {
 
             const route = router.match(window.location.origin + localizedUrl);
 
-            chai.expect(i18n.unlocalizeUrl.calledWithExactly(localizedUrl))
+            chai.expect(i18n.unlocalizeUrl.calledWithExactly(localizedUrl));
             chai.expect(route.reqUrl).to.be.eql(unlocalizedUrl);
         });
 
@@ -654,13 +660,17 @@ describe('client router', () => {
 
             const appId = 'not_mounted_app__at__some_place';
 
-            window.dispatchEvent(new CustomEvent(ilcEvents.NOT_FOUND, {
-                detail: { appId },
-            }));
+            window.dispatchEvent(
+                new CustomEvent(ilcEvents.NOT_FOUND, {
+                    detail: { appId },
+                }),
+            );
 
             sinon.assert.calledWithExactly(
                 logger.warn,
-                `ILC: Ignoring special route "404" trigger which came from not mounted app "${appId}". Currently mounted apps: ${singleSpa.getMountedApps().join(', ')}.`
+                `ILC: Ignoring special route "404" trigger which came from not mounted app "${appId}". Currently mounted apps: ${singleSpa
+                    .getMountedApps()
+                    .join(', ')}.`,
             );
         });
 
@@ -674,19 +684,21 @@ describe('client router', () => {
                     ...registryConfig.apps,
                     '@portal/mounted_app': {
                         kind: nonPrimaryKind,
-                    }
-                }
+                    },
+                },
             };
 
             router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
-            window.dispatchEvent(new CustomEvent(ilcEvents.NOT_FOUND, {
-                detail: { appId },
-            }));
+            window.dispatchEvent(
+                new CustomEvent(ilcEvents.NOT_FOUND, {
+                    detail: { appId },
+                }),
+            );
 
             sinon.assert.calledWithExactly(
                 logger.warn,
-                `ILC: Ignoring special route "404" trigger which came from non-primary app "${appId}". "${appId}" is "${nonPrimaryKind}"`
+                `ILC: Ignoring special route "404" trigger which came from non-primary app "${appId}". "${appId}" is "${nonPrimaryKind}"`,
             );
         });
 
@@ -698,13 +710,15 @@ describe('client router', () => {
 
             const appId = 'hero__at__some_place';
 
-            window.dispatchEvent(new CustomEvent(ilcEvents.NOT_FOUND, {
-                detail: { appId },
-            }));
+            window.dispatchEvent(
+                new CustomEvent(ilcEvents.NOT_FOUND, {
+                    detail: { appId },
+                }),
+            );
 
             sinon.assert.calledWithExactly(
                 logger.info,
-                `ILC: Special route "404" was triggered by "${appId}" app. Performing rerouting...`
+                `ILC: Special route "404" was triggered by "${appId}" app. Performing rerouting...`,
             );
             sinon.assert.calledOnce(beforeRoutingHandler);
         });
@@ -775,7 +789,7 @@ describe('client router', () => {
             const customRegistryConfig = {
                 ...registryConfig,
                 routes: [
-                    ...routes.filter(n => n.route !== '/hero'),
+                    ...routes.filter((n) => n.route !== '/hero'),
                     {
                         route: '/hero',
                         next: false,
@@ -783,7 +797,8 @@ describe('client router', () => {
                         slots: {
                             hero: {
                                 appName: apps['@portal/hero'].name,
-                                props: { // another props
+                                props: {
+                                    // another props
                                     newPropsKey: 'newPropsValue',
                                 },
                             },
@@ -820,7 +835,7 @@ describe('client router', () => {
 
             sinon.assert.calledWithExactly(
                 logger.info,
-                `ILC: Triggering app re-mount for [@portal/hero] due to changed props.`
+                `ILC: Triggering app re-mount for [@portal/hero] due to changed props.`,
             );
         });
 
@@ -828,7 +843,7 @@ describe('client router', () => {
             const customRegistryConfig = {
                 ...registryConfig,
                 routes: [
-                    ...routes.filter(n => n.route !== '/hero'),
+                    ...routes.filter((n) => n.route !== '/hero'),
                     {
                         route: '/hero',
                         next: false,
@@ -836,7 +851,8 @@ describe('client router', () => {
                         slots: {
                             hero: {
                                 appName: apps['@portal/hero'].name,
-                                props: { // another props
+                                props: {
+                                    // another props
                                     newPropsKey: 'newPropsValue',
                                 },
                             },
@@ -928,7 +944,10 @@ describe('client router', () => {
             chai.expect(isActiveHero()).to.be.eql(true);
             sinon.assert.calledOnce(eventHandlerUpdateHero);
             chai.expect(isActiveOpponent()).to.be.eql(true);
-            sinon.assert.calledOnceWithExactly(logger.info, 'ILC: Triggering app re-mount for [@portal/opponent] due to changed props.');
+            sinon.assert.calledOnceWithExactly(
+                logger.info,
+                'ILC: Triggering app re-mount for [@portal/opponent] due to changed props.',
+            );
         });
     });
 });

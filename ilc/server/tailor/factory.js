@@ -13,18 +13,25 @@ const ConfigsInjector = require('./configs-injector');
 const processFragmentResponse = require('./process-fragment-response');
 const requestFragment = require('./request-fragment');
 
-module.exports = function (registryService, cdnUrl, nrCustomClientJsWrapper = null, nrAutomaticallyInjectClientScript = true, logger) {
-    const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper, nrAutomaticallyInjectClientScript);
+module.exports = function (
+    registryService,
+    cdnUrl,
+    nrCustomClientJsWrapper = null,
+    nrAutomaticallyInjectClientScript = true,
+    logger,
+) {
+    const configsInjector = new ConfigsInjector(
+        newrelic,
+        cdnUrl,
+        nrCustomClientJsWrapper,
+        nrAutomaticallyInjectClientScript,
+    );
 
     const tailor = new Tailor({
         fetchContext: async function (request) {
             return request.router.getFragmentsContext();
         },
-        fetchTemplate: fetchTemplate(
-            configsInjector,
-            newrelic,
-            registryService
-        ),
+        fetchTemplate: fetchTemplate(configsInjector, newrelic, registryService),
         requestFragment: requestFragment(filterHeaders, processFragmentResponse, logger),
         processFragmentResponse,
         systemScripts: '',

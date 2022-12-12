@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const nock = require('nock');
 const _ = require('lodash');
 
-const {intlSchema} = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
+const { intlSchema } = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
 
 const i18n = require('./i18n');
 const createApp = require('./app');
@@ -11,10 +11,10 @@ const helpers = require('../tests/helpers');
 
 const i18nConfig = Object.freeze({
     enabled: true,
-    default: {locale: 'en-US', currency: 'USD'},
+    default: { locale: 'en-US', currency: 'USD' },
     supported: {
         locale: ['en-US', 'ua-UA'],
-        currency: ['USD', 'UAH']
+        currency: ['USD', 'UAH'],
     },
     routingStrategy: 'prefix_except_default',
 });
@@ -30,7 +30,7 @@ const pluginManager = Object.freeze({
 
 const getApp = () => createApp(helpers.getRegistryMock(), pluginManager);
 
-const decodeIntlHeader = headerValue =>
+const decodeIntlHeader = (headerValue) =>
     JSON.parse(JSON.stringify(intlSchema.fromBuffer(Buffer.from(headerValue, 'base64'), undefined, true)));
 
 const expectedHeader = (currentOverride = i18nConfig.default) => ({
@@ -69,13 +69,13 @@ describe('i18n', () => {
 
             const app = getApp();
 
-            const response = await app.inject({method: 'GET', url: '/all'});
+            const response = await app.inject({ method: 'GET', url: '/all' });
 
             chai.expect(response.statusCode).to.eq(200);
             chai.expect(response.body).to.contain('<html lang="en-US">');
 
             const fragmentResps = helpers.getFragmentResponses(response.body);
-            _.each(fragmentResps, v => {
+            _.each(fragmentResps, (v) => {
                 chai.expect(decodeIntlHeader(v.headers['x-request-intl'])).to.eql(expectedHeader(detectedI18nConfig));
                 chai.expect(helpers.getRouterProps(v.url).reqUrl).to.eq('/all');
             });
@@ -91,15 +91,14 @@ describe('i18n', () => {
 
             const app = getApp();
 
-            const response = await app.inject({method: 'GET', url: '/ua/all'});
+            const response = await app.inject({ method: 'GET', url: '/ua/all' });
 
             chai.expect(response.statusCode).to.eq(200);
             chai.expect(response.body).to.contain('<html lang="ua-UA">');
 
             const fragmentResps = helpers.getFragmentResponses(response.body);
-            _.each(fragmentResps, v => {
-                chai.expect(decodeIntlHeader(v.headers['x-request-intl']))
-                    .to.eql(expectedHeader(detectedI18nConfig));
+            _.each(fragmentResps, (v) => {
+                chai.expect(decodeIntlHeader(v.headers['x-request-intl'])).to.eql(expectedHeader(detectedI18nConfig));
                 chai.expect(helpers.getRouterProps(v.url).reqUrl).to.eq('/all');
             });
         });
@@ -110,7 +109,7 @@ describe('i18n', () => {
         beforeEach(() => {
             onRequest = i18n.onRequestFactory(i18nConfig, i18nParamsDetectionPlugin);
             reply = getReplyMock();
-        })
+        });
 
         describe('detect locale by i18n params detection plugin', () => {
             it('ua-UA, redirects to URL with correct lang code', async () => {
@@ -125,7 +124,8 @@ describe('i18n', () => {
 
                 await onRequest(req, reply);
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] = i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                    i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
                 chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
@@ -146,7 +146,8 @@ describe('i18n', () => {
 
                 await onRequest(req, reply);
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] = i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                    i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
                 chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
@@ -171,13 +172,18 @@ describe('i18n', () => {
                 chai.expect(req.raw.ilcState.locale).to.be.eql(detectedI18nConfig.locale);
                 chai.expect(decodeIntlHeader(req.headers['x-request-intl'])).to.eql(expectedHeader(detectedI18nConfig));
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] = i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                    i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
                 chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
                 chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
 
-                sinon.assert.calledWith(reply.res.setHeader, 'Set-Cookie', sinon.match(`ilc-i18n=${detectedI18nConfig.locale}%3A${detectedI18nConfig.currency}; Path=/;`));
+                sinon.assert.calledWith(
+                    reply.res.setHeader,
+                    'Set-Cookie',
+                    sinon.match(`ilc-i18n=${detectedI18nConfig.locale}%3A${detectedI18nConfig.currency}; Path=/;`),
+                );
             });
 
             describe('handles default locale with redirect', () => {
@@ -193,7 +199,8 @@ describe('i18n', () => {
 
                     await onRequest(req, reply);
 
-                    const [providedReqRaw, providedIntl, providedI18nConfig] = i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+                    const [providedReqRaw, providedIntl, providedI18nConfig] =
+                        i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                     chai.expect(providedReqRaw).to.be.eql(req.raw);
                     chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
@@ -214,7 +221,8 @@ describe('i18n', () => {
 
                     await onRequest(req, reply);
 
-                    const [providedReqRaw, providedIntl, providedI18nConfig] = i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+                    const [providedReqRaw, providedIntl, providedI18nConfig] =
+                        i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                     chai.expect(providedReqRaw).to.be.eql(req.raw);
                     chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
@@ -235,7 +243,8 @@ describe('i18n', () => {
 
                     await onRequest(req, reply);
 
-                    const [providedReqRaw, providedIntl, providedI18nConfig] = i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+                    const [providedReqRaw, providedIntl, providedI18nConfig] =
+                        i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                     chai.expect(providedReqRaw).to.be.eql(req.raw);
                     chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
@@ -264,7 +273,8 @@ describe('i18n', () => {
 
                 await onRequest(req, reply);
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] = i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                    i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
                 chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
@@ -290,7 +300,8 @@ describe('i18n', () => {
 
                 await onRequest(req, reply);
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] = i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                    i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
                 chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
@@ -307,14 +318,14 @@ describe('i18n', () => {
 
 function getReqMock(url = '/test', cookieString = '') {
     return {
-        raw: {url: url, ilcState: {}},
-        headers: {cookie: cookieString},
+        raw: { url: url, ilcState: {} },
+        headers: { cookie: cookieString },
     };
 }
 
 function getReplyMock() {
     return {
         redirect: sinon.stub(),
-        res: {setHeader: sinon.stub()}
-    }
+        res: { setHeader: sinon.stub() },
+    };
 }

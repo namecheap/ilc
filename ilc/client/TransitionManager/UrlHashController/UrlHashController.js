@@ -39,6 +39,5 @@ export class UrlHashController {
             // @todo handle an error the hash should not be read if it not exists
             return false;
         }
-
     }
 }

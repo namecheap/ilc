@@ -2,7 +2,7 @@ const deepmerge = require('deepmerge');
 const _ = require('lodash');
 
 module.exports = (original, override) => {
-    if (!override || !override.apps && !override.routes && !override.sharedLibs) {
+    if (!override || (!override.apps && !override.routes && !override.sharedLibs)) {
         return original;
     }
 
@@ -13,14 +13,14 @@ module.exports = (original, override) => {
     }
 
     if (override.routes) {
-        override.routes.forEach(overrideRoute => {
+        override.routes.forEach((overrideRoute) => {
             let indexOfOverrideRoute;
             const beforeOf = overrideRoute.beforeOf;
 
             const originalRoute = cloned.routes.find((route) => {
                 if (overrideRoute.routeId) {
                     return route.routeId === overrideRoute.routeId;
-                } else  {
+                } else {
                     return route.route === overrideRoute.route;
                 }
             });
@@ -35,11 +35,13 @@ module.exports = (original, override) => {
 
             if (beforeOf) {
                 const [routeThatShouldBeMoved] = cloned.routes.splice(indexOfOverrideRoute, 1);
-                const beforeRouteIndex = cloned.routes.findIndex((route) => beforeOf === route.route || beforeOf === route.routeId);
+                const beforeRouteIndex = cloned.routes.findIndex(
+                    (route) => beforeOf === route.route || beforeOf === route.routeId,
+                );
                 cloned.routes = [
                     ...cloned.routes.slice(0, beforeRouteIndex),
                     routeThatShouldBeMoved,
-                    ...cloned.routes.slice(beforeRouteIndex)
+                    ...cloned.routes.slice(beforeRouteIndex),
                 ];
             }
         });

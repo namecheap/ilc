@@ -6,32 +6,31 @@ const getThresholds = () => ({
     statements: nycConfig.statements,
     branches: nycConfig.branches,
     functions: nycConfig.functions,
-    lines: nycConfig.lines
+    lines: nycConfig.lines,
 });
 
 module.exports = function (config) {
-
     /**
      * Force to use glob config to be able to run specific test files
      * @example npm run test:client:watch -- --glob=./client/WrapApp.spec.js
      *
      * Otherwise used default files mask
      */
-    const files = config.glob ? [config.glob] : [
-        'client/**/*.spec.js',
-        'common/**/*.spec.js',
-        'systemjs/**/*.spec.js',
-        {
-            pattern: 'systemjs/spec/fixtures/**/*.js',
-            included: false,
-        },
-    ];
+    const files = config.glob
+        ? [config.glob]
+        : [
+              'client/**/*.spec.js',
+              'common/**/*.spec.js',
+              'systemjs/**/*.spec.js',
+              {
+                  pattern: 'systemjs/spec/fixtures/**/*.js',
+                  included: false,
+              },
+          ];
 
     config.set({
         singleRun: true,
-        browsers: [
-            'ChromeHeadless',
-        ],
+        browsers: ['ChromeHeadless'],
         customLaunchers: {
             ChromeHeadlessWithoutSecurity: {
                 base: 'ChromeHeadless',
@@ -39,12 +38,7 @@ module.exports = function (config) {
             },
         },
         customContextFile: './tests/karma.index.html',
-        frameworks: [
-            'parallel',
-            'mocha',
-            'chai',
-            'sinon',
-        ],
+        frameworks: ['parallel', 'mocha', 'chai', 'sinon'],
         plugins: [
             'karma-parallel',
             'karma-chrome-launcher',
@@ -61,34 +55,14 @@ module.exports = function (config) {
         ],
         files,
         preprocessors: {
-            'client/**/!(*.spec).js': [
-                'webpack',
-                'sourcemap',
-                'coverage',
-            ],
-            'common/**/!(*.spec).js': [
-                'webpack',
-                'sourcemap',
-                'coverage',
-            ],
+            'client/**/!(*.spec).js': ['webpack', 'sourcemap', 'coverage'],
+            'common/**/!(*.spec).js': ['webpack', 'sourcemap', 'coverage'],
 
-            'client/**/*.spec.js': [
-                'webpack',
-                'sourcemap',
-            ],
-            'common/**/*.spec.js': [
-                'webpack',
-                'sourcemap',
-            ],
-            'systemjs/**/*.spec.js': [
-                'webpack',
-                'sourcemap',
-            ],
+            'client/**/*.spec.js': ['webpack', 'sourcemap'],
+            'common/**/*.spec.js': ['webpack', 'sourcemap'],
+            'systemjs/**/*.spec.js': ['webpack', 'sourcemap'],
         },
-        reporters: [
-            'mocha',
-            'coverage',
-        ],
+        reporters: ['mocha', 'coverage'],
         mochaReporter: {
             showDiff: true,
         },
@@ -113,10 +87,10 @@ module.exports = function (config) {
         },
         webpack: {
             ...webpackConfig,
-            devtool: false
+            devtool: false,
         },
         webpackMiddleware: {
-            noInfo: true
+            noInfo: true,
         },
         parallelOptions: {
             executors: 2,

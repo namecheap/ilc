@@ -37,10 +37,7 @@ describe('setupEvents', () => {
     describe('while pushing history state or replacing state', () => {
         function shouldNotChangeLocationUrlByHistoryMethod(methodName) {
             it(`should not change location URL by "${methodName}" when navigation is canceled`, async () => {
-                const hooks = [
-                    sinon.stub().returns(null),
-                    sinon.stub().returns('/should/not/change/location/url'),
-                ];
+                const hooks = [sinon.stub().returns(null), sinon.stub().returns('/should/not/change/location/url')];
                 const prevHref = window.location.href;
 
                 try {
@@ -93,10 +90,7 @@ describe('setupEvents', () => {
         function shouldNotChangeLocationUrlByHistoryMethodWhenSomeOfHooksThrowsAnError(methodName) {
             it(`should not change location URL by "${methodName}" when some of hooks throws an error and a custom error handler has set already`, async () => {
                 const error = new Error('Hi there! I am an error. So it should be shown 500 error page.');
-                const hooks = [
-                    sinon.stub().returns('/should/not/change/location/url'),
-                    sinon.stub().throws(error),
-                ];
+                const hooks = [sinon.stub().returns('/should/not/change/location/url'), sinon.stub().throws(error)];
                 const errorHandler = sinon.spy();
                 const anotherErrorHandler = sinon.spy();
                 const prevHref = window.location.href;
@@ -122,19 +116,18 @@ describe('setupEvents', () => {
                 chai.expect(popstateEventHandler.called).to.be.false;
                 chai.expect(beforeRoutingEventHandler.called).to.be.false;
                 chai.expect(window.location.href).to.be.eql(prevHref);
-                chai.expect(errorHandler.calledOnceWithExactly(error, {
-                    hookIndex: 1,
-                })).to.be.true;
+                chai.expect(
+                    errorHandler.calledOnceWithExactly(error, {
+                        hookIndex: 1,
+                    }),
+                ).to.be.true;
                 chai.expect(anotherErrorHandler.called).to.be.false;
             });
 
             it(`should not change location URL by "${methodName}" when some of hooks throws an error and a custom error handler has not been set yet`, async () => {
                 const nextUrl = '/should/not/change/location/url';
                 const error = new Error('Hi there! I am an error. So it should be shown 500 error page.');
-                const hooks = [
-                    sinon.stub().returns(nextUrl),
-                    sinon.stub().throws(error),
-                ];
+                const hooks = [sinon.stub().returns(nextUrl), sinon.stub().throws(error)];
                 const prevHref = window.location.href;
 
                 try {

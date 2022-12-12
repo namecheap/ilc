@@ -10,15 +10,18 @@ function insertStart(logger, stream, attributes, headers) {
 
     if (headers.link) {
         const refs = parseLinkHeader(headers.link);
-        logger.debug({
-            detailsJSON: JSON.stringify({
-                attributes,
-                refs,
-            })
-        }, 'insertStart. Links detected. Debug Attributes');
+        logger.debug(
+            {
+                detailsJSON: JSON.stringify({
+                    attributes,
+                    refs,
+                }),
+            },
+            'insertStart. Links detected. Debug Attributes',
+        );
         const { async: isAsync, id } = attributes;
 
-        refs.forEach(ref => {
+        refs.forEach((ref) => {
             if (ref.rel === 'stylesheet') {
                 const uri = fixUri(attributes, ref.uri);
                 bundleVersionOverrides.cssBundle = uri;
@@ -26,14 +29,13 @@ function insertStart(logger, stream, attributes, headers) {
                     isAsync
                         ? `<!-- Async fragments are not fully implemented yet: ${uri} -->`
                         : id
-                        ?
-                        '<script>(function(url, id){' +
-                        `const link = document.head.querySelector('link[data-fragment-id="' + id + '"]');` +
-                        'if (link && link.href !== url) {' +
-                        `link.href = url;` +
-                        '}' +
-                        `})("${uri}", "${id}");</script>`
-                        : ''
+                        ? '<script>(function(url, id){' +
+                          `const link = document.head.querySelector('link[data-fragment-id="' + id + '"]');` +
+                          'if (link && link.href !== url) {' +
+                          `link.href = url;` +
+                          '}' +
+                          `})("${uri}", "${id}");</script>`
+                        : '',
                 );
             } else if (ref.rel === 'fragment-script') {
                 bundleVersionOverrides.spaBundle = fixUri(attributes, ref.uri);
@@ -54,12 +56,15 @@ function insertStart(logger, stream, attributes, headers) {
             bundleVersionOverrides.appName = appIdToNameAndSlot(appId).appName;
         }
 
-        logger.debug({
-            detailsJSON: JSON.stringify({
-                attributes,
-                bundleVersionOverrides
-            })
-        }, 'insert start. Creating spa-config-override tag');
+        logger.debug(
+            {
+                detailsJSON: JSON.stringify({
+                    attributes,
+                    bundleVersionOverrides,
+                }),
+            },
+            'insert start. Creating spa-config-override tag',
+        );
         stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
     }
 }

@@ -13,13 +13,7 @@ describe('IlcConfigRoot', () => {
     });
     it('IlcConfigRoot should return config', () => {
         const configRoot = getIlcConfigRoot();
-        expect(configRoot.getConfig()).to.have.keys([
-            'apps',
-            'routes',
-            'specialRoutes',
-            'settings',
-            'sharedLibs'
-        ]);
+        expect(configRoot.getConfig()).to.have.keys(['apps', 'routes', 'specialRoutes', 'settings', 'sharedLibs']);
     });
     it('IlcConfigRoot should return Config For Apps', () => {
         const configRoot = getIlcConfigRoot();
@@ -41,7 +35,7 @@ describe('IlcConfigRoot', () => {
             'dependencies',
             'spaBundle',
             'kind',
-            'l10nManifest'
+            'l10nManifest',
         ]);
     });
 

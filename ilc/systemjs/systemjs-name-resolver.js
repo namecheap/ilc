@@ -8,7 +8,8 @@
     const existingResolve = systemJSPrototype.resolve;
     systemJSPrototype.resolve = function (id, parentUrl) {
         const existingHookResult = existingResolve.call(this, id, parentUrl);
-        if (id === existingHookResult) { //unnamed module
+        if (id === existingHookResult) {
+            //unnamed module
             return existingHookResult;
         }
 
@@ -16,8 +17,8 @@
             resourcesMap[id] = {
                 name: id,
                 src: existingHookResult,
-                dependants: []
-            }
+                dependants: [],
+            };
         }
 
         if (parentUrl !== undefined && !resourcesMap[id].dependants.includes(parentUrl)) {
@@ -44,5 +45,5 @@
         }
 
         return null;
-    }
+    };
 })();

@@ -4,76 +4,78 @@ const sinon = require('sinon');
 const fetchTemplate = require('./fetch-template');
 
 describe('fetch templates', () => {
-  const configsInjector = {
-    inject: () => 'inject text',
-  };
+    const configsInjector = {
+        inject: () => 'inject text',
+    };
 
-  const newrelic = {
-    setTransactionName: sinon.spy(),
-  };
+    const newrelic = {
+        setTransactionName: sinon.spy(),
+    };
 
-  const registryService = {
-    getTemplate: async (arg) => {
-      const result = await arg;
+    const registryService = {
+        getTemplate: async (arg) => {
+            const result = await arg;
 
-      return result;
-    },
-  };
+            return result;
+        },
+    };
 
-  let currentRoute = {};
+    let currentRoute = {};
 
-  const request = {
-    router: {
-      getRoute: () => currentRoute,
-    },
-    ilcState: 'ilcState text',
-  };
+    const request = {
+        router: {
+            getRoute: () => currentRoute,
+        },
+        ilcState: 'ilcState text',
+    };
 
-  const parseTemplate = sinon.stub();
+    const parseTemplate = sinon.stub();
 
-  let fetchTemplateSetup;
+    let fetchTemplateSetup;
 
-  request.router.getFragmentsTpl = (arg) => arg;
+    request.router.getFragmentsTpl = (arg) => arg;
 
-  beforeEach(() => {
-    fetchTemplateSetup = fetchTemplate(configsInjector, newrelic, registryService);
-  })
+    beforeEach(() => {
+        fetchTemplateSetup = fetchTemplate(configsInjector, newrelic, registryService);
+    });
 
-  afterEach(() => {
-    newrelic.setTransactionName.resetHistory();
-    parseTemplate.reset();
-    currentRoute = {};
-  });
+    afterEach(() => {
+        newrelic.setTransactionName.resetHistory();
+        parseTemplate.reset();
+        currentRoute = {};
+    });
 
-  it('should throw Error if template is undefined', async () => {
-    currentRoute.template = undefined;
+    it('should throw Error if template is undefined', async () => {
+        currentRoute.template = undefined;
 
-    await chai.expect(fetchTemplateSetup(request)).to.eventually.rejectedWith('Can\'t match route base template to config map');
-  });
+        await chai
+            .expect(fetchTemplateSetup(request))
+            .to.eventually.rejectedWith("Can't match route base template to config map");
+    });
 
-  it('RegExp should work correctly', async () => {
-    currentRoute.template = 'exist';
-    currentRoute.route = '/exist';
+    it('RegExp should work correctly', async () => {
+        currentRoute.template = 'exist';
+        currentRoute.route = '/exist';
 
-    await fetchTemplateSetup(request, parseTemplate);
+        await fetchTemplateSetup(request, parseTemplate);
 
-    sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'exist');
-  });
+        sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'exist');
+    });
 
-  it('should set transaction name in newrelic if there is no route', async () => {
-    currentRoute.template = 'exist';
-    currentRoute.specialRole = 'exist';
+    it('should set transaction name in newrelic if there is no route', async () => {
+        currentRoute.template = 'exist';
+        currentRoute.specialRole = 'exist';
 
-    await fetchTemplateSetup(request, parseTemplate);
+        await fetchTemplateSetup(request, parseTemplate);
 
-    sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'special:exist');
-  });
+        sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'special:exist');
+    });
 
-  it('should return parseTemplate function with right arguments', async () => {
-    currentRoute.template = 'exist';
+    it('should return parseTemplate function with right arguments', async () => {
+        currentRoute.template = 'exist';
 
-    await fetchTemplateSetup(request, parseTemplate);
+        await fetchTemplateSetup(request, parseTemplate);
 
-    sinon.assert.calledOnceWithExactly(parseTemplate, 'inject text', 'ilcState text');
-  });
+        sinon.assert.calledOnceWithExactly(parseTemplate, 'inject text', 'ilcState text');
+    });
 });

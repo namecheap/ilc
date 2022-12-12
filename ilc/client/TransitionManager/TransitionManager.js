@@ -6,8 +6,8 @@ import ilcEvents from '../constants/ilcEvents';
 import TransitionBlockerList from './TransitionBlockerList';
 import { CssTrackedApp } from '../CssTrackedApp';
 import { GlobalSpinner } from './GlobalSpinner/GlobalSpinner';
-import {UrlHashController} from './UrlHashController/UrlHashController';
-import {SlotRenderObserver} from './SlotRenderObserver/SlotRenderObserver';
+import { UrlHashController } from './UrlHashController/UrlHashController';
+import { SlotRenderObserver } from './SlotRenderObserver/SlotRenderObserver';
 
 export const slotWillBe = {
     rendered: 'rendered',
@@ -64,9 +64,12 @@ export class TransitionManager {
 
         try {
             getSlotElement(slotName);
-        } catch (e) { // TODO: better error detection
+        } catch (e) {
+            // TODO: better error detection
             if (willBe !== slotWillBe.default) {
-                this.#logger.warn(`Failed to correctly handle page transition "${willBe}" for slot "${slotName}" due to it's absence in template. Ignoring it...`);
+                this.#logger.warn(
+                    `Failed to correctly handle page transition "${willBe}" for slot "${slotName}" due to it's absence in template. Ignoring it...`,
+                );
             }
 
             return;
@@ -102,7 +105,7 @@ export class TransitionManager {
         unsafeEventSubscriptionHappened = false;
     };
 
-    #addContentListener = slotName => {
+    #addContentListener = (slotName) => {
         if (this.#transitionBlockerExists(slotName)) {
             // @todo report incorrect behaviour
             return;
@@ -119,9 +122,9 @@ export class TransitionManager {
             this.#hiddenSlots.push(targetNode);
 
             observer.observe(targetNode, {
-                onSlotReady: function() {
+                onSlotReady: function () {
                     resolve();
-                }
+                },
             });
         });
 
@@ -132,7 +135,7 @@ export class TransitionManager {
         this.#addTransitionBlocker(contentListenerBlocker);
     };
 
-    #renderFakeSlot = slotName => {
+    #renderFakeSlot = (slotName) => {
         const targetNode = getSlotElement(slotName);
         if (targetNode.hasAttribute('ilc-fake-slot-rendered')) {
             return; // Looks like it was already rendered
@@ -153,12 +156,12 @@ export class TransitionManager {
     };
 
     #onPageReady = () => {
-        this.#fakeSlots.forEach(node => node.remove());
+        this.#fakeSlots.forEach((node) => node.remove());
         CssTrackedApp.removeAllNodesPendingRemoval();
         this.#fakeSlots.length = 0;
-        this.#hiddenSlots.forEach(node => {
+        this.#hiddenSlots.forEach((node) => {
             node.style.display = '';
-            node.hasAttribute('ilc-fake-slot-rendered') && node.removeAttribute('ilc-fake-slot-rendered')
+            node.hasAttribute('ilc-fake-slot-rendered') && node.removeAttribute('ilc-fake-slot-rendered');
         });
         this.#hiddenSlots.length = 0;
 
@@ -185,14 +188,14 @@ export class TransitionManager {
         });
 
         return spinnerBlocker;
-    }
+    };
 
     #runGlobalSpinner = () => {
-        if(!this.#spinnerController.isEnabled()) {
+        if (!this.#spinnerController.isEnabled()) {
             return;
         }
 
-        if(this.#spinnerController.isInProgress()) {
+        if (this.#spinnerController.isInProgress()) {
             // ToDo: We should not show spinner twice so this condition should report an error
             return;
         }
@@ -200,7 +203,7 @@ export class TransitionManager {
         this.#spinnerController.start({
             onBeforeStart: ({ minimumVisibleTime }) => {
                 this.#addTransitionBlocker(this.#getVisibilitySpinnerBlocker(minimumVisibleTime));
-            }
+            },
         });
     };
 
@@ -211,14 +214,13 @@ export class TransitionManager {
     #addTransitionBlocker = (transactionBlocker) => {
         transactionBlocker.finally(() => this.#removeTransitionBlocker(transactionBlocker.getId()));
         this.#transitionBlockers.add(transactionBlocker);
-    }
+    };
 
     #transitionBlockerExists = (blockerId) => {
         return this.#transitionBlockers.findById(blockerId) !== undefined;
-    }
+    };
 
     #removeTransitionBlocker = (blockerId) => {
-
         const blocker = this.#transitionBlockers.findById(blockerId);
 
         if (!blocker) {
@@ -228,16 +230,16 @@ export class TransitionManager {
         blocker.destroy();
         this.#transitionBlockers.remove(blocker);
 
-
         if (this.#transitionBlockers.isEmpty()) {
             this.#onPageReady();
         }
 
-        const isOnlySpinnerBlockerLeft = this.#transitionBlockers.size() === 1
-            && this.#transitionBlockers.findById(this.#forceShowSpinnerBlockerId) !== undefined;
+        const isOnlySpinnerBlockerLeft =
+            this.#transitionBlockers.size() === 1 &&
+            this.#transitionBlockers.findById(this.#forceShowSpinnerBlockerId) !== undefined;
 
-        const removingNotSpinnerBlockerAsLastOne = this.#transitionBlockers.size() === 0
-            && blockerId !== this.#forceShowSpinnerBlockerId;
+        const removingNotSpinnerBlockerAsLastOne =
+            this.#transitionBlockers.size() === 0 && blockerId !== this.#forceShowSpinnerBlockerId;
 
         if (isOnlySpinnerBlockerLeft || removingNotSpinnerBlockerAsLastOne) {
             window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
@@ -249,23 +251,23 @@ export class TransitionManager {
         this.#windowEventHandlers[singleSpaEvents.ROUTING_EVENT] = this.#onRouteChange;
 
         if (unsafeEventSubscriptionHappened) {
-            throw new Error('There is an attempt to subscribe on SPA routing twice, which is unsafe and will spin additional events of ILC lifecycle. Most probably it is an internal ILC error.')
+            throw new Error(
+                'There is an attempt to subscribe on SPA routing twice, which is unsafe and will spin additional events of ILC lifecycle. Most probably it is an internal ILC error.',
+            );
         }
 
         for (const eventName in this.#windowEventHandlers) {
             window.addEventListener(eventName, this.#windowEventHandlers[eventName]);
         }
 
-        unsafeEventSubscriptionHappened = true
+        unsafeEventSubscriptionHappened = true;
     };
 
-
     #onRouteChange = () => {
-
         if (this.#transitionBlockers.isEmpty()) {
             this.#onPageReady();
 
-            if(!this.#transitionBlockers.isReady()) {
+            if (!this.#transitionBlockers.isReady()) {
                 this.#transitionBlockers.init();
                 // ilcEvents.ALL_SLOTS_LOADED is dispatched only on first page load here
                 window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));

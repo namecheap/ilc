@@ -3,7 +3,7 @@ const deepmerge = require('deepmerge');
 
 const errors = require('../../common/router/errors');
 const Router = require('../../common/router/Router');
-const {makeAppId} = require('../../common/utils');
+const { makeAppId } = require('../../common/utils');
 
 module.exports = class ServerRouter {
     errors = errors;
@@ -32,15 +32,22 @@ module.exports = class ServerRouter {
     getFragmentsTpl() {
         const route = this.getRoute();
 
-        const fragmentsTpl = _.reduce(this.#getSsrSlotsList(route.slots, this.#registryConfig.apps), (res, row) => {
-            return res + `<fragment id="${row.appId}" slot="${row.name}"></fragment>`;
-        }, '');
+        const fragmentsTpl = _.reduce(
+            this.#getSsrSlotsList(route.slots, this.#registryConfig.apps),
+            (res, row) => {
+                return res + `<fragment id="${row.appId}" slot="${row.name}"></fragment>`;
+            },
+            '',
+        );
 
-        this.#logger.debug({
-            detailsJSON: JSON.stringify({
-                fragmentsTpl
-            }),
-        }, 'getFragmentsTpl');
+        this.#logger.debug(
+            {
+                detailsJSON: JSON.stringify({
+                    fragmentsTpl,
+                }),
+            },
+            'getFragmentsTpl',
+        );
 
         return fragmentsTpl;
     }
@@ -50,51 +57,54 @@ module.exports = class ServerRouter {
         const apps = this.#registryConfig.apps;
         let primarySlotDetected = false;
 
-        const fragmentsContext = _.reduce(this.#getSsrSlotsList(route.slots, apps), (res, row) => {
-            const appId = row.appId;
-            const appInfo = row.appInfo;
+        const fragmentsContext = _.reduce(
+            this.#getSsrSlotsList(route.slots, apps),
+            (res, row) => {
+                const appId = row.appId;
+                const appInfo = row.appInfo;
 
-            const ssrOpts = _.pick(row.appInfo.ssr, ['src', 'timeout', 'ignoreInvalidSsl']);
-            if (!ssrOpts.src || typeof ssrOpts.src !== 'string') {
-                throw new this.errors.RouterError({message: 'No url specified for fragment!', data: {appInfo}});
-            }
-
-            if (ssrOpts.ignoreInvalidSsl === true) {
-                ssrOpts['ignore-invalid-ssl'] = true;
-            }
-            delete ssrOpts.ignoreInvalidSsl;
-
-            const fragmentKind = row.kind || appInfo.kind;
-            if (fragmentKind === 'primary' && primarySlotDetected === false) {
-                ssrOpts.primary = true;
-                primarySlotDetected = true;
-            } else {
-                if (fragmentKind === 'primary') {
-                    this.#logger.warn(
-                        `More then one primary slot "${row.name}" found for "${this.#url}".\n` +
-                        'Make it regular to avoid unexpected behaviour.'
-                    );
+                const ssrOpts = _.pick(row.appInfo.ssr, ['src', 'timeout', 'ignoreInvalidSsl']);
+                if (!ssrOpts.src || typeof ssrOpts.src !== 'string') {
+                    throw new this.errors.RouterError({ message: 'No url specified for fragment!', data: { appInfo } });
                 }
-            }
 
-            ssrOpts.appProps = deepmerge.all([
-                appInfo.props || {},
-                appInfo.ssrProps || {},
-                row.props || {}
-                ]);
-            ssrOpts.wrapperConf = row.wrapperConf;
-            ssrOpts.spaBundleUrl = appInfo.spaBundle;
+                if (ssrOpts.ignoreInvalidSsl === true) {
+                    ssrOpts['ignore-invalid-ssl'] = true;
+                }
+                delete ssrOpts.ignoreInvalidSsl;
 
-            res[appId] = ssrOpts;
+                const fragmentKind = row.kind || appInfo.kind;
+                if (fragmentKind === 'primary' && primarySlotDetected === false) {
+                    ssrOpts.primary = true;
+                    primarySlotDetected = true;
+                } else {
+                    if (fragmentKind === 'primary') {
+                        this.#logger.warn(
+                            `More then one primary slot "${row.name}" found for "${this.#url}".\n` +
+                                'Make it regular to avoid unexpected behaviour.',
+                        );
+                    }
+                }
 
-            return res;
-        }, {});
+                ssrOpts.appProps = deepmerge.all([appInfo.props || {}, appInfo.ssrProps || {}, row.props || {}]);
+                ssrOpts.wrapperConf = row.wrapperConf;
+                ssrOpts.spaBundleUrl = appInfo.spaBundle;
 
-        this.#logger.debug({
-            detailsJSON: JSON.stringify({
-                fragmentsContext
-            }),
-        }, 'getFragmentsContext');
+                res[appId] = ssrOpts;
+
+                return res;
+            },
+            {},
+        );
+
+        this.#logger.debug(
+            {
+                detailsJSON: JSON.stringify({
+                    fragmentsContext,
+                }),
+            },
+            'getFragmentsContext',
+        );
 
         return fragmentsContext;
     }
@@ -113,45 +123,50 @@ module.exports = class ServerRouter {
         }
     }
 
-    #getSsrSlotsList = (routeSlots, apps) => _.reduce(routeSlots, (res, slotData, slotName) => {
-        let appName = slotData.appName;
-        const appId = makeAppId(appName, slotName);
-        const appInfo = apps[appName];
+    #getSsrSlotsList = (routeSlots, apps) =>
+        _.reduce(
+            routeSlots,
+            (res, slotData, slotName) => {
+                let appName = slotData.appName;
+                const appId = makeAppId(appName, slotName);
+                const appInfo = apps[appName];
 
-        if (appInfo === undefined) {
-            throw new this.errors.RouterError({message: 'Can\'t find info about app.', data: {appName}});
-        }
-        if (appInfo.ssr === undefined) {
-            return res;
-        }
+                if (appInfo === undefined) {
+                    throw new this.errors.RouterError({ message: "Can't find info about app.", data: { appName } });
+                }
+                if (appInfo.ssr === undefined) {
+                    return res;
+                }
 
-        let wrapperConf = null;
-        if (appInfo.wrappedWith) {
-            const wrapper = apps[appInfo.wrappedWith];
+                let wrapperConf = null;
+                if (appInfo.wrappedWith) {
+                    const wrapper = apps[appInfo.wrappedWith];
 
-            if (wrapper.ssr === undefined) {
-                // If wrapper doesn't support SSR - it will be disabled for all wrapped apps
+                    if (wrapper.ssr === undefined) {
+                        // If wrapper doesn't support SSR - it will be disabled for all wrapped apps
+                        return res;
+                    }
+
+                    wrapperConf = {
+                        appId: makeAppId(appInfo.wrappedWith, slotName),
+                        name: appInfo.wrappedWith,
+                        ...wrapper.ssr,
+                        props: wrapper.props,
+                    };
+                }
+
+                res.push({
+                    name: slotName,
+                    ...slotData,
+                    appId,
+                    appInfo,
+                    wrapperConf,
+                });
+
                 return res;
-            }
-
-            wrapperConf = {
-                appId: makeAppId(appInfo.wrappedWith, slotName),
-                name: appInfo.wrappedWith,
-                ...wrapper.ssr,
-                props: wrapper.props,
-            }
-        }
-
-        res.push({
-            name: slotName,
-            ...slotData,
-            appId,
-            appInfo,
-            wrapperConf,
-        });
-
-        return res;
-    }, []);
+            },
+            [],
+        );
 
     #getIlcState = () => this.#request.ilcState || {};
 };

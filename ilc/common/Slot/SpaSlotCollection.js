@@ -1,8 +1,7 @@
-import {makeAppId} from '../utils';
-import {SpaSlot} from './SpaSlot';
+import { makeAppId } from '../utils';
+import { SpaSlot } from './SpaSlot';
 
 export class SpaSlotCollection {
-
     /**
      * @private
      * @property {Array<SpaSlot>}
@@ -26,15 +25,18 @@ export class SpaSlotCollection {
             routeSlotsName.forEach((slotName) => {
                 const rawSlot = route.slots[slotName];
                 const applicationId = makeAppId(rawSlot.appName, slotName);
-                const slot = new SpaSlot({
-                    applicationId,
-                    applicationName: rawSlot.appName,
-                    slotName
-                }, configRoot);
+                const slot = new SpaSlot(
+                    {
+                        applicationId,
+                        applicationName: rawSlot.appName,
+                        slotName,
+                    },
+                    configRoot,
+                );
 
                 // Routes could contain overrides for slots
                 // So it leads to situation when slot route could be duplicated per route
-                if(!slotCollectionMap.get(applicationId)) {
+                if (!slotCollectionMap.get(applicationId)) {
                     slotCollectionMap.set(applicationId, slot);
                 }
             });
@@ -58,5 +60,4 @@ export class SpaSlotCollection {
     getSlotCollectionRaw() {
         return this.#slotCollection.map((item) => item.toJson());
     }
-
 }

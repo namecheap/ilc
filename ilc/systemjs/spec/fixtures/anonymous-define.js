@@ -1,5 +1,5 @@
-(function(define){
-    define([], function() {
+(function (define) {
+    define([], function () {
         return {
             hi: 'from anonymous defined module',
         };

@@ -10,10 +10,7 @@ const TEMPLATE_NOT_FOUND = 1;
  * @param {Object} newrelic
  * @param {Registry} registryService
  */
-module.exports = (configsInjector, newrelic, registryService) => async (
-    request,
-    parseTemplate
-) => {
+module.exports = (configsInjector, newrelic, registryService) => async (request, parseTemplate) => {
     /** @type {ServerRouter} */
     const router = request.router;
     const childTemplate = router.getFragmentsTpl(request.ilcState);
@@ -21,7 +18,7 @@ module.exports = (configsInjector, newrelic, registryService) => async (
 
     const template = await registryService.getTemplate(currRoute.template);
     if (template === undefined) {
-        throw new Error('Can\'t match route base template to config map');
+        throw new Error("Can't match route base template to config map");
     }
 
     const routeName = currRoute.route?.replace(/^\/(.+)/, '$1') || `special:${currRoute.specialRole}`;

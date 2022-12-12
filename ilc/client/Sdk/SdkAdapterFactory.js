@@ -1,5 +1,4 @@
 export class SdkAdapterFactory {
-
     #i18n;
     #router;
 

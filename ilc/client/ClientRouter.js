@@ -45,7 +45,7 @@ export default class ClientRouter extends EventEmitter {
         singleSpa,
         handlePageTransition,
         location = window.location,
-        logger = window.console
+        logger = window.console,
     ) {
         super();
 
@@ -78,8 +78,8 @@ export default class ClientRouter extends EventEmitter {
     getRelevantAppKind(appName, slotName) {
         const app = this.#registryConf.apps[appName];
 
-        if(!app) {
-            throw new this.errors.RouterError({message: 'Can not find info about the app.', data: {appName}});
+        if (!app) {
+            throw new this.errors.RouterError({ message: 'Can not find info about the app.', data: { appName } });
         }
 
         const appKind = app.kind;
@@ -98,7 +98,6 @@ export default class ClientRouter extends EventEmitter {
         const isActive = this.#activeApps.current[slotName] === appName;
         const wasActive = this.#activeApps.prev[slotName] === appName;
 
-
         //Todo: side effect have to be removed from getter
         let willBe = slotWillBe.default;
         !wasActive && isActive && (willBe = slotWillBe.rendered);
@@ -114,11 +113,11 @@ export default class ClientRouter extends EventEmitter {
         const routeConfig = route.slots[slotName];
 
         if (appConfig === undefined) {
-            throw new this.errors.RouterError({message: 'Can not find info about the app.', data: {appName}});
+            throw new this.errors.RouterError({ message: 'Can not find info about the app.', data: { appName } });
         }
 
         if (routeConfig === undefined) {
-            throw new this.errors.RouterError({message: 'Can not find info about the slot.', data: {slotName}});
+            throw new this.errors.RouterError({ message: 'Can not find info about the slot.', data: { slotName } });
         }
         const appProps = appConfig.props || {};
         const routeProps = routeConfig.props || {};
@@ -140,8 +139,8 @@ export default class ClientRouter extends EventEmitter {
             base.remove();
             this.#logger.warn(
                 'ILC: <base> tag was used only for initial rendering and removed afterwards.\n' +
-                'Currently, ILC does not support it fully.\n' +
-                'Please open an issue if you need this functionality.'
+                    'Currently, ILC does not support it fully.\n' +
+                    'Please open an issue if you need this functionality.',
             );
         } else if (state.forceSpecialRoute === '404') {
             this.#currentRoute = this.#router.matchSpecial(this.#getCurrUrl(), state.forceSpecialRoute);
@@ -208,7 +207,6 @@ export default class ClientRouter extends EventEmitter {
             this.#currentUrl = newUrl;
         }
 
-
         // In case if base template was changes we expect not SPA navigation
         const isBaseTemplateChanged = this.#currentRoute && this.#prevRoute.template !== this.#currentRoute.template;
         if (isBaseTemplateChanged) {
@@ -234,22 +232,28 @@ export default class ClientRouter extends EventEmitter {
                 } else {
                     // temporary remove slot with old props, to remove it from DOM
                     // it will be rendered with new props with the help of "triggerAppChange"
-                    appsToForceRerender.push(appName)
+                    appsToForceRerender.push(appName);
                     delete this.#activeApps.current[slotName];
                 }
             });
 
-            window.addEventListener(ilcEvents.PAGE_READY, () => {
-                if (appsToForceRerender.length) {
-                    this.#logger.info(`ILC: Triggering app re-mount for [${appsToForceRerender}] due to changed props.`);
+            window.addEventListener(
+                ilcEvents.PAGE_READY,
+                () => {
+                    if (appsToForceRerender.length) {
+                        this.#logger.info(
+                            `ILC: Triggering app re-mount for [${appsToForceRerender}] due to changed props.`,
+                        );
 
-                    triggerAppChange();
-                }
+                        triggerAppChange();
+                    }
 
-                if (updateEventsToTrigger.length) {
-                    updateEventsToTrigger.forEach(this.emit.bind(this));
-                }
-            }, { once: true });
+                    if (updateEventsToTrigger.length) {
+                        updateEventsToTrigger.forEach(this.emit.bind(this));
+                    }
+                },
+                { once: true },
+            );
         }
     };
 
@@ -277,10 +281,13 @@ export default class ClientRouter extends EventEmitter {
                 return acc;
             }
 
-            return [...acc, {
-                appName: currentSlotApp.appName,
-                slotName,
-            }];
+            return [
+                ...acc,
+                {
+                    appName: currentSlotApp.appName,
+                    slotName,
+                },
+            ];
         }, []);
     }
 
@@ -296,16 +303,14 @@ export default class ClientRouter extends EventEmitter {
             return;
         }
 
-        const anchor = event.target.tagName === 'A'
-            ? event.target
-            : event.target.closest('a');
+        const anchor = event.target.tagName === 'A' ? event.target : event.target.closest('a');
         const href = anchor && anchor.getAttribute('href');
 
         if (event.defaultPrevented || href === null || !['', '_self'].includes(anchor.target) || isSpecialUrl(href)) {
             return;
         }
 
-        const {specialRole} = this.match(href);
+        const { specialRole } = this.match(href);
         if (specialRole === null) {
             this.#debug(`Calling singleSpa.navigateToUrl("${href}")`);
             this.#singleSpa.navigateToUrl(href);
@@ -320,7 +325,7 @@ export default class ClientRouter extends EventEmitter {
         if (!mountedApps.includes(appId)) {
             return this.#logger.warn(
                 `ILC: Ignoring special route "${specialRouteId}" trigger which came from not mounted app "${appId}". ` +
-                `Currently mounted apps: ${mountedApps.join(', ')}.`
+                    `Currently mounted apps: ${mountedApps.join(', ')}.`,
             );
         }
 
@@ -331,13 +336,15 @@ export default class ClientRouter extends EventEmitter {
         if (specialRouteId === 404 && !isPrimary) {
             return this.#logger.warn(
                 `ILC: Ignoring special route "${specialRouteId}" trigger which came from non-primary app "${appId}". ` +
-                `"${appId}" is "${fragmentKind}"`
+                    `"${appId}" is "${fragmentKind}"`,
             );
         }
 
-        this.#logger.info(`ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`);
+        this.#logger.info(
+            `ILC: Special route "${specialRouteId}" was triggered by "${appId}" app. Performing rerouting...`,
+        );
 
-        this.#forceSpecialRoute = {id: specialRouteId, url: this.#getCurrUrl(true)};
+        this.#forceSpecialRoute = { id: specialRouteId, url: this.#getCurrUrl(true) };
 
         triggerAppChange(); //This call would immediately invoke "ilc:before-routing" and start apps mount/unmount process
     };
@@ -350,5 +357,5 @@ export default class ClientRouter extends EventEmitter {
         }
 
         return this.#i18n.unlocalizeUrl(url);
-    }
+    };
 }

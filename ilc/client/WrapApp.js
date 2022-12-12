@@ -1,6 +1,6 @@
-import {flattenFnArray} from './utils';
-import {slotWillBe} from './TransitionManager/TransitionManager';
-import {appIdToNameAndSlot} from '../common/utils';
+import { flattenFnArray } from './utils';
+import { slotWillBe } from './TransitionManager/TransitionManager';
+import { appIdToNameAndSlot } from '../common/utils';
 
 const APP_STATES = {
     loaded: 0,
@@ -75,7 +75,7 @@ export default class WrapApp {
         };
     }
 
-     #getWrapperProps = (props) => {
+    #getWrapperProps = (props) => {
         const newProps = Object.assign({}, props);
         newProps.appId = this.#wrapperConf.appId;
         newProps.getCurrentPathProps = () => this.#wrapperConf.props;
@@ -86,21 +86,23 @@ export default class WrapApp {
         };
 
         return newProps;
-    }
+    };
 
-    #renderAppFactory = (props, appCallbacks, wrapperCallbacks) => async (extraProps = {}) => {
-        this.#appExtraProps = extraProps;
+    #renderAppFactory =
+        (props, appCallbacks, wrapperCallbacks) =>
+        async (extraProps = {}) => {
+            this.#appExtraProps = extraProps;
 
-        const {slotName} = appIdToNameAndSlot(props.appId);
-        this.#transitionManager.handlePageTransition(slotName, slotWillBe.rerendered);
+            const { slotName } = appIdToNameAndSlot(props.appId);
+            this.#transitionManager.handlePageTransition(slotName, slotWillBe.rerendered);
 
-        await wrapperCallbacks.unmount(props);
+            await wrapperCallbacks.unmount(props);
 
-        if (this.#appState < APP_STATES.bootstrapped) {
-            await appCallbacks.bootstrap(props);
-        }
-        await appCallbacks.mount(props);
-    }
+            if (this.#appState < APP_STATES.bootstrapped) {
+                await appCallbacks.bootstrap(props);
+            }
+            await appCallbacks.mount(props);
+        };
 
     #getAppProps = (props) => {
         const newProps = Object.assign({}, props);
@@ -108,16 +110,16 @@ export default class WrapApp {
         newProps.getCurrentPathProps = () => {
             const res = props.getCurrentPathProps();
             return Object.assign({}, res, this.#appExtraProps);
-        }
+        };
 
         return newProps;
-    }
+    };
 
     #canonizeCallbacks = (callbacks, wrapPropsWith, appType) => {
         const stateMap = {
             bootstrap: APP_STATES.bootstrapped,
             mount: APP_STATES.mounted,
-            unmount: APP_STATES.unmounted
+            unmount: APP_STATES.unmounted,
         };
         const cbTypes = Object.keys(stateMap);
 
@@ -139,5 +141,5 @@ export default class WrapApp {
             }
             return acc;
         }, {});
-    }
+    };
 }
