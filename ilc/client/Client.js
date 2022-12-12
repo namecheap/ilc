@@ -276,9 +276,9 @@ export class Client {
         setNavigationErrorHandler(this.#onNavigationError.bind(this));
         window.addEventListener('error', this.#onRuntimeError.bind(this));
 
-        const transitionHook = new TransitionHooks();
-        const performanceHook = new PerformanceTransitionHook(this.#router.getCurrentRoute);
-        const titleHook = new TitleCheckerTransitionHook(this.#router.getCurrentRoute);
+        const transitionHook = new TransitionHooks(this.#logger);
+        const performanceHook = new PerformanceTransitionHook(this.#router.getCurrentRoute, this.#logger);
+        const titleHook = new TitleCheckerTransitionHook(this.#router.getCurrentRoute, this.#logger);
 
         transitionHook.addHook(performanceHook);
         transitionHook.addHook(titleHook);

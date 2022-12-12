@@ -3,10 +3,12 @@ import { BaseTransitionHook } from './BaseTransitionHook';
 export class PerformanceTransitionHook extends BaseTransitionHook {
     #currentPathGetter;
     #startRouting;
+    #logger;
 
-    constructor(currentPathGetter) {
+    constructor(currentPathGetter, logger) {
         super();
         this.#currentPathGetter = currentPathGetter;
+        this.#logger = logger;
     }
 
     beforeHandler() {
@@ -20,8 +22,7 @@ export class PerformanceTransitionHook extends BaseTransitionHook {
 
         const route = currentPath.specialRole ? `special_${currentPath.specialRole}` : currentPath.route;
 
-        // ToDo: Show only in dev mode in prod reporting to newRelic
-        console.info(`ILC: Client side route change to "${route}" took ${timeMs} milliseconds.`);
+        this.#logger.info(`ILC: Client side route change to "${route}" took ${timeMs} milliseconds.`);
 
         // ToDo: remove newrelic and use more abstract interface for monitoring tools
         if (window.newrelic && window.newrelic.addPageAction) {

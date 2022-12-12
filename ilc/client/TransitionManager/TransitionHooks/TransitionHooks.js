@@ -5,6 +5,11 @@ export class TransitionHooks {
     #targetHref;
     #subscribed = false;
     #hookList = [];
+    #logger;
+
+    constructor(logger) {
+        this.#logger = logger;
+    }
 
     addHook(hookInstance) {
         this.#hookList.push(hookInstance);
@@ -12,7 +17,7 @@ export class TransitionHooks {
 
     subscribe() {
         if (this.#subscribed) {
-            console.warn('ILC: TransitionHooks. Unexpected subscription happened');
+            this.#logger.warn('ILC: TransitionHooks. Unexpected subscription happened');
             return;
         }
 
@@ -25,16 +30,24 @@ export class TransitionHooks {
                 return;
             }
 
-            this.#hookList.forEach((hook) => {
-                hook.beforeHandler();
-            });
+            try {
+                this.#hookList.forEach((hook) => {
+                    hook.beforeHandler();
+                });
+            } catch (error) {
+                this.#logger.error('ILC: transition hooks before handler error');
+            }
 
             this.#targetHref = window.location.href;
         });
         window.addEventListener(ilcEvents.ALL_SLOTS_LOADED, () => {
-            this.#hookList.forEach((hook) => {
-                hook.afterHandler();
-            });
+            try {
+                this.#hookList.forEach((hook) => {
+                    hook.afterHandler();
+                });
+            } catch (error) {
+                this.#logger.error('ILC: transition hooks after handler error');
+            }
         });
 
         this.#subscribed = true;
