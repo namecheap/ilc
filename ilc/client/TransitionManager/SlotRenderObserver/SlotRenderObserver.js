@@ -8,6 +8,10 @@ export class SlotRenderObserver {
             );
         }
 
+        if (this.#observer === null) {
+            throw new Error('SlotRenderObserver  disconnected to create new observer create a new instance');
+        }
+
         if (!onSlotReady) {
             throw new Error('SlotRenderObserver has to receive onSlotReady callback');
         }
@@ -51,5 +55,6 @@ export class SlotRenderObserver {
             return;
         }
         this.#observer.disconnect();
+        this.#observer = null;
     }
 }
