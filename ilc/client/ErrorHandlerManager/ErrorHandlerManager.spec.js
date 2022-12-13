@@ -17,9 +17,11 @@ import {
 
 describe('ErrorHandlerManager', () => {
     const registryService = {
-        getTemplate: sinon.stub().returns(Promise.resolve({
-            data: '%ERRORID%',
-        }))
+        getTemplate: sinon.stub().returns(
+            Promise.resolve({
+                data: '%ERRORID%',
+            }),
+        ),
     };
 
     const logger = {
@@ -52,8 +54,8 @@ describe('ErrorHandlerManager', () => {
             const internalError = new InternalError({
                 message: 'I am internal error',
                 data: {
-                    blah: 'test'
-                }
+                    blah: 'test',
+                },
             });
 
             errorHandlerManager.handleError(internalError);
@@ -65,7 +67,7 @@ describe('ErrorHandlerManager', () => {
 
             errorHandlerManager.handleError(error);
 
-            const [loggedMessage, loggedError]  = logger.error.getCall(0).args;
+            const [loggedMessage, loggedError] = logger.error.getCall(0).args;
 
             expect(loggedMessage).to.equal('I am internal error');
             expect(loggedError.cause).to.equal(error);
@@ -147,7 +149,11 @@ describe('ErrorHandlerManager', () => {
                 expect(document.querySelector('html').innerHTML).not.to.have.string('Error ID: ');
                 expect(handler.called).to.be.false;
 
-                expect(alertStub.calledOnceWithExactly('Something went wrong! Please try to reload page or contact support.'));
+                expect(
+                    alertStub.calledOnceWithExactly(
+                        'Something went wrong! Please try to reload page or contact support.',
+                    ),
+                );
             });
         });
 
@@ -226,7 +232,11 @@ describe('ErrorHandlerManager', () => {
                 expect(document.querySelector('html').innerHTML).not.to.have.string('Error ID: ');
                 expect(handler.called).to.be.false;
 
-                expect(alertStub.calledOnceWithExactly('Something went wrong! Please try to reload page or contact support.'));
+                expect(
+                    alertStub.calledOnceWithExactly(
+                        'Something went wrong! Please try to reload page or contact support.',
+                    ),
+                );
             });
         });
     });

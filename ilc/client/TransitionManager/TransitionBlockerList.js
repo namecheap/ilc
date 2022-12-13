@@ -1,7 +1,19 @@
 export default class TransitionBlockerList {
-
     /** @type TransitionBlocker[] */
     #items = [];
+    #spaTransitionReady = false;
+
+    init() {
+        this.#spaTransitionReady = true;
+    }
+
+    isReady() {
+        return this.#spaTransitionReady;
+    }
+
+    isEmpty() {
+        return this.size() === 0;
+    }
 
     add(item) {
         this.#items.push(item);
@@ -10,7 +22,7 @@ export default class TransitionBlockerList {
     remove(item) {
         const itemId = item.getId();
 
-        const itemIndex = this.#items.findIndex(v => v.getId() === itemId);     
+        const itemIndex = this.#items.findIndex((v) => v.getId() === itemId);
         if (itemIndex === -1) {
             return;
         }
@@ -19,11 +31,11 @@ export default class TransitionBlockerList {
     }
 
     findById(itemId) {
-        return this.#items.find(item => item.getId() === itemId);
+        return this.#items.find((item) => item.getId() === itemId);
     }
 
     find(item) {
-        return this.#items.find(existingItem => existingItem === item);
+        return this.#items.find((existingItem) => existingItem === item);
     }
 
     size() {
@@ -31,6 +43,6 @@ export default class TransitionBlockerList {
     }
 
     promises() {
-        return this.#items.map(items => items.promise());
+        return this.#items.map((items) => items.promise());
     }
 }

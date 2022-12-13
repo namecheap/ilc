@@ -3,10 +3,10 @@ import sinon from 'sinon';
 chai.use(require('chai-as-promised'));
 const expect = chai.expect;
 
-import { getRegistryMock } from '../tests/helpers'
+import { getRegistryMock } from '../tests/helpers';
 
 import { BundleLoader } from './BundleLoader';
-import { getIlcConfigRoot } from "./configuration/getIlcConfigRoot";
+import { getIlcConfigRoot } from './configuration/getIlcConfigRoot';
 
 const fnCallbacks = {
     bootstrap: async () => 'bootstrap',
@@ -34,24 +34,22 @@ describe('BundleLoader', () => {
         registry = getRegistryMock({
             apps: {
                 '@portal/primary': {
-                    props: {prop1: 'hello'}
+                    props: { prop1: 'hello' },
                 },
                 '@portal/withWrapper': {
                     spaBundle: 'http://localhost/withWrapper.js',
-                    wrappedWith: '@portal/primary'
+                    wrappedWith: '@portal/primary',
                 },
                 '@portal/appWithCss': {
                     spaBundle: 'http://localhost/index.js',
                     cssBundle: 'http://localhost/index.css',
                     kind: 'primary',
                 },
-            }
+            },
         }).getConfig().data;
 
         configRoot.registryConfiguration = registry;
-    })
-
-
+    });
 
     afterEach(() => {
         SystemJs.import.reset();
@@ -67,7 +65,7 @@ describe('BundleLoader', () => {
             sinon.assert.calledWith(SystemJs.import, registry.apps[appName].spaBundle);
         });
 
-        it('preloads app and it\'s wrapper', async () => {
+        it("preloads app and it's wrapper", async () => {
             const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
             const appName = '@portal/withWrapper';
 
@@ -87,11 +85,10 @@ describe('BundleLoader', () => {
 
             const mainSpa = sinon.stub().returns(fnCallbacks);
 
-            SystemJs.import.resolves({mainSpa});
+            SystemJs.import.resolves({ mainSpa });
 
             const callbacks = await loader.loadApp(appName);
             expect(callbacks).to.equal(fnCallbacks);
-
 
             const callbacks2 = await loader.loadApp(appName);
             expect(callbacks2).to.equal(fnCallbacks);
@@ -109,11 +106,10 @@ describe('BundleLoader', () => {
 
             const mainSpa = sinon.stub().returns(fnCallbacks);
 
-            SystemJs.import.resolves({default: {mainSpa}});
+            SystemJs.import.resolves({ default: { mainSpa } });
 
             const callbacks = await loader.loadApp(appName);
             expect(callbacks).to.equal(fnCallbacks);
-
 
             const callbacks2 = await loader.loadApp(appName);
             expect(callbacks2).to.equal(fnCallbacks);
@@ -141,7 +137,7 @@ describe('BundleLoader', () => {
             const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
             const appName = '@portal/primary';
 
-            SystemJs.import.resolves({default: fnCallbacks});
+            SystemJs.import.resolves({ default: fnCallbacks });
 
             const callbacks = await loader.loadApp(appName);
             expect(callbacks).to.equal(fnCallbacks);
@@ -197,13 +193,12 @@ describe('BundleLoader', () => {
             SystemJs.import.resolves(fnCallbacks);
 
             const callbacks = await loader.loadAppWithCss(appName);
-            Object.keys(fnCallbacks).forEach(key => {
+            Object.keys(fnCallbacks).forEach((key) => {
                 expect(callbacks[key]).not.to.be.undefined;
-            })
+            });
 
             sinon.assert.calledWith(SystemJs.import, appName);
             sinon.assert.calledWith(SystemJs.import, registry.apps[appName].cssBundle);
         });
     });
-
 });

@@ -1,5 +1,5 @@
 import debug from 'debug';
-import {flattenFnArray} from './utils';
+import { flattenFnArray } from './utils';
 import { IlcIntl } from 'ilc-sdk/app';
 
 export default class ParcelApi {
@@ -44,7 +44,6 @@ export default class ParcelApi {
                 intlInstances[props.name] = new IlcIntl(props.name, adapter.intl);
             }
 
-
             const resultingProps = {
                 ...props,
                 parcelSdk: {
@@ -54,7 +53,10 @@ export default class ParcelApi {
                 },
             };
 
-            this.#debug(`${lifecycleType.toUpperCase()} for parcel "${parcelName}" from app "${appName}" with: `, resultingProps);
+            this.#debug(
+                `${lifecycleType.toUpperCase()} for parcel "${parcelName}" from app "${appName}" with: `,
+                resultingProps,
+            );
 
             return resultingProps;
         });
@@ -72,5 +74,5 @@ export default class ParcelApi {
         }
 
         return resCallbacks;
-    }
+    };
 }

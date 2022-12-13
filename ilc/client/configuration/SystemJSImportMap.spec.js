@@ -5,9 +5,7 @@ import { getIlcConfigRoot } from './getIlcConfigRoot';
 describe('SystemJSImportMap', () => {
     it('SystemJSImportMap should configure SystemJS', () => {
         const configRoot = getIlcConfigRoot();
-        const instance = new SystemJSImportMap(
-            configRoot.getConfigForApps(),
-            configRoot.getConfigForSharedLibs());
+        const instance = new SystemJSImportMap(configRoot.getConfigForApps(), configRoot.getConfigForSharedLibs());
         const sandbox = sinon.createSandbox();
 
         sandbox.spy(document.head, 'appendChild');

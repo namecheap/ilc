@@ -42,18 +42,16 @@ export function flattenFnArray(appOrParcel, lifecycle) {
                 const thisPromise = fn(props);
                 return smellsLikeAPromise(thisPromise)
                     ? thisPromise
-                    : Promise.reject(`The lifecycle function ${lifecycle} at array index ${index} did not return a promise`);
+                    : Promise.reject(
+                          `The lifecycle function ${lifecycle} at array index ${index} did not return a promise`,
+                      );
             });
         }, Promise.resolve());
     };
 }
 
 export function smellsLikeAPromise(promise) {
-    return (
-        promise &&
-        typeof promise.then === "function" &&
-        typeof promise.catch === "function"
-    );
+    return promise && typeof promise.then === 'function' && typeof promise.catch === 'function';
 }
 
 /**

@@ -2,100 +2,101 @@ import { expect } from 'chai';
 const LZUTF8 = require('lzutf8');
 const parseOverrideConfig = require('./parse-override-config');
 
-const assignIgnoreInvalidSsl = (ssr, protocol = 'http:') => protocol === 'https:'
-    ? Object.assign({}, ssr, {ignoreInvalidSsl: true})
-    : ssr;
+const assignIgnoreInvalidSsl = (ssr, protocol = 'http:') =>
+    protocol === 'https:' ? Object.assign({}, ssr, { ignoreInvalidSsl: true }) : ssr;
 
-const getExampleObject = (ip = '10.1.150.223', protocol = 'http:') => (
-    {
-        apps: {
-            '@portal/one': {
-                spaBundle: `${protocol}//${ip}:2273/api/fragment/uilandingpages/app.js`,
-                ssr: assignIgnoreInvalidSsl({
-                    src: `${protocol}//${ip}/api/fragment/uilandingpages/`
-                }, protocol)
-            },
-            '@portal/two': {
-                spaBundle: `${protocol}//${ip}:2222/example.js`,
-                ssr: assignIgnoreInvalidSsl({
+const getExampleObject = (ip = '10.1.150.223', protocol = 'http:') => ({
+    apps: {
+        '@portal/one': {
+            spaBundle: `${protocol}//${ip}:2273/api/fragment/uilandingpages/app.js`,
+            ssr: assignIgnoreInvalidSsl(
+                {
+                    src: `${protocol}//${ip}/api/fragment/uilandingpages/`,
+                },
+                protocol,
+            ),
+        },
+        '@portal/two': {
+            spaBundle: `${protocol}//${ip}:2222/example.js`,
+            ssr: assignIgnoreInvalidSsl(
+                {
                     src: `${protocol}//${ip}/`,
                     timeout: 1000,
-                }, protocol),
-                kind: 'primary',
-            },
-            '@portal/three': {
-                spaBundle: `${protocol}//${ip}:3333/example.js`,
-                ssr: {
-                    timeout: 1000,
                 },
-                kind: 'primary',
+                protocol,
+            ),
+            kind: 'primary',
+        },
+        '@portal/three': {
+            spaBundle: `${protocol}//${ip}:3333/example.js`,
+            ssr: {
+                timeout: 1000,
             },
-            '@portal/four': {
-                spaBundle: `${protocol}//${ip}:4444/example.js`,
-                kind: 'primary',
+            kind: 'primary',
+        },
+        '@portal/four': {
+            spaBundle: `${protocol}//${ip}:4444/example.js`,
+            kind: 'primary',
+        },
+    },
+    routes: [
+        {
+            routeId: 104,
+            route: '/domains/',
+            next: false,
+            slots: {
+                body: {
+                    appName: '@portal/two',
+                    kind: null,
+                },
             },
         },
-        routes: [
-            {
-                routeId: 104,
-                route: '/domains/',
-                next: false,
-                slots: {
-                    body: {
-                        appName: '@portal/two',
-                        kind: null,
-                    },
-                },
-            },
-        ],
-        sharedLibs: {
-            sharedLibrary: {
-                spaBundle: `${protocol}//${ip}:5555/bundle.js`,
-            },
+    ],
+    sharedLibs: {
+        sharedLibrary: {
+            spaBundle: `${protocol}//${ip}:5555/bundle.js`,
         },
-    }
-);
+    },
+});
 
-const getSanitizedObject = () => (
-    {
-        apps: {
-            '@portal/one': {
-                ssr: {}
+const getSanitizedObject = () => ({
+    apps: {
+        '@portal/one': {
+            ssr: {},
+        },
+        '@portal/two': {
+            ssr: {
+                timeout: 1000,
             },
-            '@portal/two': {
-                ssr: {
-                    timeout: 1000,
+            kind: 'primary',
+        },
+        '@portal/three': {
+            ssr: {
+                timeout: 1000,
+            },
+            kind: 'primary',
+        },
+        '@portal/four': {
+            kind: 'primary',
+        },
+    },
+    routes: [
+        {
+            routeId: 104,
+            route: '/domains/',
+            next: false,
+            slots: {
+                body: {
+                    appName: '@portal/two',
+                    kind: null,
                 },
-                kind: 'primary',
-            },
-            '@portal/three': {
-                ssr: {
-                    timeout: 1000,
-                },
-                kind: 'primary',
-            },
-            '@portal/four': {
-                kind: 'primary',
             },
         },
-        routes: [
-            {
-                routeId: 104,
-                route: '/domains/',
-                next: false,
-                slots: {
-                    body: {
-                        appName: '@portal/two',
-                        kind: null,
-                    },
-                },
-            },
-        ],
-        sharedLibs: {
-            sharedLibrary: {},
-        },
-    }
-);
+    ],
+    sharedLibs: {
+        sharedLibrary: {},
+    },
+});
 
 const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:', useCompression = false) => {
     const value = JSON.stringify({
@@ -103,7 +104,7 @@ const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:', useCompressi
             '@portal/one': {
                 spaBundle: `${protocol}//${ip}:2273/api/fragment/uilandingpages/app.js`,
                 ssr: {
-                    src: `${protocol}//${ip}/api/fragment/uilandingpages/`
+                    src: `${protocol}//${ip}/api/fragment/uilandingpages/`,
                 },
             },
             '@portal/two': {
@@ -156,25 +157,23 @@ const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:', useCompressi
     return `foo=bar; ILC-overrideConfig=${encodedValue}; foo2=bar2`;
 };
 
-
 describe('overrideConfig', () => {
-
     describe('return null', () => {
         it('should return null if type non string', async () => {
-            const incorrectExamples = [{},[], 123, null, undefined];
+            const incorrectExamples = [{}, [], 123, null, undefined];
 
-            incorrectExamples.forEach(incorrectExample => {
+            incorrectExamples.forEach((incorrectExample) => {
                 expect(parseOverrideConfig(incorrectExample)).to.equal(null);
             });
         });
 
-        it('should return null if string doesn\'t contain cookie name', async () => {
+        it("should return null if string doesn't contain cookie name", async () => {
             const incorrectExample = '123';
 
             expect(parseOverrideConfig(incorrectExample)).to.equal(null);
         });
 
-        it('should return null if cookie can\'t be parsed with JSON', async () => {
+        it("should return null if cookie can't be parsed with JSON", async () => {
             const incorrectExample = getExampleCookies().replace('overrideConfig=', 'overrideConfig=123');
 
             expect(parseOverrideConfig(incorrectExample)).to.equal(null);
@@ -234,7 +233,7 @@ describe('overrideConfig', () => {
         });
 
         it('should not sanitize correct config for any 127.x.x.x', async () => {
-            for (let i=0; i<256; i++) {
+            for (let i = 0; i < 256; i++) {
                 const ip = `127.${i}.${i}.${i}`;
                 const exampleCookies = getExampleCookies(ip);
                 expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
@@ -248,7 +247,7 @@ describe('overrideConfig', () => {
         });
 
         it('should not sanitize correct config for any 10.x.x.x', async () => {
-            for (let i=0; i<256; i++) {
+            for (let i = 0; i < 256; i++) {
                 const ip = `10.${i}.${i}.${i}`;
                 const exampleCookies = getExampleCookies(ip);
                 expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
@@ -256,7 +255,7 @@ describe('overrideConfig', () => {
         });
 
         it('should not sanitize correct config for any 192.168.x.x', async () => {
-            for (let i=0; i<256; i++) {
+            for (let i = 0; i < 256; i++) {
                 const ip = `192.168.${i}.${i}`;
                 const exampleCookies = getExampleCookies(ip);
                 expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
@@ -264,8 +263,8 @@ describe('overrideConfig', () => {
         });
 
         it('should not sanitize correct config for any 172.16.0.0 - 172.31.255.255', async () => {
-            for (let i=16; i<32; i++) {
-                for (let j=0; j<256; j++) {
+            for (let i = 16; i < 32; i++) {
+                for (let j = 0; j < 256; j++) {
                     const ip = `172.${i}.${j}.${j}`;
                     const exampleCookies = getExampleCookies(ip);
                     expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
@@ -277,7 +276,7 @@ describe('overrideConfig', () => {
             const exampleCookies = getExampleCookies('10.1.150.223', 'http:', true);
 
             expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject('10.1.150.223', 'http:'));
-        })
+        });
     });
 
     describe('sanitized', () => {
@@ -303,7 +302,7 @@ describe('overrideConfig', () => {
         });
 
         it('should sanitize non 10/127.x.x.x', async () => {
-            for (let i=0; i<256; i++) {
+            for (let i = 0; i < 256; i++) {
                 const ip = `${i}.${i}.${i}.${i}`;
                 const exampleCookies = getExampleCookies(ip);
                 if (i !== 10 && i !== 127) {
@@ -315,7 +314,7 @@ describe('overrideConfig', () => {
         it('should sanitize 192.x.x.x and x.168.x.x', async () => {
             const incorrectIps = ['192.1.1.1', '1.168.1.1'];
 
-            incorrectIps.forEach(incorrectIp => {
+            incorrectIps.forEach((incorrectIp) => {
                 let exampleCookies = getExampleCookies(incorrectIp);
                 expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject(incorrectIp));
             });
@@ -324,7 +323,7 @@ describe('overrideConfig', () => {
         it('should sanitize non 172.16.0.0 - 172.31.255.255', async () => {
             const incorrectIps = ['172.15.0.0', '172.32.255.255', '171.16.0.0', '173.31.255.255'];
 
-            incorrectIps.forEach(incorrectIp => {
+            incorrectIps.forEach((incorrectIp) => {
                 let exampleCookies = getExampleCookies(incorrectIp);
                 expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject(incorrectIp));
             });
@@ -349,9 +348,16 @@ describe('overrideConfig', () => {
         });
 
         it('should not sanitize any ip', async () => {
-            const incorrectIps = ['172.15.0.0', '172.32.255.255', '171.16.0.0', '173.31.255.255', '192.1.1.1', '1.168.1.1'];
+            const incorrectIps = [
+                '172.15.0.0',
+                '172.32.255.255',
+                '171.16.0.0',
+                '173.31.255.255',
+                '192.1.1.1',
+                '1.168.1.1',
+            ];
 
-            incorrectIps.forEach(incorrectIp => {
+            incorrectIps.forEach((incorrectIp) => {
                 const exampleCookies = getExampleCookies(incorrectIp);
                 const expectedResult = getExampleObject(incorrectIp);
                 expect(parseOverrideConfig(exampleCookies, 'all')).deep.equal(expectedResult);
@@ -363,7 +369,7 @@ describe('overrideConfig', () => {
         it('should not sanitize trusted origins', async () => {
             const trustedExamples = ['foo.com', 'bar.com', '1.1.1.1'];
 
-            trustedExamples.forEach(ip => {
+            trustedExamples.forEach((ip) => {
                 const exampleCookies = getExampleCookies(ip);
                 const expectedResult = getExampleObject(ip);
                 expect(parseOverrideConfig(exampleCookies, trustedExamples.toString())).deep.equal(expectedResult);
@@ -373,7 +379,7 @@ describe('overrideConfig', () => {
         it('should not sanitize trusted url w/o protocol', async () => {
             const trustedExamples = ['foo.com', 'bar.com', '1.1.1.1'];
 
-            trustedExamples.forEach(ip => {
+            trustedExamples.forEach((ip) => {
                 const exampleCookies = getExampleCookies(ip, '');
                 const expectedResult = getExampleObject(ip, '');
                 expect(parseOverrideConfig(exampleCookies, trustedExamples.toString())).deep.equal(expectedResult);
@@ -384,7 +390,7 @@ describe('overrideConfig', () => {
             const trustedExamples = ['foo.com', 'bar.com', '1.1.1.1'];
             const nonTrustedExamples = ['incorrect.com', '2.2.2.2'];
 
-            nonTrustedExamples.forEach(ip => {
+            nonTrustedExamples.forEach((ip) => {
                 const exampleCookies = getExampleCookies(ip);
                 const expectedResult = getSanitizedObject(ip);
                 expect(parseOverrideConfig(exampleCookies, trustedExamples.toString())).deep.equal(expectedResult);

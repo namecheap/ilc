@@ -1,6 +1,6 @@
 'use strict';
 
-const serveStatic = require('serve-static')
+const serveStatic = require('serve-static');
 
 module.exports = function (isProduction) {
     if (isProduction) {
@@ -16,11 +16,10 @@ module.exports = function (isProduction) {
         webpackMiddleware(webpack(require('../build/webpack.dev')), {
             publicPath: '/',
             headers: {
-                "Access-Control-Allow-Origin": "*",
+                'Access-Control-Allow-Origin': '*',
             },
             logLevel: 'debug',
         }),
-        serveStatic('public')
+        serveStatic('public'),
     ];
 };
-

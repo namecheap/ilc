@@ -2,4 +2,4 @@ const objectToBase64 = (object) => Buffer.from(JSON.stringify(object)).toString(
 
 module.exports = {
     objectToBase64,
-}
+};

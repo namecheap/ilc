@@ -37,33 +37,35 @@ describe('ErrorHandler', () => {
 
     it('should show 500 error page with an error id', async () => {
         nock(config.get('registry').address).get('/api/v1/router_domains').reply(200, []);
-        nock(config.get('registry').address).get(`/api/v1/template/500/rendered?locale=en-US&domain=${address}`).reply(200, {
-            content:
-                '<html>' +
-                '<body>' +
-                '<main>' +
-                '<h1>Hello there!</h1>' +
-                '<div>%ERRORID%</div>' +
-                '</main>' +
-                '</body>' +
-                '</html>',
-        });
+        nock(config.get('registry').address)
+            .get(`/api/v1/template/500/rendered?locale=en-US&domain=${address}`)
+            .reply(200, {
+                content:
+                    '<html>' +
+                    '<body>' +
+                    '<main>' +
+                    '<h1>Hello there!</h1>' +
+                    '<div>%ERRORID%</div>' +
+                    '</main>' +
+                    '</body>' +
+                    '</html>',
+            });
 
         const response = await server.get('/_ilc/500').expect(500);
 
-        const {errorId} = response.text.match(errorIdRegExp).groups;
+        const { errorId } = response.text.match(errorIdRegExp).groups;
 
         chai.expect(response.header['cache-control']).to.be.eql('no-cache, no-store, must-revalidate');
         chai.expect(response.header['pragma']).to.be.eql('no-cache');
         chai.expect(response.text).to.be.eql(
             '<html>' +
-            '<body>' +
-            '<main>' +
-            '<h1>Hello there!</h1>' +
-            `<div>Error ID: ${errorId}</div>` +
-            '</main>' +
-            '</body>' +
-            '</html>'
+                '<body>' +
+                '<main>' +
+                '<h1>Hello there!</h1>' +
+                `<div>Error ID: ${errorId}</div>` +
+                '</main>' +
+                '</body>' +
+                '</html>',
         );
     });
 
@@ -81,7 +83,7 @@ describe('ErrorHandler', () => {
     describe('when static error page config is specified', () => {
         function mockConfigValue(key, value) {
             const oldGet = config.get.bind(config);
-            sinon.stub(config.constructor.prototype, 'get').callsFake(function(name) {
+            sinon.stub(config.constructor.prototype, 'get').callsFake(function (name) {
                 if (name === key) {
                     return value;
                 }
@@ -95,7 +97,9 @@ describe('ErrorHandler', () => {
             nock(config.get('registry').address).get('/api/v1/router_domains').reply(200, []);
             const replyingError = new Error('Something awful happened.');
 
-            nock(config.get('registry').address).get(`/api/v1/template/500/rendered`).replyWithError(replyingError.message);
+            nock(config.get('registry').address)
+                .get(`/api/v1/template/500/rendered`)
+                .replyWithError(replyingError.message);
 
             const response = await server.get('/_ilc/500').expect(500);
 

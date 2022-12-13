@@ -15,14 +15,17 @@ sources.push(require.resolve('systemjs-css-extra/dist/css.min'));
 sources.push(require.resolve('./systemjs-override-importmap'));
 sources.push(require.resolve('./systemjs-name-resolver'));
 
-fs.writeFileSync(`${dest}/system.js`, sources.reduce((res, v) => {
-    const resWithNewLine = res === '' ? res : res + "\n\n";
+fs.writeFileSync(
+    `${dest}/system.js`,
+    sources.reduce((res, v) => {
+        const resWithNewLine = res === '' ? res : res + '\n\n';
 
-    if (/\.exec\.js$/.test(v)) {
-        return resWithNewLine + require(v);
-    }
+        if (/\.exec\.js$/.test(v)) {
+            return resWithNewLine + require(v);
+        }
 
-    return resWithNewLine + fs.readFileSync(v);
-}, ''));
+        return resWithNewLine + fs.readFileSync(v);
+    }, ''),
+);
 
 console.log('SystemJS build finished!');

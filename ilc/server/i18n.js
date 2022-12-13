@@ -1,14 +1,14 @@
 const Cookie = require('cookie');
 const IlcIntl = require('ilc-sdk/app').IlcIntl;
-const {intlSchema} = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
+const { intlSchema } = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
 
 const i18nCookie = require('../common/i18nCookie');
 const { parseUrl } = require('../common/utils');
 
-const isStaticFile = url => {
+const isStaticFile = (url) => {
     const extensions = ['.js', '.js.map'];
 
-    return extensions.some(ext => url.endsWith(ext));
+    return extensions.some((ext) => url.endsWith(ext));
 };
 
 const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, reply) => {
@@ -19,21 +19,24 @@ const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, 
     }
 
     let decodedI18nCookie;
-    let currI18nConf = {...i18nConfig.default};
+    let currI18nConf = { ...i18nConfig.default };
 
     const encodedI18nCookie = Cookie.parse(req.headers.cookie || '')[i18nCookie.name];
 
     if (encodedI18nCookie) {
         decodedI18nCookie = i18nCookie.decode(encodedI18nCookie);
-        currI18nConf.locale = IlcIntl.getCanonicalLocale(decodedI18nCookie.locale, i18nConfig.supported.locale) || currI18nConf.locale;
-        currI18nConf.currency = i18nConfig.supported.currency.includes(decodedI18nCookie.currency) ? decodedI18nCookie.currency : currI18nConf.currency;
+        currI18nConf.locale =
+            IlcIntl.getCanonicalLocale(decodedI18nCookie.locale, i18nConfig.supported.locale) || currI18nConf.locale;
+        currI18nConf.currency = i18nConfig.supported.currency.includes(decodedI18nCookie.currency)
+            ? decodedI18nCookie.currency
+            : currI18nConf.currency;
     }
 
     currI18nConf = await i18nParamsDetectionPlugin.detectI18nConfig(
         req.raw,
         {
             parseUrl: (url) => IlcIntl.parseUrl(i18nConfig, url),
-            localizeUrl: (url, {locale}) => IlcIntl.localizeUrl(i18nConfig, url, {locale}),
+            localizeUrl: (url, { locale }) => IlcIntl.localizeUrl(i18nConfig, url, { locale }),
             getCanonicalLocale: (locale) => IlcIntl.getCanonicalLocale(locale, i18nConfig.supported.locale),
         },
         currI18nConf,
@@ -41,7 +44,7 @@ const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, 
     );
 
     if (!req.raw.url.startsWith('/_ilc/')) {
-        const fixedUrl = IlcIntl.localizeUrl(i18nConfig, req.raw.url, {locale: currI18nConf.locale});
+        const fixedUrl = IlcIntl.localizeUrl(i18nConfig, req.raw.url, { locale: currI18nConf.locale });
         if (fixedUrl !== req.raw.url) {
             reply.redirect(fixedUrl);
             return;
@@ -52,19 +55,20 @@ const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, 
     req.raw.ilcState.locale = currI18nConf.locale;
 
     // Passing i18n data down to fragments
-    req.headers['x-request-intl'] = intlSchema.toBuffer({
-        ...i18nConfig,
-        current: currI18nConf,
-    }).toString('base64');
+    req.headers['x-request-intl'] = intlSchema
+        .toBuffer({
+            ...i18nConfig,
+            current: currI18nConf,
+        })
+        .toString('base64');
 
     const encodedNextI18nCookie = i18nCookie.encode(currI18nConf);
 
     if (encodedI18nCookie !== encodedNextI18nCookie) {
-        reply.res.setHeader('Set-Cookie', Cookie.serialize(
-            i18nCookie.name,
-            encodedNextI18nCookie,
-            i18nCookie.getOpts()
-        ));
+        reply.res.setHeader(
+            'Set-Cookie',
+            Cookie.serialize(i18nCookie.name, encodedNextI18nCookie, i18nCookie.getOpts()),
+        );
     }
 };
 

@@ -25,10 +25,14 @@ function cloneDeep(source) {
     return deepmerge({}, source);
 }
 
-const uniqueArray = array => [...new Set(array)];
+const uniqueArray = (array) => [...new Set(array)];
 
-const encodeHtmlEntities = value => value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const decodeHtmlEntities = value => value.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+const encodeHtmlEntities = (value) => value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const decodeHtmlEntities = (value) =>
+    value
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"');
 
 const fakeBaseInCasesWhereUrlIsRelative = 'http://hack';
 const parseUrl = (url) => new URL(url, fakeBaseInCasesWhereUrlIsRelative);
@@ -41,4 +45,4 @@ module.exports = {
     encodeHtmlEntities,
     decodeHtmlEntities,
     parseUrl,
-}
+};

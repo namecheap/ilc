@@ -21,11 +21,7 @@ module.exports = class Registry {
      * @param {Function} wrapFetchWithCache - cache provider
      * @param {Object} logger - log provider that implements "console" interface
      */
-    constructor(
-        address,
-        wrapFetchWithCache,
-        logger
-    ) {
+    constructor(address, wrapFetchWithCache, logger) {
         this.#address = address;
         this.#logger = logger;
 
@@ -53,11 +49,11 @@ module.exports = class Registry {
         this.getTemplate = async (templateName, { locale, forDomain } = {}) => {
             if (templateName === '500' && forDomain) {
                 const routerDomains = await this.getRouterDomains();
-                const redefined500 = routerDomains.data.find(item => item.domainName === forDomain)?.template500;
+                const redefined500 = routerDomains.data.find((item) => item.domainName === forDomain)?.template500;
                 templateName = redefined500 || templateName;
             }
 
-            return await getTemplateMemo(templateName, { locale, domain: forDomain});
+            return await getTemplateMemo(templateName, { locale, domain: forDomain });
         };
     }
 
@@ -68,11 +64,7 @@ module.exports = class Registry {
 
         this.#logger.info('Registry is preheating...');
 
-        await Promise.all([
-            this.getConfig(),
-            this.getTemplate('500'),
-            this.getRouterDomains(),
-        ]);
+        await Promise.all([this.getConfig(), this.getTemplate('500'), this.getRouterDomains()]);
 
         this.#logger.info('Registry preheated successfully!');
     }
@@ -89,8 +81,8 @@ module.exports = class Registry {
                 message: `Error while requesting config from registry`,
                 cause: error,
                 data: {
-                    requestedUrl: tplUrl
-                }
+                    requestedUrl: tplUrl,
+                },
             });
         }
 
@@ -114,7 +106,13 @@ module.exports = class Registry {
         }
 
         const queryString = params.toString();
-        const tplUrl = urljoin(this.#address, 'api/v1/template', templateName, 'rendered', queryString.length > 0 ? '?' + queryString : '');
+        const tplUrl = urljoin(
+            this.#address,
+            'api/v1/template',
+            templateName,
+            'rendered',
+            queryString.length > 0 ? '?' + queryString : '',
+        );
 
         let res;
         try {
@@ -124,8 +122,8 @@ module.exports = class Registry {
                 message: `Error while requesting rendered template "${templateName}" from registry`,
                 cause: e,
                 data: {
-                    requestedUrl: tplUrl
-                }
+                    requestedUrl: tplUrl,
+                },
             });
         }
 
@@ -133,17 +131,21 @@ module.exports = class Registry {
 
         let lastMatchOffset = templateStr.lastIndexOf('<ilc-slot');
         templateStr = templateStr.replace(/<ilc-slot\s+id="(.+)"\s*\/?>/gm, function (match, id, offset) {
-            return `<!-- Region "${id}" START -->\n` +
+            return (
+                `<!-- Region "${id}" START -->\n` +
                 // We change simplified slot definition onto TailorX required one
                 `<div id="${id}"><slot name="${id}"></slot></div>\n` +
                 // Used for AsyncBootUp functionality at client side
-                `<script>window.ilcApps.push('${id}');${lastMatchOffset === offset ? 'window.ilcApps.push(Infinity);' : ''}</script>\n` +
-                `<!-- Region "${id}" END -->`;
+                `<script>window.ilcApps.push('${id}');${
+                    lastMatchOffset === offset ? 'window.ilcApps.push(Infinity);' : ''
+                }</script>\n` +
+                `<!-- Region "${id}" END -->`
+            );
         });
 
         this.#cacheHeated.template = true;
 
-        return {...res.data, content: templateStr};
+        return { ...res.data, content: templateStr };
     };
 
     #getRouterDomains = async () => {
@@ -158,8 +160,8 @@ module.exports = class Registry {
                 message: `Error while requesting routerDomains from registry`,
                 cause: e,
                 data: {
-                    requestedUrl: url
-                }
+                    requestedUrl: url,
+                },
             });
         }
 
@@ -181,7 +183,7 @@ module.exports = class Registry {
         clonedConfig.specialRoutes = this.#filterSpecialRoutesByDomain(clonedConfig.specialRoutes, filter.domain);
 
         if (filter.domain) {
-            const routesRelatedToDomain = [ ...clonedConfig.routes, ...Object.values(clonedConfig.specialRoutes)];
+            const routesRelatedToDomain = [...clonedConfig.routes, ...Object.values(clonedConfig.specialRoutes)];
             const allRoutes = [...config.routes, ...Object.values(config.specialRoutes)];
             const allApps = config.apps;
 
@@ -222,7 +224,9 @@ module.exports = class Registry {
             }
         });
 
-        return Object.keys(specialRoutesForCurrentDomain).length ? specialRoutesForCurrentDomain : specialRoutesWithoutDomain;
+        return Object.keys(specialRoutesForCurrentDomain).length
+            ? specialRoutesForCurrentDomain
+            : specialRoutesWithoutDomain;
     };
 
     #getAppsByDomain = (routesRelatedToDomain, allRoutes, allApps, domain) => {

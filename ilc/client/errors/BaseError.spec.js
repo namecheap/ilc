@@ -2,14 +2,13 @@ import { expect } from 'chai';
 import { BaseError } from './BaseError';
 
 describe('BaseError', () => {
-
     describe('extend', () => {
         it('should return child class', () => {
             const Child = BaseError.extend('ChildError');
             expect(new Child()).to.be.instanceOf(Child);
             expect(new Child()).to.be.instanceOf(BaseError);
         });
-  
+
         it('should set correct child name', () => {
             const Child = BaseError.extend('ChildError');
             expect(new Child().name).to.be.equal('ChildError');
@@ -36,7 +35,7 @@ describe('BaseError', () => {
 
             expect(error.errorId).to.be.equal(errorId);
             expect(error.errorId).to.be.equal(errorId);
-            expect(error.errorId).to.be.equal(errorId); 
+            expect(error.errorId).to.be.equal(errorId);
         });
 
         it('should generate different errorId for diferent instances', () => {
@@ -47,12 +46,12 @@ describe('BaseError', () => {
         });
 
         it('should generate different errorId for diferent child error instances', () => {
-            class InternalError extends BaseError {};
-            class CriticalInternalError extends BaseError {};
+            class InternalError extends BaseError {}
+            class CriticalInternalError extends BaseError {}
 
             const internalOne = new InternalError();
             const internalTwo = new InternalError();
-            
+
             const criticalOne = new CriticalInternalError();
             const criticalTwo = new CriticalInternalError();
 

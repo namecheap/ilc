@@ -15,7 +15,7 @@ export class BaseError extends Error {
         const child = {
             [name]: class extends this {
                 name = name;
-            }
+            },
         };
 
         child[name].setErrorCode(BaseError.#classNameToErrorCode(name));
@@ -53,7 +53,7 @@ export class BaseError extends Error {
             return BaseError.errorCode;
         }
 
-        while ((prototypeValue !== BaseError.prototype && prototypeValue !== null)) {
+        while (prototypeValue !== BaseError.prototype && prototypeValue !== null) {
             codeContainer.push(prototypeValue.constructor.errorCode);
             prototypeValue = Reflect.getPrototypeOf(prototypeValue);
         }

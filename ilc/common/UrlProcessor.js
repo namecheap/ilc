@@ -21,7 +21,7 @@ class UrlProcessor {
             case UrlProcessor.routerHasTo.doNothing:
             default: {
                 return url;
-            };
+            }
         }
     }
 
@@ -49,7 +49,7 @@ class UrlProcessor {
         }
 
         return parsedUrl.toString().replace(this.#fakeBaseInCasesWhereUrlIsRelative, '');
-    }
+    };
 }
 
 module.exports = UrlProcessor;

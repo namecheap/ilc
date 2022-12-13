@@ -1,7 +1,7 @@
 import * as singleSpa from 'single-spa';
 import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
-import {makeAppId} from '../common/utils';
-import {getSlotElement, prependSpaCallbacks} from './utils';
+import { makeAppId } from '../common/utils';
+import { getSlotElement, prependSpaCallbacks } from './utils';
 import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
@@ -28,14 +28,21 @@ const getCustomProps = (slot, router, appErrorHandlerFactory, sdkFactoryBuilder)
     return customProps;
 };
 
-export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLoader, transitionManager, sdkFactoryBuilder, errorHandlerManager) {
+export default function (
+    ilcConfigRoot,
+    router,
+    appErrorHandlerFactory,
+    bundleLoader,
+    transitionManager,
+    sdkFactoryBuilder,
+    errorHandlerManager,
+) {
     const asyncBootUp = new AsyncBootUp();
     const registryConf = ilcConfigRoot.getConfig();
 
     const appSlotsList = composeAppSlotPairsToRegister(ilcConfigRoot);
 
-
-    appSlotsList.forEach(slot => {
+    appSlotsList.forEach((slot) => {
         const slotName = slot.getSlotName();
         const appName = slot.getApplicationName();
         const appId = slot.getApplicationId();
@@ -52,7 +59,6 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
 
         const { appSdk } = customProps;
 
-
         let lifecycleMethods;
         const updateFragmentManually = () => {
             lifecycleMethods.update({
@@ -62,7 +68,6 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
         };
 
         const isUpdatePropsMode = () => lifecycleMethods.update && registryConf.settings.onPropsUpdate === 'update';
-
 
         const onUnmount = async () => {
             if (isUpdatePropsMode()) {
@@ -81,14 +86,16 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
                 // we're missing slot for them to be mounted in template
                 getSlotElement(slotName);
             } catch (e) {
-                throw new Error(`Failed to mount application "${appName}" to slot "${slotName}" due to absence of the slot in template!`);
+                throw new Error(
+                    `Failed to mount application "${appName}" to slot "${slotName}" due to absence of the slot in template!`,
+                );
             }
         };
 
         singleSpa.registerApplication(
             appId,
             async () => {
-                if(!slot.isValid()){
+                if (!slot.isValid()) {
                     throw new Error(`Can not find application - ${appName}`);
                 }
 
@@ -101,8 +108,8 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
                         appId: makeAppId(appConf.wrappedWith, slotName),
                         ...{
                             wrappedAppConf: appConf,
-                        }
-                    }
+                        },
+                    };
                 }
 
                 // Speculative preload of the JS bundle. We don't do it for CSS here as we already did it with preload links
@@ -129,8 +136,8 @@ export default function (ilcConfigRoot, router, appErrorHandlerFactory, bundleLo
                     }
 
                     return prependSpaCallbacks(spaCallbacks, [
-                        { type: 'unmount', callback: onUnmount},
-                        { type: 'mount', callback: onMount},
+                        { type: 'unmount', callback: onUnmount },
+                        { type: 'mount', callback: onMount },
                     ]);
                 });
 

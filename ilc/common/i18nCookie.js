@@ -4,7 +4,7 @@ function getCookieOpts() {
     return {
         path: '/',
         expires: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
-    }
+    };
 }
 
 function encode(val) {
@@ -24,7 +24,7 @@ function decode(val) {
     return {
         locale: vals[0],
         currency: vals[1],
-    }
+    };
 }
 module.exports = {
     getOpts: getCookieOpts,

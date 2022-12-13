@@ -4,8 +4,4 @@ const localStorage = require('../../common/localStorage');
 const Registry = require('./Registry');
 const wrapFetchWithCache = require('../../common/wrapWithCache');
 
-module.exports = new Registry(
-    config.get('registry.address'),
-    wrapFetchWithCache(localStorage, logger),
-    logger
-);
+module.exports = new Registry(config.get('registry.address'), wrapFetchWithCache(localStorage, logger), logger);

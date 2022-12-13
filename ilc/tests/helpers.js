@@ -3,95 +3,104 @@ const nock = require('nock');
 
 function getRegistryMock(overrideConfig = {}) {
     return {
-        getTemplate: () => ({data: {content: `<!DOCTYPE html><html lang="en-US"><head></head><body><ilc-slot id="primary"/>\n<ilc-slot id="regular"/></body></html>`}}),
-        getConfig: () => ({data: deepmerge({
-                apps: {
-                    '@portal/primary': {
-                        spaBundle: 'http://localhost/index.js',
-                        kind: 'primary',
-                        ssr: {src: 'http://apps.test/primary'}
+        getTemplate: () => ({
+            data: {
+                content: `<!DOCTYPE html><html lang="en-US"><head></head><body><ilc-slot id="primary"/>\n<ilc-slot id="regular"/></body></html>`,
+            },
+        }),
+        getConfig: () => ({
+            data: deepmerge(
+                {
+                    apps: {
+                        '@portal/primary': {
+                            spaBundle: 'http://localhost/index.js',
+                            kind: 'primary',
+                            ssr: { src: 'http://apps.test/primary' },
+                        },
+                        '@portal/regular': {
+                            spaBundle: 'http://localhost/index.js',
+                            kind: 'regular',
+                            ssr: { src: 'http://apps.test/regular' },
+                        },
+                        '@portal/essential': {
+                            spaBundle: 'http://localhost/index.js',
+                            kind: 'essential',
+                            ssr: { src: 'http://apps.test/seesntial' },
+                        },
+                        '@portal/wrapper': {
+                            spaBundle: 'http://localhost/index.js',
+                            kind: 'wrapper',
+                            ssr: { src: 'http://apps.test/wrapper' },
+                        },
+                        '@portal/wrappedApp': {
+                            spaBundle: 'http://localhost/index.js',
+                            kind: 'primary',
+                            ssr: { src: 'http://apps.test/wrappedApp' },
+                        },
+                        '@portal/wrapperApp': {
+                            spaBundle: 'http://localhost/index.js',
+                            kind: 'primary',
+                            ssr: { src: 'http://apps.test/wrapperApp' },
+                        },
                     },
-                    '@portal/regular': {
-                        spaBundle: 'http://localhost/index.js',
-                        kind: 'regular',
-                        ssr: {src: 'http://apps.test/regular'}
+                    templates: ['master'],
+                    routes: [
+                        {
+                            slots: {
+                                primary: { appName: '@portal/primary' },
+                                regular: { appName: '@portal/regular' },
+                            },
+                            routeId: 1,
+                            route: '/all',
+                            template: 'master',
+                        },
+                        {
+                            slots: {
+                                primary: { appName: '@portal/primary' },
+                            },
+                            routeId: 2,
+                            route: '/primary',
+                            template: 'master',
+                        },
+                        {
+                            slots: {
+                                primary: { appName: '@portal/wrappedApp' },
+                            },
+                            routeId: 3,
+                            route: '/wrapper',
+                            template: 'master',
+                        },
+                    ],
+                    specialRoutes: {
+                        404: {
+                            slots: {},
+                            routeId: 3,
+                            route: '',
+                            next: false,
+                            template: 'master',
+                        },
                     },
-                    '@portal/essential': {
-                        spaBundle: 'http://localhost/index.js',
-                        kind: 'essential',
-                        ssr: {src: 'http://apps.test/seesntial'}
+                    settings: {
+                        trailingSlash: 'doNothing',
+                        amdDefineCompatibilityMode: false,
+                        i18n: {
+                            enabled: true,
+                            default: {
+                                currency: 'USD',
+                                locale: 'en-US',
+                            },
+                            supported: {
+                                currency: ['USD', 'UAH'],
+                                locale: ['en-US', 'ua-UA'],
+                            },
+                            routingStrategy: 'prefix_except_default',
+                        },
                     },
-                    '@portal/wrapper': {
-                        spaBundle: 'http://localhost/index.js',
-                        kind: 'wrapper',
-                        ssr: {src: 'http://apps.test/wrapper'}
-                    },
-                    '@portal/wrappedApp': {
-                        spaBundle: 'http://localhost/index.js',
-                        kind: 'primary',
-                        ssr: {src: 'http://apps.test/wrappedApp'}
-                    },
-                    '@portal/wrapperApp': {
-                        spaBundle: 'http://localhost/index.js',
-                        kind: 'primary',
-                        ssr: {src: 'http://apps.test/wrapperApp'}
-                    }
                 },
-                templates: ['master'],
-                routes: [
-                    {
-                        slots: {
-                            primary: { appName: '@portal/primary' },
-                            regular: { appName: '@portal/regular' },
-                        },
-                        routeId: 1,
-                        route: '/all',
-                        template: 'master'
-                    },
-                    {
-                        slots: {
-                            primary: { appName: '@portal/primary' },
-                        },
-                        routeId: 2,
-                        route: '/primary',
-                        template: 'master'
-                    },
-                    {
-                        slots: {
-                            primary: { appName: '@portal/wrappedApp' },
-                        },
-                        routeId: 3,
-                        route: '/wrapper',
-                        template: 'master'
-                    }
-                ],
-                specialRoutes: {
-                    '404': {
-                        slots: {},
-                        routeId: 3,
-                        route: '',
-                        next: false,
-                        template: 'master'
-                    }
-                },
-                settings: {
-                    trailingSlash: 'doNothing',
-                    amdDefineCompatibilityMode: false,
-                    i18n: {
-                        enabled: true,
-                        default: {
-                            currency: 'USD',
-                            locale: 'en-US',
-                        },
-                        supported: {
-                            currency: ['USD', 'UAH'],
-                            locale: ['en-US', 'ua-UA']
-                        },
-                        routingStrategy: 'prefix_except_default',
-                    },
-                }
-            }, overrideConfig)})
-    }
+                overrideConfig,
+            ),
+        }),
+    };
 }
 
 function getRouterProps(url) {
@@ -134,7 +143,7 @@ function setupMockServersForApps() {
             return JSON.stringify({
                 url: uri,
                 headers: this.req.headers,
-            })
+            });
         });
 }
 
@@ -157,9 +166,9 @@ function getFragmentAttributes(overrideAttributes = {}) {
         returnHeaders: false,
         forwardQuerystring: false,
         ignoreInvalidSsl: false,
-    }
+    };
 
-    return {...defaultAttributes, ...overrideAttributes};
+    return { ...defaultAttributes, ...overrideAttributes };
 }
 
 module.exports = {
@@ -169,4 +178,4 @@ module.exports = {
     getPluginManagerMock,
     setupMockServersForApps,
     getFragmentAttributes,
-}
+};

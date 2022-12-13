@@ -18,13 +18,18 @@ module.exports = function setup(tailor, errorHandlingService) {
                 return;
             }
 
-            const e = new errors.TailorError({message: `Tailor error ${urlPart}`, cause: err});
-            errorHandlingService.handleError(e, req, res).catch(err => {
-                errorHandlingService.noticeError(new errors.TailorError({message: 'Something went terribly wrong during error handling', cause: err}));
+            const e = new errors.TailorError({ message: `Tailor error ${urlPart}`, cause: err });
+            errorHandlingService.handleError(e, req, res).catch((err) => {
+                errorHandlingService.noticeError(
+                    new errors.TailorError({
+                        message: 'Something went terribly wrong during error handling',
+                        cause: err,
+                    }),
+                );
             });
         } else {
             errorHandlingService.noticeError(
-                new errors.TailorError({message: `Tailor error while headers already sent ${urlPart}`, cause: err}),
+                new errors.TailorError({ message: `Tailor error while headers already sent ${urlPart}`, cause: err }),
                 {},
                 { reportError: !req.ldeRelated },
             );
@@ -39,7 +44,7 @@ module.exports = function setup(tailor, errorHandlingService) {
         const errOpts = {
             message: `Non-primary "${fragmentAttrs.id}" fragment error while processing "${req.originalUrl}"`,
             cause: err,
-            data: { fragmentAttrs }
+            data: { fragmentAttrs },
         };
         errorHandlingService.noticeError(new errors.FragmentError(errOpts), {}, { reportError: !req.ldeRelated });
     }
@@ -48,7 +53,7 @@ module.exports = function setup(tailor, errorHandlingService) {
         const errOpts = {
             message: `Non-primary "${fragmentAttrs.id}" fragment warning while processing "${req.originalUrl}"`,
             cause: err,
-            data: { fragmentAttrs }
+            data: { fragmentAttrs },
         };
         errorHandlingService.noticeError(new errors.FragmentWarn(errOpts), {}, { reportError: !req.ldeRelated });
     }

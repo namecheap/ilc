@@ -60,8 +60,8 @@ describe('async boot up', () => {
             <main>
                 <div>
                     <div>
-                        Hello! I am Undefined SPA.
-                        I don't have provided slot id, so I can not be found on the page that is why an error should be threw.
+                        Hello! I am Undefined SPA. I don't have provided slot id, so I can not be found on the page that
+                        is why an error should be threw.
                     </div>
                 </div>
             </main>
@@ -76,19 +76,19 @@ describe('async boot up', () => {
 
             Promise.resolve()
                 .then(() => window.ilcApps.push(Infinity))
-                .then(() => clock.runAllAsync())
+                .then(() => clock.runAllAsync()),
         ]);
 
         sinon.assert.calledWithExactly(
             logger.warn,
-            `Looks like we're missing slot "${slots.before_page_loaded.id}" in template... Ignoring possible config overrides...`
+            `Looks like we're missing slot "${slots.before_page_loaded.id}" in template... Ignoring possible config overrides...`,
         );
         chai.expect(readySlotOverrides).to.be.eql(emptyOverrides);
 
         const readySlotOverrides2 = await asyncBootUp.waitForSlot(slots.after_page_loaded.id);
         sinon.assert.calledWithExactly(
             logger.warn,
-            `Looks like we're missing slot "${slots.after_page_loaded.id}" in template... Ignoring possible config overrides...`
+            `Looks like we're missing slot "${slots.after_page_loaded.id}" in template... Ignoring possible config overrides...`,
         );
         chai.expect(readySlotOverrides2).to.be.eql(emptyOverrides);
     });
@@ -97,8 +97,10 @@ describe('async boot up', () => {
         const performanceMillisecondsOnCall = [0, 0.1];
 
         performance.now
-            .onFirstCall().returns(performanceMillisecondsOnCall[0])
-            .onSecondCall().returns(performanceMillisecondsOnCall[1]);
+            .onFirstCall()
+            .returns(performanceMillisecondsOnCall[0])
+            .onSecondCall()
+            .returns(performanceMillisecondsOnCall[1]);
 
         const slots = {
             ready: {
@@ -109,10 +111,7 @@ describe('async boot up', () => {
         slots.ref = html`
             <main>
                 <div id="${slots.ready.id}">
-                    <div>
-                        Hello! I am Ready SPA.
-                        I should be marked as ready at once.
-                    </div>
+                    <div>Hello! I am Ready SPA. I should be marked as ready at once.</div>
                 </div>
             </main>
         `;
@@ -130,23 +129,27 @@ describe('async boot up', () => {
 
         chai.expect(overrideImportMap.called).to.be.false;
 
-        chai.expect(logger.info.calledOnceWithExactly(
-            `ILC: Registering app @${
-                slots.ready.id
-            } after ${
-                (performanceMillisecondsOnCall[1] - performanceMillisecondsOnCall[0])
-            } milliseconds.`
-        )).to.be.true;
+        chai.expect(
+            logger.info.calledOnceWithExactly(
+                `ILC: Registering app @${slots.ready.id} after ${
+                    performanceMillisecondsOnCall[1] - performanceMillisecondsOnCall[0]
+                } milliseconds.`,
+            ),
+        ).to.be.true;
     });
 
     it('should wait for slots that are not ready and return override configs then', async () => {
         const performanceMillisecondsOnCall = [0, 0.15, 0.25, 0.45];
 
         performance.now
-            .onCall(0).returns(performanceMillisecondsOnCall[0])
-            .onCall(1).returns(performanceMillisecondsOnCall[1])
-            .onCall(2).returns(performanceMillisecondsOnCall[2])
-            .onCall(3).returns(performanceMillisecondsOnCall[3]);
+            .onCall(0)
+            .returns(performanceMillisecondsOnCall[0])
+            .onCall(1)
+            .returns(performanceMillisecondsOnCall[1])
+            .onCall(2)
+            .returns(performanceMillisecondsOnCall[2])
+            .onCall(3)
+            .returns(performanceMillisecondsOnCall[3]);
 
         const config = {
             body: {
@@ -162,9 +165,9 @@ describe('async boot up', () => {
                 appName: '@portal/footer',
                 spaBundle: 'here/footer-spa-bundle.js',
                 cssBundle: 'here/footer-css-bundle.css',
-                wrapperPropsOverride: {tst: 1},
+                wrapperPropsOverride: { tst: 1 },
                 dependencies: {},
-            }
+            },
         };
 
         const slots = {
@@ -176,7 +179,7 @@ describe('async boot up', () => {
             },
             footer: {
                 id: 'footer',
-            }
+            },
         };
 
         slots.ref = html`
@@ -241,37 +244,37 @@ describe('async boot up', () => {
 
         sinon.assert.callCount(overrideImportMap, 4);
         chai.expect(overrideImportMap.getCall(0).args).to.be.eql([config.body.appName, config.body.spaBundle]);
-        chai.expect(overrideImportMap.getCall(1).args).to.be.eql(['bodyDependency', config.body.dependencies['bodyDependency']]);
-        chai.expect(overrideImportMap.getCall(2).args).to.be.eql(['bodyThirdPartyDependency', config.body.dependencies['bodyThirdPartyDependency']]);
+        chai.expect(overrideImportMap.getCall(1).args).to.be.eql([
+            'bodyDependency',
+            config.body.dependencies['bodyDependency'],
+        ]);
+        chai.expect(overrideImportMap.getCall(2).args).to.be.eql([
+            'bodyThirdPartyDependency',
+            config.body.dependencies['bodyThirdPartyDependency'],
+        ]);
         chai.expect(overrideImportMap.getCall(3).args).to.be.eql([config.footer.appName, config.footer.spaBundle]);
 
         chai.expect(logger.info.getCall(0).args).to.be.eql([
-            `ILC: Registering app @${
-                slots.navbar.id
-            } after ${
+            `ILC: Registering app @${slots.navbar.id} after ${
                 performanceMillisecondsOnCall[1] - performanceMillisecondsOnCall[0]
-            } milliseconds.`
+            } milliseconds.`,
         ]);
         chai.expect(logger.info.getCall(1).args).to.be.eql([
-            `ILC: Registering app @${
-                slots.body.id
-            } after ${
+            `ILC: Registering app @${slots.body.id} after ${
                 performanceMillisecondsOnCall[2] - performanceMillisecondsOnCall[0]
-            } milliseconds.`
+            } milliseconds.`,
         ]);
         chai.expect(logger.info.getCall(2).args).to.be.eql([
-            `ILC: Registering app @${
-                slots.footer.id
-            } after ${
+            `ILC: Registering app @${slots.footer.id} after ${
                 performanceMillisecondsOnCall[3] - performanceMillisecondsOnCall[0]
-            } milliseconds.`
+            } milliseconds.`,
         ]);
 
         chai.expect(document.getElementById(slots.body.id).innerHTML).does.not.include(
-            `<script type="spa-config-override">${JSON.stringify(config.body)}</script>`
+            `<script type="spa-config-override">${JSON.stringify(config.body)}</script>`,
         );
         chai.expect(document.getElementById(slots.footer.id).innerHTML).does.not.include(
-            `<script type="spa-config-override">${JSON.stringify(config.footer)}</script>`
+            `<script type="spa-config-override">${JSON.stringify(config.footer)}</script>`,
         );
     });
 
@@ -284,7 +287,7 @@ describe('async boot up', () => {
                     footerDependency: 'here/footer-dependency',
                     footerThirdPartyDependency: 'there/footer-third-party-dependency',
                 },
-            }
+            },
         };
 
         const slots = {
@@ -297,11 +300,13 @@ describe('async boot up', () => {
             <main>
                 <div id="${slots.footer.id}">
                     <div>
-                        Hello! I am Footer SPA.
-                        I have SPA override config, but I am going to be ready after single\`spa routing event.
-                        It means I don't have to mark myself as ready and I should not override initial SPA config.
+                        Hello! I am Footer SPA. I have SPA override config, but I am going to be ready after single\`spa
+                        routing event. It means I don't have to mark myself as ready and I should not override initial
+                        SPA config.
                     </div>
-                    <script type="spa-config-override">${JSON.stringify(config.footer)}</script>
+                    <script type="spa-config-override">
+                        ${JSON.stringify(config.footer)}
+                    </script>
                 </div>
             </main>
         `;
@@ -323,7 +328,7 @@ describe('async boot up', () => {
         chai.expect(logger.info.called).to.be.false;
 
         chai.expect(document.getElementById(slots.footer.id).innerHTML).includes(
-            `<script type="spa-config-override">${JSON.stringify(config.footer)}</script>`
+            `<script type="spa-config-override">${JSON.stringify(config.footer)}</script>`,
         );
     });
 });

@@ -8,13 +8,10 @@ function context(pluginPath) {
 }
 
 context.keys = function () {
-    const pluginPaths = fg.sync(
-        ['ilc-plugin-*/package.json', '@*/ilc-plugin-*/package.json'],
-        {
-            cwd: path.resolve(__dirname, '../node_modules'),
-            absolute: true,
-        }
-    );
+    const pluginPaths = fg.sync(['ilc-plugin-*/package.json', '@*/ilc-plugin-*/package.json'], {
+        cwd: path.resolve(__dirname, '../node_modules'),
+        absolute: true,
+    });
 
     return pluginPaths.map((pluginPath) => path.resolve(pluginPath, '..', require(pluginPath).main));
 };

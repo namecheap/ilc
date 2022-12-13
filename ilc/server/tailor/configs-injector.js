@@ -22,9 +22,12 @@ module.exports = class ConfigsInjector {
         let document = template.content;
 
         if (
-            typeof document !== 'string' || !document.includes('<html') ||
-            !document.includes('</head>') || !document.includes('<head>') ||
-            !document.includes('</body>') || !document.includes('<body>')
+            typeof document !== 'string' ||
+            !document.includes('<html') ||
+            !document.includes('</head>') ||
+            !document.includes('<head>') ||
+            !document.includes('</body>') ||
+            !document.includes('<body>')
         ) {
             throw new Error(`Can't inject ILC configs into invalid document.`);
         }
@@ -36,9 +39,7 @@ module.exports = class ConfigsInjector {
 
         const routeAssets = this.#getRouteAssets(registryConfig.apps, slots);
 
-        const ilcCss = this.#wrapWithIgnoreDuringParsing(
-            ...routeAssets.stylesheetLinks,
-        );
+        const ilcCss = this.#wrapWithIgnoreDuringParsing(...routeAssets.stylesheetLinks);
 
         if (document.includes(this.#cssInjectionPlaceholder)) {
             document = document.replace(this.#cssInjectionPlaceholder, ilcCss);
@@ -75,16 +76,19 @@ module.exports = class ConfigsInjector {
     };
 
     #getRouteStyleRefsToPreload = (apps, slots, templateStyleRefs) => {
-        const routeStyleRefs = _.reduce(slots, (styleRefs, slotData) => {
+        const routeStyleRefs = _.reduce(
+            slots,
+            (styleRefs, slotData) => {
+                const appInfo = apps[slotData.appName];
 
-            const appInfo = apps[slotData.appName];
+                if (appInfo.cssBundle && !styleRefs.includes(appInfo.cssBundle)) {
+                    styleRefs.push(appInfo.cssBundle);
+                }
 
-            if (appInfo.cssBundle && !styleRefs.includes(appInfo.cssBundle)) {
-                styleRefs.push(appInfo.cssBundle);
-            }
-
-            return styleRefs;
-        }, []);
+                return styleRefs;
+            },
+            [],
+        );
 
         const styleRefs = routeStyleRefs.concat(templateStyleRefs);
 
@@ -93,41 +97,59 @@ module.exports = class ConfigsInjector {
 
     //TODO: add App Wrappers support
     #getRouteAssets = (apps, slots) => {
-        const appsDependencies = _.reduce(apps, (dependencies, appInfo) => _.assign(dependencies, appInfo.dependencies), {});
+        const appsDependencies = _.reduce(
+            apps,
+            (dependencies, appInfo) => _.assign(dependencies, appInfo.dependencies),
+            {},
+        );
 
-        const routeAssets = _.reduce(slots, (routeAssets, slotData) => {
-            const appInfo = apps[slotData.appName];
+        const routeAssets = _.reduce(
+            slots,
+            (routeAssets, slotData) => {
+                const appInfo = apps[slotData.appName];
 
-            /**
-             * Need to save app's dependencies based on all merged apps dependencies
-             * to avoid duplicate vendors preloads on client side
-             * because apps may have common dependencies but from different sources
-             *
-             * @see {@path ilc/client/initIlcConfig.js}
-             */
-            const appDependencies = _.reduce(_.keys(appInfo.dependencies), (appDependencies, dependencyName) => {
-                appDependencies[dependencyName] = appsDependencies[dependencyName];
-                return appDependencies;
-            }, {});
+                /**
+                 * Need to save app's dependencies based on all merged apps dependencies
+                 * to avoid duplicate vendors preloads on client side
+                 * because apps may have common dependencies but from different sources
+                 *
+                 * @see {@path ilc/client/initIlcConfig.js}
+                 */
+                const appDependencies = _.reduce(
+                    _.keys(appInfo.dependencies),
+                    (appDependencies, dependencyName) => {
+                        appDependencies[dependencyName] = appsDependencies[dependencyName];
+                        return appDependencies;
+                    },
+                    {},
+                );
 
-            routeAssets.dependencies = _.assign(routeAssets.dependencies, appDependencies);
+                routeAssets.dependencies = _.assign(routeAssets.dependencies, appDependencies);
 
-            if (!_.includes(routeAssets.spaBundles, appInfo.spaBundle)) {
-                routeAssets.spaBundles.push(appInfo.spaBundle);
-            }
+                if (!_.includes(routeAssets.spaBundles, appInfo.spaBundle)) {
+                    routeAssets.spaBundles.push(appInfo.spaBundle);
+                }
 
-            if (
-                appInfo.cssBundle &&
-                !_.some(routeAssets.stylesheetLinks, (stylesheetLink) => _.includes(stylesheetLink, appInfo.cssBundle))
-            ) {
-                const stylesheetLink = this.#wrapWithFragmentStylesheetLink(appInfo.cssBundle, slotData.appName);
-                routeAssets.stylesheetLinks.push(stylesheetLink);
-            }
+                if (
+                    appInfo.cssBundle &&
+                    !_.some(routeAssets.stylesheetLinks, (stylesheetLink) =>
+                        _.includes(stylesheetLink, appInfo.cssBundle),
+                    )
+                ) {
+                    const stylesheetLink = this.#wrapWithFragmentStylesheetLink(appInfo.cssBundle, slotData.appName);
+                    routeAssets.stylesheetLinks.push(stylesheetLink);
+                }
 
-            return routeAssets;
-        }, {spaBundles: [], dependencies: {}, stylesheetLinks: []});
+                return routeAssets;
+            },
+            { spaBundles: [], dependencies: {}, stylesheetLinks: [] },
+        );
 
-        const scriptRefs = _.concat([this.#getClientjsUrl()], routeAssets.spaBundles, _.values(routeAssets.dependencies));
+        const scriptRefs = _.concat(
+            [this.#getClientjsUrl()],
+            routeAssets.spaBundles,
+            _.values(routeAssets.dependencies),
+        );
         const withoutDuplicateScriptRefs = uniqueArray(scriptRefs);
 
         return {
@@ -141,35 +163,29 @@ module.exports = class ConfigsInjector {
 
         return (
             `<script type="text/javascript">` +
-                `if (!(` +
-                    `typeof window.URL === 'function' && ` +
-                    `Object.entries && ` +
-                    `Object.assign && ` +
-                    `DocumentFragment.prototype.append && ` +
-                    `Element.prototype.append && ` +
-                    `Element.prototype.remove` +
-                `)) {` +
-                    `document.write('<script src="${url}" type="text/javascript" ${this.#getCrossoriginAttribute(url)}></scr' + 'ipt>');` +
-                `}` +
+            `if (!(` +
+            `typeof window.URL === 'function' && ` +
+            `Object.entries && ` +
+            `Object.assign && ` +
+            `DocumentFragment.prototype.append && ` +
+            `Element.prototype.append && ` +
+            `Element.prototype.remove` +
+            `)) {` +
+            `document.write('<script src="${url}" type="text/javascript" ${this.#getCrossoriginAttribute(
+                url,
+            )}></scr' + 'ipt>');` +
+            `}` +
             `</script>`
         );
     };
 
-    #getClientjsUrl = () => this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js');
-    #getPolyfillUrl = () => this.#cdnUrl === null ? '/_ilc/polyfill.min.js' : urljoin(this.#cdnUrl, '/polyfill.min.js');
+    #getClientjsUrl = () => (this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js'));
+    #getPolyfillUrl = () =>
+        this.#cdnUrl === null ? '/_ilc/polyfill.min.js' : urljoin(this.#cdnUrl, '/polyfill.min.js');
 
     #getSPAConfig = (registryConfig) => {
-        const apps = _.mapValues(
-            registryConfig.apps,
-            v => _.pick(v, [
-                'spaBundle',
-                'cssBundle',
-                'dependencies',
-                'props',
-                'kind',
-                'wrappedWith',
-                'l10nManifest',
-            ])
+        const apps = _.mapValues(registryConfig.apps, (v) =>
+            _.pick(v, ['spaBundle', 'cssBundle', 'dependencies', 'props', 'kind', 'wrappedWith', 'l10nManifest']),
         );
 
         let settings = registryConfig.settings;
@@ -181,16 +197,16 @@ module.exports = class ConfigsInjector {
                 globalSpinner: {
                     ...registryConfig.settings.globalSpinner,
                     customHTML: encodeHtmlEntities(customHTML),
-                }
+                },
             };
         }
 
-        const routes = registryConfig.routes.map(v => _.omit(v, ['routeId']));
+        const routes = registryConfig.routes.map((v) => _.omit(v, ['routeId']));
 
         let spaConfig = JSON.stringify({
             apps,
             routes,
-            specialRoutes: _.mapValues(registryConfig.specialRoutes, v => _.omit(v, ['routeId'])),
+            specialRoutes: _.mapValues(registryConfig.specialRoutes, (v) => _.omit(v, ['routeId'])),
             settings,
             sharedLibs: registryConfig.sharedLibs,
             dynamicLibs: registryConfig.dynamicLibs,
@@ -224,7 +240,8 @@ module.exports = class ConfigsInjector {
         return (this.#cdnUrl !== null && url.includes(this.#cdnUrl)) || url.includes('://') ? 'crossorigin' : '';
     };
 
-    #wrapWithIgnoreDuringParsing = (...content) => `<!-- TailorX: Ignore during parsing START -->${content.join('')}<!-- TailorX: Ignore during parsing END -->`;
+    #wrapWithIgnoreDuringParsing = (...content) =>
+        `<!-- TailorX: Ignore during parsing START -->${content.join('')}<!-- TailorX: Ignore during parsing END -->`;
 
     // TODO(bc): this method should be removed next Major release,
     //  because this code contradicts multiple domains feature, where you usually expects having multiple NR apps on multiple domains
@@ -243,5 +260,5 @@ module.exports = class ConfigsInjector {
 
         nrCode = nrCode.replace(/<script.*?>(.*)<\/script\s*>/s, '$1');
         return this.#nrCustomClientJsWrapper.replace('%CONTENT%', nrCode);
-    }
+    };
 };

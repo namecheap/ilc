@@ -3,10 +3,7 @@ import sinon from 'sinon';
 import html from 'nanohtml';
 import ilcEvents from '../constants/ilcEvents';
 
-import {
-    slotWillBe,
-    TransitionManager
-} from './TransitionManager';
+import { slotWillBe, TransitionManager } from './TransitionManager';
 import { CssTrackedApp } from '../CssTrackedApp';
 
 describe('TransitionManager', () => {
@@ -35,7 +32,7 @@ describe('TransitionManager', () => {
         body: {
             id: 'body',
             getComputedStyle: () => window.getComputedStyle(slots.body.ref, null),
-            getAttributeName: () => document.body.getAttribute('name'),
+            getAttributeName: () => document.body.getAttribute('ilcTempStoredHash'),
         },
     };
 
@@ -59,9 +56,7 @@ describe('TransitionManager', () => {
             removeApplication: () => slots.body.ref.removeChild(applications.body.ref),
             resetRef: () => {
                 applications.body.ref = html`
-                    <div id="${applications.body.id}" class="${applications.body.class}">
-                        Hello! I am Body SPA
-                    </div>
+                    <div id="${applications.body.id}" class="${applications.body.class}">Hello! I am Body SPA</div>
                 `;
             },
         },
@@ -82,7 +77,7 @@ describe('TransitionManager', () => {
 
         const transitionManager = new TransitionManager(logger, {
             enabled: true,
-            customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`
+            customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
         });
         handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);
         removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
@@ -107,9 +102,7 @@ describe('TransitionManager', () => {
     });
 
     it('should throw an error when a slot name is not provided', () => {
-        chai.expect(() => handlePageTransition()).to.throw(
-            'A slot name was not provided!'
-        );
+        chai.expect(() => handlePageTransition()).to.throw('A slot name was not provided!');
     });
 
     it('should log warning when a non-existing slot name is provided', () => {
@@ -119,7 +112,7 @@ describe('TransitionManager', () => {
 
         sinon.assert.calledWithExactly(
             logger.warn,
-            `Failed to correctly handle page transition "${willBe}" for slot "${slotName}" due to it's absence in template. Ignoring it...`
+            `Failed to correctly handle page transition "${willBe}" for slot "${slotName}" due to it's absence in template. Ignoring it...`,
         );
     });
 
@@ -133,7 +126,7 @@ describe('TransitionManager', () => {
 
     it('should throw an error when a slot action does not match any possible option to handle', () => {
         chai.expect(() => handlePageTransition(slots.body.id, 'undefined')).to.throw(
-            `The slot action 'undefined' did not match any possible values!`
+            `The slot action 'undefined' did not match any possible values!`,
         );
     });
 
@@ -144,8 +137,7 @@ describe('TransitionManager', () => {
 
         chai.expect(spinner.getRef()).to.be.null;
         chai.expect(slots.ref.innerHTML).to.be.equal(
-            `<div id="${slots.navbar.id}"></div>` +
-            `<div id="${slots.body.id}"></div>`
+            `<div id="${slots.navbar.id}"></div>` + `<div id="${slots.body.id}"></div>`,
         );
 
         applications.body.appendApplication();
@@ -155,11 +147,11 @@ describe('TransitionManager', () => {
         chai.expect(spinner.getRef()).to.be.null;
         chai.expect(slots.ref.innerHTML).to.be.equal(
             `<div id="${slots.navbar.id}"></div>` +
-            `<div id="${slots.body.id}">` +
-            `<div id="${applications.body.id}" class="${applications.body.class}">` +
-            'Hello! I am Body SPA' +
-            '</div>' +
-            '</div>'
+                `<div id="${slots.body.id}">` +
+                `<div id="${applications.body.id}" class="${applications.body.class}">` +
+                'Hello! I am Body SPA' +
+                '</div>' +
+                '</div>',
         );
 
         applications.body.removeApplication();
@@ -168,8 +160,7 @@ describe('TransitionManager', () => {
 
         chai.expect(spinner.getRef()).to.be.null;
         chai.expect(slots.ref.innerHTML).to.be.equal(
-            `<div id="${slots.navbar.id}"></div>` +
-            `<div id="${slots.body.id}"></div>`
+            `<div id="${slots.navbar.id}"></div>` + `<div id="${slots.body.id}"></div>`,
         );
     });
 
@@ -243,7 +234,6 @@ describe('TransitionManager', () => {
         chai.expect(spinner.getRef()).to.be.null;
     });
 
-
     // can be case when rendering is triggered before removing and vise versa, but the result should be always the same
     describe('should render a fake slot and listen to slot content changes', () => {
         it('when a slot is going to be rerendered', async () => {
@@ -253,9 +243,7 @@ describe('TransitionManager', () => {
             };
 
             newBodyApplication.ref = html`
-                <div id="${newBodyApplication.id}" class="${newBodyApplication.class}">
-                    Hello! I am new Body SPA
-                </div>
+                <div id="${newBodyApplication.id}" class="${newBodyApplication.class}">Hello! I am new Body SPA</div>
             `;
 
             applications.navbar.appendApplication();
@@ -307,9 +295,7 @@ describe('TransitionManager', () => {
             };
 
             newBodyApplication.ref = html`
-                <div id="${newBodyApplication.id}" class="${newBodyApplication.class}">
-                    Hello! I am new Body SPA
-                </div>
+                <div id="${newBodyApplication.id}" class="${newBodyApplication.class}">Hello! I am new Body SPA</div>
             `;
 
             applications.navbar.appendApplication();
@@ -361,9 +347,7 @@ describe('TransitionManager', () => {
             };
 
             newBodyApplication.ref = html`
-                <div id="${newBodyApplication.id}" class="${newBodyApplication.class}">
-                    Hello! I am new Body SPA
-                </div>
+                <div id="${newBodyApplication.id}" class="${newBodyApplication.class}">Hello! I am new Body SPA</div>
             `;
 
             applications.navbar.appendApplication();
@@ -415,9 +399,7 @@ describe('TransitionManager', () => {
             };
 
             newBodyApplication.ref = html`
-                <div id="${newBodyApplication.id}" class="${newBodyApplication.class}">
-                    Hello! I am new Body SPA
-                </div>
+                <div id="${newBodyApplication.id}" class="${newBodyApplication.class}">Hello! I am new Body SPA</div>
             `;
 
             applications.body.appendApplication();
@@ -469,8 +451,7 @@ describe('TransitionManager', () => {
         };
 
         newBodyApplicationWithoutContent.ref = html`
-            <div id="${newBodyApplicationWithoutContent.id}" class="${newBodyApplicationWithoutContent.class}">
-            </div>
+            <div id="${newBodyApplicationWithoutContent.id}" class="${newBodyApplicationWithoutContent.class}"></div>
         `;
 
         applications.navbar.appendApplication();
@@ -488,7 +469,8 @@ describe('TransitionManager', () => {
 
         chai.expect(spinner.getRef()).to.be.not.null;
 
-        document.getElementById(newBodyApplicationWithoutContent.id).innerText = 'Hello! I am contentful text, so now spinner will be removed';
+        document.getElementById(newBodyApplicationWithoutContent.id).innerText =
+            'Hello! I am contentful text, so now spinner will be removed';
         await clock.runAllAsync();
 
         chai.expect(spinner.getRef()).to.be.null;
@@ -501,8 +483,7 @@ describe('TransitionManager', () => {
         };
 
         newBodyApplicationWithoutContent.ref = html`
-            <div id="${newBodyApplicationWithoutContent.id}" class="${newBodyApplicationWithoutContent.class}">
-            </div>
+            <div id="${newBodyApplicationWithoutContent.id}" class="${newBodyApplicationWithoutContent.class}"></div>
         `;
 
         applications.navbar.appendApplication();
@@ -565,7 +546,11 @@ describe('TransitionManager', () => {
             class: 'new-body-spa',
         };
 
-        const link = html`<link rel="stylesheet" href="data:text/css,<style>div { border: 1px solid red; }</style>" ${CssTrackedApp.markedForRemovalAttribute}="true" />`;
+        const link = html`<link
+            rel="stylesheet"
+            href="data:text/css,<style>div { border: 1px solid red; }</style>"
+            ${CssTrackedApp.markedForRemovalAttribute}="true"
+        />`;
         document.head.appendChild(link);
 
         newBodyApplication.ref = html`
@@ -595,11 +580,7 @@ describe('TransitionManager', () => {
     it('should destroy spinner in at least 300ms if it is appeared', async () => {
         clock.restore();
 
-        const newBodyApplication = html`
-            <div id="new-body-application" class="new-body-spa">
-                Foo bar
-            </div>
-        `;
+        const newBodyApplication = html` <div id="new-body-application" class="new-body-spa">Foo bar</div> `;
 
         applications.navbar.appendApplication();
         applications.body.appendApplication();
@@ -608,26 +589,26 @@ describe('TransitionManager', () => {
 
         applications.body.removeApplication();
 
-        await new Promise(resolve => setTimeout(resolve, 280));
+        await new Promise((resolve) => setTimeout(resolve, 280));
         chai.expect(spinner.getRef()).to.be.null;
 
-        await new Promise(resolve => setTimeout(resolve, 20));
+        await new Promise((resolve) => setTimeout(resolve, 20));
         chai.expect(spinner.getRef()).to.be.not.null;
 
         slots.body.ref.appendChild(newBodyApplication);
 
-        await new Promise(resolve => setTimeout(resolve, 480));
+        await new Promise((resolve) => setTimeout(resolve, 480));
         chai.expect(spinner.getRef()).to.be.not.null;
 
-        await new Promise(resolve => setTimeout(resolve, 20));
+        await new Promise((resolve) => setTimeout(resolve, 20));
         chai.expect(spinner.getRef()).to.be.null;
     });
 
     it('should throw error in case of double subscription to single SPA events', function () {
-        chai.expect(function() {
+        chai.expect(function () {
             new TransitionManager(logger, {
                 enabled: true,
-                customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`
+                customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
             });
         }).to.throw();
     });
@@ -642,7 +623,7 @@ describe('TransitionManager', () => {
             customHTML: `
                 <div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>
                 <script>document.querySelector('#${spinner.id}').classList.add('${expectedClass}')</script>
-            `
+            `,
         });
 
         removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
@@ -666,14 +647,12 @@ describe('TransitionManager', () => {
             clock.restore();
 
             let runCount = 0;
-            const handlerAllSlotsLoaded = () => { runCount++ };
+            const handlerAllSlotsLoaded = () => {
+                runCount++;
+            };
             window.addEventListener(ilcEvents.ALL_SLOTS_LOADED, handlerAllSlotsLoaded);
 
-            const newBodyApplication = html`
-                <div id="new-body-application" class="new-body-spa">
-                    Foo bar
-                </div>
-            `;
+            const newBodyApplication = html` <div id="new-body-application" class="new-body-spa">Foo bar</div> `;
 
             applications.navbar.appendApplication();
             applications.body.appendApplication();
@@ -683,12 +662,12 @@ describe('TransitionManager', () => {
             applications.body.removeApplication();
 
             // render fragment immediately
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await new Promise((resolve) => setTimeout(resolve, 0));
             chai.expect(spinner.getRef()).to.be.null;
 
             slots.body.ref.appendChild(newBodyApplication);
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await new Promise((resolve) => setTimeout(resolve, 0));
             chai.expect(spinner.getRef()).to.be.null;
 
             chai.expect(runCount).to.equals(1);
@@ -700,14 +679,12 @@ describe('TransitionManager', () => {
             clock.restore();
 
             let runCount = 0;
-            const handlerAllSlotsLoaded = () => { runCount++ };
+            const handlerAllSlotsLoaded = () => {
+                runCount++;
+            };
             window.addEventListener(ilcEvents.ALL_SLOTS_LOADED, handlerAllSlotsLoaded);
 
-            const newBodyApplication = html`
-                <div id="new-body-application" class="new-body-spa">
-                    Foo bar
-                </div>
-            `;
+            const newBodyApplication = html` <div id="new-body-application" class="new-body-spa">Foo bar</div> `;
 
             applications.navbar.appendApplication();
             applications.body.appendApplication();
@@ -717,18 +694,18 @@ describe('TransitionManager', () => {
             applications.body.removeApplication();
 
             // render spinner
-            await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise((resolve) => setTimeout(resolve, 300));
             chai.expect(spinner.getRef()).to.be.not.null;
 
             slots.body.ref.appendChild(newBodyApplication);
 
             // spinner is visible, but all slots are rendered so "ilc:all-slots-loaded" was fired
-            await new Promise(resolve => setTimeout(resolve, 480));
+            await new Promise((resolve) => setTimeout(resolve, 480));
             chai.expect(spinner.getRef()).to.be.not.null;
             chai.expect(runCount).to.equals(1);
 
             // spinner is removed but "ilc:all-slots-loaded" was not fired second time
-            await new Promise(resolve => setTimeout(resolve, 20));
+            await new Promise((resolve) => setTimeout(resolve, 20));
             chai.expect(spinner.getRef()).to.be.null;
             chai.expect(runCount).to.equals(1);
 
@@ -739,14 +716,12 @@ describe('TransitionManager', () => {
             clock.restore();
 
             let runCount = 0;
-            const handlerAllSlotsLoaded = () => { runCount++ };
+            const handlerAllSlotsLoaded = () => {
+                runCount++;
+            };
             window.addEventListener(ilcEvents.ALL_SLOTS_LOADED, handlerAllSlotsLoaded);
 
-            const newBodyApplication = html`
-                <div id="new-body-application" class="new-body-spa">
-                    Foo bar
-                </div>
-            `;
+            const newBodyApplication = html` <div id="new-body-application" class="new-body-spa">Foo bar</div> `;
 
             applications.navbar.appendApplication();
             applications.body.appendApplication();
@@ -756,13 +731,13 @@ describe('TransitionManager', () => {
             applications.body.removeApplication();
 
             // render spinner
-            await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise((resolve) => setTimeout(resolve, 300));
             chai.expect(spinner.getRef()).to.be.not.null;
 
             slots.body.ref.appendChild(newBodyApplication);
 
             // spinner disappeared 100ms ago and "ilc:all-slots-loaded" was fired only once
-            await new Promise(resolve => setTimeout(resolve, 600));
+            await new Promise((resolve) => setTimeout(resolve, 600));
             chai.expect(spinner.getRef()).to.be.null;
             chai.expect(runCount).to.equals(1);
 

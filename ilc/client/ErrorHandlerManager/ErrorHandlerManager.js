@@ -1,14 +1,7 @@
 import IlcEvents from '../constants/ilcEvents';
-import {
-    BaseError,
-    UnhandledError,
-    FetchTemplateError,
-    CriticalRuntimeError,
-    CriticalInternalError,
-} from '../errors';
+import { BaseError, UnhandledError, FetchTemplateError, CriticalRuntimeError, CriticalInternalError } from '../errors';
 
 export default class ErrorHandlerManager {
-
     #ilcAlreadyCrashed = false;
 
     #logger;
@@ -20,7 +13,7 @@ export default class ErrorHandlerManager {
         this.#registryService = registryService;
     }
 
-    handleError(error) {        
+    handleError(error) {
         if (!(error instanceof BaseError)) {
             error = new UnhandledError({
                 message: error.message,
@@ -37,7 +30,7 @@ export default class ErrorHandlerManager {
         if (this.#isCriticalError(error)) {
             this.#logger.fatal(error.message, error);
             this.#crashIlc(error);
-        
+
             return;
         }
 
@@ -45,11 +38,12 @@ export default class ErrorHandlerManager {
     }
 
     #isCriticalError(error) {
-        return (error instanceof CriticalInternalError || error instanceof CriticalRuntimeError);
+        return error instanceof CriticalInternalError || error instanceof CriticalRuntimeError;
     }
 
     #crashIlc(error) {
-        this.#registryService.getTemplate('500')
+        this.#registryService
+            .getTemplate('500')
             .then((data) => {
                 data = data.data.replace('%ERRORID%', error.errorId ? `Error ID: ${error.errorId}` : '');
 
@@ -64,7 +58,7 @@ export default class ErrorHandlerManager {
                     cause: error,
                     data: {
                         fragmentErrorId: error.errorId,
-                    }
+                    },
                 });
 
                 this.#logger.error(fetchTemplateError.message, fetchTemplateError);

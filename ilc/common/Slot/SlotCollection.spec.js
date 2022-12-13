@@ -10,7 +10,8 @@ describe('SlotCollection', () => {
 
     it('should init not valid slot collection', () => {
         const slotCollection = new SlotCollection(slotRawNotValid, registry);
-        expect(() => {slotCollection.isValid()}).to.throw;
+        expect(() => {
+            slotCollection.isValid();
+        }).to.throw;
     });
-
 });

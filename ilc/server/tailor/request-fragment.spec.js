@@ -36,7 +36,6 @@ describe('request-fragment', () => {
     });
 
     it('should request fragment with correct routerProps, appProps and required headers', async () => {
-
         // Initialisation
 
         const registryConfig = getRegistryMock().getConfig().data;
@@ -52,7 +51,7 @@ describe('request-fragment', () => {
             timeout: 1000,
             returnHeaders: false,
             forwardQuerystring: false,
-            ignoreInvalidSsl: false
+            ignoreInvalidSsl: false,
         });
 
         const request = { registryConfig, ilcState: {} };
@@ -60,7 +59,7 @@ describe('request-fragment', () => {
 
         // Expectations
 
-        const expectedRouterProps = { basePath: '/primary', reqUrl: '/primary', 'fragmentName': 'primary__at__primary' };
+        const expectedRouterProps = { basePath: '/primary', reqUrl: '/primary', fragmentName: 'primary__at__primary' };
         const expectedAppProps = { publicPath: 'http://apps.test/primary' };
 
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
@@ -83,7 +82,6 @@ describe('request-fragment', () => {
     });
 
     it('should request fragment wrapper with correct routerProps, appProps and required headers', async () => {
-
         // Initialisation
 
         const registryConfig = getRegistryMock().getConfig().data;
@@ -105,7 +103,7 @@ describe('request-fragment', () => {
             timeout: 1000,
             returnHeaders: false,
             forwardQuerystring: false,
-            ignoreInvalidSsl: false
+            ignoreInvalidSsl: false,
         });
 
         const request = { registryConfig, ilcState: {} };
@@ -113,7 +111,7 @@ describe('request-fragment', () => {
 
         // Expectations
 
-        const expectedRouterProps = { basePath: '/', reqUrl: '/wrapper', 'fragmentName': 'wrapper__at__primary' };
+        const expectedRouterProps = { basePath: '/', reqUrl: '/wrapper', fragmentName: 'wrapper__at__primary' };
         const expectedAppProps = { param1: 'value1' };
         const wrappedAppProps = { page: 'wrapped' };
 
@@ -139,7 +137,6 @@ describe('request-fragment', () => {
     });
 
     it('should request fragment of wrapped application with correct routerProps, appProps and required headers', async () => {
-
         // Initialisation
 
         const registryConfig = getRegistryMock().getConfig().data;
@@ -161,7 +158,7 @@ describe('request-fragment', () => {
             timeout: 1000,
             returnHeaders: false,
             forwardQuerystring: false,
-            ignoreInvalidSsl: false
+            ignoreInvalidSsl: false,
         });
 
         const request = { registryConfig, ilcState: {} };
@@ -169,12 +166,14 @@ describe('request-fragment', () => {
 
         // Expectations
 
-        const expectedWrapperRouterProps = { basePath: '/', reqUrl: '/wrapper', 'fragmentName': 'wrapper__at__primary' };
+        const expectedWrapperRouterProps = { basePath: '/', reqUrl: '/wrapper', fragmentName: 'wrapper__at__primary' };
         const expectedWrapperAppProps = { param1: 'value1' };
         const wrapperPropsOverride = { param2: 'value2' };
         const wrappedAppProps = { page: 'wrapped' };
 
-        const expectedWrapperRouterPropsEncoded = Buffer.from(JSON.stringify(expectedWrapperRouterProps)).toString('base64');
+        const expectedWrapperRouterPropsEncoded = Buffer.from(JSON.stringify(expectedWrapperRouterProps)).toString(
+            'base64',
+        );
         const expectedWrapperAppPropsEncoded = Buffer.from(JSON.stringify(expectedWrapperAppProps)).toString('base64');
         const wrapperPropsOverrideEncoded = Buffer.from(JSON.stringify(wrapperPropsOverride)).toString('base64');
         const expectedWrappedAppPropsEncoded = Buffer.from(JSON.stringify(wrappedAppProps)).toString('base64');
@@ -188,14 +187,24 @@ describe('request-fragment', () => {
             })
             .reply(210, '', { 'x-props-override': wrapperPropsOverrideEncoded });
 
-        const expectedWrappedAppRouterProps = { basePath: '/wrapper', reqUrl: '/wrapper', fragmentName: 'wrapperApp__at__primary' };
+        const expectedWrappedAppRouterProps = {
+            basePath: '/wrapper',
+            reqUrl: '/wrapper',
+            fragmentName: 'wrapperApp__at__primary',
+        };
         // returned props from wrapper must be overrode for wrapped application
         const expectedWrappedAppAppProps = { page: 'wrapped', param2: 'value2' };
 
-        const expectedWrappedAppRouterPropsEncoded = Buffer.from(JSON.stringify(expectedWrappedAppRouterProps)).toString('base64');
-        const expectedWrappedAppAppPropsEncoded = Buffer.from(JSON.stringify(expectedWrappedAppAppProps)).toString('base64');
+        const expectedWrappedAppRouterPropsEncoded = Buffer.from(
+            JSON.stringify(expectedWrappedAppRouterProps),
+        ).toString('base64');
+        const expectedWrappedAppAppPropsEncoded = Buffer.from(JSON.stringify(expectedWrappedAppAppProps)).toString(
+            'base64',
+        );
 
-        const mockRequestWrappedAppScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
+        const mockRequestWrappedAppScope = nock('http://apps.test', {
+            reqheaders: { 'accept-encoding': 'gzip, deflate' },
+        })
             .get('/wrappedApp')
             .query({
                 routerProps: expectedWrappedAppRouterPropsEncoded,
@@ -228,7 +237,7 @@ describe('request-fragment', () => {
             timeout: timeoutMs,
             returnHeaders: false,
             forwardQuerystring: false,
-            ignoreInvalidSsl: false
+            ignoreInvalidSsl: false,
         });
 
         const request = { registryConfig, ilcState: {} };
@@ -236,7 +245,7 @@ describe('request-fragment', () => {
 
         // Expectations
 
-        const expectedRouterProps = { basePath: '/primary', reqUrl: '/primary', 'fragmentName': 'primary__at__primary' };
+        const expectedRouterProps = { basePath: '/primary', reqUrl: '/primary', fragmentName: 'primary__at__primary' };
         const expectedAppProps = { publicPath: 'http://apps.test/primary' };
 
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
@@ -260,4 +269,4 @@ describe('request-fragment', () => {
             chai.expect(e.message).to.contain('timeout');
         }
     });
-})
+});

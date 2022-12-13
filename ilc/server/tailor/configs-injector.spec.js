@@ -41,9 +41,9 @@ describe('configs injector', () => {
                 styleRefs: [],
             };
 
-            chai.expect(configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveContent, {})).to.throw(
-                `Can't inject ILC configs into invalid document.`
-            );
+            chai.expect(
+                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveContent, {}),
+            ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
         it('should throw an error when a document does not have <head> and </head>', () => {
@@ -53,9 +53,9 @@ describe('configs injector', () => {
                 styleRefs: [],
             };
 
-            chai.expect(configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveHeadTag, {})).to.throw(
-                `Can't inject ILC configs into invalid document.`
-            );
+            chai.expect(
+                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveHeadTag, {}),
+            ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
         it('should throw an error when a document does not have <head>', () => {
@@ -65,9 +65,9 @@ describe('configs injector', () => {
                 styleRefs: [],
             };
 
-            chai.expect(configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveOpenedHeadTag, {})).to.throw(
-                `Can't inject ILC configs into invalid document.`
-            );
+            chai.expect(
+                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveOpenedHeadTag, {}),
+            ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
         it('should throw an error when a document does not have </head>', () => {
@@ -77,9 +77,9 @@ describe('configs injector', () => {
                 styleRefs: [],
             };
 
-            chai.expect(configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveClosedHeadTag, {})).to.throw(
-                `Can't inject ILC configs into invalid document.`
-            );
+            chai.expect(
+                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveClosedHeadTag, {}),
+            ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
         it('should throw an error when a document does not have <body> and </body>', () => {
@@ -89,9 +89,9 @@ describe('configs injector', () => {
                 styleRefs: [],
             };
 
-            chai.expect(configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveBodyTag, {})).to.throw(
-                `Can't inject ILC configs into invalid document.`
-            );
+            chai.expect(
+                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveBodyTag, {}),
+            ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
         it('should throw an error when a document does not have <body>', () => {
@@ -101,9 +101,9 @@ describe('configs injector', () => {
                 styleRefs: [],
             };
 
-            chai.expect(configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveOpenedBodyTag, {})).to.throw(
-                `Can't inject ILC configs into invalid document.`
-            );
+            chai.expect(
+                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveOpenedBodyTag, {}),
+            ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
         it('should throw an error when a document does not have </body>', () => {
@@ -113,9 +113,9 @@ describe('configs injector', () => {
                 styleRefs: [],
             };
 
-            chai.expect(configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveClosedBodyTag, {})).to.throw(
-                `Can't inject ILC configs into invalid document.`
-            );
+            chai.expect(
+                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveClosedBodyTag, {}),
+            ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
     });
 
@@ -188,19 +188,18 @@ describe('configs injector', () => {
                     customHTML:
                         '<div class="customSpinnerHTML">I am spinner</div>' +
                         '<style>' +
-                            '.customSpinnerHTML {' +
-                                'position: fixed;' +
-                                'left: 50%;' +
-                                'top: 50%;' +
-                                'z-index: 1000;' +
-                            '}' +
+                        '.customSpinnerHTML {' +
+                        'position: fixed;' +
+                        'left: 50%;' +
+                        'top: 50%;' +
+                        'z-index: 1000;' +
+                        '}' +
                         '</style>' +
                         '<script type="text/javascript">' +
-                            'console.log("Custom spinner JS")' +
-                        '</script>'
-                    ,
-                }
-            }
+                        'console.log("Custom spinner JS")' +
+                        '</script>',
+                },
+            },
         };
 
         registryConfig.apps['thirdApp'] = {
@@ -236,33 +235,35 @@ describe('configs injector', () => {
                 settings: {
                     globalSpinner: {
                         customHTML:
-                            '&lt;div class=&quot;customSpinnerHTML&quot;&gt;I am spinner&lt;/div&gt;'+
+                            '&lt;div class=&quot;customSpinnerHTML&quot;&gt;I am spinner&lt;/div&gt;' +
                             '&lt;style&gt;' +
                             '.customSpinnerHTML {' +
-                                'position: fixed;' +
-                                'left: 50%;' +
-                                'top: 50%;' +
-                                'z-index: 1000;' +
+                            'position: fixed;' +
+                            'left: 50%;' +
+                            'top: 50%;' +
+                            'z-index: 1000;' +
                             '}' +
                             '&lt;/style&gt;' +
                             '&lt;script type=&quot;text/javascript&quot;&gt;' +
-                                'console.log(&quot;Custom spinner JS&quot;)' +
-                            '&lt;/script&gt;'
-                    }
-                }
+                            'console.log(&quot;Custom spinner JS&quot;)' +
+                            '&lt;/script&gt;',
+                    },
+                },
             });
         };
 
         it('should inject ILC config & state, polyfills, client js and new relic <script>, route assets style sheets links into the end of <head> tag', () => {
             const browserTimingHeader = `window.browserTimingHeader = 'Hi there! I should add a timing header.';`;
-            newrelic.getBrowserTimingHeader.withArgs().returns(`<script defer type="text/javascript">${browserTimingHeader}</script>`);
+            newrelic.getBrowserTimingHeader
+                .withArgs()
+                .returns(`<script defer type="text/javascript">${browserTimingHeader}</script>`);
 
             const cdnUrl = 'https://somewhere.com';
             const nrCustomClientJsWrapper = '<script>%CONTENT%</script>';
 
             const configsInjector = new ConfigsInjector(newrelic, cdnUrl, nrCustomClientJsWrapper);
 
-            const request = {ilcState: {test: 1}, registryConfig};
+            const request = { ilcState: { test: 1 }, registryConfig };
 
             const firstTemplateStyleRef = 'https://somewhere.com/firstTemplateStyleRef.css';
             const secondTemplateStyleRef = 'https://somewhere.com/secondTemplateStyleRef.css';
@@ -276,55 +277,54 @@ describe('configs injector', () => {
                 ],
                 content:
                     '<html>' +
-                        '<head>' +
-                            '<title>Configs Injector`s test</title>' +
-                            '<link rel="stylesheet" href="https://somewhere.com/style.css">' +
-                        '</head>' +
-                        '<body>' +
-                            '<div>Hi there! I am content.</div>' +
-                        '</body>' +
+                    '<head>' +
+                    '<title>Configs Injector`s test</title>' +
+                    '<link rel="stylesheet" href="https://somewhere.com/style.css">' +
+                    '</head>' +
+                    '<body>' +
+                    '<div>Hi there! I am content.</div>' +
+                    '</body>' +
                     '</html>',
             };
 
             chai.expect(configsInjector.inject(request, template, slots)).to.be.eql(
                 '<html>' +
                     '<head>' +
-                        '<title>Configs Injector`s test</title>' +
-                        '<link rel="stylesheet" href="https://somewhere.com/style.css">' +
-
-                        '<!-- TailorX: Ignore during parsing START -->' +
-                        '<link rel="stylesheet" href="https://somewhere.com/firstAppCssBundle.css" data-fragment-id="firstApp">' +
-                        '<link rel="stylesheet" href="https://somewhere.com/secondAppCssBundle.css" data-fragment-id="secondApp">' +
-                        '<!-- TailorX: Ignore during parsing END -->' +
-
-                        '<!-- TailorX: Ignore during parsing START -->' +
-                        `<script type="ilc-state">${JSON.stringify(request.ilcState)}</script>` +
-                        `<script type="ilc-config">${getSpaConfig()}</script>` +
-                        '<script>window.ilcApps = [];</script>' +
-                        `<script type="text/javascript">` +
-                            `if (!(` +
-                                `typeof window.URL === 'function' && ` +
-                                `Object.entries && ` +
-                                `Object.assign && ` +
-                                `DocumentFragment.prototype.append && ` +
-                                `Element.prototype.append && ` +
-                                `Element.prototype.remove` +
-                            `)) {` +
-                                `document.write('<script src="${cdnUrl + '/polyfill.min.js'}" type="text/javascript" crossorigin></scr' + 'ipt>');` +
-                            `}` +
-                        `</script>` +
-                        `<script src="${cdnUrl + '/client.js'}" type="text/javascript" crossorigin async></script>` +
-                        `<script>${browserTimingHeader}</script>` +
-                        '<!-- TailorX: Ignore during parsing END -->' +
-
+                    '<title>Configs Injector`s test</title>' +
+                    '<link rel="stylesheet" href="https://somewhere.com/style.css">' +
+                    '<!-- TailorX: Ignore during parsing START -->' +
+                    '<link rel="stylesheet" href="https://somewhere.com/firstAppCssBundle.css" data-fragment-id="firstApp">' +
+                    '<link rel="stylesheet" href="https://somewhere.com/secondAppCssBundle.css" data-fragment-id="secondApp">' +
+                    '<!-- TailorX: Ignore during parsing END -->' +
+                    '<!-- TailorX: Ignore during parsing START -->' +
+                    `<script type="ilc-state">${JSON.stringify(request.ilcState)}</script>` +
+                    `<script type="ilc-config">${getSpaConfig()}</script>` +
+                    '<script>window.ilcApps = [];</script>' +
+                    `<script type="text/javascript">` +
+                    `if (!(` +
+                    `typeof window.URL === 'function' && ` +
+                    `Object.entries && ` +
+                    `Object.assign && ` +
+                    `DocumentFragment.prototype.append && ` +
+                    `Element.prototype.append && ` +
+                    `Element.prototype.remove` +
+                    `)) {` +
+                    `document.write('<script src="${
+                        cdnUrl + '/polyfill.min.js'
+                    }" type="text/javascript" crossorigin></scr' + 'ipt>');` +
+                    `}` +
+                    `</script>` +
+                    `<script src="${cdnUrl + '/client.js'}" type="text/javascript" crossorigin async></script>` +
+                    `<script>${browserTimingHeader}</script>` +
+                    '<!-- TailorX: Ignore during parsing END -->' +
                     '</head>' +
                     '<body>' +
-                        '<div>Hi there! I am content.</div>' +
+                    '<div>Hi there! I am content.</div>' +
                     '</body>' +
-                '</html>'
+                    '</html>',
             );
             chai.expect(_.pick(request, ['ilcState', 'styleRefs'])).to.be.eql({
-                ilcState: {test: 1},
+                ilcState: { test: 1 },
                 styleRefs: [
                     registryConfig.apps.firstApp.cssBundle,
                     registryConfig.apps.secondApp.cssBundle,
@@ -340,67 +340,64 @@ describe('configs injector', () => {
 
             const configsInjector = new ConfigsInjector(newrelic);
 
-            const request = {registryConfig};
+            const request = { registryConfig };
 
             const template = {
                 styleRefs: [],
                 content:
                     '<html>' +
-                        '<head>' +
-                            '<!-- ILC_JS -->' +
-                            '<title>Configs Injector`s test</title>' +
-                            '<!-- ILC_CSS -->' +
-                            '<link rel="stylesheet" href="https://somewhere.com/style.css">' +
-                            '<!-- ILC_JS -->' +
-                            '<!-- ILC_CSS -->' +
-                        '</head>' +
-                        '<body>' +
-                            '<!-- ILC_JS -->' +
-                            '<div>Hi there! I am content.</div>' +
-                            '<!-- ILC_CSS -->' +
-                        '</body>' +
+                    '<head>' +
+                    '<!-- ILC_JS -->' +
+                    '<title>Configs Injector`s test</title>' +
+                    '<!-- ILC_CSS -->' +
+                    '<link rel="stylesheet" href="https://somewhere.com/style.css">' +
+                    '<!-- ILC_JS -->' +
+                    '<!-- ILC_CSS -->' +
+                    '</head>' +
+                    '<body>' +
+                    '<!-- ILC_JS -->' +
+                    '<div>Hi there! I am content.</div>' +
+                    '<!-- ILC_CSS -->' +
+                    '</body>' +
                     '</html>',
             };
 
             chai.expect(configsInjector.inject(request, template, slots)).to.be.eql(
                 '<html>' +
                     '<head>' +
-                        '<!-- TailorX: Ignore during parsing START -->' +
-                        `<script type="ilc-config">${getSpaConfig()}</script>` +
-                        '<script>window.ilcApps = [];</script>' +
-                        `<script type="text/javascript">` +
-                            `if (!(` +
-                                `typeof window.URL === 'function' && ` +
-                                `Object.entries && ` +
-                                `Object.assign && ` +
-                                `DocumentFragment.prototype.append && ` +
-                                `Element.prototype.append && ` +
-                                `Element.prototype.remove` +
-                            `)) {` +
-                                `document.write('<script src="/_ilc/polyfill.min.js" type="text/javascript" ></scr' + 'ipt>');` +
-                            `}` +
-                        `</script>` +
-                        `<script src="/_ilc/client.js" type="text/javascript"  async></script>` +
-                        browserTimingHeader +
-                        '<!-- TailorX: Ignore during parsing END -->' +
-
-                        '<title>Configs Injector`s test</title>' +
-
-                        '<!-- TailorX: Ignore during parsing START -->' +
-                        '<link rel="stylesheet" href="https://somewhere.com/firstAppCssBundle.css" data-fragment-id="firstApp">' +
-                        '<link rel="stylesheet" href="https://somewhere.com/secondAppCssBundle.css" data-fragment-id="secondApp">' +
-                        '<!-- TailorX: Ignore during parsing END -->' +
-
-                        '<link rel="stylesheet" href="https://somewhere.com/style.css">' +
-                        '<!-- ILC_JS -->' +
-                        '<!-- ILC_CSS -->' +
+                    '<!-- TailorX: Ignore during parsing START -->' +
+                    `<script type="ilc-config">${getSpaConfig()}</script>` +
+                    '<script>window.ilcApps = [];</script>' +
+                    `<script type="text/javascript">` +
+                    `if (!(` +
+                    `typeof window.URL === 'function' && ` +
+                    `Object.entries && ` +
+                    `Object.assign && ` +
+                    `DocumentFragment.prototype.append && ` +
+                    `Element.prototype.append && ` +
+                    `Element.prototype.remove` +
+                    `)) {` +
+                    `document.write('<script src="/_ilc/polyfill.min.js" type="text/javascript" ></scr' + 'ipt>');` +
+                    `}` +
+                    `</script>` +
+                    `<script src="/_ilc/client.js" type="text/javascript"  async></script>` +
+                    browserTimingHeader +
+                    '<!-- TailorX: Ignore during parsing END -->' +
+                    '<title>Configs Injector`s test</title>' +
+                    '<!-- TailorX: Ignore during parsing START -->' +
+                    '<link rel="stylesheet" href="https://somewhere.com/firstAppCssBundle.css" data-fragment-id="firstApp">' +
+                    '<link rel="stylesheet" href="https://somewhere.com/secondAppCssBundle.css" data-fragment-id="secondApp">' +
+                    '<!-- TailorX: Ignore during parsing END -->' +
+                    '<link rel="stylesheet" href="https://somewhere.com/style.css">' +
+                    '<!-- ILC_JS -->' +
+                    '<!-- ILC_CSS -->' +
                     '</head>' +
                     '<body>' +
-                        '<!-- ILC_JS -->' +
-                        '<div>Hi there! I am content.</div>' +
-                        '<!-- ILC_CSS -->' +
+                    '<!-- ILC_JS -->' +
+                    '<div>Hi there! I am content.</div>' +
+                    '<!-- ILC_CSS -->' +
                     '</body>' +
-                '</html>'
+                    '</html>',
             );
             chai.expect(request.styleRefs).to.be.eql([
                 registryConfig.apps.firstApp.cssBundle,

@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import { CssTrackedApp } from './CssTrackedApp';
 
 const ilcTestAttributeName = 'data-ilc-test';
@@ -18,7 +18,7 @@ function createOriginalAppFake(returnValue) {
         bootstrap: sinon.fake.returns(returnValue),
         mount: sinon.fake.returns(returnValue),
         unmount: sinon.fake.returns(returnValue),
-        update: sinon.fake.returns(returnValue)
+        update: sinon.fake.returns(returnValue),
     };
 }
 
@@ -26,36 +26,42 @@ describe('CssTrackedApp', function () {
     afterEach(() => {
         Array.from(document.querySelectorAll(`link[${ilcTestAttributeName}]`))
             .concat(Array.from(document.querySelectorAll(`link[${CssTrackedApp.linkUsagesAttribute}]`)))
-            .forEach(link => link.remove());
+            .forEach((link) => link.remove());
     });
 
     it('should delegate calls to original app', async () => {
         const returnValue = Math.random();
-        const originalApp = createOriginalAppFake(Promise.resolve(returnValue))
+        const originalApp = createOriginalAppFake(Promise.resolve(returnValue));
 
-        const cssWrap = new CssTrackedApp(originalApp, 'data:text/css,<style>div { border: 1px solid red; }</style>', false).getDecoratedApp();
+        const cssWrap = new CssTrackedApp(
+            originalApp,
+            'data:text/css,<style>div { border: 1px solid red; }</style>',
+            false,
+        ).getDecoratedApp();
 
-        await Promise.all(Object.keys(originalApp).map(async method => {
-            const actualReturnValue = await cssWrap[method]();
+        await Promise.all(
+            Object.keys(originalApp).map(async (method) => {
+                const actualReturnValue = await cssWrap[method]();
 
-            expect(originalApp[method].calledOnce).to.equal(true, `${method} is not called`);
-            expect(actualReturnValue).to.equal(returnValue, method);
-        }));
+                expect(originalApp[method].calledOnce).to.equal(true, `${method} is not called`);
+                expect(actualReturnValue).to.equal(returnValue, method);
+            }),
+        );
     });
 
     describe('createNew', () => {
         it('should return original instance if createNew is not IlcAdapter', async () => {
-            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()))
+            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()));
             originalApp.createNew = () => Promise.resolve(1);
 
             const cssWrap = new CssTrackedApp(originalApp, 'data:text/css,<style></style>', false).getDecoratedApp();
             const newInstance = await cssWrap.createNew();
 
             expect(newInstance).to.equal(1);
-        })
+        });
 
         it('should return original instance if createNew does not return Promise', async () => {
-            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()))
+            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()));
             originalApp.createNew = () => 1;
 
             const cssWrap = new CssTrackedApp(originalApp, 'data:text/css,<style></style>', false).getDecoratedApp();
@@ -66,19 +72,25 @@ describe('CssTrackedApp', function () {
 
         it('should delegate calls to original app if app is created via createNew', async () => {
             const returnValue = Math.random();
-            const appOnCreateNew = createOriginalAppFake(Promise.resolve(returnValue))
-            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()))
+            const appOnCreateNew = createOriginalAppFake(Promise.resolve(returnValue));
+            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()));
             originalApp.createNew = () => Promise.resolve(appOnCreateNew);
 
-            const cssWrap = new CssTrackedApp(originalApp, 'data:text/css,<style>div { border: 1px solid red; }</style>', false).getDecoratedApp();
+            const cssWrap = new CssTrackedApp(
+                originalApp,
+                'data:text/css,<style>div { border: 1px solid red; }</style>',
+                false,
+            ).getDecoratedApp();
             const newApp = await cssWrap.createNew();
 
-            await Promise.all(Object.keys(appOnCreateNew).map(async method => {
-                const actualReturnValue = await newApp[method]();
+            await Promise.all(
+                Object.keys(appOnCreateNew).map(async (method) => {
+                    const actualReturnValue = await newApp[method]();
 
-                expect(appOnCreateNew[method].calledOnce).to.equal(true, `${method} is not called`);
-                expect(actualReturnValue).to.equal(returnValue, method);
-            }));
+                    expect(appOnCreateNew[method].calledOnce).to.equal(true, `${method} is not called`);
+                    expect(actualReturnValue).to.equal(returnValue, method);
+                }),
+            );
         });
     });
 

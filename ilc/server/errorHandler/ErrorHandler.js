@@ -1,7 +1,7 @@
 const uuidv4 = require('uuid/v4');
 const extendError = require('@namecheap/error-extender');
 const config = require('config');
-const {readFileSync} = require('fs');
+const { readFileSync } = require('fs');
 const ErrorHandlingError = extendError('ErrorHandlingError');
 const defaultErrorPage = require('./defaultErrorPage');
 
@@ -26,13 +26,17 @@ module.exports = class ErrorHandler {
      */
     noticeError(err, errInfo = {}, options) {
         const infoData = Object.assign({}, errInfo);
-        options = Object.assign({}, {
-            reportError: true
-        }, options);
+        options = Object.assign(
+            {},
+            {
+                reportError: true,
+            },
+            options,
+        );
 
         if (err.data === undefined) {
             const ExtendedError = extendError(err.name);
-            err = new ExtendedError({cause: err, data: infoData, message: err.message});
+            err = new ExtendedError({ cause: err, data: infoData, message: err.message });
         } else {
             Object.assign(err.data, infoData);
         }
@@ -57,12 +61,16 @@ module.exports = class ErrorHandler {
         }
 
         try {
-            this.noticeError(err, {
-                reqId: req.id,
-                errorId,
-                domain: req.hostname,
-                url: req.url
-            }, { reportError: !req.ldeRelated });
+            this.noticeError(
+                err,
+                {
+                    reqId: req.id,
+                    errorId,
+                    domain: req.hostname,
+                    url: req.url,
+                },
+                { reportError: !req.ldeRelated },
+            );
 
             const currentDomain = req.hostname;
             const locale = (req.raw || req).ilcState.locale;
@@ -79,13 +87,13 @@ module.exports = class ErrorHandler {
                 cause: causeErr,
                 d: {
                     errorId,
-                }
+                },
             });
 
             this.#logger.error(e);
             this.#writeStaticError(nres);
         }
-    }
+    };
 
     #writeStaticError(nres) {
         nres.statusCode = 500;

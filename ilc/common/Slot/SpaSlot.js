@@ -1,4 +1,4 @@
-import {assert} from '../../client/utils';
+import { assert } from '../../client/utils';
 
 export class SpaSlot {
     #applicationId;
@@ -7,7 +7,7 @@ export class SpaSlot {
     /**
      * @property {IlcConfigRoot}
      */
-    #configRoot
+    #configRoot;
 
     /**
      * @constructor
@@ -15,12 +15,20 @@ export class SpaSlot {
      * @param {IlcConfigRoot} rootConfig
      */
     constructor(rawSlot, configRoot) {
+        const { applicationId, applicationName, slotName } = rawSlot;
 
-        const {applicationId, applicationName, slotName} = rawSlot;
-
-        assert(applicationId !== 'string', `SpaSlot instance can not be initiated without applicationId where rawSlot = ${JSON.stringify(rawSlot)}`);
-        assert(applicationName !== 'string', `SpaSlot instance can not be initiated without applicationName where rawSlot = ${JSON.stringify(rawSlot)}`);
-        assert(slotName !== 'string', `SpaSlot instance can not be initiated without slotName where rawSlot = ${JSON.stringify(rawSlot)}`);
+        assert(
+            applicationId !== 'string',
+            `SpaSlot instance can not be initiated without applicationId where rawSlot = ${JSON.stringify(rawSlot)}`,
+        );
+        assert(
+            applicationName !== 'string',
+            `SpaSlot instance can not be initiated without applicationName where rawSlot = ${JSON.stringify(rawSlot)}`,
+        );
+        assert(
+            slotName !== 'string',
+            `SpaSlot instance can not be initiated without slotName where rawSlot = ${JSON.stringify(rawSlot)}`,
+        );
 
         this.#applicationId = applicationId;
         this.#applicationName = applicationName;
@@ -52,13 +60,12 @@ export class SpaSlot {
         return this.#slotName;
     }
 
-
     /**
      * @method
      * @description Method return is slot is associated with valid application
      * @return {boolean}
      */
-    isValid(){
+    isValid() {
         return !!this.#configRoot.getConfigForAppByName(this.#applicationName);
     }
 
@@ -71,6 +78,6 @@ export class SpaSlot {
             appId: this.getApplicationId(),
             appName: this.getApplicationName(),
             slotName: this.getSlotName(),
-        }
+        };
     }
 }

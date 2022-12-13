@@ -9,10 +9,7 @@ module.exports = class Router {
     #specialRoutes = {};
 
     constructor(registryConfig) {
-        const {
-            routes,
-            specialRoutes,
-        } = registryConfig;
+        const { routes, specialRoutes } = registryConfig;
 
         this.#compiledRoutes = this.#compiler(routes);
         this.#specialRoutes = specialRoutes || {};
@@ -27,13 +24,7 @@ module.exports = class Router {
         };
 
         for (let route of this.#compiledRoutes) {
-            const {
-                next,
-                routeExp,
-                slots,
-                meta,
-                ...routeProps
-            } = route;
+            const { next, routeExp, slots, meta, ...routeProps } = route;
 
             const match = path.match(routeExp);
 
@@ -92,7 +83,7 @@ module.exports = class Router {
     };
 
     #compiler = (routes) => {
-        return routes.map(v => {
+        return routes.map((v) => {
             const route = this.#escapeStringRegexp(v.route);
 
             let routeExp;
@@ -110,7 +101,7 @@ module.exports = class Router {
 
                 if (v.route[v.route.length - 1] === '/') {
                     basePath = route.substring(0, route.length - 1);
-                };
+                }
 
                 routeExp = new RegExp(`^(${basePath})/?$`);
             }
@@ -126,9 +117,8 @@ module.exports = class Router {
         return str.replace(/[|\\{}()[\]^$+*?.-]/g, '\\$&');
     };
 
-
     #mergeSlots = (a, b) => {
-        const res = {...a, ...b};
+        const res = { ...a, ...b };
 
         for (let slotName in res) {
             if (!res.hasOwnProperty(slotName)) {
@@ -141,5 +131,5 @@ module.exports = class Router {
         }
 
         return res;
-    }
+    };
 };

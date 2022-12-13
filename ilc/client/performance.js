@@ -26,7 +26,7 @@ export default function init(getCurrentPath) {
         console.info(`ILC: Client side route change to "${route}" took ${timeMs} milliseconds.`);
 
         if (window.newrelic && window.newrelic.addPageAction) {
-            window.newrelic.addPageAction('routeChange', { time: timeMs, route })
+            window.newrelic.addPageAction('routeChange', { time: timeMs, route });
         }
     });
 }

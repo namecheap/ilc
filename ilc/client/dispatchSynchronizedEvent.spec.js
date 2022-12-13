@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import { expect } from 'chai';
 import sinon from 'sinon';
 
 import dispatchSynchronizedEvent from './dispatchSynchronizedEvent';
@@ -7,18 +7,17 @@ import ilcEvents from './constants/ilcEvents';
 let listeners = [];
 
 describe('dispatchSynchronizedEvent', () => {
-
     beforeEach(() => {
         sinon.resetHistory();
     });
 
     afterEach(() => {
-        listeners.forEach(v => v.unwatch());
+        listeners.forEach((v) => v.unwatch());
         listeners = [];
     });
 
     it('should handle success case well', async () => {
-        const testData = {a: 1, b: 'c'};
+        const testData = { a: 1, b: 'c' };
 
         const l1 = createListener();
         const l2 = createListener();
@@ -53,8 +52,8 @@ describe('dispatchSynchronizedEvent', () => {
         sinon.assert.notCalled(errLogger);
     });
 
-    it('should continue processing listeners which haven\'t failed on preparation stage', async () => {
-        const testData = {a: 1, b: 'c'};
+    it("should continue processing listeners which haven't failed on preparation stage", async () => {
+        const testData = { a: 1, b: 'c' };
 
         const l1Id = 'l1_id';
         const l1 = createListener(l1Id);
@@ -80,7 +79,7 @@ describe('dispatchSynchronizedEvent', () => {
     });
 
     it('should log errors from execution callbacks', async () => {
-        const testData = {a: 1, b: 'c'};
+        const testData = { a: 1, b: 'c' };
 
         const l1Id = 'l1_id';
         const l1 = createListener(l1Id);
@@ -102,19 +101,24 @@ describe('dispatchSynchronizedEvent', () => {
 
         expect(await promiseState(res)).to.eq('fulfilled');
         sinon.assert.calledOnceWithExactly(errLogger, l1Id, l1ExecResult);
-    })
+    });
 });
 
-
 function createListener(actorId = 'testActor') {
-    const prepare = sinon.spy(() => new Promise((resolve, reject) => {
-        listener.resolvePrep = resolve;
-        listener.rejectPrep = reject;
-    }));
-    const execute = sinon.spy(() => new Promise((resolve, reject) => {
-        listener.resolveExec = resolve;
-        listener.rejectExec = reject;
-    }));
+    const prepare = sinon.spy(
+        () =>
+            new Promise((resolve, reject) => {
+                listener.resolvePrep = resolve;
+                listener.rejectPrep = reject;
+            }),
+    );
+    const execute = sinon.spy(
+        () =>
+            new Promise((resolve, reject) => {
+                listener.resolveExec = resolve;
+                listener.rejectExec = reject;
+            }),
+    );
 
     const listener = {
         resolvePrep: undefined,
@@ -130,10 +134,10 @@ function createListener(actorId = 'testActor') {
                 execute,
             });
         },
-        unwatch(){
+        unwatch() {
             window.removeEventListener(ilcEvents.INTL_UPDATE, this._listener);
         },
-    }
+    };
 
     window.addEventListener(ilcEvents.INTL_UPDATE, listener._listener);
 
@@ -144,10 +148,12 @@ function createListener(actorId = 'testActor') {
 
 function promiseState(p) {
     const t = {};
-    return Promise.race([p, t])
-        .then(v => (v === t)? "pending" : "fulfilled", () => "rejected");
+    return Promise.race([p, t]).then(
+        (v) => (v === t ? 'pending' : 'fulfilled'),
+        () => 'rejected',
+    );
 }
 
 function waitForAllAsyncActions() {
-    return new Promise(r => setTimeout(() => r(), 10));
+    return new Promise((r) => setTimeout(() => r(), 10));
 }

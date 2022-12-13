@@ -1,4 +1,3 @@
-
 export default class TransitionBlocker {
     _promise;
     _onDestroyCallback;

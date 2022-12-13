@@ -2,7 +2,6 @@
  * @class Slot
  */
 class Slot {
-
     #rawSlot;
     #rawApps;
 
@@ -42,9 +41,8 @@ class Slot {
     getSlotName() {
         return this.#rawSlot.slotName;
     }
-
 }
 
 module.exports = {
     Slot,
-}
+};

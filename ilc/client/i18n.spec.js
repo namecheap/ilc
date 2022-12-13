@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import { expect } from 'chai';
 import sinon from 'sinon';
 
 import I18n from './i18n';
@@ -23,12 +23,12 @@ describe('I18n', () => {
     };
     const transitionManager = {
         handleAsyncAction: sinon.spy(),
-    }
+    };
     const defaultConfig = Object.freeze({
         default: { locale: 'en-US', currency: 'USD' },
         supported: {
             locale: ['en-US', 'ua-UA'],
-            currency: ['USD', 'UAH']
+            currency: ['USD', 'UAH'],
         },
         routingStrategy: 'prefix_except_default',
     });
@@ -42,12 +42,12 @@ describe('I18n', () => {
 
         Cookies.set(i18nCookie.name, i18nCookie.encode(defaultConfig.default), i18nCookie.getOpts());
 
-        defaultIntl = new I18n({...defaultConfig}, singleSpa, appErrorHandlerFactory, transitionManager);
+        defaultIntl = new I18n({ ...defaultConfig }, singleSpa, appErrorHandlerFactory, transitionManager);
     });
 
     afterEach(() => {
         defaultIntl.destroy();
-    })
+    });
 
     describe('unlocalizeUrl', () => {
         it('should unlocalize URL with locale correctly', () => {
@@ -61,15 +61,23 @@ describe('I18n', () => {
 
     describe('localizeUrl', () => {
         beforeEach(() => {
-            Cookies.set(i18nCookie.name, i18nCookie.encode({...defaultConfig.default, locale: 'ua-UA'}), i18nCookie.getOpts());
+            Cookies.set(
+                i18nCookie.name,
+                i18nCookie.encode({ ...defaultConfig.default, locale: 'ua-UA' }),
+                i18nCookie.getOpts(),
+            );
         });
 
         it('should localize an URL without locale correctly', () => {
-            expect(defaultIntl.localizeUrl(window.location.origin + '/some/url')).to.equal(window.location.origin + '/ua/some/url');
+            expect(defaultIntl.localizeUrl(window.location.origin + '/some/url')).to.equal(
+                window.location.origin + '/ua/some/url',
+            );
         });
 
         it('should localize an URL with locale correctly', () => {
-            expect(defaultIntl.localizeUrl(window.location.origin + '/ua/some/url')).to.equal(window.location.origin + '/ua/some/url');
+            expect(defaultIntl.localizeUrl(window.location.origin + '/ua/some/url')).to.equal(
+                window.location.origin + '/ua/some/url',
+            );
         });
     });
 
@@ -81,29 +89,33 @@ describe('I18n', () => {
         });
 
         it('returns custom set locale', () => {
-            Cookies.set(i18nCookie.name, i18nCookie.encode({...defaultConfig.default, locale: 'ua-UA'}), i18nCookie.getOpts());
+            Cookies.set(
+                i18nCookie.name,
+                i18nCookie.encode({ ...defaultConfig.default, locale: 'ua-UA' }),
+                i18nCookie.getOpts(),
+            );
             document.documentElement.lang = 'ua-UA';
 
             const adapter = defaultIntl.getAdapter();
 
-            expect(adapter.get()).to.eql({...defaultConfig.default, locale: 'ua-UA'});
+            expect(adapter.get()).to.eql({ ...defaultConfig.default, locale: 'ua-UA' });
         });
     });
 
     describe('adapter.set', () => {
-        it('doesn\'t accept unsupported/invalid locale or currency', () => {
+        it("doesn't accept unsupported/invalid locale or currency", () => {
             const adapter = defaultIntl.getAdapter();
 
-            expect(() => adapter.set({locale: 'pt-BR'})).to.throw(Error);
-            expect(() => adapter.set({locale: 'bd-SM'})).to.throw(Error);
-            expect(() => adapter.set({currency: 'AED'})).to.throw(Error);
-            expect(() => adapter.set({currency: 'BDS'})).to.throw(Error);
+            expect(() => adapter.set({ locale: 'pt-BR' })).to.throw(Error);
+            expect(() => adapter.set({ locale: 'bd-SM' })).to.throw(Error);
+            expect(() => adapter.set({ currency: 'AED' })).to.throw(Error);
+            expect(() => adapter.set({ currency: 'BDS' })).to.throw(Error);
         });
 
         it('triggers URL & document lang change when locale changes', () => {
             const adapter = defaultIntl.getAdapter();
 
-            adapter.set({locale: 'ua-UA'});
+            adapter.set({ locale: 'ua-UA' });
 
             sinon.assert.calledOnceWithExactly(singleSpa.navigateToUrl, `/ua/`);
             sinon.assert.notCalled(singleSpa.triggerAppChange);
@@ -113,7 +125,7 @@ describe('I18n', () => {
         it('triggers app change when only currency changes', () => {
             const adapter = defaultIntl.getAdapter();
 
-            adapter.set({currency: 'UAH'});
+            adapter.set({ currency: 'UAH' });
 
             sinon.assert.calledOnce(singleSpa.triggerAppChange);
             sinon.assert.notCalled(singleSpa.navigateToUrl);
@@ -122,28 +134,28 @@ describe('I18n', () => {
         it(`triggers "${ilcEvents.INTL_UPDATE}" when only locale changes`, () => {
             const adapter = defaultIntl.getAdapter();
 
-            const newConf = {...adapter.get(), locale: 'ua-UA'};
+            const newConf = { ...adapter.get(), locale: 'ua-UA' };
 
-            adapter.set({locale: newConf.locale});
-            sinon.assert.calledOnceWithExactly(intlChangeEvent, sinon.match({detail: newConf}));
+            adapter.set({ locale: newConf.locale });
+            sinon.assert.calledOnceWithExactly(intlChangeEvent, sinon.match({ detail: newConf }));
         });
 
         it(`triggers "${ilcEvents.INTL_UPDATE}" when only currency changes`, () => {
             const adapter = defaultIntl.getAdapter();
 
-            const newConf = {...adapter.get(), currency: 'UAH'};
+            const newConf = { ...adapter.get(), currency: 'UAH' };
 
-            adapter.set({currency: newConf.currency});
-            sinon.assert.calledOnceWithExactly(intlChangeEvent, sinon.match({detail: newConf}));
+            adapter.set({ currency: newConf.currency });
+            sinon.assert.calledOnceWithExactly(intlChangeEvent, sinon.match({ detail: newConf }));
         });
 
         it(`triggers "${ilcEvents.INTL_UPDATE}" when locale & currency change`, () => {
             const adapter = defaultIntl.getAdapter();
 
-            const newConf = {locale: 'ua-UA', currency: 'UAH'};
+            const newConf = { locale: 'ua-UA', currency: 'UAH' };
 
             adapter.set(newConf);
-            sinon.assert.calledOnceWithExactly(intlChangeEvent, sinon.match({detail: newConf}));
+            sinon.assert.calledOnceWithExactly(intlChangeEvent, sinon.match({ detail: newConf }));
         });
     });
 });

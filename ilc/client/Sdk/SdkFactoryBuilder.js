@@ -3,9 +3,8 @@ import IlcAppSdk from 'ilc-sdk/app';
 import { SdkAdapterFactory } from './SdkAdapterFactory';
 
 export class SdkFactoryBuilder {
-
     #configRoot;
-    #sdkAdapterFactory
+    #sdkAdapterFactory;
 
     constructor(configRoot, i18n, router) {
         this.#configRoot = configRoot;
@@ -17,7 +16,7 @@ export class SdkFactoryBuilder {
 
         const manifestPath = appConfig?.l10nManifest;
 
-        const sdkOptions = new SdkOptions( {
+        const sdkOptions = new SdkOptions({
             i18n: {
                 manifestPath,
             },
@@ -25,7 +24,7 @@ export class SdkFactoryBuilder {
 
         return (applicationId) => {
             return new IlcAppSdk(this.getSdkAdapterInstance(applicationId), sdkOptions.toJSON());
-        }
+        };
     }
 
     getSdkAdapterInstance(applicationId) {

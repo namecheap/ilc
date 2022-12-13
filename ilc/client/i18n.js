@@ -1,7 +1,7 @@
 import { IlcIntl } from 'ilc-sdk/app';
 import Cookies from 'js-cookie';
 
-import {appIdToNameAndSlot} from '../common/utils';
+import { appIdToNameAndSlot } from '../common/utils';
 import i18nCookie from '../common/i18nCookie';
 import dispatchSynchronizedEvent from './dispatchSynchronizedEvent';
 import singleSpaEvents from './constants/singleSpaEvents';
@@ -15,12 +15,7 @@ export default class I18n {
 
     #prevConfig;
 
-    constructor(
-        config,
-        singleSpa,
-        appErrorHandlerFactory,
-        transitionManager = undefined
-    ) {
+    constructor(config, singleSpa, appErrorHandlerFactory, transitionManager = undefined) {
         this.#config = config;
         this.#singleSpa = singleSpa;
         this.#appErrorHandlerFactory = appErrorHandlerFactory;
@@ -31,7 +26,7 @@ export default class I18n {
         window.addEventListener(singleSpaEvents.BEFORE_MOUNT_ROUTING_EVENT, this.#onBeforeAppsMount);
     }
 
-    unlocalizeUrl = v => IlcIntl.parseUrl(this.#config, v).cleanUrl;
+    unlocalizeUrl = (v) => IlcIntl.parseUrl(this.#config, v).cleanUrl;
     localizeUrl = (url) => IlcIntl.localizeUrl(this.#config, url, this.#get());
 
     getAdapter() {
@@ -79,34 +74,27 @@ export default class I18n {
     #onBeforeAppsMount = () => {
         const prevConfig = this.#prevConfig;
         const currLocale = IlcIntl.parseUrl(this.#config, window.location.pathname).locale;
-        const currConfig = Object.assign(this.#get(), {locale: currLocale});
-        if (
-            currConfig.locale === prevConfig.locale &&
-            currConfig.currency === prevConfig.currency
-        ) {
+        const currConfig = Object.assign(this.#get(), { locale: currLocale });
+        if (currConfig.locale === prevConfig.locale && currConfig.currency === prevConfig.currency) {
             return;
         }
 
         this.#set(currConfig);
         this.#prevConfig = currConfig;
 
-        const changeFlow = dispatchSynchronizedEvent(
-            ilcEvents.INTL_UPDATE,
-            this.#get(),
-            (actorId, ...args) => {
-                const {appName, slotName} = appIdToNameAndSlot(actorId);
-                const errorHandler = this.#appErrorHandlerFactory(appName, slotName);
-                errorHandler(...args);
-            }
-        );
+        const changeFlow = dispatchSynchronizedEvent(ilcEvents.INTL_UPDATE, this.#get(), (actorId, ...args) => {
+            const { appName, slotName } = appIdToNameAndSlot(actorId);
+            const errorHandler = this.#appErrorHandlerFactory(appName, slotName);
+            errorHandler(...args);
+        });
 
         this.#transitionManager.handleAsyncAction(changeFlow);
     };
 
     #get = () => i18nCookie.decode(Cookies.get(i18nCookie.name));
 
-    #set = conf => {
+    #set = (conf) => {
         document.documentElement.lang = conf.locale;
         Cookies.set(i18nCookie.name, i18nCookie.encode(conf), i18nCookie.getOpts());
-    }
+    };
 }

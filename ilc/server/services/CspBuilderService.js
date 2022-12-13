@@ -11,22 +11,21 @@ module.exports = class CspBuilderService {
         imgSrc: 'img-src',
         workerSrc: 'worker-src',
         frameSrc: 'frame-src',
-        reportUri: 'report-uri'
-    }
+        reportUri: 'report-uri',
+    };
 
-    #reportingDirectives = [this.#cspDirectiveMap.reportUri]
-    #spaceSeparator = ' '
-    #semiColonSeparator = '; '
+    #reportingDirectives = [this.#cspDirectiveMap.reportUri];
+    #spaceSeparator = ' ';
+    #semiColonSeparator = '; ';
     #cspMode = {
         strict: 'content-security-policy',
         report: 'content-security-policy-report-only',
-    }
-    #localEnv = false
+    };
+    #localEnv = false;
     #trustedLocalHosts = [];
 
-
     constructor(cspJson, isStrict = false, localEnv = false, trustedLocalHosts = []) {
-        if(cspJson) {
+        if (cspJson) {
             this.#cspJson = cspJson;
             this.#cspEnabled = true;
             this.#strictCsp = isStrict;
@@ -36,7 +35,7 @@ module.exports = class CspBuilderService {
     }
 
     setHeader(res) {
-        if(this.#cspEnabled) {
+        if (this.#cspEnabled) {
             const { name, value } = this.#buildHeader();
             res.setHeader(name, value);
         }
@@ -58,12 +57,13 @@ module.exports = class CspBuilderService {
                 const cspDirectiveName = this.#cspDirectiveMap[cspDirective];
                 let directiveValueArray = this.#cspJson[cspDirective];
 
-                if(this.#localEnv) {
+                if (this.#localEnv) {
                     directiveValueArray = directiveValueArray.concat(this.#getLocalhosts());
                 }
 
-                return `${cspDirectiveName} ${directiveValueArray.join(this.#spaceSeparator)}`
-            }).join(this.#semiColonSeparator);
+                return `${cspDirectiveName} ${directiveValueArray.join(this.#spaceSeparator)}`;
+            })
+            .join(this.#semiColonSeparator);
 
         return value;
     }
@@ -74,12 +74,14 @@ module.exports = class CspBuilderService {
 
     #buildHeader() {
         const name = this.#getCspHeaderName();
-        const value = [this.#buildCheckingDirectives(), this.#buildReportingDirectives()].join(this.#semiColonSeparator);
+        const value = [this.#buildCheckingDirectives(), this.#buildReportingDirectives()].join(
+            this.#semiColonSeparator,
+        );
 
-        return { name, value }
+        return { name, value };
     }
 
     #getLocalhosts() {
         return this.#trustedLocalHosts;
     }
-}
+};

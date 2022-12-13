@@ -24,12 +24,13 @@ module.exports = (response, context) => {
 
     const isPrimaryError = response.statusCode >= 500;
     const isNonPrimaryError =
-        (response.statusCode < 200 || response.statusCode >= 300) &&
-        !context.fragmentAttributes.primary;
+        (response.statusCode < 200 || response.statusCode >= 300) && !context.fragmentAttributes.primary;
 
     if (isPrimaryError || isNonPrimaryError) {
         throw new Error(
-            `Request error for ${context.isWrapper ? 'App Wrapper' : 'Fragment'}. statusCode: ${response.statusCode}; statusMessage: ${response.statusMessage}; url: ${context.fragmentUrl};`
+            `Request error for ${context.isWrapper ? 'App Wrapper' : 'Fragment'}. statusCode: ${
+                response.statusCode
+            }; statusMessage: ${response.statusMessage}; url: ${context.fragmentUrl};`,
         );
     }
 

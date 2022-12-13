@@ -4,14 +4,14 @@
 
 const config = require('config');
 
-exports.config = { 
+exports.config = {
     agent_enabled: config.get('newrelic.licenseKey') !== null,
     app_name: [`ILC${process.env.NODE_ENV ? '@' + process.env.NODE_ENV : ''}`],
     license_key: config.get('newrelic.licenseKey'),
     logging: {
         level: 'info',
         logging: true,
-        filepath: 'stdout'
+        filepath: 'stdout',
     },
     allow_all_headers: true,
     attributes: {
@@ -33,13 +33,10 @@ exports.config = {
             'response.headers.authorization',
             'response.headers.proxyAuthorization',
             'response.headers.setCookie*',
-            'response.headers.x*'
-        ]
+            'response.headers.x*',
+        ],
     },
     rules: {
-        ignore: [
-            '^\/ping$',
-            '^\/api\/v1\/monitor\/ping\/.*$',
-        ]
+        ignore: ['^/ping$', '^/api/v1/monitor/ping/.*$'],
     },
 };

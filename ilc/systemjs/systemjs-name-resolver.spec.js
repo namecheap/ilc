@@ -33,9 +33,7 @@ describe('systemjs name resolver', () => {
         const expectedChildModuleInfo = {
             name: './named-define-dependency.js',
             src: 'http://localhost:9876/base/systemjs/spec/fixtures/named-define-dependency.js',
-            dependants: [
-                expectedMainModuleInfo.src,
-            ],
+            dependants: [expectedMainModuleInfo.src],
         };
         const expectedImportedMainModule = {
             hi: 'from named defined module with dependencies',

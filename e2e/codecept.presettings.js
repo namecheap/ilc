@@ -55,7 +55,7 @@ const bootstrap = async () => {
             childProcess.once('error', (error) => {
                 reject(error);
             });
-            childProcess.once('exit', () => !childProcess.killed && reject(new Error('Child process exited...')));
+            childProcess.once('exit', (code, signal) => !childProcess.killed && reject(new Error(`Child process exited... with code ${code} and signal ${signal}`)));
             childProcess.catch(reject);
 
             waitOn({
