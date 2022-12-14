@@ -28,13 +28,17 @@ module.exports = class Registry {
         const getConfigMemo = (...args) => {
             const store = context.getStore();
 
-            const memo = wrapFetchWithCache(this.#getConfig, {
-                cacheForSeconds: 5,
-                name: 'registry_getConfig',
-            }, store);
+            const memo = wrapFetchWithCache(
+                this.#getConfig,
+                {
+                    cacheForSeconds: 5,
+                    name: 'registry_getConfig',
+                },
+                store,
+            );
 
-            return memo(...args)
-        }
+            return memo(...args);
+        };
 
         this.getConfig = async (options) => {
             const fullConfig = await getConfigMemo();
@@ -44,24 +48,32 @@ module.exports = class Registry {
 
         this.getRouterDomains = async (...args) => {
             const store = context.getStore();
-            const memo = wrapFetchWithCache(this.#getRouterDomains, {
-                cacheForSeconds: 30,
-                name: 'registry_routerDomains',
-            }, store);
+            const memo = wrapFetchWithCache(
+                this.#getRouterDomains,
+                {
+                    cacheForSeconds: 30,
+                    name: 'registry_routerDomains',
+                },
+                store,
+            );
 
             return await memo(...args);
-        }
+        };
 
         const getTemplateMemo = async (...args) => {
             const store = context.getStore();
 
-            const memo = wrapFetchWithCache(this.#getTemplate, {
-                cacheForSeconds: 30,
-                name: 'registry_getTemplate',
-            }, store);
+            const memo = wrapFetchWithCache(
+                this.#getTemplate,
+                {
+                    cacheForSeconds: 30,
+                    name: 'registry_getTemplate',
+                },
+                store,
+            );
 
             return await memo(...args);
-        }
+        };
 
         this.getTemplate = async (templateName, { locale, forDomain } = {}) => {
             if (templateName === '500' && forDomain) {

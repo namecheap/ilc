@@ -10,6 +10,7 @@ const helpers = require('../tests/helpers');
 const errors = require('../common/guard/errors');
 const actionTypes = require('../common/guard/actionTypes');
 const GuardManager = require('./GuardManager');
+const { context } = require('./context/context');
 
 describe('GuardManager', () => {
     const transitionHooksPlugin = Object.freeze({
@@ -47,7 +48,7 @@ describe('GuardManager', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-            const app = createApp(helpers.getRegistryMock(), pluginManager);
+            const app = createApp(helpers.getRegistryMock(), pluginManager, context);
 
             try {
                 res = await app.inject({ method: 'GET', url: '/all' });
@@ -70,7 +71,7 @@ describe('GuardManager', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-            app = createApp(helpers.getRegistryMock(), pluginManager);
+            app = createApp(helpers.getRegistryMock(), pluginManager, context);
 
             try {
                 res = await app.inject({ method: 'GET', url: '/all' });

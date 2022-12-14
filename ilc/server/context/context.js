@@ -3,7 +3,7 @@ const asyncLocalStorage = new AsyncLocalStorage();
 
 module.exports = {
     context: {
-        run({ request }, callback){
+        run({ request }, callback) {
             const store = new Map();
             store.set('reqId', request.id);
             store.set('url', request.raw.url);

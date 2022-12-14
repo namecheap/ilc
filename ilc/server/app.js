@@ -32,7 +32,7 @@ module.exports = (registryService, pluginManager, context) => {
         hashSum.update(JSON.stringify(string), 'utf8');
         const hex = hashSum.digest('hex');
         return hex;
-    }
+    };
 
     const fastifyLoggerConfig = _.omit(
         _.pick(pluginManager.getReportingPlugin(), ['logger', 'requestIdLogLabel', 'genReqId']),
@@ -50,12 +50,15 @@ module.exports = (registryService, pluginManager, context) => {
         ),
     );
 
-    app.addHook('onRequest',  (req, reply, done) => {
-        context.run({ request: req }, async() => {
+    app.addHook('onRequest', (req, reply, done) => {
+        context.run({ request: req }, async () => {
             const store = context.getStore();
 
             if (shouldUrlBeLogged(req.raw.url)) {
-                req.log.info({ url: store.get('url'), id: store.get('reqId'), domain: store.get('domain') }, 'received request');
+                req.log.info(
+                    { url: store.get('url'), id: store.get('reqId'), domain: store.get('domain') },
+                    'received request',
+                );
             }
 
             req.raw.ilcState = {};
@@ -135,7 +138,7 @@ module.exports = (registryService, pluginManager, context) => {
         req.log.info(
             {
                 checkSum: hex,
-                id: req.id
+                id: req.id,
             },
             '[ILC Cache]: Config checksum',
         );

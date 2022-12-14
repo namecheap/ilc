@@ -112,7 +112,9 @@ const wrapWithCache =
                             cachedAt: JSON.parse(localStorage.getItem(hash)).cachedAt,
                             id: contextStore && contextStore.get('reqId'),
                         },
-                        logMessage('Item read from cache. Invalidation is in progress since current request. Cache is stale'),
+                        logMessage(
+                            'Item read from cache. Invalidation is in progress since current request. Cache is stale',
+                        ),
                     );
                     return Promise.resolve(JSON.parse(localStorage.getItem(hash)));
                 }
