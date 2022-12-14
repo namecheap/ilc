@@ -1,9 +1,10 @@
 /* eslint-env node */
 const fs = require('fs');
 const path = require('path');
-const TerserPlugin = require('terser-webpack-plugin');
 const WrapperPlugin = require('wrapper-webpack-plugin');
-const { ResolveIlcDefaultPluginsWebpackPlugin } = require('ilc-plugins-sdk/webpack');
+const { ResolveIlcDefaultPluginsWebpackPlugin, DuplicateIlcPluginsWebpackPlugin } = require('ilc-plugins-sdk/webpack');
+
+const ilcPluginsPath = path.resolve(__dirname, '../../node_modules/');
 
 module.exports = {
     entry: path.resolve(__dirname, '../client.js'),
@@ -27,9 +28,10 @@ module.exports = {
         alias: {
             'single-spa': require.resolve('single-spa/lib/umd/single-spa.min.js'),
         },
-        plugins: [new ResolveIlcDefaultPluginsWebpackPlugin()],
+        plugins: [new ResolveIlcDefaultPluginsWebpackPlugin(ilcPluginsPath)],
     },
     plugins: [
+        new DuplicateIlcPluginsWebpackPlugin(ilcPluginsPath),
         new WrapperPlugin({
             test: /\.js$/,
             header: () => fs.readFileSync(path.resolve(__dirname, '../public/system.js')),
