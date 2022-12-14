@@ -1,11 +1,10 @@
 const extendError = require('@namecheap/error-extender');
-
 const errors = {};
 errors.WrapWithCacheError = extendError('WrapWithCacheError');
 
 const wrapWithCache =
     (localStorage, logger, createHash = hashFn) =>
-    (fn, cacheParams) => {
+    (fn, cacheParams, contextStore) => {
         const { cacheForSeconds = 60, name } = cacheParams;
 
         if (typeof name !== 'string' || name.length === 0) {
@@ -32,6 +31,7 @@ const wrapWithCache =
                                 hash,
                                 now,
                                 cachedAt: parsedItem.cachedAt,
+                                id: contextStore && contextStore.get('reqId'),
                             },
                             logMessage('Item read from cache. Invalidation is in progress. Cache is stale'),
                         );
@@ -48,6 +48,7 @@ const wrapWithCache =
                         hash,
                         now,
                         cachedAt: parsedItem ? parsedItem.cachedAt : undefined,
+                        id: contextStore && contextStore.get('reqId'),
                     },
                     logMessage('Invalidation started'),
                 );
@@ -63,17 +64,16 @@ const wrapWithCache =
                                 cachedAt: now,
                             }),
                         );
-
                         logger.info(
                             {
                                 memoName: name,
                                 hash,
                                 now,
                                 cachedAt: parsedItem ? parsedItem.cachedAt : undefined,
+                                id: contextStore && contextStore.get('reqId'),
                             },
-                            logMessage('Item read from API. Invalidation finished.'),
+                            logMessage('Invalidation finished'),
                         );
-
                         return JSON.parse(localStorage.getItem(hash));
                     })
                     .catch((err) => {
@@ -86,8 +86,9 @@ const wrapWithCache =
                                     hash,
                                     now,
                                     cachedAt: parsedItem ? parsedItem.cachedAt : undefined,
+                                    id: contextStore && contextStore.get('reqId'),
                                 },
-                                logMessage('Invalidation error with promise rejection'),
+                                logMessage('Invalidation error'),
                             );
                             return Promise.reject(err); //As someone is waiting for promise - just reject it
                         } else {
@@ -109,24 +110,33 @@ const wrapWithCache =
                             hash,
                             now,
                             cachedAt: JSON.parse(localStorage.getItem(hash)).cachedAt,
+                            id: contextStore && contextStore.get('reqId'),
                         },
-                        logMessage('Item read from cache. Magic condition.'),
+                        logMessage('Item read from cache. Invalidation is in progress since current request. Cache is stale'),
                     );
                     return Promise.resolve(JSON.parse(localStorage.getItem(hash)));
                 }
 
+                logger.info(
+                    {
+                        memoName: name,
+                        hash,
+                        now,
+                        id: contextStore && contextStore.get('reqId'),
+                    },
+                    logMessage('Item read from API. Can not find anything in stale cache'),
+                );
                 return cacheResolutionPromise[hash];
             }
-
-            // const item = localStorage.getItem(hash);
 
             logger.info(
                 {
                     memoName: name,
                     now,
                     cachedAt: parsedItem.cachedAt,
+                    id: contextStore && contextStore.get('reqId'),
                 },
-                logMessage('Item read from cache'),
+                logMessage('Item read from cache. Cache is actual'),
             );
 
             return Promise.resolve(parsedItem);
