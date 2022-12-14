@@ -8,6 +8,7 @@ const { intlSchema } = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" 
 const i18n = require('./i18n');
 const createApp = require('./app');
 const helpers = require('../tests/helpers');
+const { context } = require('./context/context');
 
 const i18nConfig = Object.freeze({
     enabled: true,
@@ -28,7 +29,7 @@ const pluginManager = Object.freeze({
     getI18nParamsDetectionPlugin: sinon.stub(),
 });
 
-const getApp = () => createApp(helpers.getRegistryMock(), pluginManager);
+const getApp = () => createApp(helpers.getRegistryMock(), pluginManager, context);
 
 const decodeIntlHeader = (headerValue) =>
     JSON.parse(JSON.stringify(intlSchema.fromBuffer(Buffer.from(headerValue, 'base64'), undefined, true)));

@@ -1,8 +1,8 @@
 const axios = require('axios');
 const urljoin = require('url-join');
 const { cloneDeep } = require('../../common/utils');
-
 const extendError = require('@namecheap/error-extender');
+const { context } = require('../context/context');
 
 const errors = {};
 errors.RegistryError = extendError('RegistryError');
@@ -25,10 +25,20 @@ module.exports = class Registry {
         this.#address = address;
         this.#logger = logger;
 
-        const getConfigMemo = wrapFetchWithCache(this.#getConfig, {
-            cacheForSeconds: 5,
-            name: 'registry_getConfig',
-        });
+        const getConfigMemo = (...args) => {
+            const store = context.getStore();
+
+            const memo = wrapFetchWithCache(
+                this.#getConfig,
+                {
+                    cacheForSeconds: 5,
+                    name: 'registry_getConfig',
+                },
+                store,
+            );
+
+            return memo(...args);
+        };
 
         this.getConfig = async (options) => {
             const fullConfig = await getConfigMemo();
@@ -36,15 +46,34 @@ module.exports = class Registry {
             return fullConfig;
         };
 
-        this.getRouterDomains = wrapFetchWithCache(this.#getRouterDomains, {
-            cacheForSeconds: 30,
-            name: 'registry_routerDomains',
-        });
+        this.getRouterDomains = async (...args) => {
+            const store = context.getStore();
+            const memo = wrapFetchWithCache(
+                this.#getRouterDomains,
+                {
+                    cacheForSeconds: 30,
+                    name: 'registry_routerDomains',
+                },
+                store,
+            );
 
-        const getTemplateMemo = wrapFetchWithCache(this.#getTemplate, {
-            cacheForSeconds: 30,
-            name: 'registry_getTemplate',
-        });
+            return await memo(...args);
+        };
+
+        const getTemplateMemo = async (...args) => {
+            const store = context.getStore();
+
+            const memo = wrapFetchWithCache(
+                this.#getTemplate,
+                {
+                    cacheForSeconds: 30,
+                    name: 'registry_getTemplate',
+                },
+                store,
+            );
+
+            return await memo(...args);
+        };
 
         this.getTemplate = async (templateName, { locale, forDomain } = {}) => {
             if (templateName === '500' && forDomain) {

@@ -5,6 +5,7 @@ const config = require('config');
 const defaultErrorPage = require('../../server/errorHandler/defaultErrorPage');
 const localStorage = require('../../common/localStorage');
 const helpers = require('../../tests/helpers');
+const { context } = require('../context/context');
 
 const createApp = require('../app');
 const sinon = require('sinon');
@@ -17,7 +18,7 @@ describe('ErrorHandler', () => {
     let address;
 
     before(async () => {
-        app = createApp(helpers.getRegistryMock(), helpers.getPluginManagerMock());
+        app = createApp(helpers.getRegistryMock(), helpers.getPluginManagerMock(), context);
         await app.ready();
         app.server.listen(0);
 

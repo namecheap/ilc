@@ -2,6 +2,7 @@ const newrelic = require('newrelic');
 const _ = require('lodash');
 const config = require('config');
 const fastify = require('fastify');
+const crypto = require('crypto');
 const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const errorHandlingService = require('./errorHandler/factory');
@@ -17,13 +18,20 @@ const CspBuilderService = require('./services/CspBuilderService');
 /**
  * @param {Registry} registryService
  */
-module.exports = (registryService, pluginManager) => {
+module.exports = (registryService, pluginManager, context) => {
     const guardManager = new GuardManager(pluginManager);
 
     const shouldUrlBeLogged = (url) => {
         const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
 
         return !ignoredUrls.includes(url);
+    };
+
+    const buildHashSum = (string) => {
+        const hashSum = crypto.createHash('sha1');
+        hashSum.update(string, 'utf8');
+        const hex = hashSum.digest('hex');
+        return hex;
     };
 
     const fastifyLoggerConfig = _.omit(
@@ -42,19 +50,28 @@ module.exports = (registryService, pluginManager) => {
         ),
     );
 
-    app.addHook('onRequest', async (req, reply) => {
-        if (shouldUrlBeLogged(req.raw.url)) {
-            req.log.info({ url: req.raw.url, id: req.id, domain: req.hostname }, 'received request');
-        }
+    app.addHook('onRequest', (req, reply, done) => {
+        context.run({ request: req }, async () => {
+            const store = context.getStore();
 
-        req.raw.ilcState = {};
-        const registryConfig = (await registryService.getConfig()).data;
-        const i18nOnRequest = i18n.onRequestFactory(
-            registryConfig.settings.i18n,
-            pluginManager.getI18nParamsDetectionPlugin(),
-        );
+            if (shouldUrlBeLogged(req.raw.url)) {
+                req.log.info(
+                    { url: store.get('url'), id: store.get('reqId'), domain: store.get('domain') },
+                    'received request',
+                );
+            }
 
-        await i18nOnRequest(req, reply);
+            req.raw.ilcState = {};
+            const registryConfig = (await registryService.getConfig()).data;
+            const i18nOnRequest = i18n.onRequestFactory(
+                registryConfig.settings.i18n,
+                pluginManager.getI18nParamsDetectionPlugin(),
+            );
+
+            await i18nOnRequest(req, reply);
+
+            done();
+        });
     });
 
     app.addHook('onResponse', (req, reply, done) => {
@@ -114,6 +131,17 @@ module.exports = (registryService, pluginManager) => {
             res.redirect(processedUrl);
             return;
         }
+
+        // temporary 20ms overhead
+        const hex = buildHashSum(JSON.stringify(registryConfig));
+
+        req.log.info(
+            {
+                checkSum: hex,
+                id: req.id,
+            },
+            '[ILC Cache]: Config checksum',
+        );
 
         req.headers['x-request-host'] = req.hostname;
         req.headers['x-request-uri'] = url;
