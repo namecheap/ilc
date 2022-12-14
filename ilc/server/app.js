@@ -29,7 +29,7 @@ module.exports = (registryService, pluginManager, context) => {
 
     const buildHashSum = (string) => {
         const hashSum = crypto.createHash('sha1');
-        hashSum.update(JSON.stringify(string), 'utf8');
+        hashSum.update(string, 'utf8');
         const hex = hashSum.digest('hex');
         return hex;
     };
@@ -133,7 +133,7 @@ module.exports = (registryService, pluginManager, context) => {
         }
 
         // temporary 20ms overhead
-        const hex = buildHashSum(JSON.stringify(JSON.stringify(registryConfig)));
+        const hex = buildHashSum(JSON.stringify(registryConfig));
 
         req.log.info(
             {
