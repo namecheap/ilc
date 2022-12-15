@@ -139,6 +139,7 @@ module.exports = (registryService, pluginManager, context) => {
             {
                 checkSum: hex,
                 id: req.id,
+                domain: currentDomain,
             },
             '[ILC Cache]: Config checksum',
         );
