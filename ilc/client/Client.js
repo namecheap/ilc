@@ -329,6 +329,9 @@ export class Client {
             getSharedLibConfigByName: (name) => {
                 return Promise.resolve(this.#configRoot.getConfigForSharedLibsByName(name));
             },
+            getSharedLibConfigByNameSync: (name) => {
+                return this.#configRoot.getConfigForSharedLibsByName(name);
+            },
             // @Deprecated
             // This method was designed to allow to create an app w/o singleSPA invocation (Case for dynamically loaded application)
             // It leads to situation when fragment creates dependency to ilc-sdk
