@@ -325,6 +325,7 @@ export class Client {
             onIntlChange: this.#addIntlChangeHandler.bind(this),
             mountRootParcel: singleSpa.mountRootParcel.bind(singleSpa),
             importParcelFromApp: parcelApi.importParcelFromApp.bind(this),
+            getIntlAdapter: () => (this.#i18n ? this.#i18n.getAdapter() : null),
             getAllSharedLibNames: () => Promise.resolve(Object.keys(this.#configRoot.getConfig().sharedLibs)),
             getSharedLibConfigByName: (name) => {
                 return Promise.resolve(this.#configRoot.getConfigForSharedLibsByName(name));
