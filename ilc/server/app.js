@@ -1,5 +1,4 @@
 const newrelic = require('newrelic');
-const _ = require('lodash');
 const config = require('config');
 const fastify = require('fastify');
 const crypto = require('crypto');
@@ -14,6 +13,7 @@ const mergeConfigs = require('./tailor/merge-configs');
 const parseOverrideConfig = require('./tailor/parse-override-config');
 const { SlotCollection } = require('../common/Slot/SlotCollection');
 const CspBuilderService = require('./services/CspBuilderService');
+const Application = require('./application/application');
 
 /**
  * @param {Registry} registryService
@@ -34,21 +34,12 @@ module.exports = (registryService, pluginManager, context) => {
         return hex;
     };
 
-    const fastifyLoggerConfig = _.omit(
-        _.pick(pluginManager.getReportingPlugin(), ['logger', 'requestIdLogLabel', 'genReqId']),
-        _.isEmpty,
-    );
-    const { logger } = fastifyLoggerConfig;
+    const reportingPlugin = pluginManager.getReportingPlugin();
 
-    const app = fastify(
-        Object.assign(
-            {
-                trustProxy: false, // TODO: should be configurable via Registry,
-                disableRequestLogging: true,
-            },
-            fastifyLoggerConfig,
-        ),
-    );
+    const appConfig = Application.getConfig(reportingPlugin);
+    const { logger } = reportingPlugin;
+
+    const app = fastify(appConfig);
 
     app.addHook('onRequest', (req, reply, done) => {
         context.run({ request: req }, async () => {
