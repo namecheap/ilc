@@ -13,6 +13,8 @@ RUN npm rebuild @newrelic/native-metrics
 
 COPY ./ /codebase
 
+ENV LEGACY_PLUGINS_DISCOVERY=true
+
 RUN npm run build
 
 ENV NODE_ENV=production

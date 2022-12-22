@@ -39,6 +39,8 @@ import { TransitionHooks } from './TransitionManager/TransitionHooks/TransitionH
 import { PerformanceTransitionHook } from './TransitionManager/TransitionHooks/PerformanceTransitionHook';
 import { TitleCheckerTransitionHook } from './TransitionManager/TransitionHooks/TitleCheckerTransitionHook';
 
+import clientPlugins from '../client.plugins';
+
 export class Client {
     #configRoot;
 
@@ -70,9 +72,7 @@ export class Client {
         this.#configRoot = config;
         this.#registryService = registryService;
 
-        this.#pluginManager = new PluginManager(
-            require.context('../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/),
-        );
+        this.#pluginManager = new PluginManager(...this.#loadPlugins());
         const reportingPlugin = this.#pluginManager.getReportingPlugin();
         reportingPlugin.setConfig(this.#configRoot);
 
@@ -120,6 +120,24 @@ export class Client {
         this.#preheat();
         this.#expose();
         this.#configure();
+    }
+
+    #loadPlugins() {
+        if (!LEGACY_PLUGINS_DISCOVERY) {
+            return clientPlugins;
+        }
+
+        if (LEGACY_PLUGINS_DISCOVERY) {
+            const context = require.context('../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/);
+            const contextPlugins = [
+                ...context.keys().map((pluginPath) => {
+                    const loadedPlugin = context(pluginPath);
+                    return loadedPlugin.default || loadedPlugin;
+                }),
+            ];
+
+            return contextPlugins;
+        }
     }
 
     #preheat() {
