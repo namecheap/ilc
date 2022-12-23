@@ -2,6 +2,7 @@ import * as singleSpa from 'single-spa';
 
 import { PluginManager } from 'ilc-plugins-sdk/browser';
 
+import { PluginsLoader } from './PluginsLoader';
 import UrlProcessor from '../common/UrlProcessor';
 import { appIdToNameAndSlot } from '../common/utils';
 
@@ -70,9 +71,8 @@ export class Client {
         this.#configRoot = config;
         this.#registryService = registryService;
 
-        this.#pluginManager = new PluginManager(
-            require.context('../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/),
-        );
+        const pluginsLoader = new PluginsLoader();
+        this.#pluginManager = new PluginManager(...pluginsLoader.load());
         const reportingPlugin = this.#pluginManager.getReportingPlugin();
         reportingPlugin.setConfig(this.#configRoot);
 

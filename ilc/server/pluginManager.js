@@ -1,19 +1,6 @@
 'use strict';
 
-const path = require('path');
-const fg = require('fast-glob');
+const { PluginsLoader } = require('./PluginsLoader');
+const pluginLoader = new PluginsLoader();
 
-function context(pluginPath) {
-    return require(pluginPath);
-}
-
-context.keys = function () {
-    const pluginPaths = fg.sync(['ilc-plugin-*/package.json', '@*/ilc-plugin-*/package.json'], {
-        cwd: path.resolve(__dirname, '../node_modules'),
-        absolute: true,
-    });
-
-    return pluginPaths.map((pluginPath) => path.resolve(pluginPath, '..', require(pluginPath).main));
-};
-
-module.exports = new (require('ilc-plugins-sdk').PluginManager)(context);
+module.exports = new (require('ilc-plugins-sdk').PluginManager)(...pluginLoader.load());
