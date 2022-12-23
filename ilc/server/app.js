@@ -14,19 +14,15 @@ const parseOverrideConfig = require('./tailor/parse-override-config');
 const { SlotCollection } = require('../common/Slot/SlotCollection');
 const CspBuilderService = require('./services/CspBuilderService');
 const Application = require('./application/application');
+const reportingPluginManager = require('./plugins/reportingPlugin');
+const { accessLogger } = require('./logger/accessLogger');
+const { isStaticFile, isHealthCheck } = require('./utils/utils');
 
 /**
  * @param {Registry} registryService
  */
 module.exports = (registryService, pluginManager, context) => {
     const guardManager = new GuardManager(pluginManager);
-
-    const shouldUrlBeLogged = (url) => {
-        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
-
-        return !ignoredUrls.includes(url);
-    };
-
     const buildHashSum = (string) => {
         const hashSum = crypto.createHash('sha1');
         hashSum.update(string, 'utf8');
@@ -34,25 +30,24 @@ module.exports = (registryService, pluginManager, context) => {
         return hex;
     };
 
-    const reportingPlugin = pluginManager.getReportingPlugin();
+    const reportingPlugin = reportingPluginManager.getInstance();
 
     const appConfig = Application.getConfig(reportingPlugin);
-    const { logger } = reportingPlugin;
+    const logger = reportingPluginManager.getLogger();
 
     const app = fastify(appConfig);
 
     app.addHook('onRequest', (req, reply, done) => {
         context.run({ request: req }, async () => {
-            const store = context.getStore();
-
-            if (shouldUrlBeLogged(req.raw.url)) {
-                req.log.info(
-                    { url: store.get('url'), id: store.get('reqId'), domain: store.get('domain') },
-                    'received request',
-                );
-            }
+            const { url } = req.raw;
+            accessLogger.logRequest();
 
             req.raw.ilcState = {};
+
+            if (isStaticFile(url) || isHealthCheck(url)) {
+                return done();
+            }
+
             const registryConfig = (await registryService.getConfig()).data;
             const i18nOnRequest = i18n.onRequestFactory(
                 registryConfig.settings.i18n,
@@ -66,18 +61,10 @@ module.exports = (registryService, pluginManager, context) => {
     });
 
     app.addHook('onResponse', (req, reply, done) => {
-        if (shouldUrlBeLogged(req.raw.url)) {
-            req.log.info(
-                {
-                    url: req.raw.url,
-                    statusCode: reply.statusCode,
-                    domain: req.hostname,
-                    responseTime: reply.getResponseTime(),
-                },
-                'request completed',
-            );
-        }
-
+        accessLogger.logResponse({
+            statusCode: reply.statusCode,
+            responseTime: reply.getResponseTime(),
+        });
         done();
     });
 
@@ -95,7 +82,7 @@ module.exports = (registryService, pluginManager, context) => {
     );
 
     if (config.get('cdnUrl') === null) {
-        app.use('/_ilc/', serveStatic(config.get('productionMode')));
+        app.use(config.get('static.internalUrl'), serveStatic(config.get('productionMode')));
     }
 
     app.register(require('./ping'));

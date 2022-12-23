@@ -8,6 +8,7 @@ module.exports = {
             store.set('reqId', request.id);
             store.set('url', request.raw.url);
             store.set('domain', request.hostname);
+            store.set('appLogger', request.log);
 
             return asyncLocalStorage.run(store, callback);
         },

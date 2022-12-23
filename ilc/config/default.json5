@@ -21,5 +21,11 @@
         accessLog: {
             ignoreUrls: ''
         }
+    },
+    static: {
+        internalUrl: '/_ilc/',
+    },
+    healthCheck: {
+        url: '/ping',
     }
 }
