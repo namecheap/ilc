@@ -5,7 +5,7 @@ const { DefinePlugin } = require('webpack');
 const WrapperPlugin = require('wrapper-webpack-plugin');
 const { DuplicateIlcPluginsWebpackPlugin, ResolveIlcDefaultPluginsWebpackPlugin } = require('ilc-plugins-sdk/webpack');
 
-const { LEGACY_PLUGINS_DISCOVERY } = require('../common/environment');
+const { environment } = require('../common/Environment');
 const ilcPluginsPath = path.resolve(__dirname, '../../node_modules/');
 
 module.exports = {
@@ -40,7 +40,7 @@ module.exports = {
             afterOptimizations: true,
         }),
         new DefinePlugin({
-            LEGACY_PLUGINS_DISCOVERY: JSON.stringify(LEGACY_PLUGINS_DISCOVERY),
+            LEGACY_PLUGINS_DISCOVERY_ENABLED: JSON.stringify(environment.isLegacyPluginsDiscoveryEnabled()),
         }),
     ],
     devtool: 'source-map',

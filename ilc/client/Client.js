@@ -2,6 +2,7 @@ import * as singleSpa from 'single-spa';
 
 import { PluginManager } from 'ilc-plugins-sdk/browser';
 
+import { PluginsLoader } from './PluginsLoader';
 import UrlProcessor from '../common/UrlProcessor';
 import { appIdToNameAndSlot } from '../common/utils';
 
@@ -39,8 +40,6 @@ import { TransitionHooks } from './TransitionManager/TransitionHooks/TransitionH
 import { PerformanceTransitionHook } from './TransitionManager/TransitionHooks/PerformanceTransitionHook';
 import { TitleCheckerTransitionHook } from './TransitionManager/TransitionHooks/TitleCheckerTransitionHook';
 
-import clientPlugins from '../client.plugins';
-
 export class Client {
     #configRoot;
 
@@ -72,7 +71,8 @@ export class Client {
         this.#configRoot = config;
         this.#registryService = registryService;
 
-        this.#pluginManager = new PluginManager(...this.#loadPlugins());
+        const pluginsLoader = new PluginsLoader();
+        this.#pluginManager = new PluginManager(...pluginsLoader.load());
         const reportingPlugin = this.#pluginManager.getReportingPlugin();
         reportingPlugin.setConfig(this.#configRoot);
 
@@ -120,24 +120,6 @@ export class Client {
         this.#preheat();
         this.#expose();
         this.#configure();
-    }
-
-    #loadPlugins() {
-        if (!LEGACY_PLUGINS_DISCOVERY) {
-            return clientPlugins;
-        }
-
-        if (LEGACY_PLUGINS_DISCOVERY) {
-            const context = require.context('../node_modules', true, /ilc-plugin-[^/]+\/browser\.js$/);
-            const contextPlugins = [
-                ...context.keys().map((pluginPath) => {
-                    const loadedPlugin = context(pluginPath);
-                    return loadedPlugin.default || loadedPlugin;
-                }),
-            ];
-
-            return contextPlugins;
-        }
     }
 
     #preheat() {
