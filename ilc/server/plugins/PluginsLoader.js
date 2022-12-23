@@ -1,8 +1,8 @@
 const path = require('path');
 const fg = require('fast-glob');
 
-const { environment } = require('../common/Environment');
-const { manifest: serverPluginsManifest } = require('../server.plugins.manifest');
+const { environment } = require('../../common/Environment');
+const { manifest: serverPluginsManifest } = require('../../server.plugins.manifest');
 
 class PluginsLoader {
     load() {
