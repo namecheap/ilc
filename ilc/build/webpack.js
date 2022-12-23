@@ -1,9 +1,11 @@
 /* eslint-env node */
 const fs = require('fs');
 const path = require('path');
+const { DefinePlugin } = require('webpack');
 const WrapperPlugin = require('wrapper-webpack-plugin');
-const { ResolveIlcDefaultPluginsWebpackPlugin, DuplicateIlcPluginsWebpackPlugin } = require('ilc-plugins-sdk/webpack');
+const { DuplicateIlcPluginsWebpackPlugin, ResolveIlcDefaultPluginsWebpackPlugin } = require('ilc-plugins-sdk/webpack');
 
+const { environment } = require('../common/Environment');
 const ilcPluginsPath = path.resolve(__dirname, '../../node_modules/');
 
 module.exports = {
@@ -36,6 +38,9 @@ module.exports = {
             test: /\.js$/,
             header: () => fs.readFileSync(path.resolve(__dirname, '../public/system.js')),
             afterOptimizations: true,
+        }),
+        new DefinePlugin({
+            LEGACY_PLUGINS_DISCOVERY_ENABLED: JSON.stringify(environment.isLegacyPluginsDiscoveryEnabled()),
         }),
     ],
     devtool: 'source-map',

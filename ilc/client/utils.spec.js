@@ -1,6 +1,4 @@
 import { expect } from 'chai';
-import sinon from 'sinon';
-
 import { prependSpaCallbacks } from './utils';
 
 describe('utils', () => {
