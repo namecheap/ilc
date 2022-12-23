@@ -3,7 +3,7 @@ import { manifest as clientPluginsManifest } from '../client.plugins.manifest';
 export class PluginsLoader {
     load() {
         if (!LEGACY_PLUGINS_DISCOVERY_ENABLED) {
-            return (clientPluginsManifest.plugins).map(plugin => plugin.default || plugin);
+            return clientPluginsManifest.plugins.map((plugin) => plugin.default || plugin);
         }
 
         if (LEGACY_PLUGINS_DISCOVERY_ENABLED) {
