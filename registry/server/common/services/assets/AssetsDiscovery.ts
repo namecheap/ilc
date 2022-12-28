@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import urljoin from 'url-join';
+import deepEqual from 'deep-equal';
 
 import knex from '../../../db';
 import manifestProcessor from './assetsManifestProcessor';
@@ -30,6 +31,14 @@ export default class AssetsDiscovery {
 
     stop() {
         clearInterval(this.timerId!);
+    }
+
+    private isAssetsEqual(dbAssets: Record<string, any>, manifestAssets: Record<string, any>) {
+        const shallowCopyDbAssets = Object.assign({}, dbAssets);
+        if (shallowCopyDbAssets.dependencies) {
+            shallowCopyDbAssets.dependencies = JSON.parse(shallowCopyDbAssets.dependencies);
+        }
+        return deepEqual(shallowCopyDbAssets, manifestAssets);
     }
 
     private async iteration() {
@@ -65,13 +74,16 @@ export default class AssetsDiscovery {
 
             let data = manifestProcessor(reqUrl, res.data, AssetsDiscoveryWhiteLists[this.tableName]);
 
-            await knex(this.tableName)
-                .where(this.tableId, entity[this.tableId])
-                .update(
-                    Object.assign({}, data, {
-                        assetsDiscoveryUpdatedAt: now,
-                    }),
-                );
+            if (!this.isAssetsEqual(data, res.data)) {
+                await knex(this.tableName)
+                    .where(this.tableId, entity[this.tableId])
+                    .update(
+                        Object.assign({}, data, {
+                            assetsDiscoveryUpdatedAt: now,
+                        }),
+                    );
+                console.info(`Assets for "${entity.name}" were updated`);
+            }
         }
     }
 }
