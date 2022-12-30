@@ -42,7 +42,6 @@ export default class AssetsDiscovery {
     }
 
     private async iteration() {
-        console.log('--- Iteration started ---');
         const now = Math.floor(Date.now() / 1000);
         const updateAfter = now - this.intervalSeconds;
 
@@ -91,8 +90,6 @@ export default class AssetsDiscovery {
                     );
                 console.info(`Assets for "${entity.name}" were updated`);
             }
-
-            console.log('--- Iteration finished ---');
         }
     }
 }
