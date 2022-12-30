@@ -33,7 +33,7 @@ export default class AssetsDiscovery {
         clearInterval(this.timerId!);
     }
 
-    private isAssetsEqual(dbAssets: Record<string, any>, manifestAssets: Record<string, any>) {
+    private isAssetsEqual(manifestAssets: Record<string, any>, dbAssets: Record<string, any>) {
         const shallowCopyDbAssets = Object.assign({}, dbAssets);
         if (shallowCopyDbAssets.dependencies) {
             shallowCopyDbAssets.dependencies = JSON.parse(shallowCopyDbAssets.dependencies);
@@ -74,7 +74,13 @@ export default class AssetsDiscovery {
 
             let data = manifestProcessor(reqUrl, res.data, AssetsDiscoveryWhiteLists[this.tableName]);
 
-            if (!this.isAssetsEqual(data, res.data)) {
+            const dbAssets = {
+                spaBundle: entity.spaBundle,
+                cssBundle: entity.cssBundle,
+                dependencies: entity.dependencies,
+            };
+
+            if (!this.isAssetsEqual(data, dbAssets)) {
                 await knex(this.tableName)
                     .where(this.tableId, entity[this.tableId])
                     .update(

@@ -42,8 +42,8 @@ export async function seed(knex: Knex): Promise<any> {
         },
         {
             name: '@portal/news',
-            spaBundle: `http://${publicHost}:8239/dist/single_spa.js`,
-            cssBundle: `http://${publicHost}:8239/dist/common.21f11a2afc03af3d62f8.css`,
+            spaBundle: `http://${publicHost}:8239/single_spa.js`,
+            cssBundle: `http://${publicHost}:8239/common.21f11a2afc03af3d62f8.css`,
             ssr: JSON.stringify({
                 src: 'http://localhost:8239/news/?fragment=1',
                 timeout: 5000,
