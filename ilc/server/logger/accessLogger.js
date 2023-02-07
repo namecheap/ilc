@@ -1,7 +1,12 @@
 const { context } = require('../context/context');
-const config = require('config');
 
 class AccessLogger {
+    #ignoreUrls;
+
+    constructor(config) {
+        this.#ignoreUrls = config.get('logger.accessLog.ignoreUrls').split(',');
+    }
+
     logRequest(logData = {}) {
         this.#log(logData, 'received request');
     }
@@ -17,7 +22,7 @@ class AccessLogger {
         }
 
         const store = context.getStore();
-        const url = store.get('url');
+        const url = store.get('path');
 
         const logger = store.get('appLogger');
         if (!logger) {
@@ -40,11 +45,8 @@ class AccessLogger {
     }
 
     #shouldIgnoreUrl(url) {
-        const ignoredUrls = config.get('logger.accessLog.ignoreUrls').split(',');
-        return ignoredUrls.includes(url);
+        return this.#ignoreUrls.includes(url);
     }
 }
 
-module.exports = {
-    accessLogger: new AccessLogger(),
-};
+module.exports = AccessLogger;
