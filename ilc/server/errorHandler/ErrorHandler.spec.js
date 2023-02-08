@@ -82,9 +82,14 @@ describe('ErrorHandler', () => {
     });
 
     describe('when static error page config is specified', () => {
+        const sandbox = sinon.createSandbox();
+        afterEach(() => {
+            sandbox.restore();
+        })
+
         function mockConfigValue(key, value) {
             const oldGet = config.get.bind(config);
-            sinon.stub(config.constructor.prototype, 'get').callsFake(function (name) {
+            sandbox.stub(config.constructor.prototype, 'get').callsFake(function (name) {
                 if (name === key) {
                     return value;
                 }

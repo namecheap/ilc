@@ -15,8 +15,10 @@ const { SlotCollection } = require('../common/Slot/SlotCollection');
 const CspBuilderService = require('./services/CspBuilderService');
 const Application = require('./application/application');
 const reportingPluginManager = require('./plugins/reportingPlugin');
-const { accessLogger } = require('./logger/accessLogger');
+const AccessLogger = require('./logger/accessLogger');
 const { isStaticFile, isHealthCheck } = require('./utils/utils');
+
+const accessLogger = new AccessLogger(config);
 
 /**
  * @param {Registry} registryService
