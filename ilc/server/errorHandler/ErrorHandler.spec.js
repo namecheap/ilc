@@ -85,7 +85,7 @@ describe('ErrorHandler', () => {
         const sandbox = sinon.createSandbox();
         afterEach(() => {
             sandbox.restore();
-        })
+        });
 
         function mockConfigValue(key, value) {
             const oldGet = config.get.bind(config);
