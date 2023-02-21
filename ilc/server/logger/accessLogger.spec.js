@@ -5,20 +5,20 @@ const sinon = require('sinon');
 describe('accessLogger', () => {
     it('should ignore access logs based on path', function () {
         const localConfig = { get: sinon.stub().withArgs('logger.accessLog.ignoreUrls').returns('/test/ignored/') };
-        const accessLogger = new AccessLogger(localConfig)
+        const accessLogger = new AccessLogger(localConfig);
 
         const logger = {
-            info: sinon.stub()
+            info: sinon.stub(),
         };
         const request = {
             request: {
                 raw: {
-                    url: '/test/ignored/'
+                    url: '/test/ignored/',
                 },
                 hostname: 'test-machine',
                 log: logger,
-                id: 'test1'
-            }
+                id: 'test1',
+            },
         };
 
         context.run(request, () => {
@@ -30,20 +30,20 @@ describe('accessLogger', () => {
 
     it('should ignore access logs based on path when url has query string', function () {
         const localConfig = { get: sinon.stub().withArgs('logger.accessLog.ignoreUrls').returns('/test/ignored/') };
-        const accessLogger = new AccessLogger(localConfig)
+        const accessLogger = new AccessLogger(localConfig);
 
         const logger = {
-            info: sinon.stub()
+            info: sinon.stub(),
         };
         const request = {
             request: {
                 raw: {
-                    url: '/test/ignored/?param=param'
+                    url: '/test/ignored/?param=param',
                 },
                 hostname: 'test-machine',
                 log: logger,
-                id: 'test1'
-            }
+                id: 'test1',
+            },
         };
 
         context.run(request, () => {
@@ -52,4 +52,4 @@ describe('accessLogger', () => {
 
         sinon.assert.notCalled(logger.info);
     });
-})
+});

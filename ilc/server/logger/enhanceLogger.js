@@ -19,6 +19,10 @@ module.exports = (logger, { reqIdKey }) => {
                         return origMethod.call(target, logContext, ...args);
                     }
 
+                    if (arg1 instanceof Error) {
+                        return origMethod.apply(target, args);
+                    }
+
                     if (typeof arg1 === 'object' && arg1 !== null) {
                         return origMethod.call(target, { ...logContext, ...arg1 }, ...args.splice(1));
                     }
