@@ -25,7 +25,7 @@ export async function seed(knex: Knex): Promise<any> {
             dependencies: JSON.stringify({
                 react: 'https://cdnjs.cloudflare.com/ajax/libs/react/16.8.6/umd/react.development.js',
                 'react-dom': 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.6/umd/react-dom.development.js',
-                rxjs: 'https://unpkg.com/rxjs@6.4.0/bundles/rxjs.umd.js',
+                rxjs: 'https://cdnjs.cloudflare.com/ajax/libs/rxjs/6.4.0/rxjs.umd.js',
                 '@portal/fetchWithCache': `http://${publicHost}:8238/fetchWithCache.js`,
             }),
             props: '{}',
