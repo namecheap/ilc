@@ -21,6 +21,22 @@ const example = <any>{
         spaBundle: 'http://localhost:1234/testSpaBundleSharedLib.js',
         adminNotes: 'Lorem ipsum admin notes dolor sit',
     }),
+    correctWrapperApp: {
+        name: '@portal/wrapper-test-app',
+        spaBundle: 'http://localhost:1234/wrapper.js',
+        cssBundle: 'http://127.0.0.1:1234/wrapper.css',
+        l10nManifest: 'https://localisation.com/manifest.12345678.json',
+        configSelector: ['wrapper'],
+        ssr: {
+            src: 'http://127.0.0.1:1234/wrapper',
+            timeout: 1000,
+        },
+        kind: 'wrapper',
+        // dependencies: {},
+        // props: {},
+        discoveryMetadata: {},
+        adminNotes: 'wrapper',
+    },
     correctApp: {
         name: '@portal/TestAppReactssrEntry',
         spaBundle: 'http://localhost:1234/ncTestAppReactssr.js',
@@ -39,6 +55,7 @@ const example = <any>{
             bar: 'bar1',
         },
         adminNotes: 'Lorem ipsum',
+        wrappedWith: '@portal/wrapper',
     },
     updated: Object.freeze({
         name: 'testNameSharedLibEntry',
@@ -48,6 +65,7 @@ const example = <any>{
 };
 
 example.encodedAppName = encodeURIComponent(example.correctApp.name);
+example.encodedWrapperAppName = encodeURIComponent(example.correctWrapperApp.name);
 
 describe(`Entries`, () => {
     let req: supertest.SuperTest<supertest.Test>;
@@ -142,6 +160,7 @@ describe(`Entries`, () => {
 
     it('should patch application resource', async () => {
         try {
+            await req.post(example.urlApp).send(example.correctWrapperApp).expect(200);
             await req.post(example.urlApp).send(example.correctApp).expect(200);
 
             const patch1 = { l10nManifest: 'https://google.com' };
@@ -177,6 +196,7 @@ describe(`Entries`, () => {
                 ...patch3,
             });
         } finally {
+            await req.delete(`${example.urlApp}${example.encodedWrapperAppName}`);
             await req.delete(`${example.urlApp}${example.encodedAppName}`);
         }
     });
