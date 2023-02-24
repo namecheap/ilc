@@ -33,7 +33,7 @@ export class ApplicationEntry implements Entry {
         const appManifest = await this.getManifest(appDTO.assetsDiscoveryUrl);
 
         const appEntity = {
-            ...appDTO,
+            ...this.cleanComplexDefaultKeys(appDTO, params),
             ...appManifest,
         };
 
@@ -71,6 +71,20 @@ export class ApplicationEntry implements Entry {
         const [savedApp] = await db.select().from<App>(this.entityName).where('name', appEntity.name);
 
         return savedApp;
+    }
+
+    private cleanComplexDefaultKeys(appDTO: Omit<App, 'name'>, params: unknown) {
+        if (typeof params === 'object' && params !== null) {
+            const assertedParams = params as Record<string, any>;
+
+            Object.keys(appDTO).forEach((key) => {
+                if (!assertedParams[key]) {
+                    Reflect.deleteProperty(appDTO, key);
+                }
+            });
+        }
+
+        return appDTO;
     }
 
     private async getManifest(assetsDiscoveryUrl: string | undefined) {
