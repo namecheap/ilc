@@ -313,6 +313,31 @@ describe('i18n', () => {
                 chai.expect(req.raw.url).to.be.eql('/test');
                 chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
             });
+
+            it('handles incorrect cookie locale correctly, without failure', async () => {
+                const detectedI18nConfig = {
+                    locale: 'en-US',
+                    currency: 'USD',
+                };
+
+                i18nParamsDetectionPlugin.detectI18nConfig.onFirstCall().returns(detectedI18nConfig);
+
+                const req = getReqMock('/test', `ilc-i18n=fasdfasfsadfsa;`);
+
+                await onRequest(req, reply);
+
+                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                    i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+
+                chai.expect(providedReqRaw).to.be.eql(req.raw);
+                chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
+                chai.expect(providedI18nConfig).to.be.eql(detectedI18nConfig);
+
+                sinon.assert.notCalled(reply.redirect);
+
+                chai.expect(req.raw.url).to.be.eql('/test');
+                chai.expect(req.raw.ilcState.locale).to.be.eql('en-US');
+            });
         });
     });
 });
