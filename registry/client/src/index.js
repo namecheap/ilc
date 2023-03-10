@@ -1,6 +1,6 @@
 /* eslint react/jsx-key: off */
 import React from 'react';
-import { Admin, Resource } from 'react-admin'; // eslint-disable-line import/no-unresolved
+import { Admin, Resource, Route } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import { render } from 'react-dom';
 
 import LoginPage from './LoginPage';
@@ -45,7 +45,7 @@ render(
                 <Resource name="route" {...filterPermissions(appRoutes)} />,
                 <Resource name="router_domains" {...filterPermissions(routerDomains)} />,
                 <Resource name="auth_entities" {...filterPermissions(authEntities)} />,
-                <Resource name="settings" {...filterPermissions(settings)}  />,
+                <Resource name="settings" {...filterPermissions(settings)} />,
                 <Resource name="versioning" {...filterPermissions(versioning)} />,
             ]
         }}

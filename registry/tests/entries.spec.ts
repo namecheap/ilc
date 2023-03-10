@@ -196,8 +196,8 @@ describe(`Entries`, () => {
                 ...patch3,
             });
         } finally {
-            await req.delete(`${example.urlApp}${example.encodedWrapperAppName}`);
-            await req.delete(`${example.urlApp}${example.encodedAppName}`);
+            const response2 = await req.delete(`${example.urlApp}${example.encodedAppName}`).expect(204);
+            const response1 = await req.delete(`${example.urlApp}${example.encodedWrapperAppName}`).expect(204);
         }
     });
 

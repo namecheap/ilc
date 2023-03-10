@@ -3,7 +3,7 @@ import { Scope, SettingKeys, SettingTypes, OnPropsUpdateValues } from '../settin
 
 export async function up(knex: Knex): Promise<any> {
     await knex('settings').insert({
-        key: SettingKeys.СspConfig,
+        key: SettingKeys.CspConfig,
         value: 'null',
         default: 'null',
         scope: Scope.Ilc,
@@ -15,5 +15,5 @@ export async function up(knex: Knex): Promise<any> {
 }
 
 export async function down(knex: Knex): Promise<any> {
-    await knex('settings').whereIn('key', [SettingKeys.СspConfig]).delete();
+    await knex('settings').whereIn('key', [SettingKeys.CspConfig]).delete();
 }

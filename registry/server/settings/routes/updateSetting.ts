@@ -5,6 +5,8 @@ import { SettingKeys, keySchema, partialSettingSchema } from '../interfaces';
 import db from '../../db';
 import preProcessResponse from '../services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
+import settingService from '../services/SettingsService';
+import { User } from '../../auth';
 
 type RequestParams = {
     key: SettingKeys;
@@ -25,13 +27,24 @@ const validateRequest = validateRequestFactory([
 
 const updateSetting = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const settingKey = req.params.key;
+    const { domainId } = req.body;
 
-    await db.versioning(req.user, { type: 'settings', id: settingKey }, async (trx) => {
-        await db('settings').where('key', settingKey).update('value', JSON.stringify(req.body.value)).transacting(trx);
-    });
+    const user = req.user;
 
-    const [updated] = await db.select().from('settings').where('key', settingKey);
-    res.status(200).send(preProcessResponse(updated));
+    if (!domainId) {
+        const updatedRecord = await settingService.updateRootSetting(settingKey, req.body.value, user as User);
+        res.status(200).send(preProcessResponse(updatedRecord));
+        return;
+    } else {
+        const updatedRecord = await settingService.updateDomainSetting(
+            settingKey,
+            req.body.value,
+            domainId,
+            user as User,
+        );
+        res.status(200).send(preProcessResponse(updatedRecord));
+        return;
+    }
 };
 
 export default [validateRequest, updateSetting];

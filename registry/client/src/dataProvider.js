@@ -1,5 +1,6 @@
 
 import simpleRestProvider from 'ra-data-simple-rest';
+import { fetchUtils } from 'react-admin';
 
 import * as sharedProps from './sharedProps/dataTransform';
 import * as apps from './apps/dataTransform';
@@ -39,9 +40,8 @@ const myDataProvider = {
             return v;
         });
     },
-    getOne: async (resource, params) => {
+    getOne: async (resource, params, options) => {
         params.id = encodeURIComponent(params.id);
-
         return dataProvider.getOne(resource, params).then(v => {
             transformGetter(resource, v.data);
             return v;
@@ -83,6 +83,18 @@ const myDataProvider = {
             )
         ).then(() => ({data: params.ids}));
     },
+    getOneSettingWithDomain: async (params) => {
+        const resource = 'settings';
+        const domainGetParams = !params.domainId ? '' : `?domainId=${params.domainId}`;
+        const apiUrl = `/api/v1/${resource}/${params.id}${domainGetParams}`;
+        const httpClient = fetchUtils.fetchJson;
+        return httpClient(apiUrl)
+            .then(response => {
+                const data = response.json;
+                transformGetter(resource, data);
+                return data;
+            });
+    }
 };
 
 function transformGetter(resource, data) {

@@ -23,10 +23,12 @@ export enum SettingKeys {
     I18nRoutingStrategy = 'i18n.routingStrategy',
     OverrideConfigTrustedOrigins = 'overrideConfigTrustedOrigins',
     OnPropsUpdate = 'onPropsUpdate',
-    СspConfig = 'cspConfig',
+    CspConfig = 'cspConfig',
     CspTrustedLocalHosts = 'cspTrustedLocalHosts',
     CspEnableStrict = 'cspEnableStrict',
 }
+
+export const AllowedSettingKeysForDomains = [SettingKeys.CspConfig, SettingKeys.TrailingSlash];
 
 export const enum TrailingSlashValues {
     DoNothing = 'doNothing',
@@ -53,6 +55,7 @@ export const enum SettingTypes {
     Enum = 'enum',
     Password = 'password',
     JSON = 'json',
+    Integer = 'integer',
 }
 
 export enum OnPropsUpdateValues {
@@ -131,7 +134,7 @@ const valueSchema = Joi.alternatives().conditional('key', {
                 .required(),
         },
         {
-            is: Joi.valid(SettingKeys.СspConfig),
+            is: Joi.valid(SettingKeys.CspConfig),
             then: Joi.string()
                 .custom((value, helpers) => {
                     let cspConfig;
@@ -159,6 +162,13 @@ const valueSchema = Joi.alternatives().conditional('key', {
 });
 
 export const partialSettingSchema = Joi.object({
+    key: keySchema.required(),
+    value: valueSchema,
+    domainId: Joi.number().integer().allow(null).optional(),
+});
+
+export const createSettingSchema = Joi.object({
+    domainId: Joi.number().integer().required(),
     key: keySchema.required(),
     value: valueSchema,
 });

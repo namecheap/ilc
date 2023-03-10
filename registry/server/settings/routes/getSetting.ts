@@ -21,6 +21,19 @@ const validateRequest = validateRequestFactory([
 
 const getSetting = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const [setting] = await db.select().from('settings').where('key', req.params.key);
+
+    const domainId = req.query.domainId ? Number(req.query.domainId) : null;
+
+    if (domainId) {
+        const [domainSettings] = await db
+            .select()
+            .from('settings_domain_value')
+            .where('key', req.params.key)
+            .andWhere('domainId', domainId);
+        setting.value = domainSettings.value;
+        setting.domainId = domainSettings.domainId;
+    }
+
     res.status(200).send(preProcessResponse(setting));
 };
 

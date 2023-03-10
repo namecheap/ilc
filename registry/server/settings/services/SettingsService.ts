@@ -61,6 +61,28 @@ export class SettingsService {
             return defaultValue;
         }
     }
+
+    async updateRootSetting(settingKey: SettingKeys, value: any, user: User) {
+        await db.versioning(user, { type: 'settings', id: settingKey }, async (trx) => {
+            await db('settings').where('key', settingKey).update('value', JSON.stringify(value)).transacting(trx);
+        });
+
+        const [updated] = await db.select().from('settings').where('key', settingKey);
+
+        return updated;
+    }
+
+    async updateDomainSetting(settingKey: SettingKeys, value: any, domainId: number, user: User) {
+        const [{ id }] = await db('settings_domain_value').where({ key: settingKey, domainId: domainId });
+
+        await db.versioning(user, { type: 'settings_domain_value', id }, async (trx) => {
+            await db('settings_domain_value').where({ id }).update('value', JSON.stringify(value)).transacting(trx);
+        });
+
+        const [updated] = await db('settings_domain_value').where({ key: settingKey, domainId: domainId });
+
+        return updated;
+    }
 }
 
 export default new SettingsService();

@@ -10,10 +10,37 @@ const url = '/api/v1/settings';
 describe(url, () => {
     let req: supertest.SuperTest<supertest.Test>;
     let reqWithAuth: supertest.SuperTest<supertest.Test>;
+    let createDomain: () => Promise<{ getResponse: () => { id: any }; destory: () => supertest.Test }>;
+    let createConfigRequest: (payload: Object) => supertest.Test;
+    let deleteConfigRequest: (id: number) => supertest.Test;
 
     beforeEach(async () => {
         req = await request();
         reqWithAuth = await requestWithAuth();
+        createDomain = async () => {
+            const payload = {
+                url: '/api/v1/router_domains/',
+                correct: {
+                    domainName: 'test-settings.com',
+                    template500: '500',
+                },
+            };
+
+            const domainResponse = await req.post(payload.url).send(payload.correct);
+
+            const domainId = domainResponse.body.id;
+
+            return {
+                getResponse: () => ({ id: domainId }),
+                destory: () => req.delete(`${payload.url}${domainId}`),
+            };
+        };
+        createConfigRequest = (payload: Object): supertest.Test => {
+            return req.post(url).send(payload);
+        };
+        deleteConfigRequest = (id: number): supertest.Test => {
+            return req.delete(urlJoin(url, id.toString())).send();
+        };
     });
 
     describe('when a user trying to get information', () => {
@@ -164,9 +191,29 @@ describe(url, () => {
             await reqWithAuth.get(url).expect(401);
             await reqWithAuth.get(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode)).expect(401);
         });
+
+        it('should return settings and exclude values from secret records filtered by domain', async () => {
+            const domainHelper = await createDomain();
+            const domainId = domainHelper.getResponse().id;
+            const uniqueEntityPayload = {
+                domainId,
+                key: SettingKeys.TrailingSlash,
+                value: 'redirectToNonTrailingSlash',
+            };
+            const configResponse = await createConfigRequest(uniqueEntityPayload).expect(200);
+            const id = configResponse.body.id;
+
+            try {
+                const queryFilter = encodeURIComponent(JSON.stringify({ enforceDomain: domainId }));
+                const response = await req.get(`${url}?filter=${queryFilter}`).expect(200);
+            } finally {
+                await deleteConfigRequest(id).expect(204);
+                await domainHelper.destory();
+            }
+        });
     });
 
-    describe('when a user trying to update information', () => {
+    describe('when a user tries to update information', () => {
         it('should update a setting', async () => {
             try {
                 let response = await req
@@ -374,12 +421,12 @@ describe(url, () => {
             }
         });
 
-        it(`should not update ${SettingKeys.СspConfig} if the value is not valid`, async () => {
+        it(`should not update ${SettingKeys.CspConfig} if the value is not valid`, async () => {
             try {
                 const response = await req
-                    .put(urlJoin(url, SettingKeys.СspConfig))
+                    .put(urlJoin(url, SettingKeys.CspConfig))
                     .send({
-                        key: SettingKeys.СspConfig,
+                        key: SettingKeys.CspConfig,
                         value: 'true',
                     })
                     .expect(422, '"value" contains an invalid value');
@@ -387,21 +434,21 @@ describe(url, () => {
                 chai.expect(response.body).to.deep.equal({});
             } finally {
                 await req
-                    .put(urlJoin(url, SettingKeys.СspConfig))
+                    .put(urlJoin(url, SettingKeys.CspConfig))
                     .send({
-                        key: SettingKeys.СspConfig,
+                        key: SettingKeys.CspConfig,
                         value: null,
                     })
                     .expect(200);
             }
         });
 
-        it(`should update ${SettingKeys.СspConfig} if the value is valid`, async () => {
+        it(`should update ${SettingKeys.CspConfig} if the value is valid`, async () => {
             try {
                 await req
-                    .put(urlJoin(url, SettingKeys.СspConfig))
+                    .put(urlJoin(url, SettingKeys.CspConfig))
                     .send({
-                        key: SettingKeys.СspConfig,
+                        key: SettingKeys.CspConfig,
                         value: JSON.stringify({
                             defaultSrc: ['https://test.com'],
                             reportUri: 'a/b',
@@ -410,9 +457,9 @@ describe(url, () => {
                     .expect(200);
             } finally {
                 await req
-                    .put(urlJoin(url, SettingKeys.СspConfig))
+                    .put(urlJoin(url, SettingKeys.CspConfig))
                     .send({
-                        key: SettingKeys.СspConfig,
+                        key: SettingKeys.CspConfig,
                         value: null,
                     })
                     .expect(200);
@@ -427,6 +474,119 @@ describe(url, () => {
                     value: true,
                 })
                 .expect(401);
+        });
+    });
+
+    describe('when a user tries to create settings', () => {
+        it('should create a new setting', async () => {
+            const domainHelper = await createDomain();
+            const domainId = domainHelper.getResponse().id;
+
+            const uniqueEntityPayload = {
+                domainId,
+                key: SettingKeys.TrailingSlash,
+                value: 'doNothing',
+            };
+
+            try {
+                const response = await createConfigRequest(uniqueEntityPayload).expect(200);
+                chai.expect(response.body).to.deep.equal({
+                    id: response.body.id,
+                    ...uniqueEntityPayload,
+                    ...{ value: JSON.stringify('doNothing') },
+                });
+
+                const id = response.body.id;
+                await deleteConfigRequest(id).expect(204);
+            } finally {
+                await domainHelper.destory();
+            }
+        });
+
+        it('should not create duplicated config for the same domain', async () => {
+            const domainHelper = await createDomain();
+            const domainId = domainHelper.getResponse().id;
+            const uniqueEntityPayload = {
+                domainId,
+                key: SettingKeys.TrailingSlash,
+                value: 'doNothing',
+            };
+
+            try {
+                const response = await createConfigRequest(uniqueEntityPayload).expect(200);
+                const id = response.body.id;
+                await createConfigRequest(uniqueEntityPayload).expect(500);
+                await deleteConfigRequest(id).expect(204);
+            } finally {
+                await domainHelper.destory();
+            }
+        });
+        it('should not create not allowed config for domain', async () => {
+            const domainHelper = await createDomain();
+            const domainId = domainHelper.getResponse().id;
+            const uniqueEntityPayload = {
+                domainId,
+                key: SettingKeys.BaseUrl,
+                value: 'https://1.com',
+            };
+
+            try {
+                await createConfigRequest(uniqueEntityPayload).expect(
+                    422,
+                    `Setting key ${SettingKeys.BaseUrl} is not allowed for domains`,
+                );
+            } finally {
+                await domainHelper.destory();
+            }
+        });
+        it('should not create not allows config for non-existant domain', async () => {
+            const uniqueEntityPayload = {
+                domainId: 999999,
+                key: SettingKeys.TrailingSlash,
+                value: 'doNothing',
+            };
+            await createConfigRequest(uniqueEntityPayload).expect(422, 'Domain with id 999999 does not exist');
+        });
+        it('should not create not allows config with non-valid value', async () => {
+            const domainHelper = await createDomain();
+            const domainId = domainHelper.getResponse().id;
+            const uniqueEntityPayload = {
+                domainId,
+                key: SettingKeys.TrailingSlash,
+                value: 'NotCorrectValue',
+            };
+
+            try {
+                await createConfigRequest(uniqueEntityPayload).expect(422);
+            } finally {
+                await domainHelper.destory();
+            }
+        });
+    });
+
+    describe('when a user tries to delete settings', () => {
+        it('should delete domain settings', async () => {
+            const domainHelper = await createDomain();
+            const domainId = domainHelper.getResponse().id;
+            const uniqueEntityPayload = {
+                domainId,
+                key: SettingKeys.TrailingSlash,
+                value: 'doNothing',
+            };
+
+            try {
+                const response = await createConfigRequest(uniqueEntityPayload).expect(200);
+                const id = response.body.id;
+                chai.expect(response.body).to.deep.equal({
+                    id,
+                    ...uniqueEntityPayload,
+                    ...{ value: JSON.stringify('doNothing') },
+                });
+
+                await deleteConfigRequest(id).expect(204);
+            } finally {
+                await domainHelper.destory();
+            }
         });
     });
 });

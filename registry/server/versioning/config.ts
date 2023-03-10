@@ -46,6 +46,10 @@ const versioningConf: Record<EntityTypes | keyof typeof EntityTypes, EntityConf>
         idColumn: 'name',
         related: [],
     },
+    [EntityTypes.settings_domain_value]: {
+        idColumn: 'id',
+        related: [],
+    },
 };
 
 export default versioningConf;
