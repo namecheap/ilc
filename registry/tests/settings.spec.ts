@@ -7,6 +7,11 @@ import supertest from 'supertest';
 
 const url = '/api/v1/settings';
 
+const cspValue = JSON.stringify({
+    defaultSrc: ['https://test.com'],
+    reportUri: 'a/b',
+});
+
 describe(url, () => {
     let req: supertest.SuperTest<supertest.Test>;
     let reqWithAuth: supertest.SuperTest<supertest.Test>;
@@ -98,6 +103,7 @@ describe(url, () => {
                     type: SettingTypes.Boolean,
                 },
             });
+
             chai.expect(response.body).to.deep.include({
                 key: SettingKeys.AuthOpenIdDiscoveryUrl,
                 scope: Scope.Registry,
@@ -197,8 +203,8 @@ describe(url, () => {
             const domainId = domainHelper.getResponse().id;
             const uniqueEntityPayload = {
                 domainId,
-                key: SettingKeys.TrailingSlash,
-                value: 'redirectToNonTrailingSlash',
+                key: SettingKeys.CspConfig,
+                value: cspValue,
             };
             const configResponse = await createConfigRequest(uniqueEntityPayload).expect(200);
             const id = configResponse.body.id;
@@ -206,6 +212,66 @@ describe(url, () => {
             try {
                 const queryFilter = encodeURIComponent(JSON.stringify({ enforceDomain: domainId }));
                 const response = await req.get(`${url}?filter=${queryFilter}`).expect(200);
+            } finally {
+                await deleteConfigRequest(id).expect(204);
+                await domainHelper.destory();
+            }
+        });
+
+        it('should return settings by domain name in case domain name is not root', async () => {
+            const domainHelper = await createDomain();
+            const domainId = domainHelper.getResponse().id;
+            const uniqueEntityPayload = {
+                domainId,
+                key: SettingKeys.CspConfig,
+                value: cspValue,
+            };
+            const configResponse = await createConfigRequest(uniqueEntityPayload).expect(200);
+            const id = configResponse.body.id;
+
+            try {
+                const queryFilter = encodeURIComponent(JSON.stringify({ domainName: 'test-settings.com' }));
+                const response = await req.get(`${url}?filter=${queryFilter}`).expect(200);
+
+                chai.expect(response.body).to.deep.include({
+                    key: SettingKeys.CspConfig,
+                    value: JSON.parse(cspValue),
+                    scope: Scope.Ilc,
+                    secret: false,
+                    meta: {
+                        type: SettingTypes.JSON,
+                    },
+                    domainId,
+                });
+            } finally {
+                await deleteConfigRequest(id).expect(204);
+                await domainHelper.destory();
+            }
+        });
+
+        it('should return settings by domain name in case domain name is root', async () => {
+            const domainHelper = await createDomain();
+            const domainId = domainHelper.getResponse().id;
+            const uniqueEntityPayload = {
+                domainId,
+                key: SettingKeys.CspConfig,
+                value: cspValue,
+            };
+            const configResponse = await createConfigRequest(uniqueEntityPayload).expect(200);
+            const id = configResponse.body.id;
+
+            try {
+                const queryFilter = encodeURIComponent(JSON.stringify({ domainName: 'test-settings-notReal.com' }));
+                const response = await req.get(`${url}?filter=${queryFilter}`).expect(200);
+
+                chai.expect(response.body).to.deep.include({
+                    key: 'cspConfig',
+                    scope: 'ilc',
+                    secret: false,
+                    meta: {
+                        type: SettingTypes.JSON,
+                    },
+                });
             } finally {
                 await deleteConfigRequest(id).expect(204);
                 await domainHelper.destory();
@@ -484,8 +550,8 @@ describe(url, () => {
 
             const uniqueEntityPayload = {
                 domainId,
-                key: SettingKeys.TrailingSlash,
-                value: 'doNothing',
+                key: SettingKeys.CspConfig,
+                value: cspValue,
             };
 
             try {
@@ -493,7 +559,7 @@ describe(url, () => {
                 chai.expect(response.body).to.deep.equal({
                     id: response.body.id,
                     ...uniqueEntityPayload,
-                    ...{ value: JSON.stringify('doNothing') },
+                    ...{ value: cspValue },
                 });
 
                 const id = response.body.id;
@@ -508,8 +574,8 @@ describe(url, () => {
             const domainId = domainHelper.getResponse().id;
             const uniqueEntityPayload = {
                 domainId,
-                key: SettingKeys.TrailingSlash,
-                value: 'doNothing',
+                key: SettingKeys.CspConfig,
+                value: cspValue,
             };
 
             try {
@@ -542,8 +608,8 @@ describe(url, () => {
         it('should not create not allows config for non-existant domain', async () => {
             const uniqueEntityPayload = {
                 domainId: 999999,
-                key: SettingKeys.TrailingSlash,
-                value: 'doNothing',
+                key: SettingKeys.CspConfig,
+                value: cspValue,
             };
             await createConfigRequest(uniqueEntityPayload).expect(422, 'Domain with id 999999 does not exist');
         });
@@ -552,7 +618,7 @@ describe(url, () => {
             const domainId = domainHelper.getResponse().id;
             const uniqueEntityPayload = {
                 domainId,
-                key: SettingKeys.TrailingSlash,
+                key: SettingKeys.CspConfig,
                 value: 'NotCorrectValue',
             };
 
@@ -570,8 +636,8 @@ describe(url, () => {
             const domainId = domainHelper.getResponse().id;
             const uniqueEntityPayload = {
                 domainId,
-                key: SettingKeys.TrailingSlash,
-                value: 'doNothing',
+                key: SettingKeys.CspConfig,
+                value: cspValue,
             };
 
             try {
@@ -580,7 +646,7 @@ describe(url, () => {
                 chai.expect(response.body).to.deep.equal({
                     id,
                     ...uniqueEntityPayload,
-                    ...{ value: JSON.stringify('doNothing') },
+                    ...{ value: cspValue },
                 });
 
                 await deleteConfigRequest(id).expect(204);

@@ -28,7 +28,7 @@ export enum SettingKeys {
     CspEnableStrict = 'cspEnableStrict',
 }
 
-export const AllowedSettingKeysForDomains = [SettingKeys.CspConfig, SettingKeys.TrailingSlash];
+export const AllowedSettingKeysForDomains = [SettingKeys.CspConfig];
 
 export const enum TrailingSlashValues {
     DoNothing = 'doNothing',
@@ -65,7 +65,12 @@ export enum OnPropsUpdateValues {
 
 type SettingValue = string | boolean | TrailingSlashValues | string[];
 
-export interface Setting {
+type SettingMeta = {
+    type: SettingTypes;
+    choices?: any[];
+};
+
+export type Setting = {
     key: SettingKeys;
     value: SettingValue;
     default: SettingValue;
@@ -75,7 +80,19 @@ export interface Setting {
         type: SettingTypes;
         choices?: any[];
     };
-}
+};
+
+export type SettingRaw = {
+    key: SettingKeys;
+    value: SettingValue;
+    default: SettingValue;
+    scope: Scope;
+    secret: boolean;
+    meta: string; // stringified JSON
+};
+
+export type SettingParsed = Omit<SettingRaw, 'value' | 'default' | 'meta'> &
+    Partial<Pick<SettingRaw, 'value' | 'default'>> & { meta: SettingMeta };
 
 export const keySchema = Joi.string()
     .min(1)
