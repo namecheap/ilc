@@ -27,7 +27,7 @@ describe(url, () => {
                 url: '/api/v1/router_domains/',
                 correct: {
                     domainName: 'test-settings.com',
-                    template500: '500',
+                    template500: 'ncTest500TemplateName',
                 },
             };
 
