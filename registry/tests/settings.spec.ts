@@ -15,7 +15,7 @@ const cspValue = JSON.stringify({
 describe(url, () => {
     let req: supertest.SuperTest<supertest.Test>;
     let reqWithAuth: supertest.SuperTest<supertest.Test>;
-    let createDomain: () => Promise<{ getResponse: () => { id: any }; destory: () => supertest.Test }>;
+    let createDomain: () => Promise<{ getResponse: () => { id: any }; destory: () => Promise<void> }>;
     let createConfigRequest: (payload: Object) => supertest.Test;
     let deleteConfigRequest: (id: number) => supertest.Test;
 
@@ -23,11 +23,21 @@ describe(url, () => {
         req = await request();
         reqWithAuth = await requestWithAuth();
         createDomain = async () => {
+            const template500Payload = {
+                url: '/api/v1/template/',
+                payload: {
+                    name: 'ncTest500TemplateNameForSettings',
+                    content: 'ncTest500TemplateNameForSettings',
+                },
+            };
+
+            await req.post(template500Payload.url).send(template500Payload.payload);
+
             const payload = {
                 url: '/api/v1/router_domains/',
                 correct: {
                     domainName: 'test-settings.com',
-                    template500: 'ncTest500TemplateName',
+                    template500: template500Payload.payload.name,
                 },
             };
 
@@ -37,7 +47,10 @@ describe(url, () => {
 
             return {
                 getResponse: () => ({ id: domainId }),
-                destory: () => req.delete(`${payload.url}${domainId}`),
+                destory: async () => {
+                    await req.delete(`${payload.url}${domainId}`);
+                    await req.delete(template500Payload.url + template500Payload.payload.name);
+                },
             };
         };
         createConfigRequest = (payload: Object): supertest.Test => {
