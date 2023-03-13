@@ -1,6 +1,6 @@
 /* eslint react/jsx-key: off */
 import React from 'react';
-import { Admin, Resource, Route } from 'react-admin'; // eslint-disable-line import/no-unresolved
+import { Admin, Resource } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import { render } from 'react-dom';
 
 import LoginPage from './LoginPage';
