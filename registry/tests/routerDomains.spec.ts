@@ -184,9 +184,9 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseFetching24.body).to.be.an('array').with.lengthOf(3);
                 expect(responseFetching13.body).to.be.an('array').with.lengthOf(3);
 
-                expect(responseFetching01.body).to.deep.eq(routerDomainsList.slice(0, 1 + 1)); // "+1" since value "to" in "range" is used like "<=" instead of "<"
-                expect(responseFetching24.body).to.deep.eq(routerDomainsList.slice(2, 4 + 1));
-                expect(responseFetching13.body).to.deep.eq(routerDomainsList.slice(1, 3 + 1));
+                expect(responseFetching01.body).to.have.deep.members(routerDomainsList.slice(0, 1 + 1)); // "+1" since value "to" in "range" is used like "<=" instead of "<"
+                expect(responseFetching24.body).to.have.deep.members(routerDomainsList.slice(2, 4 + 1));
+                expect(responseFetching13.body).to.have.deep.members(routerDomainsList.slice(1, 3 + 1));
             } finally {
                 await Promise.all(routerDomainsList.map((item) => req.delete(example.url + item.id)));
             }

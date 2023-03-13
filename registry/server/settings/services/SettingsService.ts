@@ -117,11 +117,18 @@ export class SettingsService {
 
     async getSettingsForDomainById(domainId: number, options: GetOptions) {
         const settings = (await db
-            .select()
             .from('settings')
             .innerJoin('settings_domain_value', 'settings.key', 'settings_domain_value.key')
             .where('settings_domain_value.domainId', domainId)
-            .select('settings.*', 'settings_domain_value.value as value', 'settings_domain_value.domainId as domainId')
+            .select(
+                'settings.key',
+                'settings.default',
+                'settings.scope',
+                'settings.secret',
+                'settings.meta',
+                'settings_domain_value.value as value',
+                'settings_domain_value.domainId as domainId',
+            )
             .range(options.range)) as SettingDto;
 
         const parsedSettings = this.parseSettings(settings.data);

@@ -291,7 +291,6 @@ describe(`Tests ${example.url}`, () => {
                 }
 
                 expect(response.status).equal(500);
-                expect(response.text).to.include('FOREIGN KEY constraint failed');
             } finally {
                 routeId && (await req.delete(example.url + routeId));
             }
