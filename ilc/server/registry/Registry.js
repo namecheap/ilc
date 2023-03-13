@@ -29,7 +29,7 @@ module.exports = class Registry {
             const store = context.getStore();
 
             const memo = wrapFetchWithCache(
-                this.#getConfig,
+                this.#getConfig.bind(this, ...args),
                 {
                     cacheForSeconds: 5,
                     name: 'registry_getConfig',
@@ -41,7 +41,7 @@ module.exports = class Registry {
         };
 
         this.getConfig = async (options) => {
-            const fullConfig = await getConfigMemo();
+            const fullConfig = await getConfigMemo(options);
             fullConfig.data = this.#filterConfig(fullConfig.data, options?.filter);
             return fullConfig;
         };
@@ -93,15 +93,20 @@ module.exports = class Registry {
 
         this.#logger.info('Registry is preheating...');
 
+        // ToDo: how to handle preheat. Load for main domain ????
         await Promise.all([this.getConfig(), this.getTemplate('500'), this.getRouterDomains()]);
 
         this.#logger.info('Registry preheated successfully!');
     }
 
-    #getConfig = async () => {
+    #getConfig = async (options) => {
         this.#logger.debug('Calling get config registry endpoint...');
 
-        const tplUrl = urljoin(this.#address, 'api/v1/config');
+        const urlGetParams = options?.filter?.domain
+            ? `?filter=${encodeURIComponent(JSON.stringify({ domainName: options?.filter?.domain }))}`
+            : '';
+        const tplUrl = urljoin(this.#address, 'api/v1/config', urlGetParams);
+
         let fullConfig;
         try {
             fullConfig = await axios.get(tplUrl, { responseType: 'json' });

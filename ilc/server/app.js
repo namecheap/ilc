@@ -50,7 +50,9 @@ module.exports = (registryService, pluginManager, context) => {
                 return done();
             }
 
-            const registryConfig = (await registryService.getConfig()).data;
+            const domainName = req.hostname;
+
+            const registryConfig = (await registryService.getConfig({ filter: { domain: domainName } })).data;
             const i18nOnRequest = i18n.onRequestFactory(
                 registryConfig.settings.i18n,
                 pluginManager.getI18nParamsDetectionPlugin(),
