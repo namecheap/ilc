@@ -27,7 +27,7 @@
     },
     "devDependencies": {
         "concurrently": "^7.1.0",
-        "prettier": "^2.7.1",
-        "husky": "^8.0.0"
+        "husky": "^8.0.0",
+        "prettier": "^2.7.1"
     }
 }

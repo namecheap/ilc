@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useMediaQuery } from '@material-ui/core';
 import {
     List,
@@ -9,6 +10,9 @@ import {
     TextField,
     FunctionField,
     EditButton,
+    BooleanInput,
+    ReferenceInput,
+    SelectInput,
 } from 'react-admin';
 import {
     ListActionsToolbar,
@@ -17,10 +21,15 @@ import {
 import {types} from './dataTransform';
 
 const SourceValueField = (props) => {
+
     const secret = '********';
 
     if (props.record.secret) {
         return secret;
+    }
+
+    if(!props.record.meta) {
+        return null;
     }
 
     switch (props.record.meta.type) {
@@ -42,10 +51,30 @@ const SourceValueField = (props) => {
     }
 }
 
+const MyEditButton = (props) => {
+
+    const { basePath, record } = props;
+    const resourcePath = `${basePath}/${record.id}`;
+    const redirect = record.domainId
+        ? `${resourcePath}?domainId=${record.domainId}`
+        : resourcePath;
+
+    return !record.domainId
+        ? <EditButton {...props} />
+        : <EditButton {...props} to={redirect}/>
+    ;
+};
+
 const PostList = props => {
     const { permissions } = props;
 
     const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
+
+    const postFilters = [
+        <ReferenceInput alwaysOn source="enforceDomain" reference="router_domains">
+            <SelectInput alwaysOn resettable optionText="domainName" />
+        </ReferenceInput>,
+    ];
 
     return (
         <List
@@ -53,6 +82,7 @@ const PostList = props => {
             exporter={false}
             bulkActionButtons={false}
             perPage={25}
+            filters={postFilters}
         >
             {isSmall
                 ? (
@@ -61,13 +91,13 @@ const PostList = props => {
                         secondaryText={record => record.value}
                     />
                 ) : (
-                    <Datagrid rowClick={permissions === 'readonly' ? undefined : 'edit'} optimized>
+                    <Datagrid optimized>
                         <TextField source="key" />
-                        <SourceValueField source="value" />
+                        <SourceValueField source="value"/>
                         <TextField source="scope" />
                         <BooleanField source="secret" />
                         <ListActionsToolbar>
-                            <EditButton />
+                            <MyEditButton />
                         </ListActionsToolbar>
                     </Datagrid>
                 )}

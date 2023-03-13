@@ -45,7 +45,7 @@ render(
                 <Resource name="route" {...filterPermissions(appRoutes)} />,
                 <Resource name="router_domains" {...filterPermissions(routerDomains)} />,
                 <Resource name="auth_entities" {...filterPermissions(authEntities)} />,
-                <Resource name="settings" {...filterPermissions(settings)}  />,
+                <Resource name="settings" {...filterPermissions(settings)} />,
                 <Resource name="versioning" {...filterPermissions(versioning)} />,
             ]
         }}

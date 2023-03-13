@@ -23,10 +23,12 @@ export enum SettingKeys {
     I18nRoutingStrategy = 'i18n.routingStrategy',
     OverrideConfigTrustedOrigins = 'overrideConfigTrustedOrigins',
     OnPropsUpdate = 'onPropsUpdate',
-    СspConfig = 'cspConfig',
+    CspConfig = 'cspConfig',
     CspTrustedLocalHosts = 'cspTrustedLocalHosts',
     CspEnableStrict = 'cspEnableStrict',
 }
+
+export const AllowedSettingKeysForDomains = [SettingKeys.CspConfig];
 
 export const enum TrailingSlashValues {
     DoNothing = 'doNothing',
@@ -53,6 +55,7 @@ export const enum SettingTypes {
     Enum = 'enum',
     Password = 'password',
     JSON = 'json',
+    Integer = 'integer',
 }
 
 export enum OnPropsUpdateValues {
@@ -62,7 +65,12 @@ export enum OnPropsUpdateValues {
 
 type SettingValue = string | boolean | TrailingSlashValues | string[];
 
-export interface Setting {
+type SettingMeta = {
+    type: SettingTypes;
+    choices?: any[];
+};
+
+export type Setting = {
     key: SettingKeys;
     value: SettingValue;
     default: SettingValue;
@@ -72,7 +80,19 @@ export interface Setting {
         type: SettingTypes;
         choices?: any[];
     };
-}
+};
+
+export type SettingRaw = {
+    key: SettingKeys;
+    value: SettingValue;
+    default: SettingValue;
+    scope: Scope;
+    secret: boolean;
+    meta: string; // stringified JSON
+};
+
+export type SettingParsed = Omit<SettingRaw, 'value' | 'default' | 'meta'> &
+    Partial<Pick<SettingRaw, 'value' | 'default'>> & { meta: SettingMeta };
 
 export const keySchema = Joi.string()
     .min(1)
@@ -131,7 +151,7 @@ const valueSchema = Joi.alternatives().conditional('key', {
                 .required(),
         },
         {
-            is: Joi.valid(SettingKeys.СspConfig),
+            is: Joi.valid(SettingKeys.CspConfig),
             then: Joi.string()
                 .custom((value, helpers) => {
                     let cspConfig;
@@ -159,6 +179,13 @@ const valueSchema = Joi.alternatives().conditional('key', {
 });
 
 export const partialSettingSchema = Joi.object({
+    key: keySchema.required(),
+    value: valueSchema,
+    domainId: Joi.number().integer().allow(null).optional(),
+});
+
+export const createSettingSchema = Joi.object({
+    domainId: Joi.number().integer().required(),
     key: keySchema.required(),
     value: valueSchema,
 });

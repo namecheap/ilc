@@ -11,7 +11,7 @@ export const types = {
 export function transformGet(setting) {
     setting.id = setting.key;
 
-    if (setting.meta.type === types.enum) {
+    if (setting.meta && setting.meta.type === types.enum) {
         setting.meta.choices = setting.meta.choices.map((choice) => ({
             id: choice,
             name: choice,
@@ -25,6 +25,8 @@ export function transformGet(setting) {
     if (setting.value === undefined) {
         setting.value = null;
     }
+
+    setting.domainId = setting.domainId || null;
 }
 
 export function transformSet(setting) {
@@ -33,7 +35,7 @@ export function transformSet(setting) {
     }
 
     for (const key in setting) {
-        if (key === 'value' || key === 'key') {
+        if (key === 'value' || key === 'key' || key === 'domainId') {
             continue;
         }
 

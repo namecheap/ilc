@@ -2,6 +2,7 @@ import _ from 'lodash/fp';
 
 import preProcessResponse from '../../common/services/preProcessResponse';
 
+// Deprecated. Use setting parser from SettingService instead.
 const preProcessSetting = _.flowRight((setting) => {
     const transformed = Object.assign({}, setting);
 

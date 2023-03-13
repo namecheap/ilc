@@ -1,21 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
     Edit,
     SimpleForm,
-    ArrayInput,
-    SimpleFormIterator,
-    TextInput,
-    RadioButtonGroupInput,
-    BooleanInput,
-    PasswordInput,
     Toolbar,
     SaveButton,
+    useGetOne,
+    useDataProvider,
 } from 'react-admin';
 
+import dataProvider from '../dataProvider';
 import * as validators from '../validators';
-import { types } from './dataTransform';
 import Title from './Title';
 import JsonField from '../JsonField/index';
+import { Input } from './Input';
+import { SettingsEdit } from './SettingsEdit';
 
 const MyToolbar = (props) => {
     return (
@@ -25,45 +24,16 @@ const MyToolbar = (props) => {
     );
 };
 
-const Input = (props) => {
-    switch(props.record.meta.type) {
-        case types.url: {
-            return (<TextInput source="value" fullWidth={true} validate={validators.url} />);
-        }
-        case types.enum: {
-            return (<RadioButtonGroupInput row={false} source="value" choices={props.record.meta.choices} />);
-        }
-        case types.boolean: {
-            return (<BooleanInput source="value" />);
-        }
-        case types.password: {
-            return (<PasswordInput source="value" fullWidth={true} />);
-        }
-        case types.stringArray: {
-            return (
-                <ArrayInput source="value">
-                    <SimpleFormIterator>
-                        <TextInput fullWidth={true} />
-                    </SimpleFormIterator>
-                </ArrayInput>
-            );
-        }
-        case types.json: {
-            return <JsonField source="value" label="CSP configuration JSON" />
-        }
-        default: {
-            return (<TextInput multiline source="value" fullWidth={true} />);
-        }
-    }
-};
-
 const MyEdit = (props) => {
+
     return (
-        <Edit title={<Title />} undoable={false} {...props}>
-            <SimpleForm toolbar={<MyToolbar />}>
-                <Input />
-            </SimpleForm>
-        </Edit>
+        <>
+            <SettingsEdit {...props}  undoable={false}>
+                <SimpleForm toolbar={<MyToolbar />}>
+                    <Input />
+                </SimpleForm>
+            </SettingsEdit>
+        </>
     );
 };
 
