@@ -1,12 +1,14 @@
+import _ from 'lodash';
 import db from '../../db';
 import { SettingKeys } from '../interfaces';
 import { User } from '../../auth';
 import { AllowedSettingKeysForDomains } from '../interfaces';
-import { SettingRaw, SettingParsed, Setting } from '../interfaces';
+import { SettingRaw, SettingParsed, Setting, Scope } from '../interfaces';
 import { safeParseJSON, JSONValue } from '../../common/services/json';
 
 type GetOptions = {
     range?: string;
+    ilc?: boolean;
     allowedForDomains: boolean | null;
 };
 
@@ -101,7 +103,10 @@ export class SettingsService {
 
     async getSettingsForRootDomain(options: GetOptions) {
         // There is no type safe interface in knex v1 :(
-        const settings = await db.select().from<SettingRaw>('settings').range(options.range);
+
+        const whereCond = options.ilc ? { scope: Scope.Ilc } : {};
+
+        const settings = await db.select().from<SettingRaw>('settings').where(whereCond).range(options.range);
 
         settings.data = options.allowedForDomains
             ? this.filterAllowedForDomainsSettingsKeys(settings.data)
@@ -139,14 +144,53 @@ export class SettingsService {
         };
     }
 
+    async getSettingsForDomainByIdForConfig(domainId: number, options: GetOptions) {
+        const whereCond = options.ilc ? { scope: Scope.Ilc } : {};
+
+        const settings = (await db
+            .from('settings')
+            .select(
+                'settings.key',
+                'settings.default',
+                'settings.scope',
+                'settings.secret',
+                'settings.meta',
+                'settings_domain_value.value as value',
+                'settings_domain_value.domainId as domainId',
+            )
+            .leftOuterJoin('settings_domain_value', 'settings.key', 'settings_domain_value.key')
+            .where('settings_domain_value.domainId', domainId)
+            .orWhereNull('settings_domain_value.domainId')
+            .andWhere(whereCond)
+            .range(options.range)) as SettingDto;
+
+        const parsedSettings = this.parseSettings(settings.data);
+
+        return {
+            data: Array.isArray(parsedSettings) ? parsedSettings : [parsedSettings],
+            pagination: settings.pagination,
+        };
+    }
+
     async getSettingsForDomainByName(domainName: string, options: GetOptions) {
         const domain = await db('router_domains').first('id').where({ domainName: domainName });
 
         if (domain && domain.id) {
-            return this.getSettingsForDomainById(domain.id, options);
+            return this.getSettingsForDomainByIdForConfig(domain.id, options);
         } else {
             return this.getSettingsForRootDomain(options);
         }
+    }
+
+    async getSettingsForConfig(domainName?: string) {
+        const settings = domainName
+            ? await this.getSettingsForDomainByName(domainName, { allowedForDomains: null, ilc: true })
+            : await this.getSettingsForRootDomain({ allowedForDomains: null, ilc: true });
+
+        return this.omitEmptyAndNullValues(settings.data).reduce((acc: Record<string, any>, setting) => {
+            _.set(acc, setting?.key, setting.value);
+            return acc;
+        }, {});
     }
 
     private parseSettings(settings: SettingRaw | SettingRaw[]) {
@@ -184,7 +228,10 @@ export class SettingsService {
     private parseSetting(settings: SettingRaw): SettingParsed {
         const parsedSetting: SettingParsed = safeParseJSON<Setting>(settings, this.isSettingTypeGuard);
 
-        if (parsedSetting.value === undefined && parsedSetting.default !== undefined) {
+        if (
+            parsedSetting.value === undefined ||
+            (parsedSetting.value === null && parsedSetting.default !== undefined)
+        ) {
             parsedSetting.value = parsedSetting.default;
         }
 
@@ -206,10 +253,11 @@ export class SettingsService {
 
     // Make code backward compatible with previous implementation
     // I would prefer not to do such implicit logic and respond with real DTO :(
-    public omitEmptyAndNullValues(settings: SettingParsed[]): Partial<SettingParsed>[] {
+    public omitEmptyAndNullValues(settings: SettingParsed[]): SettingParsed[] {
         return settings.map((setting) => {
             const filteredEntries = Object.entries(setting).filter(([_, value]) => value !== null && value !== '');
-            return Object.fromEntries(filteredEntries);
+            const filtered = Object.fromEntries(filteredEntries) as SettingParsed;
+            return filtered;
         });
     }
 }
