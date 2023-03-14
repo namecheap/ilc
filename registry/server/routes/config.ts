@@ -2,13 +2,17 @@ import _ from 'lodash';
 import express from 'express';
 
 import knex from '../db';
-import { Setting, Scope } from '../settings/interfaces';
+import { Setting, Scope, SettingParsed } from '../settings/interfaces';
 import preProcessResponse from '../settings/services/preProcessResponse';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
+import settingsService from '../settings/services/SettingsService';
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
+    let domainName = req.query.domainName ? req.query.domainName : undefined;
+    domainName = typeof domainName === 'string' ? domainName : undefined;
+
     const [apps, templates, routes, sharedProps, settings, routerDomains, sharedLibs] = await Promise.all([
         knex.select().from('apps'),
         knex.select('name').from('templates'),
@@ -18,7 +22,7 @@ router.get('/', async (req, res) => {
             .from('routes')
             .leftJoin('route_slots', 'route_slots.routeId', 'routes.id'),
         knex.select().from('shared_props'),
-        knex.select().from('settings').where('scope', Scope.Ilc),
+        settingsService.getSettingsForConfig(domainName),
         knex.select().from('router_domains'),
         knex.select().from('shared_libs'),
     ]);
@@ -115,10 +119,7 @@ router.get('/', async (req, res) => {
         }
     });
 
-    data.settings = preProcessResponse(settings).reduce((acc: { [key: string]: any }, setting: Setting) => {
-        _.set(acc, setting.key, setting.value);
-        return acc;
-    }, {});
+    data.settings = settings;
 
     data.sharedLibs = sharedLibs.reduce((acc, { name, spaBundle }) => {
         acc[name] = spaBundle;

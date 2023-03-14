@@ -103,8 +103,9 @@ module.exports = class Registry {
         this.#logger.debug('Calling get config registry endpoint...');
 
         const urlGetParams = options?.filter?.domain
-            ? `?filter=${encodeURIComponent(JSON.stringify({ domainName: options?.filter?.domain }))}`
+            ? `?domainName=${encodeURIComponent(options?.filter?.domain)}`
             : '';
+
         const tplUrl = urljoin(this.#address, 'api/v1/config', urlGetParams);
 
         let fullConfig;
