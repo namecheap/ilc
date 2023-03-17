@@ -12,8 +12,10 @@ module.exports = {
         run({ request }, callback) {
             const parsedUrl = new URL(request.raw.url, `https://${request.hostname}/`);
             const store = new Map();
+
             store.set('reqId', request.id);
             store.set('url', request.raw.url);
+            store.set('protocol', request.raw.connection.encrypted ? 'https' : 'http');
             store.set('path', parsedUrl.pathname);
             store.set('domain', request.hostname);
             store.set('appLogger', request.log);

@@ -14,6 +14,9 @@ describe('accessLogger', () => {
             request: {
                 raw: {
                     url: '/test/ignored/',
+                    connection: {
+                        encrypted: true,
+                    },
                 },
                 hostname: 'test-machine',
                 log: logger,
@@ -39,6 +42,9 @@ describe('accessLogger', () => {
             request: {
                 raw: {
                     url: '/test/ignored/?param=param',
+                    connection: {
+                        encrypted: true,
+                    },
                 },
                 hostname: 'test-machine',
                 log: logger,

@@ -39,6 +39,7 @@ import { SdkFactoryBuilder } from './Sdk/SdkFactoryBuilder';
 import { TransitionHooks } from './TransitionManager/TransitionHooks/TransitionHooks';
 import { PerformanceTransitionHook } from './TransitionManager/TransitionHooks/PerformanceTransitionHook';
 import { TitleCheckerTransitionHook } from './TransitionManager/TransitionHooks/TitleCheckerTransitionHook';
+import { HrefLangHandler } from './HrefLangHandler';
 
 export class Client {
     #configRoot;
@@ -116,6 +117,9 @@ export class Client {
         this.#moduleLoader = this.#getModuleLoader();
         this.#sdkFactoryBuilder = new SdkFactoryBuilder(this.#configRoot, this.#i18n, this.#router);
         this.#bundleLoader = new BundleLoader(this.#configRoot, this.#moduleLoader, this.#sdkFactoryBuilder);
+
+        const hrefLangHandler = new HrefLangHandler(this.#configRoot.getSettingsByKey('i18n'), this.#logger);
+        hrefLangHandler.start();
 
         this.#preheat();
         this.#expose();

@@ -26,7 +26,7 @@ module.exports = (configsInjector, newrelic, registryService) => async (request,
         newrelic.setTransactionName(routeName);
     }
 
-    const baseTemplate = configsInjector.inject(request, template.data, currRoute.slots);
+    const baseTemplate = configsInjector.inject(request, template.data, currRoute);
 
     return parseTemplate(baseTemplate, childTemplate);
 };
