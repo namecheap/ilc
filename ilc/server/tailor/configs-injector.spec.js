@@ -375,7 +375,7 @@ describe('configs injector', () => {
             );
         });
 
-        it.only('should inject ILC config, omit ILC state, polyfills, client js and new relic <script>, route assets style sheets links into a placeholder when a document has one', () => {
+        it('should inject ILC config, omit ILC state, polyfills, client js and new relic <script>, route assets style sheets links into a placeholder when a document has one', () => {
             context.run(
                 {
                     request: {
