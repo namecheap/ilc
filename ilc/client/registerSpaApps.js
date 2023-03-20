@@ -143,7 +143,9 @@ export default function (
 
                 return lifecycleMethods;
             },
-            () => router.isAppWithinSlotActive(appName, slotName),
+            (location) => {
+                return router.isAppWithinSlotActive(appName, slotName);
+            },
             customProps,
         );
     });

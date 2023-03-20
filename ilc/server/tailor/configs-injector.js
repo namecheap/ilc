@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const urljoin = require('url-join');
 const { uniqueArray, encodeHtmlEntities } = require('../../common/utils');
+const { HrefLangService } = require('../services/HrefLangService');
 
 module.exports = class ConfigsInjector {
     #newrelic;
@@ -17,8 +18,10 @@ module.exports = class ConfigsInjector {
         this.#nrAutomaticallyInjectClientScript = nrAutomaticallyInjectClientScript;
     }
 
-    inject(request, template, slots) {
+    inject(request, template, route) {
         const registryConfig = request.registryConfig;
+        const { slots, reqUrl: url } = route;
+
         let document = template.content;
 
         if (
@@ -47,7 +50,11 @@ module.exports = class ConfigsInjector {
             document = document.replace('</head>', ilcCss + '</head>');
         }
 
-        const ilcJsScripts = this.#wrapWithIgnoreDuringParsing(
+        const hrefLangService = new HrefLangService(registryConfig.settings?.i18n);
+
+        const hrefLangHtml = hrefLangService.getHrefLangsForUrlAsHTML(url);
+
+        const headHtmlContent = this.#wrapWithIgnoreDuringParsing(
             //...routeAssets.scriptLinks,
             this.#getIlcState(request),
             this.#getSPAConfig(registryConfig),
@@ -55,12 +62,13 @@ module.exports = class ConfigsInjector {
             this.#getPolyfill(),
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
             this.#getNewRelicScript(),
+            hrefLangHtml,
         );
 
         if (document.includes(this.#jsInjectionPlaceholder)) {
-            document = document.replace(this.#jsInjectionPlaceholder, ilcJsScripts);
+            document = document.replace(this.#jsInjectionPlaceholder, headHtmlContent);
         } else {
-            document = document.replace('</head>', ilcJsScripts + '</head>');
+            document = document.replace('</head>', headHtmlContent + '</head>');
         }
 
         request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, slots, template.styleRefs);
