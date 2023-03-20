@@ -160,9 +160,6 @@ module.exports = (registryService, pluginManager, context) => {
 
         const route = req.raw.router.getRoute();
 
-        console.log('route = ', route);
-        console.log('settings = ', registryConfig.settings.i18n.supported);
-
         const csp = new CspBuilderService(
             registryConfig.settings.cspConfig,
             !!registryConfig.settings.cspEnableStrict,
