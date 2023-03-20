@@ -32,6 +32,7 @@ import { BundleLoader } from './BundleLoader';
 import registerSpaApps from './registerSpaApps';
 import { TransitionManager } from './TransitionManager/TransitionManager';
 import IlcEvents from './constants/ilcEvents';
+import singleSpaEvents from './constants/singleSpaEvents';
 import ErrorHandlerManager from './ErrorHandlerManager/ErrorHandlerManager';
 
 import { FRAGMENT_KIND } from '../common/constants';
@@ -310,6 +311,16 @@ export class Client {
         });
     }
 
+    #addRouteChangeHandlerWithDispatch(handler) {
+        if (typeof handler !== 'function') {
+            throw new Error('onRouteChange should pass function handler as first argument');
+        }
+
+        window.addEventListener(singleSpaEvents.ROUTING_EVENT, handler);
+
+        return () => window.removeEventListener(singleSpaEvents.ROUTING_EVENT, handler);
+    }
+
     #expose() {
         // Here we expose window.ILC.define also as window.define to ensure that regular AMD/UMD bundles work correctly by default
         // See docs/umd_bundles_compatibility.md
@@ -327,6 +338,7 @@ export class Client {
             loadApp: this.#bundleLoader.loadAppWithCss.bind(this.#bundleLoader), // Internal API for Namecheap, not for public use
             navigate: this.#router.navigateToUrl.bind(this.#router),
             onIntlChange: this.#addIntlChangeHandler.bind(this),
+            onRouteChange: this.#addRouteChangeHandlerWithDispatch.bind(this),
             mountRootParcel: singleSpa.mountRootParcel.bind(singleSpa),
             importParcelFromApp: parcelApi.importParcelFromApp.bind(this),
             getIntlAdapter: () => (this.#i18n ? this.#i18n.getAdapter() : null),
