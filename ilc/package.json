@@ -73,7 +73,6 @@
     "karma-sourcemap-loader": "^0.3.8",
     "karma-webpack": "^4.0.2",
     "mocha": "^7.2.0",
-    "mock-require": "^3.0.3",
     "nanohtml": "^1.9.1",
     "nock": "^13.2.4",
     "nodemon": "^2.0.15",
