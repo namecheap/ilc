@@ -16,5 +16,8 @@
         accessLog: {
             ignoreUrls: 'LOGGER_ACCESSLOG_IGNOREURLS'
         }
+    },
+    healthCheck: {
+        url: 'ILC_HEALTH_CHECK_URL'
     }
 }
