@@ -58,7 +58,7 @@ class HrefLangService {
             hrefLangValue = hrefLangValue.toLowerCase();
         }
 
-        return `<link rel="alternate" hreflang="${hrefLangValue}" href="${fullUrl}" data-ilc="1">`;
+        return `<link rel="alternate" hreflang="${hrefLangValue}" href="${fullUrl}" data-ilc="1" />`;
     }
 }
 

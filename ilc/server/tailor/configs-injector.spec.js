@@ -394,10 +394,10 @@ describe('configs injector', () => {
                                 cdnUrl + '/client.js'
                             }" type="text/javascript" crossorigin async></script>` +
                             `<script>${browserTimingHeader}</script>` +
-                            `<link rel="alternate" hreflang="en-us" href="https://test.com/test/route" data-ilc="1">` +
-                            `<link rel="alternate" hreflang="ua-ua" href="https://test.com/ua/test/route" data-ilc="1">` +
-                            `<link rel="alternate" hreflang="x-default" href="https://test.com/test/route" data-ilc="1">` +
-                            `<link rel="canonical" href="https://test.com/test/route" data-ilc="1" />` +
+                            `<link rel="alternate" hreflang="en-us" href="https://test.com/test/route/" data-ilc="1" />` +
+                            `<link rel="alternate" hreflang="ua-ua" href="https://test.com/ua/test/route/" data-ilc="1" />` +
+                            `<link rel="alternate" hreflang="x-default" href="https://test.com/test/route/" data-ilc="1" />` +
+                            `<link rel="canonical" href="https://test.com/test/route/" data-ilc="1" />` +
                             '<!-- TailorX: Ignore during parsing END -->' +
                             '</head>' +
                             '<body>' +
