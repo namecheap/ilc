@@ -1,6 +1,6 @@
 const IlcIntl = require('ilc-sdk/app').IlcIntl;
 const { context } = require('../context/context');
-const { removeQueryParams } = require('../../common/utils');
+const { removeQueryParams, addTrailingSlash } = require('../../common/utils');
 
 class HrefLangService {
     #supportedLang = null;
@@ -58,7 +58,7 @@ class HrefLangService {
             hrefLangValue = hrefLangValue.toLowerCase();
         }
 
-        return `<link rel="alternate" hreflang="${hrefLangValue}" href="${fullUrl}" data-ilc="1" />`;
+        return `<link rel="alternate" hreflang="${hrefLangValue}" href="${addTrailingSlash(fullUrl)}" data-ilc="1" />`;
     }
 }
 

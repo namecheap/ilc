@@ -43,6 +43,14 @@ const removeQueryParams = (url) => {
     return urlObject.toString();
 };
 
+const addTrailingSlash = (url) => {
+    if (url.endsWith('/')) {
+        return url;
+    }
+
+    return `${url}/`;
+};
+
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
@@ -52,4 +60,5 @@ module.exports = {
     decodeHtmlEntities,
     parseUrl,
     removeQueryParams,
+    addTrailingSlash,
 };

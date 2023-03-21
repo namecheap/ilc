@@ -481,10 +481,10 @@ describe('configs injector', () => {
                             `</script>` +
                             `<script src="/_ilc/client.js" type="text/javascript"  async></script>` +
                             browserTimingHeader +
-                            `<link rel="alternate" hreflang="en-us" href="https://test.com/test/route" data-ilc="1">` +
-                            `<link rel="alternate" hreflang="ua-ua" href="https://test.com/ua/test/route" data-ilc="1">` +
-                            `<link rel="alternate" hreflang="x-default" href="https://test.com/test/route" data-ilc="1">` +
-                            `<link rel="canonical" href="https://test.com/test/route" data-ilc="1" />` +
+                            `<link rel="alternate" hreflang="en-us" href="https://test.com/test/route/" data-ilc="1" />` +
+                            `<link rel="alternate" hreflang="ua-ua" href="https://test.com/ua/test/route/" data-ilc="1" />` +
+                            `<link rel="alternate" hreflang="x-default" href="https://test.com/test/route/" data-ilc="1" />` +
+                            `<link rel="canonical" href="https://test.com/test/route/" data-ilc="1" />` +
                             '<!-- TailorX: Ignore during parsing END -->' +
                             '<title>Configs Injector`s test</title>' +
                             '<!-- TailorX: Ignore during parsing START -->' +
