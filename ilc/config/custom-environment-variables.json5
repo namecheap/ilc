@@ -1,4 +1,5 @@
 {
+    port: 'ILC_PORT',
     cdnUrl: 'CDN_URL',
     staticError: {
         disasterFileContentPath: 'ILC_DISASTER_FILE_CONTENT_PATH'
@@ -16,6 +17,9 @@
         accessLog: {
             ignoreUrls: 'LOGGER_ACCESSLOG_IGNOREURLS'
         }
+    },
+    static: {
+        internalUrl: 'ILC_STATIC_INTERNAL_URL'
     },
     healthCheck: {
         url: 'ILC_HEALTH_CHECK_URL'
