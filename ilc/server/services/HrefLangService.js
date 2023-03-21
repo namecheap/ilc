@@ -1,5 +1,6 @@
 const IlcIntl = require('ilc-sdk/app').IlcIntl;
 const { context } = require('../context/context');
+const { removeQueryParams } = require('../../common/utils');
 
 class HrefLangService {
     #supportedLang = null;
@@ -46,7 +47,7 @@ class HrefLangService {
      */
     #wrapUrlWithHrefLinkHTML(url, langCulture, isDefault = false) {
         const store = context.getStore();
-        const fullUrl = this.#getUrlWithoutSearchParams(`${store.get('protocol')}://${store.get('domain')}${url}`);
+        const fullUrl = removeQueryParams(`${store.get('protocol')}://${store.get('domain')}${url}`);
         const defaultHrefLangValue = this.#defaultHrefLangValue;
 
         let hrefLangValue = isDefault ? defaultHrefLangValue : langCulture;
@@ -58,16 +59,6 @@ class HrefLangService {
         }
 
         return `<link rel="alternate" hreflang="${hrefLangValue}" href="${fullUrl}" data-ilc="1">`;
-    }
-
-    /**
-     * *
-     * @param url
-     */
-    #getUrlWithoutSearchParams(url) {
-        const urlObject = new URL(url);
-        urlObject.search = '';
-        return urlObject.toString();
     }
 }
 

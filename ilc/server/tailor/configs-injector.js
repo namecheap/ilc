@@ -2,6 +2,7 @@ const _ = require('lodash');
 const urljoin = require('url-join');
 const { uniqueArray, encodeHtmlEntities } = require('../../common/utils');
 const { HrefLangService } = require('../services/HrefLangService');
+const { CanonicalTagService } = require('../services/CanonicalTagService');
 
 module.exports = class ConfigsInjector {
     #newrelic;
@@ -21,6 +22,7 @@ module.exports = class ConfigsInjector {
     inject(request, template, route) {
         const registryConfig = request.registryConfig;
         const { slots, reqUrl: url } = route;
+        const locale = request.ilcState?.locale || registryConfig.settings?.i18n?.default?.locale;
 
         let document = template.content;
 
@@ -53,6 +55,11 @@ module.exports = class ConfigsInjector {
         const hrefLangService = new HrefLangService(registryConfig.settings?.i18n);
 
         const hrefLangHtml = hrefLangService.getHrefLangsForUrlAsHTML(url);
+        const canonicalTagHtml = CanonicalTagService.getCanonicalTagForUrlAsHTML(
+            url,
+            locale,
+            registryConfig.settings?.i18n,
+        );
 
         const headHtmlContent = this.#wrapWithIgnoreDuringParsing(
             //...routeAssets.scriptLinks,
@@ -63,6 +70,7 @@ module.exports = class ConfigsInjector {
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
             this.#getNewRelicScript(),
             hrefLangHtml,
+            canonicalTagHtml,
         );
 
         if (document.includes(this.#jsInjectionPlaceholder)) {

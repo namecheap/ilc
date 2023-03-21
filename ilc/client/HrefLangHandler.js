@@ -1,5 +1,6 @@
-import singleSpaEvents from './constants/singleSpaEvents';
 import { IlcIntl } from 'ilc-sdk/app';
+import singleSpaEvents from './constants/singleSpaEvents';
+import { removeQueryParams } from '../common/utils';
 
 export class HrefLangHandler {
     #i18nConfig = null;
@@ -22,7 +23,7 @@ export class HrefLangHandler {
     }
 
     #handleRoutingChange = (event) => {
-        const url = this.#getUrlWithoutSearchParams(event.target.location.href);
+        const url = removeQueryParams(event.target.location.href);
         const hrefLinks = document.querySelectorAll('link[rel="alternate"][data-ilc="1"][hreflang]');
 
         hrefLinks.forEach((linkTag) => {
@@ -44,10 +45,4 @@ export class HrefLangHandler {
             }
         });
     };
-
-    #getUrlWithoutSearchParams(url) {
-        const urlObject = new URL(url);
-        urlObject.search = '';
-        return urlObject.toString();
-    }
 }

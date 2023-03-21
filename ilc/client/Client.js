@@ -41,6 +41,7 @@ import { TransitionHooks } from './TransitionManager/TransitionHooks/TransitionH
 import { PerformanceTransitionHook } from './TransitionManager/TransitionHooks/PerformanceTransitionHook';
 import { TitleCheckerTransitionHook } from './TransitionManager/TransitionHooks/TitleCheckerTransitionHook';
 import { HrefLangHandler } from './HrefLangHandler';
+import { CanonicalTagHandler } from './CanonicalTagHandler';
 
 export class Client {
     #configRoot;
@@ -121,6 +122,9 @@ export class Client {
 
         const hrefLangHandler = new HrefLangHandler(this.#configRoot.getSettingsByKey('i18n'), this.#logger);
         hrefLangHandler.start();
+
+        const canonicalTagHandler = new CanonicalTagHandler(this.#i18n, this.#logger);
+        canonicalTagHandler.start();
 
         this.#preheat();
         this.#expose();
