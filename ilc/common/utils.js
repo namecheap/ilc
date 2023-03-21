@@ -37,6 +37,20 @@ const decodeHtmlEntities = (value) =>
 const fakeBaseInCasesWhereUrlIsRelative = 'http://hack';
 const parseUrl = (url) => new URL(url, fakeBaseInCasesWhereUrlIsRelative);
 
+const removeQueryParams = (url) => {
+    const urlObject = new URL(url);
+    urlObject.search = '';
+    return urlObject.toString();
+};
+
+const addTrailingSlash = (url) => {
+    if (url.endsWith('/')) {
+        return url;
+    }
+
+    return `${url}/`;
+};
+
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
@@ -45,4 +59,6 @@ module.exports = {
     encodeHtmlEntities,
     decodeHtmlEntities,
     parseUrl,
+    removeQueryParams,
+    addTrailingSlash,
 };

@@ -43,7 +43,13 @@ describe('configs injector', () => {
             };
 
             chai.expect(
-                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveContent, {}),
+                configsInjector.inject.bind(
+                    configsInjector,
+                    { ilcState: { locale: 'en-US' } },
+                    {},
+                    templateThatDoesNotHaveContent,
+                    {},
+                ),
             ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
@@ -55,7 +61,13 @@ describe('configs injector', () => {
             };
 
             chai.expect(
-                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveHeadTag, {}),
+                configsInjector.inject.bind(
+                    configsInjector,
+                    { ilcState: { locale: 'en-US' } },
+                    {},
+                    templateThatDoesNotHaveHeadTag,
+                    {},
+                ),
             ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
@@ -67,7 +79,13 @@ describe('configs injector', () => {
             };
 
             chai.expect(
-                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveOpenedHeadTag, {}),
+                configsInjector.inject.bind(
+                    configsInjector,
+                    { ilcState: { locale: 'en-US' } },
+                    {},
+                    templateThatDoesNotHaveOpenedHeadTag,
+                    {},
+                ),
             ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
@@ -79,7 +97,13 @@ describe('configs injector', () => {
             };
 
             chai.expect(
-                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveClosedHeadTag, {}),
+                configsInjector.inject.bind(
+                    configsInjector,
+                    { ilcState: { locale: 'en-US' } },
+                    {},
+                    templateThatDoesNotHaveClosedHeadTag,
+                    {},
+                ),
             ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
@@ -91,7 +115,13 @@ describe('configs injector', () => {
             };
 
             chai.expect(
-                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveBodyTag, {}),
+                configsInjector.inject.bind(
+                    configsInjector,
+                    { ilcState: { locale: 'en-US' } },
+                    {},
+                    templateThatDoesNotHaveBodyTag,
+                    {},
+                ),
             ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
@@ -103,7 +133,13 @@ describe('configs injector', () => {
             };
 
             chai.expect(
-                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveOpenedBodyTag, {}),
+                configsInjector.inject.bind(
+                    configsInjector,
+                    { ilcState: { locale: 'en-US' } },
+                    {},
+                    templateThatDoesNotHaveOpenedBodyTag,
+                    {},
+                ),
             ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
 
@@ -115,7 +151,13 @@ describe('configs injector', () => {
             };
 
             chai.expect(
-                configsInjector.inject.bind(configsInjector, {}, {}, templateThatDoesNotHaveClosedBodyTag, {}),
+                configsInjector.inject.bind(
+                    configsInjector,
+                    { ilcState: { locale: 'en-US' } },
+                    {},
+                    templateThatDoesNotHaveClosedBodyTag,
+                    {},
+                ),
             ).to.throw(`Can't inject ILC configs into invalid document.`);
         });
     });
@@ -352,9 +394,10 @@ describe('configs injector', () => {
                                 cdnUrl + '/client.js'
                             }" type="text/javascript" crossorigin async></script>` +
                             `<script>${browserTimingHeader}</script>` +
-                            `<link rel="alternate" hreflang="en-us" href="https://test.com/test/route" data-ilc="1">` +
-                            `<link rel="alternate" hreflang="ua-ua" href="https://test.com/ua/test/route" data-ilc="1">` +
-                            `<link rel="alternate" hreflang="x-default" href="https://test.com/test/route" data-ilc="1">` +
+                            `<link rel="alternate" hreflang="en-us" href="https://test.com/test/route/" data-ilc="1" />` +
+                            `<link rel="alternate" hreflang="ua-ua" href="https://test.com/ua/test/route/" data-ilc="1" />` +
+                            `<link rel="alternate" hreflang="x-default" href="https://test.com/test/route/" data-ilc="1" />` +
+                            `<link rel="canonical" href="https://test.com/test/route/" data-ilc="1" />` +
                             '<!-- TailorX: Ignore during parsing END -->' +
                             '</head>' +
                             '<body>' +
@@ -394,7 +437,7 @@ describe('configs injector', () => {
 
                     const configsInjector = new ConfigsInjector(newrelic);
 
-                    const request = { registryConfig };
+                    const request = { registryConfig, ilcState: { locale: 'en-US' } };
 
                     const template = {
                         styleRefs: [],
@@ -419,7 +462,7 @@ describe('configs injector', () => {
                     chai.expect(
                         configsInjector.inject(request, template, { slots, reqUrl: '/test/route?a=15' }),
                     ).to.be.eql(
-                        '<html>' +
+                        '<html lang="en-US">' +
                             '<head>' +
                             '<!-- TailorX: Ignore during parsing START -->' +
                             `<script type="ilc-config">${getSpaConfig()}</script>` +
@@ -438,9 +481,10 @@ describe('configs injector', () => {
                             `</script>` +
                             `<script src="/_ilc/client.js" type="text/javascript"  async></script>` +
                             browserTimingHeader +
-                            `<link rel="alternate" hreflang="en-us" href="https://test.com/test/route" data-ilc="1">` +
-                            `<link rel="alternate" hreflang="ua-ua" href="https://test.com/ua/test/route" data-ilc="1">` +
-                            `<link rel="alternate" hreflang="x-default" href="https://test.com/test/route" data-ilc="1">` +
+                            `<link rel="alternate" hreflang="en-us" href="https://test.com/test/route/" data-ilc="1" />` +
+                            `<link rel="alternate" hreflang="ua-ua" href="https://test.com/ua/test/route/" data-ilc="1" />` +
+                            `<link rel="alternate" hreflang="x-default" href="https://test.com/test/route/" data-ilc="1" />` +
+                            `<link rel="canonical" href="https://test.com/test/route/" data-ilc="1" />` +
                             '<!-- TailorX: Ignore during parsing END -->' +
                             '<title>Configs Injector`s test</title>' +
                             '<!-- TailorX: Ignore during parsing START -->' +
