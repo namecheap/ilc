@@ -10,11 +10,13 @@
     },
     newrelic: {
         licenseKey: null,
+        standardLicenseKey: null,
         /**
          * Usage example: <script type="text/javascript">(function mygdprWrapper(){ %CONTENT% })()</script>
          */
         customClientJsWrapper: null,
-        automaticallyInjectBrowserMonitoring: true
+        automaticallyInjectBrowserMonitoring: true,
+        appName: null
     },
     overrideConfigTrustedOrigins: null,
     logger: {
