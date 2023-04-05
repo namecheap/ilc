@@ -8,9 +8,11 @@
         address: 'REGISTRY_ADDR',
     },
     newrelic: {
-        licenseKey: 'NR_LICENSE_KEY',
+        licenseKey: 'NR_LICENSE_KEY', // deprecated, I don't what was the reason to have it with a custom name
+        standardLicenseKey: 'NEW_RELIC_LICENSE_KEY',
         customClientJsWrapper: 'NR_CUSTOM_CLIENT_JS_WRAPPER',
-        automaticallyInjectBrowserMonitoring: 'NR_CUSTOM_CLIENT_AUTO_INJECT'
+        automaticallyInjectBrowserMonitoring: 'NR_CUSTOM_CLIENT_AUTO_INJECT',
+        appName: 'NEW_RELIC_APP_NAME'
     },
     overrideConfigTrustedOrigins: 'OVERRIDE_CONFIG_TRUSTED_ORIGINS',
     logger: {
