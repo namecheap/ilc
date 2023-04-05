@@ -325,6 +325,17 @@ export class Client {
         return () => window.removeEventListener(singleSpaEvents.ROUTING_EVENT, handler);
     }
 
+    #matchCurrentRoute(url) {
+        const currentRoute = this.#router.getCurrentRoute();
+        let currentUrl = currentRoute.reqUrl;
+
+        // add trailing slash to urls if it's missing
+        currentUrl += currentUrl.endsWith('/') ? '' : '/';
+        url += url.endsWith('/') ? '' : '/';
+
+        return currentUrl === url;
+    }
+
     #expose() {
         // Here we expose window.ILC.define also as window.define to ensure that regular AMD/UMD bundles work correctly by default
         // See docs/umd_bundles_compatibility.md
@@ -343,6 +354,7 @@ export class Client {
             navigate: this.#router.navigateToUrl.bind(this.#router),
             onIntlChange: this.#addIntlChangeHandler.bind(this),
             onRouteChange: this.#addRouteChangeHandlerWithDispatch.bind(this),
+            matchCurrentRoute: this.#matchCurrentRoute.bind(this),
             mountRootParcel: singleSpa.mountRootParcel.bind(singleSpa),
             importParcelFromApp: parcelApi.importParcelFromApp.bind(this),
             getIntlAdapter: () => (this.#i18n ? this.#i18n.getAdapter() : null),
