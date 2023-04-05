@@ -343,6 +343,16 @@ export class Client {
             navigate: this.#router.navigateToUrl.bind(this.#router),
             onIntlChange: this.#addIntlChangeHandler.bind(this),
             onRouteChange: this.#addRouteChangeHandlerWithDispatch.bind(this),
+            matchCurrentRoute: (url) => {
+                const currentRoute = this.#router.getCurrentRoute();
+                let currentUrl = currentRoute.reqUrl;
+
+                // add trailing slash to urls if it's missing
+                currentUrl += currentUrl.endsWith('/') ? '' : '/';
+                url += url.endsWith('/') ? '' : '/';
+
+                return currentUrl === url;
+            },
             mountRootParcel: singleSpa.mountRootParcel.bind(singleSpa),
             importParcelFromApp: parcelApi.importParcelFromApp.bind(this),
             getIntlAdapter: () => (this.#i18n ? this.#i18n.getAdapter() : null),

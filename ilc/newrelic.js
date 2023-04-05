@@ -6,7 +6,11 @@ const config = require('config');
 
 exports.config = {
     agent_enabled: config.get('newrelic.licenseKey') !== null || config.get('newrelic.standardLicenseKey') !== null,
-    app_name: [config.get('newrelic.appName') !== null ? config.get('newrelic.appName') : `ILC${process.env.NODE_ENV ? '@' + process.env.NODE_ENV : ''}`],
+    app_name: [
+        config.get('newrelic.appName') !== null
+            ? config.get('newrelic.appName')
+            : `ILC${process.env.NODE_ENV ? '@' + process.env.NODE_ENV : ''}`,
+    ],
     license_key: config.get('newrelic.licenseKey') || config.get('newrelic.standardLicenseKey'),
     logging: {
         level: 'info',
