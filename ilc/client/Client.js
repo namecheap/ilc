@@ -4,7 +4,7 @@ import { PluginManager } from 'ilc-plugins-sdk/browser';
 
 import { PluginsLoader } from './PluginsLoader';
 import UrlProcessor from '../common/UrlProcessor';
-import { appIdToNameAndSlot } from '../common/utils';
+import { appIdToNameAndSlot, removeQueryParams, addTrailingSlashToPath } from '../common/utils';
 
 import { setNavigationErrorHandler, addNavigationHook } from './navigationEvents/setupEvents';
 
@@ -330,8 +330,8 @@ export class Client {
         let currentUrl = currentRoute.reqUrl;
 
         // add trailing slash to urls if it's missing
-        currentUrl += currentUrl.endsWith('/') ? '' : '/';
-        url += url.endsWith('/') ? '' : '/';
+        currentUrl = addTrailingSlashToPath(currentUrl);
+        url = addTrailingSlashToPath(url);
 
         return currentUrl === url;
     }
