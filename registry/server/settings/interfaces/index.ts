@@ -85,6 +85,7 @@ export type Setting = {
 export type SettingRaw = {
     key: SettingKeys;
     value: SettingValue;
+    domainValue?: SettingValue;
     default: SettingValue;
     scope: Scope;
     secret: boolean;

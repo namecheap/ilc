@@ -249,6 +249,7 @@ describe(url, () => {
                 chai.expect(response.body).to.deep.include({
                     key: SettingKeys.CspConfig,
                     value: JSON.parse(cspValue),
+                    domainValue: JSON.parse(cspValue),
                     scope: Scope.Ilc,
                     secret: false,
                     meta: {

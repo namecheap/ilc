@@ -155,7 +155,8 @@ export class SettingsService {
                 'settings.scope',
                 'settings.secret',
                 'settings.meta',
-                'settings_domain_value.value as value',
+                'settings.value',
+                'settings_domain_value.value as domainValue',
                 'settings_domain_value.domainId as domainId',
             )
             .leftOuterJoin('settings_domain_value', 'settings.key', 'settings_domain_value.key')
@@ -164,7 +165,14 @@ export class SettingsService {
             .andWhere(whereCond)
             .range(options.range)) as SettingDto;
 
-        const parsedSettings = this.parseSettings(settings.data);
+        const settingsData = settings.data.map((item) => {
+            if (item.domainValue) {
+                return { ...item, value: item.domainValue };
+            }
+            return item;
+        });
+
+        const parsedSettings = this.parseSettings(settingsData);
 
         return {
             data: Array.isArray(parsedSettings) ? parsedSettings : [parsedSettings],

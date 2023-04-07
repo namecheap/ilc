@@ -10,7 +10,6 @@ describe('parseLinkHeader', () => {
 
     it('should correctly parse link', () => {
         const parsedLink = parseLinkHeader('<http://example.com/static/main.js>; rel="fragment-script";');
-        console.log(parsedLink);
         expect(parsedLink).to.deep.equal([
             {
                 params: {},
