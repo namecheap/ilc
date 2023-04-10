@@ -25,13 +25,6 @@ const accessLogger = new AccessLogger(config);
  */
 module.exports = (registryService, pluginManager, context) => {
     const guardManager = new GuardManager(pluginManager);
-    const buildHashSum = (string) => {
-        const hashSum = crypto.createHash('sha1');
-        hashSum.update(string, 'utf8');
-        const hex = hashSum.digest('hex');
-        return hex;
-    };
-
     const reportingPlugin = reportingPluginManager.getInstance();
 
     const appConfig = Application.getConfig(reportingPlugin);
@@ -113,18 +106,6 @@ module.exports = (registryService, pluginManager, context) => {
             res.redirect(processedUrl);
             return;
         }
-
-        // temporary 20ms overhead
-        const hex = buildHashSum(JSON.stringify(registryConfig));
-
-        req.log.info(
-            {
-                checkSum: hex,
-                id: req.id,
-                domain: currentDomain,
-            },
-            '[ILC Cache]: Config checksum',
-        );
 
         req.headers['x-request-host'] = req.hostname;
         req.headers['x-request-uri'] = url;
