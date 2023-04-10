@@ -6,6 +6,7 @@ const defaultErrorPage = require('../../server/errorHandler/defaultErrorPage');
 const localStorage = require('../../common/localStorage');
 const helpers = require('../../tests/helpers');
 const { context } = require('../context/context');
+const ErrorHandler = require('./ErrorHandler');
 
 const createApp = require('../app');
 const sinon = require('sinon');
@@ -110,6 +111,46 @@ describe('ErrorHandler', () => {
             const response = await server.get('/_ilc/500').expect(500);
 
             chai.expect(response.text).to.be.eql('<html><head><title>content from file</title></head></html>\n');
+        });
+    });
+
+    describe('when local error occurs', () => {
+        it('should send prod error to error tracker and log with error level', () => {
+            const errorService = {
+                noticeError: sinon.stub(),
+            };
+
+            const logger = {
+                error: sinon.stub(),
+                warn: sinon.stub(),
+            };
+
+            const errorHandler = new ErrorHandler({}, errorService, logger);
+
+            errorHandler.noticeError(new Error('My Error'), {});
+
+            sinon.assert.notCalled(logger.warn);
+            sinon.assert.calledOnce(logger.error);
+            sinon.assert.calledOnce(errorService.noticeError);
+        });
+
+        it('should not send local error to error tracker and log with warn level', () => {
+            const errorService = {
+                noticeError: sinon.stub(),
+            };
+
+            const logger = {
+                error: sinon.stub(),
+                warn: sinon.stub(),
+            };
+
+            const errorHandler = new ErrorHandler({}, errorService, logger);
+
+            errorHandler.noticeError(new Error('My Error'), {}, { reportError: false });
+
+            sinon.assert.calledOnce(logger.warn);
+            sinon.assert.notCalled(logger.error);
+            sinon.assert.notCalled(errorService.noticeError);
         });
     });
 });
