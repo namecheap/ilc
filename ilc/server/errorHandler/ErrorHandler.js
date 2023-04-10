@@ -43,9 +43,11 @@ module.exports = class ErrorHandler {
 
         if (options.reportError) {
             this.#errorsService.noticeError(err, infoData);
+            this.#logger.error(err);
+        } else {
+            err.data.localError = true;
+            this.#logger.warn(err);
         }
-
-        this.#logger.error(err);
     }
 
     handleError = async (err, req, res) => {

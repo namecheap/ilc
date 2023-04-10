@@ -44,13 +44,13 @@ describe('SettingsService', () => {
                     key: testSetting1,
                     value: JSON.stringify(generalValue1),
                     meta: JSON.stringify({ type: 'string' }),
-                    scope: 'ilc'
+                    scope: 'ilc',
                 },
                 {
                     key: testSetting2,
                     value: JSON.stringify(generalValue2),
                     meta: JSON.stringify({ type: 'string' }),
-                    scope: 'ilc'
+                    scope: 'ilc',
                 },
             ]);
 
@@ -68,7 +68,5 @@ describe('SettingsService', () => {
                 [testSetting2]: generalValue2,
             });
         });
-
     });
-
 });

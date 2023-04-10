@@ -57,7 +57,9 @@ export function safeParseJSON<T extends JSONValue>(value: unknown, typeGuard: ty
     }
 
     throw new Error(
-        `Value ${JSON.stringify(value)} is not correspond to object you define in type guard. Please you db entity and try to assert it to expected type correctly`,
+        `Value ${JSON.stringify(
+            value,
+        )} is not correspond to object you define in type guard. Please you db entity and try to assert it to expected type correctly`,
     );
 }
 
