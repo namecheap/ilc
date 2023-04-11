@@ -25,5 +25,8 @@
     },
     healthCheck: {
         url: 'ILC_HEALTH_CHECK_URL'
+    },
+    client: {
+        protocol: 'ILC_CLIENT_PROTOCOL',
     }
 }

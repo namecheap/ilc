@@ -1,3 +1,4 @@
+const config = require('config');
 const IlcIntl = require('ilc-sdk/app').IlcIntl;
 const { context } = require('../context/context');
 const { removeQueryParams, addTrailingSlash } = require('../../common/utils');
@@ -47,7 +48,7 @@ class HrefLangService {
      */
     #wrapUrlWithHrefLinkHTML(url, langCulture, isDefault = false) {
         const store = context.getStore();
-        const fullUrl = removeQueryParams(`${store.get('protocol')}://${store.get('domain')}${url}`);
+        const fullUrl = removeQueryParams(`${config.get('client.protocol')}://${store.get('domain')}${url}`);
         const defaultHrefLangValue = this.#defaultHrefLangValue;
 
         let hrefLangValue = isDefault ? defaultHrefLangValue : langCulture;
