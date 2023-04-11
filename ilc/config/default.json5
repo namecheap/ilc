@@ -29,5 +29,8 @@
     },
     healthCheck: {
         url: '/ping',
+    },
+    client: {
+        protocol: 'https',
     }
 }
