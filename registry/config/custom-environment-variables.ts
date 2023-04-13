@@ -1,4 +1,5 @@
 module.exports = {
+    port: 'ILC_REGISTRY_PORT',
     newrelic: {
         licenseKey: 'NR_LICENSE_KEY',
     },
