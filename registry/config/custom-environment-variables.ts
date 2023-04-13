@@ -15,4 +15,7 @@ module.exports = {
     auth: {
         sessionSecret: 'AUTH_SESSION_SECRET',
     },
+    healthCheck: {
+        url: 'ILC_REGISTRY_HEALTH_CHECK_URL',
+    },
 };

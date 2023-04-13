@@ -17,6 +17,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAssetsDiscovery');
 
     const app = express();
+    const healthCheckUrl = config.get<string>('healthCheck.url');
 
     app.use(
         bodyParser.json({
@@ -25,7 +26,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     );
     app.use(bodyParser.urlencoded({ extended: true }));
 
-    app.get('/ping', pong);
+    app.get(healthCheckUrl, pong);
 
     app.use('/', serveStatic('client/dist') as any);
 
