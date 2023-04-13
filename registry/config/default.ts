@@ -25,4 +25,7 @@ module.exports = {
     http: {
         requestLimit: '200kb',
     },
+    healthCheck: {
+        url: '/ping',
+    },
 };
