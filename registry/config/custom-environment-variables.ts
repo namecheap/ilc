@@ -10,6 +10,7 @@ module.exports = {
             user: 'DB_USER',
             password: 'DB_PASSWORD',
             database: 'DB_NAME',
+            filename: 'DB_FILENAME',
         },
         rootPassword: 'ROOT_PWD',
     },
