@@ -28,4 +28,9 @@ module.exports = {
     healthCheck: {
         url: '/ping',
     },
+    infra: {
+        settings: {
+            baseUrl: null,
+        },
+    },
 };

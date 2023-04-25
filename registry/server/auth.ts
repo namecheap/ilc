@@ -30,11 +30,15 @@ async function registerOpenIdStrategy(settingsService: SettingsService, callerId
 
     const issuer = await OIDCIssuer.discover(authDiscoveryUrl); // => Promise
 
+    const redirectUri = config.get('infra.settings.baseUrl')
+        ? urljoin(config.get('infra.settings.baseUrl'), '/auth/openid/return')
+        : urljoin(await settingsService.get(SettingKeys.BaseUrl, callerId), '/auth/openid/return');
+
     //console.log('Discovered issuer %s %O', issuer.issuer, issuer.metadata);
     const client = new issuer.Client({
         client_id: await settingsService.get(SettingKeys.AuthOpenIdClientId, callerId),
         client_secret: await settingsService.get(SettingKeys.AuthOpenIdClientSecret, callerId),
-        redirect_uris: [urljoin(await settingsService.get(SettingKeys.BaseUrl, callerId), '/auth/openid/return')],
+        redirect_uris: [redirectUri],
         response_types: ['code'],
     });
 
