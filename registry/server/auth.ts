@@ -3,6 +3,7 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import session from 'express-session';
 import { Express, RequestHandler } from 'express';
 import { Strategy as BearerStrategy } from 'passport-http-bearer';
+import config from 'config';
 import * as bcrypt from 'bcrypt';
 import { Issuer as OIDCIssuer, Strategy as OIDCStrategy, TokenSet } from 'openid-client';
 import { AuthRoles } from './authEntities/interfaces';
