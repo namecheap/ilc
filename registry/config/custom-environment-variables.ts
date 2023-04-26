@@ -20,4 +20,9 @@ module.exports = {
     healthCheck: {
         url: 'ILC_REGISTRY_HEALTH_CHECK_URL',
     },
+    infra: {
+        settings: {
+            baseUrl: 'ILC_REGISTRY_BASE_URL',
+        },
+    },
 };

@@ -3,6 +3,7 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import session from 'express-session';
 import { Express, RequestHandler } from 'express';
 import { Strategy as BearerStrategy } from 'passport-http-bearer';
+import config from 'config';
 import * as bcrypt from 'bcrypt';
 import { Issuer as OIDCIssuer, Strategy as OIDCStrategy, TokenSet } from 'openid-client';
 import { AuthRoles } from './authEntities/interfaces';
@@ -30,11 +31,15 @@ async function registerOpenIdStrategy(settingsService: SettingsService, callerId
 
     const issuer = await OIDCIssuer.discover(authDiscoveryUrl); // => Promise
 
+    const redirectUri = config.get('infra.settings.baseUrl')
+        ? urljoin(config.get('infra.settings.baseUrl'), '/auth/openid/return')
+        : urljoin(await settingsService.get(SettingKeys.BaseUrl, callerId), '/auth/openid/return');
+
     //console.log('Discovered issuer %s %O', issuer.issuer, issuer.metadata);
     const client = new issuer.Client({
         client_id: await settingsService.get(SettingKeys.AuthOpenIdClientId, callerId),
         client_secret: await settingsService.get(SettingKeys.AuthOpenIdClientSecret, callerId),
-        redirect_uris: [urljoin(await settingsService.get(SettingKeys.BaseUrl, callerId), '/auth/openid/return')],
+        redirect_uris: [redirectUri],
         response_types: ['code'],
     });
 
