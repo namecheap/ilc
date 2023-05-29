@@ -37,7 +37,8 @@ module.exports = (registryService, pluginManager, context) => {
             const { url, method } = req.raw;
             accessLogger.logRequest();
 
-            if (method !== 'GET' || method !== 'OPTION') {
+            console.log('method = ', method, method === 'GET');
+            if (method !== 'GET' && method !== 'OPTION') {
                 logger.warn(`Request method ${method} is not allowed`);
                 reply.code(405).send({ message: 'Method Not Allowed' });
                 return;
