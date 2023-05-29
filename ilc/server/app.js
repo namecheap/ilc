@@ -34,8 +34,14 @@ module.exports = (registryService, pluginManager, context) => {
 
     app.addHook('onRequest', (req, reply, done) => {
         context.run({ request: req }, async () => {
-            const { url } = req.raw;
+            const { url, method } = req.raw;
             accessLogger.logRequest();
+
+            if (method !== 'GET' || method !== 'OPTION') {
+                logger.warn(`Request method ${method} is not allowed`);
+                reply.code(405).send({ message: 'Method Not Allowed' });
+                return;
+            }
 
             req.raw.ilcState = {};
 
