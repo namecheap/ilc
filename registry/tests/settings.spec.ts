@@ -263,6 +263,34 @@ describe(url, () => {
             }
         });
 
+        it('should return settings by domain name in case domain name is not root and it does not have own csp config', async () => {
+            const domainHelper = await createDomain();
+            const domainId = domainHelper.getResponse().id;
+            const uniqueEntityPayload = {
+                domainId,
+                key: SettingKeys.CspConfig,
+                value: cspValue,
+            };
+
+            try {
+                const queryFilter = encodeURIComponent(JSON.stringify({ domainName: 'test-settings.com' }));
+                const response = await req.get(`${url}?filter=${queryFilter}`).expect(200);
+
+                const defaultCsp = {
+                    key: SettingKeys.CspConfig,
+                    scope: Scope.Ilc,
+                    secret: false,
+                    meta: {
+                        type: SettingTypes.JSON,
+                    },
+                };
+
+                chai.expect(response.body).to.deep.include(defaultCsp);
+            } finally {
+                await domainHelper.destory();
+            }
+        });
+
         it('should return settings by domain name in case domain name is root', async () => {
             const domainHelper = await createDomain();
             const domainId = domainHelper.getResponse().id;

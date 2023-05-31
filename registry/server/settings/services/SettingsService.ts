@@ -149,6 +149,15 @@ export class SettingsService {
 
         const settings = (await db
             .from('settings')
+            .leftJoin(
+                db
+                    .from('settings_domain_value')
+                    .select('value as domainValue', 'domainId', 'key')
+                    .where('domainId', domainId)
+                    .as('sdv'),
+                'settings.key',
+                'sdv.key',
+            )
             .select(
                 'settings.key',
                 'settings.default',
@@ -156,12 +165,9 @@ export class SettingsService {
                 'settings.secret',
                 'settings.meta',
                 'settings.value',
-                'settings_domain_value.value as domainValue',
-                'settings_domain_value.domainId as domainId',
+                'domainValue',
+                'domainId',
             )
-            .leftOuterJoin('settings_domain_value', 'settings.key', 'settings_domain_value.key')
-            .where('settings_domain_value.domainId', domainId)
-            .orWhereNull('settings_domain_value.domainId')
             .andWhere(whereCond)
             .range(options.range)) as SettingDto;
 
