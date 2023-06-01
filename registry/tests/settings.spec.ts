@@ -263,7 +263,7 @@ describe(url, () => {
             }
         });
 
-        it('should return settings by domain name in case domain name is not root and it does not have own csp config', async () => {
+        it('should return default setting value if setting supports domain override but not overridden for passed domain', async () => {
             const domainHelper = await createDomain();
             const domainId = domainHelper.getResponse().id;
             const uniqueEntityPayload = {
