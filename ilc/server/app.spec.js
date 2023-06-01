@@ -37,5 +37,6 @@ describe('App', () => {
 
         await server.get('/').expect(200);
         await server.options('/').expect(200);
+        await server.head('/').expect(200);
     });
 });
