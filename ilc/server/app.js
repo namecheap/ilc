@@ -45,7 +45,7 @@ module.exports = (registryService, pluginManager, context) => {
 
             req.raw.ilcState = {};
 
-            if (isStaticFile(url) || isHealthCheck(url)) {
+            if (isStaticFile(url) || isHealthCheck(url) || ['OPTIONS', 'HEAD'].includes(method)) {
                 return done();
             }
 
