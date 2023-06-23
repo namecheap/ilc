@@ -5,7 +5,7 @@ const expect = chai.expect;
 
 import { getRegistryMock } from '../tests/helpers';
 
-import { BundleLoader } from './BundleLoader';
+import { BundleLoader, emptyClientApplication } from './BundleLoader';
 import { getIlcConfigRoot } from './configuration/getIlcConfigRoot';
 
 const fnCallbacks = {
@@ -40,6 +40,9 @@ describe('BundleLoader', () => {
                     spaBundle: 'http://localhost/withWrapper.js',
                     wrappedWith: '@portal/primary',
                 },
+                '@portal/ssrOnly': {
+                    wrappedWith: '@portal/primary',
+                },
                 '@portal/appWithCss': {
                     spaBundle: 'http://localhost/index.js',
                     cssBundle: 'http://localhost/index.css',
@@ -65,6 +68,14 @@ describe('BundleLoader', () => {
             sinon.assert.calledWith(SystemJs.import, registry.apps[appName].spaBundle);
         });
 
+        it('does not throw with ssr only app', async () => {
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const appName = '@portal/ssrOnly';
+            SystemJs.import.resolves();
+
+            loader.preloadApp(appName);
+        });
+
         it("preloads app and it's wrapper", async () => {
             const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
             const appName = '@portal/withWrapper';
@@ -79,6 +90,14 @@ describe('BundleLoader', () => {
     });
 
     describe('loadApp()', () => {
+        it('loads ssr only app and returns callbacks mock from mainSpa', async () => {
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const appName = '@portal/ssrOnly';
+
+            const callbacks = await loader.loadApp(appName);
+            expect(callbacks).to.equal(emptyClientApplication);
+        });
+
         it('loads app and returns callbacks from mainSpa and calls it once', async () => {
             const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
             const appName = '@portal/primary';

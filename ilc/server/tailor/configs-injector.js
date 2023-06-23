@@ -245,10 +245,18 @@ module.exports = class ConfigsInjector {
     };
 
     #wrapWithLinkToPreloadScript = (url) => {
+        if (!url) {
+            return '';
+        }
+
         return `<link rel="preload" href="${url}" as="script" ${this.#getCrossoriginAttribute(url)}>`;
     };
 
     #wrapWithFragmentStylesheetLink = (url, fragmentId) => {
+        if (!url) {
+            return '';
+        }
+
         return `<link rel="stylesheet" href="${url}" data-fragment-id="${fragmentId}">`;
     };
 

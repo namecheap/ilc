@@ -31,7 +31,8 @@ const correct = Object.freeze({
     adminNotes: 'Lorem ipsum',
 });
 
-const example = <any>{
+const example = {
+    encodedName: '',
     url: '/api/v1/app/',
     assetsDiscovery,
     manifest: {
@@ -486,6 +487,32 @@ describe(`Tests ${example.url}`, () => {
                     ...example.correctWithAssetsDiscoveryUrl,
                     ...example.manifest,
                 });
+            } finally {
+                await req.delete(example.url + example.encodedName);
+            }
+        });
+
+        it('should reset a record when assetsDiscovery host is not specified', async () => {
+            try {
+                await req
+                    .post(example.url)
+                    .send(_.omit({ ...example.correct, ...{ assetsDiscoveryUrl: null } }, ['spaBundle', 'cssBundle']))
+                    .expect(200);
+
+                // const scope = nock(example.assetsDiscovery.host);
+                // scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
+
+                const response = await req
+                    .put(example.url + example.encodedName)
+                    .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'));
+
+                expect(response.body).deep.equal(
+                    {
+                        ...example.correctWithAssetsDiscoveryUrl,
+                        ...example.manifest,
+                    },
+                    response.text,
+                );
             } finally {
                 await req.delete(example.url + example.encodedName);
             }

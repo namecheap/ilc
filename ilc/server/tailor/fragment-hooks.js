@@ -22,6 +22,10 @@ function insertStart(logger, stream, attributes, headers) {
         const { async: isAsync, id } = attributes;
 
         refs.forEach((ref) => {
+            if (!ref.uri || !attributes.spaBundleUrl) {
+                return;
+            }
+
             if (ref.rel === 'stylesheet') {
                 const uri = fixUri(attributes, ref.uri);
                 bundleVersionOverrides.cssBundle = uri;
@@ -75,7 +79,7 @@ function insertEnd(stream, attributes, headers, index) {
 
 function fixUri(fragmentAttrs, uri) {
     const { spaBundleUrl } = fragmentAttrs;
-
+    console.log('uri', uri, 'spabundle', spaBundleUrl);
     return new URL(uri, spaBundleUrl).href;
 }
 
