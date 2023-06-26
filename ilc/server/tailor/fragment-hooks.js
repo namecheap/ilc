@@ -5,10 +5,22 @@ const parseLinkHeader = require('@namecheap/tailorx/lib/parse-link-header');
 
 const { appIdToNameAndSlot } = require('../../common/utils');
 
+function asyncStylesLoadTemplate(uri, id) {
+    return (
+        '<script>(function(url, id){' +
+        `const link = document.head.querySelector('link[data-fragment-id="' + id + '"]');` +
+        'if (link && link.href !== url) {' +
+        `link.href = url;` +
+        '}' +
+        `})("${uri}", "${id}");</script>`
+    );
+}
+
 function insertStart(logger, stream, attributes, headers) {
     const bundleVersionOverrides = _.pick(attributes, ['wrapperPropsOverride']);
 
-    if (headers.link) {
+    const clientIsSupported = !!attributes.spaBundleUrl;
+    if (clientIsSupported && headers.link) {
         const refs = parseLinkHeader(headers.link);
         logger.debug(
             {
@@ -22,7 +34,8 @@ function insertStart(logger, stream, attributes, headers) {
         const { async: isAsync, id } = attributes;
 
         refs.forEach((ref) => {
-            if (!ref.uri || !attributes.spaBundleUrl) {
+            if (!ref.uri) {
+                logger.error(`insertStart. Link header has no uri "${id}": ${JSON.stringify(ref)}`);
                 return;
             }
 
@@ -33,12 +46,7 @@ function insertStart(logger, stream, attributes, headers) {
                     isAsync
                         ? `<!-- Async fragments are not fully implemented yet: ${uri} -->`
                         : id
-                        ? '<script>(function(url, id){' +
-                          `const link = document.head.querySelector('link[data-fragment-id="' + id + '"]');` +
-                          'if (link && link.href !== url) {' +
-                          `link.href = url;` +
-                          '}' +
-                          `})("${uri}", "${id}");</script>`
+                        ? asyncStylesLoadTemplate(uri, id)
                         : '',
                 );
             } else if (ref.rel === 'fragment-script') {
@@ -52,25 +60,27 @@ function insertStart(logger, stream, attributes, headers) {
         });
     }
 
-    if (Object.keys(bundleVersionOverrides).length > 0) {
-        if (bundleVersionOverrides.spaBundle) {
-            // We need appName at client side to properly perform override System.js import map
-            // See client side code in AsyncBootUp.js
-            const appId = attributes.wrapperConf ? attributes.wrapperConf.appId : attributes.id;
-            bundleVersionOverrides.appName = appIdToNameAndSlot(appId).appName;
-        }
-
-        logger.debug(
-            {
-                detailsJSON: JSON.stringify({
-                    attributes,
-                    bundleVersionOverrides,
-                }),
-            },
-            'insert start. Creating spa-config-override tag',
-        );
-        stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
+    if (Object.keys(bundleVersionOverrides).length <= 0) {
+        return;
     }
+
+    if (bundleVersionOverrides.spaBundle) {
+        // We need appName at client side to properly perform override System.js import map
+        // See client side code in AsyncBootUp.js
+        const appId = attributes.wrapperConf ? attributes.wrapperConf.appId : attributes.id;
+        bundleVersionOverrides.appName = appIdToNameAndSlot(appId).appName;
+    }
+
+    logger.debug(
+        {
+            detailsJSON: JSON.stringify({
+                attributes,
+                bundleVersionOverrides,
+            }),
+        },
+        'insert start. Creating spa-config-override tag',
+    );
+    stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
 }
 
 function insertEnd(stream, attributes, headers, index) {
@@ -79,7 +89,6 @@ function insertEnd(stream, attributes, headers, index) {
 
 function fixUri(fragmentAttrs, uri) {
     const { spaBundleUrl } = fragmentAttrs;
-    console.log('uri', uri, 'spabundle', spaBundleUrl);
     return new URL(uri, spaBundleUrl).href;
 }
 
