@@ -31,12 +31,12 @@ const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): P
     const app = req.body;
     const appName = req.params.name;
 
-    const sharedLibEntry = EntryFactory.getAppInstance(appName);
+    const application = EntryFactory.getAppInstance(appName);
 
     let results;
 
     try {
-        results = await sharedLibEntry.patch(app, { user: req.user });
+        results = await application.patch(app, { user: req.user });
     } catch (error) {
         if (error instanceof NotFoundFqrnError) {
             return res.status(error.code).send(error.message);

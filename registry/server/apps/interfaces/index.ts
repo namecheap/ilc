@@ -74,9 +74,4 @@ export const partialAppSchema = Joi.object<App>({
 export const appSchema = Joi.object<App>({
     ...commonApp,
     name: appNameSchema.required(),
-    spaBundle: Joi.when('assetsDiscoveryUrl', {
-        is: commonApp.assetsDiscoveryUrl.exist(),
-        then: commonApp.spaBundle,
-        otherwise: commonApp.spaBundle.required(),
-    }),
 });

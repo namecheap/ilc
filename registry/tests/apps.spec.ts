@@ -85,8 +85,7 @@ describe(`Tests ${example.url}`, () => {
             const response = await req
                 .post(example.url)
                 .send(_.omit(example.correct, ['name', 'spaBundle']))
-                .expect(422, '"spaBundle" is required\n"name" is required');
-
+                .expect(422, '"name" is required');
             expect(response.body).deep.equal({});
         });
 
@@ -111,21 +110,20 @@ describe(`Tests ${example.url}`, () => {
                     ...example.correct,
                     ...incorrect,
                 })
-                .expect(
-                    422,
+                .expect(422);
+            expect(response.text).to.equal(
+                '"spaBundle" must be a string\n' +
                     '"cssBundle" must be a string\n' +
-                        '"assetsDiscoveryUrl" must be a string\n' +
-                        '"spaBundle" must be a string\n' +
-                        '"dependencies" must be of type object\n' +
-                        '"props" must be of type object\n' +
-                        '"configSelector" must be an array\n' +
-                        '"ssr" must be of type object\n' +
-                        '"discoveryMetadata" must be of type object\n' +
-                        '"adminNotes" must be a string\n' +
-                        '"enforceDomain" must be a number\n' +
-                        '"name" must be a string',
-                );
-
+                    '"assetsDiscoveryUrl" must be a string\n' +
+                    '"dependencies" must be of type object\n' +
+                    '"props" must be of type object\n' +
+                    '"configSelector" must be an array\n' +
+                    '"ssr" must be of type object\n' +
+                    '"discoveryMetadata" must be of type object\n' +
+                    '"adminNotes" must be a string\n' +
+                    '"enforceDomain" must be a number\n' +
+                    '"name" must be a string',
+            );
             expect(response.body).deep.equal({});
 
             response = await req.get(example.url + incorrect.name).expect(404, 'Not found');
@@ -240,6 +238,16 @@ describe(`Tests ${example.url}`, () => {
                     ...example.correctWithAssetsDiscoveryUrl,
                     ...example.manifest,
                 });
+            } finally {
+                await req.delete(example.url + example.encodedName);
+            }
+        });
+
+        it('should create an app when both spaBundle and assetsDiscovery are NOT specified', async () => {
+            try {
+                const ssrOnlyApp = _.omit(example.correct, ['spaBundle', 'cssBundle']);
+                const response = await req.post(example.url).send(ssrOnlyApp).expect(200);
+                expect(response.body).to.deep.equal(ssrOnlyApp);
             } finally {
                 await req.delete(example.url + example.encodedName);
             }
@@ -487,32 +495,6 @@ describe(`Tests ${example.url}`, () => {
                     ...example.correctWithAssetsDiscoveryUrl,
                     ...example.manifest,
                 });
-            } finally {
-                await req.delete(example.url + example.encodedName);
-            }
-        });
-
-        it('should reset a record when assetsDiscovery host is not specified', async () => {
-            try {
-                await req
-                    .post(example.url)
-                    .send(_.omit({ ...example.correct, ...{ assetsDiscoveryUrl: null } }, ['spaBundle', 'cssBundle']))
-                    .expect(200);
-
-                // const scope = nock(example.assetsDiscovery.host);
-                // scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
-
-                const response = await req
-                    .put(example.url + example.encodedName)
-                    .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'));
-
-                expect(response.body).deep.equal(
-                    {
-                        ...example.correctWithAssetsDiscoveryUrl,
-                        ...example.manifest,
-                    },
-                    response.text,
-                );
             } finally {
                 await req.delete(example.url + example.encodedName);
             }
