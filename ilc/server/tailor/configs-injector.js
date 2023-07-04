@@ -166,7 +166,7 @@ module.exports = class ConfigsInjector {
             routeAssets.spaBundles,
             _.values(routeAssets.dependencies),
         );
-        const withoutDuplicateScriptRefs = uniqueArray(scriptRefs);
+        const withoutDuplicateScriptRefs = uniqueArray(scriptRefs).filter((scriptRef) => !!scriptRef);
 
         return {
             scriptLinks: _.map(withoutDuplicateScriptRefs, this.#wrapWithLinkToPreloadScript),

@@ -15,28 +15,32 @@ const validateRequestBeforeCreateTemplate = validateRequestFactory([
 ]);
 
 const createTemplate = async (req: Request, res: Response): Promise<void> => {
-    const request = req.body;
-    const template: Template = {
-        name: request.name,
-        content: request.content,
-    };
+    try {
+        const request = req.body;
+        const template: Template = {
+            name: request.name,
+            content: request.content,
+        };
 
-    const locales = Object.keys(request.localizedVersions || {});
-    let localesAreValid = await validateLocalesAreSupported(locales, res);
-    if (!localesAreValid) {
-        return;
+        const locales = Object.keys(request.localizedVersions || {});
+        let localesAreValid = await validateLocalesAreSupported(locales, res);
+        if (!localesAreValid) {
+            return;
+        }
+
+        await db.versioning(req.user, { type: 'templates', id: template.name }, async (trx) => {
+            await db('templates').insert(template).transacting(trx);
+        });
+
+        if (locales.length > 0) {
+            await insertLocalizedVersions(locales, template, request);
+        }
+
+        const savedTemplate = await readTemplateWithAllVersions(template.name);
+        res.status(200).send(savedTemplate);
+    } catch (e) {
+        res.status(500).send(JSON.stringify(e));
     }
-
-    await db.versioning(req.user, { type: 'templates', id: template.name }, async (trx) => {
-        await db('templates').insert(template).transacting(trx);
-    });
-
-    if (locales.length > 0) {
-        await insertLocalizedVersions(locales, template, request);
-    }
-
-    const savedTemplate = await readTemplateWithAllVersions(template.name);
-    res.status(200).send(savedTemplate);
 };
 
 function insertLocalizedVersions(locales: string[], template: Template, request: Record<string, any>) {

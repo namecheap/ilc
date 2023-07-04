@@ -176,6 +176,9 @@ describe('configs injector', () => {
             fourthSlot: {
                 appName: 'firstApp',
             },
+            fifthSlot: {
+                appName: 'ssrOnlyApp',
+            },
         };
 
         const registryConfig = {
@@ -222,6 +225,18 @@ describe('configs injector', () => {
                         secondAppSecondSsrProp: 'secondAppSecondSsrProp',
                     },
                     wrappedWith: 'firstApp',
+                },
+                ssrOnlyApp: {
+                    props: {
+                        secondAppFirstProp: 'secondAppFirstProp',
+                        secondAppSecondProp: 'secondAppSecondProp',
+                    },
+                    kind: 'regular',
+                    name: 'ssrOnlyApp',
+                    ssr: {
+                        secondAppFirstSsrProp: 'secondAppFirstSsrProp',
+                        secondAppSecondSsrProp: 'secondAppSecondSsrProp',
+                    },
                 },
             },
             routes: [],
@@ -280,6 +295,7 @@ describe('configs injector', () => {
                 apps: {
                     firstApp: pickApp(registryConfig.apps.firstApp),
                     secondApp: pickApp(registryConfig.apps.secondApp),
+                    [registryConfig.apps.ssrOnlyApp.name]: pickApp(registryConfig.apps.ssrOnlyApp),
                     thirdApp: pickApp(registryConfig.apps.thirdApp),
                 },
                 routes: [],

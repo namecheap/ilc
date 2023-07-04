@@ -1,6 +1,12 @@
 import { CssTrackedApp } from './CssTrackedApp';
 import { SdkOptions } from '../common/SdkOptions';
 
+export const emptyClientApplication = Object.freeze({
+    mount: () => Promise.resolve(),
+    unmount: () => Promise.resolve(),
+    bootstrap: () => Promise.resolve(),
+});
+
 export class BundleLoader {
     #cache = new WeakMap();
     #registryApps;
@@ -27,6 +33,10 @@ export class BundleLoader {
     preloadApp(appName) {
         const app = this.#getApp(appName);
 
+        if (!app.spaBundle) {
+            return;
+        }
+
         this.#moduleLoader.import(app.spaBundle).catch(() => {});
 
         if (app.wrappedWith) {
@@ -36,6 +46,11 @@ export class BundleLoader {
 
     loadApp(appName) {
         const app = this.#getApp(appName);
+        if (!app.spaBundle) {
+            // it is SSR only app
+            return Promise.resolve(emptyClientApplication);
+        }
+
         return this.#moduleLoader.import(appName).then((appBundle) => {
             const sdkInstanceFactory = this.#sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
             const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props, { sdkFactory: sdkInstanceFactory });

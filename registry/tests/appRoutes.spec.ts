@@ -113,11 +113,25 @@ const createRouterDomain = async (routerDomain: typeof example.routerDomain) => 
 
 describe(`Tests ${example.url}`, () => {
     let req: ReturnType<typeof supertest>;
+
+    const verifyEmptyResponse = (url: string) => (res: any) => {
+        if (res.status > 299 && res.text)
+            throw new Error(
+                `Expected response text to be empty, got ${res.req.method} ${url} ${res.status} '${res.text}'`,
+            );
+    };
+
     before(async () => {
         req = await request();
-        await req.post(example.template.url).send(example.template.correct);
-        await req.post(example.app.url).send(example.app.correct);
-        await req.post(example.appWrapper.url).send(example.appWrapper.correct);
+        await req
+            .post(example.template.url)
+            .send(example.template.correct)
+            .expect(verifyEmptyResponse(example.template.url));
+        await req.post(example.app.url).send(example.app.correct).expect(verifyEmptyResponse(example.app.url));
+        await req
+            .post(example.appWrapper.url)
+            .send(example.appWrapper.correct)
+            .expect(verifyEmptyResponse(example.appWrapper.url));
     });
 
     after(async () => {
@@ -131,8 +145,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await req.post(example.url).send(example.correct).expect(200);
-
+                let response = await req.post(example.url).send(example.correct);
                 routeId = response.body.id;
 
                 const expectedRoute = {
