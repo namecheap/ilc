@@ -149,3 +149,8 @@ This approach works well but to avoid adding a regex to each service ILC uses th
 
 [Code splitting](https://webpack.js.org/guides/code-splitting/) is a complicated topic. In ILC, code splitting is even more complicated. The reason is that the webpack module format expects the loading of extra modules from the website root, which will always fail until a place from where to load extra modules is configured.
 In ILC, you can see an example of this approach in the [demo people application](https://github.com/namecheap/ilc-demo-apps/blob/master/apps/people/src/people.js#L9).
+
+
+### Sockets timeout to fragments
+
+If you experience socket timeouts during requests to fragments, plese checkout this workaround https://github.com/namecheap/ilc/issues/444
