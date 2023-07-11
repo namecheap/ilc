@@ -54,7 +54,6 @@ class UrlProcessor {
                 }
             }
         }
-        // throw new Error(parsedUrl.toString())
         return parsedUrl.toString().replace(this.#fakeBaseInCasesWhereUrlIsRelative, '');
     };
 }
