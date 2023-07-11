@@ -122,6 +122,16 @@ describe('UrlProcessor', () => {
 
     describe('when a router should redirect to an URL with trailing slash', () => {
         describe('should return an provided URL if it is with trailing slash at the end', () => {
+            it('when the path starts from double slash, which is an absolute URL for URL class', () => {
+                const expected = '/google.com/%2f/';
+                const variants = ['\\//google.com/%2f', '//google.com/%2f', '///google.com/%2f', '/////google.com/%2f'];
+                const urlProcessor = new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash);
+
+                variants.forEach((input) => {
+                    chai.expect(urlProcessor.process(input)).to.be.equal(expected, `failed for ${input}`);
+                });
+            });
+
             it('when the original provided URL does not have origin', () => {
                 chai.expect(
                     new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(
