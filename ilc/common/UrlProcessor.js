@@ -1,4 +1,6 @@
 class UrlProcessor {
+    static validSchemes = ['http://', 'https://'];
+
     static routerHasTo = {
         doNothing: 'doNothing',
         redirectToNonTrailingSlash: 'redirectToNonTrailingSlash',
@@ -26,6 +28,11 @@ class UrlProcessor {
     }
 
     #processUrlTrailingSlash = (url) => {
+        if (!UrlProcessor.validSchemes.some((scheme) => url.startsWith(scheme))) {
+            // any combination of slashes at the beginning URL class classifies as an absolute link with http: protocol, so we remove them at the end
+            url = url.replace(/^[\/\\]+/gi, '/');
+        }
+
         const parsedUrl = new URL(url, this.#fakeBaseInCasesWhereUrlIsRelative);
         const doesUrlPathnameEndWithTrailingSlash = parsedUrl.pathname[parsedUrl.pathname.length - 1] === '/';
 
@@ -47,7 +54,7 @@ class UrlProcessor {
                 }
             }
         }
-
+        // throw new Error(parsedUrl.toString())
         return parsedUrl.toString().replace(this.#fakeBaseInCasesWhereUrlIsRelative, '');
     };
 }
