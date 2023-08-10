@@ -42,17 +42,23 @@ const isTrustedOrigin = (link, trustedOrigins) => {
     });
 };
 
-const sanitizeSpoofedLinks = (obj, trustedOrigins) => {
+const sanitizeSpoofedLinks = (obj, trustedOrigins, logger) => {
     Object.entries(obj).forEach(([key, value]) => {
         if (_.isPlainObject(value)) {
-            sanitizeSpoofedLinks(value, trustedOrigins);
+            sanitizeSpoofedLinks(value, trustedOrigins, logger);
         } else if (typeof value === 'string' && isUrl(value.trim())) {
-            !isPrivateNetwork(value) && !isTrustedOrigin(value, trustedOrigins) && delete obj[key];
+            if (!isPrivateNetwork(value) && !isTrustedOrigin(value, trustedOrigins)) {
+                if (logger) {
+                    logger.warn(`Sanitized untrusted url from override config. key = ${key}, value = ${value}`);
+                }
+
+                delete obj[key];
+            }
         }
     });
 };
 
-module.exports = (cookie, trustedOrigins) => {
+module.exports = (cookie, trustedOrigins, logger) => {
     try {
         let overrideConfig =
             typeof cookie === 'string' && cookie.split(';').find((n) => n.trim().startsWith('ILC-overrideConfig'));
@@ -75,11 +81,11 @@ module.exports = (cookie, trustedOrigins) => {
                 typeof trustedOrigins === 'string' && trustedOrigins.split(',').map((n) => n.trim());
 
             if (overrideConfig.apps) {
-                sanitizeSpoofedLinks(overrideConfig.apps, parsedTrustedOrigin);
+                sanitizeSpoofedLinks(overrideConfig.apps, parsedTrustedOrigin, logger);
             }
 
             if (overrideConfig.sharedLibs) {
-                sanitizeSpoofedLinks(overrideConfig.sharedLibs, parsedTrustedOrigin);
+                sanitizeSpoofedLinks(overrideConfig.sharedLibs, parsedTrustedOrigin, logger);
             }
         }
 
