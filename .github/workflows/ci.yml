@@ -3,20 +3,37 @@ name: CI
 on:
   push:
     branches:
-      - '**'
+      - master
     tags-ignore:
+      - '**'
+  pull_request:
+    branches:
       - '**'
 
 jobs:
   build_ilc:
     name: Build ILC
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch:
+          - name: src
+            ref: ${{ github.ref }}
+          - name: dest
+            ref: ${{ github.base_ref }}
+        exclude:
+          - branch:
+                ref: ''
 
     steps:
     - uses: actions/checkout@v1
+      with:
+        ref: ${{ matrix.branch.ref }}
 
-    - uses: benjlevesque/short-sha@v1.2
-      id: sha7
+    - id: sha7
+      run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+    - run: cat ilc/server/app.spec.js
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
@@ -31,7 +48,7 @@ jobs:
     - name: Build the Docker image
       uses: docker/build-push-action@v2
       with:
-        context: "{{defaultContext}}:ilc"
+        context: ./ilc
         platforms: linux/amd64,linux/arm64
         push: true
         cache-from: |
@@ -46,12 +63,12 @@ jobs:
       run: docker run namecheap/ilc_tmp:$SHA npm run test:ci
 
     - name: Run server-side tests coverage
-      run: docker run --volume /artifacts/ilc/.test_output/server:/temporary namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
+      run: docker run --volume $(pwd)/artifacts/ilc/.test_output/server:/temporary namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
 
     - uses: actions/upload-artifact@v2
       with:
-        name: server-side-tests-artifacts
-        path: /artifacts/ilc/.test_output/server/
+        name: ${{ matrix.branch.name }}-server-side-tests-artifacts
+        path: artifacts/ilc/.test_output/server/
 
     - name: Build the Docker image to test client-side
       run: |
@@ -62,22 +79,34 @@ jobs:
       run: |
         echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
         sudo sysctl -p
-        docker run --volume /artifacts/ilc/.test_output/client:/temporary ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /temporary"
+        docker run --volume $(pwd)/artifacts/ilc/.test_output/client:/temporary ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /temporary"
 
     - uses: actions/upload-artifact@v2
       with:
-        name: client-side-tests-artifacts
-        path: /artifacts/ilc/.test_output/client/
+        name: ${{ matrix.branch.name }}-client-side-tests-artifacts
+        path: artifacts/ilc/.test_output/client/
 
   build_registry:
     name: Build Registry
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch:
+          - name: src
+            ref: ${{ github.ref }}
+          - name: dest
+            ref: ${{ github.base_ref }}
+        exclude:
+          - branch:
+                ref: ''
 
     steps:
       - uses: actions/checkout@v1
+        with:
+          ref: ${{ matrix.branch.ref }}
 
-      - uses: benjlevesque/short-sha@v1.2
-        id: sha7
+      - id: sha7
+        run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -94,7 +123,8 @@ jobs:
       - name: Build the Docker image
         uses: docker/build-push-action@v3
         with:
-          context: "{{defaultContext}}:registry"
+        #   context: "{{defaultContext}}:registry"
+          context: ./registry
           platforms: linux/amd64,linux/arm64
           push: true
           cache-from: |
@@ -106,7 +136,12 @@ jobs:
             namecheap/ilc_tmp:reg_latest
 
       - name: Run tests
-        run: docker run namecheap/ilc_tmp:reg_$SHA npm run test:ci
+        run: docker run --volume $(pwd)/artifacts/registry/.test_output:/temporary namecheap/ilc_tmp:reg_$SHA sh -c "npm run test:ci && mv .nyc_output/* /temporary"
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.branch.name }}-registry-tests-artifacts
+          path: artifacts/registry/.test_output/
 
   e2e_tests:
     name: Run E2E tests
@@ -144,6 +179,66 @@ jobs:
         with:
           name: e2e-tests-artifacts
           path: e2e/.codecept_output
+
+  coverage_report:
+    name: PR Coverage Report
+    runs-on: ubuntu-latest
+    needs: [build_ilc, build_registry]
+    if: github.base_ref
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/download-artifact@v3
+      - name: Display structure of downloaded files
+        run: ls -R
+      - name: Create coverage report for ilc/server
+        id: ilc-server-coverage-report
+        uses: namecheap/Coverage-Diff@feature/NPF-2894-coverage
+        with:
+          fullCoverageDiff: true
+          autorun: false
+          postComment: false
+          oldCodeCoveragePath: ./dest-server-side-tests-artifacts/coverage/coverage-summary.json
+          newCodeCoveragePath: ./src-server-side-tests-artifacts/coverage/coverage-summary.json
+          total_delta: 2
+      - name: Create coverage report for ilc/client
+        id: ilc-client-coverage-report
+        if: success() || failure()
+        uses: namecheap/Coverage-Diff@feature/NPF-2894-coverage
+        with:
+          fullCoverageDiff: true
+          autorun: false
+          postComment: false
+          oldCodeCoveragePath: ./dest-client-side-tests-artifacts/coverage/chrome/coverage-summary.json
+          newCodeCoveragePath: ./src-client-side-tests-artifacts/coverage/chrome/coverage-summary.json
+          total_delta: 2
+      - name: Create coverage report for registry
+        id: registry-coverage-report
+        if: success() || failure()
+        uses: namecheap/Coverage-Diff@feature/NPF-2894-coverage
+        with:
+          fullCoverageDiff: true
+          autorun: false
+          postComment: false
+          oldCodeCoveragePath: ./dest-registry-tests-artifacts/coverage/coverage-summary.json
+          newCodeCoveragePath: ./src-registry-tests-artifacts/coverage/coverage-summary.json
+          total_delta: 2
+      - name: Compose comment
+        if: success() || failure()
+        run: |
+          echo "# Coverage Report" > report.md
+          echo "## Ilc/server" >> report.md
+          echo "${{ steps.ilc-server-coverage-report.outputs.report }}" >> report.md
+          echo "## Ilc/client" >> report.md
+          echo "${{ steps.ilc-client-coverage-report.outputs.report }}" >> report.md
+          echo "## Registry" >> report.md
+          echo "${{ steps.registry-coverage-report.outputs.report }}" >> report.md
+      - name: Add Coverage PR Comment
+        if: success() || failure()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          recreate: true
+          header: coverage-diff-report
+          path: report.md
 
   push_images:
     needs: [build_ilc, build_registry, e2e_tests]
