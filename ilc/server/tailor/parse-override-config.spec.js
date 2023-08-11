@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 const LZUTF8 = require('lzutf8');
 const parseOverrideConfig = require('./parse-override-config');
 
@@ -283,8 +284,12 @@ describe('overrideConfig', () => {
         it('should sanitize domain names', async () => {
             const ip = 'foo.com';
             const exampleCookies = getExampleCookies(ip);
+            const logger = {
+                warn: sinon.spy(),
+            };
 
-            expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject());
+            expect(parseOverrideConfig(exampleCookies, undefined, logger)).deep.equal(getSanitizedObject());
+            expect(logger.warn.called).to.be.true;
         });
 
         it('should sanitize url w/ spaces', async () => {
