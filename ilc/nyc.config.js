@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
     all: true,
-    reporter: ['html', 'text'],
+    reporter: ['html', 'text', 'json-summary'],
     'check-coverage': true,
 
     branches: 0,
