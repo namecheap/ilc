@@ -55,8 +55,8 @@ module.exports = function (config) {
         ],
         files,
         preprocessors: {
-            'client/**/!(*.spec).js': ['webpack', 'sourcemap', 'coverage'],
-            'common/**/!(*.spec).js': ['webpack', 'sourcemap', 'coverage'],
+            'client/**/!(*.spec).js': ['webpack', 'sourcemap'],
+            'common/**/!(*.spec).js': ['webpack', 'sourcemap'],
 
             'client/**/*.spec.js': ['webpack', 'sourcemap'],
             'common/**/*.spec.js': ['webpack', 'sourcemap'],
