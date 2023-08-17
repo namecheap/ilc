@@ -642,6 +642,26 @@ describe('TransitionManager', () => {
         spinner.getRef().remove();
     });
 
+    it('should load default spinner when no customHTML provided', async () => {
+        removePageTransactionListeners();
+        const transitionManager = new TransitionManager(logger, {
+            enabled: true,
+        });
+
+        removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
+        const handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);
+
+        applications.navbar.appendApplication();
+        applications.body.appendApplication();
+
+        handlePageTransition(slots.body.id, slotWillBe.rerendered);
+        await clock.runAllAsync();
+        const spinnerEl = document.querySelector('dialog.ilcSpinnerWrapper');
+        expect(spinnerEl).to.be.not.null;
+        expect(spinnerEl.open).equals(true);
+        expect(spinnerEl.innerHTML).equals('loading....');
+    });
+
     describe(`should trigger "${ilcEvents.ALL_SLOTS_LOADED}" only once`, () => {
         it('when spinner was not run', async () => {
             clock.restore();
