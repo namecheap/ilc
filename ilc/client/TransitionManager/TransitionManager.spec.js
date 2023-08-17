@@ -578,8 +578,6 @@ describe('TransitionManager', () => {
     });
 
     it('should destroy spinner in at least 300ms if it is appeared', async () => {
-        clock.restore();
-
         const newBodyApplication = html` <div id="new-body-application" class="new-body-spa">Foo bar</div> `;
 
         applications.navbar.appendApplication();
@@ -589,19 +587,19 @@ describe('TransitionManager', () => {
 
         applications.body.removeApplication();
 
-        await new Promise((resolve) => setTimeout(resolve, 280));
-        chai.expect(spinner.getRef()).to.be.null;
+        await clock.tickAsync(299);
+        chai.expect(spinner.getRef(), 'not be present before 300ms').to.be.null;
+        await clock.tickAsync(1);
 
-        await new Promise((resolve) => setTimeout(resolve, 20));
-        chai.expect(spinner.getRef()).to.be.not.null;
+        chai.expect(spinner.getRef(), 'appear after 300ms').to.be.not.null;
 
         slots.body.ref.appendChild(newBodyApplication);
 
-        await new Promise((resolve) => setTimeout(resolve, 480));
-        chai.expect(spinner.getRef()).to.be.not.null;
+        await clock.tickAsync(499);
+        chai.expect(spinner.getRef(), 'present until 500ms').to.be.not.null;
 
-        await new Promise((resolve) => setTimeout(resolve, 20));
-        chai.expect(spinner.getRef()).to.be.null;
+        await clock.tickAsync(1);
+        chai.expect(spinner.getRef(), 'disappear after 500ms').to.be.null;
     });
 
     it('should throw error in case of double subscription to single SPA events', function () {
@@ -696,8 +694,6 @@ describe('TransitionManager', () => {
         });
 
         it('when spinner was run and "min time" was not exceeded', async () => {
-            clock.restore();
-
             let runCount = 0;
             const handlerAllSlotsLoaded = () => {
                 runCount++;
@@ -714,18 +710,19 @@ describe('TransitionManager', () => {
             applications.body.removeApplication();
 
             // render spinner
-            await new Promise((resolve) => setTimeout(resolve, 300));
+            await clock.tickAsync(300);
+
             chai.expect(spinner.getRef()).to.be.not.null;
 
             slots.body.ref.appendChild(newBodyApplication);
 
             // spinner is visible, but all slots are rendered so "ilc:all-slots-loaded" was fired
-            await new Promise((resolve) => setTimeout(resolve, 480));
+            await clock.tickAsync(480);
             chai.expect(spinner.getRef()).to.be.not.null;
             chai.expect(runCount).to.equals(1);
 
             // spinner is removed but "ilc:all-slots-loaded" was not fired second time
-            await new Promise((resolve) => setTimeout(resolve, 20));
+            await clock.tickAsync(20);
             chai.expect(spinner.getRef()).to.be.null;
             chai.expect(runCount).to.equals(1);
 
@@ -733,8 +730,6 @@ describe('TransitionManager', () => {
         });
 
         it('when spinner was run and "min time" was exceeded', async () => {
-            clock.restore();
-
             let runCount = 0;
             const handlerAllSlotsLoaded = () => {
                 runCount++;
@@ -751,13 +746,13 @@ describe('TransitionManager', () => {
             applications.body.removeApplication();
 
             // render spinner
-            await new Promise((resolve) => setTimeout(resolve, 300));
+            await clock.tickAsync(300);
             chai.expect(spinner.getRef()).to.be.not.null;
 
             slots.body.ref.appendChild(newBodyApplication);
 
             // spinner disappeared 100ms ago and "ilc:all-slots-loaded" was fired only once
-            await new Promise((resolve) => setTimeout(resolve, 600));
+            await clock.tickAsync(600);
             chai.expect(spinner.getRef()).to.be.null;
             chai.expect(runCount).to.equals(1);
 
