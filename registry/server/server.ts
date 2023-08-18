@@ -11,7 +11,7 @@ const http = require('http');
  * Create HTTP server.
  */
 const server = http.createServer().withShutdown();
-server.keepAliveTimeout = 5 * 60; //in seconds, should be higher then at load balancer
+server.keepAliveTimeout = config.get('keepAliveTimeout');
 
 server.on('error', onError);
 server.on('listening', onListening);

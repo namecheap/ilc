@@ -1,5 +1,6 @@
 module.exports = {
     port: 4001,
+    keepAliveTimeout: 5 * 60,
     database: {
         client: 'sqlite3',
         connection: {
