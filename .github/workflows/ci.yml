@@ -189,7 +189,7 @@ jobs:
       - uses: actions/download-artifact@v3
       - name: Create coverage report for ilc/server
         id: ilc-server-coverage-report
-        uses: namecheap/Coverage-Diff
+        uses: namecheap/Coverage-Diff@master
         with:
           fullCoverageDiff: true
           autorun: false
@@ -200,7 +200,7 @@ jobs:
       - name: Create coverage report for ilc/client
         id: ilc-client-coverage-report
         if: success() || failure()
-        uses: namecheap/Coverage-Diff
+        uses: namecheap/Coverage-Diff@master
         with:
           fullCoverageDiff: true
           autorun: false
@@ -211,7 +211,7 @@ jobs:
       - name: Create coverage report for registry
         id: registry-coverage-report
         if: success() || failure()
-        uses: namecheap/Coverage-Diff
+        uses: namecheap/Coverage-Diff@master
         with:
           fullCoverageDiff: true
           autorun: false
