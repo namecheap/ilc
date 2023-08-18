@@ -1,2 +1,3 @@
 # Ignore artifacts:
 ilc/public
+.nyc_output
