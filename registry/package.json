@@ -16,7 +16,7 @@
         "migrate:rollback": "knex --knexfile config/knexfile.ts migrate:rollback",
         "seed": "knex --knexfile config/knexfile.ts seed:run",
         "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
-        "test": "cross-env NODE_ENV=test mocha --exclude=client/node_modules/**",
+        "test": "cross-env NODE_ENV=test nyc mocha",
         "test:ci": "npm run migrate && npm run test -- --forbid-only",
         "test:coverage": "cross-env NODE_ENV=test nyc mocha",
         "postinstall": "npm run migrate && npm run seed",
@@ -25,6 +25,7 @@
     "author": "",
     "license": "Apache-2.0",
     "devDependencies": {
+        "@istanbuljs/nyc-config-typescript": "^1.0.2",
         "@types/bcrypt": "^3.0.0",
         "@types/chai": "4.3.0",
         "@types/config": "0.0.41",

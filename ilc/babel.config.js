@@ -18,6 +18,12 @@ module.exports = {
                 assumeArray: true,
             },
         ],
+        [
+            'istanbul',
+            {
+                exclude: ['**/*.spec.js', 'tests/**'],
+            },
+        ],
     ],
     sourceType: 'unambiguous',
 };
