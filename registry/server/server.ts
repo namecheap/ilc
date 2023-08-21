@@ -11,7 +11,6 @@ const http = require('http');
  * Create HTTP server.
  */
 const server = http.createServer().withShutdown();
-server.keepAliveTimeout = config.get('keepAliveTimeout');
 
 server.on('error', onError);
 server.on('listening', onListening);
@@ -70,6 +69,16 @@ function exitHandler(signal: string) {
 }
 
 export default (requestHandler: any) => {
+    let keepAliveTimeout: number;
+
+    try {
+        keepAliveTimeout = parseInt(config.get('keepAliveTimeout'));
+    } catch (err) {
+        throw new Error('Invalid keepAliveTimeout value in config. Exiting.');
+    }
+
+    server.keepAliveTimeout = keepAliveTimeout;
+
     server.on('request', requestHandler);
     server.listen(config.get('port'));
 };
