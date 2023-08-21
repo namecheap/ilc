@@ -231,7 +231,7 @@ describe('Registry', () => {
         });
 
         nock(address).get('/api/v1/template/500/rendered').reply(200, {
-            content: '<ilc-slot id="body" />',
+            content: '<html><head></head><body><ilc-slot id="body" /></body></html>',
         });
 
         nock(address).get('/api/v1/router_domains').reply(200);
@@ -279,5 +279,90 @@ describe('Registry', () => {
                 .expect(registry.getRouterDomains())
                 .to.eventually.rejectedWith('Error while requesting routerDomains from registry');
         });
+
+        it('should throw an error when a document does not have <head> and </head>', async () => {
+            nock(address).get('/api/v1/template/anotherErrorTemplate/rendered').reply(200, {
+                content: '<body>Hi there! I do not have head tag.</body>',
+            });
+
+            const registry = new Registry(address, mockPreheat, logger);
+
+            await chai
+                .expect(registry.getTemplate('anotherErrorTemplate'))
+                .to.eventually.rejectedWith('Invalid template');
+        });
+
+        it('should throw an error when a document does not have <head>', async () => {
+            nock(address).get('/api/v1/template/anotherErrorTemplate/rendered').reply(200, {
+                content: '</head><body>Hi there! I do not have head tag.</body>',
+            });
+
+            const registry = new Registry(address, mockPreheat, logger);
+
+            await chai
+                .expect(registry.getTemplate('anotherErrorTemplate'))
+                .to.eventually.rejectedWith('Invalid template');
+        });
+
+        it('should throw an error when a document does not have </head>', async () => {
+            nock(address).get('/api/v1/template/anotherErrorTemplate/rendered').reply(200, {
+                content: '<head><body>Hi there! I do not have closed head tag.</body>',
+            });
+
+            const registry = new Registry(address, mockPreheat, logger);
+
+            await chai
+                .expect(registry.getTemplate('anotherErrorTemplate'))
+                .to.eventually.rejectedWith('Invalid template');
+        });
+
+        it('should throw an error when a document does not have <body> and </body>', async () => {
+            nock(address).get('/api/v1/template/anotherErrorTemplate/rendered').reply(200, {
+                content: '<head></head>Hi there! I do not have body tag.',
+            });
+
+            const registry = new Registry(address, mockPreheat, logger);
+
+            await chai
+                .expect(registry.getTemplate('anotherErrorTemplate'))
+                .to.eventually.rejectedWith('Invalid template');
+        });
+
+        it('should throw an error when a document does not have <body>', async () => {
+            nock(address).get('/api/v1/template/anotherErrorTemplate/rendered').reply(200, {
+                content: '<head></head>Hi there! I do not have opened body tag.</body>',
+            });
+
+            const registry = new Registry(address, mockPreheat, logger);
+
+            await chai
+                .expect(registry.getTemplate('anotherErrorTemplate'))
+                .to.eventually.rejectedWith('Invalid template');
+        });
+
+        it('should throw an error when a document does not have </body>', async () => {
+            nock(address).get('/api/v1/template/anotherErrorTemplate/rendered').reply(200, {
+                content: '<head></head><body>Hi there! I do not have closed body tag.',
+            });
+
+            const registry = new Registry(address, mockPreheat, logger);
+
+            await chai
+                .expect(registry.getTemplate('anotherErrorTemplate'))
+                .to.eventually.rejectedWith('Invalid template');
+        });
+    });
+
+    it('should allow setting attributes on html, head and body tags', async () => {
+        nock(address).get('/api/v1/template/tpl/rendered').reply(200, {
+            content:
+                '<!DOCTYPE html>\n<html lang="en">\n<head attr="1">\n\n</head>\n<body class="custom">\n...\n</body>\n</html> ',
+        });
+        const mockPreheat = (callback) => callback;
+
+        const registry = new Registry(address, mockPreheat, logger);
+
+        const res = await registry.getTemplate('tpl');
+        chai.expect(res.content).includes('<body class="custom">\n...\n</body>');
     });
 });

@@ -41,6 +41,7 @@
     "lodash": "^4.17.21",
     "lzutf8": "^0.6.1",
     "newrelic": "^8.9.1",
+    "node-html-parser": "^6.1.6",
     "serve-static": "^1.15.0",
     "single-spa": "5.6.0",
     "systemjs": "6.10.1",

@@ -34,7 +34,7 @@ describe('ErrorHandler', () => {
     });
 
     after(() => {
-        app.close();
+        app.server.close();
     });
 
     it('should show 500 error page with an error id', async () => {
@@ -44,6 +44,8 @@ describe('ErrorHandler', () => {
             .reply(200, {
                 content:
                     '<html>' +
+                    '<head>' +
+                    '</head>' +
                     '<body>' +
                     '<main>' +
                     '<h1>Hello there!</h1>' +
@@ -60,7 +62,7 @@ describe('ErrorHandler', () => {
         chai.expect(response.header['cache-control']).to.be.eql('no-cache, no-store, must-revalidate');
         chai.expect(response.header['pragma']).to.be.eql('no-cache');
         chai.expect(response.text).to.be.eql(
-            '<html>' +
+            '<html><head></head>' +
                 '<body>' +
                 '<main>' +
                 '<h1>Hello there!</h1>' +

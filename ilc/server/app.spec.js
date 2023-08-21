@@ -25,7 +25,7 @@ describe('App', () => {
     });
 
     after(() => {
-        app.close();
+        app.server.close();
     });
 
     it('should return 405 for allowed requests', async () => {
