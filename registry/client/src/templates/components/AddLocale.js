@@ -50,7 +50,7 @@ export function AddLocale(props) {
             .catch(e => {
                 setError(`Unable to fetch supported language due to ${e.message}`)
             });
-    })
+    }, []);
 
     const addLang = (e) => {
         e.preventDefault();
