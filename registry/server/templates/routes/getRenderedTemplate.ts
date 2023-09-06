@@ -11,6 +11,7 @@ import errors from '../errors';
 import { tables } from '../../db/structure';
 import { templateNameSchema } from './validation';
 import RouterDomains from '../../routerDomains/interfaces';
+import { getLogger } from '../../util/logger';
 
 type GetTemplateRenderedRequestParams = {
     name: string;
@@ -65,7 +66,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
 
     if (!template) {
         template = await getTemplateByName(templateName);
-        template && console.info(`Template ${templateName} is not attached to the domain, found by template name.`);
+        template && getLogger().info(`Template ${templateName} is not attached to the domain, found by template name.`);
     }
 
     if (!template) {

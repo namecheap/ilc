@@ -1,22 +1,26 @@
 require('./util/express-promise');
 
-import config from 'config';
-import express, { RequestHandler, Application } from 'express';
 import bodyParser from 'body-parser';
-
-import pong from './util/ping';
-import * as routes from './routes/routes';
-import errorHandler from './errorHandler';
+import config from 'config';
+import express, { Application, RequestHandler } from 'express';
 import serveStatic from 'serve-static';
+
 import auth from './auth';
+import errorHandler from './errorHandler';
+import { loadPlugins } from './util/pluginManager';
+import * as routes from './routes/routes';
 import settingsService from './settings/services/SettingsService';
+import pong from './util/ping';
+import { contextMiddleware } from './middleware/context';
 
 export default async (withAuth: boolean = true): Promise<Application> => {
+    loadPlugins();
     // As in production there can be 2+ instances of the ILC registry
     // AssetsDiscovery should be run separately via "npm run assetsdiscovery"
     !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAssetsDiscovery');
 
     const app = express();
+    app.use(contextMiddleware);
     const healthCheckUrl = config.get<string>('healthCheck.url');
 
     app.use(

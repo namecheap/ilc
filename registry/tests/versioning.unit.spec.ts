@@ -5,9 +5,12 @@ import { expect, dbFactory } from './common';
 import { VersionedKnex } from '../server/db';
 import { Versioning } from '../server/versioning/services/Versioning';
 import versioningConfig from '../server/versioning/config';
+import { User } from '../server/auth';
 
-const testUser = Object.freeze({
+const testUser: User = Object.freeze({
     identifier: 'testUser',
+    authEntityId: 1,
+    role: 'testUser',
 });
 
 describe('Versioning Unit', () => {

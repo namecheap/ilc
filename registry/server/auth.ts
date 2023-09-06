@@ -1,17 +1,20 @@
-import passport from 'passport';
-import { Strategy as LocalStrategy } from 'passport-local';
-import session from 'express-session';
-import { Express, RequestHandler } from 'express';
-import { Strategy as BearerStrategy } from 'passport-http-bearer';
-import config from 'config';
 import * as bcrypt from 'bcrypt';
+import config from 'config';
+import { Express, RequestHandler } from 'express';
+import session from 'express-session';
 import { Issuer as OIDCIssuer, Strategy as OIDCStrategy, TokenSet } from 'openid-client';
-import { AuthRoles } from './authEntities/interfaces';
-
-import db from './db';
-import { SettingsService } from './settings/services/SettingsService';
-import { SettingKeys } from './settings/interfaces';
+import passport from 'passport';
+import { Strategy as BearerStrategy } from 'passport-http-bearer';
+import { Strategy as LocalStrategy } from 'passport-local';
 import urljoin from 'url-join';
+
+import { AuthRoles } from './authEntities/interfaces';
+import db from './db';
+import { SettingKeys } from './settings/interfaces';
+import { SettingsService } from './settings/services/SettingsService';
+import { getLogger } from './util/logger';
+import { storage } from './middleware/context';
+import { userContextMiddleware } from './middleware/userContext';
 
 // https://github.com/gx0r/connect-session-knex/issues/91
 const sessionKnex = require('connect-session-knex');
@@ -25,7 +28,9 @@ export interface User {
 async function registerOpenIdStrategy(settingsService: SettingsService, callerId: string) {
     const authDiscoveryUrl = await settingsService.get(SettingKeys.AuthOpenIdDiscoveryUrl, callerId);
     if (typeof authDiscoveryUrl === 'undefined') {
-        console.log(`Skipping registering oauth strategy due to missing setting ${SettingKeys.AuthOpenIdDiscoveryUrl}`);
+        getLogger().info(
+            `Skipping registering oauth strategy due to missing setting ${SettingKeys.AuthOpenIdDiscoveryUrl}`,
+        );
         return;
     }
 
@@ -182,6 +187,7 @@ export default async (app: Express, settingsService: SettingsService, config: an
     // ...
     app.use(passport.initialize());
     app.use(passport.session());
+    app.use(userContextMiddleware);
 
     await registerOpenIdStrategy(settingsService, 'auth');
 
@@ -210,7 +216,7 @@ export default async (app: Express, settingsService: SettingsService, config: an
                 SettingKeys.AuthOpenIdRequestedScopes,
             ];
             if (await settingsService.hasChanged(callerId, keysToWatch)) {
-                console.log('Change of the OpenID authentication config detected. Reinitializing auth backend...');
+                getLogger().info('Change of the OpenID authentication config detected. Reinitializing auth backend...');
 
                 await registerOpenIdStrategy(settingsService, callerId);
             }

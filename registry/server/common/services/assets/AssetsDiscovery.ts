@@ -5,6 +5,7 @@ import deepEqual from 'deep-equal';
 import knex from '../../../db';
 import manifestProcessor from './assetsManifestProcessor';
 import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
+import { getLogger } from '../../../util/logger';
 
 export default class AssetsDiscovery {
     private tableName: string;
@@ -23,7 +24,7 @@ export default class AssetsDiscovery {
         this.timerId = setInterval(
             () =>
                 this.iteration().catch((err) => {
-                    console.error('Error during refresh of the assets info:', err);
+                    getLogger().error(err, 'Error during refresh of the assets info:');
                 }),
             delay,
         );
@@ -68,7 +69,7 @@ export default class AssetsDiscovery {
                 res = await axios.get(reqUrl, { responseType: 'json' });
             } catch (err: any) {
                 //TODO: add exponential back-off
-                console.warn(`Can't refresh assets for "${entity[this.tableId]}". Error: ${err.toString()}`);
+                getLogger().warn(err, `Can't refresh assets for "${entity[this.tableId]}"`);
                 continue;
             }
 
@@ -88,7 +89,7 @@ export default class AssetsDiscovery {
                             assetsDiscoveryUpdatedAt: now,
                         }),
                     );
-                console.info(`Assets for "${entity.name}" were updated`);
+                getLogger().info(`Assets for "${entity.name}" were updated`);
             }
         }
     }

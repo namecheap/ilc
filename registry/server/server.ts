@@ -2,6 +2,7 @@
 
 /* eslint-disable no-process-exit */
 import config from 'config';
+import { getLogger } from './util/logger';
 
 // .extend adds a .withShutdown prototype method to the Server object
 require('http-shutdown').extend();
@@ -40,12 +41,12 @@ function onError(error: any) {
     // handle specific listen errors with friendly messages
     switch (error.code) {
         case 'EACCES':
-            global.console.error(bind + ' requires elevated privileges');
+            getLogger().error(bind + ' requires elevated privileges');
             process.exit(1);
             break;
 
         case 'EADDRINUSE':
-            global.console.error(bind + ' is already in use');
+            getLogger().error(bind + ' is already in use');
             process.exit(1);
             break;
 
@@ -60,11 +61,11 @@ function onError(error: any) {
 function onListening() {
     const addr = server.address();
     const bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
-    global.console.log('Listening on ' + bind);
+    getLogger().info('Listening on ' + bind);
 }
 
 function exitHandler(signal: string) {
-    global.console.log(`Exit handler "${signal}" was called, trying to close the HTTP server...`);
+    getLogger().info(`Exit handler "${signal}" was called, trying to close the HTTP server...`);
     server.shutdown(() => process.exit(0));
 }
 

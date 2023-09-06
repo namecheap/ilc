@@ -4,6 +4,7 @@ import { Knex, knex } from 'knex';
 import config from 'config';
 import rangeExtender from './range';
 import addVersioning from './versioning';
+import { knexLoggerAdapter } from './logger';
 
 const client: string = config.get('database.client');
 
@@ -16,6 +17,7 @@ const knexConf: Knex.Config = {
      * That is why we added it
      */
     useNullAsDefault: true,
+    log: knexLoggerAdapter(),
 };
 
 if (client === 'mysql') {
