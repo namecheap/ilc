@@ -18,7 +18,7 @@ const commonTemplate = {
             try {
                 await renderTemplate(value);
             } catch (e: any) {
-                throw getJoiErr('content', e.message);
+                throw getJoiErr('content', e.message, value);
             }
         }),
 };

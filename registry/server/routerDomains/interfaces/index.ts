@@ -22,7 +22,7 @@ const commonRouterDomainsSchema = {
                 return;
             }
 
-            throw getJoiErr('domainName', 'Specified "domainName" is not valid.');
+            throw getJoiErr('domainName', 'Specified "domainName" is not valid.', value);
         }),
     template500: templateNameSchema.required(),
 };

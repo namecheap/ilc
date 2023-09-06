@@ -166,7 +166,7 @@ module.exports = class Registry {
         const rawTemplate = res.data.content;
 
         if (!isTemplateValid(rawTemplate)) {
-            throw new Error('Invalid template');
+            throw new errors.RegistryError({ message: `Invalid structure in template "${templateName}"` });
         }
 
         const lastMatchOffset = rawTemplate.lastIndexOf('<ilc-slot');

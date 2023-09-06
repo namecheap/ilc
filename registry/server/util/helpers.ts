@@ -8,14 +8,15 @@ export const joiErrorToResponse = _fp.compose<
     string
 >(_fp.join('\n'), _fp.map(_fp.get('message')), _fp.get('details'));
 
-export function getJoiErr(path: string, message: string) {
+export function getJoiErr(path: string, message: string, input?: any) {
     return new ValidationError(
         'ValidationError',
         [
             {
-                message: message,
-                path: path,
+                message,
+                path,
                 type: 'any.custom',
+                input,
             },
         ],
         undefined,

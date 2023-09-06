@@ -300,16 +300,16 @@ describe('renderTemplate', () => {
 
         scope.get(route).delay(delay).reply(response.status, response.data, response.headers);
 
-        const template = `<include id="${include.attributes.id}" src="${include.attributes.src}" timeout="${include.attributes.timeout}" />`;
+        const template = `<html><head></head><body><include id="${include.attributes.id}" src="${include.attributes.src}" timeout="${include.attributes.timeout}" /></body></html>`;
 
         const renderedTemplate = await renderTemplate(template);
 
         chai.expect(renderedTemplate.styleRefs).to.be.eqls([]);
         chai.expect(renderedTemplate.content).to.be.equal(
-            `${
+            `<html><head></head><body>${
                 `<!-- Template include "${include.attributes.id}" START -->\n` +
                 include.api.response.data +
-                `\n<!-- Template include "${include.attributes.id}" END -->`
+                `\n<!-- Template include "${include.attributes.id}" END --></body></html>`
             }`,
         );
     });

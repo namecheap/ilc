@@ -9,7 +9,7 @@ let example = <any>{
         url: '/api/v1/template/',
         correct: {
             name: 'ncTestTemplateName',
-            content: 'ncTestTemplateContent',
+            content: '<html><head></head><body>ncTestTemplateContent</body></html>',
         },
     },
     app: {

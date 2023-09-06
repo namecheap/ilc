@@ -1,24 +1,24 @@
-const { parse } = require('node-html-parser');
+const { parse, HTMLElement } = require('node-html-parser');
 
 class TemplateParser {
     /**
      *
      * @param {String} html
-     * @returns {TemplateParser}
+     * @returns {Element}
      */
     parse(html) {
-        this.html = html;
-        this.dom = parse(html);
-        return this;
+        return { element: parse(html) };
     }
 
     /**
      *
-     * @param {String} selector
-     * @returns {object}
+     * @param {Element} parent
+     * @param {String} tag
+     * @returns {Element | undefined}
      */
-    querySelector(selector) {
-        return this.dom?.querySelector(selector);
+    getElementByTag(parent, tag) {
+        const node = parent.element.childNodes.find((x) => x instanceof HTMLElement && x.tagName === tag.toUpperCase());
+        return node && { element: node };
     }
 }
 module.exports = {

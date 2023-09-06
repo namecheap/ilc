@@ -289,7 +289,7 @@ describe('Registry', () => {
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
-                .to.eventually.rejectedWith('Invalid template');
+                .to.eventually.rejectedWith('Invalid structure in template "anotherErrorTemplate"');
         });
 
         it('should throw an error when a document does not have <head>', async () => {
@@ -301,7 +301,7 @@ describe('Registry', () => {
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
-                .to.eventually.rejectedWith('Invalid template');
+                .to.eventually.rejectedWith('Invalid structure in template "anotherErrorTemplate"');
         });
 
         it('should throw an error when a document does not have </head>', async () => {
@@ -313,7 +313,7 @@ describe('Registry', () => {
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
-                .to.eventually.rejectedWith('Invalid template');
+                .to.eventually.rejectedWith('Invalid structure in template "anotherErrorTemplate"');
         });
 
         it('should throw an error when a document does not have <body> and </body>', async () => {
@@ -325,7 +325,7 @@ describe('Registry', () => {
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
-                .to.eventually.rejectedWith('Invalid template');
+                .to.eventually.rejectedWith('Invalid structure in template "anotherErrorTemplate"');
         });
 
         it('should throw an error when a document does not have <body>', async () => {
@@ -337,7 +337,7 @@ describe('Registry', () => {
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
-                .to.eventually.rejectedWith('Invalid template');
+                .to.eventually.rejectedWith('Invalid structure in template "anotherErrorTemplate"');
         });
 
         it('should throw an error when a document does not have </body>', async () => {
@@ -349,7 +349,7 @@ describe('Registry', () => {
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
-                .to.eventually.rejectedWith('Invalid template');
+                .to.eventually.rejectedWith('Invalid structure in template "anotherErrorTemplate"');
         });
     });
 

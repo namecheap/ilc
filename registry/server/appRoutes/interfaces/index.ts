@@ -14,9 +14,9 @@ const commonAppRouteSlot = {
     appName: appNameSchema.external(async (value) => {
         const wrapperApp = await db('apps').first('kind').where({ name: value });
         if (!wrapperApp) {
-            throw getJoiErr('appName', `Non-existing app name "${value}" specified.`);
+            throw getJoiErr('appName', `Non-existing app name "${value}" specified.`, wrapperApp);
         } else if (wrapperApp.kind === 'wrapper') {
-            throw getJoiErr('appName', "It's forbidden to use wrappers in routes.");
+            throw getJoiErr('appName', "It's forbidden to use wrappers in routes.", wrapperApp);
         }
 
         return value;

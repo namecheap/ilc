@@ -7,6 +7,7 @@ import { Resource } from './resources/Resource';
 import { ResourceStylesheet } from './resources/ResourceStylesheet';
 import { ResourceScript } from './resources/ResourceScript';
 import { ResourcePreload } from './resources/ResourcePreload';
+import { isTemplateValid } from '../../util/isTemplateValid';
 
 interface IncludeAttributes {
     id: string;
@@ -29,6 +30,10 @@ type RenderTemplateResult = {
 };
 
 async function renderTemplate(template: string): Promise<RenderTemplateResult> {
+    if (!isTemplateValid(template)) {
+        throw new Error('HTML template has invalid structure');
+    }
+
     const includesAttributes = matchIncludesAttributes(template);
 
     const result: RenderTemplateResult = {

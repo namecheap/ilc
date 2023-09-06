@@ -44,7 +44,7 @@ const example = {
     }),
     templates: Object.freeze({
         name: templateName,
-        content: 'ncTestTemplateContent',
+        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
     }),
     sharedProps: Object.freeze({
         name: 'ncTestSharedPropsName',
