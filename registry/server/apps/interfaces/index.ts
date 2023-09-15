@@ -54,7 +54,7 @@ const commonApp = {
 
                 const wrapperApp = await db('apps').first('kind').where({ name: value });
                 if (!wrapperApp || wrapperApp.kind !== 'wrapper') {
-                    throw getJoiErr('wrappedWith', 'Specified wrapper app is not a wrapper.');
+                    throw getJoiErr('wrappedWith', 'Specified wrapper app is not a wrapper.', wrapperApp);
                 }
 
                 return value;

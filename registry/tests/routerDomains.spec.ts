@@ -23,7 +23,7 @@ describe(`Tests ${example.url}`, () => {
         reqWithAuth = await requestWithAuth();
         await req.post('/api/v1/template/').send({
             name: example.correct.template500,
-            content: 'ncTestTemplateContent',
+            content: '<html><head></head><body>ncTestTemplateContent</body></html>',
         });
     });
 

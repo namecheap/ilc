@@ -32,7 +32,7 @@ describe('SettingsService', () => {
 
             await db('templates').insert({
                 name: testTemplate,
-                content: 'doesnotmatter',
+                content: '<html><head></head><body>doesnotmatter</body></html>',
             });
 
             // Insert domain

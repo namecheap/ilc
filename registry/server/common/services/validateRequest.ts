@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import Joi from 'joi';
 import _ from 'lodash';
 import { joiErrorToResponse } from '../../util/helpers';
@@ -10,11 +10,12 @@ interface ValidationConfig {
 }
 
 const validateRequestFactory =
-    (validationConfig: ValidationConfig[]) => async (req: Request, res: Response, next: any) => {
+    (validationConfig: ValidationConfig[]) => async (req: Request, res: Response, next: NextFunction) => {
         try {
             await Promise.all(
                 _.map(validationConfig, async ({ schema, selector }) => {
-                    const validObj = await schema.validateAsync(_.get(req, selector), { abortEarly: false });
+                    const data = _.get(req, selector);
+                    const validObj = await schema.validateAsync(data, { abortEarly: false });
                     _.set(req, selector, validObj);
                 }),
             );
@@ -22,6 +23,7 @@ const validateRequestFactory =
         } catch (e: any) {
             res.status(422);
             if (e instanceof Joi.ValidationError) {
+                console.info(`Validation error at ${req.method} ${req.originalUrl}`, e);
                 // TODO: this basically makes from an readable object just a text, which seems not very useful for API consumer
                 // need to think how to introduce good validation responses, without breaking changes
                 res.send(joiErrorToResponse(e));

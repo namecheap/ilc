@@ -3,6 +3,7 @@ const urljoin = require('url-join');
 const { cloneDeep } = require('../../common/utils');
 const extendError = require('@namecheap/error-extender');
 const { context } = require('../context/context');
+const { isTemplateValid } = require('./isTemplateValid');
 
 const errors = {};
 errors.RegistryError = extendError('RegistryError');
@@ -162,10 +163,14 @@ module.exports = class Registry {
             });
         }
 
-        let templateStr = res.data.content;
+        const rawTemplate = res.data.content;
 
-        let lastMatchOffset = templateStr.lastIndexOf('<ilc-slot');
-        templateStr = templateStr.replace(/<ilc-slot\s+id="(.+)"\s*\/?>/gm, function (match, id, offset) {
+        if (!isTemplateValid(rawTemplate)) {
+            throw new errors.RegistryError({ message: `Invalid structure in template "${templateName}"` });
+        }
+
+        const lastMatchOffset = rawTemplate.lastIndexOf('<ilc-slot');
+        const processedTemplate = rawTemplate.replace(/<ilc-slot\s+id="(.+)"\s*\/?>/gm, function (match, id, offset) {
             return (
                 `<!-- Region "${id}" START -->\n` +
                 // We change simplified slot definition onto TailorX required one
@@ -180,7 +185,7 @@ module.exports = class Registry {
 
         this.#cacheHeated.template = true;
 
-        return { ...res.data, content: templateStr };
+        return { ...res.data, content: processedTemplate };
     };
 
     #getRouterDomains = async () => {

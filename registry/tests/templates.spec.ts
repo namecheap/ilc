@@ -5,31 +5,34 @@ import app from '../server/app';
 import { expect, getServerAddress } from './common';
 import { SettingKeys } from '../server/settings/interfaces';
 import { withSetting } from './utils/withSetting';
-import RouterDomains from '../server/routerDomains/interfaces';
 
 const example = {
     url: '/api/v1/template/',
     correct: Object.freeze({
         name: 'ncTestTemplateName',
-        content: 'ncTestTemplateContent',
+        content: '<html><head></head><body class="custom">ncTestTemplateContent</body></html>',
+    }),
+    invalid: Object.freeze({
+        name: 'ncTestTemplateNameInvalid',
+        content: '<html><body>ncTestTemplateContent</body></html>',
     }),
     correctLocalized: Object.freeze({
         name: 'localizedTestTemplate' + Math.random() * 10000,
-        content: 'test content',
+        content: '<html><head></head><body>test content</body></html>',
         localizedVersions: {
-            'es-MX': { content: 'Espaniol content' },
-            'fr-FR': { content: 'French content' },
+            'es-MX': { content: '<html><head></head><body>Espaniol content</body></html>' },
+            'fr-FR': { content: '<html><head></head><body>French content</body></html>' },
         },
     }),
     updated: Object.freeze({
         name: 'ncTestTemplateName',
-        content: 'ncTestTemplateContentUpdated',
+        content: '<html><head></head><body>ncTestTemplateContentUpdated</body></html>',
     }),
     updatedLocalized: Object.freeze({
-        content: 'test content',
+        content: '<html><head></head><body>test content</body></html>',
         localizedVersions: {
-            'fr-FR': { content: 'French superior content' },
-            'fr-CA': { content: 'Canada content' },
+            'fr-FR': { content: '<html><head></head><body>French superior content</body></html>' },
+            'fr-CA': { content: '<html><head></head><body>Canada content</body></html>' },
         },
     }),
 };
@@ -121,6 +124,10 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).to.eq(422, response.text);
                 expect(response.text).to.contain('locales are not supported');
             });
+        });
+
+        it('should not create record with invalid template structure', async () => {
+            await req.post(example.url).send(example.invalid).expect(422, 'HTML template has invalid structure');
         });
 
         describe('Authentication / Authorization', () => {
@@ -308,22 +315,22 @@ describe(`Tests ${example.url}`, () => {
                     url: '/api/v1/template/',
                     correct: {
                         name: 'ncTestTemplateDomainName',
-                        content: 'ncTestTemplateContent',
+                        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
                     },
                     noRoute: {
                         name: 'ncTestNoRouteTemplateName',
-                        content: 'ncTestNoRouteTemplateContent',
+                        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
                     },
                     template500: {
                         name: 'ncTest500TemplateName',
-                        content: 'ncTest500TemplateContent',
+                        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
                     },
                 },
                 routerDomain: {
                     url: '/api/v1/router_domains/',
                     correct: {
                         domainName: '',
-                        template500: 'ncTest500TemplateName',
+                        template500: '<html><head></head><body>ncTest500TemplateName</body></html>',
                     },
                 },
             };
@@ -449,6 +456,15 @@ describe(`Tests ${example.url}`, () => {
                 .send(_.omit(incorrect, 'name'))
                 .expect(422, '"content" must be a string');
             expect(response.body).deep.equal({});
+        });
+
+        it('should not update record with invalid template structure', async () => {
+            await req.post(example.url).send(example.correct).expect(200);
+
+            await req
+                .put(example.url + example.invalid.name)
+                .send(_.omit(example.invalid, 'name'))
+                .expect(422, 'HTML template has invalid structure');
         });
 
         it('should successfully update record', async () => {

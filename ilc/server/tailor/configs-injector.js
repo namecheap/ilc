@@ -26,14 +26,8 @@ module.exports = class ConfigsInjector {
 
         let document = template.content;
 
-        if (
-            typeof document !== 'string' ||
-            !document.includes('<html') ||
-            !document.includes('</head>') ||
-            !document.includes('<head>') ||
-            !document.includes('</body>') ||
-            !document.includes('<body>')
-        ) {
+
+        if (typeof document !== 'string') {
             throw new Error(`Can't inject ILC configs into invalid document.`);
         }
 

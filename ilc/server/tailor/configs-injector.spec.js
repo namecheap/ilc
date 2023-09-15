@@ -46,116 +46,7 @@ describe('configs injector', () => {
                 configsInjector.inject.bind(
                     configsInjector,
                     { ilcState: { locale: 'en-US' } },
-                    {},
                     templateThatDoesNotHaveContent,
-                    {},
-                ),
-            ).to.throw(`Can't inject ILC configs into invalid document.`);
-        });
-
-        it('should throw an error when a document does not have <head> and </head>', () => {
-            const configsInjector = new ConfigsInjector(newrelic);
-            const templateThatDoesNotHaveHeadTag = {
-                content: '<body>Hi there! I do not have head tag.</body>',
-                styleRefs: [],
-            };
-
-            chai.expect(
-                configsInjector.inject.bind(
-                    configsInjector,
-                    { ilcState: { locale: 'en-US' } },
-                    {},
-                    templateThatDoesNotHaveHeadTag,
-                    {},
-                ),
-            ).to.throw(`Can't inject ILC configs into invalid document.`);
-        });
-
-        it('should throw an error when a document does not have <head>', () => {
-            const configsInjector = new ConfigsInjector(newrelic);
-            const templateThatDoesNotHaveOpenedHeadTag = {
-                content: '</head><body>Hi there! I do not have head tag.</body>',
-                styleRefs: [],
-            };
-
-            chai.expect(
-                configsInjector.inject.bind(
-                    configsInjector,
-                    { ilcState: { locale: 'en-US' } },
-                    {},
-                    templateThatDoesNotHaveOpenedHeadTag,
-                    {},
-                ),
-            ).to.throw(`Can't inject ILC configs into invalid document.`);
-        });
-
-        it('should throw an error when a document does not have </head>', () => {
-            const configsInjector = new ConfigsInjector(newrelic);
-            const templateThatDoesNotHaveClosedHeadTag = {
-                content: '<head><body>Hi there! I do not have closed head tag.</body>',
-                styleRefs: [],
-            };
-
-            chai.expect(
-                configsInjector.inject.bind(
-                    configsInjector,
-                    { ilcState: { locale: 'en-US' } },
-                    {},
-                    templateThatDoesNotHaveClosedHeadTag,
-                    {},
-                ),
-            ).to.throw(`Can't inject ILC configs into invalid document.`);
-        });
-
-        it('should throw an error when a document does not have <body> and </body>', () => {
-            const configsInjector = new ConfigsInjector(newrelic);
-            const templateThatDoesNotHaveBodyTag = {
-                content: '<head></head>Hi there! I do not have body tag.',
-                styleRefs: [],
-            };
-
-            chai.expect(
-                configsInjector.inject.bind(
-                    configsInjector,
-                    { ilcState: { locale: 'en-US' } },
-                    {},
-                    templateThatDoesNotHaveBodyTag,
-                    {},
-                ),
-            ).to.throw(`Can't inject ILC configs into invalid document.`);
-        });
-
-        it('should throw an error when a document does not have <body>', () => {
-            const configsInjector = new ConfigsInjector(newrelic);
-            const templateThatDoesNotHaveOpenedBodyTag = {
-                content: '<head></head>Hi there! I do not have opened body tag.</body>',
-                styleRefs: [],
-            };
-
-            chai.expect(
-                configsInjector.inject.bind(
-                    configsInjector,
-                    { ilcState: { locale: 'en-US' } },
-                    {},
-                    templateThatDoesNotHaveOpenedBodyTag,
-                    {},
-                ),
-            ).to.throw(`Can't inject ILC configs into invalid document.`);
-        });
-
-        it('should throw an error when a document does not have </body>', () => {
-            const configsInjector = new ConfigsInjector(newrelic);
-            const templateThatDoesNotHaveClosedBodyTag = {
-                content: '<head></head><body>Hi there! I do not have closed body tag.',
-                styleRefs: [],
-            };
-
-            chai.expect(
-                configsInjector.inject.bind(
-                    configsInjector,
-                    { ilcState: { locale: 'en-US' } },
-                    {},
-                    templateThatDoesNotHaveClosedBodyTag,
                     {},
                 ),
             ).to.throw(`Can't inject ILC configs into invalid document.`);
@@ -522,6 +413,32 @@ describe('configs injector', () => {
                         registryConfig.apps.firstApp.cssBundle,
                         registryConfig.apps.secondApp.cssBundle,
                     ]);
+                },
+            );
+        });
+
+        it('should allow setting attributes on html, head and body tags', () => {
+            context.run(
+                {
+                    request: {
+                        raw: {
+                            url: 'test/a?test=15',
+                            connection: {
+                                encrypted: true,
+                            },
+                        },
+                        hostname: 'test.com',
+                    },
+                },
+                () => {
+                    const configsInjector = new ConfigsInjector(newrelic);
+                    const request = { ilcState: { test: 1 }, registryConfig };
+                    const template = {
+                        styleRefs: [],
+                        content: '<!DOCTYPE html>\n<html lang="en">\n<head attr="1">\n\n</head>\n<body class="custom">\n...\n</body>\n</html> ',
+                    };
+                    const result = configsInjector.inject(request, template, { slots, reqUrl: '/test/route?a=15' });
+                    chai.expect(result).includes('<body class="custom">\n...\n</body>');
                 },
             );
         });

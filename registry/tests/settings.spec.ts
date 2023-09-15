@@ -27,7 +27,7 @@ describe(url, () => {
                 url: '/api/v1/template/',
                 payload: {
                     name: 'ncTest500TemplateNameForSettings',
-                    content: 'ncTest500TemplateNameForSettings',
+                    content: '<html><head></head><body>ncTest500TemplateNameForSettings</body></html>',
                 },
             };
 

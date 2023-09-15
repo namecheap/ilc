@@ -98,6 +98,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
             });
             return;
         } else {
+            console.error(`Error on render template "${templateName}"`, e);
             throw e;
         }
     }
