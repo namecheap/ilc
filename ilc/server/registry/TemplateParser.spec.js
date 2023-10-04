@@ -6,7 +6,7 @@ describe('Template parser', () => {
         const parser = new TemplateParser();
         const result = parser.parse('<html><body></body></html>');
         expect(result).to.have.property('element');
-        expect(result.element).to.be.an('object')
+        expect(result.element).to.be.an('object');
     });
 
     it('should find html node', () => {
