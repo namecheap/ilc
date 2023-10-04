@@ -31,7 +31,21 @@ export const appRouteSlotSchema = Joi.object({
     appName: commonAppRouteSlot.appName.required(),
 });
 
-export const appRouteIdSchema = Joi.string().trim().required();
+export const appRouteIdSchema = Joi.number().positive().integer().required();
+
+export interface AppRoute {
+    id?: number;
+    orderPos?: number | null;
+    route: string;
+    next: boolean;
+    templateName?: string | null;
+    meta: object | string;
+    specialRole?: string;
+    domainId?: number | null;
+    domainIdIdxble?: number | null;
+}
+
+export type AppRouteDto = Omit<AppRoute, 'next' | 'route'>;
 
 const commonAppRoute = {
     specialRole: Joi.string().valid('404'),

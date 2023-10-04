@@ -7,16 +7,24 @@ import * as errors from '../errors';
 import * as interfaces from '../interfaces';
 import { EntityTypes } from '../interfaces';
 import Transaction = Knex.Transaction;
+import { extractInsertedId, formatDate } from '../../util/db';
 
 export * from '../interfaces';
 
 export class Versioning {
-    private db?: Knex;
+    private _db?: Knex;
 
     constructor(private config: typeof versioningConfig) {}
 
     public setDb(db: Knex) {
-        this.db = db;
+        this._db = db;
+    }
+
+    private get db(): Knex {
+        if (!this._db) {
+            throw new Error(`Attempt to perform operation before DB initialization!`);
+        }
+        return this._db;
     }
 
     /**
@@ -29,7 +37,7 @@ export class Versioning {
         user: Express.User | User,
         conf: interfaces.OperationConf,
         callback: (transaction: Transaction) => Promise<void | number>,
-    ) => {
+    ): Promise<number | undefined> => {
         if (this.config[conf.type] === undefined) {
             throw new Error(`Attempt to log changes to unknown entity: "${conf.type}"`);
         }
@@ -70,16 +78,19 @@ export class Versioning {
                 data,
                 data_after,
                 created_by: user ? (user as User).identifier : 'unauthenticated',
-                created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                created_at: formatDate(new Date()),
             };
 
-            const [versionID] = await this.db!('versioning').insert(logRecord).transacting(trx);
-            return versionID;
+            const insertedId = await this.db('versioning')
+                .returning('id')
+                .insert<[{ id: number } | number]>(logRecord)
+                .transacting(trx);
+            return extractInsertedId(insertedId);
         });
     };
 
     public async revertOperation(user: Express.User, versionId: number) {
-        let dbRes = await this.db!('versioning').first('*').where('id', versionId);
+        let dbRes = await this.db('versioning').first('*').where('id', versionId);
         if (!dbRes) {
             throw new errors.NonExistingVersionError();
         }
@@ -102,19 +113,19 @@ export class Versioning {
                 if (versionRow.data === null) {
                     // We have creation operation, so we delete records to revert it
                     for (const relation of entityConf.related) {
-                        await this.db!(relation.type)
+                        await this.db(relation.type)
                             .where(relation.key, versionRow.entity_id)
                             .delete()
                             .transacting(trx);
                     }
-                    await this.db!(versionRow.entity_type)
+                    await this.db(versionRow.entity_type)
                         .where(entityConf.idColumn, versionRow.entity_id)
                         .delete()
                         .transacting(trx);
                 } else if (versionRow.data_after === null) {
                     // Deletion operation, so we need to create everything the was deleted
                     const dataToRestore = versionRow.data;
-                    await this.db!(versionRow.entity_type)
+                    await this.db(versionRow.entity_type)
                         .insert({
                             ...dataToRestore.data,
                             [entityConf.idColumn]: versionRow.entity_id,
@@ -126,13 +137,13 @@ export class Versioning {
                             ...v,
                             [relation.key]: versionRow.entity_id,
                         }));
-                        await this.db!.batchInsert(relation.type, relatedItems).transacting(trx);
+                        await this.db.batchInsert(relation.type, relatedItems).transacting(trx);
                     }
                 } else {
                     // We have an update operation
                     const dataToRestore = versionRow.data;
                     for (const relation of entityConf.related) {
-                        await this.db!(relation.type)
+                        await this.db(relation.type)
                             .where(relation.key, versionRow.entity_id)
                             .delete()
                             .transacting(trx);
@@ -141,9 +152,9 @@ export class Versioning {
                             ...v,
                             [relation.key]: versionRow.entity_id,
                         }));
-                        await this.db!.batchInsert(relation.type, relatedItems).transacting(trx);
+                        await this.db.batchInsert(relation.type, relatedItems).transacting(trx);
                     }
-                    await this.db!(versionRow.entity_type)
+                    await this.db(versionRow.entity_type)
                         .where(entityConf.idColumn, versionRow.entity_id)
                         .update(dataToRestore.data)
                         .transacting(trx);
@@ -153,9 +164,6 @@ export class Versioning {
     }
 
     private async getDataSnapshot(trx: Transaction, conf: interfaces.OperationConf) {
-        if (!this.db) {
-            throw new Error(`Attempt to log operation before DB initialization!`);
-        }
         if (!conf.id) {
             throw new Error(`Attempt to log operation without passing an ID! Passed ID: "${conf.id}"`);
         }
@@ -183,10 +191,6 @@ export class Versioning {
     }
 
     private async checkRevertability(versionRow: any) {
-        if (!this.db) {
-            throw new Error(`Attempt to perform operation before DB initialization!`);
-        }
-
         let lastVersionRow = this.parseVersionData(
             await this.db('versioning')
                 .first('*')

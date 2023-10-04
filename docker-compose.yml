@@ -7,7 +7,9 @@ services:
     environment:
       NODE_ENV: production
       DB_CLIENT: mysql
+      # DB_CLIENT: pg
       DB_HOST: mysql
+      # DB_HOST: postgres
       DB_USER: root
       DB_PASSWORD: pwd
       DB_NAME: ilc
@@ -20,7 +22,9 @@ services:
     environment:
       NODE_ENV: production
       DB_CLIENT: mysql
+      # DB_CLIENT: pg
       DB_HOST: mysql
+      # DB_HOST: postgres
       DB_USER: root
       DB_PASSWORD: pwd
       DB_NAME: ilc
@@ -30,13 +34,14 @@ services:
         condition: service_healthy
   ilc:
     image: namecheap/ilc:latest
+    restart: always
     ports:
       - "80:8233"
       - "8233:8233"
       - "8234-8240:8234-8240" # Ports from "demo-apps" container
     environment:
       NODE_ENV: production
-      REGISTRY_ADDR: "http://registry:4001"
+      REGISTRY_ADDR: "http://host.docker.internal:4001"
       OVERRIDE_CONFIG_TRUSTED_ORIGINS: all
   demo-apps:
     image: namecheap/ilc-demo-apps:latest
@@ -44,9 +49,11 @@ services:
     env_file:
       - ./demo-apps.env  # Used by the demo site to override PUBLIC_HOST var
   mysql:
+    container_name: mysql
     platform: linux/x86_64
     image: mysql:5.7
     volumes:
+      - .:/usr/src/ilc
       - "./dbfiles:/var/lib/mysql"
     ports:
       - "3306:3306"
@@ -58,3 +65,26 @@ services:
       interval: 3s
       timeout: 3s
       retries: 50
+  postgres:
+      container_name: postgres
+      image: postgres:15.4-alpine
+      restart: always
+      environment:
+          - POSTGRES_USER=root
+          - POSTGRES_PASSWORD=pwd
+          - POSTGRES_DB=ilc
+      ports:
+          - '5432:5432'
+      volumes:
+          - postgres:/var/lib/postgresql/data
+          - .:/usr/src/ilc
+      healthcheck:
+        test: ["CMD-SHELL", "sh -c 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'"]
+        interval: 3s
+        timeout: 3s
+        retries: 50
+
+
+volumes:
+    postgres:
+        driver: local

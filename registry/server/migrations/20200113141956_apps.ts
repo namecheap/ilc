@@ -2,7 +2,9 @@ import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<any> {
     return knex.schema.table('apps', (table) => {
-        table.enu('kind', ['primary', 'essential', 'regular']).defaultTo('regular');
+        table
+            .enu('kind', ['primary', 'essential', 'regular'], { useNative: true, enumName: 'kind_enum' })
+            .defaultTo('regular');
     });
 }
 

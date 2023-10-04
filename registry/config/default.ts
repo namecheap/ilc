@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 module.exports = {
     port: 4001,
     keepAliveTimeout: 5 * 60,
@@ -5,15 +7,15 @@ module.exports = {
         client: 'sqlite3',
         connection: {
             database: 'registry_db',
-            filename: './server/dbfiles/db.sqlite',
+            filename: path.resolve(__dirname, '../server/dbfiles/db.sqlite'),
         },
         useNullAsDefault: true,
         migrations: {
-            directory: './server/migrations',
+            directory: path.resolve(__dirname, '../server/migrations'),
             extension: 'ts',
         },
         seeds: {
-            directory: './server/seeds',
+            directory: path.resolve(__dirname, '../server/seeds'),
         },
         rootPassword: null,
     },

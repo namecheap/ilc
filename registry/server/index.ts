@@ -1,10 +1,8 @@
-import path from 'path';
+import 'newrelic';
+
 import app from './app';
 import server from './server';
 import { getLogger } from './util/logger';
-
-process.env.NODE_CONFIG_DIR = path.resolve(__dirname, '../config');
-require('newrelic'); //Should be lower than NODE_CONFIG_DIR env var definition
 
 (async () => {
     try {

@@ -306,7 +306,7 @@ describe(`Tests ${example.url}`, () => {
                 app: {
                     url: '/api/v1/app/',
                     correct: {
-                        name: '@portal/ncTestAppName',
+                        name: '@portal/ncTestAppName1',
                         spaBundle: 'http://localhost:1234/ncTestAppName.js',
                         kind: 'primary',
                     },

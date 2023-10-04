@@ -1,7 +1,7 @@
 import _ from 'lodash/fp';
 
 import preProcessResponse from '../../common/services/preProcessResponse';
-import { stringifyJSON } from '../../common/services/json';
+import { parseJSON, stringifyJSON } from '../../common/services/json';
 
 const prepareRouteToRespond = (appRoute: any) => {
     return Object.assign(
@@ -15,7 +15,7 @@ const prepareRouteToRespond = (appRoute: any) => {
             domainId: appRoute.domainId,
         }),
         {
-            meta: appRoute.meta ? JSON.parse(appRoute.meta) : {},
+            meta: appRoute.meta ? parseJSON(appRoute.meta) : {},
         },
     );
 };

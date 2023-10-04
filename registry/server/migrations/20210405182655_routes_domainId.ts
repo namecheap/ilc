@@ -1,7 +1,8 @@
 import { Knex } from 'knex';
+import { isSqlite } from '../util/db';
 
 export async function up(knex: Knex): Promise<any> {
-    if (isMySQL(knex)) {
+    if (!isSqlite(knex)) {
         return knex.schema.table('routes', (table) => {
             table.integer('domainId', 10).unsigned().nullable().references('router_domains.id');
 
@@ -51,7 +52,7 @@ export async function up(knex: Knex): Promise<any> {
 }
 
 export async function down(knex: Knex): Promise<any> {
-    if (isMySQL(knex)) {
+    if (!isSqlite(knex)) {
         return knex.schema.table('routes', (table) => {
             table.dropUnique(['specialRole', 'domainId'], 'routes_specialrole_and_domainId_unique');
             table.unique(['specialRole'], 'routes_specialrole_unique');
@@ -73,8 +74,4 @@ export async function down(knex: Knex): Promise<any> {
                 }),
             );
     }
-}
-
-function isMySQL(knex: Knex) {
-    return ['mysql', 'mariasql', 'mariadb'].indexOf(knex.client.dialect) > -1;
 }

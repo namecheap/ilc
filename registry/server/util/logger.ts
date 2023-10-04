@@ -33,7 +33,7 @@ const loggerProxyHandler: ProxyHandler<Logger> = {
                     return originalMember.apply(target, args);
                 } else {
                     const ExtendedError = errorExtender(arg1.name);
-                    const errorWithData = new ExtendedError({ message: arg1.message, data: logContext });
+                    const errorWithData = new ExtendedError({ message: arg1.message, data: logContext, cause: arg1 });
                     return originalMember.call(target, errorWithData, ...args);
                 }
             }

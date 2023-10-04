@@ -1,4 +1,5 @@
 import { Knex } from 'knex';
+import { isPostgres, isMySQL } from '../util/db';
 
 export async function up(knex: Knex): Promise<void> {
     if (isMySQL(knex)) {
@@ -8,6 +9,8 @@ export async function up(knex: Knex): Promise<void> {
                 "enum('primary', 'essential','regular','wrapper') " +
                 "NOT NULL DEFAULT 'regular';",
         );
+    } else if (isPostgres(knex)) {
+        return knex.raw(`ALTER TYPE "kind_enum" ADD VALUE 'wrapper';`);
     } else {
         await alterSqliteTable(
             knex,
@@ -37,6 +40,8 @@ export async function down(knex: Knex): Promise<void> {
                 "enum('primary', 'essential','regular') " +
                 "NOT NULL DEFAULT 'regular';",
         );
+    } else if (isPostgres(knex)) {
+        return;
     } else {
         await alterSqliteTable(
             knex,
@@ -70,8 +75,4 @@ async function alterSqliteTable(knex: Knex, tableName: string, columnsSql: strin
     } finally {
         await knex.schema.raw(`PRAGMA foreign_keys=on;`);
     }
-}
-
-function isMySQL(knex: Knex) {
-    return ['mysql', 'mariasql', 'mariadb'].indexOf(knex.client.dialect) > -1;
 }

@@ -5,6 +5,7 @@ import { SettingKeys, keySchema, createSettingSchema, AllowedSettingKeysForDomai
 import db from '../../db';
 import preProcessResponse from '../services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
+import { extractInsertedId } from '../../util/db';
 
 type RequestParams = {
     key: SettingKeys;
@@ -21,25 +22,25 @@ const createSettingForDomain = async (req: Request<RequestParams>, res: Response
     const settingKey = req.body.key;
     const domainId = req.body.domainId;
     let payload = req.body;
-    let id: number;
 
     if (!AllowedSettingKeysForDomains.includes(settingKey)) {
         res.status(422).send(`Setting key ${settingKey} is not allowed for domains`);
         return;
     }
 
-    const [{ total: count }] = await db
-        .from<{ total: number }>('router_domains')
+    const [{ total }] = await db
+        .from<{ total: string | number }>('router_domains')
         .count('id as total')
         .where('id', domainId);
 
-    if (count === 0) {
+    if (Number(total) === 0) {
         res.status(422).send(`Domain with id ${domainId} does not exist`);
         return;
     }
 
     payload.value = JSON.stringify(payload.value);
-    [id] = await db('settings_domain_value').insert(payload);
+    const result = await db('settings_domain_value').insert(payload, 'id');
+    const id = extractInsertedId(result);
 
     const [savedSetting] = await db.select().from('settings_domain_value').where('id', id);
     res.status(200).send(savedSetting);

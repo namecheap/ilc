@@ -281,8 +281,6 @@ describe(`Tests ${example.url}`, () => {
                         `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`,
                     );
 
-                console.log(response.body);
-
                 expect(response.body).deep.equal({});
             } finally {
                 unmuteConsole();

@@ -3,7 +3,8 @@ import { Knex } from 'knex';
 const publicHost = process.env.PUBLIC_HOST || 'localhost';
 
 export async function seed(knex: Knex): Promise<any> {
-    await knex('apps').insert([
+    const table = 'apps';
+    await knex(table).insert([
         {
             name: '@portal/navbar',
             spaBundle: `http://${publicHost}:8235/navbar.js`,
@@ -97,5 +98,5 @@ export async function seed(knex: Knex): Promise<any> {
         },
     ]);
 
-    await knex('apps').where('name', '@portal/systemWithWrapper').update({ wrappedWith: '@portal/wrapper' });
+    await knex(table).where('name', '@portal/systemWithWrapper').update({ wrappedWith: '@portal/wrapper' });
 }

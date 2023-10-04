@@ -536,8 +536,13 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Read', () => {
+        it('should return 422 for incorrect id', async () => {
+            const response = await req.get(example.url + 123123123123123123).expect(422);
+
+            expect(response.body).deep.equal({});
+        });
         it('should return 404 for non-existing id', async () => {
-            const response = await req.get(example.url + 123123123123123123).expect(404, 'Not found');
+            const response = await req.get(example.url + 100).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
@@ -625,7 +630,7 @@ describe(`Tests ${example.url}`, () => {
     describe('Update', () => {
         it("should not update any record if record doesn't exist", async () => {
             const response = await req
-                .put(example.url + 123123123123123123)
+                .put(example.url + 123)
                 .send(example.correct)
                 .expect(404, 'Not found');
 
@@ -885,7 +890,7 @@ describe(`Tests ${example.url}`, () => {
 
     describe('Delete', () => {
         it("should not delete any record if record doesn't exist", async () => {
-            const response = await req.delete(example.url + 123123123123123123).expect(404, 'Not found');
+            const response = await req.delete(example.url + 123).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });

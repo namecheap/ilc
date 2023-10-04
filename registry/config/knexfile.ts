@@ -1,8 +1,23 @@
 require('ts-node/register');
+import path from 'node:path';
+process.env.NODE_CONFIG_DIR = path.resolve(__dirname, '../config');
+import config from 'config';
+import { Knex, knex } from 'knex';
 
-process.env.NODE_CONFIG_DIR = __dirname;
-const config = require('config');
+import { cascadeTruncatePlugin } from '../server/db/cascadeTruncate';
+import { syncSequencePlugin } from '../server/db/syncSequence';
+import { logConnectionString } from '../server/util/db';
+import { loadPlugins } from '../server/util/pluginManager';
+import { knexLoggerAdapter } from '../server/db/logger';
 
-process.chdir('..');
+loadPlugins();
+cascadeTruncatePlugin(knex);
+syncSequencePlugin(knex);
+logConnectionString();
 
-module.exports = config.get('database');
+const knexConfig: Knex.Config = config.get('database');
+
+export default {
+    ...knexConfig,
+    log: knexLoggerAdapter(),
+};

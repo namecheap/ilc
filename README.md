@@ -59,6 +59,7 @@ To quickstart with ILC locally, follow the steps below:
 
 1. Clone the [namecheap/ilc](https://github.com/namecheap/ilc/) repository.
 1. Run `npm install`
+    1. **OPTIONAL** Switch database to PostgreSQL by changing environment variable `DB_CLIENT` to `pg` in services `registry_worker` and `registry` 
 1. Run `docker compose up -d`. Wait for the process to complete:
 
     ```

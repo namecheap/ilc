@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     port: 'ILC_REGISTRY_PORT',
     keepAliveTimeout: 'ILC_REGISTRY_KEEP_ALIVE_TIMEOUT',
     newrelic: {

@@ -1,7 +1,8 @@
 import { Knex } from 'knex';
+import { isSqlite } from '../util/db';
 
 export async function up(knex: Knex): Promise<any> {
-    if (isMySQL(knex)) {
+    if (!isSqlite(knex)) {
         return Promise.resolve().then(() =>
             knex.schema.alterTable('routes', (table) => {
                 table.integer('orderPos', 10).nullable().alter({}); // alter table don't affect only uniq constraint, so you don't need and it's disallowed to set unique('routes_orderpos_unique') here
@@ -52,7 +53,7 @@ export async function up(knex: Knex): Promise<any> {
 }
 
 export async function down(knex: Knex): Promise<any> {
-    if (isMySQL(knex)) {
+    if (!isSqlite(knex)) {
         return Promise.resolve().then(() =>
             knex.schema.alterTable('routes', (table) => {
                 table.integer('orderPos', 10).notNullable().alter({});
@@ -74,8 +75,4 @@ export async function down(knex: Knex): Promise<any> {
                 }),
             );
     }
-}
-
-function isMySQL(knex: Knex) {
-    return ['mysql', 'mariasql', 'mariadb'].indexOf(knex.client.dialect) > -1;
 }

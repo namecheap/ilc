@@ -12,9 +12,11 @@ import * as routes from './routes/routes';
 import settingsService from './settings/services/SettingsService';
 import pong from './util/ping';
 import { contextMiddleware } from './middleware/context';
+import { logConnectionString } from './util/db';
 
 export default async (withAuth: boolean = true): Promise<Application> => {
     loadPlugins();
+    logConnectionString();
     // As in production there can be 2+ instances of the ILC registry
     // AssetsDiscovery should be run separately via "npm run assetsdiscovery"
     !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAssetsDiscovery');

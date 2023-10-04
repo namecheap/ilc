@@ -4,7 +4,8 @@ import path from 'path';
 import { Knex } from 'knex';
 
 export async function seed(knex: Knex): Promise<any> {
-    return knex('templates').insert([
+    const table = 'templates';
+    await knex(table).insert([
         {
             name: 'master',
             content: fs.readFileSync(path.join(__dirname, './data/templates/master.html'), {

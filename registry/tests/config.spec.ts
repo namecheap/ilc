@@ -155,7 +155,7 @@ describe('Tests /api/v1/config', () => {
                         enabled: true,
                     },
                     cspTrustedLocalHosts: ['https://localhost'],
-                    cspEnableStrict: 0,
+                    cspEnableStrict: false,
                     i18n: {
                         default: {
                             currency: 'USD',

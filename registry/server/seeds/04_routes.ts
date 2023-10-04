@@ -1,7 +1,8 @@
 import { Knex } from 'knex';
 
 export async function seed(knex: Knex): Promise<any> {
-    return knex('routes').insert([
+    const table = 'routes';
+    await knex(table).insert([
         {
             id: 1,
             orderPos: 0,
@@ -74,4 +75,5 @@ export async function seed(knex: Knex): Promise<any> {
             next: false,
         },
     ]);
+    await knex(table).syncSequence();
 }
