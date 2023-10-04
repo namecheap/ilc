@@ -150,7 +150,10 @@ describe(`Tests ${example.url}`, () => {
             const templateName = 'templateName';
 
             try {
-                await req.post('/api/v1/template/').send({ name: templateName, content: '<html><head></head><body>foo bar</body></html>' }).expect(200);
+                await req
+                    .post('/api/v1/template/')
+                    .send({ name: templateName, content: '<html><head></head><body>foo bar</body></html>' })
+                    .expect(200);
 
                 const responseRouterDomains = await req
                     .post('/api/v1/router_domains/')
@@ -391,7 +394,10 @@ describe(`Tests ${example.url}`, () => {
             const templateName = 'templateName';
 
             try {
-                await req.post('/api/v1/template/').send({ name: templateName, content: '<html><head></head><body>foo bar</body></html>' }).expect(200);
+                await req
+                    .post('/api/v1/template/')
+                    .send({ name: templateName, content: '<html><head></head><body>foo bar</body></html>' })
+                    .expect(200);
 
                 const responseRouterDomains = await req
                     .post('/api/v1/router_domains/')

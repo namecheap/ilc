@@ -1,9 +1,9 @@
+const parseUrl = require('parseurl');
 const Cookie = require('cookie');
 const IlcIntl = require('ilc-sdk/app').IlcIntl;
 const { intlSchema } = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
 
 const i18nCookie = require('../common/i18nCookie');
-const { parseUrl } = require('../common/utils');
 
 const isStaticFile = (url) => {
     const extensions = ['.js', '.js.map'];
@@ -12,7 +12,7 @@ const isStaticFile = (url) => {
 };
 
 const onRequestFactory = (i18nConfig, i18nParamsDetectionPlugin) => async (req, reply) => {
-    const parsedUrl = parseUrl(req.raw.url);
+    const parsedUrl = parseUrl(req.raw);
 
     if (!i18nConfig.enabled || req.raw.url === '/ping' || isStaticFile(parsedUrl.pathname)) {
         return; // Excluding system routes

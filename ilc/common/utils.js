@@ -35,7 +35,6 @@ const decodeHtmlEntities = (value) =>
         .replace(/&quot;/g, '"');
 
 const fakeBaseInCasesWhereUrlIsRelative = 'http://hack';
-const parseUrl = (url) => new URL(url, fakeBaseInCasesWhereUrlIsRelative);
 
 const removeQueryParams = (url) => {
     const index = url.indexOf('?');
@@ -70,7 +69,6 @@ module.exports = {
     uniqueArray,
     encodeHtmlEntities,
     decodeHtmlEntities,
-    parseUrl,
     removeQueryParams,
     addTrailingSlash,
     addTrailingSlashToPath,

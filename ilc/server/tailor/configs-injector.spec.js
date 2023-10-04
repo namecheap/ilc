@@ -435,7 +435,8 @@ describe('configs injector', () => {
                     const request = { ilcState: { test: 1 }, registryConfig };
                     const template = {
                         styleRefs: [],
-                        content: '<!DOCTYPE html>\n<html lang="en">\n<head attr="1">\n\n</head>\n<body class="custom">\n...\n</body>\n</html> ',
+                        content:
+                            '<!DOCTYPE html>\n<html lang="en">\n<head attr="1">\n\n</head>\n<body class="custom">\n...\n</body>\n</html> ',
                     };
                     const result = configsInjector.inject(request, template, { slots, reqUrl: '/test/route?a=15' });
                     chai.expect(result).includes('<body class="custom">\n...\n</body>');

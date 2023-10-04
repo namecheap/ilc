@@ -1,4 +1,5 @@
 const { AsyncLocalStorage } = require('async_hooks');
+const parseUrl = require('parseurl');
 const asyncLocalStorage = new AsyncLocalStorage();
 
 module.exports = {
@@ -10,7 +11,7 @@ module.exports = {
          * @returns {unknown}
          */
         run({ request }, callback) {
-            const parsedUrl = new URL(request.raw.url, `https://${request.hostname}/`);
+            const parsedUrl = parseUrl(request.raw);
             const store = new Map();
 
             store.set('reqId', request.id);
