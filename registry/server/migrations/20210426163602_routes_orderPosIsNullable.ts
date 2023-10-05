@@ -29,7 +29,7 @@ export async function up(knex: Knex): Promise<any> {
                     table.string('route', 255).notNullable();
                     table.boolean('next').notNullable().defaultTo(false);
                     table.string('templateName', 50).nullable().references('templates.name');
-                    table.text('meta');
+                    table.json('meta');
                     table.integer('domainId', 10).unsigned().nullable().references('router_domains.id');
                     table.unique(['specialRole', 'domainId'], 'routes_specialrole_and_domainId_unique'); // CHANGED
                 }),
