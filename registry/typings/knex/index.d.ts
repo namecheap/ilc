@@ -1,12 +1,20 @@
 // knex.d.ts
+import 'knex';
 
-import { Knex } from 'knex';
+interface RangeResult<T> {
+    data: T;
+    pagination: {
+        total: number;
+    };
+}
 
 declare module 'knex' {
     namespace Knex {
-        interface QueryBuilder {
+        interface QueryBuilder<TRecord extends {} = any, TResult = any> {
             // See file db.ts for implementation
-            range<TRecord, TResult>(value: string | null | undefined): QueryBuilder<TRecord, TResult>;
+            range(value: string | null | undefined): QueryBuilder<TRecord, RangeResult<TResult>>;
+            syncSequence(column?: string): QueryBuilder<TRecord, number>;
+            cascadeTruncate(): QueryBuilder<TRecord, void>;
         }
     }
 }

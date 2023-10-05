@@ -1,7 +1,11 @@
-import { request, requestWithAuth, expect } from './common';
+import knex from 'knex';
+import { format } from 'path';
+process.env.TZ = 'UTC';
+import supertest from 'supertest';
 
 import db from '../server/db';
-import supertest from 'supertest';
+import { formatDate } from '../server/util/db';
+import { expect, request, requestWithAuth } from './common';
 
 const basePath = '/api/v1/versioning';
 const dataStub = [
@@ -12,7 +16,7 @@ const dataStub = [
         data: '{"data":{"content":"testTemplateContent"},"related":{}}',
         data_after: null,
         created_by: 'unauthenticated',
-        created_at: 1605019085,
+        created_at: formatDate(new Date('2023-09-22T14:18:23.000Z')),
     },
     {
         id: 2,
@@ -22,7 +26,7 @@ const dataStub = [
         data_after:
             '{"data":{"spaBundle":"http://localhost:1234/ncTestAppName.js","cssBundle":null,"dependencies":null,"ssr":null,"props":null,"assetsDiscoveryUrl":null,"assetsDiscoveryUpdatedAt":null,"kind":"primary","configSelector":null},"related":{}}',
         created_by: 'unauthenticated',
-        created_at: 1605019085,
+        created_at: formatDate(new Date('2023-09-22T14:18:24.000Z')),
     },
 ];
 
@@ -38,6 +42,7 @@ describe(`Tests ${basePath}`, () => {
     before(async () => {
         await db('versioning').truncate();
         await db('versioning').insert(dataStub);
+        await db('versioning').syncSequence();
     });
 
     describe('Read', () => {
@@ -45,8 +50,8 @@ describe(`Tests ${basePath}`, () => {
             const response = await req.get(basePath).expect(200);
 
             expect(response.body).to.be.an('array').that.is.not.empty;
-            expect(response.body[0]).to.eql(dataStub[1]);
-            expect(response.body[1]).to.eql(dataStub[0]);
+            expect(response.body[0]).to.eql({ ...dataStub[1], created_at: '2023-09-22T14:18:24.000Z' });
+            expect(response.body[1]).to.eql({ ...dataStub[0], created_at: '2023-09-22T14:18:23.000Z' });
         });
 
         describe('Authentication / Authorization', () => {

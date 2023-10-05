@@ -1,7 +1,8 @@
 import { Knex } from 'knex';
 
 export async function seed(knex: Knex): Promise<any> {
-    return knex('route_slots').insert([
+    const table = 'route_slots';
+    await knex(table).insert([
         {
             routeId: 1, // *
             name: 'navbar',
@@ -89,4 +90,5 @@ export async function seed(knex: Knex): Promise<any> {
             }),
         },
     ]);
+    await knex(table).syncSequence();
 }

@@ -5,13 +5,16 @@ import config from 'config';
 import rangeExtender from './range';
 import addVersioning from './versioning';
 import { knexLoggerAdapter } from './logger';
+import { syncSequencePlugin } from './syncSequence';
+import { cascadeTruncatePlugin } from './cascadeTruncate';
+import { getLogger } from '../util/logger';
 
 const client: string = config.get('database.client');
+const connectionConfig: Knex.StaticConnectionConfig = config.get('database.connection');
 
-const knexConf: Knex.Config = {
-    // after: const knex = require('knex')({client: 'mysql'});
-    client: client,
-    connection: config.get('database.connection'),
+export const knexConfig: Knex.Config = {
+    client,
+    connection: connectionConfig,
     /**
      * Sqlite does not support inserting default values
      * That is why we added it
@@ -21,13 +24,13 @@ const knexConf: Knex.Config = {
 };
 
 if (client === 'mysql') {
-    knexConf.pool = {
+    knexConfig.pool = {
         afterCreate: (conn: any, done: Function) => {
             conn.query('SET time_zone="+00:00";', (err: Error) => done(err, conn));
         },
     };
 } else if (client === 'sqlite3') {
-    knexConf.pool = {
+    knexConfig.pool = {
         afterCreate: (conn: any, done: Function) => {
             conn.run('PRAGMA foreign_keys = ON;', (err: Error) => done(err, conn));
         },
@@ -35,6 +38,8 @@ if (client === 'mysql') {
 }
 
 rangeExtender(knex);
+syncSequencePlugin(knex);
+cascadeTruncatePlugin(knex);
 
 export { VersionedKnex } from './versioning';
 
@@ -43,4 +48,4 @@ export function dbFactory(conf: Knex.Config) {
     return addVersioning(knexInstance);
 }
 
-export default dbFactory(knexConf);
+export default dbFactory(knexConfig);

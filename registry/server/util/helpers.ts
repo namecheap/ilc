@@ -24,3 +24,10 @@ export function getJoiErr(path: string, message: string, input?: any) {
 }
 
 export const uniqueArray = (array: any[]) => [...new Set(array)];
+
+export function defined<T>(value: T | null | undefined): T {
+    if (value === undefined || value === null) {
+        throw new Error(`Expected value to be defined, but received ${value}`);
+    }
+    return value;
+}

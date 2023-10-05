@@ -1,22 +1,15 @@
 import _ from 'lodash';
 import db from '../../db';
-import { SettingKeys } from '../interfaces';
+import { SettingKeys, SettingTypes } from '../interfaces';
 import { User } from '../../auth';
 import { AllowedSettingKeysForDomains } from '../interfaces';
 import { SettingRaw, SettingParsed, Setting, Scope } from '../interfaces';
-import { safeParseJSON, JSONValue } from '../../common/services/json';
+import { safeParseJSON, JSONValue, isNumeric } from '../../common/services/json';
 
 type GetOptions = {
     range?: string;
     ilc?: boolean;
     allowedForDomains: boolean | null;
-};
-
-type SettingDto = {
-    data: SettingRaw[];
-    pagination: {
-        total: number;
-    };
 };
 
 export class SettingsService {
@@ -106,7 +99,11 @@ export class SettingsService {
 
         const whereCond = options.ilc ? { scope: Scope.Ilc } : {};
 
-        const settings = await db.select().from<SettingRaw>('settings').where(whereCond).range(options.range);
+        const settings = await db
+            .select()
+            .from<SettingRaw, SettingRaw[]>('settings')
+            .where(whereCond)
+            .range(options.range);
 
         settings.data = options.allowedForDomains
             ? this.filterAllowedForDomainsSettingsKeys(settings.data)
@@ -121,11 +118,11 @@ export class SettingsService {
     }
 
     async getSettingsForDomainById(domainId: number, options: GetOptions) {
-        const settings = (await db
+        const settings = await db
             .from('settings')
             .innerJoin('settings_domain_value', 'settings.key', 'settings_domain_value.key')
             .where('settings_domain_value.domainId', domainId)
-            .select(
+            .select<SettingRaw[]>(
                 'settings.key',
                 'settings.default',
                 'settings.scope',
@@ -134,7 +131,7 @@ export class SettingsService {
                 'settings_domain_value.value as value',
                 'settings_domain_value.domainId as domainId',
             )
-            .range(options.range)) as SettingDto;
+            .range(options.range);
 
         const parsedSettings = this.parseSettings(settings.data);
 
@@ -147,7 +144,7 @@ export class SettingsService {
     async getSettingsForDomainByIdForConfig(domainId: number, options: GetOptions) {
         const whereCond = options.ilc ? { scope: Scope.Ilc } : {};
 
-        const settings = (await db
+        const settings = await db
             .from('settings')
             .leftJoin(
                 db
@@ -158,7 +155,7 @@ export class SettingsService {
                 'settings.key',
                 'sdv.key',
             )
-            .select(
+            .select<SettingRaw[]>(
                 'settings.key',
                 'settings.default',
                 'settings.scope',
@@ -169,7 +166,7 @@ export class SettingsService {
                 'domainId',
             )
             .andWhere(whereCond)
-            .range(options.range)) as SettingDto;
+            .range(options.range);
 
         const settingsData = settings.data.map((item) => {
             if (item.domainValue) {
@@ -247,6 +244,14 @@ export class SettingsService {
             (parsedSetting.value === null && parsedSetting.default !== undefined)
         ) {
             parsedSetting.value = parsedSetting.default;
+        }
+
+        if (isNumeric(parsedSetting.value)) {
+            // handle sqlite's 0/1
+            parsedSetting.value = parseInt(parsedSetting.value as string, 10);
+        }
+        if (parsedSetting.meta.type === SettingTypes.Boolean) {
+            parsedSetting.value = Boolean(parsedSetting.value);
         }
 
         parsedSetting.secret = Boolean(parsedSetting.secret);

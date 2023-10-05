@@ -4,6 +4,8 @@ import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import RouterDomains, { routerDomainsSchema } from '../interfaces';
+import { extractInsertedId } from '../../util/db';
+import { defined } from '../../util/helpers';
 
 const validateRequest = validateRequestFactory([
     {
@@ -13,14 +15,17 @@ const validateRequest = validateRequestFactory([
 ]);
 
 const createRouterDomains = async (req: Request, res: Response): Promise<void> => {
-    let routerDomainId: number;
+    let routerDomainId: number | undefined;
     await db.versioning(req.user, { type: 'router_domains' }, async (trx) => {
-        [routerDomainId] = await db('router_domains').insert(req.body).transacting(trx);
-
+        const result = await db('router_domains').insert(req.body, 'id').transacting(trx);
+        routerDomainId = extractInsertedId(result);
         return routerDomainId;
     });
 
-    const [savedRouterDomains] = await db.select().from<RouterDomains>('router_domains').where('id', routerDomainId!);
+    const [savedRouterDomains] = await db
+        .select()
+        .from<RouterDomains>('router_domains')
+        .where('id', defined(routerDomainId));
 
     res.status(200).send(preProcessResponse(savedRouterDomains));
 };

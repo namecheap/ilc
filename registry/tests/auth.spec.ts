@@ -5,7 +5,7 @@ import tk from 'timekeeper';
 import express, { NextFunction, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import sinon from 'sinon';
-import supertest, { agent as supertestAgent } from 'supertest';
+import supertest, { agent as supertestAgent, SuperTest } from 'supertest';
 import settingsService from '../server/settings/services/SettingsService';
 
 import db from '../server/db';
@@ -14,12 +14,14 @@ import { SettingKeys } from '../server/settings/interfaces';
 import nock from 'nock';
 import * as bcrypt from 'bcrypt';
 import { muteConsole, unmuteConsole } from './utils/console';
+import { loadPlugins } from '../server/util/pluginManager';
 
 const generateResp403 = (username: string) => ({
     message: `Access denied. "${username}" has "readonly" access.`,
 });
 
 const getApp = async () => {
+    loadPlugins();
     const app = express();
 
     app.use(bodyParser.json());
@@ -52,23 +54,27 @@ describe('Authentication / Authorization', () => {
     });
 
     describe('Common', async () => {
-        const request = supertest(await getApp());
-
         it('should return 401 for non-authenticated requests', async () => {
+            const request = supertest(await getApp());
             await request.get('/protected').expect(401);
         });
     });
 
     describe('Bearer token', async () => {
-        const request = supertest(await getApp());
+        let request: SuperTest<supertest.Test>;
+        let authToken: string;
+        let userIdentifier: string;
+        before(async () => {
+            request = supertest(await getApp());
 
-        const userIdentifier = 'root_api_token';
+            userIdentifier = 'root_api_token';
 
-        //It's hardcoded in DB migrations
-        const authToken =
-            Buffer.from(userIdentifier, 'utf8').toString('base64') +
-            ':' +
-            Buffer.from('token_secret', 'utf8').toString('base64');
+            //It's hardcoded in DB migrations
+            authToken =
+                Buffer.from(userIdentifier, 'utf8').toString('base64') +
+                ':' +
+                Buffer.from('token_secret', 'utf8').toString('base64');
+        });
 
         it('should not authenticate with invalid creds', async () => {
             await request.get('/protected').set('Authorization', `Bearer invalid`).expect(401);

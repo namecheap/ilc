@@ -6,6 +6,7 @@ import knex from '../../../db';
 import manifestProcessor from './assetsManifestProcessor';
 import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 import { getLogger } from '../../../util/logger';
+import { parseJSON } from '../json';
 
 export default class AssetsDiscovery {
     private tableName: string;
@@ -37,7 +38,7 @@ export default class AssetsDiscovery {
     private isAssetsEqual(manifestAssets: Record<string, any>, dbAssets: Record<string, any>) {
         const shallowCopyDbAssets = Object.assign({}, dbAssets);
         if (shallowCopyDbAssets.dependencies) {
-            shallowCopyDbAssets.dependencies = JSON.parse(shallowCopyDbAssets.dependencies);
+            shallowCopyDbAssets.dependencies = parseJSON(shallowCopyDbAssets.dependencies);
         }
         return deepEqual(shallowCopyDbAssets, manifestAssets);
     }
@@ -59,9 +60,11 @@ export default class AssetsDiscovery {
 
             // This implementation of communication between ILC & apps duplicates code in ILC ServerRouter
             // and so should be refactored in the future.
-            if (entity.props && entity.props !== '{}') {
-                const entityProps = Buffer.from(entity.props).toString('base64');
-                reqUrl = urljoin(reqUrl, `?appProps=${entityProps}`);
+            const entityPropsJSON =
+                typeof entity.props === 'object' && entity.props !== null ? JSON.stringify(entity.props) : entity.props;
+            if (entityPropsJSON && entityPropsJSON !== '{}') {
+                const entityPropsBase64 = Buffer.from(entityPropsJSON).toString('base64');
+                reqUrl = urljoin(reqUrl, `?appProps=${entityPropsBase64}`);
             }
 
             let res: AxiosResponse;
@@ -69,7 +72,7 @@ export default class AssetsDiscovery {
                 res = await axios.get(reqUrl, { responseType: 'json' });
             } catch (err: any) {
                 //TODO: add exponential back-off
-                getLogger().warn(err, `Can't refresh assets for "${entity[this.tableId]}"`);
+                getLogger().warn(`Can't refresh assets for "${entity[this.tableId]}"`, err);
                 continue;
             }
 

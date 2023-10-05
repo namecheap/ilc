@@ -1,22 +1,20 @@
 import { Knex } from 'knex';
+import { isMySQL } from '../util/db';
 
 export async function seed(knex: Knex): Promise<any> {
+    const tables = ['route_slots', 'routes', 'apps', 'shared_props', 'shared_libs', 'router_domains', 'templates'];
     return knex.transaction(async function (trx) {
-        isMySQL(knex) && (await knex.schema.raw('SET FOREIGN_KEY_CHECKS = 0;').transacting(trx));
-
+        if (isMySQL(knex)) {
+            await knex.schema.raw('SET FOREIGN_KEY_CHECKS = 0;').transacting(trx);
+        }
         try {
-            await knex('route_slots').transacting(trx).truncate();
-            await knex('routes').transacting(trx).truncate();
-            await knex('apps').transacting(trx).truncate();
-            await knex('shared_props').transacting(trx).truncate();
-            await knex('router_domains').transacting(trx).truncate();
-            await knex('templates').transacting(trx).truncate();
+            for (const table of tables) {
+                await knex(table).transacting(trx).cascadeTruncate();
+            }
         } finally {
-            isMySQL(knex) && (await knex.schema.raw('SET FOREIGN_KEY_CHECKS = 1;').transacting(trx));
+            if (isMySQL(knex)) {
+                await knex.schema.raw('SET FOREIGN_KEY_CHECKS = 1;').transacting(trx);
+            }
         }
     });
-}
-
-function isMySQL(knex: Knex) {
-    return ['mysql', 'mariasql', 'mariadb'].indexOf(knex.client.dialect) > -1;
 }

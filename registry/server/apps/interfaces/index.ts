@@ -15,12 +15,29 @@ export default interface App {
     dependencies?: string; // JSON({ [packageName: string]: string })
     props?: string; // JSON({ [propName: string]: any })
     ssrProps?: string; // JSON({ [propName: string]: any })
-    configSelector?: string;
+    configSelector?: string; // JSON(string[])
     ssr: string; // JSON({ src: string, timeout: number })
     wrappedWith?: string;
     discoveryMetadata?: string; // JSON({ [propName: string]: any })
     adminNotes?: string;
     l10nManifest?: string;
+}
+
+export interface AppSsr {
+    src: string;
+    timeout: number;
+}
+
+export interface AppProps {
+    [x: string]: any;
+}
+
+export interface AppSsrProps {
+    [x: string]: any;
+}
+
+export interface AppDependencies {
+    [x: string]: string;
 }
 
 export const appNameSchema = Joi.string().trim().min(1);

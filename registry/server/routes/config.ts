@@ -2,10 +2,9 @@ import _ from 'lodash';
 import express from 'express';
 
 import knex from '../db';
-import { Setting, Scope, SettingParsed } from '../settings/interfaces';
-import preProcessResponse from '../settings/services/preProcessResponse';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 import settingsService from '../settings/services/SettingsService';
+import { parseJSON } from '../common/services/json';
 
 const router = express.Router();
 
@@ -38,17 +37,17 @@ router.get('/', async (req, res) => {
     };
 
     data.apps = apps.reduce((acc, v) => {
-        v.ssr = JSON.parse(v.ssr);
-        v.dependencies = JSON.parse(v.dependencies);
-        v.props = JSON.parse(v.props);
-        v.ssrProps = JSON.parse(v.ssrProps);
+        v.ssr = parseJSON(v.ssr);
+        v.dependencies = parseJSON(v.dependencies);
+        v.props = parseJSON(v.props);
+        v.ssrProps = parseJSON(v.ssrProps);
 
         if (sharedProps.length && v.configSelector !== null) {
-            JSON.parse(v.configSelector).forEach((configSelectorName: string) => {
+            parseJSON<string[]>(v.configSelector).forEach((configSelectorName) => {
                 const commonConfig = sharedProps.find((n) => n.name === configSelectorName);
                 if (commonConfig) {
-                    v.props = _.merge({}, JSON.parse(commonConfig.props), v.props);
-                    v.ssrProps = _.merge({}, JSON.parse(commonConfig.ssrProps), v.ssrProps);
+                    v.props = _.merge({}, parseJSON(commonConfig.props), v.props);
+                    v.ssrProps = _.merge({}, parseJSON(commonConfig.ssrProps), v.ssrProps);
                 }
             });
         }
@@ -109,13 +108,13 @@ router.get('/', async (req, res) => {
         if (routeItem.name !== null) {
             routeData.slots[routeItem.name] = {
                 appName: routeItem.appName,
-                props: routeItem.props !== null ? JSON.parse(routeItem.props) : {},
+                props: routeItem.props !== null ? parseJSON(routeItem.props) : {},
                 kind: routeItem.kind,
             };
         }
 
         if (routeItem.meta !== null) {
-            routeData.meta = JSON.parse(routeItem.meta);
+            routeData.meta = parseJSON(routeItem.meta);
         }
     });
 

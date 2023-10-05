@@ -6,10 +6,10 @@ import validateRequestFactory from '../../common/services/validateRequest';
 import { stringifyJSON } from '../../common/services/json';
 import { prepareAppRouteToSave } from '../services/prepareAppRoute';
 import { appRouteSchema } from '../interfaces';
-import * as httpErrors from '../../errorHandler/httpErrors';
 import { retrieveAppRouteFromDB } from './getAppRoute';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
-import { getJoiErr, joiErrorToResponse } from '../../util/helpers';
+import { defined, getJoiErr, joiErrorToResponse } from '../../util/helpers';
+import { extractInsertedId, handleForeignConstraintError } from '../../util/db';
 
 const validateRequestBeforeCreateAppRoute = validateRequestFactory([
     {
@@ -43,11 +43,12 @@ const createAppRoute = async (req: Request, res: Response) => {
         }
     }
 
-    let savedAppRouteId: number;
+    let savedAppRouteId: number | undefined;
 
     try {
         await db.versioning(req.user, { type: 'routes' }, async (transaction) => {
-            [savedAppRouteId] = await db('routes').insert(prepareAppRouteToSave(appRoute)).transacting(transaction);
+            const result = await db('routes').insert(prepareAppRouteToSave(appRoute), 'id').transacting(transaction);
+            savedAppRouteId = extractInsertedId(result);
 
             await db
                 .batchInsert(
@@ -85,15 +86,11 @@ const createAppRoute = async (req: Request, res: Response) => {
                 ),
             );
         }
-
-        if (['foreign key constraint fails', 'FOREIGN KEY constraint failed'].some((v) => message.includes(v))) {
-            throw new httpErrors.DBError({ message });
-        }
-
+        handleForeignConstraintError(e as Error);
         throw e;
     }
 
-    const savedAppRoute = await retrieveAppRouteFromDB(savedAppRouteId!);
+    const savedAppRoute = await retrieveAppRouteFromDB(defined(savedAppRouteId));
 
     res.status(200).send(savedAppRoute);
 };

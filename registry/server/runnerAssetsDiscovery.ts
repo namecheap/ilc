@@ -1,14 +1,19 @@
-import path from 'path';
+import 'newrelic';
 
-process.env.NODE_CONFIG_DIR = path.resolve(__dirname, '../config');
-require('newrelic'); //Should be lower then NODE_CONFIG_DIR env var definition
+import AssetsDiscovery from './common/services/assets/AssetsDiscovery';
+import { getLogger } from './util/logger';
+import { loadPlugins } from './util/pluginManager';
 
 const tmpInterval = Number(process.env.INTERVAL);
 const interval = Number.isNaN(tmpInterval) ? undefined : tmpInterval;
 
-import AssetsDiscovery from './common/services/assets/AssetsDiscovery';
-import { loadPlugins } from './util/pluginManager';
-
-loadPlugins();
-new AssetsDiscovery('apps').start(interval);
-new AssetsDiscovery('shared_libs').start(interval);
+(() => {
+    try {
+        loadPlugins();
+        new AssetsDiscovery('apps').start(interval);
+        new AssetsDiscovery('shared_libs').start(interval);
+    } catch (e: unknown) {
+        getLogger().error(e as Error);
+        process.exit(1);
+    }
+})();

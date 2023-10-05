@@ -14,7 +14,7 @@ if (myCmd.includes('--no-watch')) {
 
 const commands = [
     { command: `cd ./ilc/ && ${noWatch ? 'npx cross-env NODE_ENV=production' : ''} npm run ${noWatch ? 'start' : 'dev'}`, name: 'ilc' },
-    { command: `cd ./registry/ && npm run ${noWatch ? 'start' : 'dev'}`, name: 'registry' },
+    { command: `cd ./registry/ && npm run migrate && npm run seed && npm run ${noWatch ? 'start' : 'dev'}`, name: 'registry' },
 ];
 
 if (!noWatch) {
@@ -25,7 +25,7 @@ if (runWithApps) {
 }
 
 process.on('exit', () => {
-    childProcess.execSync('docker stop ilc-demo-apps');
+    childProcess.execSync('docker kill ilc-demo-apps');
 })
 
 concurrently(commands, {

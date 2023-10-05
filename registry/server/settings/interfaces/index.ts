@@ -63,11 +63,11 @@ export enum OnPropsUpdateValues {
     Update = 'update',
 }
 
-type SettingValue = string | boolean | TrailingSlashValues | string[];
+type SettingValue = string | number | boolean | string[];
 
 type SettingMeta = {
     type: SettingTypes;
-    choices?: any[];
+    choices?: SettingValue[];
 };
 
 export type Setting = {
@@ -76,10 +76,7 @@ export type Setting = {
     default: SettingValue;
     scope: Scope;
     secret: boolean;
-    meta: {
-        type: SettingTypes;
-        choices?: any[];
-    };
+    meta: SettingMeta;
 };
 
 export type SettingRaw = {
@@ -89,7 +86,7 @@ export type SettingRaw = {
     default: SettingValue;
     scope: Scope;
     secret: boolean;
-    meta: string; // stringified JSON
+    meta: SettingMeta | string; // stringified JSON
 };
 
 export type SettingParsed = Omit<SettingRaw, 'value' | 'default' | 'meta'> &

@@ -3,7 +3,7 @@ import _ from 'lodash/fp';
 /**
  * Original source code was taken from {@link https://github.com/prototypejs/prototype/blob/5fddd3e/src/prototype/lang/string.js#L702}
  */
-const isJSON = (str: string): boolean => {
+export function isJSON(str: string): boolean {
     if (/^\s*$/.test(str)) return false;
 
     str = str.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@');
@@ -11,15 +11,20 @@ const isJSON = (str: string): boolean => {
     str = str.replace(/(?:^|:|,)(?:\s*\[)+/g, '');
 
     return /^[\],:{}\s]*$/.test(str);
-};
+}
 
-const parse = (value: any): any => {
-    if (_.isString(value) && isJSON(value)) {
+export function parse<T = any>(value: unknown): T {
+    if (typeof value === 'string' && isJSON(value) && !isNumeric(value)) {
         return JSON.parse(value);
     }
 
-    return value;
-};
+    return value as T;
+}
+
+export function isNumeric(str: unknown): boolean {
+    if (typeof str !== 'string') return false;
+    return !isNaN(str as unknown as number) && !isNaN(parseFloat(str));
+}
 
 export type JSONValue = string | number | boolean | null | JSONObject | JSONArray;
 
@@ -64,12 +69,14 @@ export function safeParseJSON<T extends JSONValue>(value: unknown, typeGuard: ty
 }
 
 // Avoid using this type unsafe method and switch code to safeParseJSON
-export function parseJSON(value: any): any {
-    return _.cond([
-        [_.isArray, _.map(_.mapValues(parseJSON))],
-        [_.isObject, _.mapValues(parseJSON)],
-        [_.stubTrue, parse],
-    ])(value);
+export function parseJSON<T extends JSONValue>(value: unknown): T {
+    if (Array.isArray(value)) {
+        return value.map(parseJSON) as T;
+    } else if (typeof value === 'object' && !!value) {
+        return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, parseJSON(value)])) as T;
+    } else {
+        return parse(value);
+    }
 }
 
 export const stringifyJSON = _.curry((pathes: string[], data: any) =>

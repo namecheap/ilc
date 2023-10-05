@@ -5,6 +5,7 @@ import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import { routerDomainIdSchema } from '../interfaces';
 import * as httpErrors from '../../errorHandler/httpErrors';
+import { handleForeignConstraintError } from '../../util/db';
 
 type RequestParams = {
     id: string;
@@ -25,6 +26,7 @@ const deleteRouterDomains = async (req: Request<RequestParams>, res: Response): 
         try {
             count = await db('router_domains').where('id', req.params.id).delete().transacting(trx);
         } catch (e: any) {
+            handleForeignConstraintError(e);
             throw new httpErrors.DBError({ message: e.message });
         }
 
