@@ -79,9 +79,7 @@ module.exports = class ErrorHandler {
             let data = await this.#registryService.getTemplate('500', { locale, forDomain: currentDomain });
             data = data.data.content.replace('%ERRORID%', `Error ID: ${errorId}`);
 
-            nres.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-            nres.setHeader('Pragma', 'no-cache');
-            nres.statusCode = 500;
+            this.#ensureInternalErrorHeaders(nres);
             nres.write(data);
             nres.end();
         } catch (causeErr) {
@@ -97,8 +95,15 @@ module.exports = class ErrorHandler {
         }
     };
 
-    #writeStaticError(nres) {
+    #ensureInternalErrorHeaders(nres) {
+        nres.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        nres.setHeader('Pragma', 'no-cache');
+        nres.setHeader('Content-Type', 'text/html; charset=utf-8');
         nres.statusCode = 500;
+    }
+
+    #writeStaticError(nres) {
+        this.#ensureInternalErrorHeaders(nres);
         let content = this.#readStaticErrorPage(defaultErrorPage);
 
         nres.write(content);
