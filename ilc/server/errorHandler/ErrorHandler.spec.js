@@ -61,6 +61,7 @@ describe('ErrorHandler', () => {
 
         chai.expect(response.header['cache-control']).to.be.eql('no-cache, no-store, must-revalidate');
         chai.expect(response.header['pragma']).to.be.eql('no-cache');
+        chai.expect(response.header['content-type']).to.be.eql('text/html; charset=utf-8');
         chai.expect(response.text).to.be.eql(
             '<html><head></head>' +
                 '<body>' +
@@ -82,6 +83,7 @@ describe('ErrorHandler', () => {
         const response = await server.get('/_ilc/500').expect(500);
 
         chai.expect(response.text).to.be.eql(defaultErrorPage);
+        chai.expect(response.headers['content-type']).to.be.eql('text/html; charset=utf-8');
     });
 
     describe('when static error page config is specified', () => {
