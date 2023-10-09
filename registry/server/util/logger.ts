@@ -1,7 +1,7 @@
 import { Logger } from 'ilc-plugins-sdk';
 import { getPluginManagerInstance } from './pluginManager';
 import { storage } from '../middleware/context';
-import errorExtender from '@namecheap/error-extender';
+import errorExtender, { ExtendedError } from '@namecheap/error-extender';
 
 const hasKey = <T extends object>(obj: T, k: keyof any): k is keyof T => k in obj;
 
@@ -13,7 +13,9 @@ const loggerProxyHandler: ProxyHandler<Logger> = {
         }
         const requestIdKey = getPluginManagerInstance().getReportingPlugin().requestIdLogLabel ?? 'operationId';
         return function (
-            ...args: [arg1: object, arg2: string | undefined, ...args: any[]] | [arg1: string, ...args: any[]]
+            ...args:
+                | [arg1: object | Error | ExtendedError, arg2: string | undefined, ...args: any[]]
+                | [arg1: string, ...args: any[]]
         ) {
             const store = storage.getStore();
             const [arg1, ...restArgs] = args;
@@ -34,7 +36,7 @@ const loggerProxyHandler: ProxyHandler<Logger> = {
                 } else {
                     const ExtendedError = errorExtender(arg1.name);
                     const errorWithData = new ExtendedError({ message: arg1.message, data: logContext, cause: arg1 });
-                    return originalMember.call(target, errorWithData, ...args);
+                    return originalMember.call(target, errorWithData, ...restArgs);
                 }
             }
 

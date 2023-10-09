@@ -7,6 +7,7 @@ import manifestProcessor from './assetsManifestProcessor';
 import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 import { getLogger } from '../../../util/logger';
 import { parseJSON } from '../json';
+import { axiosErrorTransformer } from '../../../util/axiosErrorTransformer';
 
 export default class AssetsDiscovery {
     private tableName: string;
@@ -72,7 +73,7 @@ export default class AssetsDiscovery {
                 res = await axios.get(reqUrl, { responseType: 'json' });
             } catch (err: any) {
                 //TODO: add exponential back-off
-                getLogger().warn(`Can't refresh assets for "${entity[this.tableId]}"`, err);
+                getLogger().warn(axiosErrorTransformer(err), `Can't refresh assets for "${entity[this.tableId]}"`);
                 continue;
             }
 
