@@ -235,7 +235,7 @@ export default async (app: Express, settingsService: SettingsService, config: an
             res.sendStatus(404);
         },
         (req, res, next) => {
-            passport.authenticate('openid', function (err, user, info) {
+            passport.authenticate('openid', function (err: any, user: Express.User | false | null, info: any) {
                 if (err) {
                     return next(err);
                 }
@@ -268,19 +268,21 @@ export default async (app: Express, settingsService: SettingsService, config: an
     });
 
     app.get('/auth/logout', (req, res, next) => {
-        req.logout();
-        res.clearCookie('ilc:userInfo');
+        req.logout((err) => {
+            if (err) return next(err);
+            res.clearCookie('ilc:userInfo');
 
-        if (req.session) {
-            req.session.regenerate((err) => {
-                if (err) {
-                    next(err);
-                }
+            if (req.session) {
+                req.session.regenerate((err) => {
+                    if (err) {
+                        next(err);
+                    }
+                    res.redirect('/');
+                });
+            } else {
                 res.redirect('/');
-            });
-        } else {
-            res.redirect('/');
-        }
+            }
+        });
     });
 
     app.get('/auth/available-methods', async (req, res) => {
@@ -324,7 +326,7 @@ async function getEntityWithCreds(provider: string, identifier: string, secret: 
         return null;
     }
 
-    if (secret !== null || user.secret !== null) {
+    if (secret !== null && user.secret !== null) {
         //Support of the password less auth methods, like OpenID Connect
         if (!(await bcrypt.compare(secret, user.secret))) {
             return null;

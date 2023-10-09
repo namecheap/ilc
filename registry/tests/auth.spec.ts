@@ -134,7 +134,7 @@ describe('Authentication / Authorization', () => {
         });
 
         afterEach(async () => {
-            await agent.get('/auth/logout');
+            await agent.get('/auth/logout').expect(302);
         });
 
         it('should authenticate with correct creds', async () => {
