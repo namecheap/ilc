@@ -7,13 +7,13 @@ const dest = path.resolve(__dirname, '../public');
 !fs.existsSync(dest) ? fs.mkdirSync(dest) : 0;
 
 const sources = [];
-
-sources.push(require.resolve('systemjs/dist/system.min'));
-sources.push(require.resolve('./amd.exec.js'));
-sources.push(require.resolve('systemjs/dist/extras/use-default.min'));
-sources.push(require.resolve('systemjs-css-extra/dist/css.min'));
-sources.push(require.resolve('./systemjs-override-importmap'));
-sources.push(require.resolve('./systemjs-name-resolver'));
+const nodeModules = path.resolve(__dirname, '../node_modules');
+sources.push(path.resolve(nodeModules, './systemjs/dist/system.min.js'));
+sources.push(path.resolve(__dirname, './amd.exec.js'));
+sources.push(path.resolve(nodeModules, './systemjs/dist/extras/use-default.min.js'));
+sources.push(path.resolve(nodeModules, './systemjs-css-extra/dist/css.min.js'));
+sources.push(path.resolve(__dirname, './systemjs-override-importmap.js'));
+sources.push(path.resolve(__dirname, './systemjs-name-resolver.js'));
 
 fs.writeFileSync(
     `${dest}/system.js`,

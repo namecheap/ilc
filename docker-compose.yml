@@ -16,6 +16,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      # postgres:
+      #   condition: service_healthy
   registry_worker:
     image: namecheap/ilc_registry:latest
     command: ["npm", "run", "assetsdiscovery"]

@@ -92,7 +92,7 @@
     "wrapper-webpack-plugin": "^2.1.0"
   },
   "engines": {
-    "node": ">=16 <17"
+    "node": "^20.8.0"
   },
   "engineStrict": true
 }

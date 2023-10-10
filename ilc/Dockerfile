@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:20.8.0-alpine
 
 RUN apk update && apk add --no-cache bash git openssh python3 make g++ findutils
 

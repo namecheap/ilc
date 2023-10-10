@@ -1,8 +1,9 @@
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 
-const origSource = fs.readFileSync(require.resolve('systemjs/dist/extras/amd.min'));
+const origSource = fs.readFileSync(path.resolve(__dirname, '../node_modules/systemjs/dist/extras/amd.min.js'));
 
 const wrappedCode =
     '' +
