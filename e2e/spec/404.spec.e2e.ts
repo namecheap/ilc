@@ -62,12 +62,12 @@ Scenario('Renders (CSR) overridden 404 page for non-existing News app route', ({
 //endregion 404 page for non-existing News app route
 
 //region 404 page for non-existing News resource
-Scenario.skip('Renders (SSR) global 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (SSR) global 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
     I.amOnPage(newsPage.url.nonExistingResource);
     I.seeInSource(common.text404NotFound);
 });
 
-Scenario.skip('Renders (CSR) global 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (CSR) global 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
     I.amOnPage(newsPage.url.main);
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingResource), 10);
@@ -81,12 +81,12 @@ Scenario.skip('Renders (CSR) global 404 page for non-existing News resource', ({
     I.see('Pick a news source', newsPage.bannerHeadline);
 });
 
-Scenario.skip('Renders (SSR) overridden 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (SSR) overridden 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
     I.amOnPage(newsPage.url.nonExistingResourceWithOverride);
     I.seeInSource(common.text404NotFoundVue);
 });
 
-Scenario.skip('Renders (CSR) overridden 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (CSR) overridden 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
     I.amOnPage(newsPage.url.main);
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingResourceWithOverride), 10);
