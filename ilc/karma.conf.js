@@ -1,5 +1,5 @@
 const path = require('path');
-const webpackConfig = require('./build/webpack.dev');
+const webpackConfig = require('./build/webpack.test');
 const nycConfig = require('./nyc.config');
 
 const getThresholds = () => ({
@@ -55,9 +55,6 @@ module.exports = function (config) {
         ],
         files,
         preprocessors: {
-            'client/**/!(*.spec).js': ['webpack', 'sourcemap'],
-            'common/**/!(*.spec).js': ['webpack', 'sourcemap'],
-
             'client/**/*.spec.js': ['webpack', 'sourcemap'],
             'common/**/*.spec.js': ['webpack', 'sourcemap'],
             'systemjs/**/*.spec.js': ['webpack', 'sourcemap'],
@@ -87,7 +84,6 @@ module.exports = function (config) {
         },
         webpack: {
             ...webpackConfig,
-            devtool: false,
         },
         webpackMiddleware: {
             noInfo: true,
