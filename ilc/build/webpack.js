@@ -47,4 +47,11 @@ module.exports = {
     ],
     devtool: 'source-map',
     externals: [],
+    /**
+     * Very slow performance on macos with webpack-dev-middleware
+     * https://github.com/webpack/watchpack/issues/222
+     */
+    watchOptions: {
+        poll: 1000,
+    },
 };
