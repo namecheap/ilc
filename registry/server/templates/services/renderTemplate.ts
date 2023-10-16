@@ -29,15 +29,14 @@ type RenderTemplateResult = {
     styleRefs: string[];
 };
 
-async function renderTemplate(template: string): Promise<RenderTemplateResult> {
-    if (!isTemplateValid(template)) {
+async function renderTemplate(templateContent: string): Promise<RenderTemplateResult> {
+    if (!isTemplateValid(templateContent)) {
         throw new Error('HTML template has invalid structure');
     }
 
-    const includesAttributes = matchIncludesAttributes(template);
-
+    const includesAttributes = matchIncludesAttributes(templateContent);
     const result: RenderTemplateResult = {
-        content: template,
+        content: templateContent,
         styleRefs: [],
     };
 

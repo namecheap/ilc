@@ -92,7 +92,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
         res.status(200).send(_.assign(template, renderedTemplate));
     } catch (e) {
         if (e instanceof errors.FetchIncludeError) {
-            res.status(503).send(e.message);
+            res.status(500).send(e.message);
             noticeError(e, {
                 context: 'Error during fetch of the rendered template',
             });
