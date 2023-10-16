@@ -159,10 +159,6 @@ export class Client {
     }
 
     #errorHandlerFor(appName, slotName) {
-        if (!navigator.onLine) {
-            return window.location.reload();
-        }
-
         return (error, errorInfo) => {
             let isCriticalError = false;
             const isAppExists = !!this.#configRoot.getConfigForAppByName(appName);
