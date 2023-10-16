@@ -35,6 +35,12 @@ const example = {
             'fr-CA': { content: '<html><head></head><body>Canada content</body></html>' },
         },
     }),
+    withInclude: Object.freeze({
+        name: 'ncTestTemplateNameWithInclude',
+        content:
+            '<html><head></head><body><include id="test-include" src="https://complete-random-ilc-include-test-domain.org.ote/include.html" timeout="100" />' +
+            'test content</body></html>',
+    }),
 };
 
 describe(`Tests ${example.url}`, () => {
@@ -168,103 +174,6 @@ describe(`Tests ${example.url}`, () => {
             const response = await reqWithAuth.get(example.url + example.correctLocalized.name).expect(200);
 
             expect(response.body).deep.equal(example.correctLocalized);
-        });
-
-        it('should return a rendered template w/o authentication', async () => {
-            const includesHost = 'https://api.include.com';
-            const scope = nock(includesHost);
-
-            const includes = [
-                {
-                    api: {
-                        route: '/get/include/1',
-                        delay: 0,
-                        response: {
-                            status: 200,
-                            data: `
-                                <div id="include-id-1">
-                                    This include has all necessary attributes
-                                    and a specified link header which is a stylesheet
-                                </div>
-                            `,
-                            headers: {
-                                'X-Powered-By': 'JS',
-                                'X-My-Awesome-Header': 'Awesome',
-                                Link: 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000,https://my.awesome.server/my-awesome-script.js;rel=script;loveyou=3000',
-                            },
-                        },
-                    },
-                    attributes: {
-                        id: 'include-id-1',
-                        src: `${includesHost}/get/include/1`,
-                        timeout: 1000,
-                    },
-                },
-            ];
-
-            const template = {
-                name: 'This template is for a render test',
-                content: `
-                    <html>
-                    <head>
-                        <meta charset="utf-8" />
-                        <meta name="viewport" content="width=device-width,initial-scale=1"/>
-                        <include    id="${includes[0].attributes.id}"   src="${includes[0].attributes.src}"    timeout="${includes[0].attributes.timeout}" />
-                        <script>window.console.log('Something...')</script>
-                    </head>
-                    <body>
-                        <div class="class-name-1">Something...</div>
-                        <div id="div-id-1" class="class-name-2">Something...</div>
-                        <div id="div-id-2" data-id="data-id-2" />
-                    </body>
-                    </html>
-                `,
-            };
-
-            includes.forEach(
-                ({
-                    api: {
-                        route,
-                        delay,
-                        response: { status, data, headers },
-                    },
-                }) => scope.persist().get(route).delay(delay).reply(status, data, headers),
-            );
-
-            try {
-                await req.post(example.url).send(template).expect(200);
-
-                const response = await reqWithAuth.get(example.url + template.name + '/rendered').expect(200);
-
-                expect(response.body).to.eql({
-                    styleRefs: ['https://my.awesome.server/my-awesome-stylesheet.css'],
-                    name: template.name,
-                    content: `
-                    <html>
-                    <head>
-                        <meta charset="utf-8" />
-                        <meta name="viewport" content="width=device-width,initial-scale=1"/>
-                        ${
-                            `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
-                            '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
-                            includes[0].api.response.data +
-                            '\n' +
-                            '<script src="https://my.awesome.server/my-awesome-script.js"></script>\n' +
-                            `<!-- Template include "${includes[0].attributes.id}" END -->`
-                        }
-                        <script>window.console.log('Something...')</script>
-                    </head>
-                    <body>
-                        <div class="class-name-1">Something...</div>
-                        <div id="div-id-1" class="class-name-2">Something...</div>
-                        <div id="div-id-2" data-id="data-id-2" />
-                    </body>
-                    </html>
-                `,
-                });
-            } finally {
-                await req.delete(example.url + template.name);
-            }
         });
 
         it('should return localized version of rendered template', async () => {
@@ -560,6 +469,124 @@ describe(`Tests ${example.url}`, () => {
             it('should deny access w/o authentication', async () => {
                 await reqWithAuth.delete(example.url + example.correct.name).expect(401);
             });
+        });
+    });
+
+    describe('Rendered', () => {
+        it('should return HTTP 500 in case of inability to render template', async () => {
+            const setupIncludeResults = (delay: number) =>
+                nock('https://complete-random-ilc-include-test-domain.org.ote')
+                    .get('/include.html')
+                    .delay(delay)
+                    .reply(200, '<div>test content</div>');
+            setupIncludeResults(10);
+            const creationResponse = await req.post(example.url).send(example.withInclude);
+            try {
+                expect(creationResponse.status).to.eq(200, creationResponse.text);
+                setupIncludeResults(1000); // should be bigger than timeout in HTML
+                const templateResponse = await req.get(example.url + example.withInclude.name + '/rendered');
+
+                expect(templateResponse.statusCode).to.equal(500);
+            } finally {
+                await req.delete(example.url + example.withInclude.name);
+            }
+        });
+
+        it('should return a rendered template w/o authentication', async () => {
+            const includesHost = 'https://api.include.com';
+            const scope = nock(includesHost);
+
+            const includes = [
+                {
+                    api: {
+                        route: '/get/include/1',
+                        delay: 0,
+                        response: {
+                            status: 200,
+                            data: `
+                                <div id="include-id-1">
+                                    This include has all necessary attributes
+                                    and a specified link header which is a stylesheet
+                                </div>
+                            `,
+                            headers: {
+                                'X-Powered-By': 'JS',
+                                'X-My-Awesome-Header': 'Awesome',
+                                Link: 'https://my.awesome.server/my-awesome-stylesheet.css;rel=stylesheet;loveyou=3000,https://my.awesome.server/my-awesome-script.js;rel=script;loveyou=3000',
+                            },
+                        },
+                    },
+                    attributes: {
+                        id: 'include-id-1',
+                        src: `${includesHost}/get/include/1`,
+                        timeout: 1000,
+                    },
+                },
+            ];
+
+            const template = {
+                name: 'This template is for a render test',
+                content: `
+                    <html>
+                    <head>
+                        <meta charset="utf-8" />
+                        <meta name="viewport" content="width=device-width,initial-scale=1"/>
+                        <include    id="${includes[0].attributes.id}"   src="${includes[0].attributes.src}"    timeout="${includes[0].attributes.timeout}" />
+                        <script>window.console.log('Something...')</script>
+                    </head>
+                    <body>
+                        <div class="class-name-1">Something...</div>
+                        <div id="div-id-1" class="class-name-2">Something...</div>
+                        <div id="div-id-2" data-id="data-id-2" />
+                    </body>
+                    </html>
+                `,
+            };
+
+            includes.forEach(
+                ({
+                    api: {
+                        route,
+                        delay,
+                        response: { status, data, headers },
+                    },
+                }) => scope.persist().get(route).delay(delay).reply(status, data, headers),
+            );
+
+            try {
+                await req.post(example.url).send(template).expect(200);
+
+                const response = await reqWithAuth.get(example.url + template.name + '/rendered').expect(200);
+
+                expect(response.body).to.eql({
+                    styleRefs: ['https://my.awesome.server/my-awesome-stylesheet.css'],
+                    name: template.name,
+                    content: `
+                    <html>
+                    <head>
+                        <meta charset="utf-8" />
+                        <meta name="viewport" content="width=device-width,initial-scale=1"/>
+                        ${
+                            `<!-- Template include "${includes[0].attributes.id}" START -->\n` +
+                            '<link rel="stylesheet" href="https://my.awesome.server/my-awesome-stylesheet.css">\n' +
+                            includes[0].api.response.data +
+                            '\n' +
+                            '<script src="https://my.awesome.server/my-awesome-script.js"></script>\n' +
+                            `<!-- Template include "${includes[0].attributes.id}" END -->`
+                        }
+                        <script>window.console.log('Something...')</script>
+                    </head>
+                    <body>
+                        <div class="class-name-1">Something...</div>
+                        <div id="div-id-1" class="class-name-2">Something...</div>
+                        <div id="div-id-2" data-id="data-id-2" />
+                    </body>
+                    </html>
+                `,
+                });
+            } finally {
+                await req.delete(example.url + template.name);
+            }
         });
     });
 });
