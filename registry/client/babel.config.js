@@ -7,7 +7,8 @@ const presets = [
                 chrome: '80',
                 safari: '13.0',
             },
-            useBuiltIns: 'usage'
+            useBuiltIns: 'usage',
+            corejs: 3,
         },
     ],
     '@babel/preset-react',

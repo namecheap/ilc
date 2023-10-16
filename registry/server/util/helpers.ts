@@ -14,9 +14,8 @@ export function getJoiErr(path: string, message: string, input?: any) {
         [
             {
                 message,
-                path,
+                path: [path],
                 type: 'any.custom',
-                input,
             },
         ],
         undefined,

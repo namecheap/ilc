@@ -247,30 +247,25 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Use Node.js 16
-        uses: actions/setup-node@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20.8.0
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install Chrome deps
         run: sudo apt-get update && sudo apt-get install -y libgbm-dev
 
-      - name: Cache node modules
-        uses: actions/cache@v1
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.os }}-build
-
       - name: Install dependencies
-        run: npm i
+        run: npm install
 
       - name: Build ILC & Registry
         run: npm run build
 
       - name: Run E2E tests
-        run: cd e2e && npm run start:verbose
+        working-directory: e2e
+        run: npm run start:verbose
         env:
           DB_CLIENT: ${{ matrix.database.client }}
           DB_HOST: localhost

@@ -5,8 +5,10 @@ const { DefinePlugin } = require('webpack');
 const WrapperPlugin = require('wrapper-webpack-plugin');
 const { DuplicateIlcPluginsWebpackPlugin, ResolveIlcDefaultPluginsWebpackPlugin } = require('ilc-plugins-sdk/webpack');
 
-const { environment } = require('../common/Environment');
+const { Environment } = require('../common/Environment');
 const ilcPluginsPath = path.resolve(__dirname, '../../node_modules/');
+
+const environment = new Environment(process.env);
 
 module.exports = {
     entry: path.resolve(__dirname, '../client.js'),
@@ -45,4 +47,11 @@ module.exports = {
     ],
     devtool: 'source-map',
     externals: [],
+    /**
+     * Very slow performance on macos with webpack-dev-middleware
+     * https://github.com/webpack/watchpack/issues/222
+     */
+    watchOptions: {
+        poll: 1000,
+    },
 };
