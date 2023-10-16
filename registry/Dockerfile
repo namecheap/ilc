@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:20.8.0-alpine
 
 RUN apk --no-cache add --virtual builds-deps build-base python3 && \
     ln -sf python3 /usr/bin/python

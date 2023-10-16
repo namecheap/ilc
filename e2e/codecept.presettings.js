@@ -1,6 +1,7 @@
 const waitOn = require('wait-on');
 const path = require('path');
 const execa = require('execa').command;
+const terminate = require('terminate');
 
 const appPorts = {
     ilc: 8233,
@@ -28,23 +29,18 @@ const resources = [
 
 let childProcess;
 
-const shutDown = async () => {
+async function shutdown() {
     if (!childProcess || childProcess.exitCode !== null) {
         return;
     }
 
-    console.log(`Killing child process...`);
-    childProcess.kill('SIGTERM', { forceKillAfterTimeout: 3000 });
-
-    await new Promise(resolve => {
-        childProcess.once('exit', () => {
-            console.log(`Child process was successfully killed. Shutting down...`);
-            resolve();
-        });
+    console.info(`Killing child process...`);
+    await terminate(childProcess.pid, 'SIGTERM', { timeout: 3000 }, (err) => {
+        terminate(childProcess.pid);
     });
-};
+}
 
-const bootstrap = async () => {
+async function bootstrap()  {
     try {
         await new Promise((resolve, reject) => {
             const verbose = process.env.TEST_ENV === 'verbose';
@@ -68,12 +64,12 @@ const bootstrap = async () => {
     } catch (error) {
         console.error('Error during bootstrap...');
         console.error(error);
-        await shutDown();
+        await shutdown();
         process.exit(1);
     }
 };
 
-const teardown = async () => shutDown();
+const teardown = async () => shutdown();
 
 module.exports = {
     bootstrap,

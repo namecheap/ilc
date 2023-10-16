@@ -1,11 +1,12 @@
 const path = require('path');
 const fg = require('fast-glob');
 
-const { environment } = require('../../common/Environment');
+const { Environment } = require('../../common/Environment');
 const { manifest: serverPluginsManifest } = require('../../server.plugins.manifest');
 
 class PluginsLoader {
     load() {
+        const environment = new Environment(process.env);
         if (!environment.isLegacyPluginsDiscoveryEnabled()) {
             return serverPluginsManifest.plugins;
         }

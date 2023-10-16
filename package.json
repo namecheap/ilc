@@ -22,12 +22,12 @@
     "author": "",
     "license": "Apache-2.0",
     "engines": {
-        "node": ">=16 <17",
+        "node": "^20.8.0",
         "npm": ">= 6.0.0"
     },
     "devDependencies": {
-        "concurrently": "^7.1.0",
-        "husky": "^8.0.0",
-        "prettier": "^2.7.1"
+        "concurrently": "^8.2.1",
+        "husky": "^8.0.3",
+        "prettier": "^3.0.3"
     }
 }

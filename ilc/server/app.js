@@ -1,7 +1,6 @@
 const newrelic = require('newrelic');
 const config = require('config');
 const fastify = require('fastify');
-const crypto = require('crypto');
 const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const errorHandlingService = require('./errorHandler/factory');

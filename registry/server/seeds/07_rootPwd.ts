@@ -3,7 +3,7 @@ import config from 'config';
 import * as bcrypt from 'bcrypt';
 
 export async function seed(knex: Knex): Promise<void> {
-    const rootPassword = config.get('database.rootPassword');
+    const rootPassword = config.get<string>('database.rootPassword');
 
     if (rootPassword) {
         await knex('auth_entities')

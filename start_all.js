@@ -1,5 +1,4 @@
 const concurrently = require('concurrently');
-const childProcess = require('child_process');
 
 let runWithApps = true;
 let noWatch = false;
@@ -13,29 +12,40 @@ if (myCmd.includes('--no-watch')) {
 }
 
 const commands = [
-    { command: `cd ./ilc/ && ${noWatch ? 'npx cross-env NODE_ENV=production' : ''} npm run ${noWatch ? 'start' : 'dev'}`, name: 'ilc' },
-    { command: `cd ./registry/ && npm run migrate && npm run seed && npm run ${noWatch ? 'start' : 'dev'}`, name: 'registry' },
+    {
+        cwd: 'ilc',
+        command: `${noWatch ? 'npx cross-env NODE_ENV=production' : ''} npm run ${noWatch ? 'start' : 'dev'}`,
+        name: 'ilc',
+    },
+    {
+        cwd: 'registry',
+        command: `npm run migrate && npm run seed && npm run ${noWatch ? 'start' : 'dev'}`,
+        name: 'registry',
+    },
 ];
 
 if (!noWatch) {
-    commands.push({ command: 'cd ./registry/client && npm run build:watch', name: 'registry:ui' });
+    commands.push({ cwd: 'registry/client', command: 'npm run build:watch', name: 'registry:ui' });
 }
 if (runWithApps) {
-    commands.push({ command: 'docker run --rm --name ilc-demo-apps -p 8234-8240:8234-8240 namecheap/ilc-demo-apps', name: 'demo-apps' });
+    commands.push({
+        command:
+            'docker rm -f ilc-demo-apps && docker pull namecheap/ilc-demo-apps && docker run --rm --name ilc-demo-apps -p 8234-8240:8234-8240 namecheap/ilc-demo-apps',
+        name: 'demo-apps',
+    });
 }
-
-process.on('exit', () => {
-    childProcess.execSync('docker kill ilc-demo-apps');
-})
 
 concurrently(commands, {
     prefix: 'name',
     killOthers: ['failure', 'success'],
-}).result.then(() => {
-    console.log('concurrently was finished successfully');
-    process.exit(0);
-}, (err) => {
-    console.error('concurrently was finished with error');
-    console.error(err);
-    process.exit(1);
-});
+    prefixColors: ['auto']
+}).result.then(
+    () => {
+        console.log('concurrently was finished successfully');
+        process.exit(0);
+    },
+    (err) => {
+        console.error('concurrently was finished with error');
+        process.exit(1);
+    },
+);

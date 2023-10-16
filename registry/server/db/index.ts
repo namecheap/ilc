@@ -7,14 +7,13 @@ import addVersioning from './versioning';
 import { knexLoggerAdapter } from './logger';
 import { syncSequencePlugin } from './syncSequence';
 import { cascadeTruncatePlugin } from './cascadeTruncate';
-import { getLogger } from '../util/logger';
 
 const client: string = config.get('database.client');
 const connectionConfig: Knex.StaticConnectionConfig = config.get('database.connection');
 
 export const knexConfig: Knex.Config = {
     client,
-    connection: connectionConfig,
+    connection: { ...connectionConfig },
     /**
      * Sqlite does not support inserting default values
      * That is why we added it

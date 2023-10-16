@@ -16,5 +16,4 @@ class Environment {
 
 module.exports = {
     Environment,
-    environment: new Environment(process.env),
 };

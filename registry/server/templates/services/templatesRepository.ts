@@ -14,10 +14,13 @@ export async function readTemplateWithAllVersions(templateName: string) {
         .select()
         .from<LocalizedTemplate>(tables.templatesLocalized)
         .where('templateName', templateName);
-    template.localizedVersions = localizedTemplates.reduce((acc, item) => {
-        acc[item.locale] = { content: item.content };
-        return acc;
-    }, {} as Record<string, object>);
+    template.localizedVersions = localizedTemplates.reduce(
+        (acc, item) => {
+            acc[item.locale] = { content: item.content };
+            return acc;
+        },
+        {} as Record<string, object>,
+    );
 
     return template;
 }

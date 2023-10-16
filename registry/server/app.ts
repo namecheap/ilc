@@ -34,7 +34,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
 
     app.get(healthCheckUrl, pong);
 
-    app.use('/', serveStatic('client/dist') as any);
+    app.use('/', serveStatic('client/dist'));
 
     let authMw: RequestHandler[] = [(req, res, next) => next()];
     if (withAuth) {
