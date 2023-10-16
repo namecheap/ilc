@@ -11,6 +11,9 @@ exports.config = {
             url: `http://localhost:8233`,
             show: process.env.SHOW_UI === 'true',
             windowSize: '1200x900',
+            chrome: {
+                headless: 'new',
+            },
         },
         MockRequestHelper: {
             require: '@codeceptjs/mock-request',
@@ -26,30 +29,30 @@ exports.config = {
             },
         },
         Mochawesome: {
-            uniqueScreenshotNames: true
+            uniqueScreenshotNames: true,
         },
         // Adds assertions to API https://www.npmjs.com/package/codeceptjs-chai
-        ChaiWrapper : {
-            require: 'codeceptjs-chai'
-        }
+        ChaiWrapper: {
+            require: 'codeceptjs-chai',
+        },
     },
     mocha: {
         reporterOptions: {
             'codeceptjs-cli-reporter': {
-                stdout: "-",
+                stdout: '-',
                 options: {
                     verbose: true,
                     steps: true,
-                }
+                },
             },
             mochawesome: {
                 stdout: path.join(outputDir, 'console.log'),
                 options: {
                     reportDir: outputDir,
-                    reportFilename: "report"
-                }
+                    reportFilename: 'report',
+                },
             },
-        }
+        },
     },
     bootstrap: preSettings.bootstrap,
     teardown: preSettings.teardown,
@@ -59,7 +62,7 @@ exports.config = {
             enabled: true,
         },
         retryFailedStep: {
-            enabled: true
+            enabled: true,
         },
         autoDelay: {
             enabled: true,
