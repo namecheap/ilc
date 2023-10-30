@@ -26,7 +26,7 @@ module.exports = {
         sessionSecret: 'zaM7%#BjyZZ3A5zV@Mpt',
     },
     http: {
-        requestLimit: '200kb',
+        requestLimit: '1mb',
     },
     healthCheck: {
         url: '/ping',
