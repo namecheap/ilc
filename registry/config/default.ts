@@ -9,6 +9,7 @@ module.exports = {
             database: 'registry_db',
             filename: path.resolve(__dirname, '../server/dbfiles/db.sqlite'),
         },
+        searchPath: ['public'],
         useNullAsDefault: true,
         migrations: {
             directory: path.resolve(__dirname, '../server/migrations'),

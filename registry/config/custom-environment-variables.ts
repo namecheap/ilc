@@ -13,6 +13,7 @@ export default {
             database: 'DB_NAME',
             filename: 'DB_FILENAME',
         },
+        searchPath: 'DB_SEARCH_PATH',
         rootPassword: 'ROOT_PWD',
     },
     auth: {

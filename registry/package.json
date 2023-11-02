@@ -65,7 +65,6 @@
     },
     "dependencies": {
         "@namecheap/error-extender": "^1.2.0",
-        "@nc_ui/ilc-plugin-reporting-spaceship": "file:../../ilc-plugin-reporting-spaceship/nc_ui-ilc-plugin-reporting-spaceship-1.5.2.tgz",
         "@newrelic/native-metrics": "^10.0.1",
         "axios": "^0.26.1",
         "bcrypt": "^5.1.1",
