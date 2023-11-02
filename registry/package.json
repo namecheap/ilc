@@ -6,7 +6,7 @@
     "scripts": {
         "tsc": "tsc",
         "compile": "tsc --incremental",
-        "dev": "nodemon -e ts,json5 --exec \"npx tsc --incremental && dotenv -- npm run start | pino-pretty\" ",
+        "dev": "nodemon -e ts,json5 --exec \"npx tsc --incremental && dotenv -- npm run start\" ",
         "build": "npm run compile && cd ./client && npm run build",
         "start": "node -r source-map-support/register ./build/server/index.js",
         "start-docker": "npm run migrate && npm start",
@@ -65,6 +65,7 @@
     },
     "dependencies": {
         "@namecheap/error-extender": "^1.2.0",
+        "@nc_ui/ilc-plugin-reporting-spaceship": "file:../../ilc-plugin-reporting-spaceship/nc_ui-ilc-plugin-reporting-spaceship-1.5.2.tgz",
         "@newrelic/native-metrics": "^10.0.1",
         "axios": "^0.26.1",
         "bcrypt": "^5.1.1",
@@ -77,7 +78,7 @@
         "express": "^4.18.2",
         "express-session": "^1.17.3",
         "http-shutdown": "^1.2.2",
-        "ilc-plugins-sdk": "^1.7.0",
+        "ilc-plugins-sdk": "^2.0.2",
         "is-valid-domain": "0.1.6",
         "joi": "^17.11.0",
         "knex": "^3.0.1",

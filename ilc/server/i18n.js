@@ -1,7 +1,7 @@
 const parseUrl = require('parseurl');
 const Cookie = require('cookie');
 const IlcIntl = require('ilc-sdk/app').IlcIntl;
-const { intlSchema } = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
+const { intlSchema } = require('ilc-sdk');
 
 const i18nCookie = require('../common/i18nCookie');
 
