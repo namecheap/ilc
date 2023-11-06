@@ -1,10 +1,18 @@
-export class UrlHashController {
+export class ScrollController {
     // @todo write e2e tests for hash position restoring
     #hashStoreNode = document.body;
     #hashStoreAttribute = 'ilcTempStoredHash';
+    #lastVisitedUrl = this.location.pathname;
+    #shouldScrollToTop = true;
+
+    get location() {
+        return window.location;
+    }
 
     store() {
-        if (window.location.hash) {
+        this.#shouldScrollToTop = this.#lastVisitedUrl.toLowerCase() !== this.location.pathname.toLowerCase();
+        this.#lastVisitedUrl = this.location.pathname;
+        if (this.location.hash) {
             const node = this.#hashStoreNode;
             const hashValue = this.#getHashValue();
             node.setAttribute(this.#hashStoreAttribute, hashValue);
@@ -15,26 +23,28 @@ export class UrlHashController {
         const node = this.#hashStoreNode;
         // @todo: looks like it never used so storing is useless
         node.removeAttribute(this.#hashStoreAttribute);
-        this.#scrollToHash();
+        this.#restoreScrollOnNavigation();
     }
 
-    #scrollToHash() {
+    #restoreScrollOnNavigation() {
         let scrollToElement;
-
-        if (window.location.hash) {
-            scrollToElement = document.querySelector(window.location.hash);
+        if (this.location.hash) {
+            scrollToElement = document.getElementById(this.#getHashValue());
         }
 
         if (scrollToElement) {
             scrollToElement.scrollIntoView();
-        } else {
+            return;
+        }
+
+        if (this.#shouldScrollToTop) {
             window.scroll(0, 0);
         }
     }
 
     #getHashValue() {
         try {
-            return window.location.hash.slice(1);
+            return decodeURIComponent(this.location.hash.slice(1));
         } catch (error) {
             // @todo handle an error the hash should not be read if it not exists
             return false;

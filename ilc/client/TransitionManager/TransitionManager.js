@@ -6,7 +6,7 @@ import ilcEvents from '../constants/ilcEvents';
 import TransitionBlockerList from './TransitionBlockerList';
 import { CssTrackedApp } from '../CssTrackedApp';
 import { GlobalSpinner } from './GlobalSpinner/GlobalSpinner';
-import { UrlHashController } from './UrlHashController/UrlHashController';
+import { ScrollController } from './ScrollController/ScrollController';
 import { SlotRenderObserver } from './SlotRenderObserver/SlotRenderObserver';
 
 export const slotWillBe = {
@@ -34,7 +34,7 @@ export class TransitionManager {
 
     /** @type TransitionBlockerList */
     #transitionBlockers = new TransitionBlockerList();
-    #urlHashController = new UrlHashController();
+    #scrollController = new ScrollController();
 
     constructor(logger, spinnerConfig) {
         this.#logger = logger;
@@ -115,7 +115,7 @@ export class TransitionManager {
 
         const contentListenerBlocker = new NamedTransactionBlocker(slotName, (resolve) => {
             this.#runGlobalSpinner();
-            this.#urlHashController.store();
+            this.#scrollController.store();
 
             const targetNode = getSlotElement(slotName);
             targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
@@ -166,7 +166,7 @@ export class TransitionManager {
         this.#hiddenSlots.length = 0;
 
         this.#removeGlobalSpinner();
-        this.#urlHashController.restore();
+        this.#scrollController.restore();
 
         window.dispatchEvent(new CustomEvent(ilcEvents.PAGE_READY));
     };
