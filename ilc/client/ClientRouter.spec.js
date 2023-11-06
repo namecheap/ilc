@@ -748,12 +748,12 @@ describe('client router', () => {
 
             history.replaceState({}, undefined, '/hero');
             chai.expect(isActiveHero()).to.be.eql(true);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.rendered);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.rendered, 'primary');
             handlePageTransaction.resetHistory();
 
             history.replaceState({}, undefined, '/opponent');
             chai.expect(isActiveHero()).to.be.eql(false);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.removed);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.removed, 'primary');
             handlePageTransaction.resetHistory();
         });
 
@@ -763,12 +763,12 @@ describe('client router', () => {
 
             history.replaceState({}, undefined, '/opponent');
             chai.expect(isActiveHero()).to.be.eql(false);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default, 'primary');
             handlePageTransaction.resetHistory();
 
             history.replaceState({}, undefined, '/hero');
             chai.expect(isActiveHero()).to.be.eql(true);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.rendered);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.rendered, 'primary');
             handlePageTransaction.resetHistory();
         });
 
@@ -778,12 +778,12 @@ describe('client router', () => {
 
             history.replaceState({}, undefined, '/base');
             chai.expect(isActiveHero()).to.be.eql(true);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default, 'primary');
             handlePageTransaction.resetHistory();
 
             history.replaceState({}, undefined, '/');
             chai.expect(isActiveHero()).to.be.eql(true);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default, 'primary');
             handlePageTransaction.resetHistory();
         });
 
@@ -819,20 +819,20 @@ describe('client router', () => {
 
             // the same slot so nothing changed
             chai.expect(isActiveHero()).to.be.eql(true);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default, 'primary');
             handlePageTransaction.resetHistory();
 
             history.replaceState({}, undefined, '/hero');
 
             // remove slot with old props
             chai.expect(isActiveHero()).to.be.eql(false);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.removed);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.removed, 'primary');
             handlePageTransaction.resetHistory();
 
             // trigger rerender, just to render previously removed fragments
             dispatchIlcPageReadyEvent();
             chai.expect(isActiveHero()).to.be.eql(true);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default, 'primary');
             handlePageTransaction.resetHistory();
 
             sinon.assert.calledWithExactly(
@@ -878,14 +878,14 @@ describe('client router', () => {
 
             // the same slot so nothing changed
             chai.expect(isActiveHero()).to.be.eql(true);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default, 'primary');
             handlePageTransaction.resetHistory();
 
             history.replaceState({}, undefined, '/hero');
 
             // in case of "updating" we don't remove fragment, just update it with new props
             chai.expect(isActiveHero()).to.be.eql(true);
-            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default);
+            sinon.assert.calledOnceWithExactly(handlePageTransaction, 'hero', slotWillBe.default, 'primary');
             handlePageTransaction.resetHistory();
 
             sinon.assert.notCalled(logger.info);

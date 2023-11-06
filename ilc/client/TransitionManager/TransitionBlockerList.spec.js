@@ -1,6 +1,6 @@
 import chai from 'chai';
 
-import TransitionBlocker from './TransitionBlocker';
+import { TransitionBlocker } from './TransitionBlocker';
 import TransitionBlockerList from './TransitionBlockerList';
 
 describe('TransitionBlockerList', () => {
@@ -8,12 +8,20 @@ describe('TransitionBlockerList', () => {
     let transactionBlockerList;
 
     beforeEach(() => {
-        first = new TransitionBlocker((resolve) => {
-            resolve();
-        });
-        second = new TransitionBlocker((resolve) => {
-            resolve();
-        });
+        first = new TransitionBlocker(
+            (resolve) => {
+                resolve();
+            },
+            () => {},
+            { externalId: 'first' },
+        );
+        second = new TransitionBlocker(
+            (resolve) => {
+                resolve();
+            },
+            () => {},
+            { externalId: 'second' },
+        );
 
         transactionBlockerList = new TransitionBlockerList();
     });

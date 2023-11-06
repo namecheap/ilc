@@ -29,6 +29,9 @@ module.exports = function (config) {
           ];
 
     config.set({
+        client: {
+            captureConsole: true,
+        },
         singleRun: true,
         browsers: ['ChromeHeadless'],
         customLaunchers: {
@@ -59,7 +62,7 @@ module.exports = function (config) {
             'common/**/*.spec.js': ['webpack', 'sourcemap'],
             'systemjs/**/*.spec.js': ['webpack', 'sourcemap'],
         },
-        reporters: ['mocha', 'coverage'],
+        reporters: ['mocha' /*'coverage'*/],
         mochaReporter: {
             showDiff: true,
         },

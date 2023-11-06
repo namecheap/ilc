@@ -82,9 +82,14 @@ export class Client {
         this.#logger = reportingPlugin.logger;
 
         this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, this.#registryService);
+
+        const transitionTimeout = 3000;
+
         this.#transitionManager = new TransitionManager(
             this.#logger,
             this.#configRoot.getSettingsByKey('globalSpinner'),
+            this.#errorHandlerManager,
+            transitionTimeout,
         );
 
         const i18nSettings = this.#configRoot.getSettingsByKey('i18n');

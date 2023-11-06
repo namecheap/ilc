@@ -75,10 +75,14 @@ describe('TransitionManager', () => {
     beforeEach(() => {
         window.location.hash = locationHash;
 
-        const transitionManager = new TransitionManager(logger, {
-            enabled: true,
-            customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
-        });
+        const transitionManager = new TransitionManager(
+            logger,
+            {
+                enabled: true,
+                customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
+            },
+            { handleError: () => {} },
+        );
         handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);
         removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
 
@@ -165,17 +169,26 @@ describe('TransitionManager', () => {
     });
 
     it('should listen to slot content changes when a slot is going to be rendered', async () => {
+        console.log('start test---->');
+        console.log(document.getElementById('slots').innerHTML);
+        console.log('spinner.getRef() = ', spinner.getRef());
+        console.log('action------ handlePageTransition(slots.navbar.id, slotWillBe.rendered)');
         handlePageTransition(slots.navbar.id, slotWillBe.rendered);
 
         await clock.runAllAsync();
 
+        console.log(document.getElementById('slots').innerHTML);
+        console.log('spinner.getRef() = ', spinner.getRef());
         chai.expect(spinner.getRef()).to.be.not.null;
         chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
         chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
 
+        console.log('action------ handlePageTransition(slots.body.id, slotWillBe.rendered)');
         handlePageTransition(slots.body.id, slotWillBe.rendered);
 
         await clock.runAllAsync();
+        console.log(document.getElementById('slots').innerHTML);
+        console.log('spinner.getRef() = ', spinner.getRef());
 
         chai.expect(spinner.getRef()).to.be.not.null;
         chai.expect(document.getElementsByClassName(spinner.class).length).to.equal(1);
@@ -183,18 +196,24 @@ describe('TransitionManager', () => {
         chai.expect(slots.body.getComputedStyle().display).to.be.equal('none');
         chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
 
+        console.log('action------ navbar.appendApplication');
         applications.navbar.appendApplication();
 
         await clock.runAllAsync();
+        console.log(document.getElementById('slots').innerHTML);
+        console.log('spinner.getRef() = ', spinner.getRef());
 
         chai.expect(spinner.getRef()).to.be.not.null;
         chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
         chai.expect(slots.body.getComputedStyle().display).to.be.equal('none');
         chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
 
+        console.log('action------ applications.body.appendApplication();');
         applications.body.appendApplication();
 
         await clock.runAllAsync();
+        console.log(document.getElementById('slots').innerHTML);
+        console.log('spinner.getRef() = ', spinner.getRef());
 
         chai.expect(spinner.getRef()).to.be.null;
         chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('block');
@@ -604,10 +623,14 @@ describe('TransitionManager', () => {
 
     it('should throw error in case of double subscription to single SPA events', function () {
         chai.expect(function () {
-            new TransitionManager(logger, {
-                enabled: true,
-                customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
-            });
+            new TransitionManager(
+                logger,
+                {
+                    enabled: true,
+                    customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
+                },
+                {},
+            );
         }).to.throw();
     });
 
@@ -616,13 +639,17 @@ describe('TransitionManager', () => {
 
         const expectedClass = 'iAmSetFromCustomHTML';
 
-        const transitionManager = new TransitionManager(logger, {
-            enabled: true,
-            customHTML: `
+        const transitionManager = new TransitionManager(
+            logger,
+            {
+                enabled: true,
+                customHTML: `
                 <div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>
                 <script>document.querySelector('#${spinner.id}').classList.add('${expectedClass}')</script>
             `,
-        });
+            },
+            {},
+        );
 
         removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
         const handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);
@@ -642,9 +669,13 @@ describe('TransitionManager', () => {
 
     it('should load default spinner when no customHTML provided', async () => {
         removePageTransactionListeners();
-        const transitionManager = new TransitionManager(logger, {
-            enabled: true,
-        });
+        const transitionManager = new TransitionManager(
+            logger,
+            {
+                enabled: true,
+            },
+            {},
+        );
 
         removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
         const handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);

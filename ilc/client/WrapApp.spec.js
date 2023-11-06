@@ -130,7 +130,11 @@ describe('WrapApp', () => {
 
         const ilcConfigRoot = getIlcConfigRoot();
         const ilcConfigSettings = ilcConfigRoot.getSettings();
-        transitionManager = new TransitionManager(window.console, ilcConfigSettings && ilcConfigSettings.globalSpinner);
+        transitionManager = new TransitionManager(
+            window.console,
+            ilcConfigSettings && ilcConfigSettings.globalSpinner,
+            {},
+        );
     });
 
     afterEach(() => {
