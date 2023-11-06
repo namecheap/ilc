@@ -6,6 +6,7 @@ export default {
     },
     database: {
         client: 'DB_CLIENT',
+        // connection: 'DB_URI',
         connection: {
             host: 'DB_HOST',
             user: 'DB_USER',
