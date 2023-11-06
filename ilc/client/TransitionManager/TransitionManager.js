@@ -264,14 +264,16 @@ export class TransitionManager {
     };
 
     #onRouteChange = () => {
-        if (this.#transitionBlockers.isEmpty()) {
-            this.#onPageReady();
+        if (!this.#transitionBlockers.isEmpty()) {
+            return;
+        }
 
-            if (!this.#transitionBlockers.isReady()) {
-                this.#transitionBlockers.init();
-                // ilcEvents.ALL_SLOTS_LOADED is dispatched only on first page load here
-                window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
-            }
+        this.#scrollController.onEveryRouteChange();
+        this.#onPageReady();
+        if (!this.#transitionBlockers.isReady()) {
+            this.#transitionBlockers.init();
+            // ilcEvents.ALL_SLOTS_LOADED is dispatched only on first page load here
+            window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
         }
     };
 }
