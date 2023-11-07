@@ -6,7 +6,7 @@ import ilcEvents from '../constants/ilcEvents';
 import { slotWillBe, TransitionManager } from './TransitionManager';
 import { CssTrackedApp } from '../CssTrackedApp';
 
-describe('TransitionManager Timeout', () => {
+describe.only('TransitionManager Timeout', () => {
     const locationHash = 'i-am-location-hash';
 
     const logger = {
