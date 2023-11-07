@@ -133,7 +133,6 @@ export class TransitionManager {
 
     #addContentListener = (slotName, slotKind = 'essential') => {
         if (this.#transitionBlockerExists(slotName)) {
-            this.#logger.warn(`Attempt to add transition blocker for a slot ${slotName} that is already blocked.`);
             return;
         }
 
