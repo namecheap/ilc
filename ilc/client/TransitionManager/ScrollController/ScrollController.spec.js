@@ -79,8 +79,8 @@ describe('ScrollController', () => {
 
         it('should not scroll to top if store has recorded navigation between the same path', () => {
             scrollSpy = sinon.spy(window, 'scroll');
-            scrollController.store();
-            scrollController.store();
+            scrollController.onEveryRouteChange();
+            scrollController.onEveryRouteChange();
 
             scrollController.restore();
 

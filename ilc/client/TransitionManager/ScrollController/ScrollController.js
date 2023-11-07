@@ -9,9 +9,12 @@ export class ScrollController {
         return window.location;
     }
 
-    store() {
+    onEveryRouteChange() {
         this.#shouldScrollToTop = this.#lastVisitedUrl.toLowerCase() !== this.location.pathname.toLowerCase();
         this.#lastVisitedUrl = this.location.pathname;
+    }
+
+    store() {
         if (this.location.hash) {
             const node = this.#hashStoreNode;
             const hashValue = this.#getHashValue();
