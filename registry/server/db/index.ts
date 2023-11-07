@@ -9,11 +9,13 @@ import { syncSequencePlugin } from './syncSequence';
 import { cascadeTruncatePlugin } from './cascadeTruncate';
 
 const client: string = config.get('database.client');
-const connectionConfig: Knex.StaticConnectionConfig = config.get('database.connection');
+const searchPath: string = config.get('database.searchPath');
+const connectionConfig: Knex.Config['connection'] = config.get('database.connection');
 
 export const knexConfig: Knex.Config = {
     client,
-    connection: { ...connectionConfig },
+    connection: typeof connectionConfig === 'object' ? { ...connectionConfig } : connectionConfig,
+    searchPath,
     /**
      * Sqlite does not support inserting default values
      * That is why we added it

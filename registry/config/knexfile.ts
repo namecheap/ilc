@@ -19,8 +19,10 @@ logConnectionString();
 
 const knexConfig: Knex.Config = config.get('database');
 
+const connection = typeof knexConfig.connection === 'object' ? { ...knexConfig.connection } : knexConfig.connection;
+
 export default {
     ...knexConfig,
-    connection: { ...(knexConfig.connection as object) },
+    connection,
     log: knexLoggerAdapter(),
 };

@@ -5,7 +5,7 @@ import ilcEvents from '../constants/ilcEvents';
 import TransitionBlockerList from './TransitionBlockerList';
 import { CssTrackedApp } from '../CssTrackedApp';
 import { GlobalSpinner } from './GlobalSpinner/GlobalSpinner';
-import { UrlHashController } from './UrlHashController/UrlHashController';
+import { ScrollController } from './ScrollController/ScrollController';
 import { SlotRenderObserver } from './SlotRenderObserver/SlotRenderObserver';
 import { CriticalSlotTransitionError } from './errors/CriticalSlotTransitionError';
 
@@ -34,7 +34,7 @@ export class TransitionManager {
 
     /** @type TransitionBlockerList */
     #transitionBlockers = new TransitionBlockerList();
-    #urlHashController = new UrlHashController();
+    #scrollController = new ScrollController();
 
     #transitionBlockerTimeout = 0;
     #errorHandlerManager;
@@ -140,7 +140,7 @@ export class TransitionManager {
 
         const blockerExecutor = (resolve) => {
             this.#runGlobalSpinner();
-            this.#urlHashController.store();
+            this.#scrollController.store();
 
             const targetNode = getSlotElement(slotName);
             targetNode.style.display = 'none'; // we will show all new slots, only when all will be settled
@@ -195,7 +195,7 @@ export class TransitionManager {
         this.#hiddenSlots.length = 0;
 
         this.#removeGlobalSpinner();
-        this.#urlHashController.restore();
+        this.#scrollController.restore();
 
         window.dispatchEvent(new CustomEvent(ilcEvents.PAGE_READY));
     };
@@ -318,14 +318,16 @@ export class TransitionManager {
     };
 
     #onRouteChange = () => {
-        if (this.#transitionBlockers.isEmpty()) {
-            this.#onPageReady();
+        this.#scrollController.onEveryRouteChange();
+        if (!this.#transitionBlockers.isEmpty()) {
+            return;
+        }
 
-            if (!this.#transitionBlockers.isReady()) {
-                this.#transitionBlockers.init();
-                // ilcEvents.ALL_SLOTS_LOADED is dispatched only on first page load here
-                window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
-            }
+        this.#onPageReady();
+        if (!this.#transitionBlockers.isReady()) {
+            this.#transitionBlockers.init();
+            // ilcEvents.ALL_SLOTS_LOADED is dispatched only on first page load here
+            window.dispatchEvent(new CustomEvent(ilcEvents.ALL_SLOTS_LOADED));
         }
     };
 }

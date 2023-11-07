@@ -6,6 +6,7 @@ export default {
     },
     database: {
         client: 'DB_CLIENT',
+        // connection: 'DB_URI',
         connection: {
             host: 'DB_HOST',
             user: 'DB_USER',
@@ -13,6 +14,7 @@ export default {
             database: 'DB_NAME',
             filename: 'DB_FILENAME',
         },
+        searchPath: 'DB_SEARCH_PATH',
         rootPassword: 'ROOT_PWD',
     },
     auth: {
