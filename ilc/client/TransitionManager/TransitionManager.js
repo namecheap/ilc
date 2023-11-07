@@ -264,11 +264,11 @@ export class TransitionManager {
     };
 
     #onRouteChange = () => {
+        this.#scrollController.onEveryRouteChange();
         if (!this.#transitionBlockers.isEmpty()) {
             return;
         }
 
-        this.#scrollController.onEveryRouteChange();
         this.#onPageReady();
         if (!this.#transitionBlockers.isReady()) {
             this.#transitionBlockers.init();
