@@ -75,10 +75,14 @@ describe('TransitionManager', () => {
     beforeEach(() => {
         window.location.hash = locationHash;
 
-        const transitionManager = new TransitionManager(logger, {
-            enabled: true,
-            customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
-        });
+        const transitionManager = new TransitionManager(
+            logger,
+            {
+                enabled: true,
+                customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
+            },
+            { handleError: () => {} },
+        );
         handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);
         removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
 
@@ -604,10 +608,14 @@ describe('TransitionManager', () => {
 
     it('should throw error in case of double subscription to single SPA events', function () {
         chai.expect(function () {
-            new TransitionManager(logger, {
-                enabled: true,
-                customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
-            });
+            new TransitionManager(
+                logger,
+                {
+                    enabled: true,
+                    customHTML: `<div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>`,
+                },
+                {},
+            );
         }).to.throw();
     });
 
@@ -616,13 +624,17 @@ describe('TransitionManager', () => {
 
         const expectedClass = 'iAmSetFromCustomHTML';
 
-        const transitionManager = new TransitionManager(logger, {
-            enabled: true,
-            customHTML: `
+        const transitionManager = new TransitionManager(
+            logger,
+            {
+                enabled: true,
+                customHTML: `
                 <div id="${spinner.id}" class="${spinner.class}">Hello! I am Spinner</div>
                 <script>document.querySelector('#${spinner.id}').classList.add('${expectedClass}')</script>
             `,
-        });
+            },
+            {},
+        );
 
         removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
         const handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);
@@ -642,9 +654,13 @@ describe('TransitionManager', () => {
 
     it('should load default spinner when no customHTML provided', async () => {
         removePageTransactionListeners();
-        const transitionManager = new TransitionManager(logger, {
-            enabled: true,
-        });
+        const transitionManager = new TransitionManager(
+            logger,
+            {
+                enabled: true,
+            },
+            {},
+        );
 
         removePageTransactionListeners = transitionManager.removeEventListeners.bind(transitionManager);
         const handlePageTransition = transitionManager.handlePageTransition.bind(transitionManager);

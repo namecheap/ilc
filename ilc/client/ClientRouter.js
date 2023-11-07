@@ -75,6 +75,18 @@ export default class ClientRouter extends EventEmitter {
     match = (url) => this.#router.match(this.#i18n.unlocalizeUrl(url.replace(this.#location.origin, '') || '/'));
     navigateToUrl = (url) => this.#singleSpa.navigateToUrl(this.#i18n.localizeUrl(url));
 
+    /**
+     * Get the relevant application kind for a given app name and slot name.
+     *
+     * @param {string} appName - The name of the application.
+     * @param {string} slotName - The name of the slot.
+     *
+     * @returns {string} 'regular' | 'primary' | 'essential'
+     *
+     * @throws {RouterError} Throws a RouterError if information about the app cannot be found in the registry.
+     *
+     * @method
+     */
     getRelevantAppKind(appName, slotName) {
         const app = this.#registryConf.apps[appName];
 
@@ -100,10 +112,16 @@ export default class ClientRouter extends EventEmitter {
 
         //Todo: side effect have to be removed from getter
         let willBe = slotWillBe.default;
-        !wasActive && isActive && (willBe = slotWillBe.rendered);
-        wasActive && !isActive && (willBe = slotWillBe.removed);
 
-        this.#handlePageTransition(slotName, willBe);
+        if (!wasActive && isActive) {
+            willBe = slotWillBe.rendered;
+        }
+
+        if (wasActive && !isActive) {
+            willBe = slotWillBe.removed;
+        }
+
+        this.#handlePageTransition(slotName, willBe, this.getRelevantAppKind(appName, slotName));
 
         return isActive;
     }

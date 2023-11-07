@@ -1,6 +1,5 @@
 import { getSlotElement } from '../utils';
-import TransitionBlocker from './TransitionBlocker';
-import NamedTransactionBlocker from './NamedTransitionBlocker';
+import { TransitionBlocker } from './TransitionBlocker';
 import singleSpaEvents from '../constants/singleSpaEvents';
 import ilcEvents from '../constants/ilcEvents';
 import TransitionBlockerList from './TransitionBlockerList';
@@ -8,6 +7,7 @@ import { CssTrackedApp } from '../CssTrackedApp';
 import { GlobalSpinner } from './GlobalSpinner/GlobalSpinner';
 import { ScrollController } from './ScrollController/ScrollController';
 import { SlotRenderObserver } from './SlotRenderObserver/SlotRenderObserver';
+import { CriticalSlotTransitionError } from './errors/CriticalSlotTransitionError';
 
 export const slotWillBe = {
     rendered: 'rendered',
@@ -36,9 +36,19 @@ export class TransitionManager {
     #transitionBlockers = new TransitionBlockerList();
     #scrollController = new ScrollController();
 
-    constructor(logger, spinnerConfig) {
+    #transitionBlockerTimeout = 0;
+    #errorHandlerManager;
+
+    constructor(logger, spinnerConfig, errorHandlerManager, transitionBlockerTimeout = 0) {
         this.#logger = logger;
         this.#spinnerController = new GlobalSpinner(spinnerConfig);
+        this.#transitionBlockerTimeout = transitionBlockerTimeout;
+
+        if (!errorHandlerManager) {
+            throw new Error('errorHandlerManager is required for TransitionManager constructor');
+        }
+
+        this.#errorHandlerManager = errorHandlerManager;
 
         this.#addEventListeners();
     }
@@ -49,11 +59,27 @@ export class TransitionManager {
         }
 
         this.#runGlobalSpinner();
-        this.#addTransitionBlocker(new TransitionBlocker(promise));
+        // ToDo: here logic is broken :(
+
+        const executionCancellation = () => {};
+
+        this.#addTransitionBlocker(
+            new TransitionBlocker(promise, executionCancellation, { externalId: 'asyncActionTransitionChange' }),
+        );
     }
 
-    // This method is required for changing pages
-    handlePageTransition = (slotName, willBe) => {
+    /**
+     * Handle a page transition for a specific slot within the application. This method is required for changing pages
+     *
+     * @param {string} slotName - The name of the slot to handle the transition for.
+     * @param {string} willBe - The intended state of the slot during the transition.
+     * @param {string} [slotKind='essential'] - The kind of the slot, which can be 'regular', 'essential', or 'primary'.
+     *
+     * @throws {Error} Throws an error if a slot name is not provided or if the slot action does not match any possible values.
+     *
+     * @method
+     */
+    handlePageTransition = (slotName, willBe, slotKind = 'essential') => {
         if (!this.#spinnerController.isEnabled()) {
             return;
         }
@@ -77,14 +103,14 @@ export class TransitionManager {
 
         switch (willBe) {
             case slotWillBe.rendered:
-                this.#addContentListener(slotName);
+                this.#addContentListener(slotName, slotKind);
                 break;
             case slotWillBe.removed:
                 this.#renderFakeSlot(slotName);
                 break;
             case slotWillBe.rerendered:
                 this.#renderFakeSlot(slotName);
-                this.#addContentListener(slotName);
+                this.#addContentListener(slotName, slotKind);
                 break;
             case slotWillBe.default:
                 break;
@@ -105,15 +131,14 @@ export class TransitionManager {
         unsafeEventSubscriptionHappened = false;
     };
 
-    #addContentListener = (slotName) => {
+    #addContentListener = (slotName, slotKind = 'essential') => {
         if (this.#transitionBlockerExists(slotName)) {
-            // @todo report incorrect behaviour
             return;
         }
 
         const observer = new SlotRenderObserver();
 
-        const contentListenerBlocker = new NamedTransactionBlocker(slotName, (resolve) => {
+        const blockerExecutor = (resolve) => {
             this.#runGlobalSpinner();
             this.#scrollController.store();
 
@@ -126,13 +151,17 @@ export class TransitionManager {
                     resolve();
                 },
             });
-        });
+        };
 
-        contentListenerBlocker.onDestroy(() => {
+        const blockerExecutorCancellation = () => {
             observer.disconnect();
-        });
+        };
 
-        this.#addTransitionBlocker(contentListenerBlocker);
+        const contentListenerBlocker = new TransitionBlocker(blockerExecutor, blockerExecutorCancellation, {
+            timeout: this.#transitionBlockerTimeout,
+            externalId: slotName,
+        });
+        this.#addTransitionBlocker(contentListenerBlocker, slotKind);
     };
 
     #renderFakeSlot = (slotName) => {
@@ -176,16 +205,22 @@ export class TransitionManager {
         let timer;
         let forceResolve;
 
-        const spinnerBlocker = new NamedTransactionBlocker(this.#forceShowSpinnerBlockerId, (resolve) => {
-            timer = setTimeout(() => {
-                resolve();
-            }, minimumVisibleTime);
+        const spinnerBlocker = new TransitionBlocker(
+            (resolve) => {
+                timer = setTimeout(() => {
+                    resolve();
+                }, minimumVisibleTime);
 
-            forceResolve = resolve;
-        }).onDestroy(() => {
-            timer && clearTimeout(timer);
-            forceResolve();
-        });
+                forceResolve = resolve;
+            },
+            () => {
+                timer && clearTimeout(timer);
+                forceResolve();
+            },
+            {
+                externalId: this.#forceShowSpinnerBlockerId,
+            },
+        );
 
         return spinnerBlocker;
     };
@@ -211,9 +246,28 @@ export class TransitionManager {
         this.#spinnerController.stop();
     };
 
-    #addTransitionBlocker = (transactionBlocker) => {
-        transactionBlocker.finally(() => this.#removeTransitionBlocker(transactionBlocker.getId()));
-        this.#transitionBlockers.add(transactionBlocker);
+    #addTransitionBlocker = (transitionBlocker, slotKind) => {
+        const promise = transitionBlocker
+            .then(() => {
+                this.#removeTransitionBlocker(transitionBlocker.getId());
+            })
+            .catch((error) => {
+                if (slotKind === 'regular') {
+                    this.#removeTransitionBlocker(transitionBlocker.getId());
+                } else {
+                    this.#errorHandlerManager.handleError(
+                        new CriticalSlotTransitionError({
+                            message:
+                                error.message || `Transition blocker with name ${transitionBlocker.getId()} failed`,
+                        }),
+                    );
+
+                    return;
+                }
+            });
+        this.#transitionBlockers.add(transitionBlocker);
+
+        return promise;
     };
 
     #transitionBlockerExists = (blockerId) => {

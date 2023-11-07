@@ -29,6 +29,9 @@ module.exports = function (config) {
           ];
 
     config.set({
+        client: {
+            captureConsole: true,
+        },
         singleRun: true,
         browsers: ['ChromeHeadless'],
         customLaunchers: {
