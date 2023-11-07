@@ -1,12 +1,12 @@
 import { SlotTransitionTimeoutError } from './errors/SlotTransitionTimeoutError';
 
 export class TransitionBlocker {
-    _promise;
-    _onDestroyCallback;
-    _timeoutEnabled = false;
-    _timeout = 3000;
-    _timeoutId;
-    _externalId = 'UnnamedTransitionBlocker';
+    #promise;
+    #onDestroyCallback;
+    #timeoutEnabled = false;
+    #timeout = 3000;
+    #timeoutId;
+    #externalId = 'UnnamedTransitionBlocker';
 
     /**
      * Constructor for a TransitionBlocker instance.
@@ -22,9 +22,9 @@ export class TransitionBlocker {
      * @constructor
      */
     constructor(blockerExecutor, blockerExecutionCancellation, options) {
-        this._timeoutEnabled = !!options?.timeout;
-        this._timeout = options?.timeout || this._timeout;
-        this._externalId = options?.externalId;
+        this.#timeoutEnabled = !!options?.timeout;
+        this.#timeout = options?.timeout || this.#timeout;
+        this.#externalId = options?.externalId;
 
         if (typeof blockerExecutionCancellation !== 'function') {
             throw new Error(
@@ -32,7 +32,7 @@ export class TransitionBlocker {
             );
         }
 
-        this._onDestroyCallback = blockerExecutionCancellation;
+        this.#onDestroyCallback = blockerExecutionCancellation;
 
         const cancellablePromise = new Promise((resolve, reject) => {
             if (blockerExecutor && typeof blockerExecutor.then === 'function') {
@@ -43,56 +43,56 @@ export class TransitionBlocker {
                 throw new Error('TransitionBlocker blockerExecutor must be a function or a promise');
             }
 
-            if (this._timeoutEnabled) {
-                this._timeoutId = setTimeout(() => {
+            if (this.#timeoutEnabled) {
+                this.#timeoutId = setTimeout(() => {
                     reject(
                         new SlotTransitionTimeoutError(
-                            `TransitionBlocker timeout ${this._timeout}ms for blocker ${this.getId()}`,
+                            `TransitionBlocker timeout ${this.#timeout}ms for blocker ${this.getId()}`,
                         ),
                     );
-                }, this._timeout);
+                }, this.#timeout);
             }
         });
 
         // We have to guarantee clearing timeout in case promise is fulfilled or rejected
-        this._promise = cancellablePromise.then(
+        this.#promise = cancellablePromise.then(
             (result) => {
-                this._clearTimeout();
+                this.#clearTimeout();
                 return result;
             },
             (error) => {
-                this._clearTimeout();
+                this.#clearTimeout();
                 throw error;
             },
         );
     }
 
-    _clearTimeout() {
-        if (this._timeoutEnabled && this._timeoutId) {
-            clearTimeout(this._timeoutId);
-            this._timeoutId = null;
+    #clearTimeout() {
+        if (this.#timeoutEnabled && this.#timeoutId) {
+            clearTimeout(this.#timeoutId);
+            this.#timeoutId = null;
         }
     }
 
     then(onFulfilled, onRejected) {
-        this._promise.then(onFulfilled, onRejected);
+        this.#promise.then(onFulfilled, onRejected);
         return this;
     }
 
     catch(onRejected) {
-        this._promise.catch(onRejected);
+        this.#promise.catch(onRejected);
         return this;
     }
 
     getId() {
-        return this._externalId;
+        return this.#externalId;
     }
 
     destroy() {
-        this._onDestroyCallback(this._externalId);
+        this.#onDestroyCallback(this._externalId);
     }
 
     promise() {
-        return this._promise;
+        return this.#promise;
     }
 }
