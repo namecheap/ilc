@@ -169,26 +169,17 @@ describe('TransitionManager', () => {
     });
 
     it('should listen to slot content changes when a slot is going to be rendered', async () => {
-        console.log('start test---->');
-        console.log(document.getElementById('slots').innerHTML);
-        console.log('spinner.getRef() = ', spinner.getRef());
-        console.log('action------ handlePageTransition(slots.navbar.id, slotWillBe.rendered)');
         handlePageTransition(slots.navbar.id, slotWillBe.rendered);
 
         await clock.runAllAsync();
 
-        console.log(document.getElementById('slots').innerHTML);
-        console.log('spinner.getRef() = ', spinner.getRef());
         chai.expect(spinner.getRef()).to.be.not.null;
         chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
         chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
 
-        console.log('action------ handlePageTransition(slots.body.id, slotWillBe.rendered)');
         handlePageTransition(slots.body.id, slotWillBe.rendered);
 
         await clock.runAllAsync();
-        console.log(document.getElementById('slots').innerHTML);
-        console.log('spinner.getRef() = ', spinner.getRef());
 
         chai.expect(spinner.getRef()).to.be.not.null;
         chai.expect(document.getElementsByClassName(spinner.class).length).to.equal(1);
@@ -196,24 +187,18 @@ describe('TransitionManager', () => {
         chai.expect(slots.body.getComputedStyle().display).to.be.equal('none');
         chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
 
-        console.log('action------ navbar.appendApplication');
         applications.navbar.appendApplication();
 
         await clock.runAllAsync();
-        console.log(document.getElementById('slots').innerHTML);
-        console.log('spinner.getRef() = ', spinner.getRef());
 
         chai.expect(spinner.getRef()).to.be.not.null;
         chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
         chai.expect(slots.body.getComputedStyle().display).to.be.equal('none');
         chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
 
-        console.log('action------ applications.body.appendApplication();');
         applications.body.appendApplication();
 
         await clock.runAllAsync();
-        console.log(document.getElementById('slots').innerHTML);
-        console.log('spinner.getRef() = ', spinner.getRef());
 
         chai.expect(spinner.getRef()).to.be.null;
         chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('block');
