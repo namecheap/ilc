@@ -120,7 +120,7 @@ export default class ClientRouter extends EventEmitter {
         if (wasActive && !isActive) {
             willBe = slotWillBe.removed;
         }
-        console.log(slotName, willBe, this.getRelevantAppKind(appName, slotName));
+
         this.#handlePageTransition(slotName, willBe, this.getRelevantAppKind(appName, slotName));
 
         return isActive;

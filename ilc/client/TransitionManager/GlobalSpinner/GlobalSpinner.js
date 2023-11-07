@@ -28,10 +28,8 @@ export class GlobalSpinner {
                 });
 
             if (!this.#spinnerConfig.customHTML) {
-                console.log('runDefaultSpinner');
                 this.#runDefaultSpinner();
             } else {
-                console.log('runCustomSpinner');
                 this.#runCustomSpinner();
             }
         }, this.#spinnerConfig.showAfter);
