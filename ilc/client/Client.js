@@ -321,7 +321,16 @@ export class Client {
             throw new Error('onRouteChange should pass function handler as first argument');
         }
 
-        window.addEventListener(singleSpaEvents.ROUTING_EVENT, handler);
+        window.addEventListener(singleSpaEvents.ROUTING_EVENT, (event) => {
+            const route = this.#router.getCurrentRoute();
+            const ilcEvent = new CustomEvent('ilc:onRouteChange', {
+                detail: {
+                    basePath: route.basePath,
+                    reqUrl: route.reqUrl,
+                },
+            });
+            handler(event, ilcEvent);
+        });
 
         return () => window.removeEventListener(singleSpaEvents.ROUTING_EVENT, handler);
     }
