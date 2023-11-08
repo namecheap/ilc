@@ -83,7 +83,7 @@ export class Client {
 
         this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, this.#registryService);
 
-        const transitionTimeout = 3000;
+        const transitionTimeout = 60000;
 
         this.#transitionManager = new TransitionManager(
             this.#logger,
