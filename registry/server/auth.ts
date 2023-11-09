@@ -244,6 +244,8 @@ export default async (app: Express, settingsService: SettingsService, config: an
                     res.header('Content-type', 'text/html');
                     return res.end(`<pre>${info.message}</pre><br><a href="/">Go to main page</a>`);
                 }
+
+                getLogger().info(`User ${user.identifier} authenticated via OpenID`)
                 req.logIn(user, function (err) {
                     if (err) {
                         return next(err);
