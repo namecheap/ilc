@@ -109,6 +109,7 @@ export default class ClientRouter extends EventEmitter {
     isAppWithinSlotActive(appName, slotName) {
         const isActive = this.#activeApps.current[slotName] === appName;
         const wasActive = this.#activeApps.prev[slotName] === appName;
+        const isClientless = this.#ilcConfigRoot.isApplicationClientlessByAppName(appName);
 
         //Todo: side effect have to be removed from getter
         let willBe = slotWillBe.default;
@@ -119,6 +120,10 @@ export default class ClientRouter extends EventEmitter {
 
         if (wasActive && !isActive) {
             willBe = slotWillBe.removed;
+        }
+
+        if (isClientless) {
+            willBe = slotWillBe.default;
         }
 
         this.#handlePageTransition(slotName, willBe, this.getRelevantAppKind(appName, slotName));
