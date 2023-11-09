@@ -156,14 +156,11 @@ describe(`Tests ${example.url}`, () => {
                 domainName: `domainNameCorrect${i}.com`,
             }));
 
-            const promises = routerDomainsList.map(async (data) => {
-                const { body } = await req.post(example.url).send(data).expect(200);
-                data.id = body.id;
-            });
-
             try {
-                await Promise.all(promises);
-                routerDomainsList.sort((a, b) => a.id! - b.id!);
+                for (const data of routerDomainsList) {
+                    const { body } = await req.post(example.url).send(data).expect(200);
+                    data.id = body.id;
+                }
 
                 const responseFetching01 = await req.get(
                     `${example.url}?range=${encodeURIComponent(`[${rangeStart + 0},${rangeStart + 1}]`)}`,

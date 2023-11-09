@@ -12,7 +12,7 @@ Scenario('should open a news page and show news sources', async ({ I, newsPage: 
     I.see('Pick a news source', newsPage.bannerHeadline);
 });
 
-Scenario.skip('should open an article page from a direct link', async ({ I, newsPage: newsPage }) => {
+Scenario('should open an article page from a direct link', async ({ I, newsPage: newsPage }) => {
     I.amOnPage(newsPage.url.main);
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.newsSources, 10);
@@ -29,8 +29,9 @@ Scenario.skip('should open an article page from a direct link', async ({ I, news
     const firstNewsSourceArticleHref = await I.grabAttributeFrom(newsPage.firstNewsSourceArticle, 'href');
 
     I.click(newsPage.firstNewsSourceArticle);
+    I.wait(3);
     I.switchToNextTab();
-    I.waitInUrl(firstNewsSourceArticleHref.replace(/https?/, ''), 10);
+    I.waitInUrl(firstNewsSourceArticleHref, 10);
     I.switchToPreviousTab();
     I.seeInCurrentUrl(lastNewsSourceLinkHref);
     I.closeOtherTabs();
