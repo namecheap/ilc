@@ -318,10 +318,14 @@ export default async (app: Express, settingsService: SettingsService, config: an
 };
 
 async function getEntityWithCreds(provider: string, identifier: string, secret: string | null): Promise<User | null> {
-    const user = await db.select().from('auth_entities').first('identifier', 'id', 'role', 'secret').where({
-        provider,
-        identifier,
-    });
+    const user = await db
+        .select()
+        .from('auth_entities')
+        .first('identifier', 'id', 'role', 'secret')
+        .where({
+            provider,
+        })
+        .andWhereRaw('LOWER(identifier) = LOWER(?)', [identifier]);
     if (!user) {
         return null;
     }

@@ -18,7 +18,10 @@ export abstract class Resource {
         ...Attributes.crossorigin,
     };
 
-    constructor(public uri: string, params?: Params) {
+    constructor(
+        public uri: string,
+        params?: Params,
+    ) {
         this.params = params || {};
     }
 
