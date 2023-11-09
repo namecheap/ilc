@@ -247,7 +247,7 @@ export class TransitionManager {
     };
 
     #addTransitionBlocker = (transitionBlocker, slotKind) => {
-        const promise = transitionBlocker
+        transitionBlocker
             .then(() => {
                 this.#removeTransitionBlocker(transitionBlocker.getId());
             })
@@ -261,13 +261,10 @@ export class TransitionManager {
                                 error.message || `Transition blocker with name ${transitionBlocker.getId()} failed`,
                         }),
                     );
-
-                    return;
                 }
             });
-        this.#transitionBlockers.add(transitionBlocker);
 
-        return promise;
+        this.#transitionBlockers.add(transitionBlocker);
     };
 
     #transitionBlockerExists = (blockerId) => {

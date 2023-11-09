@@ -15,6 +15,8 @@ import nock from 'nock';
 import * as bcrypt from 'bcrypt';
 import { muteConsole, unmuteConsole } from './utils/console';
 import { loadPlugins } from '../server/util/pluginManager';
+import { isSqlite } from '../server/util/db';
+import knex from 'knex';
 
 const generateResp403 = (username: string) => ({
     message: `Access denied. "${username}" has "readonly" access.`,
@@ -76,11 +78,11 @@ describe('Authentication / Authorization', () => {
                 Buffer.from('token_secret', 'utf8').toString('base64');
         });
 
-        it('should not authenticate with invalid creds', async () => {
+        it('should not authenticate with invalid credentails', async () => {
             await request.get('/protected').set('Authorization', `Bearer invalid`).expect(401);
         });
 
-        it('should authenticate with correct creds', async () => {
+        it('should authenticate with correct credentails', async () => {
             await request.get('/protected').set('Authorization', `Bearer ${authToken}`).expect(200, 'ok');
         });
 
@@ -362,6 +364,47 @@ describe('Authentication / Authorization', () => {
                     // correctly logout
                     await agent.get('/auth/logout').expect(302);
                     await agent.get('/protected').expect(401);
+                });
+                it('should authenticate against OpenID server (case-insensitive identifier)', async () => {
+                    await db('auth_entities').where('identifier', userIdentifier.toUpperCase()).delete();
+                    await db('auth_entities').insert({
+                        identifier: userIdentifier.toUpperCase(),
+                        provider: 'openid',
+                        role: 'admin',
+                    });
+                    const res = await agent
+                        .get('/auth/openid')
+                        .expect(302)
+                        .expect(
+                            'Location',
+                            new RegExp(
+                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                            ),
+                        );
+
+                    await agent
+                        .get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
+                        .expect(302)
+                        .expect('Location', '/')
+                        .expect((res) => {
+                            let setCookie = res.header['set-cookie'];
+                            assert.ok(Array.isArray(setCookie));
+                            assert.ok(setCookie[0]);
+
+                            const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
+                            const userInfo = JSON.parse(parts['ilc:userInfo']);
+
+                            assert.strictEqual(userInfo.identifier, userIdentifier.toUpperCase());
+                            assert.strictEqual(userInfo.role, 'admin');
+                        });
+
+                    // respect session cookie
+                    await agent.get('/protected').expect(200, 'ok');
+
+                    // correctly logout
+                    await agent.get('/auth/logout').expect(302);
+                    await agent.get('/protected').expect(401);
+                    await db('auth_entities').where('identifier', userIdentifier.toUpperCase()).delete();
                 });
 
                 it('should authenticate against OpenID server & perform impersonation', async () => {
