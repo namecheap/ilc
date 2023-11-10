@@ -22,6 +22,7 @@ describe('TransitionManager', () => {
                 <div id="${slots.id}">
                     <div id="${slots.navbar.id}"></div>
                     <div id="${slots.body.id}"></div>
+                    <div id="${slots.clientless.id}"></div>
                 </div>
             `;
         },
@@ -33,6 +34,9 @@ describe('TransitionManager', () => {
             id: 'body',
             getComputedStyle: () => window.getComputedStyle(slots.body.ref, null),
             getAttributeName: () => document.body.getAttribute('ilcTempStoredHash'),
+        },
+        clientless: {
+            id: 'clientless',
         },
     };
 
@@ -59,6 +63,13 @@ describe('TransitionManager', () => {
                     <div id="${applications.body.id}" class="${applications.body.class}">Hello! I am Body SPA</div>
                 `;
             },
+        },
+        clientless: {
+            id: 'clientless-application',
+            class: 'clientless-spa',
+            appendApplication: () => {},
+            removeApplication: () => {},
+            resetRef: () => {},
         },
     };
 
@@ -141,7 +152,9 @@ describe('TransitionManager', () => {
 
         chai.expect(spinner.getRef()).to.be.null;
         chai.expect(slots.ref.innerHTML).to.be.equal(
-            `<div id="${slots.navbar.id}"></div>` + `<div id="${slots.body.id}"></div>`,
+            `<div id="${slots.navbar.id}"></div>` +
+                `<div id="${slots.body.id}"></div>` +
+                `<div id="${slots.clientless.id}"></div>`,
         );
 
         applications.body.appendApplication();
@@ -155,7 +168,8 @@ describe('TransitionManager', () => {
                 `<div id="${applications.body.id}" class="${applications.body.class}">` +
                 'Hello! I am Body SPA' +
                 '</div>' +
-                '</div>',
+                '</div>' +
+                `<div id="${slots.clientless.id}"></div>`,
         );
 
         applications.body.removeApplication();
@@ -164,8 +178,92 @@ describe('TransitionManager', () => {
 
         chai.expect(spinner.getRef()).to.be.null;
         chai.expect(slots.ref.innerHTML).to.be.equal(
-            `<div id="${slots.navbar.id}"></div>` + `<div id="${slots.body.id}"></div>`,
+            `<div id="${slots.navbar.id}"></div>` + `<div id="${slots.body.id}"></div>` + `<div id="clientless"></div>`,
         );
+    });
+
+    it('should listen to slot content changes when a slot is going to be rendered', async () => {
+        handlePageTransition(slots.navbar.id, slotWillBe.rendered);
+
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+        chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
+
+        handlePageTransition(slots.body.id, slotWillBe.rendered);
+
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+        chai.expect(document.getElementsByClassName(spinner.class).length).to.equal(1);
+        chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
+
+        applications.navbar.appendApplication();
+
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+        chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
+
+        applications.body.appendApplication();
+
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.null;
+        chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('block');
+        chai.expect(slots.body.getComputedStyle().display).to.be.equal('block');
+        chai.expect(slots.body.getAttributeName()).to.be.null;
+    });
+
+    it('should listen to slot content changes when a slot is going to be rendered with clientless slot', async () => {
+        handlePageTransition(slots.navbar.id, slotWillBe.rendered);
+
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+        chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
+
+        handlePageTransition(slots.clientless.id, slotWillBe.default);
+
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+        chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
+
+        handlePageTransition(slots.body.id, slotWillBe.rendered);
+
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+        chai.expect(document.getElementsByClassName(spinner.class).length).to.equal(1);
+        chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
+
+        applications.navbar.appendApplication();
+
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+        chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getComputedStyle().display).to.be.equal('none');
+        chai.expect(slots.body.getAttributeName()).to.be.equal(locationHash);
+
+        applications.body.appendApplication();
+
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.null;
+        chai.expect(slots.navbar.getComputedStyle().display).to.be.equal('block');
+        chai.expect(slots.body.getComputedStyle().display).to.be.equal('block');
+        chai.expect(slots.body.getAttributeName()).to.be.null;
     });
 
     it('should listen to slot content changes when a slot is going to be rendered', async () => {

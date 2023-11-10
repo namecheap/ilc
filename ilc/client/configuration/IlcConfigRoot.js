@@ -30,7 +30,21 @@ export class IlcConfigRoot {
         return this.registryConfiguration['apps'][name];
     }
 
-    // @Deprecated. Config for shared lib was desinged in non extensible format.
+    /**
+     *
+     * @param name
+     * @description Checks if application is clientless by name. Clientless app is an app w/o clientside bundle. So it renders only on backend side.
+     * @returns {boolean}
+     */
+    isApplicationClientlessByAppName(name) {
+        if (!this.registryConfiguration['apps'][name]) {
+            throw new Error(`Application with name ${name} is not registered in ILC`);
+        }
+
+        return !this.registryConfiguration['apps'][name].spaBundle;
+    }
+
+    // @Deprecated. Config for shared lib was designed in non extensible format.
     // Next Major release it will require breaking change to return configuration object
     getConfigForSharedLibs() {
         return this.registryConfiguration['sharedLibs'];

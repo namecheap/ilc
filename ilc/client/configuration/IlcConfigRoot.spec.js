@@ -4,6 +4,7 @@ import { expect } from 'chai';
 describe('IlcConfigRoot', () => {
     it('IlcConfigRoot should init', () => {
         const configRoot = getIlcConfigRoot();
+        console.log(configRoot.getConfigForApps());
         expect(configRoot).to.be.an('object');
     });
     it('IlcConfigRoot should return singleton', () => {
@@ -26,6 +27,7 @@ describe('IlcConfigRoot', () => {
             '@portal/system',
             '@portal/systemWithWrapper',
             '@portal/wrapper',
+            '@portal/clientless',
         ]);
     });
 
@@ -58,5 +60,11 @@ describe('IlcConfigRoot', () => {
     it('IlcConfigRoot should return Config For Settings By Key', () => {
         const configRoot = getIlcConfigRoot();
         expect(configRoot.getSettingsByKey('i18n')).to.be.an('object');
+    });
+
+    it('IlcConfigRoot should return if app is clientless', () => {
+        const configRoot = getIlcConfigRoot();
+        expect(configRoot.isApplicationClientlessByAppName('@portal/navbar')).to.be.false;
+        expect(configRoot.isApplicationClientlessByAppName('@portal/clientless')).to.be.true;
     });
 });
