@@ -6,7 +6,7 @@ import ilcEvents from '../constants/ilcEvents';
 import { slotWillBe, TransitionManager } from './TransitionManager';
 import { CssTrackedApp } from '../CssTrackedApp';
 
-describe.only('TransitionManager', () => {
+describe('TransitionManager', () => {
     const locationHash = 'i-am-location-hash';
 
     const logger = {
@@ -37,7 +37,7 @@ describe.only('TransitionManager', () => {
         },
         clientless: {
             id: 'clientless',
-        }
+        },
     };
 
     const applications = {
@@ -69,8 +69,8 @@ describe.only('TransitionManager', () => {
             class: 'clientless-spa',
             appendApplication: () => {},
             removeApplication: () => {},
-            resetRef: () => {}
-        }
+            resetRef: () => {},
+        },
     };
 
     const spinner = {
@@ -152,7 +152,9 @@ describe.only('TransitionManager', () => {
 
         chai.expect(spinner.getRef()).to.be.null;
         chai.expect(slots.ref.innerHTML).to.be.equal(
-            `<div id="${slots.navbar.id}"></div>` + `<div id="${slots.body.id}"></div>` + `<div id="${slots.clientless.id}"></div>`,
+            `<div id="${slots.navbar.id}"></div>` +
+                `<div id="${slots.body.id}"></div>` +
+                `<div id="${slots.clientless.id}"></div>`,
         );
 
         applications.body.appendApplication();

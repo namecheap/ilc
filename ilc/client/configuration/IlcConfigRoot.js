@@ -37,7 +37,7 @@ export class IlcConfigRoot {
      * @returns {boolean}
      */
     isApplicationClientlessByAppName(name) {
-        if(!this.registryConfiguration['apps'][name]) {
+        if (!this.registryConfiguration['apps'][name]) {
             throw new Error(`Application with name ${name} is not registered in ILC`);
         }
 
