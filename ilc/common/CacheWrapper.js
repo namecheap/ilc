@@ -41,7 +41,7 @@ class CacheWrapper {
 
         return (...args) => {
             const now = this.#nowInSec();
-            const hash = this.createHash(memoName + JSON.stringify(args));
+            const hash = this.createHash(`${memoName}${cacheForSeconds}${JSON.stringify(args)}`);
 
             const logInfo = {
                 now,

@@ -100,7 +100,9 @@ describe('CacheWrapper', () => {
         const cacheWrapper = new CacheWrapper(localStorage, logger, null, createHash);
         wrappedFn = cacheWrapper.wrap(fn, cacheParams);
         fn.withArgs(...fnArgs).returns(Promise.resolve(newData));
-        createHash.withArgs(cacheParams.name + JSON.stringify(fnArgs)).returns(cachedValueKey);
+        createHash
+            .withArgs(cacheParams.name + cacheParams.cacheForSeconds + JSON.stringify(fnArgs))
+            .returns(cachedValueKey);
         localStorage.setItem(cachedValueKey, JSON.stringify(prevCachedValue));
 
         const firstValue = await wrappedFn(...fnArgs);
@@ -124,40 +126,66 @@ describe('CacheWrapper', () => {
         chai.expect(rejectedError).to.equal(rejectedError);
     });
 
-    describe('Multiple wrappers with same name', () => {
+    describe('Multiple wrappers', () => {
         let wrappedFirstFn;
         let wrappedSecondFn;
-        let wrappedThrird;
+        let wrappedThirdFn;
 
-        beforeEach(() => {
-            const cacheWrapper = new CacheWrapper(localStorage, logger);
+        describe('with same name and cacheForSeconds', () => {
+            beforeEach(() => {
+                const cacheWrapper = new CacheWrapper(localStorage, logger);
 
-            wrappedFirstFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
-            wrappedSecondFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
-            wrappedThrird = cacheWrapper.wrap(fn, { name: 'testCacheName' });
+                wrappedFirstFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
+                wrappedSecondFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
+                wrappedThirdFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
+            });
+
+            it('should return the same value in case of concurrent invocation', async () => {
+                fn.withArgs().callsFake(() => new Promise((resolve) => setTimeout(() => resolve(data), 100)));
+
+                const [firstValue, secondValue, thirdValue] = await Promise.all([
+                    wrappedFirstFn(),
+                    wrappedSecondFn(),
+                    wrappedThirdFn(),
+                ]);
+
+                chai.expect(firstValue).to.deep.equal(secondValue).and.to.deep.equal(thirdValue);
+                chai.expect(fn.calledOnce).to.be.true;
+            });
+
+            it('should return the same promise in case of concurrent invocation', async () => {
+                const fnPromise = new Promise((resolve) => resolve(data));
+                fn.withArgs().callsFake(() => fnPromise);
+
+                const [firstValue, secondValue, thirdValue] = [wrappedFirstFn(), wrappedSecondFn(), wrappedThirdFn()];
+
+                chai.expect(firstValue).to.deep.equal(secondValue).and.to.deep.equal(thirdValue);
+                chai.expect(fn.calledOnce).to.be.true;
+            });
         });
 
-        it('should return the same value in case of concurrent invocation', async () => {
-            fn.withArgs().callsFake(() => new Promise((resolve) => setTimeout(() => resolve(data), 100)));
+        describe('with same name and cacheForSeconds', () => {
+            let fn;
 
-            const [firstValue, secondValue, thirdValue] = await Promise.all([
-                wrappedFirstFn(),
-                wrappedSecondFn(),
-                wrappedThrird(),
-            ]);
+            beforeEach(() => {
+                fn = sinon.stub();
 
-            chai.expect(firstValue).to.deep.equal(secondValue).and.to.deep.equal(thirdValue);
-            chai.expect(fn.calledOnce).to.be.true;
-        });
+                const cacheWrapper = new CacheWrapper(localStorage, logger);
 
-        it('should return the same promise in case of concurrent invocation', async () => {
-            const fnPromise = new Promise((resolve) => resolve(data));
-            fn.withArgs().callsFake(() => fnPromise);
+                wrappedFirstFn = cacheWrapper.wrap(fn, { name: 'testCacheName', cacheForSeconds: 100 });
+                wrappedSecondFn = cacheWrapper.wrap(fn, { name: 'testCacheName', cacheForSeconds: 200 });
+                wrappedThirdFn = cacheWrapper.wrap(fn, { name: 'testCacheName', cacheForSeconds: 300 });
+            });
 
-            const [firstValue, secondValue, thirdValue] = [wrappedFirstFn(), wrappedSecondFn(), wrappedThrird()];
+            it('should return the different promise in case of concurrent invocation', async () => {
+                const fnPromise = new Promise((resolve) => resolve(data));
+                fn.withArgs().callsFake(() => fnPromise);
 
-            chai.expect(firstValue).to.deep.equal(secondValue).and.to.deep.equal(thirdValue);
-            chai.expect(fn.calledOnce).to.be.true;
+                const [firstValue, secondValue, thirdValue] = [wrappedFirstFn(), wrappedSecondFn(), wrappedThirdFn()];
+
+                chai.expect(firstValue).not.to.deep.equal(secondValue).and.not.to.deep.equal(thirdValue);
+                chai.expect(fn.calledThrice).to.be.true;
+            });
         });
     });
 
