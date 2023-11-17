@@ -5,145 +5,159 @@ errors.WrapWithCacheError = extendError('WrapWithCacheError');
 const wrapWithCache =
     (localStorage, logger, createHash = hashFn) =>
     (fn, cacheParams, contextStore) => {
-        const { cacheForSeconds = 60, name } = cacheParams;
+        const { name: memoName, cacheForSeconds = 60 } = cacheParams;
 
-        if (typeof name !== 'string' || name.length === 0) {
+        if (typeof memoName !== 'string' || memoName.length === 0) {
             throw new Error(
                 'To wrap your function you should provide unique "name" to argument, to create hash-id of result of your function',
             );
         }
 
-        const cacheResolutionPromise = {};
+        const cacheRenewPromise = {};
 
         return (...args) => {
-            const now = Math.floor(Date.now() / 1000);
-            const hash = createHash(name + JSON.stringify(args));
-            const item = localStorage.getItem(hash);
-            const parsedItem = item ? JSON.parse(item) : null;
+            const now = nowInSec();
+            const hash = createHash(memoName + JSON.stringify(args));
 
-            if (parsedItem === null || parsedItem.cachedAt < now - cacheForSeconds) {
-                if (cacheResolutionPromise[hash] !== undefined) {
-                    if (parsedItem !== null) {
-                        // It's better to return stale cache rather then cause delay
-                        logger.info(
-                            {
-                                memoName: name,
-                                hash,
-                                now,
-                                cachedAt: parsedItem.cachedAt,
-                                id: contextStore && contextStore.get('reqId'),
-                            },
-                            logMessage('Item read from cache. Invalidation is in progress. Cache is stale'),
-                        );
+            const logInfo = {
+                now,
+                hash,
+                memoName,
+                id: contextStore && contextStore.get('reqId'),
+            };
 
-                        return Promise.resolve(JSON.parse(localStorage.getItem(hash)));
-                    }
+            const getCache = () => {
+                const cache = localStorage.getItem(hash);
+                return cache ? JSON.parse(cache) : null;
+            };
 
-                    return cacheResolutionPromise[hash];
-                }
+            const setCache = (cache) => {
+                localStorage.setItem(hash, JSON.stringify(cache));
+            };
 
+            const cache = getCache();
+            const cacheIsActual = cache !== null && cache.cachedAt >= now - cacheForSeconds;
+
+            // Return cache if actual
+            if (cacheIsActual) {
                 logger.info(
                     {
-                        memoName: name,
-                        hash,
-                        now,
-                        cachedAt: parsedItem ? parsedItem.cachedAt : undefined,
-                        id: contextStore && contextStore.get('reqId'),
+                        ...logInfo,
+                        cachedAt: cache.cachedAt,
                     },
-                    logMessage('Invalidation started'),
+                    logMessage('Item read from cache. Cache is actual'),
                 );
 
-                cacheResolutionPromise[hash] = fn(...args)
-                    .then((data) => {
-                        delete cacheResolutionPromise[hash];
-                        localStorage.setItem(
-                            hash,
-                            JSON.stringify({
-                                data,
-                                checkAfter: now + cacheForSeconds,
-                                cachedAt: now,
-                            }),
-                        );
-                        logger.info(
-                            {
-                                memoName: name,
-                                hash,
-                                now,
-                                cachedAt: parsedItem ? parsedItem.cachedAt : undefined,
-                                id: contextStore && contextStore.get('reqId'),
-                            },
-                            logMessage('Invalidation finished'),
-                        );
-                        return JSON.parse(localStorage.getItem(hash));
-                    })
-                    .catch((err) => {
-                        delete cacheResolutionPromise[hash];
+                return Promise.resolve(cache);
+            }
 
-                        if (localStorage.getItem(hash) === null) {
-                            logger.info(
-                                {
-                                    memoName: name,
-                                    hash,
-                                    now,
-                                    cachedAt: parsedItem ? parsedItem.cachedAt : undefined,
-                                    id: contextStore && contextStore.get('reqId'),
-                                },
-                                logMessage('Invalidation error'),
-                            );
-                            return Promise.reject(err); //As someone is waiting for promise - just reject it
-                        } else {
-                            // Here no one waiting for this promise anymore, thrown error would cause
-                            // unhandled promise rejection
-                            const error = new errors.WrapWithCacheError({
-                                message: 'Error during cache update function execution',
-                                cause: err,
-                            });
-                            logger.error(error);
-                        }
-                    });
+            const cacheRenewInProgress = cacheRenewPromise[hash] !== undefined;
 
-                if (localStorage.getItem(hash) !== null) {
-                    // It's better to return stale cache rather then cause delay
+            if (cacheRenewInProgress) {
+                // If cache is stale, but renew is in progress - return stale cache
+                // otherwise return renew promise
+                if (cache !== null) {
                     logger.info(
                         {
-                            memoName: name,
-                            hash,
-                            now,
-                            cachedAt: JSON.parse(localStorage.getItem(hash)).cachedAt,
-                            id: contextStore && contextStore.get('reqId'),
+                            ...logInfo,
+                            cachedAt: cache.cachedAt,
                         },
-                        logMessage(
-                            'Item read from cache. Invalidation is in progress since current request. Cache is stale',
-                        ),
+                        logMessage('Item read from cache. Invalidation is in progress. Cache is stale'),
                     );
-                    return Promise.resolve(JSON.parse(localStorage.getItem(hash)));
+
+                    return Promise.resolve(cache);
                 }
 
-                logger.info(
-                    {
-                        memoName: name,
-                        hash,
-                        now,
-                        id: contextStore && contextStore.get('reqId'),
-                    },
-                    logMessage('Item read from API. Can not find anything in stale cache'),
-                );
-                return cacheResolutionPromise[hash];
+                return cacheRenewPromise[hash];
             }
 
             logger.info(
                 {
-                    memoName: name,
-                    now,
-                    cachedAt: parsedItem.cachedAt,
-                    id: contextStore && contextStore.get('reqId'),
+                    ...logInfo,
+                    cachedAt: (cache || {}).cachedAt,
                 },
-                logMessage('Item read from cache. Cache is actual'),
+                logMessage('Invalidation started'),
             );
 
-            return Promise.resolve(parsedItem);
+            // Start cache renew
+            cacheRenewPromise[hash] = fn(...args)
+                .then((data) => {
+                    const now = nowInSec();
+
+                    const renewedCache = {
+                        data,
+                        cachedAt: now,
+                    };
+
+                    setCache(renewedCache);
+
+                    delete cacheRenewPromise[hash];
+
+                    logger.info(
+                        {
+                            ...logInfo,
+                            now,
+                            cachedAt: renewedCache.cachedAt,
+                        },
+                        logMessage('Invalidation finished'),
+                    );
+
+                    return renewedCache;
+                })
+                .catch((err) => {
+                    delete cacheRenewPromise[hash];
+
+                    if (cache === null) {
+                        logger.info(
+                            {
+                                ...logInfo,
+                            },
+                            logMessage('Invalidation error'),
+                        );
+
+                        // As someone is waiting for promise - just reject it
+                        return Promise.reject(err);
+                    } else {
+                        // Here no one waiting for this promise anymore, thrown error would cause
+                        // unhandled promise rejection
+                        const error = new errors.WrapWithCacheError({
+                            cause: err,
+                            message: 'Error during cache update function execution',
+                        });
+
+                        logger.error(error);
+                    }
+                });
+
+            // Return stale cache instead of waiting for renew
+            if (cache !== null) {
+                logger.info(
+                    {
+                        ...logInfo,
+                        cachedAt: cache.cachedAt,
+                    },
+                    logMessage(
+                        'Item read from cache. Invalidation is in progress since current request. Cache is stale',
+                    ),
+                );
+
+                return Promise.resolve(cache);
+            }
+
+            logger.info(
+                {
+                    ...logInfo,
+                },
+                logMessage('Item read from API. Can not find anything in stale cache'),
+            );
+
+            return cacheRenewPromise[hash];
         };
     };
+
+function nowInSec() {
+    return Math.floor(Date.now() / 1000);
+}
 
 function hashFn(str) {
     for (var i = 0, h = 0xdeadbeef; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 2654435761);

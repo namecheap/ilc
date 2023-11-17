@@ -17,6 +17,108 @@ describe('Registry', () => {
         nock.cleanAll();
     });
 
+    it('should cache getConfig function only once', async () => {
+        const mockGetConfig = sinon.stub().returns(() => {
+            return () => ({
+                data: [
+                    {
+                        domainName: 'this',
+                        template500: 'exist',
+                    },
+                ],
+            });
+        });
+
+        const registry = new Registry(address, mockGetConfig, logger);
+
+        await registry.getConfig();
+        await registry.getConfig();
+        await registry.getConfig();
+
+        const calls = mockGetConfig.getCalls();
+
+        const specificCalls = calls.filter((call) =>
+            call.calledWithExactly(
+                sinon.match.any,
+                {
+                    cacheForSeconds: 5,
+                    name: 'registry_getConfig',
+                },
+                sinon.match.any,
+            ),
+        );
+
+        chai.expect(specificCalls).to.have.lengthOf(1);
+    });
+
+    it('should cache getTemplate function only once', async () => {
+        const mockGetConfig = sinon.stub().returns(() => {
+            return () => ({
+                data: [
+                    {
+                        domainName: 'this',
+                        template500: 'exist',
+                    },
+                ],
+            });
+        });
+
+        const registry = new Registry(address, mockGetConfig, logger);
+
+        await registry.getTemplate();
+        await registry.getTemplate();
+        await registry.getTemplate();
+
+        const calls = mockGetConfig.getCalls();
+
+        const specificCalls = calls.filter((call) =>
+            call.calledWithExactly(
+                sinon.match.any,
+                {
+                    cacheForSeconds: 30,
+                    name: 'registry_getTemplate',
+                },
+                sinon.match.any,
+            ),
+        );
+
+        chai.expect(specificCalls).to.have.lengthOf(1);
+    });
+
+    it('should cache getRouterDomains function only once', async () => {
+        const mockGetConfig = sinon.stub().returns(() => {
+            return () => ({
+                data: [
+                    {
+                        domainName: 'this',
+                        template500: 'exist',
+                    },
+                ],
+            });
+        });
+
+        const registry = new Registry(address, mockGetConfig, logger);
+
+        await registry.getRouterDomains();
+        await registry.getRouterDomains();
+        await registry.getRouterDomains();
+
+        const calls = mockGetConfig.getCalls();
+
+        const specificCalls = calls.filter((call) =>
+            call.calledWithExactly(
+                sinon.match.any,
+                {
+                    cacheForSeconds: 30,
+                    name: 'registry_routerDomains',
+                },
+                sinon.match.any,
+            ),
+        );
+
+        chai.expect(specificCalls).to.have.lengthOf(1);
+    });
+
     it('getConfig should return right value', async () => {
         const mockGetConfig = () => {
             return () => ({

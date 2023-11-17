@@ -26,7 +26,6 @@ describe('wrapWithCache', () => {
     };
     const prevCachedValue = {
         data: prevData,
-        checkAfter: now,
         cachedAt: now - cacheParams.cacheForSeconds - 60,
     };
 
@@ -57,7 +56,7 @@ describe('wrapWithCache', () => {
             .to.include({
                 data,
             })
-            .and.to.have.all.keys('checkAfter', 'cachedAt');
+            .and.to.have.all.keys('cachedAt');
     });
 
     it('should return values while it expects function`s parameters as a cached value`s key', async () => {
@@ -123,6 +122,48 @@ describe('wrapWithCache', () => {
         }
 
         chai.expect(rejectedError).to.equal(rejectedError);
+    });
+
+    describe('Correct cache date', () => {
+        let clock;
+
+        beforeEach(() => (clock = sinon.useFakeTimers()));
+
+        afterEach(() => clock.restore());
+
+        it('should set correct date now when saving new data to cache', async () => {
+            const setItem = sinon.stub();
+
+            const wrapWithCacheStorage = wrapWithCache(
+                {
+                    setItem,
+                    getItem: () => null,
+                },
+                logger,
+            );
+
+            wrapedFn = wrapWithCacheStorage(
+                () => {
+                    clock.tick(50000);
+                    return Promise.resolve(data);
+                },
+                {
+                    name: 'testCacheName',
+                },
+            );
+
+            await wrapedFn();
+
+            chai.expect(
+                setItem.calledWith(
+                    sinon.match.any,
+                    JSON.stringify({
+                        data: 'data',
+                        cachedAt: 50,
+                    }),
+                ),
+            ).to.be.true;
+        });
     });
 
     describe('when requesting new data fails in the foreground but cache has a stale value', () => {
