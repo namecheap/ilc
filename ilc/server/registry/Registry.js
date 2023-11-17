@@ -2,7 +2,6 @@ const axios = require('axios');
 const urljoin = require('url-join');
 const { cloneDeep } = require('../../common/utils');
 const extendError = require('@namecheap/error-extender');
-const { context } = require('../context/context');
 const { isTemplateValid } = require('./isTemplateValid');
 
 const errors = {};
@@ -19,41 +18,27 @@ module.exports = class Registry {
 
     /**
      * @param {string} address - registry address. Ex: http://registry:8080/
-     * @param {Function} wrapWithCache - cache provider
+     * @param {Function} cacheWrapper - cache provider
      * @param {Object} logger - log provider that implements "console" interface
      */
-    constructor(address, wrapWithCache, logger) {
+    constructor(address, cacheWrapper, logger) {
         this.#address = address;
         this.#logger = logger;
 
-        const store = context.getStore();
+        const getConfigMemoized = cacheWrapper.wrap(this.#getConfig.bind(this), {
+            cacheForSeconds: 5,
+            name: 'registry_getConfig',
+        });
 
-        const getConfigMemoized = wrapWithCache(
-            this.#getConfig.bind(this),
-            {
-                cacheForSeconds: 5,
-                name: 'registry_getConfig',
-            },
-            store,
-        );
+        const getTemplateMemoized = cacheWrapper.wrap(this.#getTemplate.bind(this), {
+            cacheForSeconds: 30,
+            name: 'registry_getTemplate',
+        });
 
-        const getTemplateMemoized = wrapWithCache(
-            this.#getTemplate.bind(this),
-            {
-                cacheForSeconds: 30,
-                name: 'registry_getTemplate',
-            },
-            store,
-        );
-
-        this.getRouterDomains = wrapWithCache(
-            this.#getRouterDomains.bind(this),
-            {
-                cacheForSeconds: 30,
-                name: 'registry_routerDomains',
-            },
-            store,
-        );
+        this.getRouterDomains = cacheWrapper.wrap(this.#getRouterDomains.bind(this), {
+            cacheForSeconds: 30,
+            name: 'registry_routerDomains',
+        });
 
         this.getConfig = async (options) => {
             const fullConfig = await getConfigMemoized(options);

@@ -17,121 +17,92 @@ describe('Registry', () => {
         nock.cleanAll();
     });
 
-    it('should cache getConfig function only once', async () => {
-        const mockGetConfig = sinon.stub().returns(() => {
-            return () => ({
-                data: [
-                    {
-                        domainName: 'this',
-                        template500: 'exist',
-                    },
-                ],
-            });
+    describe('using cache wrapper', () => {
+        let cacheWrapperMock;
+        let registry;
+
+        beforeEach(() => {
+            cacheWrapperMock = {
+                wrap: sinon.stub().returns(() => {
+                    return () => ({
+                        data: [
+                            {
+                                domainName: 'this',
+                                template500: 'exist',
+                            },
+                        ],
+                    });
+                }),
+            };
+
+            registry = new Registry(address, cacheWrapperMock, logger);
         });
 
-        const registry = new Registry(address, mockGetConfig, logger);
+        it('should cache getConfig function only once', async () => {
+            await registry.getConfig();
+            await registry.getConfig();
+            await registry.getConfig();
 
-        await registry.getConfig();
-        await registry.getConfig();
-        await registry.getConfig();
+            const calls = cacheWrapperMock.wrap.getCalls();
 
-        const calls = mockGetConfig.getCalls();
-
-        const specificCalls = calls.filter((call) =>
-            call.calledWithExactly(
-                sinon.match.any,
-                {
+            const specificCalls = calls.filter((call) =>
+                call.calledWithExactly(sinon.match.any, {
                     cacheForSeconds: 5,
                     name: 'registry_getConfig',
-                },
-                sinon.match.any,
-            ),
-        );
+                }),
+            );
 
-        chai.expect(specificCalls).to.have.lengthOf(1);
-    });
-
-    it('should cache getTemplate function only once', async () => {
-        const mockGetConfig = sinon.stub().returns(() => {
-            return () => ({
-                data: [
-                    {
-                        domainName: 'this',
-                        template500: 'exist',
-                    },
-                ],
-            });
+            chai.expect(specificCalls).to.have.lengthOf(1);
         });
 
-        const registry = new Registry(address, mockGetConfig, logger);
+        it('should cache getTemplate function only once', async () => {
+            await registry.getTemplate();
+            await registry.getTemplate();
+            await registry.getTemplate();
 
-        await registry.getTemplate();
-        await registry.getTemplate();
-        await registry.getTemplate();
+            const calls = cacheWrapperMock.wrap.getCalls();
 
-        const calls = mockGetConfig.getCalls();
-
-        const specificCalls = calls.filter((call) =>
-            call.calledWithExactly(
-                sinon.match.any,
-                {
+            const specificCalls = calls.filter((call) =>
+                call.calledWithExactly(sinon.match.any, {
                     cacheForSeconds: 30,
                     name: 'registry_getTemplate',
-                },
-                sinon.match.any,
-            ),
-        );
+                }),
+            );
 
-        chai.expect(specificCalls).to.have.lengthOf(1);
-    });
-
-    it('should cache getRouterDomains function only once', async () => {
-        const mockGetConfig = sinon.stub().returns(() => {
-            return () => ({
-                data: [
-                    {
-                        domainName: 'this',
-                        template500: 'exist',
-                    },
-                ],
-            });
+            chai.expect(specificCalls).to.have.lengthOf(1);
         });
 
-        const registry = new Registry(address, mockGetConfig, logger);
+        it('should cache getRouterDomains function only once', async () => {
+            await registry.getRouterDomains();
+            await registry.getRouterDomains();
+            await registry.getRouterDomains();
 
-        await registry.getRouterDomains();
-        await registry.getRouterDomains();
-        await registry.getRouterDomains();
+            const calls = cacheWrapperMock.wrap.getCalls();
 
-        const calls = mockGetConfig.getCalls();
-
-        const specificCalls = calls.filter((call) =>
-            call.calledWithExactly(
-                sinon.match.any,
-                {
+            const specificCalls = calls.filter((call) =>
+                call.calledWithExactly(sinon.match.any, {
                     cacheForSeconds: 30,
                     name: 'registry_routerDomains',
-                },
-                sinon.match.any,
-            ),
-        );
+                }),
+            );
 
-        chai.expect(specificCalls).to.have.lengthOf(1);
+            chai.expect(specificCalls).to.have.lengthOf(1);
+        });
     });
 
     it('getConfig should return right value', async () => {
-        const mockGetConfig = () => {
-            return () => ({
+        const cacheWrapperMock = {
+            wrap: () => () => ({
                 data: [
                     {
                         domainName: 'this',
                         template500: 'exist',
                     },
                 ],
-            });
+            }),
         };
 
-        const registry = new Registry(address, mockGetConfig, logger);
+        const registry = new Registry(address, cacheWrapperMock, logger);
         const getConfig = await registry.getConfig();
 
         await chai.expect(getConfig).to.be.eql({
@@ -262,29 +233,32 @@ describe('Registry', () => {
 
         const currentDomain = 'foo.com';
 
-        const mockGetConfigWithFilter = () => () => ({ data: IlcConfig });
-        const registry = new Registry(address, mockGetConfigWithFilter, logger);
+        const cacheWrapperMock = {
+            wrap: () => () => ({ data: IlcConfig }),
+        };
+
+        const registry = new Registry(address, cacheWrapperMock, logger);
         const getConfig = await registry.getConfig({ filter: { domain: currentDomain } });
 
         await chai.expect(getConfig).to.be.eql(expectedConfig);
     });
 
     it('getTemplate should return right value if template name equal 500', async () => {
-        const mockGetTemplate = () => {
-            return (arg) => ({
+        const cacheWrapperMock = {
+            wrap: () => (arg) => ({
                 data: [
                     {
                         domainName: 'this',
                         template500: arg || 'exist',
                     },
                 ],
-            });
+            }),
         };
 
         const templateName = '500';
         const forDomain = 'this';
 
-        const registry = new Registry(address, mockGetTemplate, logger);
+        const registry = new Registry(address, cacheWrapperMock, logger);
         const getTemplate = await registry.getTemplate(templateName, { forDomain });
 
         await chai.expect(getTemplate).to.be.eql({
@@ -298,21 +272,21 @@ describe('Registry', () => {
     });
 
     it('getTemplate should return right value if template name not equal 500', async () => {
-        const mockGetTemplate = () => {
-            return (arg) => ({
+        const cacheWrapperMock = {
+            wrap: () => (arg) => ({
                 data: [
                     {
                         domainName: 'this',
                         template500: arg || 'exist',
                     },
                 ],
-            });
+            }),
         };
 
         const templateName = 'anotherErrorTemplate';
         const forDomain = 'this';
 
-        const registry = new Registry(address, mockGetTemplate, logger);
+        const registry = new Registry(address, cacheWrapperMock, logger);
         const getTemplate = await registry.getTemplate(templateName, { forDomain });
 
         await chai.expect(getTemplate).to.be.eql({
@@ -326,7 +300,9 @@ describe('Registry', () => {
     });
 
     it('Registry should preheat only once', async () => {
-        const mockPreheat = (callback) => callback;
+        const cacheWrapperMock = {
+            wrap: (callback) => callback,
+        };
 
         nock(address).get('/api/v1/config').reply(200, {
             content: '<ilc-slot id="body" />',
@@ -338,7 +314,7 @@ describe('Registry', () => {
 
         nock(address).get('/api/v1/router_domains').reply(200);
 
-        const registry = new Registry(address, mockPreheat, logger);
+        const registry = new Registry(address, cacheWrapperMock, logger);
         await registry.preheat();
         await registry.preheat();
 
@@ -348,12 +324,14 @@ describe('Registry', () => {
     });
 
     describe('Handling errors', async () => {
-        const mockPreheat = (callback) => callback;
+        const cacheWrapperMock = {
+            wrap: (callback) => callback,
+        };
 
         it('getConfig should throw error', async () => {
             nock(address).get('/api/v1/config').reply(404);
 
-            const registry = new Registry(address, mockPreheat, logger);
+            const registry = new Registry(address, cacheWrapperMock, logger);
 
             await chai
                 .expect(registry.getConfig())
@@ -363,7 +341,7 @@ describe('Registry', () => {
         it('getTemplate should throw error', async () => {
             nock(address).get('/api/v1/template/anotherErrorTemplate/rendered').reply(404);
 
-            const registry = new Registry(address, mockPreheat, logger);
+            const registry = new Registry(address, cacheWrapperMock, logger);
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
@@ -375,7 +353,7 @@ describe('Registry', () => {
         it('getRouterDomains should throw error', async () => {
             nock(address).get('/api/v1/router_domains').reply(404);
 
-            const registry = new Registry(address, mockPreheat, logger);
+            const registry = new Registry(address, cacheWrapperMock, logger);
 
             await chai
                 .expect(registry.getRouterDomains())
@@ -387,7 +365,7 @@ describe('Registry', () => {
                 content: '<body>Hi there! I do not have head tag.</body>',
             });
 
-            const registry = new Registry(address, mockPreheat, logger);
+            const registry = new Registry(address, cacheWrapperMock, logger);
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
@@ -399,7 +377,7 @@ describe('Registry', () => {
                 content: '</head><body>Hi there! I do not have head tag.</body>',
             });
 
-            const registry = new Registry(address, mockPreheat, logger);
+            const registry = new Registry(address, cacheWrapperMock, logger);
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
@@ -411,7 +389,7 @@ describe('Registry', () => {
                 content: '<head><body>Hi there! I do not have closed head tag.</body>',
             });
 
-            const registry = new Registry(address, mockPreheat, logger);
+            const registry = new Registry(address, cacheWrapperMock, logger);
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
@@ -423,7 +401,7 @@ describe('Registry', () => {
                 content: '<head></head>Hi there! I do not have body tag.',
             });
 
-            const registry = new Registry(address, mockPreheat, logger);
+            const registry = new Registry(address, cacheWrapperMock, logger);
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
@@ -435,7 +413,7 @@ describe('Registry', () => {
                 content: '<head></head>Hi there! I do not have opened body tag.</body>',
             });
 
-            const registry = new Registry(address, mockPreheat, logger);
+            const registry = new Registry(address, cacheWrapperMock, logger);
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
@@ -447,7 +425,7 @@ describe('Registry', () => {
                 content: '<head></head><body>Hi there! I do not have closed body tag.',
             });
 
-            const registry = new Registry(address, mockPreheat, logger);
+            const registry = new Registry(address, cacheWrapperMock, logger);
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
@@ -460,9 +438,12 @@ describe('Registry', () => {
             content:
                 '<!DOCTYPE html>\n<html lang="en">\n<head attr="1">\n\n</head>\n<body class="custom">\n...\n</body>\n</html> ',
         });
-        const mockPreheat = (callback) => callback;
 
-        const registry = new Registry(address, mockPreheat, logger);
+        const cacheWrapperMock = {
+            wrap: (callback) => callback,
+        };
+
+        const registry = new Registry(address, cacheWrapperMock, logger);
 
         const res = await registry.getTemplate('tpl');
         chai.expect(res.content).includes('<body class="custom">\n...\n</body>');

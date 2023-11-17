@@ -1,10 +1,36 @@
 const extendError = require('@namecheap/error-extender');
-const errors = {};
-errors.WrapWithCacheError = extendError('WrapWithCacheError');
 
-const wrapWithCache =
-    (localStorage, logger, createHash = hashFn) =>
-    (fn, cacheParams, contextStore) => {
+const errors = {};
+errors.CacheWrapperError = extendError('CacheWrapperError');
+
+class CacheWrapper {
+    #cacheRenewPromise = {};
+
+    constructor(localStorage, logger, context, createHash = hashFn) {
+        this.logger = logger;
+        this.context = context;
+        this.storage = localStorage;
+        this.createHash = createHash;
+    }
+
+    #getCache(hash) {
+        const cache = this.storage.getItem(hash);
+        return cache ? JSON.parse(cache) : null;
+    }
+
+    #setCache(hash, cache) {
+        this.storage.setItem(hash, JSON.stringify(cache));
+    }
+
+    #nowInSec() {
+        return Math.floor(Date.now() / 1000);
+    }
+
+    #logMessage(str) {
+        return `[ILC Cache]: ${str}`;
+    }
+
+    wrap(fn, cacheParams) {
         const { name: memoName, cacheForSeconds = 60 } = cacheParams;
 
         if (typeof memoName !== 'string' || memoName.length === 0) {
@@ -13,106 +39,95 @@ const wrapWithCache =
             );
         }
 
-        const cacheRenewPromise = {};
-
         return (...args) => {
-            const now = nowInSec();
-            const hash = createHash(memoName + JSON.stringify(args));
+            const now = this.#nowInSec();
+            const hash = this.createHash(memoName + JSON.stringify(args));
 
             const logInfo = {
                 now,
                 hash,
                 memoName,
-                id: contextStore && contextStore.get('reqId'),
+                id: this.context && this.context.get('reqId'),
             };
 
-            const getCache = () => {
-                const cache = localStorage.getItem(hash);
-                return cache ? JSON.parse(cache) : null;
-            };
-
-            const setCache = (cache) => {
-                localStorage.setItem(hash, JSON.stringify(cache));
-            };
-
-            const cache = getCache();
+            const cache = this.#getCache(hash);
             const cacheIsActual = cache !== null && cache.cachedAt >= now - cacheForSeconds;
 
             // Return cache if actual
             if (cacheIsActual) {
-                logger.info(
+                this.logger.info(
                     {
                         ...logInfo,
                         cachedAt: cache.cachedAt,
                     },
-                    logMessage('Item read from cache. Cache is actual'),
+                    this.#logMessage('Item read from cache. Cache is actual'),
                 );
 
                 return Promise.resolve(cache);
             }
 
-            const cacheRenewInProgress = cacheRenewPromise[hash] !== undefined;
+            const cacheRenewInProgress = this.#cacheRenewPromise[hash] !== undefined;
 
             if (cacheRenewInProgress) {
                 // If cache is stale, but renew is in progress - return stale cache
                 // otherwise return renew promise
                 if (cache !== null) {
-                    logger.info(
+                    this.logger.info(
                         {
                             ...logInfo,
                             cachedAt: cache.cachedAt,
                         },
-                        logMessage('Item read from cache. Invalidation is in progress. Cache is stale'),
+                        this.#logMessage('Item read from cache. Invalidation is in progress. Cache is stale'),
                     );
 
                     return Promise.resolve(cache);
                 }
 
-                return cacheRenewPromise[hash];
+                return this.#cacheRenewPromise[hash];
             }
 
-            logger.info(
+            this.logger.info(
                 {
                     ...logInfo,
                     cachedAt: (cache || {}).cachedAt,
                 },
-                logMessage('Invalidation started'),
+                this.#logMessage('Invalidation started'),
             );
 
             // Start cache renew
-            cacheRenewPromise[hash] = fn(...args)
+            this.#cacheRenewPromise[hash] = fn(...args)
                 .then((data) => {
-                    const now = nowInSec();
+                    const now = this.#nowInSec();
 
                     const renewedCache = {
                         data,
                         cachedAt: now,
                     };
 
-                    setCache(renewedCache);
+                    this.#setCache(hash, renewedCache);
 
-                    delete cacheRenewPromise[hash];
+                    delete this.#cacheRenewPromise[hash];
 
-                    logger.info(
+                    this.logger.info(
                         {
                             ...logInfo,
                             now,
                             cachedAt: renewedCache.cachedAt,
                         },
-                        logMessage('Invalidation finished'),
+                        this.#logMessage('Invalidation finished'),
                     );
 
                     return renewedCache;
                 })
                 .catch((err) => {
-                    delete cacheRenewPromise[hash];
+                    delete this.#cacheRenewPromise[hash];
 
                     if (cache === null) {
-                        logger.info(
+                        this.logger.info(
                             {
                                 ...logInfo,
                             },
-                            logMessage('Invalidation error'),
+                            this.#logMessage('Invalidation error'),
                         );
 
                         // As someone is waiting for promise - just reject it
@@ -120,23 +135,23 @@ const wrapWithCache =
                     } else {
                         // Here no one waiting for this promise anymore, thrown error would cause
                         // unhandled promise rejection
-                        const error = new errors.WrapWithCacheError({
+                        const error = new errors.CacheWrapperError({
                             cause: err,
                             message: 'Error during cache update function execution',
                         });
 
-                        logger.error(error);
+                        this.logger.error(error);
                     }
                 });
 
             // Return stale cache instead of waiting for renew
             if (cache !== null) {
-                logger.info(
+                this.logger.info(
                     {
                         ...logInfo,
                         cachedAt: cache.cachedAt,
                     },
-                    logMessage(
+                    this.#logMessage(
                         'Item read from cache. Invalidation is in progress since current request. Cache is stale',
                     ),
                 );
@@ -144,19 +159,16 @@ const wrapWithCache =
                 return Promise.resolve(cache);
             }
 
-            logger.info(
+            this.logger.info(
                 {
                     ...logInfo,
                 },
-                logMessage('Item read from API. Can not find anything in stale cache'),
+                this.#logMessage('Item read from API. Can not find anything in stale cache'),
             );
 
-            return cacheRenewPromise[hash];
+            return this.#cacheRenewPromise[hash];
         };
-    };
-
-function nowInSec() {
-    return Math.floor(Date.now() / 1000);
+    }
 }
 
 function hashFn(str) {
@@ -164,8 +176,4 @@ function hashFn(str) {
     return ((h ^ (h >>> 16)) >>> 0).toString();
 }
 
-function logMessage(str) {
-    return `[ILC Cache]: ${str}`;
-}
-
-module.exports = wrapWithCache;
+module.exports = CacheWrapper;

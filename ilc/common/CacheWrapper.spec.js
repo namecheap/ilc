@@ -1,10 +1,10 @@
 import chai from 'chai';
 import sinon from 'sinon';
 import localStorage from './localStorage';
-import wrapWithCache from './wrapWithCache';
+import CacheWrapper from './CacheWrapper';
 
-describe('wrapWithCache', () => {
-    let wrapedFn;
+describe('CacheWrapper', () => {
+    let wrappedFn;
 
     const fn = sinon.stub();
     const createHash = sinon.stub();
@@ -30,8 +30,8 @@ describe('wrapWithCache', () => {
     };
 
     beforeEach(() => {
-        const wrapWithCacheStorage = wrapWithCache(localStorage, logger);
-        wrapedFn = wrapWithCacheStorage(fn, { name: 'testCacheName' });
+        const cacheWrapper = new CacheWrapper(localStorage, logger);
+        wrappedFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
     });
 
     afterEach(() => {
@@ -41,8 +41,8 @@ describe('wrapWithCache', () => {
     });
 
     it('should throw error if uses without "name"', async () => {
-        const wrapWithCacheStorage = wrapWithCache(localStorage, logger);
-        chai.expect(() => wrapWithCacheStorage(fn, { name: undefined })).to.throw(
+        const cacheWrapper = new CacheWrapper(localStorage, logger);
+        chai.expect(() => cacheWrapper.wrap(fn, { name: undefined })).to.throw(
             'To wrap your function you should provide unique "name" to argument, to create hash-id of result of your function',
         );
     });
@@ -50,7 +50,7 @@ describe('wrapWithCache', () => {
     it('should return a value', async () => {
         fn.withArgs().returns(Promise.resolve(data));
 
-        const value = await wrapedFn();
+        const value = await wrappedFn();
 
         chai.expect(value)
             .to.include({
@@ -66,8 +66,8 @@ describe('wrapWithCache', () => {
             .onSecondCall()
             .returns(Promise.resolve(newData));
 
-        const firstValue = await wrapedFn(...fnArgs);
-        const secondValue = await wrapedFn(...fnArgs);
+        const firstValue = await wrappedFn(...fnArgs);
+        const secondValue = await wrappedFn(...fnArgs);
 
         chai.expect(firstValue).to.deep.equals(secondValue);
         chai.expect(fn.calledOnce).to.be.true;
@@ -82,7 +82,7 @@ describe('wrapWithCache', () => {
         fn.withArgs(...firstFnArgs).returns(Promise.resolve(firstData));
         fn.withArgs(...secondFnArgs).returns(Promise.resolve(secondData));
 
-        const [firstValue, secondValue] = await Promise.all([wrapedFn(...firstFnArgs), wrapedFn(...secondFnArgs)]);
+        const [firstValue, secondValue] = await Promise.all([wrappedFn(...firstFnArgs), wrappedFn(...secondFnArgs)]);
 
         chai.expect(firstValue).to.not.deep.equals(secondValue);
     });
@@ -90,21 +90,21 @@ describe('wrapWithCache', () => {
     it('should return the same value in case of concurrent invocation', async () => {
         fn.withArgs().callsFake(() => new Promise((resolve) => setTimeout(() => resolve(data), 100)));
 
-        const [firstValue, secondValue, thirdValue] = await Promise.all([wrapedFn(), wrapedFn(), wrapedFn()]);
+        const [firstValue, secondValue, thirdValue] = await Promise.all([wrappedFn(), wrappedFn(), wrappedFn()]);
 
         chai.expect(firstValue).to.deep.equal(secondValue).and.to.deep.equal(thirdValue);
         chai.expect(fn.calledOnce).to.be.true;
     });
 
     it('should return a stale value while it requests new data in the background', async () => {
-        const wrapWithCacheStorage = wrapWithCache(localStorage, logger, createHash);
-        wrapedFn = wrapWithCacheStorage(fn, cacheParams);
+        const cacheWrapper = new CacheWrapper(localStorage, logger, null, createHash);
+        wrappedFn = cacheWrapper.wrap(fn, cacheParams);
         fn.withArgs(...fnArgs).returns(Promise.resolve(newData));
         createHash.withArgs(cacheParams.name + JSON.stringify(fnArgs)).returns(cachedValueKey);
         localStorage.setItem(cachedValueKey, JSON.stringify(prevCachedValue));
 
-        const firstValue = await wrapedFn(...fnArgs);
-        const secondValue = await wrapedFn(...fnArgs);
+        const firstValue = await wrappedFn(...fnArgs);
+        const secondValue = await wrappedFn(...fnArgs);
 
         chai.expect(firstValue).to.deep.equal(prevCachedValue).but.to.not.deep.equals(secondValue);
         chai.expect(fn.calledOnce).to.be.true;
@@ -116,12 +116,49 @@ describe('wrapWithCache', () => {
         let rejectedError;
 
         try {
-            await wrapedFn();
+            await wrappedFn();
         } catch (error) {
             rejectedError = error;
         }
 
         chai.expect(rejectedError).to.equal(rejectedError);
+    });
+
+    describe('Multiple wrappers with same name', () => {
+        let wrappedFirstFn;
+        let wrappedSecondFn;
+        let wrappedThrird;
+
+        beforeEach(() => {
+            const cacheWrapper = new CacheWrapper(localStorage, logger);
+
+            wrappedFirstFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
+            wrappedSecondFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
+            wrappedThrird = cacheWrapper.wrap(fn, { name: 'testCacheName' });
+        });
+
+        it('should return the same value in case of concurrent invocation', async () => {
+            fn.withArgs().callsFake(() => new Promise((resolve) => setTimeout(() => resolve(data), 100)));
+
+            const [firstValue, secondValue, thirdValue] = await Promise.all([
+                wrappedFirstFn(),
+                wrappedSecondFn(),
+                wrappedThrird(),
+            ]);
+
+            chai.expect(firstValue).to.deep.equal(secondValue).and.to.deep.equal(thirdValue);
+            chai.expect(fn.calledOnce).to.be.true;
+        });
+
+        it('should return the same promise in case of concurrent invocation', async () => {
+            const fnPromise = new Promise((resolve) => resolve(data));
+            fn.withArgs().callsFake(() => fnPromise);
+
+            const [firstValue, secondValue, thirdValue] = [wrappedFirstFn(), wrappedSecondFn(), wrappedThrird()];
+
+            chai.expect(firstValue).to.deep.equal(secondValue).and.to.deep.equal(thirdValue);
+            chai.expect(fn.calledOnce).to.be.true;
+        });
     });
 
     describe('Correct cache date', () => {
@@ -134,7 +171,7 @@ describe('wrapWithCache', () => {
         it('should set correct date now when saving new data to cache', async () => {
             const setItem = sinon.stub();
 
-            const wrapWithCacheStorage = wrapWithCache(
+            const cacheWrapper = new CacheWrapper(
                 {
                     setItem,
                     getItem: () => null,
@@ -142,7 +179,7 @@ describe('wrapWithCache', () => {
                 logger,
             );
 
-            wrapedFn = wrapWithCacheStorage(
+            wrappedFn = cacheWrapper.wrap(
                 () => {
                     clock.tick(50000);
                     return Promise.resolve(data);
@@ -152,7 +189,7 @@ describe('wrapWithCache', () => {
                 },
             );
 
-            await wrapedFn();
+            await wrappedFn();
 
             chai.expect(
                 setItem.calledWith(
@@ -168,24 +205,24 @@ describe('wrapWithCache', () => {
 
     describe('when requesting new data fails in the foreground but cache has a stale value', () => {
         beforeEach(() => {
-            const wrapWithCacheStorage = wrapWithCache(localStorage, logger, createHash);
-            wrapedFn = wrapWithCacheStorage(fn, cacheParams);
+            const cacheWrapper = new CacheWrapper(localStorage, logger, null, createHash);
+            wrappedFn = cacheWrapper.wrap(fn, cacheParams);
             fn.withArgs(...fnArgs).returns(Promise.reject(fnError));
             localStorage.setItem(cachedValueKey, JSON.stringify(prevCachedValue));
             createHash.withArgs(JSON.stringify(fnArgs)).returns(cachedValueKey);
         });
 
         it('should return a stale cached value', async () => {
-            await wrapedFn(...fnArgs);
-            const secondValue = await wrapedFn(...fnArgs);
+            await wrappedFn(...fnArgs);
+            const secondValue = await wrappedFn(...fnArgs);
 
             chai.expect(secondValue).to.deep.equal(prevCachedValue);
             chai.expect(fn.calledOnce).to.be.true;
         });
 
         it('should log an error because a stale cached value was returned', async () => {
-            await wrapedFn(...fnArgs);
-            await wrapedFn(...fnArgs);
+            await wrappedFn(...fnArgs);
+            await wrappedFn(...fnArgs);
 
             chai.expect(logger.error.calledOnce).to.be.true;
             chai.expect(logger.error.getCall(0).args[0]).to.be.instanceof(Error);
