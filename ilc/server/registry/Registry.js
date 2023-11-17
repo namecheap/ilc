@@ -19,61 +19,48 @@ module.exports = class Registry {
 
     /**
      * @param {string} address - registry address. Ex: http://registry:8080/
-     * @param {Function} wrapFetchWithCache - cache provider
+     * @param {Function} wrapWithCache - cache provider
      * @param {Object} logger - log provider that implements "console" interface
      */
-    constructor(address, wrapFetchWithCache, logger) {
+    constructor(address, wrapWithCache, logger) {
         this.#address = address;
         this.#logger = logger;
 
-        const getConfigMemo = (...args) => {
-            const store = context.getStore();
+        const store = context.getStore();
 
-            const memo = wrapFetchWithCache(
-                this.#getConfig.bind(this, ...args),
-                {
-                    cacheForSeconds: 5,
-                    name: 'registry_getConfig',
-                },
-                store,
-            );
+        const getConfigMemoized = wrapWithCache(
+            this.#getConfig.bind(this),
+            {
+                cacheForSeconds: 5,
+                name: 'registry_getConfig',
+            },
+            store,
+        );
 
-            return memo(...args);
-        };
+        const getTemplateMemoized = wrapWithCache(
+            this.#getTemplate.bind(this),
+            {
+                cacheForSeconds: 30,
+                name: 'registry_getTemplate',
+            },
+            store,
+        );
+
+        this.getRouterDomains = wrapWithCache(
+            this.#getRouterDomains.bind(this),
+            {
+                cacheForSeconds: 30,
+                name: 'registry_routerDomains',
+            },
+            store,
+        );
 
         this.getConfig = async (options) => {
-            const fullConfig = await getConfigMemo(options);
+            const fullConfig = await getConfigMemoized(options);
+
+            // TODO: Memoize filtration as well
             fullConfig.data = this.#filterConfig(fullConfig.data, options?.filter);
             return fullConfig;
-        };
-
-        this.getRouterDomains = async (...args) => {
-            const store = context.getStore();
-            const memo = wrapFetchWithCache(
-                this.#getRouterDomains,
-                {
-                    cacheForSeconds: 30,
-                    name: 'registry_routerDomains',
-                },
-                store,
-            );
-
-            return await memo(...args);
-        };
-
-        const getTemplateMemo = async (...args) => {
-            const store = context.getStore();
-
-            const memo = wrapFetchWithCache(
-                this.#getTemplate,
-                {
-                    cacheForSeconds: 30,
-                    name: 'registry_getTemplate',
-                },
-                store,
-            );
-
-            return await memo(...args);
         };
 
         this.getTemplate = async (templateName, { locale, forDomain } = {}) => {
@@ -83,7 +70,7 @@ module.exports = class Registry {
                 templateName = redefined500 || templateName;
             }
 
-            return await getTemplateMemo(templateName, { locale, domain: forDomain });
+            return await getTemplateMemoized(templateName, { locale, domain: forDomain });
         };
     }
 
