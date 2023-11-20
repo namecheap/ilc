@@ -1,7 +1,7 @@
 {
     "spec": [
-        "server/**/*.spec.js",
-        "common/**/*.spec.js"
+        "dist/server/**/*.spec.js",
+        "dist/common/**/*.spec.js"
     ],
     "require": "@babel/register",
     "timeout": 5000,

@@ -71,7 +71,7 @@ describe('GuardManager', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-            app = createApp(helpers.getRegistryMock(), pluginManager, context);
+            const app = createApp(helpers.getRegistryMock(), pluginManager, context);
 
             try {
                 res = await app.inject({ method: 'GET', url: '/all' });

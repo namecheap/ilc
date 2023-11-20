@@ -4,7 +4,7 @@
   "description": "",
   "main": "server/index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha",
+    "test": "npm run build:server && cross-env NODE_ENV=test mocha",
     "test:ci": "npm run test -- --forbid-only --exit",
     "test:watch": "npm run test -- --watch",
     "test:coverage": "cross-env NODE_ENV=test nyc mocha --exit",
