@@ -95,7 +95,7 @@ describe('BundleLoader', () => {
             const appName = '@portal/ssrOnly';
 
             const callbacks = await loader.loadApp(appName);
-            expect(callbacks).to.equal(emptyClientApplication);
+            expect(callbacks).to.eql({ ...emptyClientApplication, applicationConfig: registry.apps[appName] });
         });
 
         it('loads app and returns callbacks from mainSpa and calls it once', async () => {
@@ -107,10 +107,11 @@ describe('BundleLoader', () => {
             SystemJs.import.resolves({ mainSpa });
 
             const callbacks = await loader.loadApp(appName);
-            expect(callbacks).to.equal(fnCallbacks);
+            const result = { ...callbacks, applicationConfig: registry.apps[appName] };
+            expect(callbacks).to.eql(result);
 
             const callbacks2 = await loader.loadApp(appName);
-            expect(callbacks2).to.equal(fnCallbacks);
+            expect(callbacks2).to.eql(result);
 
             sinon.assert.calledWith(SystemJs.import, appName);
             sinon.assert.calledTwice(SystemJs.import);
@@ -128,10 +129,11 @@ describe('BundleLoader', () => {
             SystemJs.import.resolves({ default: { mainSpa } });
 
             const callbacks = await loader.loadApp(appName);
-            expect(callbacks).to.equal(fnCallbacks);
+            const result = { ...callbacks, applicationConfig: registry.apps[appName] };
+            expect(callbacks).to.eql(result);
 
             const callbacks2 = await loader.loadApp(appName);
-            expect(callbacks2).to.equal(fnCallbacks);
+            expect(callbacks2).to.eql(result);
 
             sinon.assert.calledWith(SystemJs.import, appName);
             sinon.assert.calledTwice(SystemJs.import);
@@ -147,7 +149,8 @@ describe('BundleLoader', () => {
             SystemJs.import.resolves(fnCallbacks);
 
             const callbacks = await loader.loadApp(appName);
-            expect(callbacks).to.equal(fnCallbacks);
+            const result = { ...callbacks, applicationConfig: registry.apps[appName] };
+            expect(callbacks).to.eql(result);
 
             sinon.assert.calledWith(SystemJs.import, appName);
         });
@@ -159,7 +162,30 @@ describe('BundleLoader', () => {
             SystemJs.import.resolves({ default: fnCallbacks });
 
             const callbacks = await loader.loadApp(appName);
-            expect(callbacks).to.equal(fnCallbacks);
+            const result = { ...callbacks, applicationConfig: registry.apps[appName] };
+            expect(callbacks).to.eql(result);
+
+            sinon.assert.calledWith(SystemJs.import, appName);
+        });
+        it('should load CssTrackedApp by default', async () => {
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const appName = '@portal/appWithCss';
+
+            SystemJs.import.resolves(fnCallbacks);
+
+            const callbacks = await loader.loadApp(appName);
+            expect(callbacks.__CSS_TRACKED_APP__).to.equal(true);
+
+            sinon.assert.calledWith(SystemJs.import, appName);
+        });
+        it('should load pure app without css if flag set', async () => {
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const appName = '@portal/appWithCss';
+
+            SystemJs.import.resolves(fnCallbacks);
+
+            const callbacks = await loader.loadApp(appName, { injectGlobalCss: false });
+            expect(callbacks.__CSS_TRACKED_APP__).to.equal(undefined);
 
             sinon.assert.calledWith(SystemJs.import, appName);
         });
@@ -200,7 +226,8 @@ describe('BundleLoader', () => {
             SystemJs.import.resolves(fnCallbacks);
 
             const callbacks = await loader.loadAppWithCss(appName);
-            expect(callbacks).to.equal(fnCallbacks);
+            const result = { ...callbacks, applicationConfig: registry.apps[appName] };
+            expect(callbacks).to.eql(result);
 
             sinon.assert.calledWith(SystemJs.import, appName);
         });

@@ -26,6 +26,7 @@ export class CssTrackedApp {
             mount: this.mount,
             unmount: this.unmount,
             update: this.update,
+            __CSS_TRACKED_APP__: true,
         };
     };
 

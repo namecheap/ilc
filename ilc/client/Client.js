@@ -360,7 +360,7 @@ export class Client {
         );
 
         Object.assign(window.ILC, {
-            loadApp: this.#bundleLoader.loadAppWithCss.bind(this.#bundleLoader), // Internal API for Namecheap, not for public use
+            loadApp: this.#bundleLoader.loadApp.bind(this.#bundleLoader), // Internal API for Namecheap, not for public use
             navigate: this.#router.navigateToUrl.bind(this.#router),
             onIntlChange: this.#addIntlChangeHandler.bind(this),
             onRouteChange: this.#addRouteChangeHandlerWithDispatch.bind(this),

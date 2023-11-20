@@ -44,19 +44,33 @@ export class BundleLoader {
         }
     }
 
-    loadApp(appName) {
-        const app = this.#getApp(appName);
-        if (!app.spaBundle) {
+    /**
+     *
+     * @param {string} appName
+     * @param {boolean} options.injectGlobalCss to css with <link> element in <head>
+     * @returns Promise<object> application
+     */
+    loadApp(appName, { injectGlobalCss = true } = {}) {
+        const applicationConfig = this.#getApp(appName);
+        if (!applicationConfig.spaBundle) {
             // it is SSR only app
-            return Promise.resolve(emptyClientApplication);
+            return Promise.resolve(this.#enrichApplicationWithConfig(emptyClientApplication, applicationConfig));
         }
 
         return this.#moduleLoader.import(appName).then((appBundle) => {
             const sdkInstanceFactory = this.#sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
-            const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props, { sdkFactory: sdkInstanceFactory });
-            return typeof app.cssBundle === 'string'
-                ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval).getDecoratedApp()
-                : rawCallbacks;
+            const rawCallbacks = this.#getAppSpaCallbacks(appBundle, applicationConfig.props, {
+                sdkFactory: sdkInstanceFactory,
+            });
+            const application =
+                typeof applicationConfig.cssBundle === 'string' && injectGlobalCss !== false
+                    ? new CssTrackedApp(
+                          rawCallbacks,
+                          applicationConfig.cssBundle,
+                          this.#delayCssRemoval,
+                      ).getDecoratedApp()
+                    : rawCallbacks;
+            return this.#enrichApplicationWithConfig(application, applicationConfig);
         });
     }
 
@@ -92,6 +106,16 @@ export class BundleLoader {
 
         return app;
     };
+
+    /**
+     * Merge config to to application object
+     * @param {object} app
+     * @param {object} config
+     * @returns {object}
+     */
+    #enrichApplicationWithConfig(app, applicationConfig) {
+        return { ...app, applicationConfig: Object.freeze(applicationConfig) };
+    }
 
     #getAppSpaCallbacks = (appBundle, props = {}, { sdkFactory }) => {
         // We do this to make sure that mainSpa function will be called only once

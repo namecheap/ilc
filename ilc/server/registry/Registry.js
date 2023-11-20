@@ -104,7 +104,7 @@ module.exports = class Registry {
         this.#logger.debug('Calling get config registry endpoint...');
 
         const urlGetParams = options?.filter?.domain
-            ? `?domainName=${encodeURIComponent(options?.filter?.domain)}`
+            ? `?domainName=${encodeURIComponent(options.filter.domain.toLowerCase())}`
             : '';
 
         const tplUrl = urljoin(this.#address, 'api/v1/config', urlGetParams);
@@ -138,7 +138,7 @@ module.exports = class Registry {
         }
 
         if (domain) {
-            params.set('domain', domain);
+            params.set('domain', domain.toLowerCase());
         }
 
         const queryString = params.toString();
