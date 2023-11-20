@@ -13,7 +13,7 @@ class PluginsLoader {
 
         if (environment.isLegacyPluginsDiscoveryEnabled()) {
             const pluginPaths = fg.sync(['ilc-plugin-*/package.json', '@*/ilc-plugin-*/package.json'], {
-                cwd: path.resolve(__dirname, '../../../node_modules'),
+                cwd: path.resolve(__dirname, '../../node_modules'),
                 absolute: true,
             });
 
