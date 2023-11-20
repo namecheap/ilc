@@ -6,8 +6,4 @@ const reportingPluginManager = require('../plugins/reportingPlugin');
 const { context } = require('../context/context');
 const logger = reportingPluginManager.getLogger();
 
-module.exports = new Registry(
-    config.get('registry.address'),
-    new CacheWrapper(localStorage, logger, context.getStore()),
-    logger,
-);
+module.exports = new Registry(config.get('registry.address'), new CacheWrapper(localStorage, logger, context), logger);

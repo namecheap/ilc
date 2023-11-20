@@ -30,6 +30,15 @@ class CacheWrapper {
         return `[ILC Cache]: ${str}`;
     }
 
+    #getRequestId() {
+        if (this.context) {
+            const contextStore = this.context.getStore();
+            return contextStore?.get('reqId');
+        }
+
+        return undefined;
+    }
+
     wrap(fn, cacheParams) {
         const { name: memoName, cacheForSeconds = 60 } = cacheParams;
 
@@ -47,7 +56,7 @@ class CacheWrapper {
                 now,
                 hash,
                 memoName,
-                id: this.context && this.context.get('reqId'),
+                id: this.#getRequestId(),
             };
 
             const cache = this.#getCache(hash);
