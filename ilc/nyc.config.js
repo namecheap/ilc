@@ -26,6 +26,7 @@ module.exports = {
         'newrelic.js',
         '.karma_output',
         'client',
+        'dist',
         'public',
         'config',
         'build',
