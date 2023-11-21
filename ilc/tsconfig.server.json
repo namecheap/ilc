@@ -1,20 +1,9 @@
 {
-  "compilerOptions": {
-    "outDir": "dist",
-    "module": "commonjs",
-    "target": "es6",
-    "allowJs": true,
-    "strict": true,
-    "esModuleInterop": true
-  },
+  "extends": "./tsconfig.json",
   "include": [
     "./server/**/*.ts",
     "./server/**/*.js",
     "./common/**/*.ts",
     "./common/**/*.js"
-  ],
-  "exclude": [
-    "./node_modules",
-    "./server.plugins.manifest.js"
   ]
 }
