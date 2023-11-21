@@ -1,3 +1,4 @@
 /public/*
 /.nyc_output
 /.karma_output
+/dist

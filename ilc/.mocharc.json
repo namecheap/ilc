@@ -3,7 +3,7 @@
         "server/**/*.spec.js",
         "common/**/*.spec.js"
     ],
-    "require": "@babel/register",
+    "require": "ts-node/register",
     "timeout": 5000,
     "exclude": "node_modules/**/*"
 }

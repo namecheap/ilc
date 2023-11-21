@@ -1,4 +1,5 @@
 # Ignore artifacts:
 ilc/public
+ilc/dist
 .nyc_output
 .karma_output

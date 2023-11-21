@@ -19,6 +19,16 @@ module.exports = {
     mode: 'production',
     module: {
         rules: [
+            {
+                test: /\.(js|ts)$/,
+                use: {
+                    loader: 'ts-loader',
+                    options: {
+                        configFile: 'tsconfig.client.json',
+                    },
+                },
+                exclude: /node_modules/,
+            },
             { parser: { System: false } },
             {
                 test: /\.js?$/,
@@ -32,6 +42,7 @@ module.exports = {
         alias: {
             'single-spa': require.resolve('single-spa/lib/umd/single-spa.min.js'),
         },
+        extensions: ['.js', '.ts'],
         plugins: [new ResolveIlcDefaultPluginsWebpackPlugin(ilcPluginsPath)],
     },
     plugins: [
