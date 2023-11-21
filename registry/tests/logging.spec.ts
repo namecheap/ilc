@@ -26,16 +26,16 @@ async function runScenario(handler: Handler) {
 }
 
 describe('Logging', () => {
-    let logger: SinonSpy;
+    let errorLog: SinonSpy;
     before(async () => {
         loadPlugins();
-        logger = sinon.spy(getPluginManagerInstance().getReportingPlugin().logger, 'error');
+        errorLog = sinon.spy(getPluginManagerInstance().getReportingPlugin().logger, 'error');
     });
     beforeEach(() => {
-        logger.resetHistory();
+        errorLog.resetHistory();
     });
     after(() => {
-        logger.restore();
+        errorLog.restore();
     });
 
     it('should log string in json format', async () => {
@@ -44,7 +44,20 @@ describe('Logging', () => {
             res.end();
         };
         await runScenario(logStringHandler);
-        sinon.assert.calledWith(logger, sinon.match({ userId: 'root', operationId: sinon.match.string }), 'test');
+        sinon.assert.calledWith(errorLog, sinon.match({ userId: 'root', operationId: sinon.match.string }), 'test');
+    });
+
+    it('should log info with path and clientIp', async () => {
+        const logStringHandler: Handler = (req, res, next) => {
+            getLogger().error('test');
+            res.end();
+        };
+        await runScenario(logStringHandler);
+        sinon.assert.calledWith(
+            errorLog,
+            sinon.match({ userId: 'root', path: '/test', clientIp: '::ffff:127.0.0.1' }),
+            'test',
+        );
     });
 
     it('should log object json format', async () => {
@@ -53,7 +66,10 @@ describe('Logging', () => {
             res.end();
         };
         await runScenario(logObjectHandler);
-        sinon.assert.calledWith(logger, sinon.match({ userId: 'root', operationId: sinon.match.string, key: 'value' }));
+        sinon.assert.calledWith(
+            errorLog,
+            sinon.match({ userId: 'root', operationId: sinon.match.string, key: 'value' }),
+        );
     });
 
     it('should log error json format', async () => {
@@ -63,10 +79,11 @@ describe('Logging', () => {
         };
         await runScenario(logObjectHandler);
         sinon.assert.calledWith(
-            logger,
+            errorLog,
             sinon.match({ message: 'desc', data: sinon.match({ userId: 'root', operationId: sinon.match.string }) }),
         );
     });
+
     it('should log extended error json format', async () => {
         const logObjectHandler: Handler = (req, res, next) => {
             const CustomError = errorExtender('Custom');
@@ -79,7 +96,7 @@ describe('Logging', () => {
         };
         await runScenario(logObjectHandler);
         sinon.assert.calledWith(
-            logger,
+            errorLog,
             sinon.match({ message: 'desc', data: sinon.match({ userId: 'root', operationId: sinon.match.string }) }),
         );
     });
