@@ -4,7 +4,7 @@
   "description": "",
   "main": "server/index.js",
   "scripts": {
-    "test": "npm run build:server && cross-env NODE_ENV=test mocha",
+    "test": "cross-env NODE_ENV=test mocha",
     "test:ci": "npm run test -- --forbid-only --exit",
     "test:watch": "npm run test -- --watch",
     "test:coverage": "cross-env NODE_ENV=test nyc mocha --exit",
@@ -86,6 +86,7 @@
     "sinon": "^16.1.0",
     "supertest": "^6.3.3",
     "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4",
