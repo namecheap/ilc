@@ -3,8 +3,8 @@ import errors from './errors';
 export default class Registry {
     errors = errors;
 
-    constructor(wrapWithCache) {
-        this.getTemplate = wrapWithCache(this.#getTemplate, {
+    constructor(cacheWrapper) {
+        this.getTemplate = cacheWrapper.wrap(this.#getTemplate, {
             cacheForSeconds: 3600,
             name: 'registry_getTemplate',
         });

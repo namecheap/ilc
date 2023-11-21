@@ -2,7 +2,6 @@ const axios = require('axios');
 const urljoin = require('url-join');
 const { cloneDeep } = require('../../common/utils');
 const extendError = require('@namecheap/error-extender');
-const { context } = require('../context/context');
 const { isTemplateValid } = require('./isTemplateValid');
 
 const errors = {};
@@ -19,61 +18,34 @@ module.exports = class Registry {
 
     /**
      * @param {string} address - registry address. Ex: http://registry:8080/
-     * @param {Function} wrapFetchWithCache - cache provider
+     * @param {Function} cacheWrapper - cache provider
      * @param {Object} logger - log provider that implements "console" interface
      */
-    constructor(address, wrapFetchWithCache, logger) {
+    constructor(address, cacheWrapper, logger) {
         this.#address = address;
         this.#logger = logger;
 
-        const getConfigMemo = (...args) => {
-            const store = context.getStore();
+        const getConfigMemoized = cacheWrapper.wrap(this.#getConfig.bind(this), {
+            cacheForSeconds: 5,
+            name: 'registry_getConfig',
+        });
 
-            const memo = wrapFetchWithCache(
-                this.#getConfig.bind(this, ...args),
-                {
-                    cacheForSeconds: 5,
-                    name: 'registry_getConfig',
-                },
-                store,
-            );
+        const getTemplateMemoized = cacheWrapper.wrap(this.#getTemplate.bind(this), {
+            cacheForSeconds: 30,
+            name: 'registry_getTemplate',
+        });
 
-            return memo(...args);
-        };
+        this.getRouterDomains = cacheWrapper.wrap(this.#getRouterDomains.bind(this), {
+            cacheForSeconds: 30,
+            name: 'registry_routerDomains',
+        });
 
         this.getConfig = async (options) => {
-            const fullConfig = await getConfigMemo(options);
+            const fullConfig = await getConfigMemoized(options);
+
+            // TODO: Memoize filtration as well
             fullConfig.data = this.#filterConfig(fullConfig.data, options?.filter);
             return fullConfig;
-        };
-
-        this.getRouterDomains = async (...args) => {
-            const store = context.getStore();
-            const memo = wrapFetchWithCache(
-                this.#getRouterDomains,
-                {
-                    cacheForSeconds: 30,
-                    name: 'registry_routerDomains',
-                },
-                store,
-            );
-
-            return await memo(...args);
-        };
-
-        const getTemplateMemo = async (...args) => {
-            const store = context.getStore();
-
-            const memo = wrapFetchWithCache(
-                this.#getTemplate,
-                {
-                    cacheForSeconds: 30,
-                    name: 'registry_getTemplate',
-                },
-                store,
-            );
-
-            return await memo(...args);
         };
 
         this.getTemplate = async (templateName, { locale, forDomain } = {}) => {
@@ -83,7 +55,7 @@ module.exports = class Registry {
                 templateName = redefined500 || templateName;
             }
 
-            return await getTemplateMemo(templateName, { locale, domain: forDomain });
+            return await getTemplateMemoized(templateName, { locale, domain: forDomain });
         };
     }
 
@@ -104,7 +76,7 @@ module.exports = class Registry {
         this.#logger.debug('Calling get config registry endpoint...');
 
         const urlGetParams = options?.filter?.domain
-            ? `?domainName=${encodeURIComponent(options?.filter?.domain)}`
+            ? `?domainName=${encodeURIComponent(options.filter.domain.toLowerCase())}`
             : '';
 
         const tplUrl = urljoin(this.#address, 'api/v1/config', urlGetParams);
@@ -138,7 +110,7 @@ module.exports = class Registry {
         }
 
         if (domain) {
-            params.set('domain', domain);
+            params.set('domain', domain.toLowerCase());
         }
 
         const queryString = params.toString();
