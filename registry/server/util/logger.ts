@@ -1,7 +1,15 @@
 import { Logger } from 'ilc-plugins-sdk';
 import { getPluginManagerInstance } from './pluginManager';
-import { storage } from '../middleware/context';
+import { storage, Store } from '../middleware/context';
 import errorExtender, { ExtendedError } from '@namecheap/error-extender';
+
+type LogContext = Omit<Store, 'user' | 'reqId'> & {
+    userId?: string;
+};
+
+type NoContext = {
+    asyncContext: 'none';
+};
 
 const hasKey = <T extends object>(obj: T, k: keyof any): k is keyof T => k in obj;
 
@@ -19,11 +27,17 @@ const loggerProxyHandler: ProxyHandler<Logger> = {
         ) {
             const store = storage.getStore();
             const [arg1, ...restArgs] = args;
-            const logContext = {
-                [requestIdKey]: store?.get('reqId'),
-                domain: store?.get('domain'),
-                userId: store?.get('user')?.identifier,
-            };
+            const logContext: LogContext | NoContext = store
+                ? {
+                      [requestIdKey]: store.get('reqId'),
+                      domain: store.get('domain'),
+                      userId: store.get('user')?.identifier,
+                      path: store.get('path'),
+                      clientIp: store.get('clientIp'),
+                  }
+                : {
+                      asyncContext: 'none',
+                  };
 
             if (typeof arg1 === 'string') {
                 return originalMember.call(target, logContext, ...args);
