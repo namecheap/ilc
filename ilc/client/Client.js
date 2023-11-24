@@ -360,7 +360,7 @@ export class Client {
         );
 
         Object.assign(window.ILC, {
-            loadApp: this.#bundleLoader.loadAppWithCss.bind(this.#bundleLoader), // Internal API for Namecheap, not for public use
+            loadApp: this.#bundleLoader.loadApp.bind(this.#bundleLoader),
             navigate: this.#router.navigateToUrl.bind(this.#router),
             onIntlChange: this.#addIntlChangeHandler.bind(this),
             onRouteChange: this.#addRouteChangeHandlerWithDispatch.bind(this),
@@ -371,6 +371,9 @@ export class Client {
             getAllSharedLibNames: () => Promise.resolve(Object.keys(this.#configRoot.getConfig().sharedLibs)),
             getSharedLibConfigByName: (name) => {
                 return Promise.resolve(this.#configRoot.getConfigForSharedLibsByName(name));
+            },
+            getApplicationConfigByName: (name) => {
+                return Promise.resolve(this.#configRoot.getConfigForAppByName(name));
             },
             getSharedLibConfigByNameSync: (name) => {
                 return this.#configRoot.getConfigForSharedLibsByName(name);

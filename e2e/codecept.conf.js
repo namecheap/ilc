@@ -9,10 +9,9 @@ exports.config = {
     helpers: {
         Puppeteer: {
             url: `http://localhost:8233`,
-            show: process.env.SHOW_UI === 'true',
             windowSize: '1200x900',
             chrome: {
-                headless: 'new',
+                headless: process.env.SHOW_UI === 'true' ? false: 'new',
             },
         },
         MockRequestHelper: {
