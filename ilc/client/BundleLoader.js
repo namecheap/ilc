@@ -44,19 +44,33 @@ export class BundleLoader {
         }
     }
 
-    loadApp(appName) {
-        const app = this.#getApp(appName);
-        if (!app.spaBundle) {
+    /**
+     *
+     * @param {string} appName
+     * @param {boolean} options.injectGlobalCss to css with <link> element in <head>
+     * @returns Promise<object> application
+     */
+    loadApp(appName, { injectGlobalCss = true } = {}) {
+        const applicationConfig = this.#getApp(appName);
+        if (!applicationConfig.spaBundle) {
             // it is SSR only app
             return Promise.resolve(emptyClientApplication);
         }
 
         return this.#moduleLoader.import(appName).then((appBundle) => {
             const sdkInstanceFactory = this.#sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
-            const rawCallbacks = this.#getAppSpaCallbacks(appBundle, app.props, { sdkFactory: sdkInstanceFactory });
-            return typeof app.cssBundle === 'string'
-                ? new CssTrackedApp(rawCallbacks, app.cssBundle, this.#delayCssRemoval).getDecoratedApp()
-                : rawCallbacks;
+            const rawCallbacks = this.#getAppSpaCallbacks(appBundle, applicationConfig.props, {
+                sdkFactory: sdkInstanceFactory,
+            });
+            const application =
+                typeof applicationConfig.cssBundle === 'string' && injectGlobalCss !== false
+                    ? new CssTrackedApp(
+                          rawCallbacks,
+                          applicationConfig.cssBundle,
+                          this.#delayCssRemoval,
+                      ).getDecoratedApp()
+                    : rawCallbacks;
+            return application;
         });
     }
 

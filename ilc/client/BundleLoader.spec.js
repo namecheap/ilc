@@ -160,6 +160,27 @@ describe('BundleLoader', () => {
 
             const callbacks = await loader.loadApp(appName);
             expect(callbacks).to.equal(fnCallbacks);
+            sinon.assert.calledWith(SystemJs.import, appName);
+        });
+        it('should load CssTrackedApp by default', async () => {
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const appName = '@portal/appWithCss';
+
+            SystemJs.import.resolves(fnCallbacks);
+
+            const callbacks = await loader.loadApp(appName);
+            expect(callbacks.__CSS_TRACKED_APP__).to.equal(true);
+
+            sinon.assert.calledWith(SystemJs.import, appName);
+        });
+        it('should load pure app without css if flag set', async () => {
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const appName = '@portal/appWithCss';
+
+            SystemJs.import.resolves(fnCallbacks);
+
+            const callbacks = await loader.loadApp(appName, { injectGlobalCss: false });
+            expect(callbacks.__CSS_TRACKED_APP__).to.equal(undefined);
 
             sinon.assert.calledWith(SystemJs.import, appName);
         });
