@@ -20,6 +20,7 @@ export class SlotRenderObserver {
             hasAddedNodes: false,
             hasTextOrOpticNodes: false,
             isAnyChildVisible: false,
+            hasForcedBlockRemovingNode: false,
         };
 
         this.#observer = new MutationObserver((mutationsList) => {
@@ -41,9 +42,16 @@ export class SlotRenderObserver {
                 );
             }
 
-            if (Object.values(status).some((n) => !n)) return;
+            if (!status.hasForcedBlockRemovingNodes) {
+                status.hasForcedBlockRemovingNode = !!targetNode.querySelector('[data-ilc-slot-ready="true"]');
+            }
 
-            onSlotReady();
+            if (
+                (status.hasAddedNodes && status.hasTextOrOpticNodes && status.isAnyChildVisible) ||
+                status.hasForcedBlockRemovingNode
+            ) {
+                onSlotReady();
+            }
         });
 
         this.#observer.observe(targetNode, { childList: true, subtree: true, attributeFilter: ['style'] });
