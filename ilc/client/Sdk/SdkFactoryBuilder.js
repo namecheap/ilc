@@ -20,6 +20,7 @@ export class SdkFactoryBuilder {
             i18n: {
                 manifestPath,
             },
+            cssBundle: appConfig?.cssBundle,
         });
 
         return (applicationId) => {
