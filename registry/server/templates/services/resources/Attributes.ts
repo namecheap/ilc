@@ -10,8 +10,13 @@ const integrity = {
     integrity: null,
 };
 
+const ilcInstructions = {
+    'data-ilc-instructions': null,
+};
+
 export const Attributes = {
     integrity,
     crossorigin,
     referrerpolicy,
+    ilcInstructions,
 };

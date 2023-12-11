@@ -16,6 +16,7 @@ export abstract class Resource {
     protected static allowedAttributes: AllowedAttributes = {
         ...Attributes.integrity,
         ...Attributes.crossorigin,
+        ...Attributes.ilcInstructions,
     };
 
     constructor(
