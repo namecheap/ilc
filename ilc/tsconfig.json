@@ -5,6 +5,7 @@
     "target": "es6",
     "allowJs": true,
     "strict": true,
+    "sourceMap": true,
     "esModuleInterop": true
   },
   "exclude": ["node_modules", "public"],
