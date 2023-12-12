@@ -91,7 +91,11 @@ export default class I18n {
         this.#transitionManager.handleAsyncAction(changeFlow);
     };
 
-    #get = () => i18nCookie.decode(Cookies.get(i18nCookie.name));
+    #get = () => {
+        const decoded = i18nCookie.decode(Cookies.get(i18nCookie.name));
+
+        return Object.assign({}, this.#config.default, decoded);
+    };
 
     #set = (conf) => {
         document.documentElement.lang = conf.locale;
