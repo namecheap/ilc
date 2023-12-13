@@ -38,6 +38,7 @@ if (runWithApps) {
 concurrently(commands, {
     prefix: 'name',
     killOthers: ['failure', 'success'],
+    killSignal: 'SIGKILL',
     prefixColors: ['auto']
 }).result.then(
     () => {

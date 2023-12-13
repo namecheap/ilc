@@ -4,6 +4,7 @@ const nock = require('nock');
 const _ = require('lodash');
 
 const { intlSchema } = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
+const { IlcIntl } = require('ilc-sdk/app');
 
 const i18n = require('./i18n');
 const createApp = require('./app');
@@ -107,12 +108,78 @@ describe('i18n', () => {
 
     describe('Unit tests', () => {
         let onRequest, reply;
+
         beforeEach(() => {
             onRequest = i18n.onRequestFactory(i18nConfig, i18nParamsDetectionPlugin);
             reply = getReplyMock();
         });
 
         describe('detect locale by i18n params detection plugin', () => {
+            describe('Correct call signature', () => {
+                const detectedI18nConfig = {
+                    locale: 'ua-UA',
+                    currency: 'UAH',
+                };
+                const cookiesI18nConfig = {
+                    currency: 'EUR',
+                    locale: 'en-GB',
+                };
+                const req = getReqMock('/test', `ilc-i18n=${cookiesI18nConfig.locale}:${cookiesI18nConfig.currency};`);
+
+                let parseUrlStub, localizeUrlStub, getCanonicalLocaleStub;
+                before(() => {
+                    parseUrlStub = sinon.stub(IlcIntl, 'parseUrl');
+                    localizeUrlStub = sinon.stub(IlcIntl, 'localizeUrl');
+                    getCanonicalLocaleStub = sinon.stub(IlcIntl, 'getCanonicalLocale');
+                });
+                beforeEach(() => {
+                    i18nParamsDetectionPlugin.detectI18nConfig.returns(detectedI18nConfig);
+                });
+                after(() => {
+                    parseUrlStub.restore();
+                    localizeUrlStub.restore();
+                    getCanonicalLocaleStub.restore();
+                });
+
+                it('should provide all arguments', async () => {
+                    await onRequest(req, reply);
+                    const [providedReqRaw, providedIntl, providedI18nConfig, providedCookie] =
+                        i18nParamsDetectionPlugin.detectI18nConfig.lastCall.args;
+                    chai.expect(providedIntl).to.be.an('object');
+                    chai.expect(providedReqRaw).to.be.eql(req.raw);
+                    chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
+                    chai.expect(providedCookie).to.be.eql(cookiesI18nConfig);
+                });
+                it('should provide intl', async () => {
+                    await onRequest(req, reply);
+
+                    const [, providedIntl] = i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+                    chai.expect(providedIntl).to.have.keys([
+                        'parseUrl',
+                        'localizeUrl',
+                        'getCanonicalLocale',
+                        'getDefaultCurrency',
+                        'getDefaultLocale',
+                        'getSupportedCurrencies',
+                        'getSupportedLocales',
+                    ]);
+                    chai.expect(providedIntl.parseUrl('/test')).to.not.throw;
+                    sinon.assert.calledOnceWithExactly(parseUrlStub, i18nConfig, '/test');
+                    chai.expect(providedIntl.localizeUrl('/test', { locale: 'de-DE' })).to.not.throw;
+                    sinon.assert.calledWithExactly(localizeUrlStub, i18nConfig, '/test', { locale: 'de-DE' });
+                    chai.expect(providedIntl.getCanonicalLocale('de-DE')).to.not.throw;
+                    sinon.assert.calledWithExactly(getCanonicalLocaleStub, 'de-DE', i18nConfig.supported.locale);
+                    await chai.expect(providedIntl.getDefaultCurrency()).to.eventually.eql(i18nConfig.default.currency);
+                    await chai.expect(providedIntl.getDefaultLocale()).to.eventually.eql(i18nConfig.default.locale);
+                    await chai
+                        .expect(providedIntl.getSupportedCurrencies())
+                        .to.eventually.eql(i18nConfig.supported.currency);
+                    await chai
+                        .expect(providedIntl.getSupportedLocales())
+                        .to.eventually.eql(i18nConfig.supported.locale);
+                });
+            });
+
             it('ua-UA, redirects to URL with correct lang code', async () => {
                 const detectedI18nConfig = {
                     locale: 'ua-UA',
@@ -125,11 +192,10 @@ describe('i18n', () => {
 
                 await onRequest(req, reply);
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                const [providedReqRaw, , providedI18nConfig] =
                     i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
-                chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
                 chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
 
                 sinon.assert.calledWithExactly(reply.redirect, '/ua/test');
@@ -147,11 +213,10 @@ describe('i18n', () => {
 
                 await onRequest(req, reply);
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                const [providedReqRaw, , providedI18nConfig] =
                     i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
-                chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
                 chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
 
                 sinon.assert.calledOnceWithExactly(reply.redirect, '/ua/test');
@@ -173,11 +238,11 @@ describe('i18n', () => {
                 chai.expect(req.raw.ilcState.locale).to.be.eql(detectedI18nConfig.locale);
                 chai.expect(decodeIntlHeader(req.headers['x-request-intl'])).to.eql(expectedHeader(detectedI18nConfig));
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                const [providedReqRaw, , providedI18nConfig] =
                     i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
-                chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
+
                 chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
 
                 sinon.assert.calledWith(
@@ -200,11 +265,11 @@ describe('i18n', () => {
 
                     await onRequest(req, reply);
 
-                    const [providedReqRaw, providedIntl, providedI18nConfig] =
+                    const [providedReqRaw, , providedI18nConfig] =
                         i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                     chai.expect(providedReqRaw).to.be.eql(req.raw);
-                    chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
+
                     chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
 
                     sinon.assert.calledWith(reply.redirect, '/test');
@@ -222,11 +287,11 @@ describe('i18n', () => {
 
                     await onRequest(req, reply);
 
-                    const [providedReqRaw, providedIntl, providedI18nConfig] =
+                    const [providedReqRaw, , providedI18nConfig] =
                         i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                     chai.expect(providedReqRaw).to.be.eql(req.raw);
-                    chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
+
                     chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
 
                     sinon.assert.calledWith(reply.redirect, '/test');
@@ -244,11 +309,11 @@ describe('i18n', () => {
 
                     await onRequest(req, reply);
 
-                    const [providedReqRaw, providedIntl, providedI18nConfig] =
+                    const [providedReqRaw, , providedI18nConfig] =
                         i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                     chai.expect(providedReqRaw).to.be.eql(req.raw);
-                    chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
+
                     chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
 
                     sinon.assert.calledWith(reply.redirect, '/test');
@@ -274,11 +339,11 @@ describe('i18n', () => {
 
                 await onRequest(req, reply);
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                const [providedReqRaw, , providedI18nConfig] =
                     i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
-                chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
+
                 chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
 
                 sinon.assert.calledWith(reply.redirect, '/ua/test');
@@ -301,11 +366,11 @@ describe('i18n', () => {
 
                 await onRequest(req, reply);
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                const [providedReqRaw, , providedI18nConfig] =
                     i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
-                chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
+
                 chai.expect(providedI18nConfig).to.be.eql(cookiesI18nConfig);
 
                 sinon.assert.notCalled(reply.redirect);
@@ -326,11 +391,11 @@ describe('i18n', () => {
 
                 await onRequest(req, reply);
 
-                const [providedReqRaw, providedIntl, providedI18nConfig] =
+                const [providedReqRaw, , providedI18nConfig] =
                     i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
 
                 chai.expect(providedReqRaw).to.be.eql(req.raw);
-                chai.expect(providedIntl).to.have.keys(['parseUrl', 'localizeUrl', 'getCanonicalLocale']);
+
                 chai.expect(providedI18nConfig).to.be.eql(detectedI18nConfig);
 
                 sinon.assert.notCalled(reply.redirect);
