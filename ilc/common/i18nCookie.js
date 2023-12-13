@@ -16,7 +16,7 @@ function encode(val) {
 }
 
 function decode(val) {
-    const vals = val.split(':');
+    const vals = val ? val.split(':') : [];
     if (vals.length < 2) {
         return {};
     }
