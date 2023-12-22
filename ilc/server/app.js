@@ -33,41 +33,50 @@ module.exports = (registryService, pluginManager, context) => {
 
     app.addHook('onRequest', (req, reply, done) => {
         context.run({ request: req }, async () => {
-            const { url, method } = req.raw;
-            accessLogger.logRequest();
+            try {
+                const { url, method } = req.raw;
+                accessLogger.logRequest();
 
-            if (!['GET', 'OPTIONS', 'HEAD'].includes(method)) {
-                logger.warn(`Request method ${method} is not allowed for url ${url}`);
-                reply.code(405).send({ message: 'Method Not Allowed' });
-                return;
+                if (!['GET', 'OPTIONS', 'HEAD'].includes(method)) {
+                    logger.warn(`Request method ${method} is not allowed for url ${url}`);
+                    reply.code(405).send({ message: 'Method Not Allowed' });
+                    return;
+                }
+
+                req.raw.ilcState = {};
+
+                if (isStaticFile(url) || isHealthCheck(url) || ['OPTIONS', 'HEAD'].includes(method)) {
+                    return done();
+                }
+
+                const domainName = req.hostname;
+
+                const registryConfig = await registryService.getConfig({ filter: { domain: domainName } });
+                const i18nOnRequest = i18n.onRequestFactory(
+                    registryConfig.settings.i18n,
+                    pluginManager.getI18nParamsDetectionPlugin(),
+                );
+
+                await i18nOnRequest(req, reply);
+                done();
+            } catch (error) {
+                errorHandlingService.handleError(error, req, reply);
             }
-
-            req.raw.ilcState = {};
-
-            if (isStaticFile(url) || isHealthCheck(url) || ['OPTIONS', 'HEAD'].includes(method)) {
-                return done();
-            }
-
-            const domainName = req.hostname;
-
-            const registryConfig = (await registryService.getConfig({ filter: { domain: domainName } })).data;
-            const i18nOnRequest = i18n.onRequestFactory(
-                registryConfig.settings.i18n,
-                pluginManager.getI18nParamsDetectionPlugin(),
-            );
-
-            await i18nOnRequest(req, reply);
-
-            done();
         });
     });
 
     app.addHook('onResponse', (req, reply, done) => {
-        accessLogger.logResponse({
-            statusCode: reply.statusCode,
-            responseTime: reply.getResponseTime(),
+        context.run({ request: req }, async () => {
+            try {
+                accessLogger.logResponse({
+                    statusCode: reply.statusCode,
+                    responseTime: reply.getResponseTime(),
+                });
+                done();
+            } catch (error) {
+                errorHandlingService.handleError(error);
+            }
         });
-        done();
     });
 
     const autoInjectNrMonitoringConfig = config.get('newrelic.automaticallyInjectBrowserMonitoring');
@@ -103,7 +112,7 @@ module.exports = (registryService, pluginManager, context) => {
 
     app.all('*', async (req, res) => {
         const currentDomain = req.hostname;
-        let registryConfig = (await registryService.getConfig({ filter: { domain: currentDomain } })).data;
+        let registryConfig = await registryService.getConfig({ filter: { domain: currentDomain } });
         const url = req.raw.url;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
         const processedUrl = urlProcessor.process(url);

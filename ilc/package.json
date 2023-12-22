@@ -11,7 +11,7 @@
     "test:client": "npm run build:systemjs && cross-env NODE_ENV=test karma start",
     "test:client:watch": "npm run test:client -- --single-run=false --auto-watch=true",
     "start": "node --max-http-header-size 30000 dist/server/index.js",
-    "dev": "npm run build:polyfills && cross-env NODE_ENV=development nodemon --max-http-header-size 30000 dist/server/index.js",
+    "dev": "npm run build:polyfills && cross-env NODE_ENV=development nodemon -w server -w common --exec \"npm run build:server && npm run start\" ",
     "build": "rimraf public && npm run build:server && npm run build:systemjs && npm run build:client && npm run build:polyfills",
     "build:server": "npx tsc --project ./tsconfig.server.json && npx copyfiles -f ./config/* ./dist/config/",
     "build:client": "webpack --config build/webpack.js --progress",

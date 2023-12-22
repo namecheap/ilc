@@ -108,7 +108,7 @@ describe('select slots to register', () => {
         ];
 
         const configRoot = getIlcConfigRoot();
-        const registryConf = getRegistryMock().getConfig().data;
+        const registryConf = getRegistryMock().getConfig();
         registryConf.routes = routes;
         configRoot.registryConfiguration = registryConf;
 

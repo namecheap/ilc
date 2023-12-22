@@ -91,28 +91,76 @@ describe('Registry', () => {
     });
 
     it('getConfig should return right value', async () => {
-        const cacheWrapperMock = {
-            wrap: () => () => ({
-                data: [
-                    {
-                        domainName: 'this',
-                        template500: 'exist',
+        const config = {
+            apps: {
+                '@portal/navbar': {
+                    kind: 'essential',
+                    ssr: {
+                        src: 'http://localhost:8235/',
+                        timeout: 1000,
                     },
-                ],
-            }),
+                    dependencies: {
+                        react: 'https://cdnjs.cloudflare.com/ajax/libs/react/16.8.6/umd/react.development.js',
+                        'react-dom':
+                            'https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.6/umd/react-dom.development.js',
+                    },
+                    spaBundle: 'http://localhost:8235/navbar.js',
+                },
+            },
+            templates: ['master', '500', '500ForLocalhostAsIPv4'],
+            routes: [
+                {
+                    slots: {
+                        navbar: {
+                            appName: '@portal/navbar',
+                            props: {},
+                            kind: null,
+                        },
+                    },
+                    meta: {},
+                    routeId: 1,
+                    route: '*',
+                    next: true,
+                    template: 'master',
+                },
+            ],
+            specialRoutes: [
+                {
+                    slots: {
+                        body: {
+                            appName: '@portal/system',
+                            props: {
+                                _statusCode: '404',
+                            },
+                            kind: null,
+                        },
+                        navbar: {
+                            appName: '@portal/navbar',
+                            props: {},
+                            kind: null,
+                        },
+                    },
+                    meta: {},
+                    routeId: 7,
+                    next: false,
+                    template: 'master',
+                    specialRole: '404',
+                },
+            ],
+            settings: {
+                trailingSlash: 'doNothing',
+            },
+            sharedLibs: {},
+            dynamicLibs: {},
+        };
+        const cacheWrapperMock = {
+            wrap: () => () => ({ data: config }),
         };
 
         const registry = new Registry(address, cacheWrapperMock, logger);
         const getConfig = await registry.getConfig();
 
-        await chai.expect(getConfig).to.be.eql({
-            data: [
-                {
-                    domainName: 'this',
-                    template500: 'exist',
-                },
-            ],
-        });
+        chai.expect(getConfig).to.be.eql(config);
     });
 
     it('should return filtered config by domain', async () => {
@@ -191,42 +239,40 @@ describe('Registry', () => {
         };
 
         const expectedConfig = {
-            data: {
-                routes: [
-                    {
-                        route: '*',
-                        slots: {
-                            body: {
-                                appName: '@portal/homeFoo',
-                            },
-                        },
-                    },
-                ],
-                specialRoutes: {
-                    404: {
-                        slots: {
-                            navbar: { appName: '@portal/navbar' },
-                            body: { appName: '@portal/foo404' },
+            routes: [
+                {
+                    route: '*',
+                    slots: {
+                        body: {
+                            appName: '@portal/homeFoo',
                         },
                     },
                 },
-                apps: {
-                    '@portal/homeFoo': {
-                        spaBundle: 'http://cdn.com/foo.js',
+            ],
+            specialRoutes: {
+                404: {
+                    slots: {
+                        navbar: { appName: '@portal/navbar' },
+                        body: { appName: '@portal/foo404' },
                     },
-                    '@portal/navbar': {
-                        spaBundle: 'http://cdn.com/navbar.js',
-                    },
-                    '@portal/foo404': {
-                        spaBundle: 'http://cdn.com/foo404.js',
-                    },
+                },
+            },
+            apps: {
+                '@portal/homeFoo': {
+                    spaBundle: 'http://cdn.com/foo.js',
+                },
+                '@portal/navbar': {
+                    spaBundle: 'http://cdn.com/navbar.js',
+                },
+                '@portal/foo404': {
+                    spaBundle: 'http://cdn.com/foo404.js',
+                },
 
-                    '@portal/enforcedForFoo': {
-                        spaBundle: 'http://cdn.com/enforcedForFoo.js',
-                    },
-                    '@portal/appWithoutRouteAndWithoutEnforceDomain': {
-                        spaBundle: 'http://cdn.com/appWithoutRouteAndWithoutEnforceDomain.js',
-                    },
+                '@portal/enforcedForFoo': {
+                    spaBundle: 'http://cdn.com/enforcedForFoo.js',
+                },
+                '@portal/appWithoutRouteAndWithoutEnforceDomain': {
+                    spaBundle: 'http://cdn.com/appWithoutRouteAndWithoutEnforceDomain.js',
                 },
             },
         };
@@ -240,7 +286,7 @@ describe('Registry', () => {
         const registry = new Registry(address, cacheWrapperMock, logger);
         const getConfig = await registry.getConfig({ filter: { domain: currentDomain } });
 
-        await chai.expect(getConfig).to.be.eql(expectedConfig);
+        chai.expect(getConfig).to.be.eql(expectedConfig);
     });
 
     it('getTemplate should return right value if template name equal 500', async () => {
@@ -289,7 +335,7 @@ describe('Registry', () => {
         const registry = new Registry(address, cacheWrapperMock, logger);
         const getTemplate = await registry.getTemplate(templateName, { forDomain });
 
-        await chai.expect(getTemplate).to.be.eql({
+        chai.expect(getTemplate).to.be.eql({
             data: [
                 {
                     domainName: 'this',
