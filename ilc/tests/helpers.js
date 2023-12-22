@@ -8,8 +8,8 @@ function getRegistryMock(overrideConfig = {}) {
                 content: `<!DOCTYPE html><html lang="en-US"><head></head><body><ilc-slot id="primary"/>\n<ilc-slot id="regular"/></body></html>`,
             },
         }),
-        getConfig: () => ({
-            data: deepmerge(
+        getConfig: () =>
+            deepmerge(
                 {
                     apps: {
                         '@portal/primary': {
@@ -99,7 +99,6 @@ function getRegistryMock(overrideConfig = {}) {
                 },
                 overrideConfig,
             ),
-        }),
     };
 }
 

@@ -1,14 +1,13 @@
 const axios = require('axios');
 const urljoin = require('url-join');
-const { cloneDeep } = require('../../common/utils');
 const extendError = require('@namecheap/error-extender');
 const { isTemplateValid } = require('./isTemplateValid');
 
-const errors = {};
-errors.RegistryError = extendError('RegistryError');
+const RegistryError = extendError('RegistryError');
 
 module.exports = class Registry {
     #address;
+    #configUrl;
     #logger;
     #cacheHeated = {
         config: false,
@@ -23,9 +22,10 @@ module.exports = class Registry {
      */
     constructor(address, cacheWrapper, logger) {
         this.#address = address;
+        this.#configUrl = urljoin(address, 'api/v1/config');
         this.#logger = logger;
 
-        const getConfigMemoized = cacheWrapper.wrap(this.#getConfig.bind(this), {
+        const fetchConfigMemoized = cacheWrapper.wrap(this.#fetchConfig.bind(this), {
             cacheForSeconds: 5,
             name: 'registry_getConfig',
         });
@@ -41,11 +41,10 @@ module.exports = class Registry {
         });
 
         this.getConfig = async (options) => {
-            const fullConfig = await getConfigMemoized(options);
-
+            const { data } = await fetchConfigMemoized(options);
             // TODO: Memoize filtration as well
-            fullConfig.data = this.#filterConfig(fullConfig.data, options?.filter);
-            return fullConfig;
+            const filteredData = this.#filterAndTransformConfig(data, options?.filter);
+            return filteredData;
         };
 
         this.getTemplate = async (templateName, { locale, forDomain } = {}) => {
@@ -72,34 +71,27 @@ module.exports = class Registry {
         this.#logger.info('Registry preheated successfully!');
     }
 
-    #getConfig = async (options) => {
+    /**
+     * Fetch config from registry
+     * @param {String} options.filter.domain
+     * @returns {Object}
+     */
+    async #fetchConfig(options) {
         this.#logger.debug('Calling get config registry endpoint...');
-
-        const urlGetParams = options?.filter?.domain
-            ? `?domainName=${encodeURIComponent(options.filter.domain.toLowerCase())}`
-            : '';
-
-        const tplUrl = urljoin(this.#address, 'api/v1/config', urlGetParams);
-
-        let fullConfig;
         try {
-            fullConfig = await axios.get(tplUrl, { responseType: 'json' });
+            const { data } = await axios.get(this.#configUrl, { params: { domainName: options?.filter?.domain } });
+            this.#cacheHeated.config = true;
+            return data;
         } catch (error) {
-            throw new errors.RegistryError({
+            throw new RegistryError({
                 message: `Error while requesting config from registry`,
                 cause: error,
                 data: {
-                    requestedUrl: tplUrl,
+                    requestedUrl: this.#configUrl,
                 },
             });
         }
-
-        // Looks like a bug because in case of error we should try to heat cache on next iteration
-        // We have already faced an issue with inconsistent cache between different nodes
-        this.#cacheHeated.config = true;
-
-        return fullConfig.data;
-    };
+    }
 
     #getTemplate = async (templateName, { locale, domain }) => {
         this.#logger.debug('Calling get template registry endpoint...');
@@ -126,7 +118,7 @@ module.exports = class Registry {
         try {
             res = await axios.get(tplUrl, { responseType: 'json' });
         } catch (e) {
-            throw new errors.RegistryError({
+            throw new RegistryError({
                 message: `Error while requesting rendered template "${templateName}" from registry`,
                 cause: e,
                 data: {
@@ -138,7 +130,7 @@ module.exports = class Registry {
         const rawTemplate = res.data.content;
 
         if (!isTemplateValid(rawTemplate)) {
-            throw new errors.RegistryError({ message: `Invalid structure in template "${templateName}"` });
+            throw new RegistryError({ message: `Invalid structure in template "${templateName}"` });
         }
 
         const lastMatchOffset = rawTemplate.lastIndexOf('<ilc-slot');
@@ -168,7 +160,7 @@ module.exports = class Registry {
         try {
             res = await axios.get(url, { responseType: 'json' });
         } catch (e) {
-            throw new errors.RegistryError({
+            throw new RegistryError({
                 message: `Error while requesting routerDomains from registry`,
                 cause: e,
                 data: {
@@ -181,30 +173,41 @@ module.exports = class Registry {
         return res.data;
     };
 
-    #filterConfig = (config, filter) => {
-        if (!filter || !Object.keys(filter).length) {
-            return config;
-        }
-
-        const clonedConfig = cloneDeep(config);
-
-        if (filter.domain) {
-            clonedConfig.routes = this.#filterRoutesByDomain(clonedConfig.routes, filter.domain);
-        }
-
-        clonedConfig.specialRoutes = this.#filterSpecialRoutesByDomain(clonedConfig.specialRoutes, filter.domain);
-
-        if (filter.domain) {
-            const routesRelatedToDomain = [...clonedConfig.routes, ...Object.values(clonedConfig.specialRoutes)];
+    /**
+     * Filter config per domain
+     * Changes specialRoutes from array to dictionary
+     * @param {Config} config
+     * @param {String} filter.domain
+     * @returns {TransformedConfig} filtered config
+     */
+    #filterAndTransformConfig(config, filter) {
+        if (filter?.domain) {
+            const filteredRoutes = this.#filterRoutesByDomain(config.routes, filter.domain);
+            const filteredSpecialRoutes = this.#filterAndTransformSpecialRoutesByDomain(
+                config.specialRoutes,
+                filter.domain,
+            );
+            const routesRelatedToDomain = [...filteredRoutes, ...Object.values(filteredSpecialRoutes)];
             const allRoutes = [...config.routes, ...Object.values(config.specialRoutes)];
             const allApps = config.apps;
-
-            clonedConfig.apps = this.#getAppsByDomain(routesRelatedToDomain, allRoutes, allApps, filter.domain);
+            const filteredApps = this.#getAppsByDomain(routesRelatedToDomain, allRoutes, allApps, filter.domain);
+            return {
+                ...config,
+                apps: filteredApps,
+                routes: filteredRoutes,
+                specialRoutes: filteredSpecialRoutes,
+            };
         }
 
-        return clonedConfig;
-    };
+        return config;
+    }
 
+    /**
+     *
+     * @param {Route[]} routes
+     * @param {String} domain
+     * @returns {Route[]} filtered routes
+     */
     #filterRoutesByDomain = (routes, domain) => {
         const routesForCurrentDomain = [];
         const routesWithoutDomain = [];
@@ -222,7 +225,13 @@ module.exports = class Registry {
         return routesForCurrentDomain.length ? routesForCurrentDomain : routesWithoutDomain;
     };
 
-    #filterSpecialRoutesByDomain = (specialRoutes, domain) => {
+    /**
+     *
+     * @param {SpecialRoute[]} specialRoutes
+     * @param {String} domain
+     * @returns {Record<string, SpecialRoute>} filtered and transformed special routes
+     */
+    #filterAndTransformSpecialRoutesByDomain = (specialRoutes, domain) => {
         const specialRoutesWithoutDomain = {};
         const specialRoutesForCurrentDomain = {};
 

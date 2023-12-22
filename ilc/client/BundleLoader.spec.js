@@ -49,7 +49,7 @@ describe('BundleLoader', () => {
                     kind: 'primary',
                 },
             },
-        }).getConfig().data;
+        }).getConfig();
 
         configRoot.registryConfiguration = registry;
     });

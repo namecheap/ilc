@@ -32,7 +32,7 @@ describe('ParcelApi', () => {
                     wrappedWith: '@portal/primary',
                 },
             },
-        }).getConfig().data;
+        }).getConfig();
     });
 
     afterEach(() => {

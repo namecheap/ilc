@@ -32,7 +32,7 @@ describe('server router', () => {
                     },
                 },
             ],
-        }).getConfig().data;
+        }).getConfig();
         const request = { registryConfig, ilcState: {} };
 
         const router = new ServerRouter(logger, request, '/no-app');
@@ -49,7 +49,7 @@ describe('server router', () => {
                         ssr: { src: null },
                     },
                 },
-            }).getConfig().data;
+            }).getConfig();
 
             const request = { registryConfig, ilcState: {} };
 
@@ -65,7 +65,7 @@ describe('server router', () => {
                         kind: 'primary',
                     },
                 },
-            }).getConfig().data;
+            }).getConfig();
 
             const request = { registryConfig, ilcState: {} };
 
@@ -256,7 +256,7 @@ describe('server router', () => {
         const registryConfig = getRegistryMock({
             apps,
             routes,
-        }).getConfig().data;
+        }).getConfig();
 
         const request = { url: '/hero/apps?prop=value', registryConfig };
 
@@ -359,7 +359,7 @@ describe('server router', () => {
                     },
                 },
             },
-        }).getConfig().data;
+        }).getConfig();
 
         const request = {
             ilcState: { forceSpecialRoute: 404 },

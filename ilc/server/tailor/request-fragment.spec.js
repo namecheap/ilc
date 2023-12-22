@@ -38,7 +38,7 @@ describe('request-fragment', () => {
     it('should request fragment with correct routerProps, appProps and required headers', async () => {
         // Initialisation
 
-        const registryConfig = getRegistryMock().getConfig().data;
+        const registryConfig = getRegistryMock().getConfig();
 
         const attributes = getFragmentAttributes({
             id: 'primary__at__primary',
@@ -82,9 +82,9 @@ describe('request-fragment', () => {
     });
 
     it('should request fragment wrapper with correct routerProps, appProps and required headers', async () => {
-        // Initialisation
+        // Initialization
 
-        const registryConfig = getRegistryMock().getConfig().data;
+        const registryConfig = getRegistryMock().getConfig();
 
         const attributes = getFragmentAttributes({
             id: 'wrapperApp__at__primary',
@@ -139,7 +139,7 @@ describe('request-fragment', () => {
     it('should request fragment of wrapped application with correct routerProps, appProps and required headers', async () => {
         // Initialisation
 
-        const registryConfig = getRegistryMock().getConfig().data;
+        const registryConfig = getRegistryMock().getConfig();
 
         const attributes = getFragmentAttributes({
             id: 'wrapperApp__at__primary',
@@ -223,7 +223,7 @@ describe('request-fragment', () => {
     });
 
     it('should return timeout if timeout is specified for fragment', async () => {
-        const registryConfig = getRegistryMock().getConfig().data;
+        const registryConfig = getRegistryMock().getConfig();
 
         let timeoutMs = 200;
         const attributes = getFragmentAttributes({
