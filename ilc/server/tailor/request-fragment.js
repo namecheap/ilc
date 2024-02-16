@@ -43,6 +43,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
             if (attributes.wrapperConf) {
                 const wrapperConf = attributes.wrapperConf;
                 const reqUrl = makeFragmentUrl({
+                    domain: request.hostname,
                     route: currRoute,
                     baseUrl: wrapperConf.src,
                     appId: wrapperConf.appId,
@@ -169,6 +170,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                 });
 
                 const reqUrl = makeFragmentUrl({
+                    domain: request.hostname,
                     route: currRoute,
                     baseUrl: fragmentUrl,
                     appId: attributes.id,
@@ -239,7 +241,16 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
         });
     };
 
-function makeFragmentUrl({ route, baseUrl, appId, props, ignoreBasePath = false, sdkOptions, wrappedAppProps }) {
+function makeFragmentUrl({
+    domain,
+    route,
+    baseUrl,
+    appId,
+    props,
+    ignoreBasePath = false,
+    sdkOptions,
+    wrappedAppProps,
+}) {
     const url = new URL(baseUrl);
 
     const reqProps = {
@@ -248,6 +259,7 @@ function makeFragmentUrl({ route, baseUrl, appId, props, ignoreBasePath = false,
         fragmentName: appId,
     };
 
+    url.searchParams.append('domain', domain);
     url.searchParams.append('routerProps', objectToBase64(reqProps));
 
     if (props) {
