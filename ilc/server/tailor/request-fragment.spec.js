@@ -54,7 +54,11 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = { registryConfig, ilcState: {} };
+        const request = {
+            registryConfig,
+            ilcState: {},
+            hostname: 'apps.test',
+        };
         request.router = new ServerRouter(logger, request, '/primary');
 
         // Expectations
@@ -62,12 +66,14 @@ describe('request-fragment', () => {
         const expectedRouterProps = { basePath: '/primary', reqUrl: '/primary', fragmentName: 'primary__at__primary' };
         const expectedAppProps = { publicPath: 'http://apps.test/primary' };
 
+        const expectedDomain = request.hostname;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
 
         const mockRequestScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/primary')
             .query({
+                domain: expectedDomain,
                 routerProps: expectedRouterPropsEncoded,
                 appProps: expectedAppPropsEncoded,
             })
@@ -106,7 +112,11 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = { registryConfig, ilcState: {} };
+        const request = {
+            registryConfig,
+            ilcState: {},
+            hostname: 'apps.test',
+        };
         request.router = new ServerRouter(logger, request, '/wrapper');
 
         // Expectations
@@ -115,6 +125,7 @@ describe('request-fragment', () => {
         const expectedAppProps = { param1: 'value1' };
         const wrappedAppProps = { page: 'wrapped' };
 
+        const expectedDomain = request.hostname;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
         const expectedWrappedAppPropsEncoded = Buffer.from(JSON.stringify(wrappedAppProps)).toString('base64');
@@ -122,6 +133,7 @@ describe('request-fragment', () => {
         const mockRequestScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/wrapper')
             .query({
+                domain: expectedDomain,
                 routerProps: expectedRouterPropsEncoded,
                 appProps: expectedAppPropsEncoded,
                 wrappedProps: expectedWrappedAppPropsEncoded,
@@ -161,7 +173,11 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = { registryConfig, ilcState: {} };
+        const request = {
+            registryConfig,
+            ilcState: {},
+            hostname: 'apps.test',
+        };
         request.router = new ServerRouter(logger, request, '/wrapper');
 
         // Expectations
@@ -171,6 +187,7 @@ describe('request-fragment', () => {
         const wrapperPropsOverride = { param2: 'value2' };
         const wrappedAppProps = { page: 'wrapped' };
 
+        const expectedDomain = request.hostname;
         const expectedWrapperRouterPropsEncoded = Buffer.from(JSON.stringify(expectedWrapperRouterProps)).toString(
             'base64',
         );
@@ -181,6 +198,7 @@ describe('request-fragment', () => {
         const mockRequestWrapperScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/wrapper')
             .query({
+                domain: expectedDomain,
                 routerProps: expectedWrapperRouterPropsEncoded,
                 appProps: expectedWrapperAppPropsEncoded,
                 wrappedProps: expectedWrappedAppPropsEncoded,
@@ -207,6 +225,7 @@ describe('request-fragment', () => {
         })
             .get('/wrappedApp')
             .query({
+                domain: expectedDomain,
                 routerProps: expectedWrappedAppRouterPropsEncoded,
                 appProps: expectedWrappedAppAppPropsEncoded,
             })
@@ -240,7 +259,11 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = { registryConfig, ilcState: {} };
+        const request = {
+            registryConfig,
+            ilcState: {},
+            hostname: 'apps.test',
+        };
         request.router = new ServerRouter(logger, request, '/primary');
 
         // Expectations
@@ -248,12 +271,14 @@ describe('request-fragment', () => {
         const expectedRouterProps = { basePath: '/primary', reqUrl: '/primary', fragmentName: 'primary__at__primary' };
         const expectedAppProps = { publicPath: 'http://apps.test/primary' };
 
+        const expectedDomain = request.hostname;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
 
         const mockRequestScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/primary')
             .query({
+                domain: expectedDomain,
                 routerProps: expectedRouterPropsEncoded,
                 appProps: expectedAppPropsEncoded,
             })
