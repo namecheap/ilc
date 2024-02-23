@@ -26,6 +26,7 @@ const commonSchema = {
     secret: Joi.string(),
     provider: Joi.string().valid(...AuthProvidersVals),
     role: Joi.string().valid(...AuthRolesVals),
+    versionId: Joi.string().strip(),
 };
 
 export const updateSchema = Joi.object({

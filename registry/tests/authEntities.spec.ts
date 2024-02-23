@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { request, expect, requestWithAuth } from './common';
 import supertest from 'supertest';
+import e from 'express';
 
 const example = {
     url: '/api/v1/auth_entities/',
@@ -61,7 +62,7 @@ describe(`Tests ${example.url}`, () => {
 
                 response = await req.get(example.url + authEntityId).expect(200);
 
-                expect(response.body).deep.equal(expectedRes);
+                expect(response.body).deep.equal({...expectedRes, versionId: response.body.versionId});
             } finally {
                 authEntityId && (await req.delete(example.url + authEntityId));
             }
@@ -88,9 +89,11 @@ describe(`Tests ${example.url}`, () => {
 
                 response = await req.get(example.url + authEntityId).expect(200);
 
+                expect(response.body.versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
+
                 const expectedRes = _.omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
 
-                expect(response.body).deep.equal(expectedRes);
+                expect(response.body).deep.equal({...expectedRes, versionId: response.body.versionId});
             } finally {
                 authEntityId && (await req.delete(example.url + authEntityId));
             }
@@ -108,7 +111,12 @@ describe(`Tests ${example.url}`, () => {
                 const expectedRes = _.omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
-                expect(response.body).to.deep.include(expectedRes);
+                expect(response.body).to.have.lengthOf(4);
+                expect(response.body[0].versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
+
+                response.body.forEach((item: any) => { delete item.versionId; });
+
+                expect(response.body).to.deep.include({...expectedRes});
             } finally {
                 authEntityId && (await req.delete(example.url + authEntityId));
             }

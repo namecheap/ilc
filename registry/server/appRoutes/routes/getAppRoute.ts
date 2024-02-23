@@ -6,6 +6,7 @@ import { prepareAppRouteToRespond } from '../services/prepareAppRoute';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForConsumer } from '../services/transformSpecialRoutes';
 import { getRoutesById } from './routesRepository';
+import { appendDigest } from '../../util/hmac';
 
 type GetAppRouteRequestParams = {
     id: string;

@@ -139,7 +139,7 @@ describe(`Tests ${example.url}`, () => {
 
                 response = await req.get(example.url + example.encodedName).expect(200);
 
-                expect(response.body).deep.equal(example.correct);
+                expect(response.body).deep.equal({...example.correct, versionId: response.body.versionId});
             } finally {
                 await req.delete(example.url + example.encodedName);
             }
@@ -172,7 +172,7 @@ describe(`Tests ${example.url}`, () => {
 
                 response = await req.get(example.url + example.encodedName).expect(200);
 
-                expect(response.body).deep.equal(appConfig);
+                expect(response.body).deep.equal({...appConfig, versionId: response.body.versionId});
             } finally {
                 await req.delete(example.url + example.encodedName);
                 domainId && (await req.delete('/api/v1/router_domains/' + domainId));
@@ -277,7 +277,8 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req.get(example.url + example.encodedName).expect(200);
 
-                expect(response.body).deep.equal(example.correct);
+                expect(response.body.versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
+                expect(response.body).deep.equal({...example.correct, versionId: response.body.versionId});
             } finally {
                 await req.delete(example.url + example.encodedName);
             }
@@ -290,7 +291,9 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req.get(example.url).expect(200);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
-                expect(response.body).to.deep.include(example.correct);
+                expect(response.body).to.have.lengthOf(1)
+                expect(response.body[0].versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
+                expect(response.body[0]).to.deep.equal({...example.correct, versionId: response.body[0].versionId});
             } finally {
                 await req.delete(example.url + example.encodedName);
             }
