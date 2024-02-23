@@ -21,6 +21,7 @@ const commonTemplate = {
                 throw getJoiErr('content', e.message, value);
             }
         }),
+    versionId: Joi.string().strip(),
 };
 
 const localizedVersions = Joi.object().pattern(

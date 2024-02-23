@@ -25,6 +25,7 @@ const commonRouterDomainsSchema = {
             throw getJoiErr('domainName', 'Specified "domainName" is not valid.', value);
         }),
     template500: templateNameSchema.required(),
+    versionId: Joi.string().strip(),
 };
 
 export const partialRouterDomainsSchema = Joi.object({

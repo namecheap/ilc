@@ -3,12 +3,28 @@ import Template, { LocalizedTemplate } from '../interfaces';
 import { tables } from '../../db/structure';
 import { Knex } from 'knex';
 import Transaction = Knex.Transaction;
+import { appendDigest } from '../../util/hmac';
 
 export async function readTemplateWithAllVersions(templateName: string) {
-    const [template] = await db.select().from<Template>(tables.templates).where('name', templateName);
+    const [template] = await db
+        .select(`${tables.versioning}.id as versionId`, `${tables.templates}.*`)
+        .from<Template>(tables.templates)
+        .leftOuterJoin(tables.versioning, function () {
+            this.on(`${tables.versioning}.entity_id`, '=', `${tables.templates}.name`);
+        })
+        .where('name', templateName)
+        .andWhere(function () {
+            this.orWhere(`${tables.versioning}.entity_type`, 'templates')
+                .orWhere(`${tables.versioning}.entity_type`, null);
+        })
+        .orderBy(`${tables.versioning}.id`, 'desc')
+        .limit(1);
+
     if (!template) {
         return undefined;
     }
+
+    template.versionId = appendDigest(template.versionId, 'template');
 
     const localizedTemplates: LocalizedTemplate[] = await db
         .select()
