@@ -7,6 +7,7 @@ import validateRequestFactory from '../../common/services/validateRequest';
 import SharedLib, { sharedLibNameSchema } from '../interfaces';
 import { tables } from '../../db/structure'
 import { appendDigest } from '../../util/hmac'
+import { EntityTypes } from '../../versioning/interfaces';
 
 type GetSharedLibRequestParams = {
     name: string;
@@ -23,15 +24,8 @@ const validateRequestBeforeGetSharedLib = validateRequestFactory([
 
 const getSharedLib = async (req: Request<GetSharedLibRequestParams>, res: Response): Promise<void> => {
     const sharedLibName = req.params.name;
-    const entityId = db.ref(`${tables.sharedLibs}.name`);
-    const versionIdSubQuery = db
-        .table(tables.versioning)
-        .max('id').as('versionId')
-        .where('entity_id', entityId)
-        .andWhere('entity_type', 'shared_libs');
     const [sharedLib] = await db
-        .select(`${tables.sharedLibs}.*`, versionIdSubQuery)
-        .from<SharedLib>(tables.sharedLibs)
+        .selectVersionedRowsFrom<SharedLib>(tables.sharedLibs, 'name', EntityTypes.shared_libs, [`${tables.sharedLibs}.*`])
         .where('name', sharedLibName);
 
     if (!sharedLib) {

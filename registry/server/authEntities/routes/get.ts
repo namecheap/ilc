@@ -7,6 +7,7 @@ import validateRequestFactory from '../../common/services/validateRequest';
 import SharedProps from '../interfaces';
 import { tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
+import { EntityTypes } from '../../versioning/interfaces';
 
 type RequestParams = {
     id: string;
@@ -22,14 +23,9 @@ const validateRequest = validateRequestFactory([
 ]);
 
 const getSharedProps = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const versionIdSubQuery = db
-        .table(tables.versioning)
-        .max('id').as('versionId')
-        .where('entity_id', db.raw(`cast(${tables.authEntities}.id as char)`))
-        .andWhere('entity_type', 'auth_entities');
     const [record] = await db
-        .select(`${tables.authEntities}.*`, versionIdSubQuery)
-        .from<SharedProps>('auth_entities').where('id', req.params.id);
+        .selectVersionedRowsFrom<SharedProps>(tables.authEntities, 'id', EntityTypes.auth_entities, [`${tables.authEntities}.*`])
+        .where('id', req.params.id);
 
     if (!record) {
         res.status(404).send('Not found');

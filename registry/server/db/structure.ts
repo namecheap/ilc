@@ -1,3 +1,5 @@
+import { EntityTypes } from "../versioning/interfaces";
+
 export const tables = {
     apps: 'apps',
     authEntities: 'auth_entities',

@@ -7,6 +7,7 @@ import validateRequestFactory from '../../common/services/validateRequest';
 import RouterDomains, { routerDomainIdSchema } from '../interfaces';
 import { tables } from '../../db/structure'
 import { appendDigest } from '../../util/hmac'
+import { EntityTypes } from '../../versioning/interfaces';
 
 
 type RequestParams = {
@@ -23,14 +24,8 @@ const validateRequest = validateRequestFactory([
 ]);
 
 const getRouterDomains = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const versionIdSubQuery = db
-        .table(tables.versioning)
-        .max('id').as('versionId')
-        .where('entity_id', db.raw(`cast(${tables.routerDomains}.id as char)`))
-        .andWhere('entity_type', 'router_domains');
     const [routerDomains] = await db
-        .select(`${tables.routerDomains}.*`, versionIdSubQuery)
-        .from<RouterDomains>(tables.routerDomains)
+        .selectVersionedRowsFrom<RouterDomains>(tables.routerDomains, 'id', EntityTypes.router_domains, [`${tables.routerDomains}.*`])
         .where('id', req.params.id);
 
     if (!routerDomains) {

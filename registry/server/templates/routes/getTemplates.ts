@@ -4,17 +4,11 @@ import db from '../../db';
 import Template from '../interfaces';
 import { tables } from '../../db/structure'
 import { appendDigest } from '../../util/hmac';
+import { EntityTypes } from '../../versioning/interfaces';
 
 const getTemplates = async (req: Request, res: Response): Promise<void> => {
-    const entityId = db.ref(`${tables.templates}.name`);
-    const versionIdSubQuery = db
-        .table(tables.versioning)
-        .max('id').as('versionId')
-        .where('entity_id', entityId)
-        .andWhere('entity_type', 'templates');
     const templates = await db
-        .select(`${tables.templates}.*`, versionIdSubQuery)
-        .from<Template>(tables.templates);
+        .selectVersionedRowsFrom<Template>(tables.templates, 'name', EntityTypes.templates, [`${tables.templates}.*`]);
     const itemsWithId = templates.map(item => {
         return { ...item, versionId: appendDigest(item.versionId, 'template') };
     });

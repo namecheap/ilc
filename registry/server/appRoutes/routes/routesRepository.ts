@@ -1,16 +1,12 @@
 import db from '../../db';
 import { tables } from '../../db/structure'
 import { appendDigest } from '../../util/hmac';
+import { EntityTypes } from '../../versioning/interfaces';
 
 export const getRoutesById = (appRouteId: number) => {
-    const versionIdSubQuery = db
-        .table(tables.versioning)
-        .max('id').as('versionId')
-        .where('entity_id', db.raw('cast(routes.id as char)'))
-        .andWhere('entity_type', 'routes');
     const query = db
-        .select('routes.id as _routeId', 'routes.*', 'route_slots.*', versionIdSubQuery)
-        .from('routes')
+        .selectVersionedRows(tables.routes, 'id', EntityTypes.routes, ['routes.id as _routeId', 'routes.*', 'route_slots.*'])
+        .from(tables.routes)
         .leftJoin('route_slots', 'route_slots.routeId', 'routes.id');
     return query
         .then((appRoutes) => {

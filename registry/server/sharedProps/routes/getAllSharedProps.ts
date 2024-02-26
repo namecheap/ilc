@@ -5,17 +5,11 @@ import preProcessResponse from '../../common/services/preProcessResponse';
 import SharedProps, { sharedPropsNameSchema } from '../interfaces';
 import { tables } from '../../db/structure'
 import { appendDigest } from '../../util/hmac'
+import { EntityTypes } from '../../versioning/interfaces';
 
 const getSharedProps = async (req: Request, res: Response): Promise<void> => {
-    const entityId = db.ref(`${tables.sharedProps}.name`);
-    const versionIdSubQuery = db
-        .table(tables.versioning)
-        .max('id').as('versionId')
-        .where('entity_id', entityId)
-        .andWhere('entity_type', 'shared_props');
     const sharedProps = await db
-        .select(`${tables.sharedProps}.*`, versionIdSubQuery)
-        .from<SharedProps>('shared_props');
+        .selectVersionedRowsFrom<SharedProps>(tables.sharedProps, 'name', EntityTypes.shared_props, [`${tables.sharedProps}.*`]);
     const sharedPropsWithId = sharedProps.map(item => {
         return { ...item, versionId: appendDigest(item.versionId, 'sharedProp') };
     });

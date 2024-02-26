@@ -16,7 +16,7 @@ const AuthRolesVals = Object.values(AuthRoles);
 export default interface AuthEntity {
     id: number | null;
     identifier: string;
-    secret: string | null;
+    secret?: string | null;
     provider: AuthProviders;
     role: AuthRoles;
 }

@@ -7,6 +7,7 @@ import settingsService from '../settings/services/SettingsService';
 import { parseJSON } from '../common/services/json';
 import { tables } from '../db/structure';
 import { appendDigest } from '../util/hmac';
+import { EntityTypes } from '../versioning/interfaces';
 
 const router = express.Router();
 
@@ -15,47 +16,18 @@ router.get('/', async (req, res) => {
 
     let domainName = req.query.domainName ? req.query.domainName : undefined;
     domainName = typeof domainName === 'string' ? domainName : undefined;
-    const versionId = 'versionId';
-
-    const appsLibsEntityId = knex.ref(`${tables.apps}.name`);
-    const appsVersionIdSubQuery = knex
-        .table(tables.versioning)
-        .max('id').as(versionId)
-        .where('entity_id', appsLibsEntityId)
-        .andWhere('entity_type', 'apps');
-
-    const templatesLibsEntityId = knex.ref(`${tables.templates}.name`);
-    const templatesVersionIdSubQuery = knex
-        .table(tables.versioning)
-        .max('id').as(versionId)
-        .where('entity_id', templatesLibsEntityId)
-        .andWhere('entity_type', 'templates');
-
-    const routesVersionIdSubQuery = knex
-        .table(tables.versioning)
-        .max('id').as(versionId)
-        .where('entity_id', knex.raw('cast(routes.id as char)'))
-        .andWhere('entity_type', 'routes');
-
-    const sharedLibsEntityId = knex.ref(`${tables.sharedLibs}.name`);
-    const sharedLibsVersionIdSubQuery = knex
-        .table(tables.versioning)
-        .max('id').as(versionId)
-        .where('entity_id', sharedLibsEntityId)
-        .andWhere('entity_type', 'shared_libs');
 
     const [apps, templates, routes, sharedProps, settings, routerDomains, sharedLibs] = await Promise.all([
-        knex.select(`${tables.apps}.*`, appsVersionIdSubQuery).from(tables.apps),
-        knex.select(`${tables.templates}.name`, templatesVersionIdSubQuery).from(tables.templates),
+        knex.selectVersionedRowsFrom(tables.apps, 'name', EntityTypes.apps, [`${tables.apps}.*`]),
+        knex.selectVersionedRowsFrom(tables.templates, 'name', EntityTypes.templates, [`${tables.templates}.name`]),
         knex
-            .select(`${tables.routes}.*`, `${tables.routeSlots}.*`, routesVersionIdSubQuery)
-            .orderBy('orderPos', 'ASC')
-            .from('routes')
-            .leftJoin('route_slots', 'route_slots.routeId', 'routes.id'),
+            .selectVersionedRowsFrom(tables.routes, 'id', EntityTypes.routes, [`${tables.routes}.*`, `${tables.routeSlots}.*`])
+            .leftJoin('route_slots', 'route_slots.routeId', 'routes.id')
+            .orderBy('orderPos', 'ASC'),
         knex.select().from('shared_props'), // No versionId for sharedProps in the response
         settingsService.getSettingsForConfig(domainName), // No versionId for settings in the response
         knex.select().from(`${tables.routerDomains}`),
-        knex.select(`${tables.sharedLibs}.*`, sharedLibsVersionIdSubQuery).from(`${tables.sharedLibs}`),
+        knex.selectVersionedRowsFrom(tables.sharedLibs, 'name', EntityTypes.shared_libs, [`${tables.sharedLibs}.*`]),
     ]);
 
     const data = {

@@ -5,18 +5,13 @@ import preProcessResponse from '../../common/services/preProcessResponse';
 import App, { appNameSchema } from '../interfaces';
 import { tables } from '../../db/structure'
 import { appendDigest } from '../../util/hmac';
+import { EntityTypes } from '../../versioning/interfaces';
 
 const getApps = async (req: Request, res: Response): Promise<void> => {
     const filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
-    const entityId = db.ref(`${tables.apps}.name`);
-    const versionIdSubQuery = db
-        .table(`${tables.versioning}`)
-        .max('id').as('versionId')
-        .where('entity_id', entityId)
-        .andWhere('entity_type', 'apps');
+
     const query = db
-        .select(`${tables.apps}.*`, versionIdSubQuery)
-        .from<App>('apps');
+        .selectVersionedRowsFrom<App>(tables.apps, 'name', EntityTypes.apps, [`${tables.apps}.*`]);
 
     if (filters.id || filters.name) {
         query.whereIn('name', [...(filters.id || filters.name)]);

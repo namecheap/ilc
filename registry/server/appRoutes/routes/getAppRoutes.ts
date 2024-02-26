@@ -7,18 +7,14 @@ import { prepareAppRoutesToRespond } from '../services/prepareAppRoute';
 import { transformSpecialRoutesForConsumer, SPECIAL_PREFIX } from '../services/transformSpecialRoutes';
 import { tables } from '../../db/structure'
 import { appendDigest } from '../../util/hmac'
+import { EntityTypes } from '../../versioning/interfaces';
 
 const getAppRoutes = async (req: Request, res: Response) => {
     const filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
-    const versionIdSubQuery = db
-        .table(tables.versioning)
-        .max('id').as('versionId')
-        .where('entity_id', db.raw('cast(routes.id as char)'))
-        .andWhere('entity_type', 'routes');
+
     const query = db
-        .select<AppRoute[]>('routes.id as routeId', 'routes.*', versionIdSubQuery)
-        .orderBy('orderPos', 'ASC')
-        .from(tables.routes);
+        .selectVersionedRowsFrom<AppRoute>(tables.routes, 'id', EntityTypes.routes, ['routes.id as routeId', 'routes.*'])
+        .orderBy('orderPos', 'ASC');
 
     if (filters.showSpecial === true) {
         query.where('routes.route', 'like', `${SPECIAL_PREFIX}%`);
