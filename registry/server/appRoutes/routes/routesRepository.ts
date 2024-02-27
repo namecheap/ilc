@@ -1,12 +1,12 @@
 import db from '../../db';
-import { tables } from '../../db/structure'
+import { Tables } from '../../db/structure'
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 
 export const getRoutesById = (appRouteId: number) => {
     const query = db
-        .selectVersionedRows(tables.routes, 'id', EntityTypes.routes, ['routes.id as _routeId', 'routes.*', 'route_slots.*'])
-        .from(tables.routes)
+        .selectVersionedRows(Tables.Routes, 'id', EntityTypes.routes, ['routes.id as _routeId', 'routes.*', 'route_slots.*'])
+        .from(Tables.Routes)
         .leftJoin('route_slots', 'route_slots.routeId', 'routes.id');
     return query
         .then((appRoutes) => {

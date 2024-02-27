@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { request, expect, requestWithAuth } from './common';
 import supertest from 'supertest';
-import exp from 'node:constants';
 
 const example = {
     url: '/api/v1/shared_props/',

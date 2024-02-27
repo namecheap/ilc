@@ -8,7 +8,7 @@ import Template, { LocalizedTemplate } from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
 import renderTemplate from '../services/renderTemplate';
 import errors from '../errors';
-import { tables } from '../../db/structure';
+import { Tables } from '../../db/structure';
 import { templateNameSchema } from './validation';
 import RouterDomains from '../../routerDomains/interfaces';
 import { getLogger } from '../../util/logger';
@@ -109,7 +109,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     if (locale) {
         const [localizedTemplate] = await db
             .select()
-            .from<LocalizedTemplate>(tables.templatesLocalized)
+            .from<LocalizedTemplate>(Tables.TemplatesLocalized)
             .where('templateName', templateName)
             .andWhere('locale', locale as string);
 

@@ -1,15 +1,17 @@
 import type { Knex } from 'knex';
 
 import versioningService, { OperationConf } from '../versioning/services/Versioning';
-import { tables } from './structure';
+import { Tables } from './structure';
 import { EntityTypes, VersionedRecord } from '../versioning/interfaces';
+
+type ColumnDescriptor = Knex.ColumnDescriptor<{}, {}[]>;
 
 interface SelectVersioned<TRecord extends {} = any, TResult = unknown> {
     <TResult2 = TResult> (
         table: string,
         key: string,
         entityType: EntityTypes,
-        columns: string[],
+        columns: ColumnDescriptor[],
     ): Knex.QueryBuilder<TRecord, VersionedRecord<TResult2>>;
 }
 
@@ -18,7 +20,7 @@ interface SelectVersionedRows<TRecord extends {} = any, TResult = unknown> {
         table: string,
         key: string,
         entityType: EntityTypes,
-        columns: string[],
+        columns: ColumnDescriptor[],
     ): Knex.QueryBuilder<TRecord, VersionedRecord<TResult2>[]>;
 }
 
@@ -35,9 +37,9 @@ export interface VersionedKnex<TRecord extends {} = any, TResult = any> extends 
 }
 
 function selectVersionedRows(knex: VersionedKnex) {
-    return function(table: string, key: string, entityType: EntityTypes, columns: any[]) {
+    return function(table: string, key: string, entityType: EntityTypes, columns: ColumnDescriptor[]) {
         const versionIdQuery = knex
-            .table(tables.versioning)
+            .table(Tables.Versioning)
             .max('id').as('versionId')
             .where('entity_id', knex.raw(`cast(${table}.${key} as char)`))
             .andWhere('entity_type', entityType);
@@ -46,7 +48,7 @@ function selectVersionedRows(knex: VersionedKnex) {
 }
 
 function selectVersionedRowsFrom(knex: VersionedKnex) {
-    return function(table: string, key: string, entityType: EntityTypes, columns: any[]) {
+    return function(table: string, key: string, entityType: EntityTypes, columns: ColumnDescriptor[]) {
         return knex
             .selectVersionedRows(table, key, entityType, columns)
             .from(table);

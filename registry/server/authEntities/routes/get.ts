@@ -5,7 +5,7 @@ import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 import SharedProps from '../interfaces';
-import { tables } from '../../db/structure';
+import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 
@@ -24,7 +24,7 @@ const validateRequest = validateRequestFactory([
 
 const getSharedProps = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const [record] = await db
-        .selectVersionedRowsFrom<SharedProps>(tables.authEntities, 'id', EntityTypes.auth_entities, [`${tables.authEntities}.*`])
+        .selectVersionedRowsFrom<SharedProps>(Tables.AuthEntities, 'id', EntityTypes.auth_entities, [`${Tables.AuthEntities}.*`])
         .where('id', req.params.id);
 
     if (!record) {

@@ -5,7 +5,7 @@ import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 import RouterDomains, { routerDomainIdSchema } from '../interfaces';
-import { tables } from '../../db/structure'
+import { Tables } from '../../db/structure'
 import { appendDigest } from '../../util/hmac'
 import { EntityTypes } from '../../versioning/interfaces';
 
@@ -25,7 +25,7 @@ const validateRequest = validateRequestFactory([
 
 const getRouterDomains = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const [routerDomains] = await db
-        .selectVersionedRowsFrom<RouterDomains>(tables.routerDomains, 'id', EntityTypes.router_domains, [`${tables.routerDomains}.*`])
+        .selectVersionedRowsFrom<RouterDomains>(Tables.RouterDomains, 'id', EntityTypes.router_domains, [`${Tables.RouterDomains}.*`])
         .where('id', req.params.id);
 
     if (!routerDomains) {

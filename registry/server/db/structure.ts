@@ -1,15 +1,13 @@
-import { EntityTypes } from "../versioning/interfaces";
-
-export const tables = {
-    apps: 'apps',
-    authEntities: 'auth_entities',
-    routes: 'routes',
-    routerDomains: 'router_domains',
-    routeSlots: 'route_slots',
-    templates: 'templates',
-    settings: 'settings',
-    sharedLibs: 'shared_libs',
-    sharedProps: 'shared_props',
-    templatesLocalized: 'templates_localized',
-    versioning: 'versioning',
-} as const;
+export enum Tables {
+    Apps = 'apps',
+    AuthEntities = 'auth_entities',
+    Routes = 'routes',
+    RouterDomains = 'router_domains',
+    RouteSlots = 'route_slots',
+    Templates = 'templates',
+    Settings = 'settings',
+    SharedLibs = 'shared_libs',
+    SharedProps = 'shared_props',
+    TemplatesLocalized = 'templates_localized',
+    Versioning = 'versioning',
+};

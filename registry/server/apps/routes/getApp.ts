@@ -6,7 +6,7 @@ import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 import App, { appNameSchema } from '../interfaces';
-import { tables } from '../../db/structure'
+import { Tables } from '../../db/structure'
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 
@@ -26,7 +26,7 @@ const validateRequestBeforeGetApp = validateRequestFactory([
 const getApp = async (req: Request<GetAppRequestParams>, res: Response): Promise<void> => {
     const appName = req.params.name;
     const [app] = await db
-        .selectVersionedRowsFrom<App>(tables.apps, 'name', EntityTypes.apps, [`${tables.apps}.*`])
+        .selectVersionedRowsFrom<App>(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`])
         .where('name', appName);
 
     if (!app) {

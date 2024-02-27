@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { request, expect, requestWithAuth } from './common';
 import supertest from 'supertest';
-import e from 'express';
 
 const example = {
     url: '/api/v1/auth_entities/',
