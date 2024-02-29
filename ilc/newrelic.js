@@ -41,7 +41,7 @@ exports.config = {
         ],
     },
     error_collector: {
-        ignore_status_codes: [400, 405],
+        ignore_status_codes: [400, 404, 405],
     },
     rules: {
         ignore: ['^/ping$', '^/api/v1/monitor/ping/.*$'],
