@@ -7,6 +7,9 @@ const errors = require('./errors');
 describe('error handler', () => {
     const request = {
         originalUrl: 'originalUrl',
+        headers: {
+            'user-agent': 'bot',
+        },
     };
 
     const error = new Error('error');
@@ -50,7 +53,7 @@ describe('error handler', () => {
                     message: `Tailor error while headers already sent while processing request "${request.originalUrl}"`,
                     cause: error,
                 }),
-                {},
+                { userAgent: 'bot' },
                 { reportError: true },
             ]);
         });
