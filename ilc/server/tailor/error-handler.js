@@ -30,7 +30,7 @@ module.exports = function setup(tailor, errorHandlingService) {
         } else {
             errorHandlingService.noticeError(
                 new errors.TailorError({ message: `Tailor error while headers already sent ${urlPart}`, cause: err }),
-                {},
+                { userAgent: req.headers['user-agent'] },
                 { reportError: !req.ldeRelated },
             );
         }
