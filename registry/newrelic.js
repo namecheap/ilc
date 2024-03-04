@@ -46,6 +46,9 @@ exports.config = {
             'response.headers.x*'
         ]
     },
+    error_collector: {
+        ignore_status_codes: [400, 404, 405]
+    },
     rules: {
         ignore: [
             '^\/ping$'
