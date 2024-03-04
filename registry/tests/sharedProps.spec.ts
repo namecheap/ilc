@@ -60,7 +60,7 @@ describe(`Tests ${example.url}`, () => {
 
                 response = await req.get(example.url + example.correct.name).expect(200);
 
-                expect(response.body).deep.equal(example.correct);
+                expect(response.body).deep.equal({...example.correct, versionId: response.body.versionId});
             } finally {
                 await req.delete(example.url + example.correct.name);
             }
@@ -84,8 +84,8 @@ describe(`Tests ${example.url}`, () => {
                 await req.post(example.url).send(example.correct).expect(200);
 
                 const response = await req.get(example.url + example.correct.name).expect(200);
-
-                expect(response.body).deep.equal(example.correct);
+                expect(response.body.versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
+                expect(response.body).deep.equal({...example.correct, versionId: response.body.versionId});
             } finally {
                 await req.delete(example.url + example.correct.name);
             }
@@ -98,7 +98,9 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req.get(example.url).expect(200);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
-                expect(response.body).to.deep.include(example.correct);
+                expect(response.body.length).to.be.equal(1);
+                expect(response.body[0].versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
+                expect(response.body[0]).to.eql({...example.correct, versionId: response.body[0].versionId});
             } finally {
                 await req.delete(example.url + example.correct.name);
             }

@@ -106,11 +106,13 @@ describe(`Tests ${example.url}`, () => {
             let response = await req.post(example.url).send(example.correct).expect(200);
 
             let createdTemplate = { ...example.correct, localizedVersions: {} };
-            expect(response.body).deep.equal(createdTemplate);
+
+            expect(response.body.versionId).to.match(/^[0-9]+.[-_0-9a-zA-Z]{32}$/);
+            expect(response.body).deep.equal({...createdTemplate, versionId: response.body.versionId});
 
             response = await req.get(example.url + example.correct.name).expect(200);
 
-            expect(response.body).deep.equal(createdTemplate);
+            expect(response.body).deep.equal({...createdTemplate, versionId: response.body.versionId});
         });
 
         it('should create localized versions of template', async () => {
@@ -159,6 +161,7 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).deep.equal({
                 ...example.correct,
                 localizedVersions: {},
+                versionId: response.body.versionId,
             });
         });
 
@@ -173,7 +176,7 @@ describe(`Tests ${example.url}`, () => {
 
             const response = await reqWithAuth.get(example.url + example.correctLocalized.name).expect(200);
 
-            expect(response.body).deep.equal(example.correctLocalized);
+            expect(response.body).deep.equal({...example.correctLocalized, versionId: response.body.versionId});
         });
 
         it('should return localized version of rendered template', async () => {
@@ -204,7 +207,8 @@ describe(`Tests ${example.url}`, () => {
             const response = await req.get(example.url).expect(200);
 
             expect(response.body).to.be.an('array').that.is.not.empty;
-            expect(response.body).to.deep.include(example.correct);
+            expect(response.body).to.deep.include({...example.correct, versionId: response.body[0].versionId});
+            expect(response.body[0].versionId).to.match(/^[0-9]+.[-_0-9a-zA-Z]{32}$/);
         });
 
         describe('template with domain', () => {
@@ -387,6 +391,7 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).deep.equal({
                 ...example.updated,
                 localizedVersions: {},
+                versionId: response.body.versionId,
             });
         });
 
@@ -405,6 +410,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal({
                     name: example.correctLocalized.name,
                     ...example.updatedLocalized,
+                    versionId: response.body.versionId,
                 });
             });
         });
@@ -558,9 +564,14 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await reqWithAuth.get(example.url + template.name + '/rendered').expect(200);
 
+                const versionId = response.body.versionId;
+
+                expect(versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
+
                 expect(response.body).to.eql({
                     styleRefs: ['https://my.awesome.server/my-awesome-stylesheet.css'],
                     name: template.name,
+                    versionId: versionId,
                     content: `
                     <html>
                     <head>
