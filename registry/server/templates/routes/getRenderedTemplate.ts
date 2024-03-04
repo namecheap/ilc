@@ -8,10 +8,11 @@ import Template, { LocalizedTemplate } from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
 import renderTemplate from '../services/renderTemplate';
 import errors from '../errors';
-import { tables } from '../../db/structure';
+import { Tables } from '../../db/structure';
 import { templateNameSchema } from './validation';
 import RouterDomains from '../../routerDomains/interfaces';
 import { getLogger } from '../../util/logger';
+import { appendDigest } from '../../util/hmac';
 
 type GetTemplateRenderedRequestParams = {
     name: string;
@@ -37,19 +38,49 @@ async function getTemplateByDomain(domain: string, templateName: string): Promis
     }
 
     const [template] = await db
-        .select('templates.*')
+        .select('versioning.id as versionId', ', templates.*')
         .from<Template>('templates')
         .join('routes', 'templates.name', 'routes.templateName')
+        .leftOuterJoin('versioning', function () {
+            this.on('versioning.entity_id', '=', 'templates.name');
+        })
         .where({
             domainId: domainItem.id,
-            name: templateName,
-        });
+            name: templateName
+        })
+        .andWhere(function () {
+            this.orWhere('versioning.entity_type', 'templates')
+                .orWhere('versioning.entity_type', null);
+        })
+        .orderBy('versioning.id', 'desc')
+        .limit(1);
+
+    if (template) {
+        template.versionId = appendDigest(template.versionId, 'template');
+    }
 
     return template;
 }
 
 async function getTemplateByName(templateName: string): Promise<Template | undefined> {
-    const [template] = await db.select().from<Template>('templates').where('name', templateName);
+    const [template] = await db
+        .select('versioning.id as versionId', 'templates.*')
+        .from<Template>('templates')
+        .leftOuterJoin('versioning', function () {
+            this.on('versioning.entity_id', '=', 'templates.name');
+        })
+        .where('templates.name', templateName)
+        .andWhere(function () {
+            this.orWhere('versioning.entity_type', 'templates')
+                .orWhere('versioning.entity_type', null);
+        })
+        .orderBy('versioning.id', 'desc')
+        .limit(1);
+
+    if (template) {
+        template.versionId = appendDigest(template.versionId, 'template');
+    }
+
     return template;
 }
 
@@ -78,7 +109,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     if (locale) {
         const [localizedTemplate] = await db
             .select()
-            .from<LocalizedTemplate>(tables.templatesLocalized)
+            .from<LocalizedTemplate>(Tables.TemplatesLocalized)
             .where('templateName', templateName)
             .andWhere('locale', locale as string);
 

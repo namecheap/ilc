@@ -10,6 +10,7 @@ export const sharedPropsNameSchema = Joi.string().min(1).max(50);
 const commonSharedProps = {
     props: Joi.object().default({}),
     ssrProps: Joi.object().default({}),
+    versionId: Joi.string().strip(),
 };
 
 export const partialSharedPropsSchema = Joi.object({
