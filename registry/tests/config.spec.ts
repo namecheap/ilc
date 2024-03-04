@@ -121,14 +121,6 @@ describe('Tests /api/v1/config', () => {
                 expect(response.body.routerDomains).to.be.undefined;
                 expect(response.body.sharedLibs).to.be.an('object');
 
-                expect(response.body.apps[example.apps.name].versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
-                delete response.body.apps[example.apps.name].versionId;
-
-                response.body.routes.forEach((route: any) => {
-                    expect(route.versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
-                    delete route.versionId;
-                });
-
                 expect(response.body.routes).to.deep.include({
                     routeId,
                     ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
@@ -156,10 +148,6 @@ describe('Tests /api/v1/config', () => {
                 );
 
                 expect(response.body.templates).to.include(example.templates.name);
-
-                expect(response.body.templatesVersions).have.lengthOf(1);
-                expect(response.body.templatesVersions[0]).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
-
                 expect(response.body.settings).to.deep.equal({
                     [SettingKeys.TrailingSlash]: TrailingSlashValues.DoNothing,
                     [SettingKeys.AmdDefineCompatibilityMode]: false,

@@ -19,7 +19,6 @@ const commonSharedLib = {
     assetsDiscoveryUrl: Joi.string().trim().uri().default(null),
     adminNotes: Joi.string().trim().default(null),
     l10nManifest: Joi.string().max(255).default(null),
-    versionId: Joi.string().strip(),
 };
 
 export const partialSharedLibSchema = Joi.object<SharedLib>({

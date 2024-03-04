@@ -151,7 +151,6 @@ describe(`Tests ${example.url}`, () => {
                 const expectedRoute = {
                     id: routeId,
                     ..._.omitBy(example.correct, _.isNil),
-                    versionId: response.body.versionId,
                 };
                 expect(response.body).deep.equal(expectedRoute);
 
@@ -428,7 +427,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it('should create record with existing domainId', async () => {
+        it('should create record with existed domainId', async () => {
             let domainId, routeId;
 
             try {
@@ -446,7 +445,6 @@ describe(`Tests ${example.url}`, () => {
                 const expectedRoute = {
                     id: routeId,
                     ..._.omitBy(exampleWithExistedDomainId, _.isNil),
-                    versionId: response.body.versionId,
                 };
                 expect(response.body).deep.equal(expectedRoute);
 
@@ -459,7 +457,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it('should create special record with existing domainId', async () => {
+        it('should create special record with existed domainId', async () => {
             let domainId, routeId;
 
             try {
@@ -477,7 +475,6 @@ describe(`Tests ${example.url}`, () => {
                 const expectedRoute = {
                     id: routeId,
                     ..._.omitBy(exampleWithExistedDomainId, _.isNil),
-                    versionId: response.body.versionId
                 };
 
                 expect(response.body).deep.equal(expectedRoute);
@@ -503,7 +500,6 @@ describe(`Tests ${example.url}`, () => {
                     slots: example.correctWithMetadata.slots,
                     meta: example.correctWithMetadata.meta,
                     ..._.omitBy(_.omit(example.correctWithMetadata, ['slots', 'meta']), _.isNil),
-                    versionId: response.body.versionId,
                 };
 
                 expect(response.body).deep.equal(expectedRoute);
@@ -560,12 +556,9 @@ describe(`Tests ${example.url}`, () => {
 
                 response = await req.get(example.url + routeId).expect(200);
 
-                expect(response.body).to.have.property('versionId').that.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
-
                 const expectedRoute = {
                     id: routeId,
                     ..._.omitBy(example.correct, _.isNil),
-                    versionId: response.body.versionId,
                 };
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
@@ -573,7 +566,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it('should successfully return all existing records', async () => {
+        it('should successfully return all existed records', async () => {
             let routeId;
             try {
                 let response = await req.post(example.url).send(example.correct).expect(200);
@@ -582,14 +575,10 @@ describe(`Tests ${example.url}`, () => {
                 response = await req.get(example.url).expect(200);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
-                expect(response.body).to.have.lengthOf(1);
-                expect(response.body[0].versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
-
                 const expectedRoute = {
                     id: routeId,
                     ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
                     meta: example.correct.meta,
-                    versionId: response.body[0].versionId,
                 };
                 expect(response.body).to.deep.include(expectedRoute);
             } finally {
@@ -615,13 +604,10 @@ describe(`Tests ${example.url}`, () => {
                 response = await req.get(`${example.url}?filter=${queryFilter}`).expect(200);
 
                 expect(response.body).to.be.an('array').with.lengthOf(1);
-                expect(response.body[0].versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
-
                 const expectedRoute = {
                     id: routeId,
                     ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
                     domainId,
-                    versionId: response.body[0].versionId,
                 };
 
                 expect(response.body).to.deep.include(expectedRoute);
@@ -830,7 +816,6 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal({
                     ...example.updated,
                     id: routeId,
-                    versionId: response.body.versionId,
                 });
             } finally {
                 routeId && (await req.delete(example.url + routeId));
@@ -862,7 +847,6 @@ describe(`Tests ${example.url}`, () => {
                     ...example.updated,
                     id: routeId,
                     domainId: domainId2,
-                    versionId: response.body.versionId,
                 });
             } finally {
                 routeId && (await req.delete(example.url + routeId));
@@ -886,7 +870,6 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal({
                     ...example.updatedWithMetadata,
                     id: routeId,
-                    versionId: response.body.versionId,
                 });
             } finally {
                 routeId && (await req.delete(example.url + routeId));

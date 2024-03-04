@@ -13,7 +13,6 @@ const prepareRouteToRespond = (appRoute: any) => {
             templateName: appRoute.templateName,
             orderPos: appRoute.orderPos,
             domainId: appRoute.domainId,
-            versionId: appRoute.versionId,
         }),
         {
             meta: appRoute.meta ? parseJSON(appRoute.meta) : {},

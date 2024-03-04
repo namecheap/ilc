@@ -5,16 +5,11 @@ import db from '../../db';
 import { AppRoute } from '../interfaces';
 import { prepareAppRoutesToRespond } from '../services/prepareAppRoute';
 import { transformSpecialRoutesForConsumer, SPECIAL_PREFIX } from '../services/transformSpecialRoutes';
-import { Tables } from '../../db/structure'
-import { appendDigest } from '../../util/hmac'
-import { EntityTypes } from '../../versioning/interfaces';
 
 const getAppRoutes = async (req: Request, res: Response) => {
     const filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
 
-    const query = db
-        .selectVersionedRowsFrom<AppRoute>(Tables.Routes, 'id', EntityTypes.routes, ['routes.id as routeId', 'routes.*'])
-        .orderBy('orderPos', 'ASC');
+    const query = db.select<AppRoute[]>('routes.id as routeId', 'routes.*').orderBy('orderPos', 'ASC').from('routes');
 
     if (filters.showSpecial === true) {
         query.where('routes.route', 'like', `${SPECIAL_PREFIX}%`);
@@ -32,10 +27,8 @@ const getAppRoutes = async (req: Request, res: Response) => {
     }
 
     const appRoutes = await query.range(req.query.range as string | undefined);
-    const itemsWithId = appRoutes.data.map((item: any) => {
-        return { ...item, versionId: appendDigest(item.versionId, 'route') };
-    });
-    const appRoutesResponse = transformSpecialRoutesForConsumer(itemsWithId);
+
+    const appRoutesResponse = transformSpecialRoutesForConsumer(appRoutes.data);
 
     res.setHeader('Content-Range', appRoutes.pagination.total); //Stub for future pagination capabilities
     res.status(200).send(prepareAppRoutesToRespond(appRoutesResponse));
