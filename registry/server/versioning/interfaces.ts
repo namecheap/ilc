@@ -35,9 +35,3 @@ export interface VersionRowParsed extends VersionRowBase {
     data: { data: object; related: Record<string, object[]> } | null;
     data_after: { data: object; related: Record<string, object[]> } | null;
 }
-
-export interface WithVersionId {
-    versionId: number | string;
-}
-
-export type VersionedRecord<T> = T & WithVersionId;

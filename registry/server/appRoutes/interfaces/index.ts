@@ -56,7 +56,6 @@ const commonAppRoute = {
     slots: Joi.object().pattern(commonAppRouteSlot.name, appRouteSlotSchema),
     domainId: Joi.number().default(null),
     meta: Joi.object().default({}),
-    versionId: Joi.string().strip(),
 };
 
 export const partialAppRouteSchema = Joi.object({

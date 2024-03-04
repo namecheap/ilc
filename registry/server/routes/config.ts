@@ -5,9 +5,6 @@ import knex from '../db';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 import settingsService from '../settings/services/SettingsService';
 import { parseJSON } from '../common/services/json';
-import { Tables } from '../db/structure';
-import { appendDigest } from '../util/hmac';
-import { EntityTypes } from '../versioning/interfaces';
 
 const router = express.Router();
 
@@ -16,22 +13,22 @@ router.get('/', async (req, res) => {
     domainName = typeof domainName === 'string' ? domainName : undefined;
 
     const [apps, templates, routes, sharedProps, settings, routerDomains, sharedLibs] = await Promise.all([
-        knex.selectVersionedRowsFrom(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]),
-        knex.selectVersionedRowsFrom(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.name`]),
+        knex.select().from('apps'),
+        knex.select('name').from('templates'),
         knex
-            .selectVersionedRowsFrom(Tables.Routes, 'id', EntityTypes.routes, [`${Tables.Routes}.*`, `${Tables.RouteSlots}.*`])
-            .leftJoin('route_slots', 'route_slots.routeId', 'routes.id')
-            .orderBy('orderPos', 'ASC'),
-        knex.select().from('shared_props'), // No versionId for sharedProps in the response
-        settingsService.getSettingsForConfig(domainName), // No versionId for settings in the response
-        knex.select().from(`${Tables.RouterDomains}`),
-        knex.selectVersionedRowsFrom(Tables.SharedLibs, 'name', EntityTypes.shared_libs, [`${Tables.SharedLibs}.*`]),
+            .select()
+            .orderBy('orderPos', 'ASC')
+            .from('routes')
+            .leftJoin('route_slots', 'route_slots.routeId', 'routes.id'),
+        knex.select().from('shared_props'),
+        settingsService.getSettingsForConfig(domainName),
+        knex.select().from('router_domains'),
+        knex.select().from('shared_libs'),
     ]);
 
     const data = {
         apps: {},
         templates: [] as string[],
-        templatesVersions: [] as string[],
         routes: [] as any[],
         specialRoutes: [] as any[],
         settings: {},
@@ -40,7 +37,6 @@ router.get('/', async (req, res) => {
     };
 
     data.apps = apps.reduce((acc, v) => {
-        v.versionId = appendDigest(v.versionId, 'app');
         v.ssr = parseJSON(v.ssr);
         v.dependencies = parseJSON(v.dependencies);
         v.props = parseJSON(v.props);
@@ -71,7 +67,6 @@ router.get('/', async (req, res) => {
             'wrappedWith',
             'enforceDomain',
             'l10nManifest',
-            'versionId',
         ]);
 
         return acc;
@@ -79,14 +74,8 @@ router.get('/', async (req, res) => {
 
     data.templates = templates.map(({ name }) => name);
 
-    data.templatesVersions = templates.map(({ versionId }) => appendDigest(versionId, 'template'));
-
     routes.forEach((routeItem) => {
-        const routeVersionId = appendDigest(routeItem.versionId, 'route');
-
         routeItem = transformSpecialRoutesForConsumer(routeItem);
-
-        routeItem.versionId = routeVersionId;
 
         const currentRoutesList = routeItem.specialRole ? data.specialRoutes : data.routes;
 
@@ -108,7 +97,7 @@ router.get('/', async (req, res) => {
                     meta: {},
                 },
                 _.omitBy(
-                    _.pick(routeItem, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain', 'versionId']),
+                    _.pick(routeItem, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain']),
                     _.isNull,
                 ),
             );
@@ -136,8 +125,8 @@ router.get('/', async (req, res) => {
         return acc;
     }, {});
 
-    data.dynamicLibs = sharedLibs.reduce((acc, { name, spaBundle, l10nManifest, versionId }) => {
-        acc[name] = { spaBundle, l10nManifest, versionId: appendDigest(versionId, 'sharedLib') };
+    data.dynamicLibs = sharedLibs.reduce((acc, { name, spaBundle, l10nManifest }) => {
+        acc[name] = { spaBundle, l10nManifest };
         return acc;
     }, {});
 

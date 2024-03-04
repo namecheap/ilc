@@ -5,10 +5,6 @@ import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 import RouterDomains, { routerDomainIdSchema } from '../interfaces';
-import { Tables } from '../../db/structure'
-import { appendDigest } from '../../util/hmac'
-import { EntityTypes } from '../../versioning/interfaces';
-
 
 type RequestParams = {
     id: string;
@@ -24,14 +20,11 @@ const validateRequest = validateRequestFactory([
 ]);
 
 const getRouterDomains = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const [routerDomains] = await db
-        .selectVersionedRowsFrom<RouterDomains>(Tables.RouterDomains, 'id', EntityTypes.router_domains, [`${Tables.RouterDomains}.*`])
-        .where('id', req.params.id);
+    const [routerDomains] = await db.select().from<RouterDomains>('router_domains').where('id', req.params.id);
 
     if (!routerDomains) {
         res.status(404).send('Not found');
     } else {
-        routerDomains.versionId = appendDigest(routerDomains.versionId, 'routerDomains');
         res.status(200).send(preProcessResponse(routerDomains));
     }
 };

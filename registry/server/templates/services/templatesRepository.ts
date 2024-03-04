@@ -1,34 +1,18 @@
 import db from '../../db';
 import Template, { LocalizedTemplate } from '../interfaces';
-import { Tables } from '../../db/structure';
+import { tables } from '../../db/structure';
 import { Knex } from 'knex';
 import Transaction = Knex.Transaction;
-import { appendDigest } from '../../util/hmac';
 
 export async function readTemplateWithAllVersions(templateName: string) {
-    const [template] = await db
-        .select(`${Tables.Versioning}.id as versionId`, `${Tables.Templates}.*`)
-        .from<Template>(Tables.Templates)
-        .leftOuterJoin(Tables.Versioning, function () {
-            this.on(`${Tables.Versioning}.entity_id`, '=', `${Tables.Templates}.name`);
-        })
-        .where('name', templateName)
-        .andWhere(function () {
-            this.orWhere(`${Tables.Versioning}.entity_type`, 'templates')
-                .orWhere(`${Tables.Versioning}.entity_type`, null);
-        })
-        .orderBy(`${Tables.Versioning}.id`, 'desc')
-        .limit(1);
-
+    const [template] = await db.select().from<Template>(tables.templates).where('name', templateName);
     if (!template) {
         return undefined;
     }
 
-    template.versionId = appendDigest(template.versionId, 'template');
-
     const localizedTemplates: LocalizedTemplate[] = await db
         .select()
-        .from<LocalizedTemplate>(Tables.TemplatesLocalized)
+        .from<LocalizedTemplate>(tables.templatesLocalized)
         .where('templateName', templateName);
     template.localizedVersions = localizedTemplates.reduce(
         (acc, item) => {
@@ -43,13 +27,13 @@ export async function readTemplateWithAllVersions(templateName: string) {
 
 export async function upsertLocalizedVersions(templateName: string, localizedVersions: any, trx: Transaction) {
     const locales = Object.keys(localizedVersions);
-    const existingLocaleVersions = await db(Tables.TemplatesLocalized)
+    const existingLocaleVersions = await db(tables.templatesLocalized)
         .where((builder) => builder.where({ templateName: templateName }))
         .transacting(trx);
     const existingLocales = existingLocaleVersions.map((l) => l.locale);
     for (let v in existingLocaleVersions) {
         const locale = existingLocaleVersions[v].locale;
-        await db(Tables.TemplatesLocalized)
+        await db(tables.templatesLocalized)
             .where({
                 templateName,
                 locale: locale,
@@ -61,7 +45,7 @@ export async function upsertLocalizedVersions(templateName: string, localizedVer
     const newLocales = locales.filter((l) => !existingLocales.includes(l));
     for (let v in newLocales) {
         let locale = newLocales[v];
-        await db(Tables.TemplatesLocalized)
+        await db(tables.templatesLocalized)
             .insert({ ...localizedVersions[locale], locale, templateName })
             .transacting(trx);
     }
@@ -69,6 +53,6 @@ export async function upsertLocalizedVersions(templateName: string, localizedVer
     const deletedLocales = existingLocales.filter((l) => !locales.includes(l));
     for (let i in deletedLocales) {
         let locale = deletedLocales[i];
-        await db(Tables.TemplatesLocalized).where({ templateName, locale }).delete().transacting(trx);
+        await db(tables.templatesLocalized).where({ templateName, locale }).delete().transacting(trx);
     }
 }

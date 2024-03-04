@@ -16,7 +16,7 @@ const AuthRolesVals = Object.values(AuthRoles);
 export default interface AuthEntity {
     id: number | null;
     identifier: string;
-    secret?: string | null;
+    secret: string | null;
     provider: AuthProviders;
     role: AuthRoles;
 }
@@ -26,7 +26,6 @@ const commonSchema = {
     secret: Joi.string(),
     provider: Joi.string().valid(...AuthProvidersVals),
     role: Joi.string().valid(...AuthRolesVals),
-    versionId: Joi.string().strip(),
 };
 
 export const updateSchema = Joi.object({

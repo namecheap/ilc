@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { request, expect, requestWithAuth } from './common';
 import supertest from 'supertest';
-import exp from 'node:constants';
 
 const example = {
     url: '/api/v1/router_domains/',
@@ -81,7 +80,6 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseFetching.body).deep.equal({
                     id: routerDomainsId,
                     ...example.correct,
-                    versionId: responseFetching.body.versionId,
                 });
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
@@ -111,11 +109,9 @@ describe(`Tests ${example.url}`, () => {
 
                 const responseFetching = await req.get(example.url + routerDomainsId).expect(200);
 
-                expect(responseFetching.body.versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
                 expect(responseFetching.body).deep.equal({
                     id: routerDomainsId,
                     ...example.correct,
-                    versionId: responseFetching.body.versionId
                 });
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
@@ -134,16 +130,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const responseFetchingAll = await req.get(example.url).expect(200);
 
-
                 expect(responseFetchingAll.body).to.be.an('array').that.is.not.empty;
-                expect(responseFetchingAll.body).to.have.lengthOf(2);
-
-                expect(responseFetchingAll.body[0].versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
-
-                responseFetchingAll.body.forEach((item: any) => {
-                    delete item.versionId;
-                });
-
                 expect(responseFetchingAll.body).to.deep.include({
                     id: routerDomainsId1,
                     ...example.correct,
@@ -190,17 +177,9 @@ describe(`Tests ${example.url}`, () => {
                         responseFetching24.header['content-range'] === responseFetching13.header['content-range'],
                 ).to.be.true;
 
-                const dropVersionId = (items: any[]) => { items.forEach((item) => { delete item.versionId; }); };
-
                 expect(responseFetching01.body).to.be.an('array').with.lengthOf(2);
                 expect(responseFetching24.body).to.be.an('array').with.lengthOf(3);
                 expect(responseFetching13.body).to.be.an('array').with.lengthOf(3);
-
-                expect(responseFetching01.body[0].versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
-
-                dropVersionId(responseFetching01.body);
-                dropVersionId(responseFetching24.body);
-                dropVersionId(responseFetching13.body);
 
                 expect(responseFetching01.body).to.have.deep.members(routerDomainsList.slice(0, 1 + 1)); // "+1" since value "to" in "range" is used like "<=" instead of "<"
                 expect(responseFetching24.body).to.have.deep.members(routerDomainsList.slice(2, 4 + 1));

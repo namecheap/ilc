@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import Template, { LocalizedTemplate } from '../interfaces';
-import { Tables } from '../../db/structure';
+import { tables } from '../../db/structure';
 import { readTemplateWithAllVersions } from '../services/templatesRepository';
 import { templateSchema, validateLocalesAreSupported } from './validation';
 
@@ -52,7 +52,7 @@ function insertLocalizedVersions(locales: string[], template: Template, request:
                 locale: locale,
             };
 
-            return db(Tables.TemplatesLocalized).insert(localizedTemplate);
+            return db(tables.templatesLocalized).insert(localizedTemplate);
         }),
     );
 }

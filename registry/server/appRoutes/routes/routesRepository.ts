@@ -1,17 +1,12 @@
 import db from '../../db';
-import { Tables } from '../../db/structure'
-import { appendDigest } from '../../util/hmac';
-import { EntityTypes } from '../../versioning/interfaces';
 
 export const getRoutesById = (appRouteId: number) => {
-    const query = db
-        .selectVersionedRows(Tables.Routes, 'id', EntityTypes.routes, ['routes.id as _routeId', 'routes.*', 'route_slots.*'])
-        .from(Tables.Routes)
-        .leftJoin('route_slots', 'route_slots.routeId', 'routes.id');
-    return query
+    return db
+        .select('routes.id as _routeId', 'routes.*', 'route_slots.*')
+        .from('routes')
+        .leftJoin('route_slots', 'route_slots.routeId', 'routes.id')
         .then((appRoutes) => {
             return appRoutes.reduce((acc, appRoute) => {
-                appRoute.versionId = appendDigest(appRoute.versionId, 'route');
                 // "where" with alias doesn't work in MySql, and "having" without "groupBy" doesn't work in SQLite
                 // thats why filtering better to do here
                 if (appRoute._routeId === appRouteId) {
