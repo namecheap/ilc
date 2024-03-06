@@ -37,5 +37,5 @@ module.exports = {
             baseUrl: null,
         },
     },
-    salt: 'default_test_salt'
+    salt: 'default_test_salt',
 };

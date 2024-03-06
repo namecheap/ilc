@@ -1,5 +1,6 @@
 import db from '../../db';
 import Template, { LocalizedTemplate } from '../interfaces';
+import { EntityTypes } from '../../versioning/interfaces';
 import { Tables } from '../../db/structure';
 import { Knex } from 'knex';
 import Transaction = Knex.Transaction;
@@ -7,18 +8,8 @@ import { appendDigest } from '../../util/hmac';
 
 export async function readTemplateWithAllVersions(templateName: string) {
     const [template] = await db
-        .select(`${Tables.Versioning}.id as versionId`, `${Tables.Templates}.*`)
-        .from<Template>(Tables.Templates)
-        .leftOuterJoin(Tables.Versioning, function () {
-            this.on(`${Tables.Versioning}.entity_id`, '=', `${Tables.Templates}.name`);
-        })
-        .where('name', templateName)
-        .andWhere(function () {
-            this.orWhere(`${Tables.Versioning}.entity_type`, 'templates')
-                .orWhere(`${Tables.Versioning}.entity_type`, null);
-        })
-        .orderBy(`${Tables.Versioning}.id`, 'desc')
-        .limit(1);
+        .selectVersionedRowsFrom(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.*`])
+        .where('name', templateName);
 
     if (!template) {
         return undefined;

@@ -477,7 +477,7 @@ describe(`Tests ${example.url}`, () => {
                 const expectedRoute = {
                     id: routeId,
                     ..._.omitBy(exampleWithExistedDomainId, _.isNil),
-                    versionId: response.body.versionId
+                    versionId: response.body.versionId,
                 };
 
                 expect(response.body).deep.equal(expectedRoute);
@@ -560,7 +560,9 @@ describe(`Tests ${example.url}`, () => {
 
                 response = await req.get(example.url + routeId).expect(200);
 
-                expect(response.body).to.have.property('versionId').that.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
+                expect(response.body)
+                    .to.have.property('versionId')
+                    .that.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
 
                 const expectedRoute = {
                     id: routeId,

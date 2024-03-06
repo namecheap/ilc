@@ -11,7 +11,7 @@ const getSharedProps = async (req: Request, res: Response): Promise<void> => {
         .selectVersionedRows(Tables.AuthEntities, 'id', EntityTypes.auth_entities, [`${Tables.AuthEntities}.*`])
         .from(Tables.AuthEntities);
     sharedProps = sharedProps.map((v) => {
-        v.versionId = appendDigest(v.versionId, 'authEntities')
+        v.versionId = appendDigest(v.versionId, 'authEntities');
         delete v.secret;
         return v;
     });

@@ -10,4 +10,4 @@ export enum Tables {
     SharedProps = 'shared_props',
     TemplatesLocalized = 'templates_localized',
     Versioning = 'versioning',
-};
+}

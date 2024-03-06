@@ -108,11 +108,11 @@ describe(`Tests ${example.url}`, () => {
             let createdTemplate = { ...example.correct, localizedVersions: {} };
 
             expect(response.body.versionId).to.match(/^[0-9]+.[-_0-9a-zA-Z]{32}$/);
-            expect(response.body).deep.equal({...createdTemplate, versionId: response.body.versionId});
+            expect(response.body).deep.equal({ ...createdTemplate, versionId: response.body.versionId });
 
             response = await req.get(example.url + example.correct.name).expect(200);
 
-            expect(response.body).deep.equal({...createdTemplate, versionId: response.body.versionId});
+            expect(response.body).deep.equal({ ...createdTemplate, versionId: response.body.versionId });
         });
 
         it('should create localized versions of template', async () => {
@@ -176,7 +176,7 @@ describe(`Tests ${example.url}`, () => {
 
             const response = await reqWithAuth.get(example.url + example.correctLocalized.name).expect(200);
 
-            expect(response.body).deep.equal({...example.correctLocalized, versionId: response.body.versionId});
+            expect(response.body).deep.equal({ ...example.correctLocalized, versionId: response.body.versionId });
         });
 
         it('should return localized version of rendered template', async () => {
@@ -207,7 +207,7 @@ describe(`Tests ${example.url}`, () => {
             const response = await req.get(example.url).expect(200);
 
             expect(response.body).to.be.an('array').that.is.not.empty;
-            expect(response.body).to.deep.include({...example.correct, versionId: response.body[0].versionId});
+            expect(response.body).to.deep.include({ ...example.correct, versionId: response.body[0].versionId });
             expect(response.body[0].versionId).to.match(/^[0-9]+.[-_0-9a-zA-Z]{32}$/);
         });
 
@@ -596,6 +596,43 @@ describe(`Tests ${example.url}`, () => {
                 `,
                 });
             } finally {
+                await req.delete(example.url + template.name);
+            }
+        });
+
+        it('should return a rendered template for a specific domain', async () => {
+            const domain = 'test-domain-123.com.ote';
+            const content = '<html><head></head><body>test-domain-123</body></html>';
+            const contentUpdated = '<html><head></head><body>test-domain-123 updated</body></html>';
+            const template = { name: 'template-for-test-domain-123', content: content };
+            let routerDomainId = 0;
+            let routeId = 0;
+
+            try {
+                await req.post(example.url).send(template).expect(200);
+                await req
+                    .put(example.url + template.name)
+                    .send({ content: contentUpdated, localizedVersions: {} })
+                    .expect(200);
+
+                const postRouterDomainsResponse = await req
+                    .post('/api/v1/router_domains')
+                    .send({ domainName: domain, template500: template.name })
+                    .expect(200);
+                routerDomainId = postRouterDomainsResponse.body.id;
+
+                const postRouteResponse = await req
+                    .post('/api/v1/route')
+                    .send({ specialRole: '404', templateName: template.name, domainId: routerDomainId })
+                    .expect(200);
+                routeId = postRouteResponse.body.id;
+
+                const response = await req.get(example.url + template.name + '/rendered?domain=' + domain).expect(200);
+
+                expect(response.body.content).to.eq(contentUpdated);
+            } finally {
+                await req.delete('/api/v1/route/' + routeId);
+                await req.delete('/api/v1/router_domains/' + routerDomainId);
                 await req.delete(example.url + template.name);
             }
         });

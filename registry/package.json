@@ -16,7 +16,7 @@
         "migrate:rollback": "knex --knexfile config/knexfile.ts migrate:rollback",
         "seed": "dotenv -- knex --knexfile config/knexfile.ts seed:run",
         "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
-        "test": "cross-env NODE_ENV=test NODE_CONFIG_ENV=sqlite-test mocha",
+        "test": "DB_CLIENT=sqlite3 npm run reset && cross-env NODE_ENV=test NODE_CONFIG_ENV=sqlite-test mocha",
         "test:mysql": "cross-env-shell NODE_ENV=test NODE_CONFIG_ENV=mysql-test DB_CLIENT=mysql \"npm run reset && mocha\" ",
         "test:postgres": "cross-env-shell NODE_ENV=test NODE_CONFIG_ENV=postgres-test DB_CLIENT=pg \"npm run reset && mocha\" ",
         "test:ci": "npm run migrate && cross-env NODE_ENV=test nyc mocha --forbid-only",

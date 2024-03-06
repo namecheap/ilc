@@ -3,15 +3,14 @@ import { Request, Response } from 'express';
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import App, { appNameSchema } from '../interfaces';
-import { Tables } from '../../db/structure'
+import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 
 const getApps = async (req: Request, res: Response): Promise<void> => {
     const filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
 
-    const query = db
-        .selectVersionedRowsFrom<App>(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]);
+    const query = db.selectVersionedRowsFrom<App>(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]);
 
     if (filters.id || filters.name) {
         query.whereIn('name', [...(filters.id || filters.name)]);

@@ -24,7 +24,9 @@ const validateRequest = validateRequestFactory([
 
 const getSharedProps = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const [record] = await db
-        .selectVersionedRowsFrom<SharedProps>(Tables.AuthEntities, 'id', EntityTypes.auth_entities, [`${Tables.AuthEntities}.*`])
+        .selectVersionedRowsFrom<SharedProps>(Tables.AuthEntities, 'id', EntityTypes.auth_entities, [
+            `${Tables.AuthEntities}.*`,
+        ])
         .where('id', req.params.id);
 
     if (!record) {

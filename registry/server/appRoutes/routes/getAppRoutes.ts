@@ -5,15 +5,18 @@ import db from '../../db';
 import { AppRoute } from '../interfaces';
 import { prepareAppRoutesToRespond } from '../services/prepareAppRoute';
 import { transformSpecialRoutesForConsumer, SPECIAL_PREFIX } from '../services/transformSpecialRoutes';
-import { Tables } from '../../db/structure'
-import { appendDigest } from '../../util/hmac'
+import { Tables } from '../../db/structure';
+import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 
 const getAppRoutes = async (req: Request, res: Response) => {
     const filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
 
     const query = db
-        .selectVersionedRowsFrom<AppRoute>(Tables.Routes, 'id', EntityTypes.routes, ['routes.id as routeId', 'routes.*'])
+        .selectVersionedRowsFrom<AppRoute>(Tables.Routes, 'id', EntityTypes.routes, [
+            'routes.id as routeId',
+            'routes.*',
+        ])
         .orderBy('orderPos', 'ASC');
 
     if (filters.showSpecial === true) {

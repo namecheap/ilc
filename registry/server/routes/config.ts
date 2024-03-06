@@ -19,7 +19,10 @@ router.get('/', async (req, res) => {
         knex.selectVersionedRowsFrom(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]),
         knex.selectVersionedRowsFrom(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.name`]),
         knex
-            .selectVersionedRowsFrom(Tables.Routes, 'id', EntityTypes.routes, [`${Tables.Routes}.*`, `${Tables.RouteSlots}.*`])
+            .selectVersionedRowsFrom(Tables.Routes, 'id', EntityTypes.routes, [
+                `${Tables.Routes}.*`,
+                `${Tables.RouteSlots}.*`,
+            ])
             .leftJoin('route_slots', 'route_slots.routeId', 'routes.id')
             .orderBy('orderPos', 'ASC'),
         knex.select().from('shared_props'), // No versionId for sharedProps in the response

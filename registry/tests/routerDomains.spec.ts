@@ -115,7 +115,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseFetching.body).deep.equal({
                     id: routerDomainsId,
                     ...example.correct,
-                    versionId: responseFetching.body.versionId
+                    versionId: responseFetching.body.versionId,
                 });
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
@@ -133,7 +133,6 @@ describe(`Tests ${example.url}`, () => {
                 routerDomainsId2 = responseCreation2.body.id;
 
                 const responseFetchingAll = await req.get(example.url).expect(200);
-
 
                 expect(responseFetchingAll.body).to.be.an('array').that.is.not.empty;
                 expect(responseFetchingAll.body).to.have.lengthOf(2);
@@ -190,7 +189,11 @@ describe(`Tests ${example.url}`, () => {
                         responseFetching24.header['content-range'] === responseFetching13.header['content-range'],
                 ).to.be.true;
 
-                const dropVersionId = (items: any[]) => { items.forEach((item) => { delete item.versionId; }); };
+                const dropVersionId = (items: any[]) => {
+                    items.forEach((item) => {
+                        delete item.versionId;
+                    });
+                };
 
                 expect(responseFetching01.body).to.be.an('array').with.lengthOf(2);
                 expect(responseFetching24.body).to.be.an('array').with.lengthOf(3);

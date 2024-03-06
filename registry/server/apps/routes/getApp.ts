@@ -6,7 +6,7 @@ import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 import App, { appNameSchema } from '../interfaces';
-import { Tables } from '../../db/structure'
+import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 

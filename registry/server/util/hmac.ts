@@ -9,8 +9,9 @@ const salt = config.get<string>('salt');
  */
 export function appendDigest(
     value: { toString: () => string } | null | undefined,
-    kind: 'app' | 'authEntities' | 'route' | 'routerDomains' | 'sharedLib' | 'sharedProp' | 'template'): string {
-    const string = value === null || value === undefined ? "0" : value.toString();
+    kind: 'app' | 'authEntities' | 'route' | 'routerDomains' | 'sharedLib' | 'sharedProp' | 'template',
+): string {
+    const string = value === null || value === undefined ? '0' : value.toString();
     const hasher = createHmac('sha256', salt);
     const digest = hasher.update(`${kind}${string}`).digest('base64url').substring(0, 32);
     return `${string}.${digest}`;

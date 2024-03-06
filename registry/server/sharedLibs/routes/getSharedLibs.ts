@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import { Tables } from '../../db/structure'
-import { appendDigest } from '../../util/hmac'
+import { Tables } from '../../db/structure';
+import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 
 const getSharedLibs = async (req: Request, res: Response): Promise<void> => {

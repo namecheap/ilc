@@ -9,6 +9,7 @@ import validateRequestFactory from '../../common/services/validateRequest';
 import renderTemplate from '../services/renderTemplate';
 import errors from '../errors';
 import { Tables } from '../../db/structure';
+import { EntityTypes } from '../../versioning/interfaces';
 import { templateNameSchema } from './validation';
 import RouterDomains from '../../routerDomains/interfaces';
 import { getLogger } from '../../util/logger';
@@ -38,22 +39,12 @@ async function getTemplateByDomain(domain: string, templateName: string): Promis
     }
 
     const [template] = await db
-        .select('versioning.id as versionId', ', templates.*')
-        .from<Template>('templates')
+        .selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.*`])
         .join('routes', 'templates.name', 'routes.templateName')
-        .leftOuterJoin('versioning', function () {
-            this.on('versioning.entity_id', '=', 'templates.name');
-        })
         .where({
             domainId: domainItem.id,
-            name: templateName
-        })
-        .andWhere(function () {
-            this.orWhere('versioning.entity_type', 'templates')
-                .orWhere('versioning.entity_type', null);
-        })
-        .orderBy('versioning.id', 'desc')
-        .limit(1);
+            name: templateName,
+        });
 
     if (template) {
         template.versionId = appendDigest(template.versionId, 'template');
@@ -64,18 +55,8 @@ async function getTemplateByDomain(domain: string, templateName: string): Promis
 
 async function getTemplateByName(templateName: string): Promise<Template | undefined> {
     const [template] = await db
-        .select('versioning.id as versionId', 'templates.*')
-        .from<Template>('templates')
-        .leftOuterJoin('versioning', function () {
-            this.on('versioning.entity_id', '=', 'templates.name');
-        })
-        .where('templates.name', templateName)
-        .andWhere(function () {
-            this.orWhere('versioning.entity_type', 'templates')
-                .orWhere('versioning.entity_type', null);
-        })
-        .orderBy('versioning.id', 'desc')
-        .limit(1);
+        .selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.*`])
+        .where('name', templateName);
 
     if (template) {
         template.versionId = appendDigest(template.versionId, 'template');
