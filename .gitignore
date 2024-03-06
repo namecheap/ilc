@@ -6,3 +6,5 @@ node_modules
 /dbfiles
 /mkdocs_dist
 registry/lde/dbfiles
+.yalc
+yalc.lock

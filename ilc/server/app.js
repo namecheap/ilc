@@ -110,14 +110,14 @@ module.exports = (registryService, pluginManager, context) => {
         throw new Error('500 page test error');
     });
 
-    app.all('*', async (req, res) => {
+    app.all('*', async (req, reply) => {
         const currentDomain = req.hostname;
         let registryConfig = await registryService.getConfig({ filter: { domain: currentDomain } });
         const url = req.raw.url;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
         const processedUrl = urlProcessor.process(url);
         if (processedUrl !== url) {
-            res.redirect(processedUrl);
+            reply.redirect(processedUrl);
             return;
         }
 
@@ -144,7 +144,7 @@ module.exports = (registryService, pluginManager, context) => {
         const redirectTo = await guardManager.redirectTo(req);
 
         if (redirectTo) {
-            res.redirect(
+            reply.redirect(
                 urlProcessor.process(
                     i18n.localizeUrl(registryConfig.settings.i18n, redirectTo, {
                         locale: req.raw.ilcState.locale,
@@ -164,7 +164,7 @@ module.exports = (registryService, pluginManager, context) => {
         );
 
         try {
-            res.res = csp.setHeader(res.res);
+            reply.res = csp.setHeader(reply.res);
         } catch (error) {
             errorHandlingService.noticeError(error, {
                 message: 'CSP object processing error',
@@ -176,16 +176,16 @@ module.exports = (registryService, pluginManager, context) => {
             const locale = req.raw.ilcState.locale;
             let { data } = await registryService.getTemplate(route.template, { locale });
 
-            res.header('Content-Type', 'text/html');
-            res.status(200).send(data.content);
+            reply.header('Content-Type', 'text/html');
+            reply.status(200).send(data.content);
             return;
         }
 
         const slotCollection = new SlotCollection(route.slots, registryConfig);
         slotCollection.isValid();
 
-        res.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
-        tailor.requestHandler(req.raw, res.res);
+        reply.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
+        tailor.requestHandler(req.raw, reply.res);
     });
 
     app.setErrorHandler(errorHandlingService.handleError);

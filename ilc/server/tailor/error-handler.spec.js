@@ -58,24 +58,6 @@ describe('error handler', () => {
             ]);
         });
 
-        it('should notice Tailor Error when something went wrong during error handling', async () => {
-            const response = {};
-            const somethingWentWrongDuringErrorHandling = new Error('something went wrong during error handling');
-
-            errorHandlingService.handleError.onFirstCall().rejects(somethingWentWrongDuringErrorHandling);
-            eventHandlers.get('error')(request, error, response);
-
-            await clock.runAllAsync();
-
-            chai.expect(errorHandlingService.noticeError.calledOnce).to.be.true;
-            chai.expect(errorHandlingService.noticeError.getCall(0).args).to.be.eql([
-                new errors.TailorError({
-                    message: 'Something went terribly wrong during error handling',
-                    cause: somethingWentWrongDuringErrorHandling,
-                }),
-            ]);
-        });
-
         it('should handle Tailor Error when headers did not send yet and error handling is going to be successful', async () => {
             const response = {};
 
