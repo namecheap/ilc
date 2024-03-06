@@ -52,7 +52,6 @@ module.exports = class ErrorHandler {
 
     handleError = async (err, req, res) => {
         const errorId = uuidv4();
-
         // This handler serves as Fastify & Tailor handler.
         // While Fastify will pass it's own Reply object
         // Tailor passes http.ServerResponse from Node core

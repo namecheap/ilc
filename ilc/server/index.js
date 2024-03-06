@@ -1,3 +1,5 @@
+import 'source-map-support/register';
+
 const path = require('path');
 const { context } = require('./context/context');
 

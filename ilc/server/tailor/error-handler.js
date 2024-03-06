@@ -5,31 +5,28 @@ const errors = require('./errors');
  * @param {Tailor} tailor
  * @param {ErrorHandler} errorHandlingService
  */
-module.exports = function setup(tailor, errorHandlingService) {
-    //TODO: Handle Bot specific behaviour
-    function handleError(req, err, res) {
-        const urlPart = `while processing request "${req.originalUrl}"`;
-        if (res !== undefined) {
-            // If fragment respond with 404 - force special 404 route
-            // See "process-fragment-response.js", there we throw this error
-            if (err.cause instanceof errors.Fragment404Response) {
-                req.ilcState.forceSpecialRoute = '404';
-                tailor.requestHandler(req, res);
-                return;
-            }
 
-            const e = new errors.TailorError({ message: `Tailor error ${urlPart}`, cause: err });
-            errorHandlingService.handleError(e, req, res).catch((err) => {
-                errorHandlingService.noticeError(
-                    new errors.TailorError({
-                        message: 'Something went terribly wrong during error handling',
-                        cause: err,
-                    }),
-                );
-            });
-        } else {
+const IGNORED_ERRORS = ['SeobotsGuardStreamError'];
+
+module.exports = function setup(tailor, errorHandlingService) {
+    function handleError(req, error, res) {
+        const urlPart = `while processing request "${req.originalUrl}"`;
+        // If fragment respond with 404 - force special 404 route
+        // See "process-fragment-response.js", there we throw this error
+        if (error.cause instanceof errors.Fragment404Response) {
+            req.ilcState.forceSpecialRoute = '404';
+            tailor.requestHandler(req, res);
+            return;
+        }
+
+        const wrappedError = new errors.TailorError({ message: `Tailor error ${urlPart}`, cause: error });
+        const shouldWriteResponse = Boolean(res);
+
+        if (shouldWriteResponse) {
+            errorHandlingService.handleError(wrappedError, req, res);
+        } else if (!IGNORED_ERRORS.includes(error.name)) {
             errorHandlingService.noticeError(
-                new errors.TailorError({ message: `Tailor error while headers already sent ${urlPart}`, cause: err }),
+                wrappedError,
                 { userAgent: req.headers['user-agent'] },
                 { reportError: !req.ldeRelated },
             );
