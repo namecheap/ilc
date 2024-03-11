@@ -1,6 +1,7 @@
 import knex from 'knex';
 import { format } from 'path';
 process.env.TZ = 'UTC';
+import app from '../server/app';
 import supertest from 'supertest';
 
 import db from '../server/db';
@@ -29,6 +30,43 @@ const dataStub = [
         created_at: formatDate(new Date('2023-09-22T14:18:24.000Z')),
     },
 ];
+
+describe('Versioning Properties', () => {
+    let req: supertest.SuperTest<supertest.Test>;
+
+    beforeEach(async () => {
+        req = await request();
+    });
+
+    it('versionId should be increased after update', async () => {
+        try {
+            await req
+                .post('/api/v1/shared_props')
+                .send({ name: 'sharedprops1', props: { a: 'a1' }, ssrProps: {} })
+                .expect(200);
+
+            var initialGetResponse = (await req.get('/api/v1/shared_props/sharedprops1').send().expect(200)).body;
+
+            await req
+                .put('/api/v1/shared_props/sharedprops1')
+                .send({ props: { a: 'a2' }, ssrProps: {} })
+                .expect(200);
+
+            var secondGetResponse = (await req.get('/api/v1/shared_props/sharedprops1').send().expect(200)).body;
+
+            expect(initialGetResponse.props).to.eql({ a: 'a1' });
+            expect(secondGetResponse.props).to.eql({ a: 'a2' });
+
+            const initialVersionId = initialGetResponse.versionId.split('.');
+            const secondVersionId = secondGetResponse.versionId.split('.');
+
+            expect(parseInt(secondVersionId[0])).to.be.greaterThan(parseInt(initialVersionId[0]));
+            expect(parseInt(secondVersionId[1])).to.not.eql(initialVersionId[1]);
+        } finally {
+            await req.delete('/api/v1/shared_props/sharedprops1');
+        }
+    });
+});
 
 describe(`Tests ${basePath}`, () => {
     let req: supertest.SuperTest<supertest.Test>;

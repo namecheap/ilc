@@ -42,7 +42,7 @@ function selectVersionedRows(knex: VersionedKnex) {
             .table(Tables.Versioning)
             .max('id')
             .as('versionId')
-            .where('entity_id', knex.raw(`cast(${table}.${key} as char)`))
+            .where('entity_id', knex.raw(`cast(${table}.${key} as char(255))`))
             .andWhere('entity_type', entityType);
         return knex.select.call(knex, columns.concat([versionIdQuery]));
     };
