@@ -1,8 +1,11 @@
 const chai = require('chai');
+const fastify = require('fastify');
 const supertest = require('supertest');
 const nock = require('nock');
 const config = require('config');
-const defaultErrorPage = require('../../server/errorHandler/defaultErrorPage');
+const fs = require('fs');
+const path = require('path');
+const { StatusCodes, ReasonPhrases } = require('http-status-codes');
 const localStorage = require('../../common/localStorage');
 const helpers = require('../../tests/helpers');
 const { context } = require('../context/context');
@@ -10,6 +13,8 @@ const ErrorHandler = require('./ErrorHandler');
 
 const createApp = require('../app');
 const sinon = require('sinon');
+
+const defaultErrorPage = fs.readFileSync(path.resolve(__dirname, '../../server/assets/defaultErrorPage.html'), 'utf-8');
 
 describe('ErrorHandler', () => {
     const errorIdRegExp = /(?<errorId>[\d\w]{8}-[\d\w]{4}-[\d\w]{4}-[\d\w]{4}-[\d\w]{12})/;
@@ -82,8 +87,43 @@ describe('ErrorHandler', () => {
 
         const response = await server.get('/_ilc/500').expect(500);
 
-        chai.expect(response.text).to.be.eql(defaultErrorPage);
+        chai.expect(response.text).equal(
+            defaultErrorPage
+                .replaceAll('%STATUS_CODE%', StatusCodes.INTERNAL_SERVER_ERROR)
+                .replaceAll('%STATUS_MESSAGE%', ReasonPhrases.INTERNAL_SERVER_ERROR),
+        );
         chai.expect(response.headers['content-type']).to.be.eql('text/html; charset=utf-8');
+    });
+
+    it('should send an client error page', async () => {
+        const errorService = {
+            noticeError: sinon.stub(),
+        };
+
+        const logger = {
+            error: sinon.stub(),
+            warn: sinon.stub(),
+        };
+
+        const errorHandler = new ErrorHandler({}, errorService, logger);
+
+        const app = fastify();
+        const error = new Error('My Error');
+        app.get('/error', (req, reply) => {
+            errorHandler.handleClientError(reply, error, StatusCodes.IM_A_TEAPOT);
+        });
+        await app.ready();
+
+        const server = supertest(app.server);
+        const { text } = await server.get(`/error`).expect(StatusCodes.IM_A_TEAPOT);
+        chai.expect(text).equal(
+            defaultErrorPage
+                .replaceAll('%STATUS_CODE%', StatusCodes.IM_A_TEAPOT)
+                .replaceAll('%STATUS_MESSAGE%', ReasonPhrases.IM_A_TEAPOT),
+        );
+        sinon.assert.calledOnceWithExactly(logger.warn, error);
+        sinon.assert.notCalled(logger.error);
+        sinon.assert.notCalled(errorService.noticeError);
     });
 
     describe('when static error page config is specified', () => {

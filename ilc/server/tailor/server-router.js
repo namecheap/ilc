@@ -18,7 +18,7 @@ module.exports = class ServerRouter {
     #router = null;
 
     /**
-     * @param {Console} logger
+     * @param {Logger} logger
      * @param {http.IncomingMessage} request
      * @param {string} url
      */

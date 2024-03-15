@@ -1,17 +1,12 @@
-const newrelic = require('newrelic');
+import { AsyncResource } from 'node:async_hooks';
+import { renderTemplateHandlerFactory } from './routes/renderTemplateHandlerFactory';
+import { wildcardRequestHandlerFactory } from './routes/wildcardRequestHandlerFactory';
+
 const config = require('config');
 const fastify = require('fastify');
-const tailorFactory = require('./tailor/factory');
 const serveStatic = require('./serveStatic');
 const errorHandlingService = require('./errorHandler/factory');
 const i18n = require('./i18n');
-const GuardManager = require('./GuardManager');
-const UrlProcessor = require('../common/UrlProcessor');
-const ServerRouter = require('./tailor/server-router');
-const mergeConfigs = require('./tailor/merge-configs');
-const parseOverrideConfig = require('./tailor/parse-override-config');
-const { SlotCollection } = require('../common/Slot/SlotCollection');
-const CspBuilderService = require('./services/CspBuilderService');
 const Application = require('./application/application');
 const reportingPluginManager = require('./plugins/reportingPlugin');
 const AccessLogger = require('./logger/accessLogger');
@@ -23,7 +18,6 @@ const accessLogger = new AccessLogger(config);
  * @param {Registry} registryService
  */
 module.exports = (registryService, pluginManager, context) => {
-    const guardManager = new GuardManager(pluginManager);
     const reportingPlugin = reportingPluginManager.getInstance();
 
     const appConfig = Application.getConfig(reportingPlugin);
@@ -31,9 +25,15 @@ module.exports = (registryService, pluginManager, context) => {
 
     const app = fastify(appConfig);
 
+    const asyncResourceSymbol = Symbol('asyncResource');
+
     app.addHook('onRequest', (req, reply, done) => {
         context.run({ request: req }, async () => {
             try {
+                const asyncResource = new AsyncResource('fastify-request-context');
+                req[asyncResourceSymbol] = asyncResource;
+                const doneWithContext = () => asyncResource.runInAsyncScope(done, req.raw);
+
                 const { url, method } = req.raw;
                 accessLogger.logRequest();
 
@@ -46,7 +46,7 @@ module.exports = (registryService, pluginManager, context) => {
                 req.raw.ilcState = {};
 
                 if (isStaticFile(url) || isHealthCheck(url) || ['OPTIONS', 'HEAD'].includes(method)) {
-                    return done();
+                    return doneWithContext();
                 }
 
                 const domainName = req.hostname;
@@ -58,39 +58,36 @@ module.exports = (registryService, pluginManager, context) => {
                 );
 
                 await i18nOnRequest(req, reply);
-                done();
+
+                doneWithContext();
             } catch (error) {
                 errorHandlingService.handleError(error, req, reply);
             }
         });
     });
 
-    app.addHook('onResponse', (req, reply, done) => {
-        context.run({ request: req }, async () => {
-            try {
-                accessLogger.logResponse({
-                    statusCode: reply.statusCode,
-                    responseTime: reply.getResponseTime(),
-                });
-                done();
-            } catch (error) {
-                errorHandlingService.handleError(error);
-            }
-        });
+    /**
+     * Solves issue when async context is lost in webpack-dev-middleware during initial bundle build
+     * Took from here
+     * https://github.com/fastify/fastify-request-context/blob/master/index.js#L46
+     * TODO: after migration to fastify v4 makes sense to use above plugin instead of custom impl
+     */
+    app.addHook('preValidation', (req, res, done) => {
+        const asyncResource = req[asyncResourceSymbol];
+        asyncResource.runInAsyncScope(done, req.raw);
     });
 
-    const autoInjectNrMonitoringConfig = config.get('newrelic.automaticallyInjectBrowserMonitoring');
-    const autoInjectNrMonitoring =
-        typeof autoInjectNrMonitoringConfig === 'boolean'
-            ? autoInjectNrMonitoringConfig
-            : autoInjectNrMonitoringConfig !== 'false';
-    const tailor = tailorFactory(
-        registryService,
-        config.get('cdnUrl'),
-        config.get('newrelic.customClientJsWrapper'),
-        autoInjectNrMonitoring,
-        logger,
-    );
+    app.addHook('onResponse', (req, reply, done) => {
+        try {
+            accessLogger.logResponse({
+                statusCode: reply.statusCode,
+                responseTime: reply.getResponseTime(),
+            });
+            done();
+        } catch (error) {
+            errorHandlingService.handleError(error);
+        }
+    });
 
     if (config.get('cdnUrl') === null) {
         app.use(config.get('static.internalUrl'), serveStatic(config.get('productionMode')));
@@ -98,95 +95,14 @@ module.exports = (registryService, pluginManager, context) => {
 
     app.register(require('./ping'));
 
-    app.get('/_ilc/api/v1/registry/template/:templateName', async (req, res) => {
-        const currentDomain = req.hostname;
-        const locale = req.raw.ilcState.locale;
-        const data = await registryService.getTemplate(req.params.templateName, { locale, forDomain: currentDomain });
-        res.status(200).send(data.data.content);
-    });
+    app.get('/_ilc/api/v1/registry/template/:templateName', renderTemplateHandlerFactory(registryService));
 
     // Route to test 500 page appearance
     app.get('/_ilc/500', async () => {
         throw new Error('500 page test error');
     });
 
-    app.all('*', async (req, reply) => {
-        const currentDomain = req.hostname;
-        let registryConfig = await registryService.getConfig({ filter: { domain: currentDomain } });
-        const url = req.raw.url;
-        const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
-        const processedUrl = urlProcessor.process(url);
-        if (processedUrl !== url) {
-            reply.redirect(processedUrl);
-            return;
-        }
-
-        req.headers['x-request-host'] = req.hostname;
-        req.headers['x-request-uri'] = url;
-
-        const overrideConfigs = parseOverrideConfig(
-            req.headers.cookie,
-            registryConfig.settings.overrideConfigTrustedOrigins,
-            logger,
-        );
-        // Excluding LDE related transactions from NewRelic
-        if (overrideConfigs !== null) {
-            req.raw.ldeRelated = true;
-            newrelic.getTransaction().ignore();
-        }
-
-        registryConfig = mergeConfigs(registryConfig, overrideConfigs);
-
-        const unlocalizedUrl = i18n.unlocalizeUrl(registryConfig.settings.i18n, url);
-        req.raw.registryConfig = registryConfig;
-        req.raw.router = new ServerRouter(req.log, req.raw, unlocalizedUrl);
-
-        const redirectTo = await guardManager.redirectTo(req);
-
-        if (redirectTo) {
-            reply.redirect(
-                urlProcessor.process(
-                    i18n.localizeUrl(registryConfig.settings.i18n, redirectTo, {
-                        locale: req.raw.ilcState.locale,
-                    }),
-                ),
-            );
-            return;
-        }
-
-        const route = req.raw.router.getRoute();
-
-        const csp = new CspBuilderService(
-            registryConfig.settings.cspConfig,
-            !!registryConfig.settings.cspEnableStrict,
-            !!req.raw.ldeRelated,
-            registryConfig.settings.cspTrustedLocalHosts,
-        );
-
-        try {
-            reply.res = csp.setHeader(reply.res);
-        } catch (error) {
-            errorHandlingService.noticeError(error, {
-                message: 'CSP object processing error',
-            });
-        }
-
-        const isRouteWithoutSlots = !Object.keys(route.slots).length;
-        if (isRouteWithoutSlots) {
-            const locale = req.raw.ilcState.locale;
-            let { data } = await registryService.getTemplate(route.template, { locale });
-
-            reply.header('Content-Type', 'text/html');
-            reply.status(200).send(data.content);
-            return;
-        }
-
-        const slotCollection = new SlotCollection(route.slots, registryConfig);
-        slotCollection.isValid();
-
-        reply.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
-        tailor.requestHandler(req.raw, reply.res);
-    });
+    app.all('*', wildcardRequestHandlerFactory(logger, registryService, pluginManager));
 
     app.setErrorHandler(errorHandlingService.handleError);
 

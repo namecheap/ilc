@@ -1,9 +1,9 @@
 const axios = require('axios');
 const urljoin = require('url-join');
-const extendError = require('@namecheap/error-extender');
 const { isTemplateValid } = require('./isTemplateValid');
+const { RegistryError, ValidationRegistryError, NotFoundRegistryError } = require('./errors');
 
-const RegistryError = extendError('RegistryError');
+const VALID_TEMPLATE_NAME = /^[a-zA-Z0-9\-_]{1,50}$/;
 
 module.exports = class Registry {
     #address;
@@ -94,6 +94,11 @@ module.exports = class Registry {
     }
 
     #getTemplate = async (templateName, { locale, domain }) => {
+        if (!VALID_TEMPLATE_NAME.test(templateName)) {
+            throw new ValidationRegistryError({
+                message: `Invalid template name ${templateName}`,
+            });
+        }
         this.#logger.debug('Calling get template registry endpoint...');
 
         const params = new URLSearchParams();
@@ -117,10 +122,19 @@ module.exports = class Registry {
         let res;
         try {
             res = await axios.get(tplUrl, { responseType: 'json' });
-        } catch (e) {
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 404) {
+                throw new NotFoundRegistryError({
+                    message: `Not found template "${templateName}" in registry`,
+                    cause: error,
+                    data: {
+                        requestedUrl: tplUrl,
+                    },
+                });
+            }
             throw new RegistryError({
                 message: `Error while requesting rendered template "${templateName}" from registry`,
-                cause: e,
+                cause: error,
                 data: {
                     requestedUrl: tplUrl,
                 },
