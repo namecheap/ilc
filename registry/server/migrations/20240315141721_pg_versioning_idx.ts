@@ -3,7 +3,7 @@ import { isPostgres } from '../util/db';
 
 export async function up(knex: Knex): Promise<void> {
     if (isPostgres(knex)) {
-        return knex.raw('CREATE INDEX versioning_entity_idx ON public."versioning" (entity_type,entity_id,id DESC);');
+        return knex.raw('CREATE INDEX versioning_entity_idx ON "versioning" (entity_type,entity_id,id DESC);');
     }
 }
 
