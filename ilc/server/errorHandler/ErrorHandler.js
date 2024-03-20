@@ -1,9 +1,13 @@
+const fs = require('fs');
+const path = require('path');
+const { StatusCodes, getReasonPhrase } = require('http-status-codes');
 const uuidv4 = require('uuid/v4');
 const extendError = require('@namecheap/error-extender');
 const config = require('config');
 const { readFileSync } = require('fs');
 const ErrorHandlingError = extendError('ErrorHandlingError');
-const defaultErrorPage = require('./defaultErrorPage');
+
+const defaultErrorPage = fs.readFileSync(path.resolve(__dirname, '../assets/defaultErrorPage.html'), 'utf-8');
 
 module.exports = class ErrorHandler {
     #registryService;
@@ -19,9 +23,9 @@ module.exports = class ErrorHandler {
 
     /**
      *
-     * @param {Error} err
+     * @param {any} err
      * @param {any} errInfo
-     * @param {Object} options
+     * @param {Object} [options]
      * @param {Boolean} options.reportError = true
      */
     noticeError(err, errInfo = {}, options) {
@@ -78,7 +82,7 @@ module.exports = class ErrorHandler {
             let data = await this.#registryService.getTemplate('500', { locale, forDomain: currentDomain });
             data = data.data.content.replace('%ERRORID%', `Error ID: ${errorId}`);
 
-            this.#ensureInternalErrorHeaders(nres);
+            this.#ensureInternalErrorHeaders(nres, StatusCodes.INTERNAL_SERVER_ERROR);
             nres.write(data);
             nres.end();
         } catch (causeErr) {
@@ -94,18 +98,26 @@ module.exports = class ErrorHandler {
         }
     };
 
-    #ensureInternalErrorHeaders(nres) {
+    async handleClientError(reply, error, statusCode) {
+        this.#logger.warn(error);
+        this.#writeStaticError(reply.res, statusCode);
+    }
+
+    #ensureInternalErrorHeaders(nres, statusCode) {
         nres.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         nres.setHeader('Pragma', 'no-cache');
         nres.setHeader('Content-Type', 'text/html; charset=utf-8');
-        nres.statusCode = 500;
+        nres.statusCode = statusCode;
     }
 
-    #writeStaticError(nres) {
-        this.#ensureInternalErrorHeaders(nres);
-        let content = this.#readStaticErrorPage(defaultErrorPage);
-
-        nres.write(content);
+    #writeStaticError(nres, statusCode = StatusCodes.INTERNAL_SERVER_ERROR) {
+        this.#ensureInternalErrorHeaders(nres, statusCode);
+        const errorPageTemplate = this.#readStaticErrorPage(defaultErrorPage);
+        const statusMessage = getReasonPhrase(statusCode);
+        const errorPage = errorPageTemplate
+            .replaceAll('%STATUS_CODE%', statusCode)
+            .replaceAll('%STATUS_MESSAGE%', statusMessage);
+        nres.write(errorPage);
         nres.end();
     }
 

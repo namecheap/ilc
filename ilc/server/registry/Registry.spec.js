@@ -3,6 +3,7 @@ const sinon = require('sinon');
 const nock = require('nock');
 
 const Registry = require('./Registry');
+const { ValidationRegistryError, NotFoundRegistryError } = require('./errors');
 
 describe('Registry', () => {
     const address = 'http://registry:8080/';
@@ -391,9 +392,7 @@ describe('Registry', () => {
 
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
-                .to.eventually.rejectedWith(
-                    'Error while requesting rendered template "anotherErrorTemplate" from registry',
-                );
+                .to.eventually.rejectedWith(NotFoundRegistryError);
         });
 
         it('getRouterDomains should throw error', async () => {
@@ -476,6 +475,17 @@ describe('Registry', () => {
             await chai
                 .expect(registry.getTemplate('anotherErrorTemplate'))
                 .to.eventually.rejectedWith('Invalid structure in template "anotherErrorTemplate"');
+        });
+        it('should throw error if template name is not valid', async () => {
+            const cases = ['', '../../package.json', 'A'.repeat(51)];
+
+            await Promise.all(
+                cases.map(async (x) => {
+                    const registry = new Registry(address, cacheWrapperMock, logger);
+
+                    await chai.expect(registry.getTemplate(x)).to.eventually.rejectedWith(ValidationRegistryError);
+                }),
+            );
         });
     });
 
