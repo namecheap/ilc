@@ -100,6 +100,7 @@ module.exports = class ErrorHandler {
 
     async handleClientError(reply, error, statusCode) {
         this.#logger.warn(error);
+        reply.sent = true;
         this.#writeStaticError(reply.res, statusCode);
     }
 
