@@ -1,13 +1,13 @@
 import newrelic from 'newrelic';
-import extendError from '@namecheap/error-extender';
+import { setErrorData } from '../util/helpers';
 import { getLogger } from '../util/logger';
 
-function noticeError(error: Error, errorInfo = {}): void {
-    const additionalInfo = Object.assign({}, errorInfo);
-    newrelic.noticeError(error, additionalInfo);
+type ErrorAttributes = { [key: string]: string | number | boolean };
 
-    const ExtendedError = extendError(error.name);
-    getLogger().error(new ExtendedError({ cause: error, data: additionalInfo, message: error.message }));
+export function noticeError(error: Error, customAttributes: ErrorAttributes = {}): void {
+    newrelic.noticeError(error, { ...customAttributes });
+    setErrorData(error, customAttributes);
+    getLogger().error(error);
 }
 
 export default noticeError;

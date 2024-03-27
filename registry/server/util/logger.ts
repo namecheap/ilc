@@ -1,7 +1,7 @@
 import { Logger } from 'ilc-plugins-sdk';
 import { getPluginManagerInstance } from './pluginManager';
 import { storage, Store } from '../middleware/context';
-import errorExtender, { ExtendedError } from '@namecheap/error-extender';
+import { setErrorData } from './helpers';
 
 type LogContext = Omit<Store, 'user' | 'reqId'> & {
     userId?: string;
@@ -21,9 +21,7 @@ const loggerProxyHandler: ProxyHandler<Logger> = {
         }
         const requestIdKey = getPluginManagerInstance().getReportingPlugin().requestIdLogLabel ?? 'operationId';
         return function (
-            ...args:
-                | [arg1: object | Error | ExtendedError, arg2: string | undefined, ...args: any[]]
-                | [arg1: string, ...args: any[]]
+            ...args: [arg1: object | Error, arg2: string | undefined, ...args: any[]] | [arg1: string, ...args: any[]]
         ) {
             const store = storage.getStore();
             const [arg1, ...restArgs] = args;
@@ -44,14 +42,8 @@ const loggerProxyHandler: ProxyHandler<Logger> = {
             }
 
             if (arg1 instanceof Error) {
-                if ('data' in arg1 && typeof arg1['data'] === 'object' && arg1['data'] !== null) {
-                    Object.assign(arg1['data'], logContext);
-                    return originalMember.apply(target, args);
-                } else {
-                    const ExtendedError = errorExtender(arg1.name);
-                    const errorWithData = new ExtendedError({ message: arg1.message, data: logContext, cause: arg1 });
-                    return originalMember.call(target, errorWithData, ...restArgs);
-                }
+                setErrorData(arg1, logContext);
+                return originalMember.apply(target, args);
             }
 
             if (typeof arg1 === 'object' && arg1 !== null) {

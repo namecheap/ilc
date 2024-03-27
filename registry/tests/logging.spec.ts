@@ -80,7 +80,17 @@ describe('Logging', () => {
         await runScenario(logObjectHandler);
         sinon.assert.calledWith(
             errorLog,
-            sinon.match({ message: 'desc', data: sinon.match({ userId: 'root', operationId: sinon.match.string }) }),
+            sinon.match({
+                message: 'desc',
+                stack: sinon.match.string,
+                data: {
+                    userId: 'root',
+                    operationId: sinon.match.string,
+                    path: '/test',
+                    clientIp: sinon.match.string,
+                    domain: '127.0.0.1',
+                },
+            }),
         );
     });
 
@@ -88,7 +98,7 @@ describe('Logging', () => {
         const logObjectHandler: Handler = (req, res, next) => {
             const CustomError = errorExtender('Custom');
             try {
-                getLogger().error(new CustomError({ message: 'desc' }));
+                getLogger().error(new CustomError({ message: 'desc', data: { a: 1 }, cause: new Error('cause') }));
             } catch (e) {
                 console.log(e);
             }
@@ -97,7 +107,22 @@ describe('Logging', () => {
         await runScenario(logObjectHandler);
         sinon.assert.calledWith(
             errorLog,
-            sinon.match({ message: 'desc', data: sinon.match({ userId: 'root', operationId: sinon.match.string }) }),
+            sinon.match({
+                message: 'desc',
+                stack: sinon.match.string,
+                cause: sinon.match({
+                    message: 'cause',
+                    stack: sinon.match.string,
+                }),
+                data: {
+                    userId: 'root',
+                    operationId: sinon.match.string,
+                    path: '/test',
+                    clientIp: sinon.match.string,
+                    domain: '127.0.0.1',
+                    a: 1,
+                },
+            }),
         );
     });
 });
