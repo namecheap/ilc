@@ -1,8 +1,7 @@
 const { context } = require('../context/context');
+const { setErrorData } = require('../utils/helpers');
 
-module.exports = (logger, { reqIdKey }) => {
-    const requestIdKey = reqIdKey || 'operationId';
-
+module.exports = (logger, { requestIdLogLabel }) => {
     const loggerProxyHandler = {
         get(target, prop) {
             const origMethod = target[prop];
@@ -11,8 +10,9 @@ module.exports = (logger, { reqIdKey }) => {
                     const store = context.getStore();
                     const [arg1] = args;
                     const logContext = {
-                        [requestIdKey]: store.get('reqId'),
+                        [requestIdLogLabel]: store.get('requestId'),
                         domain: store.get('domain'),
+                        path: store.get('path'),
                     };
 
                     if (arg1 === 'string') {
@@ -20,6 +20,7 @@ module.exports = (logger, { reqIdKey }) => {
                     }
 
                     if (arg1 instanceof Error) {
+                        setErrorData(arg1, logContext);
                         return origMethod.apply(target, args);
                     }
 

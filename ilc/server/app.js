@@ -12,8 +12,6 @@ const reportingPluginManager = require('./plugins/reportingPlugin');
 const AccessLogger = require('./logger/accessLogger');
 const { isStaticFile, isHealthCheck } = require('./utils/utils');
 
-const accessLogger = new AccessLogger(config);
-
 /**
  * @param {Registry} registryService
  */
@@ -22,13 +20,13 @@ module.exports = (registryService, pluginManager, context) => {
 
     const appConfig = Application.getConfig(reportingPlugin);
     const logger = reportingPluginManager.getLogger();
-
+    const accessLogger = new AccessLogger(config, logger);
     const app = fastify(appConfig);
 
     const asyncResourceSymbol = Symbol('asyncResource');
 
     app.addHook('onRequest', (req, reply, done) => {
-        context.run({ request: req }, async () => {
+        context.run({ request: req, requestId: reportingPluginManager.getRequestId() ?? request.id }, async () => {
             try {
                 const asyncResource = new AsyncResource('fastify-request-context');
                 req[asyncResourceSymbol] = asyncResource;
@@ -85,7 +83,7 @@ module.exports = (registryService, pluginManager, context) => {
             });
             done();
         } catch (error) {
-            errorHandlingService.handleError(error);
+            errorHandlingService.noticeError(error);
         }
     });
 

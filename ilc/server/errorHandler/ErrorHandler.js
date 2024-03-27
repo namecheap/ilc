@@ -5,6 +5,7 @@ const uuidv4 = require('uuid/v4');
 const extendError = require('@namecheap/error-extender');
 const config = require('config');
 const { readFileSync } = require('fs');
+const { setErrorData } = require('../utils/helpers');
 const ErrorHandlingError = extendError('ErrorHandlingError');
 
 const defaultErrorPage = fs.readFileSync(path.resolve(__dirname, '../assets/defaultErrorPage.html'), 'utf-8');
@@ -28,28 +29,13 @@ module.exports = class ErrorHandler {
      * @param {Object} [options]
      * @param {Boolean} options.reportError = true
      */
-    noticeError(err, errInfo = {}, options) {
-        const infoData = Object.assign({}, errInfo);
-        options = Object.assign(
-            {},
-            {
-                reportError: true,
-            },
-            options,
-        );
-
-        if (err.data === undefined) {
-            const ExtendedError = extendError(err.name);
-            err = new ExtendedError({ cause: err, data: infoData, message: err.message });
-        } else {
-            Object.assign(err.data, infoData);
-        }
-
-        if (options.reportError) {
-            this.#errorsService.noticeError(err, infoData);
+    noticeError(err, customAttributes = {}, { reportError = true } = {}) {
+        if (reportError) {
+            this.#errorsService.noticeError(err, { ...customAttributes });
+            setErrorData(err, customAttributes);
             this.#logger.error(err);
         } else {
-            err.data.localError = true;
+            setErrorData(err, { ...customAttributes, localError: true });
             this.#logger.warn(err);
         }
     }
@@ -66,17 +52,7 @@ module.exports = class ErrorHandler {
         }
 
         try {
-            this.noticeError(
-                err,
-                {
-                    reqId: req.id,
-                    errorId,
-                    domain: req.hostname,
-                    url: req.url,
-                },
-                { reportError: !req.ldeRelated },
-            );
-
+            this.noticeError(err, { errorId }, { reportError: !req.ldeRelated });
             const currentDomain = req.hostname;
             const locale = (req.raw || req).ilcState.locale;
             let data = await this.#registryService.getTemplate('500', { locale, forDomain: currentDomain });
@@ -86,14 +62,12 @@ module.exports = class ErrorHandler {
             nres.write(data);
             nres.end();
         } catch (causeErr) {
-            const e = new ErrorHandlingError({
+            const handlingError = new ErrorHandlingError({
+                message: 'Additional error in error handling',
                 cause: causeErr,
-                d: {
-                    errorId,
-                },
+                data: { errorId },
             });
-
-            this.#logger.error(e);
+            this.#logger.error(handlingError);
             this.#writeStaticError(nres);
         }
     };

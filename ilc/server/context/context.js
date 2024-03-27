@@ -10,16 +10,15 @@ module.exports = {
          * @param {Function} callback
          * @returns {unknown}
          */
-        run({ request }, callback) {
+        run({ request, requestId }, callback) {
             const parsedUrl = parseUrl(request.raw);
             const store = new Map();
 
-            store.set('reqId', request.id);
             store.set('url', request.raw.url);
             store.set('protocol', request.raw.connection.encrypted ? 'https' : 'http');
             store.set('path', parsedUrl.pathname);
             store.set('domain', request.hostname);
-            store.set('appLogger', request.log);
+            store.set('requestId', requestId);
 
             return asyncLocalStorage.run(store, callback);
         },

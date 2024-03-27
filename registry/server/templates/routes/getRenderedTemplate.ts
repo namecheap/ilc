@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
-import _, { LodashStubString } from 'lodash/fp';
 
 import noticeError from '../../errorHandler/noticeError';
 import db from '../../db';
@@ -101,7 +100,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
 
     try {
         const renderedTemplate = await renderTemplate(content);
-        res.status(200).send(_.assign(template, renderedTemplate));
+        res.status(200).send({ ...template, ...renderedTemplate });
     } catch (e) {
         if (e instanceof errors.FetchIncludeError) {
             res.status(500).send(e.message);
@@ -110,7 +109,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
             });
             return;
         } else {
-            console.error(`Error on render template "${templateName}"`, e);
+            getLogger().error(e as Error, `Error on render template "${templateName}"`);
             throw e;
         }
     }
