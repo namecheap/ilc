@@ -1,6 +1,6 @@
 module.exports = class Application {
     static getConfig(reportPlugin) {
-        const loggerKeys = ['logger', 'requestIdLogLabel', 'genReqId'];
+        const loggerKeys = ['logger'];
         const appConfig = {
             trustProxy: false, // TODO: should be configurable via Registry,
             disableRequestLogging: true,
