@@ -3,13 +3,60 @@ const { context } = require('../context/context');
 const sinon = require('sinon');
 
 describe('accessLogger', () => {
+    const logger = {
+        info: sinon.stub(),
+    };
+    beforeEach(() => {
+        logger.info.resetHistory();
+    });
+
+    it('log request', function () {
+        const localConfig = { get: sinon.stub().withArgs('logger.accessLog.ignoreUrls').returns('/test/ignored/') };
+
+        const accessLogger = new AccessLogger(localConfig, logger);
+        const request = {
+            request: {
+                raw: {
+                    url: '/test/1',
+                    connection: {
+                        encrypted: true,
+                    },
+                },
+            },
+        };
+
+        context.run(request, () => {
+            accessLogger.logRequest({ additional: true });
+        });
+
+        sinon.assert.calledOnceWithExactly(logger.info, { additional: true }, sinon.match.string);
+    });
+
+    it('log response', function () {
+        const localConfig = { get: sinon.stub().withArgs('logger.accessLog.ignoreUrls').returns('/test/ignored/') };
+
+        const accessLogger = new AccessLogger(localConfig, logger);
+        const request = {
+            request: {
+                raw: {
+                    url: '/test/1',
+                    connection: {
+                        encrypted: true,
+                    },
+                },
+            },
+        };
+
+        context.run(request, () => {
+            accessLogger.logResponse({ additional: true });
+        });
+
+        sinon.assert.calledOnceWithExactly(logger.info, { additional: true }, sinon.match.string);
+    });
+
     it('should ignore access logs based on path', function () {
         const localConfig = { get: sinon.stub().withArgs('logger.accessLog.ignoreUrls').returns('/test/ignored/') };
-        const accessLogger = new AccessLogger(localConfig);
-
-        const logger = {
-            info: sinon.stub(),
-        };
+        const accessLogger = new AccessLogger(localConfig, logger);
         const request = {
             request: {
                 raw: {
@@ -19,7 +66,6 @@ describe('accessLogger', () => {
                     },
                 },
                 hostname: 'test-machine',
-                log: logger,
                 id: 'test1',
             },
         };
@@ -33,11 +79,11 @@ describe('accessLogger', () => {
 
     it('should ignore access logs based on path when url has query string', function () {
         const localConfig = { get: sinon.stub().withArgs('logger.accessLog.ignoreUrls').returns('/test/ignored/') };
-        const accessLogger = new AccessLogger(localConfig);
-
         const logger = {
             info: sinon.stub(),
         };
+        const accessLogger = new AccessLogger(localConfig, logger);
+
         const request = {
             request: {
                 raw: {
@@ -47,7 +93,6 @@ describe('accessLogger', () => {
                     },
                 },
                 hostname: 'test-machine',
-                log: logger,
                 id: 'test1',
             },
         };

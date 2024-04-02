@@ -2,9 +2,11 @@ const { context } = require('../context/context');
 
 class AccessLogger {
     #ignoreUrls;
+    #logger;
 
-    constructor(config) {
+    constructor(config, logger) {
         this.#ignoreUrls = config.get('logger.accessLog.ignoreUrls').split(',');
+        this.#logger = logger;
     }
 
     logRequest(logData = {}) {
@@ -22,26 +24,17 @@ class AccessLogger {
         }
 
         const store = context.getStore();
-        const url = store.get('path');
+        const path = store.get('path');
 
-        const logger = store.get('appLogger');
-        if (!logger) {
+        if (!this.#logger) {
             throw new Error('Logger is not available');
         }
 
-        if (this.#shouldIgnoreUrl(url)) {
+        if (this.#shouldIgnoreUrl(path)) {
             return;
         }
 
-        const logContext = {
-            ...logData,
-            ...{
-                url,
-                domain: store.get('domain'),
-            },
-        };
-
-        logger.info(logContext, message);
+        this.#logger.info(logData, message);
     }
 
     #shouldIgnoreUrl(url) {

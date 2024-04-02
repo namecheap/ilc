@@ -12,11 +12,13 @@ class ReportingPlugin {
         return this.#plugin;
     }
 
+    getRequestId() {
+        return this.#plugin.genReqId();
+    }
+
     getLogger() {
         const logger = this.#plugin.logger;
-        return enhanceLogger(logger, {
-            reqIdKey: this.#plugin.requestIdLogLabel || 'operationId',
-        });
+        return enhanceLogger(logger, { requestIdLogLabel: this.#plugin.requestIdLogLabel ?? 'requestId' });
     }
 }
 
