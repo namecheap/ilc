@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { StatusCodes, getReasonPhrase } = require('http-status-codes');
+const safeJsonStringify = require('safe-json-stringify');
 const uuidv4 = require('uuid/v4');
 const extendError = require('@namecheap/error-extender');
 const config = require('config');
@@ -65,7 +66,7 @@ module.exports = class ErrorHandler {
             const handlingError = new ErrorHandlingError({
                 message: 'Additional error in error handling',
                 cause: causeErr,
-                data: { errorId },
+                data: { errorId, originalError: safeJsonStringify(err) },
             });
             this.#logger.error(handlingError);
             this.#writeStaticError(nres);

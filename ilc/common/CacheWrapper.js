@@ -1,7 +1,7 @@
 const extendError = require('@namecheap/error-extender');
 
 const errors = {};
-errors.CacheWrapperError = extendError('CacheWrapperError');
+errors.CacheWrapperError = extendError('CacheWrapperError', { defaultData: {} });
 
 class CacheWrapper {
     #cacheRenewPromise = {};
