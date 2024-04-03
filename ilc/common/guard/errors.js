@@ -2,7 +2,7 @@ const extendError = require('@namecheap/error-extender');
 
 const errors = {};
 
-errors.GuardError = extendError('GuardError');
+errors.GuardError = extendError('GuardError', { defaultData: {} });
 errors.GuardTransitionHookError = extendError('GuardTransitionHookError', {
     parent: errors.GuardError,
 });

@@ -1,6 +1,5 @@
 import Joi, { ValidationError } from 'joi';
 import _fp from 'lodash/fp';
-import { type ExtendedError } from '@namecheap/error-extender';
 
 export const joiErrorToResponse = _fp.compose<
     Array<Joi.ValidationError>,

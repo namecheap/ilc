@@ -1,6 +1,6 @@
 import errorExtender from '@namecheap/error-extender';
 
 export default {
-    FetchIncludeError: errorExtender('FetchIncludeError'),
-    InvalidTemplateError: errorExtender('InvalidTemplateError'),
+    FetchIncludeError: errorExtender('FetchIncludeError', { defaultData: {} }),
+    InvalidTemplateError: errorExtender('InvalidTemplateError', { defaultData: {} }),
 };
