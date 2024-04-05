@@ -18,9 +18,9 @@ export function renderTemplateHandlerFactory(registryService: Registry): Request
             reply.status(200).send(data.data.content);
         } catch (error: unknown) {
             if (error instanceof NotFoundRegistryError) {
-                errorHandlingService.handleClientError(reply, error, StatusCodes.NOT_FOUND);
+                return errorHandlingService.handleClientError(reply, error, StatusCodes.NOT_FOUND);
             } else if (error instanceof ValidationRegistryError) {
-                errorHandlingService.handleClientError(reply, error, StatusCodes.BAD_REQUEST);
+                return errorHandlingService.handleClientError(reply, error, StatusCodes.BAD_REQUEST);
             } else {
                 throw error;
             }
