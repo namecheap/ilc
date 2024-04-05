@@ -1,7 +1,7 @@
 const extendError = require('@namecheap/error-extender');
 
 const errors = {};
-errors.RouterError = extendError('RouterError');
+errors.RouterError = extendError('RouterError', { defaultData: {} });
 errors.NoRouteMatchError = extendError('NoRouteMatchError', {
     parent: errors.RouterError,
     defaultMessage: "Can't find matched route for passed path",
