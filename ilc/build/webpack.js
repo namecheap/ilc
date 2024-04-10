@@ -1,7 +1,7 @@
 /* eslint-env node */
 const fs = require('fs');
 const path = require('path');
-const { DefinePlugin } = require('webpack');
+const { DefinePlugin, SourceMapDevToolPlugin } = require('webpack');
 const WrapperPlugin = require('wrapper-webpack-plugin');
 const { DuplicateIlcPluginsWebpackPlugin, ResolveIlcDefaultPluginsWebpackPlugin } = require('ilc-plugins-sdk/webpack');
 
@@ -55,8 +55,12 @@ module.exports = {
         new DefinePlugin({
             LEGACY_PLUGINS_DISCOVERY_ENABLED: JSON.stringify(environment.isLegacyPluginsDiscoveryEnabled()),
         }),
+        new SourceMapDevToolPlugin({
+            append: '\n//# sourceMappingURL=http://localhost:8233/_ilc/[url]',
+            filename: '[file].map[query]',
+        }),
     ],
-    devtool: 'source-map',
+    devtool: 'hidden-source-map',
     externals: [],
     /**
      * Very slow performance on macos with webpack-dev-middleware
