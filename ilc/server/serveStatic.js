@@ -1,6 +1,5 @@
-'use strict';
-
 const serveStatic = require('serve-static');
+const cors = require('cors');
 
 module.exports = function (isProduction) {
     if (isProduction) {
@@ -14,5 +13,5 @@ module.exports = function (isProduction) {
     const webpackConfig = require('../../build/webpack.dev');
     const compiler = webpack(webpackConfig);
 
-    return [webpackDevMiddleware(compiler), serveStatic('public')];
+    return [cors({ origin: true }), webpackDevMiddleware(compiler), serveStatic('public')];
 };
