@@ -29,7 +29,6 @@
     "cidr-matcher": "^2.1.1",
     "config": "^3.3.9",
     "cookie": "^0.5.0",
-    "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "debug": "^4.3.4",
     "deepmerge": "4.3.1",

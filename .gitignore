@@ -2,7 +2,8 @@ node_modules
 /.idea
 *.ncint.*
 .DS_Store
-.vscode
+.vscode/*
+!.vscode/launch.json
 /dbfiles
 /mkdocs_dist
 registry/lde/dbfiles

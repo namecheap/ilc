@@ -76,15 +76,18 @@ module.exports = (registryService, pluginManager, context) => {
     });
 
     app.addHook('onResponse', (req, reply, done) => {
-        try {
-            accessLogger.logResponse({
-                statusCode: reply.statusCode,
-                responseTime: reply.getResponseTime(),
-            });
-            done();
-        } catch (error) {
-            errorHandlingService.noticeError(error);
-        }
+        const asyncResource = req[asyncResourceSymbol];
+        asyncResource.runInAsyncScope(() => {
+            try {
+                accessLogger.logResponse({
+                    statusCode: reply.statusCode,
+                    responseTime: reply.getResponseTime(),
+                });
+                done();
+            } catch (error) {
+                errorHandlingService.noticeError(error);
+            }
+        }, req.raw);
     });
 
     if (config.get('cdnUrl') === null) {
