@@ -1,4 +1,5 @@
 const extendError = require('@namecheap/error-extender');
+const { withTimeout } = require('./utils');
 
 const errors = {};
 errors.CacheWrapperError = extendError('CacheWrapperError', { defaultData: {} });
@@ -104,7 +105,11 @@ class CacheWrapper {
             );
 
             // Start cache renew
-            this.#cacheRenewPromise[hash] = fn(...args)
+            this.#cacheRenewPromise[hash] = withTimeout(
+                fn(...args),
+                cacheForSeconds * 1000,
+                `Cache ${memoName} update timeout ${cacheForSeconds}s`,
+            )
                 .then((data) => {
                     const now = this.#nowInSec();
 

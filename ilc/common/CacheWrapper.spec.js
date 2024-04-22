@@ -2,9 +2,17 @@ import chai from 'chai';
 import sinon from 'sinon';
 import localStorage from './localStorage';
 import CacheWrapper from './CacheWrapper';
+import { TimeoutError } from './utils';
+
+/**
+ * timers/promises and setImmediate doesn't work in karma test
+ */
+async function setImmediatePromise() {
+    return new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 describe('CacheWrapper', () => {
-    let wrappedFn;
+    let wrappedFn, clock;
 
     const fn = sinon.stub();
     const createHash = sinon.stub();
@@ -38,6 +46,7 @@ describe('CacheWrapper', () => {
         fn.reset();
         logger.error.reset();
         localStorage.clear();
+        clock?.restore();
     });
 
     it('should throw error if uses without "name"', async () => {
@@ -106,6 +115,7 @@ describe('CacheWrapper', () => {
         localStorage.setItem(cachedValueKey, JSON.stringify(prevCachedValue));
 
         const firstValue = await wrappedFn(...fnArgs);
+        await setImmediatePromise(); // Promise.race() in implemantion blocks cache update in same event loop tick so need to run additional tick in test
         const secondValue = await wrappedFn(...fnArgs);
 
         chai.expect(firstValue).to.deep.equal(prevCachedValue).but.to.not.deep.equals(secondValue);
@@ -124,6 +134,47 @@ describe('CacheWrapper', () => {
         }
 
         chai.expect(rejectedError).to.equal(rejectedError);
+    });
+
+    it('should handle long execution of requesting new data', async () => {
+        clock = sinon.useFakeTimers();
+        fn.withArgs()
+            .onFirstCall()
+            .resolves(data)
+            .onSecondCall()
+            .returns(new Promise(() => {}))
+            .onThirdCall()
+            .resolves(newData);
+
+        // init cache entry
+        const firstValue = await wrappedFn();
+        chai.expect(firstValue).to.deep.equal({ cachedAt: 0, data });
+        chai.expect(fn.calledOnce).to.be.true;
+
+        // cache expired
+        await clock.tickAsync(cacheParams.cacheForSeconds * 1000);
+        const secondValue = await wrappedFn();
+        chai.expect(fn.calledTwice).to.be.true;
+        chai.expect(secondValue).to.deep.equal({ cachedAt: 0, data });
+        chai.expect(logger.error.called).to.be.false;
+
+        // timeout exceed
+        await clock.tickAsync(cacheParams.cacheForSeconds * 1000);
+        chai.expect(logger.error.calledOnce).to.be.true;
+        chai.expect(logger.error.getCall(0).args[0].cause).to.be.instanceof(TimeoutError);
+        chai.expect(logger.error.getCall(0).args[0].message).to.eq('Error during cache update function execution');
+        chai.expect(logger.error.getCall(0).args[0].cause.message).to.eq('Cache testCacheName update timeout 60s');
+
+        // update cache after error
+        const thirdValue = await wrappedFn(); // this request will still return stale value since we do not wait for promises after 1st execution
+        await clock.runAllAsync(); // let Promise.race() finish
+        chai.expect(fn.calledThrice).to.be.true;
+        chai.expect(thirdValue).to.deep.equal({ cachedAt: 0, data });
+
+        const fourthValue = await wrappedFn();
+        chai.expect(fn.calledThrice).to.be.true;
+        chai.expect(fourthValue).to.deep.equal({ cachedAt: 7200, data: newData });
+        chai.expect(logger.error.calledOnce).to.be.true;
     });
 
     describe('Multiple wrappers', () => {
@@ -251,6 +302,7 @@ describe('CacheWrapper', () => {
         it('should log an error because a stale cached value was returned', async () => {
             await wrappedFn(...fnArgs);
             await wrappedFn(...fnArgs);
+            await setImmediatePromise(); // Promise.race blocks promise resolving is same event loop tick, need to switch it manually
 
             chai.expect(logger.error.calledOnce).to.be.true;
             chai.expect(logger.error.getCall(0).args[0]).to.be.instanceof(Error);
