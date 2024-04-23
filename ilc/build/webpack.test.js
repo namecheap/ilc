@@ -20,5 +20,6 @@ const config = {
 };
 
 config.resolve.alias['nock'] = false;
+config.resolve.alias['timers'] = false;
 
 module.exports = config;

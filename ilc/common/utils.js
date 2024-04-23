@@ -62,6 +62,22 @@ function addTrailingSlashToPath(url) {
     return isFullUrl ? parsedUrl.toString() : parsedUrl.pathname.slice(1);
 }
 
+class TimeoutError extends Error {}
+
+/**
+ *
+ * @param {Promise}
+ * @param {number} timeout
+ */
+async function withTimeout(promise, ms, message = 'Promise timeout') {
+    let timeoutId;
+    const timeoutPromise = new Promise((resolve, reject) => {
+        timeoutId = setTimeout(() => reject(new TimeoutError(message)), ms);
+    });
+    const decoratedPromise = promise.finally(() => clearTimeout(timeoutId));
+    return Promise.race([decoratedPromise, timeoutPromise]);
+}
+
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
@@ -72,4 +88,6 @@ module.exports = {
     removeQueryParams,
     addTrailingSlash,
     addTrailingSlashToPath,
+    withTimeout,
+    TimeoutError,
 };
