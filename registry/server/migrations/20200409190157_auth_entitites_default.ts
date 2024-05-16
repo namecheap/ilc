@@ -10,6 +10,11 @@ export async function up(knex: Knex): Promise<any> {
             role: 'admin',
         },
         {
+            identifier: 'root',
+            provider: 'openid',
+            role: 'admin',
+        },
+        {
             identifier: 'root_api_token',
             secret: await bcrypt.hash('token_secret', await bcrypt.genSalt()),
             provider: 'bearer',

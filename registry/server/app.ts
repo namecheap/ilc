@@ -5,7 +5,7 @@ import config from 'config';
 import express, { Application, RequestHandler } from 'express';
 import serveStatic from 'serve-static';
 
-import auth from './auth';
+import { useAuth } from './auth';
 import errorHandler from './errorHandler';
 import { loadPlugins } from './util/pluginManager';
 import * as routes from './routes/routes';
@@ -13,6 +13,8 @@ import settingsService from './settings/services/SettingsService';
 import pong from './util/ping';
 import { contextMiddleware } from './middleware/context';
 import { logConnectionString } from './util/db';
+import { getLogger } from './util/logger';
+import { OpenIdService } from './auth/services/OpenIdService';
 
 export default async (withAuth: boolean = true): Promise<Application> => {
     loadPlugins();
@@ -38,9 +40,18 @@ export default async (withAuth: boolean = true): Promise<Application> => {
 
     let authMw: RequestHandler[] = [(req, res, next) => next()];
     if (withAuth) {
-        authMw = await auth(app, settingsService, {
-            session: { secret: config.get('auth.sessionSecret') },
-        });
+        const openIdService = new OpenIdService(settingsService);
+        authMw = await useAuth(
+            app,
+            openIdService,
+            {
+                session: {
+                    secret: config.get('auth.sessionSecret'),
+                    cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production' },
+                },
+            },
+            getLogger(),
+        );
     }
 
     app.use('/api/v1/config', routes.config);

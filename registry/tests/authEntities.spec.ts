@@ -110,7 +110,7 @@ describe(`Tests ${example.url}`, () => {
                 const expectedRes = _.omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
-                expect(response.body).to.have.lengthOf(4);
+                expect(response.body).to.have.lengthOf(5);
                 expect(response.body[0].versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
 
                 response.body.forEach((item: any) => {
