@@ -119,6 +119,7 @@ describe(url, () => {
 
             chai.expect(response.body).to.deep.include({
                 key: SettingKeys.AuthOpenIdDiscoveryUrl,
+                value: 'http://localhost:8080',
                 scope: Scope.Registry,
                 secret: false,
                 meta: {
@@ -127,6 +128,7 @@ describe(url, () => {
             });
             chai.expect(response.body).to.deep.include({
                 key: SettingKeys.AuthOpenIdClientId,
+                value: 'ilc_registry',
                 scope: Scope.Registry,
                 secret: false,
                 meta: {

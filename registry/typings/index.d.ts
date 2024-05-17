@@ -1,8 +1,14 @@
-import type { User as RegistryUser } from '../server/auth';
+import { User as RegistryUser } from './User';
 
 declare global {
     namespace Express {
         interface User extends RegistryUser {}
+    }
+}
+
+declare module 'express-session' {
+    interface SessionData {
+        oidc: object;
     }
 }
 

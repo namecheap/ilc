@@ -2,7 +2,7 @@ import { Request, RequestHandler } from 'express';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { v4 } from 'uuid';
 
-import { User } from '../auth';
+import { User } from '../../typings/User';
 import { getPluginManagerInstance } from '../util/pluginManager';
 import { TypedMap } from '../util/TypedMap';
 
