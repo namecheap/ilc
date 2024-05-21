@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import db from '../../db';
 import { SettingKeys, SettingTypes } from '../interfaces';
-import { User } from '../../auth';
+import { User } from '../../../typings/User';
 import { AllowedSettingKeysForDomains } from '../interfaces';
 import { SettingRaw, SettingParsed, Setting, Scope } from '../interfaces';
 import { safeParseJSON, JSONValue, isNumeric } from '../../common/services/json';
@@ -20,7 +20,7 @@ export class SettingsService {
 
     constructor() {}
 
-    async get(key: SettingKeys, callerId: string | null = null): Promise<any> {
+    async get<T = any>(key: SettingKeys, callerId: string | null = null): Promise<T> {
         const value = await this.getVal(key);
 
         if (callerId) {

@@ -1,6 +1,6 @@
 import versioningConfig from '../config';
 import { Knex } from 'knex';
-import { User } from '../../auth';
+import { User } from '../../../typings/User';
 import _ from 'lodash';
 
 import * as errors from '../errors';

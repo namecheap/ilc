@@ -22,6 +22,11 @@ const commands = [
         command: `npm run migrate && npm run seed && npm run ${noWatch ? 'start' : 'dev'}`,
         name: 'registry',
     },
+    {
+        cwd: 'registry',
+        command: 'npx ts-node lde/oauth-server.ts',
+        name: 'oauth-server',
+    },
 ];
 
 if (!noWatch) {
@@ -39,7 +44,7 @@ concurrently(commands, {
     prefix: 'name',
     killOthers: ['failure', 'success'],
     killSignal: 'SIGKILL',
-    prefixColors: ['auto']
+    prefixColors: ['auto'],
 }).result.then(
     () => {
         console.log('concurrently was finished successfully');

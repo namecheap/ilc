@@ -6,7 +6,7 @@ import db from '../../db';
 import preProcessResponse from '../services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
 import settingService from '../services/SettingsService';
-import { User } from '../../auth';
+import { User } from '../../../typings/User';
 
 type RequestParams = {
     key: SettingKeys;

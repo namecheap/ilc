@@ -642,6 +642,34 @@ describe('TransitionManager', () => {
         chai.expect(spinner.getRef()).to.be.null;
     });
 
+    it('should destroy spinner when data attribute is set', async () => {
+        const newBodyApplication = {
+            id: 'new-body-application',
+            class: 'new-body-spa',
+        };
+
+        newBodyApplication.ref = html` <div id="${newBodyApplication.id}" class="${newBodyApplication.class}"></div> `;
+
+        applications.navbar.appendApplication();
+        applications.body.appendApplication();
+
+        handlePageTransition(slots.body.id, slotWillBe.rerendered);
+
+        applications.body.removeApplication();
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+
+        slots.body.ref.appendChild(newBodyApplication.ref);
+        await clock.runAllAsync();
+
+        chai.expect(spinner.getRef()).to.be.not.null;
+
+        document.getElementById(newBodyApplication.id).dataset.ilcSlotReady = true;
+        await clock.runAllAsync();
+        chai.expect(spinner.getRef()).to.be.null;
+    });
+
     it('should remove CSS that is marked as non used when all fragments contain visible nodes', async () => {
         const newBodyApplication = {
             id: 'new-body-application',

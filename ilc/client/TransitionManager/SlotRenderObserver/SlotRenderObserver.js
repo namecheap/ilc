@@ -54,7 +54,11 @@ export class SlotRenderObserver {
             }
         });
 
-        this.#observer.observe(targetNode, { childList: true, subtree: true, attributeFilter: ['style'] });
+        this.#observer.observe(targetNode, {
+            childList: true,
+            subtree: true,
+            attributeFilter: ['style', 'data-ilc-slot-ready'],
+        });
     }
 
     disconnect() {

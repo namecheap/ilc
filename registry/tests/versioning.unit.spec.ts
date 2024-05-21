@@ -5,7 +5,7 @@ import { expect, dbFactory } from './common';
 import { VersionedKnex } from '../server/db';
 import { Versioning } from '../server/versioning/services/Versioning';
 import versioningConfig from '../server/versioning/config';
-import { User } from '../server/auth';
+import { User } from '../typings/User';
 
 const testUser: User = Object.freeze({
     identifier: 'testUser',
