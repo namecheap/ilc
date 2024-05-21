@@ -1,5 +1,4 @@
 import db from '../../../db';
-import SharedLib from '../../../sharedLibs/interfaces';
 import { ValidationFqrnError } from './error/ValidationFqrnError';
 import { AssetsDiscoveryProcessor } from '../assets/AssetsDiscoveryProcessor';
 import { AssetsValidator } from '../assets/AssetsValidator';
@@ -13,21 +12,28 @@ export class ApplicationEntry implements Entry {
 
     constructor(private identifier?: string) {}
 
-    public async patch(params: Partial<App>, { user }: { user: any }) {
+    public async patch(params: unknown, { user }: { user: any }) {
         if (!this.identifier) {
             throw new ValidationFqrnError('Patch does not invoked because instance was initialized w/o identifier');
         }
 
         await this.verifyExistence(this.identifier);
 
-        if (!Object.keys(params).length) {
+        const appDTO = await partialAppSchema.validateAsync(params, {
+            abortEarly: true,
+            presence: 'optional',
+        });
+
+        const partialAppDTO = this.cleanComplexDefaultKeys(appDTO, params);
+
+        if (!Object.keys(partialAppDTO).length) {
             throw new ValidationFqrnError('Patch does not contain any items to update');
         }
 
-        const appManifest = await this.getManifest(params.assetsDiscoveryUrl);
+        const appManifest = await this.getManifest(partialAppDTO.assetsDiscoveryUrl);
 
         const appEntity = {
-            ...params,
+            ...partialAppDTO,
             ...appManifest,
         };
 
@@ -65,6 +71,24 @@ export class ApplicationEntry implements Entry {
         const [savedApp] = await db.select().from<App>(this.entityName).where('name', appEntity.name);
 
         return savedApp;
+    }
+
+    private cleanComplexDefaultKeys(appDTO: Omit<App, 'name'>, params: unknown) {
+        if (typeof params === 'object' && params !== null) {
+            const assertedParams = params as Record<string, any>;
+
+            return Object.keys(appDTO).reduce<Partial<App>>((partialApp, key: string) => {
+                const typedKey = key as keyof Omit<App, 'name'>;
+
+                if (typeof assertedParams[typedKey] !== 'undefined') {
+                    partialApp[typedKey] = appDTO[typedKey];
+                }
+
+                return partialApp;
+            }, {});
+        }
+
+        return appDTO;
     }
 
     private async getManifest(assetsDiscoveryUrl: string | undefined) {
