@@ -431,6 +431,54 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        // Should be fixed during bugfix
+        it.skip('should be possible to remove\reset fields valued during update', async () => {
+            let domainId;
+            const templateName = 'templateName';
+
+            try {
+                await req
+                    .post('/api/v1/template/')
+                    .send({ name: templateName, content: '<html><head></head><body>foo bar</body></html>' })
+                    .expect(200);
+
+                const responseRouterDomains = await req
+                    .post('/api/v1/router_domains/')
+                    .send({ domainName: 'foo.com', template500: templateName })
+                    .expect(200);
+                domainId = responseRouterDomains.body.id;
+
+                const createAppWithEnforcedDomain = {
+                    ...example.correct,
+                    enforceDomain: domainId,
+                };
+
+                const updateAppDropedEnforcedDomain = {
+                    ..._.omit(example.updated, 'name'),
+                };
+
+                // Create app with enforce domain
+                await req.post(example.url).send(createAppWithEnforcedDomain).expect(200);
+
+                // Update with removed enforce domain
+                const response = await req
+                    .put(example.url + example.encodedName)
+                    .send(updateAppDropedEnforcedDomain)
+                    .expect(200);
+
+                expect(response.body).deep.equal(
+                    {
+                        ...example.updated,
+                    },
+                    'Update should remove enforceDomain field',
+                );
+            } finally {
+                await req.delete(example.url + example.encodedName);
+                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
+                await req.delete('/api/v1/template/' + templateName);
+            }
+        });
+
         it('should not update record with non-existed enforceDomain', async () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
