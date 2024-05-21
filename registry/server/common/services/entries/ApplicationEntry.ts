@@ -13,27 +13,21 @@ export class ApplicationEntry implements Entry {
 
     constructor(private identifier?: string) {}
 
-    public async patch(params: unknown, { user }: { user: any }) {
+    public async patch(params: Partial<App>, { user }: { user: any }) {
         if (!this.identifier) {
             throw new ValidationFqrnError('Patch does not invoked because instance was initialized w/o identifier');
         }
 
         await this.verifyExistence(this.identifier);
 
-        const appDTO = (await partialAppSchema.validateAsync(params, {
-            noDefaults: true,
-            abortEarly: true,
-            presence: 'optional',
-        })) as Omit<App, 'name'>;
-
-        if (!Object.keys(appDTO).length) {
+        if (!Object.keys(params).length) {
             throw new ValidationFqrnError('Patch does not contain any items to update');
         }
 
-        const appManifest = await this.getManifest(appDTO.assetsDiscoveryUrl);
+        const appManifest = await this.getManifest(params.assetsDiscoveryUrl);
 
         const appEntity = {
-            ...this.cleanComplexDefaultKeys(appDTO, params),
+            ...params,
             ...appManifest,
         };
 
@@ -71,20 +65,6 @@ export class ApplicationEntry implements Entry {
         const [savedApp] = await db.select().from<App>(this.entityName).where('name', appEntity.name);
 
         return savedApp;
-    }
-
-    private cleanComplexDefaultKeys(appDTO: Omit<App, 'name'>, params: unknown) {
-        if (typeof params === 'object' && params !== null) {
-            const assertedParams = params as Record<string, any>;
-
-            Object.keys(appDTO).forEach((key) => {
-                if (!assertedParams[key]) {
-                    Reflect.deleteProperty(appDTO, key);
-                }
-            });
-        }
-
-        return appDTO;
     }
 
     private async getManifest(assetsDiscoveryUrl: string | undefined) {

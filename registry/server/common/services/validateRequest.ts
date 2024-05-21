@@ -7,16 +7,34 @@ import { getLogger } from '../../util/logger';
 interface ValidationConfig {
     schema: Joi.Schema;
     selector: string;
+
+    /**
+     * Result object preserves originally provided fields
+     */
+    noDefaults?: boolean;
 }
 
 const validateRequestFactory =
     (validationConfig: ValidationConfig[]) => async (req: Request, res: Response, next: NextFunction) => {
         try {
             await Promise.all(
-                _.map(validationConfig, async ({ schema, selector }) => {
+                _.map(validationConfig, async ({ schema, selector, noDefaults }) => {
                     const data = _.get(req, selector);
                     const validObj = await schema.validateAsync(data, { abortEarly: false });
-                    _.set(req, selector, validObj);
+
+                    let result = validObj;
+
+                    if (noDefaults) {
+                        result = Object.keys(validObj).reduce<any>((noDefaultsObject, key) => {
+                            if (typeof data[key] !== 'undefined') {
+                                noDefaultsObject[key] = validObj[key];
+                            }
+
+                            return noDefaultsObject;
+                        }, {});
+                    }
+
+                    _.set(req, selector, result);
                 }),
             );
             next();

@@ -24,6 +24,7 @@ const validateRequestBeforeUpdateApp = validateRequestFactory([
     {
         schema: partialAppSchema,
         selector: 'body',
+        noDefaults: true,
     },
 ]);
 
