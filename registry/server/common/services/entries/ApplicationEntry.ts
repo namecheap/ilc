@@ -1,5 +1,4 @@
 import db from '../../../db';
-import SharedLib from '../../../sharedLibs/interfaces';
 import { ValidationFqrnError } from './error/ValidationFqrnError';
 import { AssetsDiscoveryProcessor } from '../assets/AssetsDiscoveryProcessor';
 import { AssetsValidator } from '../assets/AssetsValidator';
@@ -20,20 +19,21 @@ export class ApplicationEntry implements Entry {
 
         await this.verifyExistence(this.identifier);
 
-        const appDTO = (await partialAppSchema.validateAsync(params, {
-            noDefaults: true,
+        const appDTO = await partialAppSchema.validateAsync(params, {
             abortEarly: true,
             presence: 'optional',
-        })) as Omit<App, 'name'>;
+        });
 
-        if (!Object.keys(appDTO).length) {
+        const partialAppDTO = this.cleanComplexDefaultKeys(appDTO, params);
+
+        if (!Object.keys(partialAppDTO).length) {
             throw new ValidationFqrnError('Patch does not contain any items to update');
         }
 
-        const appManifest = await this.getManifest(appDTO.assetsDiscoveryUrl);
+        const appManifest = await this.getManifest(partialAppDTO.assetsDiscoveryUrl);
 
         const appEntity = {
-            ...this.cleanComplexDefaultKeys(appDTO, params),
+            ...partialAppDTO,
             ...appManifest,
         };
 
@@ -77,11 +77,15 @@ export class ApplicationEntry implements Entry {
         if (typeof params === 'object' && params !== null) {
             const assertedParams = params as Record<string, any>;
 
-            Object.keys(appDTO).forEach((key) => {
-                if (!assertedParams[key]) {
-                    Reflect.deleteProperty(appDTO, key);
+            return Object.keys(appDTO).reduce<Partial<App>>((partialApp, key: string) => {
+                const typedKey = key as keyof Omit<App, 'name'>;
+
+                if (typeof assertedParams[typedKey] !== 'undefined') {
+                    partialApp[typedKey] = appDTO[typedKey];
                 }
-            });
+
+                return partialApp;
+            }, {});
         }
 
         return appDTO;
