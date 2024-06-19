@@ -18,12 +18,18 @@ module.exports = {
                 assumeArray: true,
             },
         ],
-        [
-            'istanbul',
-            {
-                exclude: ['**/*.spec.js', 'tests/**'],
-            },
-        ],
     ],
     sourceType: 'unambiguous',
+    env: {
+        test: {
+            plugins: [
+                [
+                    'istanbul',
+                    {
+                        exclude: ['**/*.spec.js', 'tests/**'],
+                    },
+                ],
+            ],
+        },
+    },
 };
