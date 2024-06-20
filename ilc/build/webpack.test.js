@@ -17,6 +17,9 @@ const config = {
         splitChunks: false,
     },
     devtool: 'inline-source-map',
+    performance: {
+        hints: false,
+    },
 };
 
 config.resolve.alias['nock'] = false;
