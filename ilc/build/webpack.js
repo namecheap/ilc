@@ -65,4 +65,8 @@ module.exports = {
     watchOptions: {
         poll: 1000,
     },
+    performance: {
+        hints: 'error',
+        maxEntrypointSize: 250000,
+    },
 };
