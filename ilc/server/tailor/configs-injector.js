@@ -59,7 +59,6 @@ module.exports = class ConfigsInjector {
             this.#getIlcState(request),
             this.#getSPAConfig(registryConfig),
             `<script>window.ilcApps = [];</script>`,
-            this.#getPolyfill(),
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
             this.#getNewRelicScript(),
             hrefLangHtml,
@@ -167,30 +166,7 @@ module.exports = class ConfigsInjector {
         };
     };
 
-    #getPolyfill = () => {
-        const url = this.#getPolyfillUrl();
-
-        return (
-            `<script type="text/javascript">` +
-            `if (!(` +
-            `typeof window.URL === 'function' && ` +
-            `Object.entries && ` +
-            `Object.assign && ` +
-            `DocumentFragment.prototype.append && ` +
-            `Element.prototype.append && ` +
-            `Element.prototype.remove` +
-            `)) {` +
-            `document.write('<script src="${url}" type="text/javascript" ${this.#getCrossoriginAttribute(
-                url,
-            )}></scr' + 'ipt>');` +
-            `}` +
-            `</script>`
-        );
-    };
-
     #getClientjsUrl = () => (this.#cdnUrl === null ? '/_ilc/client.js' : urljoin(this.#cdnUrl, '/client.js'));
-    #getPolyfillUrl = () =>
-        this.#cdnUrl === null ? '/_ilc/polyfill.min.js' : urljoin(this.#cdnUrl, '/polyfill.min.js');
 
     #getSPAConfig = (registryConfig) => {
         const apps = _.mapValues(registryConfig.apps, (v) =>
