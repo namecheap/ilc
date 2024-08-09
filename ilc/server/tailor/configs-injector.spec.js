@@ -283,20 +283,6 @@ describe('configs injector', () => {
                             `<script type="ilc-state">${JSON.stringify(request.ilcState)}</script>` +
                             `<script type="ilc-config">${getSpaConfig()}</script>` +
                             '<script>window.ilcApps = [];</script>' +
-                            `<script type="text/javascript">` +
-                            `if (!(` +
-                            `typeof window.URL === 'function' && ` +
-                            `Object.entries && ` +
-                            `Object.assign && ` +
-                            `DocumentFragment.prototype.append && ` +
-                            `Element.prototype.append && ` +
-                            `Element.prototype.remove` +
-                            `)) {` +
-                            `document.write('<script src="${
-                                cdnUrl + '/polyfill.min.js'
-                            }" type="text/javascript" crossorigin></scr' + 'ipt>');` +
-                            `}` +
-                            `</script>` +
                             `<script src="${
                                 cdnUrl + '/client.js'
                             }" type="text/javascript" crossorigin async></script>` +
@@ -325,7 +311,7 @@ describe('configs injector', () => {
             );
         });
 
-        it('should inject ILC config, omit ILC state, polyfills, client js and new relic <script>, route assets style sheets links into a placeholder when a document has one', () => {
+        it('should inject ILC config, omit ILC state, client js and new relic <script>, route assets style sheets links into a placeholder when a document has one', () => {
             context.run(
                 {
                     request: {
@@ -374,18 +360,6 @@ describe('configs injector', () => {
                             '<!-- TailorX: Ignore during parsing START -->' +
                             `<script type="ilc-config">${getSpaConfig()}</script>` +
                             '<script>window.ilcApps = [];</script>' +
-                            `<script type="text/javascript">` +
-                            `if (!(` +
-                            `typeof window.URL === 'function' && ` +
-                            `Object.entries && ` +
-                            `Object.assign && ` +
-                            `DocumentFragment.prototype.append && ` +
-                            `Element.prototype.append && ` +
-                            `Element.prototype.remove` +
-                            `)) {` +
-                            `document.write('<script src="/_ilc/polyfill.min.js" type="text/javascript" ></scr' + 'ipt>');` +
-                            `}` +
-                            `</script>` +
                             `<script src="/_ilc/client.js" type="text/javascript"  async></script>` +
                             browserTimingHeader +
                             `<link rel="alternate" hreflang="en-us" href="https://test.com/test/route/" data-ilc="1" />` +

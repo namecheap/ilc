@@ -11,12 +11,11 @@
     "test:client": "npm run build:systemjs && cross-env NODE_ENV=test karma start",
     "test:client:watch": "npm run test:client -- --single-run=false --auto-watch=true",
     "start": "node --max-http-header-size 30000 dist/server/index.js",
-    "dev": "npm run build:polyfills && cross-env NODE_ENV=development nodemon -w server -w common -e ts,js,json --exec \"npm run build:server && npm run start | pino-pretty\" ",
-    "build": "rimraf public && npm run build:server && npm run build:systemjs && npm run build:client && npm run build:polyfills",
+    "dev": "cross-env NODE_ENV=development nodemon -w server -w common -e ts,js,json --exec \"npm run build:server && npm run start | pino-pretty\" ",
+    "build": "rimraf public && npm run build:server && npm run build:systemjs && npm run build:client",
     "build:server": "rimraf ./dist && tsc --project ./tsconfig.server.json && copyfiles ./config/* ./server/assets/* ./dist/",
     "build:client": "webpack --config build/webpack.js --progress",
-    "build:systemjs": "node ./systemjs/build.js",
-    "build:polyfills": "mkdir public || true && nwget https://polyfill.io/v3/polyfill.min.js?features=URL%2CObject.entries%2CDocumentFragment.prototype.append%2CElement.prototype.append%2CElement.prototype.remove%2CObject.assign%2CElement.prototype.closest%2CCustomEvent%2CObject.values%2CArray.from -O ./public/polyfill.min.js"
+    "build:systemjs": "node ./systemjs/build.js"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -97,7 +96,6 @@
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4",
     "webpack-dev-middleware": "^6.1.1",
-    "wget-improved": "3.3.1",
     "wrapper-webpack-plugin": "^2.2.2"
   },
   "engines": {
