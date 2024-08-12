@@ -38,13 +38,19 @@ export interface VersionedKnex<TRecord extends {} = any, TResult = any> extends 
 
 function selectVersionedRows(knex: VersionedKnex) {
     return function (table: string, key: string, entityType: EntityTypes, columns: ColumnDescriptor[]) {
-        const versionIdQuery = knex
-            .table(Tables.Versioning)
-            .max('id')
-            .as('versionId')
-            .where('entity_id', knex.raw(`cast(${table}.${key} as char(255))`))
-            .andWhere('entity_type', entityType);
-        return knex.select.call(knex, columns.concat([versionIdQuery]));
+        return knex
+            .leftJoin(
+                knex
+                    .select('entity_id')
+                    .from(Tables.Versioning)
+                    .max('id', { as: 'versionId' })
+                    .where({ entity_type: entityType })
+                    .groupBy('entity_id')
+                    .as('v'),
+                'v.entity_id',
+                knex.raw(`${table}.${key}::varchar(255)`),
+            )
+            .select([...columns, 'versionId']);
     };
 }
 
