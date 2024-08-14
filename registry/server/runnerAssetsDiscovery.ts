@@ -13,7 +13,7 @@ const interval = Number.isNaN(tmpInterval) ? undefined : tmpInterval;
         new AssetsDiscovery('apps').start(interval);
         new AssetsDiscovery('shared_libs').start(interval);
     } catch (e: unknown) {
-        getLogger().error(e as Error);
+        getLogger().fatal(e as Error);
         process.exit(1);
     }
 })();

@@ -3,98 +3,147 @@ import urljoin from 'url-join';
 import deepEqual from 'deep-equal';
 
 import knex from '../../../db';
-import manifestProcessor from './assetsManifestProcessor';
+import manifestProcessor, { ManifestData } from './assetsManifestProcessor';
 import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 import { getLogger } from '../../../util/logger';
 import { parseJSON } from '../json';
 import { axiosErrorTransformer } from '../../../util/axiosErrorTransformer';
+import { startBackgroundTransaction } from 'newrelic';
+
+type AssetsDiscoveryEntity = {
+    [key: string]: any;
+    assetsDiscoveryUrl: string;
+    spaBundle: string;
+    cssBundle: string;
+    dependencies: string;
+    assetsDiscoveryUpdatedAt: number;
+    props?: object | null;
+};
+
+type DbAssetsOnly = Pick<AssetsDiscoveryEntity, 'spaBundle' | 'cssBundle' | 'dependencies'>;
 
 export default class AssetsDiscovery {
-    private tableName: string;
-    private tableId: string;
+    private tableName: keyof typeof AssetsDiscoveryWhiteLists;
+
+    private tableId: 'name';
+
     private timerId?: NodeJS.Timeout;
 
     private intervalSeconds: number;
 
-    constructor(tableName: string, { tableId = 'name', intervalSeconds = 5 } = {}) {
+    constructor(
+        tableName: keyof typeof AssetsDiscoveryWhiteLists,
+        { tableId = 'name' as const, intervalSeconds = 5 } = {},
+    ) {
         this.tableName = tableName;
         this.tableId = tableId;
         this.intervalSeconds = intervalSeconds;
     }
 
     start(delay: number = 1000) {
-        this.timerId = setInterval(
-            () =>
-                this.iteration().catch((err) => {
+        const runLoop = () => {
+            this.timerId = setTimeout(async () => {
+                await this.iteration().catch((err) => {
                     getLogger().error(err, 'Error during refresh of the assets info:');
-                }),
-            delay,
-        );
+                });
+                runLoop();
+            }, delay);
+        };
+
+        runLoop();
     }
 
     stop() {
-        clearInterval(this.timerId!);
+        clearTimeout(this.timerId!);
     }
 
-    private isAssetsEqual(manifestAssets: Record<string, any>, dbAssets: Record<string, any>) {
+    private async iteration() {
+        return startBackgroundTransaction(this.tableName, AssetsDiscovery.constructor.name, async () => {
+            const now = Math.floor(Date.now() / 1000);
+            const entities = await this.getEntitiesToRefresh(now);
+
+            for (const entity of entities) {
+                try {
+                    await this.processEntity(entity, now);
+                } catch (err: any) {
+                    getLogger().error(axiosErrorTransformer(err), `Can't process assets for "${entity[this.tableId]}"`);
+                }
+            }
+        });
+    }
+
+    private async processEntity(entity: AssetsDiscoveryEntity, now: number) {
+        const maxRequestTimeout = 10000;
+        const startOfRequest = performance.now();
+
+        let reqUrl = this.buildAssetsUrl(entity);
+        const res: Readonly<AxiosResponse> = await axios.get(reqUrl, {
+            responseType: 'json',
+            timeout: maxRequestTimeout,
+        });
+        const data = manifestProcessor(reqUrl, res.data, AssetsDiscoveryWhiteLists[this.tableName]);
+        const dbAssets = {
+            spaBundle: entity.spaBundle,
+            cssBundle: entity.cssBundle,
+            dependencies: entity.dependencies,
+        };
+
+        if (this.isAssetsEqual(data, dbAssets)) {
+            return;
+        }
+
+        await this.updateEntityWithNewAssets(entity, data, now);
+        getLogger().info(`Assets for "${entity.name}" were updated in ${performance.now() - startOfRequest}ms`);
+    }
+
+    private isAssetsEqual(manifestAssets: ManifestData, dbAssets: DbAssetsOnly) {
         const shallowCopyDbAssets = Object.assign({}, dbAssets);
         if (shallowCopyDbAssets.dependencies) {
             shallowCopyDbAssets.dependencies = parseJSON(shallowCopyDbAssets.dependencies);
         }
+
         return deepEqual(shallowCopyDbAssets, manifestAssets);
     }
 
-    private async iteration() {
-        const now = Math.floor(Date.now() / 1000);
-        const updateAfter = now - this.intervalSeconds;
+    private buildAssetsUrl(entity: AssetsDiscoveryEntity) {
+        let reqUrl = entity.assetsDiscoveryUrl;
 
-        const entities = await knex
-            .select()
+        // This implementation of communication between ILC & apps duplicates code in ILC ServerRouter
+        // and so should be refactored in the future.
+        const entityPropsJSON =
+            typeof entity.props === 'object' && entity.props !== null ? JSON.stringify(entity.props) : entity.props;
+        if (entityPropsJSON && entityPropsJSON !== '{}') {
+            const entityPropsBase64 = Buffer.from(entityPropsJSON).toString('base64');
+            reqUrl = urljoin(reqUrl, `?appProps=${entityPropsBase64}`);
+        }
+
+        return reqUrl;
+    }
+
+    private async updateEntityWithNewAssets(
+        entity: AssetsDiscoveryEntity,
+        data: Record<string, any>,
+        updatedTime: number,
+    ) {
+        const queryWaitTimeout = 10000;
+        await knex(this.tableName)
+            .where(this.tableId, entity[this.tableId])
+            .update(
+                Object.assign({}, data, {
+                    assetsDiscoveryUpdatedAt: updatedTime,
+                }),
+            )
+            .timeout(queryWaitTimeout);
+    }
+
+    private async getEntitiesToRefresh(unixTimestampNow: number) {
+        const updateAfter = unixTimestampNow - this.intervalSeconds;
+        return knex
+            .select<AssetsDiscoveryEntity[]>()
             .from(this.tableName)
             .whereNotNull('assetsDiscoveryUrl')
             .andWhere(function () {
                 this.whereNull('assetsDiscoveryUpdatedAt').orWhere('assetsDiscoveryUpdatedAt', '<', updateAfter);
             });
-
-        for (const entity of entities) {
-            let reqUrl = entity.assetsDiscoveryUrl;
-
-            // This implementation of communication between ILC & apps duplicates code in ILC ServerRouter
-            // and so should be refactored in the future.
-            const entityPropsJSON =
-                typeof entity.props === 'object' && entity.props !== null ? JSON.stringify(entity.props) : entity.props;
-            if (entityPropsJSON && entityPropsJSON !== '{}') {
-                const entityPropsBase64 = Buffer.from(entityPropsJSON).toString('base64');
-                reqUrl = urljoin(reqUrl, `?appProps=${entityPropsBase64}`);
-            }
-
-            let res: AxiosResponse;
-            try {
-                res = await axios.get(reqUrl, { responseType: 'json' });
-            } catch (err: any) {
-                //TODO: add exponential back-off
-                getLogger().warn(axiosErrorTransformer(err), `Can't refresh assets for "${entity[this.tableId]}"`);
-                continue;
-            }
-
-            let data = manifestProcessor(reqUrl, res.data, AssetsDiscoveryWhiteLists[this.tableName]);
-
-            const dbAssets = {
-                spaBundle: entity.spaBundle,
-                cssBundle: entity.cssBundle,
-                dependencies: entity.dependencies,
-            };
-
-            if (!this.isAssetsEqual(data, dbAssets)) {
-                await knex(this.tableName)
-                    .where(this.tableId, entity[this.tableId])
-                    .update(
-                        Object.assign({}, data, {
-                            assetsDiscoveryUpdatedAt: now,
-                        }),
-                    );
-                getLogger().info(`Assets for "${entity.name}" were updated`);
-            }
-        }
     }
 }
