@@ -8,7 +8,7 @@ import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 import { getLogger } from '../../../util/logger';
 import { parseJSON } from '../json';
 import { axiosErrorTransformer } from '../../../util/axiosErrorTransformer';
-import { startBackgroundTransaction } from 'newrelic';
+import newrelic from 'newrelic';
 
 type AssetsDiscoveryEntity = {
     [key: string]: any;
@@ -58,7 +58,7 @@ export default class AssetsDiscovery {
     }
 
     private async iteration() {
-        return startBackgroundTransaction(this.tableName, AssetsDiscovery.constructor.name, async () => {
+        return newrelic.startBackgroundTransaction(this.tableName, AssetsDiscovery.constructor.name, async () => {
             const now = Math.floor(Date.now() / 1000);
             const entities = await this.getEntitiesToRefresh(now);
 
