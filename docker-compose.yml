@@ -71,24 +71,21 @@ services:
       retries: 50
   postgres:
       container_name: postgres
-      image: postgres:15.4-alpine
+      image: postgres:15.6-alpine
       restart: always
       environment:
-          - POSTGRES_USER=root
-          - POSTGRES_PASSWORD=pwd
-          - POSTGRES_DB=ilc
+        POSTGRES_USER: root
+        POSTGRES_PASSWORD: pwd
+        POSTGRES_DB: ilc
       ports:
           - '5432:5432'
       volumes:
           - postgres:/var/lib/postgresql/data
-          - .:/usr/src/ilc
       healthcheck:
-        test: ["CMD-SHELL", "sh -c 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}'"]
+        test: ["CMD-SHELL", "sh -c 'pg_isready -U root -d ilc'"]
         interval: 3s
         timeout: 3s
         retries: 50
-
-
 volumes:
     postgres:
         driver: local
