@@ -8,6 +8,7 @@ import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 import { getLogger } from '../../../util/logger';
 import { parseJSON } from '../json';
 import { axiosErrorTransformer } from '../../../util/axiosErrorTransformer';
+import { exponentialRetry } from '../../../util/axiosExponentialRetry';
 import newrelic from 'newrelic';
 
 type AssetsDiscoveryEntity = {
@@ -77,10 +78,12 @@ export default class AssetsDiscovery {
         const startOfRequest = performance.now();
 
         let reqUrl = this.buildAssetsUrl(entity);
-        const res: Readonly<AxiosResponse> = await axios.get(reqUrl, {
-            responseType: 'json',
-            timeout: maxRequestTimeout,
-        });
+        const res: Readonly<AxiosResponse> = await exponentialRetry(() =>
+            axios.get(reqUrl, {
+                responseType: 'json',
+                timeout: maxRequestTimeout,
+            }),
+        );
         const data = manifestProcessor(reqUrl, res.data, AssetsDiscoveryWhiteLists[this.tableName]);
         const dbAssets = {
             spaBundle: entity.spaBundle,
