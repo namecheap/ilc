@@ -51,6 +51,20 @@ describe('ScrollController', () => {
             }
         });
 
+        describe('when the ScrollController is instantiated before the page ready event', () => {
+            let documentBodyStub;
+
+            beforeEach(() => {
+                documentBodyStub = sinon.stub(document, 'body').get(() => undefined);
+                scrollController = new ScrollController();
+                documentBodyStub.restore();
+            });
+
+            it('should not throw error', () => {
+                expect(() => scrollController.restore()).to.not.throw();
+            });
+        });
+
         it('should remove the stored hash attribute from the document body', () => {
             document.body.setAttribute('ilcTempStoredHash', 'testAnchor');
             scrollController.restore();
