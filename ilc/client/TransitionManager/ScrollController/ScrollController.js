@@ -1,6 +1,5 @@
 export class ScrollController {
     // @todo write e2e tests for hash position restoring
-    #hashStoreNode = document.body;
     #hashStoreAttribute = 'ilcTempStoredHash';
     #lastVisitedUrl = this.location.pathname;
     #shouldScrollToTop = true;
@@ -16,17 +15,22 @@ export class ScrollController {
 
     store() {
         if (this.location.hash) {
-            const node = this.#hashStoreNode;
+            const node = this.#getHashStoreNode();
             const hashValue = this.#getHashValue();
             node.setAttribute(this.#hashStoreAttribute, hashValue);
         }
     }
 
     restore() {
-        const node = this.#hashStoreNode;
+        const node = this.#getHashStoreNode();
         // @todo: looks like it never used so storing is useless
         node.removeAttribute(this.#hashStoreAttribute);
+
         this.#restoreScrollOnNavigation();
+    }
+
+    #getHashStoreNode() {
+        return document.body;
     }
 
     #restoreScrollOnNavigation() {
