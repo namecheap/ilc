@@ -12,14 +12,14 @@ class SdkOptions {
     }
 
     toJSON() {
-        if (!this.#i18n) {
-            return undefined;
-        }
-
-        return {
+        const json = {
             i18n: this.#i18n,
             cssBundle: this.#cssBundle,
         };
+
+        const allValuesUndefined = Object.values(json).every((value) => value === undefined);
+
+        return allValuesUndefined ? undefined : json;
     }
 }
 
