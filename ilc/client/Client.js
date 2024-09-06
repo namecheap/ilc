@@ -29,7 +29,7 @@ import I18n from './i18n';
 import GuardManager from './GuardManager';
 import ParcelApi from './ParcelApi';
 import { BundleLoader } from './BundleLoader';
-import registerSpaApps from './registerSpaApps';
+import { registerApplications } from './registerSpaApps';
 import { TransitionManager } from './TransitionManager/TransitionManager';
 import IlcEvents from './constants/ilcEvents';
 import singleSpaEvents from './constants/singleSpaEvents';
@@ -273,7 +273,7 @@ export class Client {
 
         // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
         // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
-        registerSpaApps(
+        registerApplications(
             this.#configRoot,
             this.#router,
             this.#errorHandlerFor.bind(this),
@@ -361,6 +361,7 @@ export class Client {
 
         Object.assign(window.ILC, {
             loadApp: this.#bundleLoader.loadApp.bind(this.#bundleLoader),
+            unloadApp: this.#bundleLoader.unloadApp.bind(this.#bundleLoader),
             navigate: this.#router.navigateToUrl.bind(this.#router),
             onIntlChange: this.#addIntlChangeHandler.bind(this),
             onRouteChange: this.#addRouteChangeHandlerWithDispatch.bind(this),
@@ -391,5 +392,15 @@ export class Client {
 
     start() {
         singleSpa.start({ urlRerouteOnly: true });
+    }
+
+    /**
+     *
+     * @param {String} appId application id
+     */
+    async unloadApp(appId) {
+        const { appName } = appIdToNameAndSlot(appId);
+        this.#bundleLoader.unloadApp(appName);
+        await singleSpa.unloadApplication(appId);
     }
 }

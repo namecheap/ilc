@@ -17,6 +17,9 @@ const fnCallbacks = {
 describe('BundleLoader', () => {
     const SystemJs = {
         import: sinon.stub(),
+        resolve: sinon.stub(),
+        get: sinon.stub(),
+        delete: sinon.stub(),
     };
     let registry;
     const configRoot = getIlcConfigRoot();
@@ -116,6 +119,33 @@ describe('BundleLoader', () => {
             sinon.assert.calledTwice(SystemJs.import);
 
             sinon.assert.calledOnce(mainSpa);
+            sinon.assert.calledWith(mainSpa, registry.apps[appName].props);
+        });
+        it('loads app and returns callbacks from mainSpa and calls without cache', async () => {
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const appName = '@portal/primary';
+
+            const mainSpa = sinon.stub().returns(fnCallbacks);
+
+            const appBundle = { mainSpa };
+
+            SystemJs.import.resolves(appBundle);
+            SystemJs.resolve.returns('bundle.js');
+            SystemJs.get.withArgs('bundle.js').returns(appBundle);
+            SystemJs.delete.withArgs('bundle.js').returns({});
+
+            const callbacks = await loader.loadApp(appName);
+            expect(callbacks).to.equal(fnCallbacks);
+
+            loader.unloadApp(appName);
+
+            const callbacks2 = await loader.loadApp(appName, { cachedEnabled: false });
+            expect(callbacks2).to.equal(fnCallbacks);
+
+            sinon.assert.calledWith(SystemJs.import, appName);
+            sinon.assert.calledTwice(SystemJs.import);
+
+            sinon.assert.calledTwice(mainSpa);
             sinon.assert.calledWith(mainSpa, registry.apps[appName].props);
         });
 

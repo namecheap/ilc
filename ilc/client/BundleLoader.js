@@ -107,7 +107,7 @@ export class BundleLoader {
         return app;
     };
 
-    #getAppSpaCallbacks = (appBundle, props = {}, { sdkFactory }) => {
+    #getAppSpaCallbacks = (appBundle, props = {}, { sdkFactory, cacheEnabled }) => {
         // We do this to make sure that mainSpa function will be called only once
         if (this.#cache.has(appBundle)) {
             return this.#cache.get(appBundle);
@@ -127,4 +127,15 @@ export class BundleLoader {
             return appBundle;
         }
     };
+
+    /**
+     *
+     * @param {String} appName application name
+     */
+    unloadApp(appName) {
+        const moduleId = this.#moduleLoader.resolve(appName);
+        const appBundle = this.#moduleLoader.get(moduleId);
+        this.#cache.delete(appBundle);
+        this.#moduleLoader.delete(moduleId);
+    }
 }
