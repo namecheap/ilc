@@ -34,8 +34,6 @@ const decodeHtmlEntities = (value) =>
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"');
 
-const fakeBaseInCasesWhereUrlIsRelative = 'http://hack';
-
 const removeQueryParams = (url) => {
     const index = url.indexOf('?');
     if (index !== -1) {

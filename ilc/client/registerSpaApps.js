@@ -6,7 +6,7 @@ import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
 
-const getCustomProps = (slot, router, appErrorHandlerFactory, sdkFactoryBuilder) => {
+function getCustomProps(slot, router, appErrorHandlerFactory, sdkFactoryBuilder) {
     const appName = slot.getApplicationName();
     const appId = slot.getApplicationId();
     const slotName = slot.getSlotName();
@@ -26,9 +26,9 @@ const getCustomProps = (slot, router, appErrorHandlerFactory, sdkFactoryBuilder)
     };
 
     return customProps;
-};
+}
 
-export default function (
+export function registerApplications(
     ilcConfigRoot,
     router,
     appErrorHandlerFactory,
@@ -92,61 +92,60 @@ export default function (
             }
         };
 
-        singleSpa.registerApplication(
-            appId,
-            async () => {
-                if (!slot.isValid()) {
-                    throw new Error(`Can not find application - ${appName}`);
-                }
+        const loadingFn = async () => {
+            if (!slot.isValid()) {
+                throw new Error(`Can not find application - ${appName}`);
+            }
 
-                const appConf = ilcConfigRoot.getConfigForAppByName(appName);
+            const appConf = ilcConfigRoot.getConfigForAppByName(appName);
 
-                let wrapperConf = null;
-                if (appConf.wrappedWith) {
-                    wrapperConf = {
-                        ...ilcConfigRoot.getConfigForAppByName(appConf.wrappedWith),
-                        appId: makeAppId(appConf.wrappedWith, slotName),
-                        ...{
-                            wrappedAppConf: appConf,
-                        },
-                    };
-                }
+            let wrapperConf = null;
+            if (appConf.wrappedWith) {
+                wrapperConf = {
+                    ...ilcConfigRoot.getConfigForAppByName(appConf.wrappedWith),
+                    appId: makeAppId(appConf.wrappedWith, slotName),
+                    ...{
+                        wrappedAppConf: appConf,
+                    },
+                };
+            }
 
-                // Speculative preload of the JS bundle. We don't do it for CSS here as we already did it with preload links
-                bundleLoader.preloadApp(appName);
+            // Speculative preload of the JS bundle. We don't do it for CSS here as we already did it with preload links
+            bundleLoader.preloadApp(appName);
 
-                const overrides = await asyncBootUp.waitForSlot(slotName);
-                // App wrapper was rendered at SSR instead of app
-                if (wrapperConf !== null && overrides.wrapperPropsOverride === null) {
-                    wrapperConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : wrapperConf.cssBundle;
-                } else {
-                    appConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
-                }
+            const overrides = await asyncBootUp.waitForSlot(slotName);
+            // App wrapper was rendered at SSR instead of app
+            if (wrapperConf !== null && overrides.wrapperPropsOverride === null) {
+                wrapperConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : wrapperConf.cssBundle;
+            } else {
+                appConf.cssBundle = overrides.cssBundle ? overrides.cssBundle : appConf.cssBundle;
+            }
 
-                const waitTill = [bundleLoader.loadAppWithCss(appName)];
+            const waitTill = [bundleLoader.loadAppWithCss(appName)];
+            if (wrapperConf !== null) {
+                waitTill.push(bundleLoader.loadAppWithCss(appConf.wrappedWith));
+            }
+
+            lifecycleMethods = await Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {
                 if (wrapperConf !== null) {
-                    waitTill.push(bundleLoader.loadAppWithCss(appConf.wrappedWith));
+                    const wrapper = new WrapApp(wrapperConf, overrides.wrapperPropsOverride, transitionManager);
+
+                    spaCallbacks = wrapper.wrapWith(spaCallbacks, wrapperSpaCallbacks);
                 }
 
-                lifecycleMethods = await Promise.all(waitTill).then(([spaCallbacks, wrapperSpaCallbacks]) => {
-                    if (wrapperConf !== null) {
-                        const wrapper = new WrapApp(wrapperConf, overrides.wrapperPropsOverride, transitionManager);
+                return prependSpaCallbacks(spaCallbacks, [
+                    { type: 'unmount', callback: onUnmount },
+                    { type: 'mount', callback: onMount },
+                ]);
+            });
 
-                        spaCallbacks = wrapper.wrapWith(spaCallbacks, wrapperSpaCallbacks);
-                    }
+            return lifecycleMethods;
+        };
 
-                    return prependSpaCallbacks(spaCallbacks, [
-                        { type: 'unmount', callback: onUnmount },
-                        { type: 'mount', callback: onMount },
-                    ]);
-                });
+        const activityFn = (location) => {
+            return router.isAppWithinSlotActive(appName, slotName);
+        };
 
-                return lifecycleMethods;
-            },
-            (location) => {
-                return router.isAppWithinSlotActive(appName, slotName);
-            },
-            customProps,
-        );
+        singleSpa.registerApplication(appId, loadingFn, activityFn, customProps);
     });
 }
