@@ -361,7 +361,7 @@ export class Client {
 
         Object.assign(window.ILC, {
             loadApp: this.#bundleLoader.loadApp.bind(this.#bundleLoader),
-            unloadApp: this.#bundleLoader.unloadApp.bind(this.#bundleLoader),
+            unloadApp: this.unloadApp.bind(this),
             navigate: this.#router.navigateToUrl.bind(this.#router),
             onIntlChange: this.#addIntlChangeHandler.bind(this),
             onRouteChange: this.#addRouteChangeHandlerWithDispatch.bind(this),
