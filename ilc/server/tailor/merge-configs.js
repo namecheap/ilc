@@ -15,8 +15,6 @@ module.exports = (original, override) => {
     if (override.routes) {
         override.routes.forEach((overrideRoute) => {
             let indexOfOverrideRoute;
-            const beforeOf = overrideRoute.beforeOf;
-
             const originalRoute = cloned.routes.find((route) => {
                 if (overrideRoute.routeId) {
                     return route.routeId === overrideRoute.routeId;
@@ -32,19 +30,8 @@ module.exports = (original, override) => {
                 cloned.routes.push(overrideRoute);
                 indexOfOverrideRoute = cloned.routes.length - 1;
             }
-
-            if (beforeOf) {
-                const [routeThatShouldBeMoved] = cloned.routes.splice(indexOfOverrideRoute, 1);
-                const beforeRouteIndex = cloned.routes.findIndex(
-                    (route) => beforeOf === route.route || beforeOf === route.routeId,
-                );
-                cloned.routes = [
-                    ...cloned.routes.slice(0, beforeRouteIndex),
-                    routeThatShouldBeMoved,
-                    ...cloned.routes.slice(beforeRouteIndex),
-                ];
-            }
         });
+        cloned.routes = cloned.routes.sort((a, b) => a.orderPos - b.orderPos);
     }
 
     if (override.sharedLibs) {
