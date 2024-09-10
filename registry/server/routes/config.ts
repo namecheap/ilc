@@ -111,7 +111,16 @@ router.get('/', async (req, res) => {
                     meta: {},
                 },
                 _.omitBy(
-                    _.pick(routeItem, ['routeId', 'route', 'next', 'template', 'specialRole', 'domain', 'versionId']),
+                    _.pick(routeItem, [
+                        'routeId',
+                        'route',
+                        'next',
+                        'template',
+                        'specialRole',
+                        'domain',
+                        'orderPos',
+                        'versionId',
+                    ]),
                     _.isNull,
                 ),
             );

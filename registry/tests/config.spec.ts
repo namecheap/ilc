@@ -131,17 +131,18 @@ describe('Tests /api/v1/config', () => {
 
                 expect(response.body.routes).to.deep.include({
                     routeId,
-                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
+                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta', 'orderPos']),
                 });
 
                 expect(response.body.routes).to.deep.include({
                     routeId: routeIdWithDomain,
-                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
                     domain: example.routerDomains.domainName,
+                    orderPos: 123,
+                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
                 });
 
                 expect(response.body.routes).to.deep.include({
-                    ..._.omit(example.appRoutesWithoutSlots, ['orderPos', 'templateName']),
+                    ..._.omit(example.appRoutesWithoutSlots, ['templateName']),
                     template: example.appRoutesWithoutSlots.templateName,
                 });
 
