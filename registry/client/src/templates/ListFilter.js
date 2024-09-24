@@ -15,15 +15,6 @@ export const ListFilter = ({ routerDomain, ...props }) => {
 
     return (
         <Filter {...props} className={classes.filters}>
-            <TextInput label="Name" source="q" alwaysOn resettable />
-            <SelectInput
-                alwaysOn
-                source="kind"
-                label="Kind"
-                optionText="name"
-                resettable
-                choices={APP_KINDS_WITH_WRAPPER}
-            />
             {routerDomain.length ? (
                 <SelectInput
                     alwaysOn
