@@ -52,8 +52,8 @@ const getApps = async (req: RequestWithFilters<Filters>, res: Response): Promise
                 .where(`${Tables.Apps}.enforceDomain`, null);
         } else {
             query
-                .innerJoin(Tables.RouteSlots, `${Tables.RouteSlots}.appName`, `${Tables.Apps}.name`)
-                .innerJoin(Tables.Routes, `${Tables.Routes}.id`, `${Tables.RouteSlots}.routeId`)
+                .leftJoin(Tables.RouteSlots, `${Tables.RouteSlots}.appName`, `${Tables.Apps}.name`)
+                .leftJoin(Tables.Routes, `${Tables.Routes}.id`, `${Tables.RouteSlots}.routeId`)
                 .where(`${Tables.Routes}.domainId`, filters.domainId)
                 .orWhere(`${Tables.Apps}.enforceDomain`, filters.domainId)
                 .groupBy(`${Tables.Apps}.name`)

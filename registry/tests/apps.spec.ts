@@ -362,7 +362,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it('should successfully return records filtered by domainID', async () => {
+        it('should successfully return records filtered by domainID using slots and routes', async () => {
             const teardownFns: (() => Promise<void>)[] = [];
 
             try {
@@ -413,6 +413,53 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req.get(`${example.url}?${query}`).expect(200);
 
                 expectAppsListEqual(response.body, [example.appsList[1]]);
+            } finally {
+                for (const fn of teardownFns) {
+                    await fn();
+                }
+            }
+        });
+
+        it('should successfully return records filtered by domainId, using enforceDomain', async () => {
+            const teardownFns: (() => Promise<void>)[] = [];
+            try {
+                //create template
+                const template = {
+                    name: 'hello500',
+                    content: '<html><head></head><body class="custom">hello500</body></html>',
+                };
+                await req.post('/api/v1/template').send(template).expect(200);
+                teardownFns.unshift(async () => {
+                    await req.delete('/api/v1/template/' + template.name).expect(204);
+                });
+
+                //create domain with this template
+                const domain = { domainName: 'example.com', template500: template.name };
+                const {
+                    body: { id: routerDomainId },
+                } = await req.post('/api/v1/router_domains').send(domain).expect(200);
+                teardownFns.unshift(async () => {
+                    await req.delete('/api/v1/router_domains/' + routerDomainId).expect(204);
+                });
+
+                // create apps, adding a routerDomainId as enforceDomain to one of them
+                const app1WithDomain = {
+                    ...example.appsList[1],
+                    enforceDomain: routerDomainId,
+                };
+                const apps = [example.appsList[0], app1WithDomain, example.appsList[2]];
+                for (const app of apps) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+                teardownFns.unshift(async () => {
+                    for (const app of apps) {
+                        await req.delete(example.url + app.name).expect(204);
+                    }
+                });
+
+                const query = makeFilterQuery({ domainId: routerDomainId });
+                const response = await req.get(`${example.url}?${query}`).expect(200);
+                expectAppsListEqual(response.body, [app1WithDomain]);
             } finally {
                 for (const fn of teardownFns) {
                     await fn();
