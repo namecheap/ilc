@@ -1,7 +1,6 @@
 import { makeStyles } from '@material-ui/core';
 import React from 'react';
-import { Filter, TextInput, SelectInput } from 'react-admin';
-import { APP_KINDS_WITH_WRAPPER } from '../constants';
+import { Filter, SelectInput } from 'react-admin';
 
 const useStyles = makeStyles({
     filters: {

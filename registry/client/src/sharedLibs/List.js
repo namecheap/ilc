@@ -1,6 +1,6 @@
 import React from 'react';
 import { useMediaQuery } from '@material-ui/core';
-import { Datagrid, List, SimpleList, TextField, EditButton, FunctionField } from 'react-admin'; // eslint-disable-line import/no-unresolved
+import { Datagrid, List, SimpleList, TextField, EditButton, FunctionField } from 'react-admin';
 import { Empty, ListBulkActions, ListActionsToolbar } from '../components';
 import { ListFilter } from './ListFilter';
 

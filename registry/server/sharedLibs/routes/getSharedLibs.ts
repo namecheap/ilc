@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
