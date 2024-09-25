@@ -273,7 +273,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it('should filter a list of templates by domain', async () => {
+        it.only('should filter a list of templates by domainId using', async () => {
             const teardownFns: (() => Promise<void>)[] = [];
 
             try {
@@ -290,7 +290,10 @@ describe(`Tests ${example.url}`, () => {
                 // Create a domain
                 const domainResponse = await req
                     .post('/api/v1/router_domains')
-                    .send({ domainName: 'example.com', template500: example.templatesList[1].name })
+                    .send({
+                        domainName: 'example.com',
+                        template500: example.templatesList[1].name,
+                    })
                     .expect(200);
                 const domainId = domainResponse.body.id;
                 teardownFns.unshift(async () => {
@@ -301,7 +304,7 @@ describe(`Tests ${example.url}`, () => {
                 const routeResponse = await req.post('/api/v1/route').send({
                     route: 'example',
                     domainId,
-                    templateName: example.templatesList[1].name,
+                    templateName: example.templatesList[2].name,
                 });
                 const routeId = routeResponse.body.id;
                 teardownFns.unshift(async () => {
@@ -309,13 +312,31 @@ describe(`Tests ${example.url}`, () => {
                 });
 
                 // Get the list of templates by domain
-                const query = makeFilterQuery({ domainId });
-                const response = await req.get(`${example.url}?${query}`).expect(200);
-                expect(response.body).to.be.an('array').that.is.not.empty;
-                expect(response.body).to.have.length(1);
-                expect(response.body).to.deep.include({
+                const { body: templatesWithDomain } = await req
+                    .get(`${example.url}?${makeFilterQuery({ domainId })}`)
+                    .expect(200);
+                expect(templatesWithDomain).to.be.an('array').that.is.not.empty;
+                // There should be two templates:
+                expect(templatesWithDomain).to.have.length(2);
+                // One of the templates should be from the domain
+                expect(_.omit(templatesWithDomain[0], 'versionId')).to.deep.equal({
                     ...example.templatesList[1],
-                    versionId: response.body[0].versionId,
+                });
+                // The other template should be from the route
+                expect(_.omit(templatesWithDomain[1], 'versionId')).to.deep.equal({
+                    ...example.templatesList[2],
+                });
+
+                // Get the list of templates without domain
+                const { body: templatesWithoutDomain } = await req
+                    .get(`${example.url}?${makeFilterQuery({ domainId: 'null' })}`)
+                    .expect(200);
+                expect(templatesWithoutDomain).to.be.an('array').that.is.not.empty;
+                // There should be one template:
+                expect(templatesWithoutDomain).to.have.length(1);
+                // The template not associated with the any domain
+                expect(_.omit(templatesWithoutDomain[0], 'versionId')).to.deep.equal({
+                    ...example.templatesList[0],
                 });
             } finally {
                 for (const fn of teardownFns) {

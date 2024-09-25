@@ -35,17 +35,25 @@ const getTemplates = async (req: RequestWithFilters<Filters>, res: Response): Pr
 
     if (req.filters?.domainId) {
         if (req.filters.domainId === 'null') {
-            query.whereNotExists(function () {
-                this.select(1)
-                    .from(Tables.Routes)
-                    .where(`${Tables.Routes}.templateName`, db.ref(`${Tables.Templates}.name`))
-                    .whereNotNull(`${Tables.Routes}.domainId`);
-            });
+            query
+                .whereNotExists(function () {
+                    this.select(1)
+                        .from(Tables.Routes)
+                        .where(`${Tables.Routes}.templateName`, db.ref(`${Tables.Templates}.name`))
+                        .whereNotNull(`${Tables.Routes}.domainId`);
+                })
+                .whereNotExists(function () {
+                    this.select(1)
+                        .from(Tables.RouterDomains)
+                        .where(`${Tables.RouterDomains}.template500`, db.ref(`${Tables.Templates}.name`));
+                });
         } else {
             query
                 .distinct()
-                .innerJoin(Tables.Routes, `${Tables.Routes}.templateName`, `${Tables.Templates}.name`)
-                .where(`${Tables.Routes}.domainId`, req.filters.domainId);
+                .leftJoin(Tables.Routes, `${Tables.Routes}.templateName`, `${Tables.Templates}.name`)
+                .leftJoin(Tables.RouterDomains, `${Tables.RouterDomains}.template500`, `${Tables.Templates}.name`)
+                .where(`${Tables.Routes}.domainId`, req.filters.domainId)
+                .orWhere(`${Tables.RouterDomains}.id`, req.filters.domainId);
         }
     }
 
