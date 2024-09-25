@@ -19,8 +19,7 @@
         "test": "cross-env-shell DB_CLIENT=sqlite3 npm run reset && cross-env NODE_ENV=test NODE_CONFIG_ENV=sqlite-test mocha",
         "test:mysql": "cross-env-shell NODE_ENV=test NODE_CONFIG_ENV=mysql-test DB_CLIENT=mysql \"npm run reset && mocha\" ",
         "test:postgres": "cross-env-shell NODE_ENV=test NODE_CONFIG_ENV=postgres-test DB_CLIENT=pg \"npm run reset && mocha\" ",
-        "test:ci": "npm run migrate && cross-env NODE_ENV=test nyc mocha --forbid-only",
-        "test:coverage": "cross-env NODE_ENV=test nyc mocha",
+        "test:ci": "npm run migrate && cross-env NODE_ENV=test dotenv -- nyc mocha --forbid-only",
         "reset": "dotenv bash ./scripts/reset.sh && npm run migrate",
         "assetsdiscovery": "cross-env NODE_ENV=production INTERVAL=2000 node -r source-map-support/register ./build/server/runnerAssetsDiscovery.js",
         "assetsdiscovery:dev": "nodemon -e ts,json5 --exec \"npx tsc --incremental && dotenv -- npm run assetsdiscovery | pino-pretty\" "
