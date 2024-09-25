@@ -7,19 +7,31 @@ import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 import Joi from 'joi';
 import { filtersMiddleware, RequestWithFilters } from '../../middleware/filters';
+import { ok } from 'assert';
 
 interface Filters {
     domainId?: number | 'null';
+    id?: string[] | string;
+    name?: string[] | string;
 }
 
 const filtersSchema = Joi.object<Filters>({
     domainId: Joi.alternatives(Joi.number(), Joi.string().valid('null')).optional(),
+    id: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
+    name: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
 });
 
 const getTemplates = async (req: RequestWithFilters<Filters>, res: Response): Promise<void> => {
     const query = db.selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [
         `${Tables.Templates}.*`,
     ]);
+
+    if (req.filters?.id || req.filters?.name) {
+        const name = req.filters?.name ?? req.filters?.id;
+        ok(name);
+        const normalizedNames = Array.isArray(name) ? name : [name];
+        query.whereIn('name', normalizedNames);
+    }
 
     if (req.filters?.domainId) {
         if (req.filters.domainId === 'null') {
