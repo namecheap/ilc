@@ -122,15 +122,9 @@ export class SettingsService {
             .from('settings')
             .innerJoin('settings_domain_value', 'settings.key', 'settings_domain_value.key')
             .where('settings_domain_value.domainId', domainId)
-            .select<SettingRaw[]>(
-                'settings.key',
-                'settings.default',
-                'settings.scope',
-                'settings.secret',
-                'settings.meta',
-                'settings_domain_value.value as value',
-                'settings_domain_value.domainId as domainId',
-            )
+            .select<
+                SettingRaw[]
+            >('settings.key', 'settings.default', 'settings.scope', 'settings.secret', 'settings.meta', 'settings_domain_value.value as value', 'settings_domain_value.domainId as domainId')
             .range(options.range);
 
         const parsedSettings = this.parseSettings(settings.data);

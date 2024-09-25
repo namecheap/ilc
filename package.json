@@ -17,7 +17,7 @@
         "postinstall": "npm run install-all",
         "format": "npx prettier --write \"registry/**/*.ts\" \"ilc/**/*.{js,ts}\" ",
         "format:check": "npx prettier --check \"registry/**/*.ts\" \"ilc/**/*.{js,ts}\" ",
-        "prepare": "husky install"
+        "prepare": "husky"
     },
     "author": "",
     "license": "Apache-2.0",
@@ -26,9 +26,9 @@
         "npm": ">= 6.0.0"
     },
     "devDependencies": {
-        "concurrently": "^8.2.1",
-        "husky": "^8.0.3",
-        "prettier": "^3.0.3"
+        "concurrently": "^9.0.1",
+        "husky": "^9.1.6",
+        "prettier": "^3.3.3"
     },
     "dependencies": {}
 }
