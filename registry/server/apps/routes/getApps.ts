@@ -41,18 +41,21 @@ const getApps = async (req: RequestWithFilters<Filters>, res: Response): Promise
     }
     if (filters.domainId) {
         if (filters.domainId === 'null') {
-            query.whereNotExists(function () {
-                this.select(1)
-                    .from(Tables.RouteSlots)
-                    .innerJoin(Tables.Routes, `${Tables.Routes}.id`, `${Tables.RouteSlots}.routeId`)
-                    .where(`${Tables.RouteSlots}.appName`, db.ref(`${Tables.Apps}.name`))
-                    .whereNotNull(`${Tables.Routes}.domainId`);
-            });
+            query
+                .whereNotExists(function () {
+                    this.select(1)
+                        .from(Tables.RouteSlots)
+                        .innerJoin(Tables.Routes, `${Tables.Routes}.id`, `${Tables.RouteSlots}.routeId`)
+                        .where(`${Tables.RouteSlots}.appName`, db.ref(`${Tables.Apps}.name`))
+                        .whereNotNull(`${Tables.Routes}.domainId`);
+                })
+                .where(`${Tables.Apps}.enforceDomain`, null);
         } else {
             query
                 .innerJoin(Tables.RouteSlots, `${Tables.RouteSlots}.appName`, `${Tables.Apps}.name`)
                 .innerJoin(Tables.Routes, `${Tables.Routes}.id`, `${Tables.RouteSlots}.routeId`)
                 .where(`${Tables.Routes}.domainId`, filters.domainId)
+                .orWhere(`${Tables.Apps}.enforceDomain`, filters.domainId)
                 .groupBy(`${Tables.Apps}.name`)
                 .groupBy('v.versionId');
         }

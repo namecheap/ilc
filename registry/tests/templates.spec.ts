@@ -273,7 +273,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it.only('should filter a list of templates by domain', async () => {
+        it('should filter a list of templates by domain', async () => {
             const teardownFns: (() => Promise<void>)[] = [];
 
             try {
