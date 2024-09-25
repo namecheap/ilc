@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { request, requestWithAuth, expect } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
 import supertest from 'supertest';
-import { stringify as qsStringify } from 'querystring';
+import { makeFilterQuery } from './utils/makeFilterQuery';
 
 const assetsDiscovery = {
     host: 'http://127.0.0.1:1234',
@@ -92,10 +92,6 @@ const example = {
     appsList,
 };
 example.encodedName = encodeURIComponent(example.correct.name);
-
-function makeFilterQuery(params: Record<string, any>) {
-    return qsStringify({ filter: JSON.stringify(params) });
-}
 
 function expectAppsListEqual(actual: readonly any[], expected: readonly any[]) {
     expect(actual).to.be.an('array').that.is.not.empty;
