@@ -22,9 +22,9 @@ const filtersSchema = Joi.object<Filters>({
 });
 
 const getTemplates = async (req: RequestWithFilters<Filters>, res: Response): Promise<void> => {
-    const query = db.selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [
-        `${Tables.Templates}.*`,
-    ]);
+    const query = db
+        .selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.*`])
+        .orderBy('name', 'asc');
 
     if (req.filters?.id || req.filters?.name) {
         const name = req.filters?.name ?? req.filters?.id;
