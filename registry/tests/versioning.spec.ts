@@ -1,9 +1,6 @@
-import knex from 'knex';
-import { format } from 'path';
 process.env.TZ = 'UTC';
-import app from '../server/app';
-import supertest from 'supertest';
 
+import supertest, { type Agent } from 'supertest';
 import db from '../server/db';
 import { formatDate } from '../server/util/db';
 import { expect, request, requestWithAuth } from './common';
@@ -32,7 +29,7 @@ const dataStub = [
 ];
 
 describe('Versioning Properties', () => {
-    let req: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
 
     beforeEach(async () => {
         req = await request();
@@ -69,8 +66,8 @@ describe('Versioning Properties', () => {
 });
 
 describe(`Tests ${basePath}`, () => {
-    let req: supertest.SuperTest<supertest.Test>;
-    let reqWithAuth: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
+    let reqWithAuth: Agent;
 
     beforeEach(async () => {
         req = await request();

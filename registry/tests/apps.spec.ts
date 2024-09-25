@@ -1,8 +1,8 @@
-import nock from 'nock';
 import _ from 'lodash';
-import { request, requestWithAuth, expect } from './common';
+import nock from 'nock';
+import { type Agent } from 'supertest';
+import { expect, request, requestWithAuth } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
-import supertest from 'supertest';
 
 const assetsDiscovery = {
     host: 'http://127.0.0.1:1234',
@@ -74,7 +74,7 @@ const example = {
 example.encodedName = encodeURIComponent(example.correct.name);
 
 describe(`Tests ${example.url}`, () => {
-    let req: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
 
     beforeEach(async () => {
         req = await request();

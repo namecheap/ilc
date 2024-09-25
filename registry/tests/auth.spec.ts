@@ -6,7 +6,7 @@ import fs from 'fs';
 import nock from 'nock';
 import querystring from 'querystring';
 import sinon from 'sinon';
-import supertest, { agent as supertestAgent, SuperTest } from 'supertest';
+import supertest, { agent as supertestAgent, type Agent } from 'supertest';
 import { useAuth } from '../server/auth';
 import { OpenIdService } from '../server/auth/services/OpenIdService';
 import db from '../server/db';
@@ -63,7 +63,7 @@ describe('Authentication / Authorization', () => {
     });
 
     describe('Bearer token', async () => {
-        let request: SuperTest<supertest.Test>;
+        let request: Agent;
         let authToken: string;
         let userIdentifier: string;
         before(async () => {
@@ -223,7 +223,7 @@ describe('Authentication / Authorization', () => {
 
     describe('OpenID Connect', () => {
         let app: Express;
-        let agent: supertest.SuperTest<supertest.Test>;
+        let agent: Agent;
         let oidcServer: nock.Scope;
         let tokenEndpoint: nock.Scope;
 

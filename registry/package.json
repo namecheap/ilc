@@ -47,7 +47,7 @@
         "@types/passport-http-bearer": "^1.0.41",
         "@types/passport-local": "^1.0.38",
         "@types/sinon": "^17.0.3",
-        "@types/supertest": "^2.0.16",
+        "@types/supertest": "^6.0.2",
         "@types/url-join": "^4.0.3",
         "@types/uuid": "^9.0.8",
         "chai": "4.5.0",
