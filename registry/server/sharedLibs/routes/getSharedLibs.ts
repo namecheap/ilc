@@ -22,7 +22,7 @@ const getSharedLibs = async (req: RequestWithFilters<Filters>, res: Response): P
         .from(Tables.SharedLibs);
 
     if (req.filters?.name) {
-        query.whereILike('name', `%${req.filters.name}%`);
+        query.whereLike(`${Tables.SharedLibs}.name`, `%${req.filters.name}%`);
     }
 
     const sharedLibs = await query.range(req.query.range as string | undefined);

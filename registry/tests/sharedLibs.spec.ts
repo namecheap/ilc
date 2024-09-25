@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { request, requestWithAuth, expect } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
 import supertest from 'supertest';
+import { makeFilterQuery } from './utils/makeFilterQuery';
 
 const example = <any>{
     url: '/api/v1/shared_libs/',
@@ -23,6 +24,23 @@ const example = <any>{
         spaBundle: 'http://localhost:1234/testSpaBundleSharedLibUPDATED.js',
         adminNotes: 'Lorem ipsum admin notes dolor sit UPDATED',
     }),
+    libsList: [
+        {
+            name: 'lib0',
+            spaBundle: 'https://example.com/lib0.js',
+            adminNotes: 'Lorem ipsum admin notes dolor sit',
+        },
+        {
+            name: 'lib1',
+            spaBundle: 'https://example.com/lib1.js',
+            adminNotes: 'Lorem ipsum admin notes dolor sit',
+        },
+        {
+            name: 'lib2',
+            spaBundle: 'https://example.com/lib2.js',
+            adminNotes: 'Lorem ipsum admin notes dolor sit',
+        },
+    ],
 };
 
 example.correctWithAssetsDiscoveryUrl = Object.freeze({
@@ -186,6 +204,27 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body[0]).to.deep.equal({ ...example.correct, versionId: response.body[0].versionId });
             } finally {
                 await req.delete(example.url + example.correct.name);
+            }
+        });
+
+        it('should successfully return records filtered by name', async () => {
+            try {
+                // Create a list of shared libraries
+                for (const lib of example.libsList) {
+                    await req.post(example.url).send(lib).expect(200);
+                }
+
+                const query = makeFilterQuery({ name: example.libsList[1].name });
+                const { body: records } = await req.get(`${example.url}?${query}`).expect(200);
+
+                expect(records).to.be.an('array').that.is.not.empty;
+                expect(records.length).to.be.equal(1);
+                expect(records[0].versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
+                expect(_.omit(records[0], 'versionId')).to.deep.equal({ ...example.libsList[1] });
+            } finally {
+                for (const lib of example.libsList) {
+                    await req.delete(example.url + lib.name).expect(204, '');
+                }
             }
         });
 
