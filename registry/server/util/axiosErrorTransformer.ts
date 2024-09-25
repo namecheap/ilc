@@ -17,10 +17,10 @@ export function axiosErrorTransformer<T = unknown>(err: T): typeof IlcAxiosError
                       data: err.response?.data,
                       headers: err.response?.headers,
                   },
-                  url: err.config.url,
-                  method: err.config.method,
-                  payload: err.config.data,
-                  headers: err.config.headers,
+                  url: err.config?.url,
+                  method: err.config?.method,
+                  payload: err.config?.data,
+                  headers: err.config?.headers,
               },
           })
         : err;
