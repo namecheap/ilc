@@ -58,7 +58,7 @@ export default class AsyncBootUp {
             return res;
         }
 
-        const overridesEl = slotEl.querySelector('script[type="spa-config-override"]');
+        const overridesEl = slotEl.querySelector('script[type="text/spa-config-override"]');
         if (overridesEl) {
             const conf = JSON.parse(overridesEl.innerHTML);
 

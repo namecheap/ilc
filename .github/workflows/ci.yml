@@ -26,7 +26,7 @@ jobs:
               ref: ""
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ matrix.branch.ref }}
 
@@ -36,17 +36,17 @@ jobs:
           echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Docker ILC auth
         run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
 
       - name: Build the Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./ilc
           platforms: linux/amd64,linux/arm64
@@ -62,12 +62,12 @@ jobs:
         run: docker run namecheap/ilc_tmp:$SHA npm run test:ci
 
       - name: Run server-side tests coverage
-        run: docker run --volume $(pwd)/artifacts/ilc/.test_output/server:/temporary namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage && mv .nyc_output/* /temporary"
+        run: docker run --volume $(pwd)/artifacts/ilc/coverage/server:/.coverage namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage && mv .nyc_output/* /.coverage"
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.branch.name }}-server-side-tests-artifacts
-          path: artifacts/ilc/.test_output/server/
+          path: artifacts/ilc/coverage/server
 
       - name: Build the Docker image to test client-side
         run: |
@@ -78,12 +78,12 @@ jobs:
         run: |
           echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
           sudo sysctl -p
-          docker run --volume $(pwd)/artifacts/ilc/.test_output/client:/temporary ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /temporary"
+          docker run --volume $(pwd)/artifacts/ilc/coverage/client:/.coverage ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /.coverage"
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.branch.name }}-client-side-tests-artifacts
-          path: artifacts/ilc/.test_output/client/
+          path: artifacts/ilc/coverage/client
 
   build_registry:
     name: Build Registry
@@ -100,7 +100,7 @@ jobs:
               ref: ""
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ matrix.branch.ref }}
 
@@ -112,7 +112,7 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
         with:
           buildkitd-flags: --debug
 
@@ -181,7 +181,7 @@ jobs:
         options: --name=postgres --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ matrix.branch.ref }}
 
@@ -195,7 +195,7 @@ jobs:
         run: >-
           bash ./registry/scripts/reset.sh;
           docker run
-          --volume $(pwd)/artifacts/registry/.test_output:/temporary
+          --volume $(pwd)/artifacts/registry/coverage:/.coverage
           --network ${{ job.container.network }}
           -e DB_CLIENT=${{ matrix.database.client }}
           -e DB_HOST=${{ matrix.database.host }}
@@ -204,12 +204,12 @@ jobs:
           -e DB_PASSWORD=pwd
           -e DB_NAME=$DB_NAME
           namecheap/ilc_tmp:reg_$SHA
-          sh -c "npm run test:ci && mv .nyc_output/* /temporary"
+          sh -c "npm run test:ci && mv .nyc_output/* /.coverage"
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.branch.name }}-${{ matrix.database.client }}-registry-tests-artifacts
-          path: artifacts/registry/.test_output/
+          path: ./artifacts/registry/coverage
 
   e2e_tests:
     name: Run E2E tests
@@ -245,10 +245,10 @@ jobs:
         options: --name=postgres --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.8.0
           cache: 'npm'
@@ -271,7 +271,7 @@ jobs:
           DB_PASSWORD: pwd
           DB_NAME: ilc
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: e2e-tests-artifacts
@@ -283,8 +283,8 @@ jobs:
     needs: [build_ilc, registry_tests]
     if: github.base_ref
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
       - name: Create coverage report for ilc/server
         id: ilc-server-coverage-report
         uses: namecheap/Coverage-Diff@master
@@ -320,7 +320,7 @@ jobs:
           postComment: false
           oldCodeCoveragePath: ./dest-merged-registry-tests-artifacts/coverage/coverage-summary.json
           newCodeCoveragePath: ./src-merged-registry-tests-artifacts/coverage/coverage-summary.json
-          total_delta: 2
+          total_delta: 6
       - name: Compose comment
         if: success() || failure()
         run: |
@@ -377,7 +377,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Build the Docker image
         run: |

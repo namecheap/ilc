@@ -195,7 +195,7 @@ describe('async boot up', () => {
                         Hello! I am Body SPA.
                         I have SPA override config, so I should override dependencies and return my override SPA config.
                     </div>
-                    <script type="spa-config-override">${JSON.stringify(config.body)}</script>
+                    <script type="text/spa-config-override">${JSON.stringify(config.body)}</script>
                 </div>
                 <div id=${slots.footer.id}">
                     <div>
@@ -203,7 +203,7 @@ describe('async boot up', () => {
                         I have SPA override config, so I should return my override SPA config.
                         But I don't have any dependencies, so I should not override them.
                     </div>
-                    <script type="spa-config-override">${JSON.stringify(config.footer)}</script>
+                    <script type="text/spa-config-override">${JSON.stringify(config.footer)}</script>
                 </div>
             </main>
         `;
@@ -271,10 +271,10 @@ describe('async boot up', () => {
         ]);
 
         chai.expect(document.getElementById(slots.body.id).innerHTML).does.not.include(
-            `<script type="spa-config-override">${JSON.stringify(config.body)}</script>`,
+            `<script type="text/spa-config-override">${JSON.stringify(config.body)}</script>`,
         );
         chai.expect(document.getElementById(slots.footer.id).innerHTML).does.not.include(
-            `<script type="spa-config-override">${JSON.stringify(config.footer)}</script>`,
+            `<script type="text/spa-config-override">${JSON.stringify(config.footer)}</script>`,
         );
     });
 
@@ -304,7 +304,7 @@ describe('async boot up', () => {
                         routing event. It means I don't have to mark myself as ready and I should not override initial
                         SPA config.
                     </div>
-                    <script type="spa-config-override">
+                    <script type="text/spa-config-override">
                         ${JSON.stringify(config.footer)}
                     </script>
                 </div>
@@ -328,7 +328,7 @@ describe('async boot up', () => {
         chai.expect(logger.info.called).to.be.false;
 
         chai.expect(document.getElementById(slots.footer.id).innerHTML).includes(
-            `<script type="spa-config-override">${JSON.stringify(config.footer)}</script>`,
+            `<script type="text/spa-config-override">${JSON.stringify(config.footer)}</script>`,
         );
     });
 });
