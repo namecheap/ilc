@@ -1,9 +1,9 @@
 import { Response } from 'express';
 import Joi from 'joi';
+
 import preProcessResponse from '../../common/services/preProcessResponse';
-import db from '../../db';
-import { RequestWithFilters, filtersMiddleware } from '../../middleware/filters';
-import { AppsGetListFilters, AppsRepository } from '../repositories/AppsRepository';
+import { filtersMiddleware, RequestWithFilters } from '../../middleware/filters';
+import { AppsGetListFilters, appsRepository } from '../repositories/AppsRepository';
 
 const filtersSchema = Joi.object<AppsGetListFilters>({
     q: Joi.string().optional(),
@@ -16,8 +16,7 @@ const filtersSchema = Joi.object<AppsGetListFilters>({
 const getApps = async (req: RequestWithFilters<AppsGetListFilters>, res: Response): Promise<void> => {
     const filters = req.filters ?? {};
 
-    const repo = new AppsRepository(db);
-    const { data, pagination } = await repo.getList(filters, {
+    const { data, pagination } = await appsRepository.getList(filters, {
         // TODO: add a vlidating middleware to make sure it's a valid range
         range: req.query.range as string | undefined,
     });

@@ -1,5 +1,5 @@
 import { PaginatedResult } from '../../../typings/PaginatedResult';
-import { VersionedKnex } from '../../db';
+import db, { VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
@@ -41,3 +41,6 @@ export class SharedLibsRepository {
         };
     }
 }
+
+// TODO: implement factory and IoC Container
+export const sharedLibsRepository = new SharedLibsRepository(db);

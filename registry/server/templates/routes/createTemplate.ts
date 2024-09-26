@@ -4,7 +4,7 @@ import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
 import Template, { LocalizedTemplate } from '../interfaces';
 import { Tables } from '../../db/structure';
-import { readTemplateWithAllVersions } from '../services/templatesRepository';
+import { templatesRepository } from '../services/templatesRepository';
 import { templateSchema, validateLocalesAreSupported } from './validation';
 
 const validateRequestBeforeCreateTemplate = validateRequestFactory([
@@ -36,7 +36,7 @@ const createTemplate = async (req: Request, res: Response): Promise<void> => {
             await insertLocalizedVersions(locales, template, request);
         }
 
-        const savedTemplate = await readTemplateWithAllVersions(template.name);
+        const savedTemplate = await templatesRepository.readTemplateWithAllVersions(template.name);
         res.status(200).send(savedTemplate);
     } catch (e) {
         res.status(500).send(JSON.stringify(e));

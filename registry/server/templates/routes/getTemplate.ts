@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import validateRequestFactory from '../../common/services/validateRequest';
-import { readTemplateWithAllVersions } from '../services/templatesRepository';
+import { templatesRepository } from '../services/templatesRepository';
 import { templateNameSchema } from './validation';
 
 type GetTemplateRequestParams = {
@@ -21,7 +21,7 @@ const validateRequestBeforeGetTemplate = validateRequestFactory([
 const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response): Promise<void> => {
     const { name: templateName } = req.params;
 
-    const template = await readTemplateWithAllVersions(templateName);
+    const template = await templatesRepository.readTemplateWithAllVersions(templateName);
 
     if (!template) {
         res.status(404).send('Not found');

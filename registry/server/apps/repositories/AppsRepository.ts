@@ -1,10 +1,11 @@
 import { Knex } from 'knex';
 import { PaginatedResult } from '../../../typings/PaginatedResult';
-import { VersionedKnex } from '../../db';
+import db, { VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 import App from '../interfaces';
+import { normalizeArray } from '../../util/normalizeArray';
 
 export interface AppsGetListFilters {
     q?: string;
@@ -57,7 +58,7 @@ export class AppsRepository {
         if (!filters.kind) {
             return;
         }
-        const kind = Array.isArray(filters.kind) ? filters.kind : [filters.kind];
+        const kind = normalizeArray(filters.kind);
         if (kind.length === 0) {
             return;
         }
@@ -98,3 +99,6 @@ export class AppsRepository {
         }
     }
 }
+
+// TODO: implement factory and IoC Container
+export const appsRepository = new AppsRepository(db);
