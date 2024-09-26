@@ -17,7 +17,7 @@ Scenario('should open every page and show a content only of an opened page', asy
     });
     I.dontSeeElement(newsPage.bannerHeadline);
     I.dontSeeElement(newsPage.newsSources);
-    I.see('No one selected', peoplePage.selectedPerson);
+    I.waitForText('No one selected', 10, peoplePage.selectedPerson);
     I.waitForClickable(peoplePage.fetchMorePeople, 10);
     I.seeNumberOfVisibleElements(peoplePage.personsList, 10);
 
@@ -28,7 +28,7 @@ Scenario('should open every page and show a content only of an opened page', asy
     I.dontSeeElement(peoplePage.fetchMorePeople);
     I.dontSeeElement(peoplePage.selectedPerson);
     I.dontSeeElement(peoplePage.personsList);
-    I.see('No planet selected', planetsPage.selectedPlanet);
+    I.waitForText('No planet selected', 10, planetsPage.selectedPlanet);
     I.waitNumberOfVisibleElements(planetsPage.planetsList, 10, 10);
 
     clickOnLink('/nosuchpath');
@@ -41,7 +41,7 @@ Scenario('should open every page and show a content only of an opened page', asy
         'aria-current': 'page',
     });
     I.dontSee('404 not found', 'body > div#body');
-    I.see('No planet selected', planetsPage.selectedPlanet);
+    I.waitForText('No planet selected', 10, planetsPage.selectedPlanet);
     I.waitNumberOfVisibleElements(planetsPage.planetsList, 10, 10);
 
     clickOnLink(peoplePage.peopleUrl);
@@ -50,7 +50,7 @@ Scenario('should open every page and show a content only of an opened page', asy
     });
     I.dontSeeElement(planetsPage.selectedPlanet);
     I.dontSeeElement(planetsPage.planetsList);
-    I.see('No one selected', peoplePage.selectedPerson);
+    I.waitForText('No one selected', 10, peoplePage.selectedPerson);
     I.waitForClickable(peoplePage.fetchMorePeople, 10);
     I.seeNumberOfVisibleElements(peoplePage.personsList, 10);
 

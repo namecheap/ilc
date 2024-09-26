@@ -8,7 +8,7 @@ Scenario('should open a planets page without any selected planet initially', asy
     I.seeAttributesOnElements(planetsPage.goToPlanets, {
         'aria-current': 'page',
     });
-    I.see('No planet selected', planetsPage.selectedPlanet);
+    I.waitForText('No planet selected', 10, planetsPage.selectedPlanet);
     I.waitNumberOfVisibleElements(planetsPage.planetsList, 10, 30);
 });
 

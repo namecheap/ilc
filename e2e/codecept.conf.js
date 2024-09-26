@@ -11,7 +11,7 @@ exports.config = {
             url: `http://localhost:8233`,
             windowSize: '1200x900',
             chrome: {
-                headless: process.env.SHOW_UI === 'true' ? false: 'new',
+                headless: process.env.SHOW_UI === 'true' ? false : 'new',
             },
         },
         MockRequestHelper: {
@@ -66,6 +66,7 @@ exports.config = {
         autoDelay: {
             enabled: true,
         },
+        pauseOnFail: {},
     },
     include: {
         peoplePage: path.join(__dirname, 'spec', 'pages', 'people.ts'),

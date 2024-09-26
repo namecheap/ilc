@@ -1,3 +1,5 @@
+import type { Browser, Page } from 'puppeteer';
+
 Feature('news ilc demo application');
 
 Scenario('should open a news page and show news sources', async ({ I, newsPage: newsPage }) => {
@@ -29,7 +31,10 @@ Scenario('should open an article page from a direct link', async ({ I, newsPage:
     const firstNewsSourceArticleHref = await I.grabAttributeFrom(newsPage.firstNewsSourceArticle, 'href');
 
     I.click(newsPage.firstNewsSourceArticle);
-    I.wait(3);
+    I.usePuppeteerTo('wait for new tab open', async ({ page, browser }: { page: Page; browser: Browser }) => {
+        const pageTarget = page.target();
+        await browser.waitForTarget((target) => target.opener() === pageTarget, { timeout: 10_000 });
+    });
     I.switchToNextTab();
     I.waitInUrl(firstNewsSourceArticleHref, 10);
     I.switchToPreviousTab();
