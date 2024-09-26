@@ -1,11 +1,15 @@
-const path = require('path');
+import path from 'path';
 
-const preSettings = require('./codecept.presettings.js');
+import { bootstrap, teardown } from './codecept.presettings';
 
 const outputDir = path.join(__dirname, '.codecept_output');
 
-exports.config = {
+export const config: CodeceptJS.MainConfig = {
     output: outputDir,
+    rerun: {
+        minSuccess: 3,
+        maxReruns: 5,
+    },
     helpers: {
         Puppeteer: {
             url: `http://localhost:8233`,
@@ -53,8 +57,8 @@ exports.config = {
             },
         },
     },
-    bootstrap: preSettings.bootstrap,
-    teardown: preSettings.teardown,
+    bootstrap,
+    teardown,
     hooks: [],
     plugins: {
         screenshotOnFail: {
