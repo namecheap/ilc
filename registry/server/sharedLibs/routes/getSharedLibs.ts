@@ -1,37 +1,22 @@
 import { Response } from 'express';
-
-import db from '../../db';
-import preProcessResponse from '../../common/services/preProcessResponse';
-import { Tables } from '../../db/structure';
-import { appendDigest } from '../../util/hmac';
-import { EntityTypes } from '../../versioning/interfaces';
 import Joi from 'joi';
+import preProcessResponse from '../../common/services/preProcessResponse';
+import db from '../../db';
 import { filtersMiddleware, RequestWithFilters } from '../../middleware/filters';
+import { SharedLibsGetListFilters, SharedLibsRepository } from '../repositories/SharedLibsRepository';
 
-interface Filters {
-    name?: string;
-}
-
-const filtersSchema = Joi.object<Filters>({
+const filtersSchema = Joi.object<SharedLibsGetListFilters>({
     name: Joi.string().optional(),
 });
 
-const getSharedLibs = async (req: RequestWithFilters<Filters>, res: Response): Promise<void> => {
-    const query = db
-        .selectVersionedRows(Tables.SharedLibs, 'name', EntityTypes.shared_libs, [`${Tables.SharedLibs}.*`])
-        .from(Tables.SharedLibs);
-
-    if (req.filters?.name) {
-        query.whereLike(`${Tables.SharedLibs}.name`, `%${req.filters.name}%`);
-    }
-
-    const sharedLibs = await query.range(req.query.range as string | undefined);
-    const itemsWithId = sharedLibs.data.map((item: any) => {
-        return { ...item, versionId: appendDigest(item.versionId, 'sharedLib') };
+const getSharedLibs = async (req: RequestWithFilters<SharedLibsGetListFilters>, res: Response): Promise<void> => {
+    const repo = new SharedLibsRepository(db);
+    const { data: sharedLibs, pagination } = await repo.getList(req.filters ?? {}, {
+        range: req.query.range as string | undefined,
     });
 
-    res.setHeader('Content-Range', sharedLibs.pagination.total);
-    res.status(200).send(preProcessResponse(itemsWithId));
+    res.setHeader('Content-Range', pagination.total);
+    res.status(200).send(preProcessResponse(sharedLibs));
 };
 
 export default [filtersMiddleware(filtersSchema), getSharedLibs];

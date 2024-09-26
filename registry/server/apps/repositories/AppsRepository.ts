@@ -21,7 +21,7 @@ interface AppsGetListOptions {
 export class AppsRepository {
     constructor(private readonly db: VersionedKnex) {}
 
-    async getList(filters: AppsGetListFilters, options: AppsGetListOptions): Promise<PaginatedResult<App[]>> {
+    async getList(filters: AppsGetListFilters, options: AppsGetListOptions): Promise<PaginatedResult<App>> {
         const { db } = this;
         const query = db.selectVersionedRowsFrom<App>(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]);
 
