@@ -1,7 +1,6 @@
 import JoiDefault from 'joi';
 import db from '../../db';
 import { getJoiErr } from '../../util/helpers';
-import SharedLib from '../../sharedLibs/interfaces';
 
 const Joi = JoiDefault.defaults((schema) => {
     return schema.empty(null);

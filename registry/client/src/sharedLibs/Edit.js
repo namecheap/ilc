@@ -1,19 +1,13 @@
-import React, {Fragment} from 'react';
-import {
-    Create,
-    Edit,
-    FormTab,
-    TabbedForm,
-    TextInput,
-    FormDataConsumer,
-    FunctionField,
-} from 'react-admin'; // eslint-disable-line import/no-unresolved
+import React, { Fragment } from 'react';
+import { Create, Edit, FormTab, TabbedForm, TextInput, FormDataConsumer, FunctionField } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import { Typography } from '@material-ui/core';
 
 import * as validators from '../validators';
 import Title from './Title';
+import { getPrefixedSharedLibName } from './getPrefixedSharedLibName';
 
-const selectHasAssetsDiscoveryUrl = (formData) => formData.assetsDiscoveryUrl && formData.assetsDiscoveryUrl.length !== 0;
+const selectHasAssetsDiscoveryUrl = (formData) =>
+    formData.assetsDiscoveryUrl && formData.assetsDiscoveryUrl.length !== 0;
 const selectWarnMessageDueToAssetsDiscoveryUrl = (formData) => {
     if (!selectHasAssetsDiscoveryUrl(formData)) {
         return '';
@@ -51,20 +45,18 @@ const styles = {
     },
 };
 
-const InputForm = ({mode = 'edit', ...props}) => {
+const InputForm = ({ mode = 'edit', ...props }) => {
     return (
         <TabbedForm {...props}>
             <FormTab label="Summary">
-                {mode === 'edit'
-                    ? <FunctionField
-                        label="Name"
-                        render={record => `@sharedLibrary/${record.name}`}
-                    />
-                    : <div style={styles.row}>
+                {mode === 'edit' ? (
+                    <FunctionField label="Name" render={(record) => getPrefixedSharedLibName(record.name)} />
+                ) : (
+                    <div style={styles.row}>
                         <Typography variant="body1">@sharedLibrary/</Typography>
                         <TextInput source="name" fullWidth />
                     </div>
-                }
+                )}
                 <TextInput
                     fullWidth
                     multiline
@@ -74,15 +66,33 @@ const InputForm = ({mode = 'edit', ...props}) => {
             </FormTab>
             <FormTab label="Assets">
                 <FormDataConsumer>
-                    {({formData}) => {
+                    {({ formData }) => {
                         const hasAssetsDiscoveryUrl = selectHasAssetsDiscoveryUrl(formData);
                         const assetsDiscoveryUrlWarningText = selectWarnMessageDueToAssetsDiscoveryUrl(formData);
 
                         return (
                             <Fragment>
-                                <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" helperText={assetsDiscoveryUrlWarningText} />
-                                <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl} />
-                                <TextInput fullWidth resettable type="url" source="l10nManifest" validate={validators.url} />
+                                <TextInput
+                                    fullWidth
+                                    resettable
+                                    type="url"
+                                    source="assetsDiscoveryUrl"
+                                    helperText={assetsDiscoveryUrlWarningText}
+                                />
+                                <TextInput
+                                    fullWidth
+                                    resettable
+                                    type="url"
+                                    source="spaBundle"
+                                    disabled={hasAssetsDiscoveryUrl}
+                                />
+                                <TextInput
+                                    fullWidth
+                                    resettable
+                                    type="url"
+                                    source="l10nManifest"
+                                    validate={validators.url}
+                                />
                             </Fragment>
                         );
                     }}

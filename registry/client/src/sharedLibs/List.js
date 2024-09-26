@@ -3,6 +3,7 @@ import { useMediaQuery } from '@material-ui/core';
 import { Datagrid, List, SimpleList, TextField, EditButton, FunctionField } from 'react-admin';
 import { Empty, ListBulkActions, ListActionsToolbar } from '../components';
 import { ListFilter } from './ListFilter';
+import { getPrefixedSharedLibName } from './getPrefixedSharedLibName';
 
 const PostList = (props) => {
     const { permissions } = props;
@@ -21,12 +22,12 @@ const PostList = (props) => {
         >
             {isSmall ? (
                 <SimpleList
-                    primaryText={(record) => `@sharedLibrary/${record.name}`}
+                    primaryText={(record) => getPrefixedSharedLibName(record.name)}
                     secondaryText={(record) => record.spaBundle}
                 />
             ) : (
                 <Datagrid rowClick="show" optimized>
-                    <FunctionField label="Name" render={(record) => `@sharedLibrary/${record.name}`} />
+                    <FunctionField label="Name" render={(record) => getPrefixedSharedLibName(record.name)} />
                     <TextField source="spaBundle" />
                     <ListActionsToolbar>
                         <EditButton />
