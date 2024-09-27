@@ -3,7 +3,7 @@ import Joi from 'joi';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import { readTemplateWithAllVersions, upsertLocalizedVersions } from '../services/templatesRepository';
+import { templatesRepository } from '../services/templatesRepository';
 import { partialTemplateSchema, templateNameSchema, validateLocalesAreSupported } from './validation';
 
 type UpdateTemplateRequestParams = {
@@ -45,10 +45,10 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
 
     await db.versioning(req.user, { type: 'templates', id: templateName }, async (trx) => {
         await db('templates').where({ name: templateName }).update(template).transacting(trx);
-        await upsertLocalizedVersions(templateName, localizedVersions, trx);
+        await templatesRepository.upsertLocalizedVersions(templateName, localizedVersions, trx);
     });
 
-    const updatedTemplate = await readTemplateWithAllVersions(templateName);
+    const updatedTemplate = await templatesRepository.readTemplateWithAllVersions(templateName);
     res.status(200).send(updatedTemplate);
 };
 

@@ -1,23 +1,14 @@
 import React from 'react';
 import { useMediaQuery } from '@material-ui/core';
-import {
-    Datagrid,
-    List,
-    SimpleList,
-    TextField,
-    EditButton,
-    FunctionField,
-} from 'react-admin'; // eslint-disable-line import/no-unresolved
-import {
-    Empty,
-    ListBulkActions,
-    ListActionsToolbar,
-} from '../components';
+import { Datagrid, List, SimpleList, TextField, EditButton, FunctionField } from 'react-admin';
+import { Empty, ListBulkActions, ListActionsToolbar } from '../components';
+import { ListFilter } from './ListFilter';
+import { getPrefixedSharedLibName } from './getPrefixedSharedLibName';
 
-const PostList = props => {
+const PostList = (props) => {
     const { permissions } = props;
 
-    const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
+    const isSmall = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     return (
         <List
@@ -26,19 +17,17 @@ const PostList = props => {
             exporter={false}
             perPage={25}
             actions={permissions === 'readonly' ? false : undefined}
+            filters={<ListFilter />}
             empty={<Empty />}
         >
             {isSmall ? (
                 <SimpleList
-                    primaryText={record => `@sharedLibrary/${record.name}`}
-                    secondaryText={record => record.spaBundle}
+                    primaryText={(record) => getPrefixedSharedLibName(record.name)}
+                    secondaryText={(record) => record.spaBundle}
                 />
             ) : (
                 <Datagrid rowClick="show" optimized>
-                    <FunctionField
-                        label="Name"
-                        render={record => `@sharedLibrary/${record.name}`}
-                    />
+                    <FunctionField label="Name" render={(record) => getPrefixedSharedLibName(record.name)} />
                     <TextField source="spaBundle" />
                     <ListActionsToolbar>
                         <EditButton />

@@ -1,36 +1,28 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import Joi from 'joi';
 
-import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import App, { appNameSchema } from '../interfaces';
-import { Tables } from '../../db/structure';
-import { appendDigest } from '../../util/hmac';
-import { EntityTypes } from '../../versioning/interfaces';
+import { filtersMiddleware, RequestWithFilters } from '../../middleware/filters';
+import { AppsGetListFilters, appsRepository } from '../repositories/AppsRepository';
 
-const getApps = async (req: Request, res: Response): Promise<void> => {
-    const filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
+const filtersSchema = Joi.object<AppsGetListFilters>({
+    q: Joi.string().optional(),
+    kind: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())),
+    name: Joi.array().items(Joi.string()),
+    id: Joi.array().items(Joi.string()),
+    domainId: Joi.alternatives(Joi.number(), Joi.string().valid('null')),
+});
 
-    const query = db.selectVersionedRowsFrom<App>(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]);
+const getApps = async (req: RequestWithFilters<AppsGetListFilters>, res: Response): Promise<void> => {
+    const filters = req.filters ?? {};
 
-    if (filters.id || filters.name) {
-        query.whereIn('name', [...(filters.id || filters.name)]);
-    }
-    if (typeof filters.kind === 'string') {
-        query.where('kind', filters.kind);
-    } else if (Array.isArray(filters.kind)) {
-        query.whereIn('kind', filters.kind);
-    }
-    if (filters.q) {
-        query.where('name', 'like', `%${filters.q}%`);
-    }
-
-    const apps = await query.range(req.query.range as string | undefined);
-    const itemsWithId = apps.data.map((item: any) => {
-        return { ...item, versionId: appendDigest(item.versionId, 'app') };
+    const { data, pagination } = await appsRepository.getList(filters, {
+        // TODO: add a vlidating middleware to make sure it's a valid range
+        range: req.query.range as string | undefined,
     });
 
-    res.setHeader('Content-Range', apps.pagination.total); //Stub for future pagination capabilities
-    res.status(200).send(preProcessResponse(itemsWithId));
+    res.setHeader('Content-Range', pagination.total); //Stub for future pagination capabilities
+    res.status(200).send(preProcessResponse(data));
 };
 
-export default [getApps];
+export default [filtersMiddleware(filtersSchema), getApps];

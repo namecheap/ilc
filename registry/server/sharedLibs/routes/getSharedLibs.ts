@@ -1,22 +1,21 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import Joi from 'joi';
 
-import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import { Tables } from '../../db/structure';
-import { appendDigest } from '../../util/hmac';
-import { EntityTypes } from '../../versioning/interfaces';
+import { filtersMiddleware, RequestWithFilters } from '../../middleware/filters';
+import { SharedLibsGetListFilters, sharedLibsRepository } from '../repositories/SharedLibsRepository';
 
-const getSharedLibs = async (req: Request, res: Response): Promise<void> => {
-    const query = db
-        .selectVersionedRows(Tables.SharedLibs, 'name', EntityTypes.shared_libs, [`${Tables.SharedLibs}.*`])
-        .from(Tables.SharedLibs);
-    const sharedLibs = await query.range(req.query.range as string | undefined);
-    const itemsWithId = sharedLibs.data.map((item: any) => {
-        return { ...item, versionId: appendDigest(item.versionId, 'sharedLib') };
+const filtersSchema = Joi.object<SharedLibsGetListFilters>({
+    name: Joi.string().optional(),
+});
+
+const getSharedLibs = async (req: RequestWithFilters<SharedLibsGetListFilters>, res: Response): Promise<void> => {
+    const { data: sharedLibs, pagination } = await sharedLibsRepository.getList(req.filters ?? {}, {
+        range: req.query.range as string | undefined,
     });
 
-    res.setHeader('Content-Range', sharedLibs.pagination.total);
-    res.status(200).send(preProcessResponse(itemsWithId));
+    res.setHeader('Content-Range', pagination.total);
+    res.status(200).send(preProcessResponse(sharedLibs));
 };
 
-export default [getSharedLibs];
+export default [filtersMiddleware(filtersSchema), getSharedLibs];

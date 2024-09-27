@@ -46,8 +46,8 @@ function insertStart(logger, stream, attributes, headers) {
                     isAsync
                         ? `<!-- Async fragments are not fully implemented yet: ${uri} -->`
                         : id
-                          ? asyncStylesLoadTemplate(uri, id)
-                          : '',
+                        ? asyncStylesLoadTemplate(uri, id)
+                        : '',
                 );
             } else if (ref.rel === 'fragment-script') {
                 bundleVersionOverrides.spaBundle = fixUri(attributes, ref.uri);

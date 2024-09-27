@@ -1,21 +1,19 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import Joi from 'joi';
 
-import db from '../../db';
-import Template from '../interfaces';
-import { Tables } from '../../db/structure';
-import { appendDigest } from '../../util/hmac';
-import { EntityTypes } from '../../versioning/interfaces';
+import { filtersMiddleware, RequestWithFilters } from '../../middleware/filters';
+import { TemplatesGetListFilters, templatesRepository } from '../services/templatesRepository';
 
-const getTemplates = async (req: Request, res: Response): Promise<void> => {
-    const templates = await db.selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [
-        `${Tables.Templates}.*`,
-    ]);
-    const itemsWithId = templates.map((item) => {
-        return { ...item, versionId: appendDigest(item.versionId, 'template') };
-    });
+const filtersSchema = Joi.object<TemplatesGetListFilters>({
+    domainId: Joi.alternatives(Joi.number(), Joi.string().valid('null')).optional(),
+    id: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
+    name: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
+});
 
-    res.setHeader('Content-Range', templates.length); //Stub for future pagination capabilities
-    res.status(200).send(itemsWithId);
+const getTemplates = async (req: RequestWithFilters<TemplatesGetListFilters>, res: Response): Promise<void> => {
+    const { data, pagination } = await templatesRepository.getList(req.filters ?? {});
+    res.setHeader('Content-Range', pagination.total); //Stub for future pagination capabilities
+    res.status(200).send(data);
 };
 
-export default [getTemplates];
+export default [filtersMiddleware(filtersSchema), getTemplates];

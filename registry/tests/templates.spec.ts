@@ -5,6 +5,7 @@ import app from '../server/app';
 import { expect, getServerAddress } from './common';
 import { SettingKeys } from '../server/settings/interfaces';
 import { withSetting } from './utils/withSetting';
+import { makeFilterQuery } from './utils/makeFilterQuery';
 
 const example = {
     url: '/api/v1/template/',
@@ -41,6 +42,21 @@ const example = {
             '<html><head></head><body><include id="test-include" src="https://complete-random-ilc-include-test-domain.org.ote/include.html" timeout="100" />' +
             'test content</body></html>',
     }),
+
+    templatesList: [
+        {
+            name: 'template0',
+            content: '<html><head></head><body>template0</body></html>',
+        },
+        {
+            name: 'template1',
+            content: '<html><head></head><body>template1</body></html>',
+        },
+        {
+            name: 'template2',
+            content: '<html><head></head><body>template2</body></html>',
+        },
+    ],
 };
 
 describe(`Tests ${example.url}`, () => {
@@ -209,6 +225,124 @@ describe(`Tests ${example.url}`, () => {
             expect(response.body).to.be.an('array').that.is.not.empty;
             expect(response.body).to.deep.include({ ...example.correct, versionId: response.body[0].versionId });
             expect(response.body[0].versionId).to.match(/^[0-9]+.[-_0-9a-zA-Z]{32}$/);
+        });
+
+        describe('filter by name', () => {
+            const testCases = [
+                {
+                    title: 'name',
+                    filter: { name: example.templatesList[1].name },
+                },
+                {
+                    title: 'id',
+                    filter: { id: example.templatesList[1].name },
+                },
+                {
+                    title: 'name[]',
+                    filter: { name: [example.templatesList[1].name] },
+                },
+                {
+                    title: 'id[]',
+                    filter: { id: [example.templatesList[1].name] },
+                },
+            ];
+
+            for (const testCase of testCases) {
+                it(`should filter a list of templates by name represented by ${testCase.title}`, async () => {
+                    try {
+                        // Create a list of templates
+                        for (const template of example.templatesList) {
+                            await req.post(example.url).send(template).expect(200);
+                        }
+
+                        // Get the list of templates
+                        const query = makeFilterQuery({ name: example.templatesList[1].name });
+                        const response = await req.get(`${example.url}?${query}`).expect(200);
+                        expect(response.body).to.be.an('array').that.is.not.empty;
+                        expect(response.body).to.have.length(1);
+                        expect(response.body).to.deep.include({
+                            ...example.templatesList[1],
+                            versionId: response.body[0].versionId,
+                        });
+                    } finally {
+                        for (const template of example.templatesList) {
+                            await req.delete(example.url + template.name).expect(204);
+                        }
+                    }
+                });
+            }
+        });
+
+        it('should filter a list of templates by domainId', async () => {
+            const teardownFns: (() => Promise<void>)[] = [];
+
+            try {
+                // Create a list of templates
+                for (const template of example.templatesList) {
+                    await req.post(example.url).send(template).expect(200);
+                }
+                teardownFns.unshift(async () => {
+                    for (const template of example.templatesList) {
+                        await req.delete(example.url + template.name).expect(204);
+                    }
+                });
+
+                // Create a domain
+                const domainResponse = await req
+                    .post('/api/v1/router_domains')
+                    .send({
+                        domainName: 'example.com',
+                        template500: example.templatesList[1].name,
+                    })
+                    .expect(200);
+                const domainId = domainResponse.body.id;
+                teardownFns.unshift(async () => {
+                    await req.delete('/api/v1/router_domains/' + domainId).expect(204);
+                });
+
+                // Create a route
+                const routeResponse = await req.post('/api/v1/route').send({
+                    route: 'example',
+                    domainId,
+                    templateName: example.templatesList[2].name,
+                });
+                const routeId = routeResponse.body.id;
+                teardownFns.unshift(async () => {
+                    await req.delete('/api/v1/route/' + routeId).expect(204);
+                });
+
+                // Get the list of templates by domain
+                const { body: templatesWithDomain } = await req
+                    .get(`${example.url}?${makeFilterQuery({ domainId })}`)
+                    .expect(200);
+                expect(templatesWithDomain).to.be.an('array').that.is.not.empty;
+                // There should be two templates:
+                expect(templatesWithDomain).to.have.length(2);
+                // One of the templates should be from the domain
+                expect(_.omit(templatesWithDomain[0], 'versionId')).to.deep.equal({
+                    ...example.templatesList[1],
+                });
+                // The other template should be from the route
+                expect(_.omit(templatesWithDomain[1], 'versionId')).to.deep.equal({
+                    ...example.templatesList[2],
+                });
+
+                // Get the list of templates without domain
+                const { body: templatesWithoutDomain } = await req
+                    .get(`${example.url}?${makeFilterQuery({ domainId: 'null' })}`)
+                    .expect(200);
+                expect(templatesWithoutDomain).to.be.an('array').that.is.not.empty;
+                // There should be one template:
+                expect(templatesWithoutDomain).to.have.length(1);
+                // The template not associated with the any domain
+                expect(_.omit(templatesWithoutDomain[0], 'versionId')).to.deep.equal({
+                    ...example.templatesList[0],
+                });
+            } finally {
+                for (const fn of teardownFns) {
+                    await fn();
+                }
+            }
         });
 
         describe('template with domain', () => {
