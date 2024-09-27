@@ -1,5 +1,5 @@
 ---
-ignore_macros: true
+render_macros: false
 ---
 
 ## Overview
