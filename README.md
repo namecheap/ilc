@@ -116,7 +116,7 @@ The `namecheap/ilc` repository consists of the following parts:
 
 * [Overview](./docs/overview.md)
 * [Micro-frontend Types](./docs/microfrontend-types.md)
-* [Step-By-Step lessons about apps development with ILC](./docs/how-to-guides/)
+* [Step-By-Step lessons about apps development with ILC](./docs/how-to-guides/index.md)
 * [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html)
 * [ILC Registry](./docs/registry.md)
 * [Animation during reroute](./docs/animation_during_reroute.md)
