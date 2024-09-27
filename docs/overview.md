@@ -30,7 +30,7 @@ Check the full list of these parameters in the following files:
 ## Authentication credentials configuration
 
 Once you get ILC up and running, you must remove default access credentials and configure your own. Check the
-[Registry: Authentication / Authorization](./registry.md#authentication-authorization) document for more details.
+[Registry: Authentication / Authorization](./registry.md#authentication-and-authorization) document for more details.
 
 ## High availability (HA)
 
