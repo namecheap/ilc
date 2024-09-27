@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import { request, expect, requestWithAuth } from './common';
-import supertest from 'supertest';
+import { type Agent } from 'supertest';
+import { expect, request, requestWithAuth } from './common';
 
 const example = {
     url: '/api/v1/auth_entities/',
@@ -17,7 +17,7 @@ const example = {
 };
 
 describe(`Tests ${example.url}`, () => {
-    let req: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
 
     beforeEach(async () => {
         req = await request();

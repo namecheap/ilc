@@ -1,17 +1,21 @@
-const path = require('path');
+import path from 'path';
 
-const preSettings = require('./codecept.presettings.js');
+import { bootstrap, teardown } from './codecept.presettings';
 
 const outputDir = path.join(__dirname, '.codecept_output');
 
-exports.config = {
+export const config: CodeceptJS.MainConfig = {
     output: outputDir,
+    rerun: {
+        minSuccess: 3,
+        maxReruns: 5,
+    },
     helpers: {
         Puppeteer: {
             url: `http://localhost:8233`,
             windowSize: '1200x900',
             chrome: {
-                headless: process.env.SHOW_UI === 'true' ? false: 'new',
+                headless: process.env.SHOW_UI === 'true' ? false : 'new',
             },
         },
         MockRequestHelper: {
@@ -53,8 +57,8 @@ exports.config = {
             },
         },
     },
-    bootstrap: preSettings.bootstrap,
-    teardown: preSettings.teardown,
+    bootstrap,
+    teardown,
     hooks: [],
     plugins: {
         screenshotOnFail: {
@@ -66,6 +70,7 @@ exports.config = {
         autoDelay: {
             enabled: true,
         },
+        pauseOnFail: {},
     },
     include: {
         peoplePage: path.join(__dirname, 'spec', 'pages', 'people.ts'),

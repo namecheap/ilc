@@ -1,7 +1,6 @@
-import supertest from 'supertest';
-import { expect, request, requestWithAuth } from './common';
 import * as querystring from 'querystring';
-import _ from 'lodash';
+import { type Agent } from 'supertest';
+import { expect, request, requestWithAuth } from './common';
 
 const example = <any>{
     url: `/api/v1/entries/${querystring.escape('@sharedLibrary/testNameSharedLibEntry')}`,
@@ -68,8 +67,8 @@ example.encodedAppName = encodeURIComponent(example.correctApp.name);
 example.encodedWrapperAppName = encodeURIComponent(example.correctWrapperApp.name);
 
 describe(`Entries`, () => {
-    let req: supertest.SuperTest<supertest.Test>;
-    let reqWithAuth: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
+    let reqWithAuth: Agent;
 
     beforeEach(async () => {
         req = await request();

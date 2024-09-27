@@ -150,11 +150,16 @@ describe('client router', () => {
         specialRoutes,
     };
 
-    let router, configRoot;
+    let router, configRoot, originalConfig;
 
     before(() => {
         configRoot = getIlcConfigRoot();
+        originalConfig = configRoot.registryConfiguration;
         configRoot.registryConfiguration = registryConfig;
+    });
+
+    after(() => {
+        configRoot.registryConfiguration = originalConfig;
     });
 
     afterEach(() => {

@@ -1,5 +1,4 @@
 import { getIlcConfigRoot } from './getIlcConfigRoot';
-import { expect } from 'chai';
 
 describe('IlcConfigRoot', () => {
     it('IlcConfigRoot should init', () => {

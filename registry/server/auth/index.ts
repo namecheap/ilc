@@ -1,4 +1,4 @@
-import sessionKnex from 'connect-session-knex';
+import { ConnectSessionKnexStore } from 'connect-session-knex';
 import { Express, RequestHandler } from 'express';
 import session from 'express-session';
 import { Logger } from 'ilc-plugins-sdk';
@@ -30,16 +30,15 @@ export async function useAuth(
     config: SetupAuthOptions,
     logger: Logger,
 ): Promise<RequestHandler[]> {
-    const SessionKnex = sessionKnex(session);
     const sessionConfig = Object.assign(
         {
             resave: false,
             saveUninitialized: false,
             cookie: { httpOnly: true, secure: false },
-            store: new SessionKnex({
+            store: new ConnectSessionKnexStore({
                 knex: db,
-                createtable: false,
-                tablename: 'sessions',
+                createTable: false,
+                tableName: 'sessions',
             }),
         },
         config.session,
