@@ -47,16 +47,24 @@ export const templateSchema = Joi.object({
     localizedVersions,
 });
 
-export async function validateLocalesAreSupported(locales: string[], res: Response) {
+export async function getUnsupportedLocales(locales: string[]): Promise<string[]> {
     const supportedLocales = await settingsService.get(SettingKeys.I18nSupportedLocales);
-    let unsupportedLocales = locales.filter((l) => !supportedLocales.includes(l));
+    return locales.filter((l) => !supportedLocales.includes(l));
+}
+
+export function unsupportedLocalesToJoiError(unsupportedLocales: string[]): Joi.ValidationError {
+    return getJoiErr(
+        `localizedVersions.${unsupportedLocales[0]}`,
+        `Next locales are not supported ${unsupportedLocales.join(',')}. Either change request or change ${
+            SettingKeys.I18nSupportedLocales
+        } setting.`,
+    );
+}
+
+export async function validateLocalesAreSupported(locales: string[], res: Response) {
+    const unsupportedLocales = await getUnsupportedLocales(locales);
     if (unsupportedLocales.length > 0) {
-        let joiError = getJoiErr(
-            `localizedVersions.${unsupportedLocales[0]}`,
-            `Next locales are not supported ${unsupportedLocales.join(',')}. Either change request or change ${
-                SettingKeys.I18nSupportedLocales
-            } setting.`,
-        );
+        const joiError = unsupportedLocalesToJoiError(unsupportedLocales);
         res.status(422);
         res.send(joiErrorToResponse(joiError));
         return false;

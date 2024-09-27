@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import Template, { LocalizedTemplate } from '../interfaces';
+import Template, { LocalizedTemplateRow } from '../interfaces';
 import { Tables } from '../../db/structure';
 import { templatesRepository } from '../services/templatesRepository';
 import { templateSchema, validateLocalesAreSupported } from './validation';
@@ -46,7 +46,7 @@ const createTemplate = async (req: Request, res: Response): Promise<void> => {
 function insertLocalizedVersions(locales: string[], template: Template, request: Record<string, any>) {
     return Promise.all(
         locales.map((locale) => {
-            const localizedTemplate: LocalizedTemplate = {
+            const localizedTemplate: LocalizedTemplateRow = {
                 templateName: template.name,
                 content: request.localizedVersions[locale].content,
                 locale: locale,

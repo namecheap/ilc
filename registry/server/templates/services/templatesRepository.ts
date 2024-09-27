@@ -1,21 +1,46 @@
-import { ok } from 'assert';
 import { Knex } from 'knex';
 
 import { PaginatedResult } from '../../../typings/PaginatedResult';
 import db, { VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
-import { EntityTypes } from '../../versioning/interfaces';
-import Template, { LocalizedTemplate } from '../interfaces';
+import { normalizeArray } from '../../util/normalizeArray';
+import { EntityTypes, VersionedRecord } from '../../versioning/interfaces';
+import Template, {
+    LocalizedTemplateRow,
+    LocalizedVersion,
+    TemplateWithLocalizedVersions,
+    UpdateTemplatePayload,
+} from '../interfaces';
 
 import Transaction = Knex.Transaction;
-import { normalizeArray } from '../../util/normalizeArray';
+import { getUnsupportedLocales } from '../routes/validation';
+import { User } from '../../../typings/User';
 
 export interface TemplatesGetListFilters {
     domainId?: number | 'null';
     id?: string[] | string;
     name?: string[] | string;
 }
+
+interface UpdateTemplateResultOk {
+    type: 'ok';
+    template: VersionedRecord<TemplateWithLocalizedVersions>;
+}
+
+interface UpdateTemplateResultNotFound {
+    type: 'notFound';
+}
+
+interface UpdateTemplateResultLocalesNotSupported {
+    type: 'localeNotSupported';
+    locales: string[];
+}
+
+type UpdateTemplateResult =
+    | UpdateTemplateResultOk
+    | UpdateTemplateResultNotFound
+    | UpdateTemplateResultLocalesNotSupported;
 
 export class TemplatesRepository {
     constructor(private db: VersionedKnex) {}
@@ -47,11 +72,15 @@ export class TemplatesRepository {
         };
     }
 
-    async readTemplateWithAllVersions(templateName: string) {
+    async readTemplateWithAllVersions(
+        templateName: string,
+    ): Promise<VersionedRecord<TemplateWithLocalizedVersions> | undefined> {
         const { db } = this;
 
         const [template] = await db
-            .selectVersionedRowsFrom(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.*`])
+            .selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [
+                `${Tables.Templates}.*`,
+            ])
             .where('name', templateName);
 
         if (!template) {
@@ -60,19 +89,64 @@ export class TemplatesRepository {
 
         template.versionId = appendDigest(template.versionId, 'template');
 
-        const localizedTemplates: LocalizedTemplate[] = await db
+        const localizedTemplates: LocalizedTemplateRow[] = await db
             .select()
-            .from<LocalizedTemplate>(Tables.TemplatesLocalized)
+            .from<LocalizedTemplateRow>(Tables.TemplatesLocalized)
             .where('templateName', templateName);
-        template.localizedVersions = localizedTemplates.reduce(
+
+        const localizedVersions = localizedTemplates.reduce(
             (acc, item) => {
                 acc[item.locale] = { content: item.content };
                 return acc;
             },
-            {} as Record<string, object>,
+            {} as Record<string, LocalizedVersion>,
         );
 
-        return template;
+        return { ...template, localizedVersions };
+    }
+
+    async updateTemplate(
+        templateName: string,
+        payload: UpdateTemplatePayload,
+        user: User,
+    ): Promise<UpdateTemplateResult> {
+        const { db } = this;
+
+        const template = {
+            content: payload.content,
+        };
+        const templatesToUpdate = await db(Tables.Templates).where({
+            name: templateName,
+        });
+        if (!templatesToUpdate.length) {
+            return { type: 'notFound' };
+        }
+        const localizedVersions = payload.localizedVersions ?? {};
+        const unsupportedLocales = await getUnsupportedLocales(Object.keys(localizedVersions));
+        if (unsupportedLocales.length > 0) {
+            return { type: 'localeNotSupported', locales: unsupportedLocales };
+        }
+
+        await db.versioning(
+            user,
+            {
+                type: EntityTypes.templates,
+                id: templateName,
+            },
+            async (trx) => {
+                await db(Tables.Templates).where({ name: templateName }).update(template).transacting(trx);
+                await templatesRepository.upsertLocalizedVersions(templateName, localizedVersions, trx);
+            },
+        );
+
+        const updatedTemplate = await templatesRepository.readTemplateWithAllVersions(templateName);
+        if (!updatedTemplate) {
+            // This time we cannot simply return UpdateTemplateResultNotFound result,
+            // because the template is assumed to have been just updated,
+            // so it must exist.
+            throw new Error(`Template ${templateName} not found`);
+        }
+        return { type: 'ok', template: updatedTemplate };
     }
 
     async upsertLocalizedVersions(templateName: string, localizedVersions: any, trx: Transaction) {
@@ -119,6 +193,8 @@ export class TemplatesRepository {
     }
 
     private addFilterByDomainId(query: Knex.QueryBuilder, filters: TemplatesGetListFilters) {
+        const { db } = this;
+
         if (!filters.domainId) {
             return;
         }

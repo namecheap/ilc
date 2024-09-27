@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
+import { exhaustiveCheck } from 'ts-exhaustive-check';
 
-import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
+import { joiErrorToResponse } from '../../util/helpers';
 import { templatesRepository } from '../services/templatesRepository';
-import { partialTemplateSchema, templateNameSchema, validateLocalesAreSupported } from './validation';
+import { partialTemplateSchema, templateNameSchema, unsupportedLocalesToJoiError } from './validation';
 
 type UpdateTemplateRequestParams = {
     name: string;
@@ -24,32 +25,30 @@ const validateRequestBeforeUpdateTemplate = validateRequestFactory([
 ]);
 
 const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Response): Promise<void> => {
-    const template = {
-        content: req.body.content,
-    };
-    const templateName = req.params.name;
+    const result = await templatesRepository.updateTemplate(
+        req.params.name,
+        req.body,
+        // TODO: cheeck if user here is really required
+        req.user!,
+    );
 
-    const templatesToUpdate = await db('templates').where({
-        name: templateName,
-    });
-    if (!templatesToUpdate.length) {
-        res.status(404).send('Not found');
-        return;
+    switch (result.type) {
+        case 'notFound': {
+            res.status(404).send('Not found');
+            return;
+        }
+        case 'localeNotSupported': {
+            res.status(422).send(joiErrorToResponse(unsupportedLocalesToJoiError(result.locales)));
+            return;
+        }
+        case 'ok': {
+            res.status(200).send(result.template);
+            return;
+        }
+        default: {
+            exhaustiveCheck(result);
+        }
     }
-
-    const localizedVersions = req.body.localizedVersions || {};
-    const localesAreValid = await validateLocalesAreSupported(Object.keys(localizedVersions), res);
-    if (!localesAreValid) {
-        return;
-    }
-
-    await db.versioning(req.user, { type: 'templates', id: templateName }, async (trx) => {
-        await db('templates').where({ name: templateName }).update(template).transacting(trx);
-        await templatesRepository.upsertLocalizedVersions(templateName, localizedVersions, trx);
-    });
-
-    const updatedTemplate = await templatesRepository.readTemplateWithAllVersions(templateName);
-    res.status(200).send(updatedTemplate);
 };
 
 export default [validateRequestBeforeUpdateTemplate, updateTemplate];
