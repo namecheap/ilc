@@ -1,9 +1,9 @@
 import chai from 'chai';
 import urlJoin from 'url-join';
 
+import supertest, { type Agent } from 'supertest';
+import { Scope, SettingKeys, SettingTypes, TrailingSlashValues } from '../server/settings/interfaces';
 import { request, requestWithAuth } from './common';
-import { SettingKeys, TrailingSlashValues, Scope, SettingTypes } from '../server/settings/interfaces';
-import supertest from 'supertest';
 
 const url = '/api/v1/settings';
 
@@ -13,8 +13,8 @@ const cspValue = JSON.stringify({
 });
 
 describe(url, () => {
-    let req: supertest.SuperTest<supertest.Test>;
-    let reqWithAuth: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
+    let reqWithAuth: Agent;
     let createDomain: () => Promise<{ getResponse: () => { id: any }; destory: () => Promise<void> }>;
     let createConfigRequest: (payload: Object) => supertest.Test;
     let deleteConfigRequest: (id: number) => supertest.Test;

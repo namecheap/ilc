@@ -8,7 +8,7 @@ describe('exponentialRetry', () => {
     let fn: sinon.SinonStub;
 
     beforeEach(() => {
-        clock = sinon.useFakeTimers();
+        clock = sinon.useFakeTimers({ shouldClearNativeTimers: true });
         fn = sinon.stub();
     });
 
@@ -34,7 +34,11 @@ describe('exponentialRetry', () => {
         fn.onFirstCall().rejects(error);
         fn.onSecondCall().resolves('success');
 
-        const response = await exponentialRetry(fn);
+        const promise = exponentialRetry(fn);
+
+        await clock.runAllAsync();
+
+        const response = await promise;
 
         expect(response).to.equal('success');
         expect(fn.calledTwice).to.be.true;
@@ -47,7 +51,11 @@ describe('exponentialRetry', () => {
         fn.rejects(error);
 
         try {
-            await exponentialRetry(fn, { maxAttempts: 3 });
+            const promise = exponentialRetry(fn, { maxAttempts: 3 });
+
+            await clock.runAllAsync();
+
+            await promise;
             expect.fail('Expected to throw an error');
         } catch (err) {
             expect(err).to.deep.equal(error);
@@ -79,10 +87,9 @@ describe('exponentialRetry', () => {
         fn.onFirstCall().rejects(error);
         fn.onSecondCall().resolves('success');
 
-        const baseDelay = 150;
-        const promise = exponentialRetry(fn, { baseDelay });
+        const promise = exponentialRetry(fn, { baseDelay: 150 });
 
-        await clock.tickAsync(baseDelay); // Wait for the first delay (baseDelay)
+        await clock.tickAsync(300); // Wait for the first MAX delay (baseDelay)
 
         const response = await promise;
 

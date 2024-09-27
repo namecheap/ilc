@@ -2,7 +2,7 @@ import { decodeHtmlEntities } from '../../common/utils';
 
 export class IlcConfigRoot {
     constructor() {
-        const ilcConfigurationNode = document.querySelector('script[type="ilc-config"]');
+        const ilcConfigurationNode = document.querySelector('script[type="text/ilc-config"]');
 
         if (ilcConfigurationNode === null) {
             throw new Error("Can't find single-spa configuration node. Looks like server side problem occurs.");

@@ -8,7 +8,7 @@ Scenario('should open a people page without any selected planet initially', asyn
     I.seeAttributesOnElements(peoplePage.goToPeople, {
         'aria-current': 'page',
     });
-    I.see('No one selected', peoplePage.selectedPerson);
+    I.waitForText('No one selected', 10, peoplePage.selectedPerson);
     I.waitForClickable(peoplePage.fetchMorePeople, 30);
     I.seeNumberOfVisibleElements(peoplePage.personsList, 10);
 });

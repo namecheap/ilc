@@ -62,11 +62,11 @@ describe('WrapApp', () => {
     }
 
     /**
-     * Init fake <script type="ilc-config">...</script>
+     * Init fake <script type="text/ilc-config">...</script>
      * @param {Object} config
      */
     function initFakeIlcConfig(config = {}) {
-        const existentIlcConfigScriptEl = document.querySelector('script[type="ilc-config"]');
+        const existentIlcConfigScriptEl = document.querySelector('script[type="text/ilc-config"]');
 
         if (existentIlcConfigScriptEl) {
             existentIlcConfigScriptEl.innerHTML = JSON.stringify(config);
@@ -74,7 +74,7 @@ describe('WrapApp', () => {
         }
 
         const ilcConfigScriptElAttr = document.createAttribute('type');
-        ilcConfigScriptElAttr.value = 'ilc-config';
+        ilcConfigScriptElAttr.value = 'text/ilc-config';
 
         const ilcConfigScriptEl = document.createElement('script');
         ilcConfigScriptEl.innerHTML = JSON.stringify(config);

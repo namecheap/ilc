@@ -78,9 +78,9 @@ function insertStart(logger, stream, attributes, headers) {
                 bundleVersionOverrides,
             }),
         },
-        'insert start. Creating spa-config-override tag',
+        'insert start. Creating text/spa-config-override tag',
     );
-    stream.write(`<script type="spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
+    stream.write(`<script type="text/spa-config-override">${JSON.stringify(bundleVersionOverrides)}</script>`);
 }
 
 function insertEnd(stream, attributes, headers, index) {

@@ -1,8 +1,8 @@
-import nock from 'nock';
 import _ from 'lodash';
-import { request, requestWithAuth, expect } from './common';
+import nock from 'nock';
+import { type Agent } from 'supertest';
+import { expect, request, requestWithAuth } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
-import supertest from 'supertest';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 
 const assetsDiscovery = {
@@ -102,7 +102,7 @@ function expectAppsListEqual(actual: readonly any[], expected: readonly any[]) {
 }
 
 describe(`Tests ${example.url}`, () => {
-    let req: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
 
     beforeEach(async () => {
         req = await request();

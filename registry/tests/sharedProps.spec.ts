@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import { request, expect, requestWithAuth } from './common';
-import supertest from 'supertest';
+import { type Agent } from 'supertest';
+import { expect, request, requestWithAuth } from './common';
 
 const example = {
     url: '/api/v1/shared_props/',
@@ -22,8 +22,8 @@ const example = {
 };
 
 describe(`Tests ${example.url}`, () => {
-    let req: supertest.SuperTest<supertest.Test>;
-    let reqWithAuth: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
+    let reqWithAuth: Agent;
 
     beforeEach(async () => {
         req = await request();

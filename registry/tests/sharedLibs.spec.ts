@@ -1,8 +1,8 @@
-import nock from 'nock';
 import _ from 'lodash';
-import { request, requestWithAuth, expect } from './common';
+import nock from 'nock';
+import { type Agent } from 'supertest';
+import { expect, request, requestWithAuth } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
-import supertest from 'supertest';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 
 const example = <any>{
@@ -49,8 +49,8 @@ example.correctWithAssetsDiscoveryUrl = Object.freeze({
 });
 
 describe(`Tests ${example.url}`, () => {
-    let req: supertest.SuperTest<supertest.Test>;
-    let reqWithAuth: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
+    let reqWithAuth: Agent;
 
     beforeEach(async () => {
         req = await request();

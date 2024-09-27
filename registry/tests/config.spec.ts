@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import supertest from 'supertest';
+import supertest, { type Agent } from 'supertest';
 
 import { SettingKeys, TrailingSlashValues, OnPropsUpdateValues } from '../server/settings/interfaces';
 import { request, expect, requestWithAuth } from './common';
@@ -64,8 +64,8 @@ const example = {
 };
 
 describe('Tests /api/v1/config', () => {
-    let req: supertest.SuperTest<supertest.Test>;
-    let reqWithAuth: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
+    let reqWithAuth: Agent;
 
     beforeEach(async () => {
         req = await request();

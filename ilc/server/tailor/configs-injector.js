@@ -197,7 +197,7 @@ module.exports = class ConfigsInjector {
             dynamicLibs: registryConfig.dynamicLibs,
         });
 
-        return `<script type="ilc-config">${spaConfig}</script>`;
+        return `<script type="text/ilc-config">${spaConfig}</script>`;
     };
 
     #getIlcState = (request) => {

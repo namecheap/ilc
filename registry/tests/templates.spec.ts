@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import nock from 'nock';
-import supertest from 'supertest';
+import supertest, { type Agent } from 'supertest';
 import app from '../server/app';
 import { expect, getServerAddress } from './common';
 import { SettingKeys } from '../server/settings/interfaces';
@@ -60,8 +60,8 @@ const example = {
 };
 
 describe(`Tests ${example.url}`, () => {
-    let req: supertest.SuperTest<supertest.Test>;
-    let reqWithAuth: supertest.SuperTest<supertest.Test>;
+    let req: Agent;
+    let reqWithAuth: Agent;
     let reqAddress = '';
 
     beforeEach(async () => {

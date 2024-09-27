@@ -281,7 +281,7 @@ describe('configs injector', () => {
                             '<!-- TailorX: Ignore during parsing END -->' +
                             '<!-- TailorX: Ignore during parsing START -->' +
                             `<script type="ilc-state">${JSON.stringify(request.ilcState)}</script>` +
-                            `<script type="ilc-config">${getSpaConfig()}</script>` +
+                            `<script type="text/ilc-config">${getSpaConfig()}</script>` +
                             '<script>window.ilcApps = [];</script>' +
                             `<script src="${
                                 cdnUrl + '/client.js'
@@ -358,7 +358,7 @@ describe('configs injector', () => {
                         '<html lang="en-US">' +
                             '<head>' +
                             '<!-- TailorX: Ignore during parsing START -->' +
-                            `<script type="ilc-config">${getSpaConfig()}</script>` +
+                            `<script type="text/ilc-config">${getSpaConfig()}</script>` +
                             '<script>window.ilcApps = [];</script>' +
                             `<script src="/_ilc/client.js" type="text/javascript"  async></script>` +
                             browserTimingHeader +

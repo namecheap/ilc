@@ -24,7 +24,7 @@ Scenario('(SSR) should correctly open page where app requires missing slot in te
     I.seeAttributesOnElements(peoplePage.goToPeople, {
         'aria-current': 'page',
     });
-    I.see('No one selected', peoplePage.selectedPerson);
+    I.waitForText('No one selected', 10, peoplePage.selectedPerson);
     I.waitForClickable(peoplePage.fetchMorePeople, 10);
 });
 
@@ -50,6 +50,6 @@ Scenario('(CSR) should correctly open page where app requires missing slot in te
     I.seeAttributesOnElements(peoplePage.goToPeople, {
         'aria-current': 'page',
     });
-    I.see('No one selected', peoplePage.selectedPerson);
+    I.waitForText('No one selected', 10, peoplePage.selectedPerson);
     I.waitForClickable(peoplePage.fetchMorePeople, 10);
 });

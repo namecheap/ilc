@@ -43,7 +43,7 @@ if (runWithApps) {
 concurrently(commands, {
     prefix: 'name',
     killOthers: ['failure', 'success'],
-    killSignal: 'SIGKILL',
+    killSignal: 'SIGTERM',
     prefixColors: ['auto'],
 }).result.then(
     () => {
@@ -51,7 +51,7 @@ concurrently(commands, {
         process.exit(0);
     },
     (err) => {
-        console.error('concurrently was finished with error');
+        console.error('concurrently was finished with error', err);
         process.exit(1);
     },
 );

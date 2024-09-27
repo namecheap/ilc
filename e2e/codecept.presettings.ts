@@ -1,7 +1,7 @@
-const waitOn = require('wait-on');
-const path = require('path');
-const execa = require('execa').command;
-const terminate = require('terminate');
+import { command as execa, ExecaChildProcess } from 'execa';
+import path from 'path';
+import terminate from 'terminate';
+import waitOn from 'wait-on';
 
 const appPorts = {
     ilc: 8233,
@@ -27,7 +27,7 @@ const resources = [
     `http-get://127.0.0.1:${appPorts.wrapper}/client-entry.js`,
 ];
 
-let childProcess;
+let childProcess: ExecaChildProcess<string>;
 
 async function shutdown() {
     if (!childProcess || childProcess.exitCode !== null) {
@@ -35,23 +35,28 @@ async function shutdown() {
     }
 
     console.info(`Killing child process...`);
-    await terminate(childProcess.pid, 'SIGTERM', { timeout: 3000 }, (err) => {
-        terminate(childProcess.pid);
+    terminate(childProcess.pid!, 'SIGTERM', { timeout: 3000 }, (err) => {
+        terminate(childProcess.pid!);
     });
 }
 
-async function bootstrap()  {
+export async function bootstrap() {
     try {
         await new Promise((resolve, reject) => {
-            const verbose = process.env.TEST_ENV === 'verbose';
-            const stdio = verbose ? 'inherit' : 'ignore';
+            const isVerbose = process.argv.includes('--verbose');
+            const stdio = isVerbose ? 'inherit' : 'ignore';
 
             console.log('Launching ILC with demo apps for E2E tests...');
             childProcess = execa(`npm run start -- --no-watch`, { cwd: path.join(__dirname, '..'), stdio });
             childProcess.once('error', (error) => {
                 reject(error);
             });
-            childProcess.once('exit', (code, signal) => !childProcess.killed && reject(new Error(`Child process exited... with code ${code} and signal ${signal}`)));
+            childProcess.once(
+                'exit',
+                (code, signal) =>
+                    !childProcess.killed &&
+                    reject(new Error(`Child process exited... with code ${code} and signal ${signal}`)),
+            );
             childProcess.catch(reject);
 
             waitOn({
@@ -59,7 +64,9 @@ async function bootstrap()  {
                 timeout: 10 * 60 * 1000,
                 interval: 1000,
                 verbose: true,
-            }).then(resolve).catch(reject);
+            })
+                .then(resolve)
+                .catch(reject);
         });
     } catch (error) {
         console.error('Error during bootstrap...');
@@ -67,11 +74,6 @@ async function bootstrap()  {
         await shutdown();
         process.exit(1);
     }
-};
+}
 
-const teardown = async () => shutdown();
-
-module.exports = {
-    bootstrap,
-    teardown,
-};
+export const teardown = async () => shutdown();
