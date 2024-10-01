@@ -7,6 +7,7 @@ import { appendDigest } from '../../util/hmac';
 import { normalizeArray } from '../../util/normalizeArray';
 import { EntityTypes, VersionedRecord } from '../../versioning/interfaces';
 import Template, {
+    CreateTemplatePayload,
     LocalizedTemplateRow,
     LocalizedVersion,
     TemplateWithLocalizedVersions,
@@ -22,6 +23,22 @@ export interface TemplatesGetListFilters {
     id?: string[] | string;
     name?: string[] | string;
 }
+
+//----
+
+interface CreateTemplateResultOk {
+    type: 'ok';
+    template: VersionedRecord<TemplateWithLocalizedVersions>;
+}
+
+interface CreateTemplateResultLocalesNotSupported {
+    type: 'localeNotSupported';
+    locales: string[];
+}
+
+type CreateTemplateResult = CreateTemplateResultOk | CreateTemplateResultLocalesNotSupported;
+
+//----
 
 interface UpdateTemplateResultOk {
     type: 'ok';
@@ -42,6 +59,8 @@ type UpdateTemplateResult =
     | UpdateTemplateResultNotFound
     | UpdateTemplateResultLocalesNotSupported;
 
+//----
+
 interface UpsertTemplateLocalizedVersionResultOk {
     type: 'ok';
     localizedVersion: LocalizedVersion;
@@ -61,6 +80,8 @@ type UpsertTemplateLocalizedVersionResult =
     | UpsertTemplateLocalizedVersionResultNotFound
     | UpsertTemplateLocalizedVersionResultLocaleNotSupported;
 
+//----
+
 interface DeleteTemplateLocalizedVersionResultOk {
     type: 'ok';
 }
@@ -72,6 +93,8 @@ interface DeleteTemplateLocalizedVersionResultNotFound {
 type DeleteTemplateLocalizedVersionResult =
     | DeleteTemplateLocalizedVersionResultOk
     | DeleteTemplateLocalizedVersionResultNotFound;
+
+//----
 
 export class TemplatesRepository {
     constructor(private db: VersionedKnex) {}
@@ -134,6 +157,34 @@ export class TemplatesRepository {
         );
 
         return { ...template, localizedVersions };
+    }
+
+    async createTemplate(template: CreateTemplatePayload, user: User): Promise<CreateTemplateResult> {
+        const { db } = this;
+        const templateToCreate = {
+            name: template.name,
+            content: template.content,
+        };
+
+        const localizedVersions = template.localizedVersions ?? {};
+        const unsupportedLocales = await getUnsupportedLocales(Object.keys(localizedVersions));
+        if (unsupportedLocales.length > 0) {
+            return { type: 'localeNotSupported', locales: unsupportedLocales };
+        }
+
+        await db.versioning(user, { type: EntityTypes.templates, id: template.name }, async (trx) => {
+            await db(Tables.Templates).insert(templateToCreate).transacting(trx);
+            if (Object.keys(localizedVersions).length > 0) {
+                await templatesRepository.upsertLocalizedVersions(template.name, localizedVersions, trx);
+            }
+        });
+
+        const savedTemplate = await templatesRepository.readTemplateWithAllVersions(template.name);
+        if (!savedTemplate) {
+            throw new Error('Failed to create template');
+        }
+
+        return { type: 'ok', template: savedTemplate };
     }
 
     async updateTemplate(

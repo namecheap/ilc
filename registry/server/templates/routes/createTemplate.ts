@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
+import { exhaustiveCheck } from 'ts-exhaustive-check';
 
-import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import Template, { LocalizedTemplateRow } from '../interfaces';
-import { Tables } from '../../db/structure';
+import { joiErrorToResponse } from '../../util/helpers';
 import { templatesRepository } from '../services/templatesRepository';
-import { templateSchema, validateLocalesAreSupported } from './validation';
+import { templateSchema, unsupportedLocalesToJoiError } from './validation';
 
 const validateRequestBeforeCreateTemplate = validateRequestFactory([
     {
@@ -16,45 +15,23 @@ const validateRequestBeforeCreateTemplate = validateRequestFactory([
 
 const createTemplate = async (req: Request, res: Response): Promise<void> => {
     try {
-        const request = req.body;
-        const template: Template = {
-            name: request.name,
-            content: request.content,
-        };
-
-        const locales = Object.keys(request.localizedVersions || {});
-        let localesAreValid = await validateLocalesAreSupported(locales, res);
-        if (!localesAreValid) {
-            return;
+        const result = await templatesRepository.createTemplate(req.body, req.user!);
+        switch (result.type) {
+            case 'localeNotSupported': {
+                res.status(422).send(joiErrorToResponse(unsupportedLocalesToJoiError(result.locales)));
+                return;
+            }
+            case 'ok': {
+                res.status(200).send(result.template);
+                return;
+            }
+            default: {
+                exhaustiveCheck(result);
+            }
         }
-
-        await db.versioning(req.user, { type: 'templates', id: template.name }, async (trx) => {
-            await db('templates').insert(template).transacting(trx);
-        });
-
-        if (locales.length > 0) {
-            await insertLocalizedVersions(locales, template, request);
-        }
-
-        const savedTemplate = await templatesRepository.readTemplateWithAllVersions(template.name);
-        res.status(200).send(savedTemplate);
     } catch (e) {
         res.status(500).send(JSON.stringify(e));
     }
 };
-
-function insertLocalizedVersions(locales: string[], template: Template, request: Record<string, any>) {
-    return Promise.all(
-        locales.map((locale) => {
-            const localizedTemplate: LocalizedTemplateRow = {
-                templateName: template.name,
-                content: request.localizedVersions[locale].content,
-                locale: locale,
-            };
-
-            return db(Tables.TemplatesLocalized).insert(localizedTemplate);
-        }),
-    );
-}
 
 export default [validateRequestBeforeCreateTemplate, createTemplate];

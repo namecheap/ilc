@@ -19,3 +19,6 @@ export interface TemplateWithLocalizedVersions extends Template {
 
 export type UpdateTemplatePayload = Omit<Template, 'name' | 'localizedVersions'> &
     Partial<Pick<TemplateWithLocalizedVersions, 'localizedVersions'>>;
+
+export type CreateTemplatePayload = Omit<Template, 'localizedVersions'> &
+    Partial<Pick<TemplateWithLocalizedVersions, 'localizedVersions'>>;

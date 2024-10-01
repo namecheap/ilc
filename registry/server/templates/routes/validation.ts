@@ -1,9 +1,8 @@
 import Joi from 'joi';
-import renderTemplate from '../services/renderTemplate';
-import { getJoiErr, joiErrorToResponse } from '../../util/helpers';
-import { Response } from 'express';
-import settingsService from '../../settings/services/SettingsService';
 import { SettingKeys } from '../../settings/interfaces';
+import settingsService from '../../settings/services/SettingsService';
+import { getJoiErr } from '../../util/helpers';
+import renderTemplate from '../services/renderTemplate';
 
 export const templateNameSchema = Joi.string().min(1).max(50);
 
@@ -60,16 +59,4 @@ export function unsupportedLocalesToJoiError(unsupportedLocales: string[]): Joi.
             SettingKeys.I18nSupportedLocales
         } setting.`,
     );
-}
-
-export async function validateLocalesAreSupported(locales: string[], res: Response) {
-    const unsupportedLocales = await getUnsupportedLocales(locales);
-    if (unsupportedLocales.length > 0) {
-        const joiError = unsupportedLocalesToJoiError(unsupportedLocales);
-        res.status(422);
-        res.send(joiErrorToResponse(joiError));
-        return false;
-    }
-
-    return true;
 }
