@@ -772,7 +772,7 @@ describe(`Tests ${example.url}`, () => {
         });
     });
 
-    describe.only('Localized', () => {
+    describe('Localized', () => {
         describe('Create', () => {
             it('should not allow to create localized template version for unsupported locale', async () => {
                 try {
@@ -826,7 +826,7 @@ describe(`Tests ${example.url}`, () => {
             });
         });
 
-        describe.only('Delete', () => {
+        describe('Delete', () => {
             it('should not allow to delete localized template version for a non-existent template', async () => {
                 const nonExistentTemplate = 'non-existent-template';
 
