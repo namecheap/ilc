@@ -771,4 +771,96 @@ describe(`Tests ${example.url}`, () => {
             }
         });
     });
+
+    describe.only('Localized', () => {
+        describe('Create', () => {
+            it('should not allow to create localized template version for unsupported locale', async () => {
+                try {
+                    await req.post(example.url).send(example.correct).expect(200);
+
+                    await req
+                        .put(example.url + example.correct.name + '/localizedVersions/pt-BR')
+                        .send({ content: example.correct.content })
+                        .expect(422);
+                } finally {
+                    await req.delete(example.url + example.correct.name).expect(204);
+                }
+            });
+            it('should not allow to create localized template version for a non-existent template', async () => {
+                const nonExistentTemplate = 'non-existent-template';
+
+                await req
+                    .put(example.url + nonExistentTemplate + '/localizedVersions/ua-UA')
+                    .send({ content: example.correct.content })
+                    .expect(404);
+            });
+            it('should create localized template version', async () => {
+                try {
+                    await req.post(example.url).send(example.correct).expect(200);
+
+                    await req
+                        .put(example.url + example.correct.name + '/localizedVersions/ua-UA')
+                        .send({ content: example.correct.content })
+                        .expect(200);
+                } finally {
+                    await req.delete(example.url + example.correct.name).expect(204);
+                }
+            });
+        });
+
+        describe('Update', () => {
+            it('should update localized template version', async () => {
+                try {
+                    await req.post(example.url).send(example.correct).expect(200);
+                    await req
+                        .put(example.url + example.correct.name + '/localizedVersions/ua-UA')
+                        .send({ content: example.correct.content })
+                        .expect(200);
+                    await req
+                        .put(example.url + example.correct.name + '/localizedVersions/ua-UA')
+                        .send({ content: example.updated.content })
+                        .expect(200);
+                } finally {
+                    await req.delete(example.url + example.correct.name).expect(204);
+                }
+            });
+        });
+
+        describe.only('Delete', () => {
+            it('should not allow to delete localized template version for a non-existent template', async () => {
+                const nonExistentTemplate = 'non-existent-template';
+
+                await req
+                    .put(example.url + nonExistentTemplate + '/localizedVersions/ua-UA')
+                    .send({ content: example.correct.content })
+                    .expect(404);
+            });
+
+            it('should not allow to delete a non-existent localized template version', async () => {
+                try {
+                    await req.post(example.url).send(example.correct).expect(200);
+                    await req
+                        .put(example.url + example.correct.name + '/localizedVersions/ua-UA')
+                        .send({ content: example.correct.content })
+                        .expect(200);
+                    await req.delete(example.url + example.correct.name + '/localizedVersions/en-US').expect(404);
+                } finally {
+                    await req.delete(example.url + example.correct.name).expect(204);
+                }
+            });
+
+            it('should delete localized template version', async () => {
+                try {
+                    await req.post(example.url).send(example.correct).expect(200);
+                    await req
+                        .put(example.url + example.correct.name + '/localizedVersions/ua-UA')
+                        .send({ content: example.correct.content })
+                        .expect(200);
+                    await req.delete(example.url + example.correct.name + '/localizedVersions/ua-UA').expect(204);
+                } finally {
+                    await req.delete(example.url + example.correct.name).expect(204);
+                }
+            });
+        });
+    });
 });

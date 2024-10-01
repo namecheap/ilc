@@ -24,15 +24,16 @@ const commonTemplate = {
     versionId: Joi.string().strip(),
 };
 
-const localizedVersions = Joi.object().pattern(
-    Joi.string()
-        .regex(/[a-z]{2}-[A-Z]{2,4}/)
-        .min(5)
-        .max(7),
-    Joi.object({
-        content: commonTemplate.content.required(),
-    }),
-);
+export const localeNameSchema = Joi.string()
+    .regex(/[a-z]{2}-[A-Z]{2,4}/)
+    .min(5)
+    .max(7);
+
+export const localizedVersionSchema = Joi.object({
+    content: commonTemplate.content.required(),
+});
+
+const localizedVersions = Joi.object().pattern(localeNameSchema, localizedVersionSchema);
 
 export const partialTemplateSchema = Joi.object({
     ...commonTemplate,

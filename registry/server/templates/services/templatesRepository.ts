@@ -42,6 +42,37 @@ type UpdateTemplateResult =
     | UpdateTemplateResultNotFound
     | UpdateTemplateResultLocalesNotSupported;
 
+interface UpsertTemplateLocalizedVersionResultOk {
+    type: 'ok';
+    localizedVersion: LocalizedVersion;
+}
+
+interface UpsertTemplateLocalizedVersionResultNotFound {
+    type: 'notFound';
+}
+
+interface UpsertTemplateLocalizedVersionResultLocaleNotSupported {
+    type: 'localeNotSupported';
+    locale: string;
+}
+
+type UpsertTemplateLocalizedVersionResult =
+    | UpsertTemplateLocalizedVersionResultOk
+    | UpsertTemplateLocalizedVersionResultNotFound
+    | UpsertTemplateLocalizedVersionResultLocaleNotSupported;
+
+interface DeleteTemplateLocalizedVersionResultOk {
+    type: 'ok';
+}
+
+interface DeleteTemplateLocalizedVersionResultNotFound {
+    type: 'notFound';
+}
+
+type DeleteTemplateLocalizedVersionResult =
+    | DeleteTemplateLocalizedVersionResultOk
+    | DeleteTemplateLocalizedVersionResultNotFound;
+
 export class TemplatesRepository {
     constructor(private db: VersionedKnex) {}
 
@@ -149,7 +180,62 @@ export class TemplatesRepository {
         return { type: 'ok', template: updatedTemplate };
     }
 
-    async upsertLocalizedVersions(templateName: string, localizedVersions: any, trx: Transaction) {
+    async upsertLocalizedVersion(
+        templateName: string,
+        locale: string,
+        localizedVersion: LocalizedVersion,
+    ): Promise<UpsertTemplateLocalizedVersionResult> {
+        const { db } = this;
+        // TODO: check if locale is supported
+        const unsupportedLocales = await getUnsupportedLocales([locale]);
+        if (unsupportedLocales.length > 0) {
+            return { type: 'localeNotSupported', locale: unsupportedLocales[0] };
+        }
+
+        // TODO: check if template exists
+        const result = await db.transaction(async (trx): Promise<UpsertTemplateLocalizedVersionResult> => {
+            const existingTemplate = await trx(Tables.Templates).where({ name: templateName }).select(1).first();
+            if (!existingTemplate) {
+                return { type: 'notFound' };
+            }
+
+            const existingRecord = await trx(Tables.TemplatesLocalized)
+                .where({ templateName, locale })
+                .select(1)
+                .first();
+
+            if (existingRecord) {
+                await trx(Tables.TemplatesLocalized)
+                    .update({ content: localizedVersion.content })
+                    .where({ templateName, locale });
+            } else {
+                await trx(Tables.TemplatesLocalized).insert({
+                    templateName,
+                    locale,
+                    content: localizedVersion.content,
+                });
+            }
+
+            return { type: 'ok', localizedVersion } as const;
+        });
+
+        return result;
+    }
+
+    async deleteLocalizedVersion(templateName: string, locale: string): Promise<DeleteTemplateLocalizedVersionResult> {
+        const { db } = this;
+        const result = await db(Tables.TemplatesLocalized).where({ templateName, locale }).delete();
+        if (result === 0) {
+            return { type: 'notFound' };
+        }
+        return { type: 'ok' };
+    }
+
+    private async upsertLocalizedVersions(
+        templateName: string,
+        localizedVersions: Record<string, LocalizedVersion>,
+        trx: Transaction,
+    ): Promise<void> {
         const { db } = this;
 
         const locales = Object.keys(localizedVersions);
