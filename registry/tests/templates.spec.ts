@@ -514,6 +514,23 @@ describe(`Tests ${example.url}`, () => {
                 .expect(422, 'HTML template has invalid structure');
         });
 
+        it('should not update record with unsupported locale', async () => {
+            await req.post(example.url).send(example.correct).expect(200);
+
+            await req
+                .put(example.url + example.correct.name)
+                .send({
+                    content: example.correct.content,
+                    localizedVersions: {
+                        'zh-CN': { content: example.correct.content },
+                    },
+                })
+                .expect(
+                    422,
+                    'Next locales are not supported zh-CN. Either change request or change i18n.supported.locale setting.',
+                );
+        });
+
         it('should successfully update record', async () => {
             await req.post(example.url).send(example.correct).expect(200);
 
@@ -769,6 +786,107 @@ describe(`Tests ${example.url}`, () => {
                 await req.delete('/api/v1/router_domains/' + routerDomainId);
                 await req.delete(example.url + template.name);
             }
+        });
+    });
+
+    describe('Localized', () => {
+        describe('Create', () => {
+            it('should not allow to create localized template version for unsupported locale', async () => {
+                try {
+                    await req.post(example.url).send(example.correct).expect(200);
+
+                    await req
+                        .put(example.url + example.correct.name + '/localized/pt-BR')
+                        .send({ content: example.correct.content })
+                        .expect(422);
+                } finally {
+                    await req.delete(example.url + example.correct.name).expect(204);
+                }
+            });
+
+            it('should not allow to create localized template version for a non-existent template', async () => {
+                const nonExistentTemplate = 'non-existent-template';
+
+                await req
+                    .put(example.url + nonExistentTemplate + '/localized/ua-UA')
+                    .send({ content: example.correct.content })
+                    .expect(404);
+            });
+
+            it('should create localized template version', async () => {
+                try {
+                    await req.post(example.url).send(example.correct).expect(200);
+
+                    const response = await req
+                        .put(example.url + example.correct.name + '/localized/ua-UA')
+                        .send({ content: example.correct.content })
+                        .expect(200);
+
+                    expect(response.body).deep.equal({
+                        content: example.correct.content,
+                    });
+                } finally {
+                    await req.delete(example.url + example.correct.name).expect(204);
+                }
+            });
+        });
+
+        describe('Update', () => {
+            it('should update localized template version', async () => {
+                try {
+                    await req.post(example.url).send(example.correct).expect(200);
+                    await req
+                        .put(example.url + example.correct.name + '/localized/ua-UA')
+                        .send({ content: example.correct.content })
+                        .expect(200);
+                    const response = await req
+                        .put(example.url + example.correct.name + '/localized/ua-UA')
+                        .send({ content: example.updated.content })
+                        .expect(200);
+                    expect(response.body).deep.equal({
+                        content: example.updated.content,
+                    });
+                } finally {
+                    await req.delete(example.url + example.correct.name).expect(204);
+                }
+            });
+        });
+
+        describe('Delete', () => {
+            it('should not allow to delete localized template version for a non-existent template', async () => {
+                const nonExistentTemplate = 'non-existent-template';
+
+                await req
+                    .put(example.url + nonExistentTemplate + '/localized/ua-UA')
+                    .send({ content: example.correct.content })
+                    .expect(404);
+            });
+
+            it('should not allow to delete a non-existent localized template version', async () => {
+                try {
+                    await req.post(example.url).send(example.correct).expect(200);
+                    await req
+                        .put(example.url + example.correct.name + '/localized/ua-UA')
+                        .send({ content: example.correct.content })
+                        .expect(200);
+                    await req.delete(example.url + example.correct.name + '/localized/en-US').expect(404);
+                } finally {
+                    await req.delete(example.url + example.correct.name).expect(204);
+                }
+            });
+
+            it('should delete localized template version', async () => {
+                try {
+                    await req.post(example.url).send(example.correct).expect(200);
+                    await req
+                        .put(example.url + example.correct.name + '/localized/ua-UA')
+                        .send({ content: example.correct.content })
+                        .expect(200);
+                    await req.delete(example.url + example.correct.name + '/localized/ua-UA').expect(204);
+                } finally {
+                    await req.delete(example.url + example.correct.name).expect(204);
+                }
+            });
         });
     });
 });

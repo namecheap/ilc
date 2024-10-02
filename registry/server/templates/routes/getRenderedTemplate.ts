@@ -3,7 +3,7 @@ import Joi from 'joi';
 
 import noticeError from '../../errorHandler/noticeError';
 import db from '../../db';
-import Template, { LocalizedTemplate } from '../interfaces';
+import Template, { LocalizedTemplateRow } from '../interfaces';
 import validateRequestFactory from '../../common/services/validateRequest';
 import renderTemplate from '../services/renderTemplate';
 import errors from '../errors';
@@ -89,7 +89,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     if (locale) {
         const [localizedTemplate] = await db
             .select()
-            .from<LocalizedTemplate>(Tables.TemplatesLocalized)
+            .from<LocalizedTemplateRow>(Tables.TemplatesLocalized)
             .where('templateName', templateName)
             .andWhere('locale', locale as string);
 
