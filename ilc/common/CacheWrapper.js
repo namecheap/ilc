@@ -1,5 +1,4 @@
-const extendError = require('@namecheap/error-extender');
-const { withTimeout } = require('./utils');
+const { withTimeout, extendError } = require('./utils');
 
 const errors = {};
 errors.CacheWrapperError = extendError('CacheWrapperError', { defaultData: {} });

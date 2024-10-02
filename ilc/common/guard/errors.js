@@ -1,4 +1,4 @@
-const extendError = require('@namecheap/error-extender');
+const { extendError } = require('../utils');
 
 const errors = {};
 

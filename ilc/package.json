@@ -20,7 +20,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@namecheap/error-extender": "^2.1.0",
+    "@namecheap/error-extender": "^2.2.1",
     "@namecheap/tailorx": "^8.1.0",
     "@newrelic/native-metrics": "^11.0.0",
     "agentkeepalive": "^4.5.0",
