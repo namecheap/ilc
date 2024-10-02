@@ -2,16 +2,11 @@ import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import validateRequestFactory from '../../common/services/validateRequest';
+import { validateLocalesMiddleware } from '../../middleware/validatelocales';
 import { exhaustiveCheck } from '../../util/exhaustiveCheck';
-import { joiErrorToResponse } from '../../util/helpers';
 import { LocalizedVersion } from '../interfaces';
 import { templatesRepository } from '../services/templatesRepository';
-import {
-    localeNameSchema,
-    localizedVersionSchema,
-    templateNameSchema,
-    unsupportedLocalesToJoiError,
-} from './validation';
+import { localeNameSchema, localizedVersionSchema, templateNameSchema } from './validation';
 
 const validateRequestBeforeUpsertLocalizedVersion = validateRequestFactory([
     {
@@ -26,6 +21,11 @@ const validateRequestBeforeUpsertLocalizedVersion = validateRequestFactory([
         selector: 'body',
     },
 ]);
+
+const validateLocale = validateLocalesMiddleware(
+    (req) => [req.params.locale],
+    () => 'params.locale',
+);
 
 type Params = {
     name: string;
@@ -45,10 +45,6 @@ const upsertTemplateLocalizedVersion = async (
             res.status(404).send('Not found');
             return;
         }
-        case 'localeNotSupported': {
-            res.status(422).send(joiErrorToResponse(unsupportedLocalesToJoiError([result.locale])));
-            return;
-        }
         case 'ok': {
             res.status(200).send(result.localizedVersion);
             return;
@@ -59,4 +55,4 @@ const upsertTemplateLocalizedVersion = async (
     }
 };
 
-export default [validateRequestBeforeUpsertLocalizedVersion, upsertTemplateLocalizedVersion];
+export default [validateRequestBeforeUpsertLocalizedVersion, validateLocale, upsertTemplateLocalizedVersion];

@@ -14,7 +14,6 @@ import Template, {
     TemplateWithLocalizedVersions,
     UpdateTemplatePayload,
 } from '../interfaces';
-import { getUnsupportedLocales } from '../routes/validation';
 
 import Transaction = Knex.Transaction;
 
@@ -23,18 +22,6 @@ export interface TemplatesGetListFilters {
     id?: string[] | string;
     name?: string[] | string;
 }
-
-interface CreateTemplateResultOk {
-    type: 'ok';
-    template: VersionedRecord<TemplateWithLocalizedVersions>;
-}
-
-interface CreateTemplateResultLocalesNotSupported {
-    type: 'localeNotSupported';
-    locales: string[];
-}
-
-type CreateTemplateResult = CreateTemplateResultOk | CreateTemplateResultLocalesNotSupported;
 
 interface UpdateTemplateResultOk {
     type: 'ok';
@@ -45,15 +32,7 @@ interface UpdateTemplateResultNotFound {
     type: 'notFound';
 }
 
-interface UpdateTemplateResultLocalesNotSupported {
-    type: 'localeNotSupported';
-    locales: string[];
-}
-
-type UpdateTemplateResult =
-    | UpdateTemplateResultOk
-    | UpdateTemplateResultNotFound
-    | UpdateTemplateResultLocalesNotSupported;
+type UpdateTemplateResult = UpdateTemplateResultOk | UpdateTemplateResultNotFound;
 
 interface UpsertTemplateLocalizedVersionResultOk {
     type: 'ok';
@@ -64,15 +43,9 @@ interface UpsertTemplateLocalizedVersionResultNotFound {
     type: 'notFound';
 }
 
-interface UpsertTemplateLocalizedVersionResultLocaleNotSupported {
-    type: 'localeNotSupported';
-    locale: string;
-}
-
 type UpsertTemplateLocalizedVersionResult =
     | UpsertTemplateLocalizedVersionResultOk
-    | UpsertTemplateLocalizedVersionResultNotFound
-    | UpsertTemplateLocalizedVersionResultLocaleNotSupported;
+    | UpsertTemplateLocalizedVersionResultNotFound;
 
 interface DeleteTemplateLocalizedVersionResultOk {
     type: 'ok';
@@ -149,7 +122,10 @@ export class TemplatesRepository {
         return { ...template, localizedVersions };
     }
 
-    async createTemplate(template: CreateTemplatePayload, user: User | undefined): Promise<CreateTemplateResult> {
+    async createTemplate(
+        template: CreateTemplatePayload,
+        user: User | undefined,
+    ): Promise<VersionedRecord<TemplateWithLocalizedVersions>> {
         const { db } = this;
         const templateToCreate = {
             name: template.name,
@@ -157,10 +133,6 @@ export class TemplatesRepository {
         };
 
         const localizedVersions = template.localizedVersions ?? {};
-        const unsupportedLocales = await getUnsupportedLocales(Object.keys(localizedVersions));
-        if (unsupportedLocales.length > 0) {
-            return { type: 'localeNotSupported', locales: unsupportedLocales };
-        }
 
         await db.versioning(user, { type: EntityTypes.templates, id: template.name }, async (trx) => {
             await db(Tables.Templates).insert(templateToCreate).transacting(trx);
@@ -171,7 +143,7 @@ export class TemplatesRepository {
 
         const savedTemplate = await this.mustReadTemplateWithAllVersions(template.name);
 
-        return { type: 'ok', template: savedTemplate };
+        return savedTemplate;
     }
 
     async updateTemplate(
@@ -188,10 +160,6 @@ export class TemplatesRepository {
             return { type: 'notFound' };
         }
         const localizedVersions = payload.localizedVersions ?? {};
-        const unsupportedLocales = await getUnsupportedLocales(Object.keys(localizedVersions));
-        if (unsupportedLocales.length > 0) {
-            return { type: 'localeNotSupported', locales: unsupportedLocales };
-        }
 
         await db.versioning(
             user,
@@ -219,10 +187,6 @@ export class TemplatesRepository {
         localizedVersion: LocalizedVersion,
     ): Promise<UpsertTemplateLocalizedVersionResult> {
         const { db } = this;
-        const unsupportedLocales = await getUnsupportedLocales([locale]);
-        if (unsupportedLocales.length > 0) {
-            return { type: 'localeNotSupported', locale: unsupportedLocales[0] };
-        }
 
         const result = await db.transaction(async (trx): Promise<UpsertTemplateLocalizedVersionResult> => {
             const existingTemplate = await trx(Tables.Templates).where({ name: templateName }).select(1).first();

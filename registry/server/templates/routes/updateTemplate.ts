@@ -2,10 +2,10 @@ import { Request, Response } from 'express';
 import Joi from 'joi';
 
 import validateRequestFactory from '../../common/services/validateRequest';
+import { validateLocalesMiddleware } from '../../middleware/validatelocales';
 import { exhaustiveCheck } from '../../util/exhaustiveCheck';
-import { joiErrorToResponse } from '../../util/helpers';
 import { templatesRepository } from '../services/templatesRepository';
-import { partialTemplateSchema, templateNameSchema, unsupportedLocalesToJoiError } from './validation';
+import { partialTemplateSchema, templateNameSchema } from './validation';
 
 type UpdateTemplateRequestParams = {
     name: string;
@@ -24,16 +24,17 @@ const validateRequestBeforeUpdateTemplate = validateRequestFactory([
     },
 ]);
 
+const validateLocale = validateLocalesMiddleware(
+    (req) => Object.keys(req.body.localizedVersions ?? {}),
+    (unsupportedLocales) => `body.localizedVersions.${unsupportedLocales[0]}`,
+);
+
 const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Response): Promise<void> => {
     const result = await templatesRepository.updateTemplate(req.params.name, req.body, req.user);
 
     switch (result.type) {
         case 'notFound': {
             res.status(404).send('Not found');
-            return;
-        }
-        case 'localeNotSupported': {
-            res.status(422).send(joiErrorToResponse(unsupportedLocalesToJoiError(result.locales)));
             return;
         }
         case 'ok': {
@@ -46,4 +47,4 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
     }
 };
 
-export default [validateRequestBeforeUpdateTemplate, updateTemplate];
+export default [validateRequestBeforeUpdateTemplate, validateLocale, updateTemplate];
