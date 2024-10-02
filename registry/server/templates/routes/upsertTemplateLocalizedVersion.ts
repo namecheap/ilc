@@ -1,16 +1,17 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
+
 import validateRequestFactory from '../../common/services/validateRequest';
+import { exhaustiveCheck } from '../../util/exhaustiveCheck';
+import { joiErrorToResponse } from '../../util/helpers';
+import { LocalizedVersion } from '../interfaces';
+import { templatesRepository } from '../services/templatesRepository';
 import {
     localeNameSchema,
     localizedVersionSchema,
     templateNameSchema,
     unsupportedLocalesToJoiError,
 } from './validation';
-import { LocalizedVersion } from '../interfaces';
-import { joiErrorToResponse } from '../../util/helpers';
-import { exhaustiveCheck } from 'ts-exhaustive-check';
-import { templatesRepository } from '../services/templatesRepository';
 
 const validateRequestBeforeUpsertLocalizedVersion = validateRequestFactory([
     {

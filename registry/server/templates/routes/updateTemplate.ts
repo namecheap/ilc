@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
-import { exhaustiveCheck } from 'ts-exhaustive-check';
 
 import validateRequestFactory from '../../common/services/validateRequest';
+import { exhaustiveCheck } from '../../util/exhaustiveCheck';
 import { joiErrorToResponse } from '../../util/helpers';
 import { templatesRepository } from '../services/templatesRepository';
 import { partialTemplateSchema, templateNameSchema, unsupportedLocalesToJoiError } from './validation';
