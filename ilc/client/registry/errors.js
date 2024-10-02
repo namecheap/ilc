@@ -1,4 +1,4 @@
-import extendError from '@namecheap/error-extender';
+import { extendError } from '../../common/utils';
 
 const errors = {};
 errors.RegistryError = extendError('RegistryError');

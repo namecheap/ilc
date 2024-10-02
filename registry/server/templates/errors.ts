@@ -1,9 +1,9 @@
-import errorExtender from '@namecheap/error-extender';
+import { extendError } from '../util/extendError';
 
 export default {
-    FetchIncludeError: errorExtender('FetchIncludeError', { defaultData: {} }),
-    InvalidTemplateError: errorExtender('InvalidTemplateError', { defaultData: {} }),
-    TemplateNotFoundError: errorExtender('TemplateNotFoundError', {
+    FetchIncludeError: extendError('FetchIncludeError', { defaultData: {} }),
+    InvalidTemplateError: extendError('InvalidTemplateError', { defaultData: {} }),
+    TemplateNotFoundError: extendError('TemplateNotFoundError', {
         defaultMessage: 'Template not found',
         defaultData: {},
     }),

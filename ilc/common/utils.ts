@@ -1,6 +1,11 @@
-const deepmerge = require('deepmerge');
+import errorExtender, { type ExtendConfig } from '@namecheap/error-extender';
+import deepmerge from 'deepmerge';
 
-function appIdToNameAndSlot(appId) {
+type NameAndSlot = {
+    appName: string;
+    slotName: string;
+};
+export function appIdToNameAndSlot(appId: string): NameAndSlot {
     const [appNameWithoutPrefix, slotName] = appId.split('__at__');
 
     // Case for shared libraries
@@ -17,24 +22,25 @@ function appIdToNameAndSlot(appId) {
     };
 }
 
-function makeAppId(appName, slotName) {
+export function makeAppId(appName: string, slotName: string): string {
     return `${appName.replace('@portal/', '')}__at__${slotName}`;
 }
 
-function cloneDeep(source) {
-    return deepmerge({}, source);
+export function cloneDeep<T extends object>(source: T): T {
+    return deepmerge<T>({}, source);
 }
 
-const uniqueArray = (array) => [...new Set(array)];
+export const uniqueArray = <T>(array: T[]): T[] => [...new Set(array)];
 
-const encodeHtmlEntities = (value) => value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const decodeHtmlEntities = (value) =>
+export const encodeHtmlEntities = (value: string): string =>
+    value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+export const decodeHtmlEntities = (value: string): string =>
     value
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"');
 
-const removeQueryParams = (url) => {
+export const removeQueryParams = (url: string): string => {
     const index = url.indexOf('?');
     if (index !== -1) {
         return url.substring(0, index);
@@ -43,7 +49,7 @@ const removeQueryParams = (url) => {
     }
 };
 
-const addTrailingSlash = (url) => {
+export const addTrailingSlash = (url: string): string => {
     if (url.endsWith('/')) {
         return url;
     }
@@ -51,7 +57,7 @@ const addTrailingSlash = (url) => {
     return `${url}/`;
 };
 
-function addTrailingSlashToPath(url) {
+export function addTrailingSlashToPath(url: string): string {
     const isFullUrl = url.includes('://');
     const parsedUrl = isFullUrl ? new URL(url) : new URL(`https://example.com/${url}`);
     const hasTrailingSlash = parsedUrl.pathname.endsWith('/');
@@ -60,32 +66,22 @@ function addTrailingSlashToPath(url) {
     return isFullUrl ? parsedUrl.toString() : parsedUrl.pathname.slice(1);
 }
 
-class TimeoutError extends Error {}
+export class TimeoutError extends Error {}
 
 /**
  *
  * @param {Promise}
  * @param {number} timeout
  */
-async function withTimeout(promise, ms, message = 'Promise timeout') {
-    let timeoutId;
-    const timeoutPromise = new Promise((resolve, reject) => {
+export async function withTimeout<T>(promise: Promise<T>, ms: number, message = 'Promise timeout'): Promise<T> {
+    let timeoutId: NodeJS.Timeout;
+    const timeoutPromise = new Promise<T>((resolve, reject) => {
         timeoutId = setTimeout(() => reject(new TimeoutError(message)), ms);
     });
     const decoratedPromise = promise.finally(() => clearTimeout(timeoutId));
     return Promise.race([decoratedPromise, timeoutPromise]);
 }
 
-module.exports = {
-    appIdToNameAndSlot,
-    makeAppId,
-    cloneDeep,
-    uniqueArray,
-    encodeHtmlEntities,
-    decodeHtmlEntities,
-    removeQueryParams,
-    addTrailingSlash,
-    addTrailingSlashToPath,
-    withTimeout,
-    TimeoutError,
-};
+export function extendError<T>(name: string, options: ExtendConfig<T> = {}) {
+    return errorExtender(name, { ...options, inverse: true });
+}
