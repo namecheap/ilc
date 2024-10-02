@@ -779,7 +779,7 @@ describe(`Tests ${example.url}`, () => {
                     await req.post(example.url).send(example.correct).expect(200);
 
                     await req
-                        .put(example.url + example.correct.name + '/localizedVersions/pt-BR')
+                        .put(example.url + example.correct.name + '/localized/pt-BR')
                         .send({ content: example.correct.content })
                         .expect(422);
                 } finally {
@@ -790,7 +790,7 @@ describe(`Tests ${example.url}`, () => {
                 const nonExistentTemplate = 'non-existent-template';
 
                 await req
-                    .put(example.url + nonExistentTemplate + '/localizedVersions/ua-UA')
+                    .put(example.url + nonExistentTemplate + '/localized/ua-UA')
                     .send({ content: example.correct.content })
                     .expect(404);
             });
@@ -799,7 +799,7 @@ describe(`Tests ${example.url}`, () => {
                     await req.post(example.url).send(example.correct).expect(200);
 
                     await req
-                        .put(example.url + example.correct.name + '/localizedVersions/ua-UA')
+                        .put(example.url + example.correct.name + '/localized/ua-UA')
                         .send({ content: example.correct.content })
                         .expect(200);
                 } finally {
@@ -813,11 +813,11 @@ describe(`Tests ${example.url}`, () => {
                 try {
                     await req.post(example.url).send(example.correct).expect(200);
                     await req
-                        .put(example.url + example.correct.name + '/localizedVersions/ua-UA')
+                        .put(example.url + example.correct.name + '/localized/ua-UA')
                         .send({ content: example.correct.content })
                         .expect(200);
                     await req
-                        .put(example.url + example.correct.name + '/localizedVersions/ua-UA')
+                        .put(example.url + example.correct.name + '/localized/ua-UA')
                         .send({ content: example.updated.content })
                         .expect(200);
                 } finally {
@@ -831,7 +831,7 @@ describe(`Tests ${example.url}`, () => {
                 const nonExistentTemplate = 'non-existent-template';
 
                 await req
-                    .put(example.url + nonExistentTemplate + '/localizedVersions/ua-UA')
+                    .put(example.url + nonExistentTemplate + '/localized/ua-UA')
                     .send({ content: example.correct.content })
                     .expect(404);
             });
@@ -840,10 +840,10 @@ describe(`Tests ${example.url}`, () => {
                 try {
                     await req.post(example.url).send(example.correct).expect(200);
                     await req
-                        .put(example.url + example.correct.name + '/localizedVersions/ua-UA')
+                        .put(example.url + example.correct.name + '/localized/ua-UA')
                         .send({ content: example.correct.content })
                         .expect(200);
-                    await req.delete(example.url + example.correct.name + '/localizedVersions/en-US').expect(404);
+                    await req.delete(example.url + example.correct.name + '/localized/en-US').expect(404);
                 } finally {
                     await req.delete(example.url + example.correct.name).expect(204);
                 }
@@ -853,10 +853,10 @@ describe(`Tests ${example.url}`, () => {
                 try {
                     await req.post(example.url).send(example.correct).expect(200);
                     await req
-                        .put(example.url + example.correct.name + '/localizedVersions/ua-UA')
+                        .put(example.url + example.correct.name + '/localized/ua-UA')
                         .send({ content: example.correct.content })
                         .expect(200);
-                    await req.delete(example.url + example.correct.name + '/localizedVersions/ua-UA').expect(204);
+                    await req.delete(example.url + example.correct.name + '/localized/ua-UA').expect(204);
                 } finally {
                     await req.delete(example.url + example.correct.name).expect(204);
                 }

@@ -24,8 +24,6 @@ export interface TemplatesGetListFilters {
     name?: string[] | string;
 }
 
-//----
-
 interface CreateTemplateResultOk {
     type: 'ok';
     template: VersionedRecord<TemplateWithLocalizedVersions>;
@@ -37,8 +35,6 @@ interface CreateTemplateResultLocalesNotSupported {
 }
 
 type CreateTemplateResult = CreateTemplateResultOk | CreateTemplateResultLocalesNotSupported;
-
-//----
 
 interface UpdateTemplateResultOk {
     type: 'ok';
@@ -59,8 +55,6 @@ type UpdateTemplateResult =
     | UpdateTemplateResultNotFound
     | UpdateTemplateResultLocalesNotSupported;
 
-//----
-
 interface UpsertTemplateLocalizedVersionResultOk {
     type: 'ok';
     localizedVersion: LocalizedVersion;
@@ -80,8 +74,6 @@ type UpsertTemplateLocalizedVersionResult =
     | UpsertTemplateLocalizedVersionResultNotFound
     | UpsertTemplateLocalizedVersionResultLocaleNotSupported;
 
-//----
-
 interface DeleteTemplateLocalizedVersionResultOk {
     type: 'ok';
 }
@@ -93,8 +85,6 @@ interface DeleteTemplateLocalizedVersionResultNotFound {
 type DeleteTemplateLocalizedVersionResult =
     | DeleteTemplateLocalizedVersionResultOk
     | DeleteTemplateLocalizedVersionResultNotFound;
-
-//----
 
 export class TemplatesRepository {
     constructor(private db: VersionedKnex) {}
@@ -175,14 +165,11 @@ export class TemplatesRepository {
         await db.versioning(user, { type: EntityTypes.templates, id: template.name }, async (trx) => {
             await db(Tables.Templates).insert(templateToCreate).transacting(trx);
             if (Object.keys(localizedVersions).length > 0) {
-                await templatesRepository.upsertLocalizedVersions(template.name, localizedVersions, trx);
+                await this.upsertLocalizedVersions(template.name, localizedVersions, trx);
             }
         });
 
-        const savedTemplate = await templatesRepository.readTemplateWithAllVersions(template.name);
-        if (!savedTemplate) {
-            throw new Error('Failed to create template');
-        }
+        const savedTemplate = await this.mustReadTemplateWithAllVersions(template.name);
 
         return { type: 'ok', template: savedTemplate };
     }
@@ -194,9 +181,6 @@ export class TemplatesRepository {
     ): Promise<UpdateTemplateResult> {
         const { db } = this;
 
-        const template = {
-            content: payload.content,
-        };
         const templatesToUpdate = await db(Tables.Templates).where({
             name: templateName,
         });
@@ -216,18 +200,16 @@ export class TemplatesRepository {
                 id: templateName,
             },
             async (trx) => {
-                await db(Tables.Templates).where({ name: templateName }).update(template).transacting(trx);
-                await templatesRepository.upsertLocalizedVersions(templateName, localizedVersions, trx);
+                await db(Tables.Templates)
+                    .where({ name: templateName })
+                    .update({ content: payload.content })
+                    .transacting(trx);
+                await this.upsertLocalizedVersions(templateName, localizedVersions, trx);
             },
         );
 
-        const updatedTemplate = await templatesRepository.readTemplateWithAllVersions(templateName);
-        if (!updatedTemplate) {
-            // This time we cannot simply return UpdateTemplateResultNotFound result,
-            // because the template is assumed to have been just updated,
-            // so it must exist.
-            throw new Error(`Template ${templateName} not found`);
-        }
+        const updatedTemplate = await this.mustReadTemplateWithAllVersions(templateName);
+
         return { type: 'ok', template: updatedTemplate };
     }
 
@@ -280,6 +262,16 @@ export class TemplatesRepository {
             return { type: 'notFound' };
         }
         return { type: 'ok' };
+    }
+
+    private async mustReadTemplateWithAllVersions(
+        templateName: string,
+    ): Promise<VersionedRecord<TemplateWithLocalizedVersions>> {
+        const maybeTemplate = await this.readTemplateWithAllVersions(templateName);
+        if (!maybeTemplate) {
+            throw new Error('Template not found');
+        }
+        return maybeTemplate;
     }
 
     private async upsertLocalizedVersions(

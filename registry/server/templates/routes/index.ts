@@ -18,8 +18,8 @@ export default (authMw: RequestHandler[]) => {
     templatesRouter.get('/:name', ...getTemplate);
     templatesRouter.put('/:name', authMw, ...updateTemplate);
     templatesRouter.delete('/:name', authMw, ...deleteTemplate);
-    templatesRouter.put('/:name/localizedVersions/:locale', authMw, ...upsertTemplateLocalizedVersion);
-    templatesRouter.delete('/:name/localizedVersions/:locale', authMw, ...deleteTemplateLocalizedVersion);
+    templatesRouter.put('/:name/localized/:locale', authMw, ...upsertTemplateLocalizedVersion);
+    templatesRouter.delete('/:name/localized/:locale', authMw, ...deleteTemplateLocalizedVersion);
 
     return templatesRouter;
 };
