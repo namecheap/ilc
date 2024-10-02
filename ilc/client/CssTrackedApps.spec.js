@@ -92,6 +92,29 @@ describe('CssTrackedApp', function () {
                 }),
             );
         });
+
+        it('should remove CSS link after createNew, mount, and unmount', async () => {
+            const returnValue = Math.random();
+            const appOnCreateNew = createOriginalAppFake(Promise.resolve(returnValue));
+            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()));
+            originalApp.createNew = () => Promise.resolve(appOnCreateNew);
+
+            const cssLink = 'data:text/css,<style>div { border: 1px solid blue; }</style>';
+            const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
+
+            const newApp = await cssWrap.createNew();
+
+            await newApp.mount();
+
+            let link = document.querySelector(`link[href="${cssLink}"]`);
+            expect(link).to.not.be.null;
+            expect(link.getAttribute(CssTrackedApp.linkUsagesAttribute)).to.equal('1');
+
+            await newApp.unmount();
+
+            link = document.querySelector(`link[href="${cssLink}"]`);
+            expect(link).to.be.null;
+        });
     });
 
     it('should add counter to css on mount', async () => {
