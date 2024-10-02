@@ -1,3 +1,4 @@
+const errorExtender = require('@namecheap/error-extender');
 const deepmerge = require('deepmerge');
 
 function appIdToNameAndSlot(appId) {
@@ -76,6 +77,10 @@ async function withTimeout(promise, ms, message = 'Promise timeout') {
     return Promise.race([decoratedPromise, timeoutPromise]);
 }
 
+function extendError(name, options = {}) {
+    return errorExtender(name, { ...options, inverse: true });
+}
+
 module.exports = {
     appIdToNameAndSlot,
     makeAppId,
@@ -88,4 +93,5 @@ module.exports = {
     addTrailingSlashToPath,
     withTimeout,
     TimeoutError,
+    extendError,
 };

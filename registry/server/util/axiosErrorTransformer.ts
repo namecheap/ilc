@@ -1,7 +1,7 @@
-import errorExtender from '@namecheap/error-extender';
-import type { AxiosError } from 'axios';
+import { type AxiosError } from 'axios';
+import { extendError } from './extendError';
 
-const IlcAxiosError = errorExtender('AxiosError');
+const IlcAxiosError = extendError('AxiosError');
 
 export function isAxiosError(err: unknown): err is AxiosError {
     return Boolean((err as AxiosError)?.isAxiosError);

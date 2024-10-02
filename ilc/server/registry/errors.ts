@@ -1,4 +1,4 @@
-import extendError from '@namecheap/error-extender';
+import { extendError } from '../../common/utils';
 
 export const RegistryError = extendError('RegistryError', { defaultData: {} });
 export const ValidationRegistryError = extendError('ValidationRegistryError', {

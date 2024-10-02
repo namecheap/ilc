@@ -1,13 +1,12 @@
 import sinon, { SinonSpy } from 'sinon';
 import supertest from 'supertest';
 
-import errorExtender from '@namecheap/error-extender';
-
 import createApplication from '../server/app';
 import { getLogger } from '../server/util/logger';
 import { getPluginManagerInstance, loadPlugins } from '../server/util/pluginManager';
 
 import type { Handler } from 'express';
+import { extendError } from '../server/util/extendError';
 
 async function runScenario(handler: Handler) {
     const app = await createApplication(true);
@@ -96,7 +95,7 @@ describe('Logging', () => {
 
     it('should log extended error json format', async () => {
         const logObjectHandler: Handler = (req, res, next) => {
-            const CustomError = errorExtender('Custom');
+            const CustomError = extendError('Custom');
             try {
                 getLogger().error(new CustomError({ message: 'desc', data: { a: 1 }, cause: new Error('cause') }));
             } catch (e) {

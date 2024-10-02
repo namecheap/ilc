@@ -65,7 +65,7 @@
         "typescript": "^5.6.2"
     },
     "dependencies": {
-        "@namecheap/error-extender": "^2.2.0",
+        "@namecheap/error-extender": "^2.2.1",
         "@newrelic/native-metrics": "^11.0.0",
         "axios": "^1.7.7",
         "bcrypt": "^5.1.1",

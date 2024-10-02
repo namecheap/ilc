@@ -1,4 +1,4 @@
-const extendError = require('@namecheap/error-extender');
+const { extendError } = require('../../common/utils');
 
 const errors = {};
 errors.TailorError = extendError('TailorError', { defaultData: {} });
