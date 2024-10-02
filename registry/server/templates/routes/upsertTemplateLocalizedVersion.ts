@@ -50,6 +50,7 @@ const upsertTemplateLocalizedVersion = async (
             return;
         }
         default: {
+            /* istanbul ignore next */
             exhaustiveCheck(result);
         }
     }

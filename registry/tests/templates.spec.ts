@@ -514,6 +514,23 @@ describe(`Tests ${example.url}`, () => {
                 .expect(422, 'HTML template has invalid structure');
         });
 
+        it('should not update record with unsupported locale', async () => {
+            await req.post(example.url).send(example.correct).expect(200);
+
+            await req
+                .put(example.url + example.correct.name)
+                .send({
+                    content: example.correct.content,
+                    localizedVersions: {
+                        'zh-CN': { content: example.correct.content },
+                    },
+                })
+                .expect(
+                    422,
+                    'Next locales are not supported zh-CN. Either change request or change i18n.supported.locale setting.',
+                );
+        });
+
         it('should successfully update record', async () => {
             await req.post(example.url).send(example.correct).expect(200);
 

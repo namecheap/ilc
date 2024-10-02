@@ -35,6 +35,7 @@ const deleteTemplateLocalizedVersion = async (req: Request<Params>, res: Respons
             return;
         }
         default: {
+            /* istanbul ignore next */
             exhaustiveCheck(result);
         }
     }

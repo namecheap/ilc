@@ -42,6 +42,7 @@ const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Re
             return;
         }
         default: {
+            /* istanbul ignore next */
             exhaustiveCheck(result);
         }
     }
