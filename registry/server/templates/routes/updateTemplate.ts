@@ -1,4 +1,3 @@
-import { ok } from 'assert';
 import { Request, Response } from 'express';
 import Joi from 'joi';
 
@@ -26,7 +25,6 @@ const validateRequestBeforeUpdateTemplate = validateRequestFactory([
 ]);
 
 const updateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Response): Promise<void> => {
-    ok(req.user);
     const result = await templatesRepository.updateTemplate(req.params.name, req.body, req.user);
 
     switch (result.type) {

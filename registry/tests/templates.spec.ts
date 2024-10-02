@@ -786,6 +786,7 @@ describe(`Tests ${example.url}`, () => {
                     await req.delete(example.url + example.correct.name).expect(204);
                 }
             });
+
             it('should not allow to create localized template version for a non-existent template', async () => {
                 const nonExistentTemplate = 'non-existent-template';
 
@@ -794,14 +795,19 @@ describe(`Tests ${example.url}`, () => {
                     .send({ content: example.correct.content })
                     .expect(404);
             });
-            it('should create localized template version', async () => {
+
+            it.only('should create localized template version', async () => {
                 try {
                     await req.post(example.url).send(example.correct).expect(200);
 
-                    await req
+                    const response = await req
                         .put(example.url + example.correct.name + '/localized/ua-UA')
                         .send({ content: example.correct.content })
                         .expect(200);
+
+                    expect(response.body).deep.equal({
+                        content: example.correct.content,
+                    });
                 } finally {
                     await req.delete(example.url + example.correct.name).expect(204);
                 }
@@ -816,10 +822,13 @@ describe(`Tests ${example.url}`, () => {
                         .put(example.url + example.correct.name + '/localized/ua-UA')
                         .send({ content: example.correct.content })
                         .expect(200);
-                    await req
+                    const response = await req
                         .put(example.url + example.correct.name + '/localized/ua-UA')
                         .send({ content: example.updated.content })
                         .expect(200);
+                    expect(response.body).deep.equal({
+                        content: example.updated.content,
+                    });
                 } finally {
                     await req.delete(example.url + example.correct.name).expect(204);
                 }

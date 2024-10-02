@@ -1,6 +1,7 @@
 import { Knex } from 'knex';
 
 import { PaginatedResult } from '../../../typings/PaginatedResult';
+import { User } from '../../../typings/User';
 import db, { VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
@@ -13,10 +14,9 @@ import Template, {
     TemplateWithLocalizedVersions,
     UpdateTemplatePayload,
 } from '../interfaces';
+import { getUnsupportedLocales } from '../routes/validation';
 
 import Transaction = Knex.Transaction;
-import { getUnsupportedLocales } from '../routes/validation';
-import { User } from '../../../typings/User';
 
 export interface TemplatesGetListFilters {
     domainId?: number | 'null';
@@ -149,7 +149,7 @@ export class TemplatesRepository {
         return { ...template, localizedVersions };
     }
 
-    async createTemplate(template: CreateTemplatePayload, user: User): Promise<CreateTemplateResult> {
+    async createTemplate(template: CreateTemplatePayload, user: User | undefined): Promise<CreateTemplateResult> {
         const { db } = this;
         const templateToCreate = {
             name: template.name,
@@ -177,7 +177,7 @@ export class TemplatesRepository {
     async updateTemplate(
         templateName: string,
         payload: UpdateTemplatePayload,
-        user: User,
+        user: User | undefined,
     ): Promise<UpdateTemplateResult> {
         const { db } = this;
 
@@ -219,13 +219,11 @@ export class TemplatesRepository {
         localizedVersion: LocalizedVersion,
     ): Promise<UpsertTemplateLocalizedVersionResult> {
         const { db } = this;
-        // TODO: check if locale is supported
         const unsupportedLocales = await getUnsupportedLocales([locale]);
         if (unsupportedLocales.length > 0) {
             return { type: 'localeNotSupported', locale: unsupportedLocales[0] };
         }
 
-        // TODO: check if template exists
         const result = await db.transaction(async (trx): Promise<UpsertTemplateLocalizedVersionResult> => {
             const existingTemplate = await trx(Tables.Templates).where({ name: templateName }).select(1).first();
             if (!existingTemplate) {

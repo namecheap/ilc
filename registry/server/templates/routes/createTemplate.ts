@@ -1,4 +1,3 @@
-import { ok } from 'assert';
 import { Request, Response } from 'express';
 
 import validateRequestFactory from '../../common/services/validateRequest';
@@ -16,7 +15,6 @@ const validateRequestBeforeCreateTemplate = validateRequestFactory([
 
 const createTemplate = async (req: Request, res: Response): Promise<void> => {
     try {
-        ok(req.user);
         const result = await templatesRepository.createTemplate(req.body, req.user);
         switch (result.type) {
             case 'localeNotSupported': {
