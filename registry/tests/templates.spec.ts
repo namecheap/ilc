@@ -796,7 +796,7 @@ describe(`Tests ${example.url}`, () => {
                     .expect(404);
             });
 
-            it.only('should create localized template version', async () => {
+            it('should create localized template version', async () => {
                 try {
                     await req.post(example.url).send(example.correct).expect(200);
 
