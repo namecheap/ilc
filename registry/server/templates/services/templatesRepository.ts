@@ -7,6 +7,7 @@ import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
 import { normalizeArray } from '../../util/normalizeArray';
 import { EntityTypes, VersionedRecord } from '../../versioning/interfaces';
+import errors from '../errors';
 import Template, {
     CreateTemplatePayload,
     LocalizedTemplateRow,
@@ -231,7 +232,7 @@ export class TemplatesRepository {
     ): Promise<VersionedRecord<TemplateWithLocalizedVersions>> {
         const maybeTemplate = await this.readTemplateWithAllVersions(templateName);
         if (!maybeTemplate) {
-            throw new Error('Template not found');
+            throw new errors.TemplateNotFoundError({ data: { templateName } });
         }
         return maybeTemplate;
     }
