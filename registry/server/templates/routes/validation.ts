@@ -6,7 +6,7 @@ import renderTemplate from '../services/renderTemplate';
 
 export const templateNameSchema = Joi.string().min(1).max(50);
 
-const commonTemplate = {
+export const commonTemplate = {
     content: Joi.string()
         .min(1)
         .external(async (value) => {
