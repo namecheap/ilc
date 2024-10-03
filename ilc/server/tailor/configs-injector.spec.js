@@ -2,6 +2,7 @@ const chai = require('chai');
 const sinon = require('sinon');
 const _ = require('lodash');
 const _fp = require('lodash/fp');
+const LZUTF8 = require('lzutf8');
 const { context } = require('../context/context');
 
 const ConfigsInjector = require('./configs-injector');
@@ -414,6 +415,50 @@ describe('configs injector', () => {
                     };
                     const result = configsInjector.inject(request, template, { slots, reqUrl: '/test/route?a=15' });
                     chai.expect(result).includes('<body class="custom">\n...\n</body>');
+                },
+            );
+        });
+        it('should exclude New Relic script if ILC-overrideConfig cookie is present', () => {
+            const overrideConfig = JSON.stringify({ someKey: 'someValue' });
+            const encodedOverrideConfig = 'LZUTF8:' + LZUTF8.encodeBase64(LZUTF8.compress(overrideConfig));
+
+            context.run(
+                {
+                    request: {
+                        raw: {
+                            url: 'test/a?test=15',
+                            connection: {
+                                encrypted: true,
+                            },
+                        },
+                        hostname: 'test.com',
+                        headers: {
+                            cookie: `ILC-overrideConfig=${encodedOverrideConfig}`,
+                        },
+                    },
+                },
+                () => {
+                    const browserTimingHeader = `<script defer type="text/javascript">window.browserTimingHeader = 'Hi there! I should add a timing header.';</script>`;
+                    newrelic.getBrowserTimingHeader.withArgs().returns(browserTimingHeader);
+                    const configsInjector = new ConfigsInjector(newrelic);
+                    const request = { registryConfig, ilcState: { locale: 'en-US' }, ldeRelated: true };
+                    const template = {
+                        styleRefs: [],
+                        content:
+                            '<html>' +
+                            '<head>' +
+                            '<!-- ILC_JS -->' +
+                            '<title>Configs Injector`s test</title>' +
+                            '<!-- ILC_CSS -->' +
+                            '<link rel="stylesheet" href="https://somewhere.com/style.css">' +
+                            '</head>' +
+                            '<body>' +
+                            '<div>Hi there! I am content.</div>' +
+                            '</body>' +
+                            '</html>',
+                    };
+                    const result = configsInjector.inject(request, template, { slots, reqUrl: '/test/route?a=15' });
+                    chai.expect(result).to.not.include(browserTimingHeader);
                 },
             );
         });
