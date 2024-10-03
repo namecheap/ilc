@@ -132,6 +132,18 @@ describe('UrlProcessor', () => {
                 });
             });
 
+            it('when the path contains locale with multiple trailing slashes', () => {
+                const urlProcessor = new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash);
+
+                const malformedUrl = '/de///google.com/';
+                const expectedFixedUrl = '/de/google.com/';
+
+                chai.expect(urlProcessor.process(malformedUrl)).to.be.equal(
+                    expectedFixedUrl,
+                    `Failed for input: ${malformedUrl}`,
+                );
+            });
+
             it('when the original provided URL does not have origin', () => {
                 chai.expect(
                     new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(
