@@ -617,6 +617,14 @@ describe(`Tests ${example.url}`, () => {
 
             await req.delete(example.url + example.correctLocalized.name).expect(204);
         });
+
+        it.only('should not allow to pass localizedVersions to the PATCH request', async () => {
+            await req.post(example.url).send(example.correct).expect(200);
+            await req
+                .patch(example.url + example.correct.name)
+                .send(_.omit(example.correctLocalized, 'name'))
+                .expect(422, '"localizedVersions" is not allowed');
+        });
     });
 
     describe('Delete', () => {
