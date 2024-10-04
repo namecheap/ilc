@@ -22,3 +22,5 @@ export type UpdateTemplatePayload = Omit<Template, 'name' | 'localizedVersions'>
 
 export type CreateTemplatePayload = Omit<Template, 'localizedVersions'> &
     Partial<Pick<TemplateWithLocalizedVersions, 'localizedVersions'>>;
+
+export type PartialUpdateTemplatePayload = Pick<Template, 'content'>;
