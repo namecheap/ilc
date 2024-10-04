@@ -29,11 +29,13 @@ class UrlProcessor {
 
     #processUrlTrailingSlash = (url) => {
         if (!UrlProcessor.validSchemes.some((scheme) => url.startsWith(scheme))) {
+            // any combination of slashes at the beginning URL class classifies as an absolute link with http: protocol, so we remove them at the end
             url = url.replace(/^[\/\\]+/gi, '/');
         }
 
         const parsedUrl = new URL(url, this.#fakeBaseInCasesWhereUrlIsRelative);
 
+        // Ensure there are no double slashes in the pathname, excluding the start
         parsedUrl.pathname = parsedUrl.pathname.replace(/\/{2,}/g, '/');
 
         const doesUrlPathnameEndWithTrailingSlash = parsedUrl.pathname[parsedUrl.pathname.length - 1] === '/';
