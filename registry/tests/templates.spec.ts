@@ -2,10 +2,10 @@ import _ from 'lodash';
 import nock from 'nock';
 import supertest, { type Agent } from 'supertest';
 import app from '../server/app';
-import { expect, getServerAddress } from './common';
 import { SettingKeys } from '../server/settings/interfaces';
-import { withSetting } from './utils/withSetting';
+import { expect, getServerAddress } from './common';
 import { makeFilterQuery } from './utils/makeFilterQuery';
+import { withSetting } from './utils/withSetting';
 
 const example = {
     url: '/api/v1/template/',
@@ -573,6 +573,57 @@ describe(`Tests ${example.url}`, () => {
                     .send(_.omit(example.updated, 'name'))
                     .expect(401);
             });
+        });
+    });
+
+    describe('Partial Update', () => {
+        it("should not partially update any record if record doesn't exist", async () => {
+            const nonExisting = { name: 123 };
+            await req
+                .patch(example.url + nonExisting.name)
+                .send({ content: example.correct.content })
+                .expect(404, 'Not found');
+        });
+
+        it('should successfully partially update record', async () => {
+            await req.post(example.url).send(example.correct).expect(200);
+
+            const response = await req
+                .patch(example.url + example.correct.name)
+                .send({ content: example.updated.content })
+                .expect(200);
+            expect(response.body).deep.equal({
+                ...example.updated,
+                versionId: response.body.versionId,
+            });
+        });
+
+        it('should not delete localized versions of the template on partial update', async () => {
+            await withSetting(
+                SettingKeys.I18nSupportedLocales,
+                Object.keys(example.correctLocalized.localizedVersions),
+                async () => {
+                    await req.post(example.url).send(example.correctLocalized).expect(200);
+                },
+            );
+
+            await req
+                .patch(example.url + example.correctLocalized.name)
+                .send({ content: example.updated.content })
+                .expect(200);
+
+            const template = await req.get(example.url + example.correctLocalized.name).expect(200);
+            expect(template.body.localizedVersions).deep.equal(example.correctLocalized.localizedVersions);
+
+            await req.delete(example.url + example.correctLocalized.name).expect(204);
+        });
+
+        it('should not allow to pass localizedVersions to the PATCH request', async () => {
+            await req.post(example.url).send(example.correct).expect(200);
+            await req
+                .patch(example.url + example.correct.name)
+                .send(_.omit(example.correctLocalized, 'name'))
+                .expect(422, '"localizedVersions" is not allowed');
         });
     });
 

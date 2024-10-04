@@ -12,6 +12,7 @@ import Template, {
     CreateTemplatePayload,
     LocalizedTemplateRow,
     LocalizedVersion,
+    PartialUpdateTemplatePayload,
     TemplateWithLocalizedVersions,
     UpdateTemplatePayload,
 } from '../interfaces';
@@ -59,6 +60,17 @@ interface DeleteTemplateLocalizedVersionResultNotFound {
 type DeleteTemplateLocalizedVersionResult =
     | DeleteTemplateLocalizedVersionResultOk
     | DeleteTemplateLocalizedVersionResultNotFound;
+
+type PartialUpdateTemplateResultOk = {
+    type: 'ok';
+    template: VersionedRecord<Template>;
+};
+
+type PartialUpdateTemplateResultNotFound = {
+    type: 'notFound';
+};
+
+type PartialUpdateTemplateResult = PartialUpdateTemplateResultOk | PartialUpdateTemplateResultNotFound;
 
 export class TemplatesRepository {
     constructor(private db: VersionedKnex) {}
@@ -142,7 +154,7 @@ export class TemplatesRepository {
             }
         });
 
-        const savedTemplate = await this.mustReadTemplateWithAllVersions(template.name);
+        const savedTemplate = await this.readTemplateWithAllVersionsOrFail(template.name);
 
         return savedTemplate;
     }
@@ -177,7 +189,29 @@ export class TemplatesRepository {
             },
         );
 
-        const updatedTemplate = await this.mustReadTemplateWithAllVersions(templateName);
+        const updatedTemplate = await this.readTemplateWithAllVersionsOrFail(templateName);
+
+        return { type: 'ok', template: updatedTemplate };
+    }
+
+    async partialUpdateTemplate(
+        templateName: string,
+        payload: PartialUpdateTemplatePayload,
+        user: User | undefined,
+    ): Promise<PartialUpdateTemplateResult> {
+        const templateExists = await this.db(Tables.Templates).where({ name: templateName }).select(1).first();
+        if (!templateExists) {
+            return { type: 'notFound' };
+        }
+
+        await db.versioning(user, { type: EntityTypes.templates, id: templateName }, async (trx) => {
+            await db(Tables.Templates)
+                .where({ name: templateName })
+                .update({ content: payload.content })
+                .transacting(trx);
+        });
+
+        const updatedTemplate = await this.readTemplateOrFail(templateName);
 
         return { type: 'ok', template: updatedTemplate };
     }
@@ -227,7 +261,20 @@ export class TemplatesRepository {
         return { type: 'ok' };
     }
 
-    private async mustReadTemplateWithAllVersions(
+    private async readTemplateOrFail(templateName: string): Promise<VersionedRecord<Template>> {
+        const [maybeTemplate] = await db
+            .selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [
+                `${Tables.Templates}.*`,
+            ])
+            .where('name', templateName);
+
+        if (!maybeTemplate) {
+            throw new errors.TemplateNotFoundError({ data: { templateName } });
+        }
+        return maybeTemplate;
+    }
+
+    private async readTemplateWithAllVersionsOrFail(
         templateName: string,
     ): Promise<VersionedRecord<TemplateWithLocalizedVersions>> {
         const maybeTemplate = await this.readTemplateWithAllVersions(templateName);
