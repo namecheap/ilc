@@ -577,15 +577,15 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Partial Update', () => {
-        it("should not partial update any record if record doesn't exist", async () => {
-            const incorrect = { name: 123 };
+        it("should not partially update any record if record doesn't exist", async () => {
+            const nonExisting = { name: 123 };
             await req
-                .patch(example.url + incorrect.name)
+                .patch(example.url + nonExisting.name)
                 .send({ content: example.correct.content })
                 .expect(404, 'Not found');
         });
 
-        it('should successfully partial update record', async () => {
+        it('should successfully partially update record', async () => {
             await req.post(example.url).send(example.correct).expect(200);
 
             const response = await req

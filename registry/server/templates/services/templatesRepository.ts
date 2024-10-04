@@ -154,7 +154,7 @@ export class TemplatesRepository {
             }
         });
 
-        const savedTemplate = await this.mustReadTemplateWithAllVersions(template.name);
+        const savedTemplate = await this.readTemplateWithAllVersionsOrFail(template.name);
 
         return savedTemplate;
     }
@@ -189,7 +189,7 @@ export class TemplatesRepository {
             },
         );
 
-        const updatedTemplate = await this.mustReadTemplateWithAllVersions(templateName);
+        const updatedTemplate = await this.readTemplateWithAllVersionsOrFail(templateName);
 
         return { type: 'ok', template: updatedTemplate };
     }
@@ -211,7 +211,7 @@ export class TemplatesRepository {
                 .transacting(trx);
         });
 
-        const updatedTemplate = await this.mustReadTemplate(templateName);
+        const updatedTemplate = await this.readTemplateOrFail(templateName);
 
         return { type: 'ok', template: updatedTemplate };
     }
@@ -261,7 +261,7 @@ export class TemplatesRepository {
         return { type: 'ok' };
     }
 
-    private async mustReadTemplate(templateName: string): Promise<VersionedRecord<Template>> {
+    private async readTemplateOrFail(templateName: string): Promise<VersionedRecord<Template>> {
         const [maybeTemplate] = await db
             .selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [
                 `${Tables.Templates}.*`,
@@ -274,7 +274,7 @@ export class TemplatesRepository {
         return maybeTemplate;
     }
 
-    private async mustReadTemplateWithAllVersions(
+    private async readTemplateWithAllVersionsOrFail(
         templateName: string,
     ): Promise<VersionedRecord<TemplateWithLocalizedVersions>> {
         const maybeTemplate = await this.readTemplateWithAllVersions(templateName);
