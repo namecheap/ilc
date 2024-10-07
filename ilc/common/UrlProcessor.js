@@ -34,24 +34,24 @@ class UrlProcessor {
         }
 
         const parsedUrl = new URL(url, this.#fakeBaseInCasesWhereUrlIsRelative);
+
+        // Ensure there are no double slashes in the pathname, excluding the start
+        parsedUrl.pathname = parsedUrl.pathname.replace(/\/{2,}/g, '/');
+
         const doesUrlPathnameEndWithTrailingSlash = parsedUrl.pathname[parsedUrl.pathname.length - 1] === '/';
 
         switch (this.#trailingSlash) {
             case UrlProcessor.routerHasTo.redirectToNonTrailingSlash: {
                 if (doesUrlPathnameEndWithTrailingSlash) {
                     parsedUrl.pathname = parsedUrl.pathname.slice(0, -1);
-                    break;
-                } else {
-                    return url;
                 }
+                break;
             }
             case UrlProcessor.routerHasTo.redirectToTrailingSlash: {
                 if (!doesUrlPathnameEndWithTrailingSlash) {
                     parsedUrl.pathname = parsedUrl.pathname.concat('/');
-                    break;
-                } else {
-                    return url;
                 }
+                break;
             }
         }
         return parsedUrl.toString().replace(this.#fakeBaseInCasesWhereUrlIsRelative, '');
