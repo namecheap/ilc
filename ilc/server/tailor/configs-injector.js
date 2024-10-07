@@ -54,15 +54,13 @@ module.exports = class ConfigsInjector {
             registryConfig.settings?.i18n,
         );
 
-        const newRelicScript =
-            !this.#nrAutomaticallyInjectClientScript || request.ldeRelated ? '' : this.#getNewRelicScript();
         const headHtmlContent = this.#wrapWithIgnoreDuringParsing(
             //...routeAssets.scriptLinks,
             this.#getIlcState(request),
             this.#getSPAConfig(registryConfig),
             `<script>window.ilcApps = [];</script>`,
             this.#wrapWithAsyncScriptTag(this.#getClientjsUrl()),
-            newRelicScript,
+            this.#getNewRelicScript(),
             hrefLangHtml,
             canonicalTagHtml,
         );
@@ -74,6 +72,10 @@ module.exports = class ConfigsInjector {
         }
 
         request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, slots, template.styleRefs);
+
+        if (request.ldeRelated) {
+            document = this.#wrapTagsToRemove(document, /<script\b[^>]*>\s*;window\.NREUM[\s\S]*?<\/script>/g);
+        }
 
         return document;
     }
@@ -236,6 +238,10 @@ module.exports = class ConfigsInjector {
     //  So it is much easier to achieve needed outcome by modifying template.
     // Right now gently backward compatibility is maintained, so everyone who expects NR to be injected in browser will get it.
     #getNewRelicScript = () => {
+        if (!this.#nrAutomaticallyInjectClientScript) {
+            return '';
+        }
+
         let nrCode = this.#newrelic.getBrowserTimingHeader();
         if (this.#nrCustomClientJsWrapper === null || !nrCode) {
             return nrCode;
@@ -244,4 +250,11 @@ module.exports = class ConfigsInjector {
         nrCode = nrCode.replace(/<script.*?>(.*)<\/script\s*>/s, '$1');
         return this.#nrCustomClientJsWrapper.replace('%CONTENT%', nrCode);
     };
+
+    #wrapWithRemoveBeforeParsing = (content) =>
+        `<!-- TailorX: Remove before parsing START -->${content}<!-- TailorX: Remove before parsing END -->`;
+
+    #wrapTagsToRemove(content, regex) {
+        return content.replace(regex, (match) => this.#wrapWithRemoveBeforeParsing(match));
+    }
 };

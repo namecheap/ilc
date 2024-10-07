@@ -418,7 +418,7 @@ describe('configs injector', () => {
                 },
             );
         });
-        it('should exclude New Relic script if ILC-overrideConfig cookie is present', () => {
+        it('should add remove new relic wrap tags if ILC-overrideConfig cookie is present', () => {
             const overrideConfig = JSON.stringify({ someKey: 'someValue' });
             const encodedOverrideConfig = 'LZUTF8:' + LZUTF8.encodeBase64(LZUTF8.compress(overrideConfig));
 
@@ -438,8 +438,12 @@ describe('configs injector', () => {
                     },
                 },
                 () => {
-                    const browserTimingHeader = `<script defer type="text/javascript">window.browserTimingHeader = 'Hi there! I should add a timing header.';</script>`;
-                    newrelic.getBrowserTimingHeader.withArgs().returns(browserTimingHeader);
+                    const nrHeader = `<script type="text/javascript">
+        ;window.NREUM||(NREUM={});NREUM.init={distributed_tracing:{enabled:true},privacy:{cookies_enabled:true},ajax:{deny_list:["bam.nr-data.net"]}};
+
+        ;NREUM.loader_config={accountID:"1111",trustKey:"1111",agentID:"1111",licenseKey:"1111",applicationID:"1111"};
+        ;NREUM.info={beacon:"bam.nr-data.net",errorBeacon:"bam.nr-data.net",licenseKey:"1111",applicationID:"1111",sa:1};</script>`;
+                    const expectedHeader = `<!-- TailorX: Remove before parsing START -->${nrHeader}<!-- TailorX: Remove before parsing END -->`
                     const configsInjector = new ConfigsInjector(newrelic);
                     const request = { registryConfig, ilcState: { locale: 'en-US' }, ldeRelated: true };
                     const template = {
@@ -447,6 +451,7 @@ describe('configs injector', () => {
                         content:
                             '<html>' +
                             '<head>' +
+                            nrHeader +
                             '<!-- ILC_JS -->' +
                             '<title>Configs Injector`s test</title>' +
                             '<!-- ILC_CSS -->' +
@@ -457,8 +462,9 @@ describe('configs injector', () => {
                             '</body>' +
                             '</html>',
                     };
+
                     const result = configsInjector.inject(request, template, { slots, reqUrl: '/test/route?a=15' });
-                    chai.expect(result).to.not.include(browserTimingHeader);
+                    chai.expect(result).to.include(expectedHeader);
                 },
             );
         });
