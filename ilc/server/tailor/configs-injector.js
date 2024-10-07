@@ -11,6 +11,7 @@ module.exports = class ConfigsInjector {
     #cdnUrl;
     #jsInjectionPlaceholder = '<!-- ILC_JS -->';
     #cssInjectionPlaceholder = '<!-- ILC_CSS -->';
+    #markedProdTags = /<!-- Prod only start -->.*?<!-- Prod only end -->/gims;
 
     constructor(newrelic, cdnUrl = null, nrCustomClientJsWrapper = null, nrAutomaticallyInjectClientScript = true) {
         this.#newrelic = newrelic;
@@ -74,7 +75,7 @@ module.exports = class ConfigsInjector {
         request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, slots, template.styleRefs);
 
         if (request.ldeRelated) {
-            document = this.#wrapTagsToRemove(document, /<script\b[^>]*>\s*;window\.NREUM[\s\S]*?<\/script>/g);
+            document = this.#removeProdTags(document);
         }
 
         return document;
@@ -251,10 +252,7 @@ module.exports = class ConfigsInjector {
         return this.#nrCustomClientJsWrapper.replace('%CONTENT%', nrCode);
     };
 
-    #wrapWithRemoveBeforeParsing = (content) =>
-        `<!-- TailorX: Remove before parsing START -->${content}<!-- TailorX: Remove before parsing END -->`;
-
-    #wrapTagsToRemove(content, regex) {
-        return content.replace(regex, (match) => this.#wrapWithRemoveBeforeParsing(match));
+    #removeProdTags(content) {
+        return content.replace(this.#markedProdTags, '');
     }
 };
