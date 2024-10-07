@@ -443,7 +443,7 @@ describe('configs injector', () => {
 
         ;NREUM.loader_config={accountID:"1111",trustKey:"1111",agentID:"1111",licenseKey:"1111",applicationID:"1111"};
         ;NREUM.info={beacon:"bam.nr-data.net",errorBeacon:"bam.nr-data.net",licenseKey:"1111",applicationID:"1111",sa:1};</script>`;
-                    const expectedHeader = `<!-- TailorX: Remove before parsing START -->${nrHeader}<!-- TailorX: Remove before parsing END -->`
+                    const expectedHeader = `<!-- TailorX: Remove before parsing START -->${nrHeader}<!-- TailorX: Remove before parsing END -->`;
                     const configsInjector = new ConfigsInjector(newrelic);
                     const request = { registryConfig, ilcState: { locale: 'en-US' }, ldeRelated: true };
                     const template = {
