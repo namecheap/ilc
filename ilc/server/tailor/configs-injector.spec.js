@@ -2,6 +2,7 @@ const chai = require('chai');
 const sinon = require('sinon');
 const _ = require('lodash');
 const _fp = require('lodash/fp');
+const LZUTF8 = require('lzutf8');
 const { context } = require('../context/context');
 
 const ConfigsInjector = require('./configs-injector');
@@ -414,6 +415,55 @@ describe('configs injector', () => {
                     };
                     const result = configsInjector.inject(request, template, { slots, reqUrl: '/test/route?a=15' });
                     chai.expect(result).includes('<body class="custom">\n...\n</body>');
+                },
+            );
+        });
+        it('should remove marked tags for LDE if cookie is present', () => {
+            const overrideConfig = JSON.stringify({ someKey: 'someValue' });
+            const encodedOverrideConfig = 'LZUTF8:' + LZUTF8.encodeBase64(LZUTF8.compress(overrideConfig));
+
+            context.run(
+                {
+                    request: {
+                        raw: {
+                            url: 'test/a?test=15',
+                            connection: {
+                                encrypted: true,
+                            },
+                        },
+                        hostname: 'test.com',
+                        headers: {
+                            cookie: `ILC-overrideConfig=${encodedOverrideConfig}`,
+                        },
+                    },
+                },
+                () => {
+                    const nrHeader = `<!-- Prod only start --><script type="text/javascript">
+        ;window.NREUM||(NREUM={});NREUM.init={distributed_tracing:{enabled:true},privacy:{cookies_enabled:true},ajax:{deny_list:["bam.nr-data.net"]}};
+
+        ;NREUM.loader_config={accountID:"1111",trustKey:"1111",agentID:"1111",licenseKey:"1111",applicationID:"1111"};
+        ;NREUM.info={beacon:"bam.nr-data.net",errorBeacon:"bam.nr-data.net",licenseKey:"1111",applicationID:"1111",sa:1};</script><!-- Prod only end -->`;
+                    const configsInjector = new ConfigsInjector(newrelic);
+                    const request = { registryConfig, ilcState: { locale: 'en-US' }, ldeRelated: true };
+                    const template = {
+                        styleRefs: [],
+                        content:
+                            '<html>' +
+                            '<head>' +
+                            nrHeader +
+                            '<!-- ILC_JS -->' +
+                            '<title>Configs Injector`s test</title>' +
+                            '<!-- ILC_CSS -->' +
+                            '<link rel="stylesheet" href="https://somewhere.com/style.css">' +
+                            '</head>' +
+                            '<body>' +
+                            '<div>Hi there! I am content.</div>' +
+                            '</body>' +
+                            '</html>',
+                    };
+
+                    const result = configsInjector.inject(request, template, { slots, reqUrl: '/test/route?a=15' });
+                    chai.expect(result).to.not.include(nrHeader);
                 },
             );
         });

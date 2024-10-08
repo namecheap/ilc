@@ -11,6 +11,7 @@ module.exports = class ConfigsInjector {
     #cdnUrl;
     #jsInjectionPlaceholder = '<!-- ILC_JS -->';
     #cssInjectionPlaceholder = '<!-- ILC_CSS -->';
+    #markedProdTags = /<!-- Prod only start -->.*?<!-- Prod only end -->/gims;
 
     constructor(newrelic, cdnUrl = null, nrCustomClientJsWrapper = null, nrAutomaticallyInjectClientScript = true) {
         this.#newrelic = newrelic;
@@ -72,6 +73,10 @@ module.exports = class ConfigsInjector {
         }
 
         request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, slots, template.styleRefs);
+
+        if (request.ldeRelated) {
+            document = this.#removeProdTags(document);
+        }
 
         return document;
     }
@@ -246,4 +251,8 @@ module.exports = class ConfigsInjector {
         nrCode = nrCode.replace(/<script.*?>(.*)<\/script\s*>/s, '$1');
         return this.#nrCustomClientJsWrapper.replace('%CONTENT%', nrCode);
     };
+
+    #removeProdTags(content) {
+        return content.replace(this.#markedProdTags, '');
+    }
 };
