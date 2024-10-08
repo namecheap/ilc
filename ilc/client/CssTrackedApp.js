@@ -47,7 +47,7 @@ export class CssTrackedApp {
                 return newInstance;
             }
 
-            return new CssTrackedApp(newInstance, this.#cssLinkUri, false).getDecoratedApp();
+            return new CssTrackedApp(newInstance, this.#cssLinkUri, this.#delayCssRemoval).getDecoratedApp();
         });
     };
 
