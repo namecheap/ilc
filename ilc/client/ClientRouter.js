@@ -35,6 +35,8 @@ export default class ClientRouter extends EventEmitter {
         current: {},
     };
 
+    static isRouteChangeStarted = false;
+
     constructor(
         ilcConfigRoot,
         state,
@@ -274,9 +276,11 @@ export default class ClientRouter extends EventEmitter {
                     if (updateEventsToTrigger.length) {
                         updateEventsToTrigger.forEach(this.emit.bind(this));
                     }
+                    ClientRouter.isRouteChangeStarted = false;
                 },
                 { once: true },
             );
+            ClientRouter.isRouteChangeStarted = true;
         }
     };
 

@@ -1,3 +1,5 @@
+import ClientRouter from './ClientRouter';
+
 export class CssTrackedApp {
     #originalApp;
     #cssLinkUri;
@@ -47,7 +49,7 @@ export class CssTrackedApp {
                 return newInstance;
             }
 
-            return new CssTrackedApp(newInstance, this.#cssLinkUri, this.#delayCssRemoval).getDecoratedApp();
+            return new CssTrackedApp(newInstance, this.#cssLinkUri, false).getDecoratedApp();
         });
     };
 
@@ -103,15 +105,27 @@ export class CssTrackedApp {
     #decrementOrRemoveCssUsages(link) {
         const numberOfUsages = this.#getNumberOfLinkUsages(link);
         if (numberOfUsages <= 1) {
-            if (this.#delayCssRemoval) {
-                link.removeAttribute(CssTrackedApp.linkUsagesAttribute);
-                link.setAttribute(CssTrackedApp.markedForRemovalAttribute, 'true');
-            } else {
-                link.remove();
-            }
+            this.#handleLinkRemoval(link);
         } else {
             link.setAttribute(CssTrackedApp.linkUsagesAttribute, (numberOfUsages - 1).toString());
         }
+    }
+
+    #handleLinkRemoval(link) {
+        if (this.#shouldDelayRemoval()) {
+            this.#markLinkForRemoval(link);
+        } else {
+            link.remove();
+        }
+    }
+
+    #shouldDelayRemoval() {
+        return this.#delayCssRemoval || ClientRouter.isRouteChangeStarted;
+    }
+
+    #markLinkForRemoval(link) {
+        link.removeAttribute(CssTrackedApp.linkUsagesAttribute);
+        link.setAttribute(CssTrackedApp.markedForRemovalAttribute, 'true');
     }
 
     #getNumberOfLinkUsages(link) {
