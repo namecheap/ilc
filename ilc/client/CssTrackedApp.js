@@ -1,9 +1,11 @@
-import ClientRouter from './ClientRouter';
+import ilcEvents from './constants/ilcEvents';
 
 export class CssTrackedApp {
     #originalApp;
     #cssLinkUri;
     #delayCssRemoval;
+    #isRouteChanged = false;
+    #routeChangeListener;
 
     static linkUsagesAttribute = 'data-ilc-usages';
     static markedForRemovalAttribute = 'data-ilc-remove';
@@ -19,6 +21,11 @@ export class CssTrackedApp {
         // real life might differ at some time
         this.#cssLinkUri = cssLink;
         this.#delayCssRemoval = delayCssRemoval;
+
+        // add route change listener for embedded apps
+        if (!delayCssRemoval) {
+            this.#addRouteChangeListener();
+        }
     }
 
     getDecoratedApp = () => {
@@ -74,6 +81,7 @@ export class CssTrackedApp {
             if (link != null) {
                 this.#decrementOrRemoveCssUsages(link);
             }
+            this.#removeRouteChangeListener();
         }
     };
 
@@ -120,7 +128,7 @@ export class CssTrackedApp {
     }
 
     #shouldDelayRemoval() {
-        return this.#delayCssRemoval || ClientRouter.isRouteChangeStarted;
+        return this.#delayCssRemoval || this.#isRouteChanged;
     }
 
     #markLinkForRemoval(link) {
@@ -135,5 +143,23 @@ export class CssTrackedApp {
 
     #findLink() {
         return document.querySelector(`link[href="${this.#cssLinkUri}"]`);
+    }
+
+    #handleRouteChange() {
+        this.#isRouteChanged = true;
+    }
+
+    #addRouteChangeListener() {
+        if (!this.#routeChangeListener) {
+            this.#routeChangeListener = this.#handleRouteChange.bind(this);
+            window.addEventListener(ilcEvents.BEFORE_ROUTING, this.#routeChangeListener);
+        }
+    }
+
+    #removeRouteChangeListener() {
+        if (this.#routeChangeListener) {
+            window.removeEventListener(ilcEvents.BEFORE_ROUTING, this.#routeChangeListener);
+            this.#routeChangeListener = null;
+        }
     }
 }

@@ -1,7 +1,7 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 import { CssTrackedApp } from './CssTrackedApp';
-import ClientRouter from './ClientRouter';
+import ilcEvents from './constants/ilcEvents';
 
 const ilcTestAttributeName = 'data-ilc-test';
 
@@ -233,14 +233,13 @@ describe('CssTrackedApp', function () {
             let link = document.querySelector(`link[href="${cssLink}"]`);
             expect(link.getAttribute(CssTrackedApp.linkUsagesAttribute)).to.equal('1');
 
-            sinon.replace(ClientRouter, 'isRouteChangeStarted', true);
+            // Dispatch the BEFORE_ROUTING event
+            window.dispatchEvent(new Event(ilcEvents.BEFORE_ROUTING));
             await newApp.unmount();
 
             link = document.querySelector(`link[href="${cssLink}"]`);
 
             expect(link).to.not.be.null;
-
-            ClientRouter.isRouteChangeStarted = false;
         });
 
         it('should remove link if embedded app is unmounted without route change', async () => {
