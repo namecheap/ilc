@@ -1,6 +1,7 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 import { CssTrackedApp } from './CssTrackedApp';
+import ilcEvents from './constants/ilcEvents';
 
 const ilcTestAttributeName = 'data-ilc-test';
 
@@ -204,6 +205,52 @@ describe('CssTrackedApp', function () {
 
             expect(link.parentNode).to.equal(document.body);
             expect(link.getAttribute(CssTrackedApp.markedForRemovalAttribute)).to.equal('true');
+        });
+    });
+
+    describe('when embedded app is unmounted', () => {
+        let newApp;
+        let cssLink;
+
+        beforeEach(async () => {
+            const returnValue = Math.random();
+            const appOnCreateNew = createOriginalAppFake(Promise.resolve(returnValue));
+            const originalApp = createOriginalAppFake(Promise.resolve(Math.random()));
+            originalApp.createNew = () => Promise.resolve(appOnCreateNew);
+
+            cssLink = 'data:text/css,<style>div { border: 1px solid blue; }</style>';
+            const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
+            newApp = await cssWrap.createNew();
+        });
+
+        afterEach(() => {
+            sinon.restore();
+        });
+
+        it('should mark link for removal if route change action is in progress', async () => {
+            await newApp.mount();
+
+            let link = document.querySelector(`link[href="${cssLink}"]`);
+            expect(link.getAttribute(CssTrackedApp.linkUsagesAttribute)).to.equal('1');
+
+            window.dispatchEvent(new Event(ilcEvents.BEFORE_ROUTING));
+            await newApp.unmount();
+
+            link = document.querySelector(`link[href="${cssLink}"]`);
+
+            expect(link).to.not.be.null;
+        });
+
+        it('should remove link if embedded app is unmounted without route change', async () => {
+            await newApp.mount();
+
+            let link = document.querySelector(`link[href="${cssLink}"]`);
+            expect(link.getAttribute(CssTrackedApp.linkUsagesAttribute)).to.equal('1');
+
+            await newApp.unmount();
+
+            link = document.querySelector(`link[href="${cssLink}"]`);
+            expect(link).to.be.null;
         });
     });
 });

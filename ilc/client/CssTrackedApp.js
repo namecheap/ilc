@@ -1,7 +1,11 @@
+import ilcEvents from './constants/ilcEvents';
+
 export class CssTrackedApp {
     #originalApp;
     #cssLinkUri;
     #delayCssRemoval;
+    #isRouteChanged = false;
+    #routeChangeListener;
 
     static linkUsagesAttribute = 'data-ilc-usages';
     static markedForRemovalAttribute = 'data-ilc-remove';
@@ -17,6 +21,11 @@ export class CssTrackedApp {
         // real life might differ at some time
         this.#cssLinkUri = cssLink;
         this.#delayCssRemoval = delayCssRemoval;
+
+        // add route change listener for embedded apps
+        if (!delayCssRemoval) {
+            this.#addRouteChangeListener();
+        }
     }
 
     getDecoratedApp = () => {
@@ -47,7 +56,7 @@ export class CssTrackedApp {
                 return newInstance;
             }
 
-            return new CssTrackedApp(newInstance, this.#cssLinkUri, this.#delayCssRemoval).getDecoratedApp();
+            return new CssTrackedApp(newInstance, this.#cssLinkUri, false).getDecoratedApp();
         });
     };
 
@@ -72,6 +81,7 @@ export class CssTrackedApp {
             if (link != null) {
                 this.#decrementOrRemoveCssUsages(link);
             }
+            this.#removeRouteChangeListener();
         }
     };
 
@@ -103,15 +113,27 @@ export class CssTrackedApp {
     #decrementOrRemoveCssUsages(link) {
         const numberOfUsages = this.#getNumberOfLinkUsages(link);
         if (numberOfUsages <= 1) {
-            if (this.#delayCssRemoval) {
-                link.removeAttribute(CssTrackedApp.linkUsagesAttribute);
-                link.setAttribute(CssTrackedApp.markedForRemovalAttribute, 'true');
-            } else {
-                link.remove();
-            }
+            this.#handleLinkRemoval(link);
         } else {
             link.setAttribute(CssTrackedApp.linkUsagesAttribute, (numberOfUsages - 1).toString());
         }
+    }
+
+    #handleLinkRemoval(link) {
+        if (this.#shouldDelayRemoval()) {
+            this.#markLinkForRemoval(link);
+        } else {
+            link.remove();
+        }
+    }
+
+    #shouldDelayRemoval() {
+        return this.#delayCssRemoval || this.#isRouteChanged;
+    }
+
+    #markLinkForRemoval(link) {
+        link.removeAttribute(CssTrackedApp.linkUsagesAttribute);
+        link.setAttribute(CssTrackedApp.markedForRemovalAttribute, 'true');
     }
 
     #getNumberOfLinkUsages(link) {
@@ -121,5 +143,23 @@ export class CssTrackedApp {
 
     #findLink() {
         return document.querySelector(`link[href="${this.#cssLinkUri}"]`);
+    }
+
+    #handleRouteChange() {
+        this.#isRouteChanged = true;
+    }
+
+    #addRouteChangeListener() {
+        if (!this.#routeChangeListener) {
+            this.#routeChangeListener = this.#handleRouteChange.bind(this);
+            window.addEventListener(ilcEvents.BEFORE_ROUTING, this.#routeChangeListener);
+        }
+    }
+
+    #removeRouteChangeListener() {
+        if (this.#routeChangeListener) {
+            window.removeEventListener(ilcEvents.BEFORE_ROUTING, this.#routeChangeListener);
+            this.#routeChangeListener = null;
+        }
     }
 }
