@@ -233,7 +233,6 @@ describe('CssTrackedApp', function () {
             let link = document.querySelector(`link[href="${cssLink}"]`);
             expect(link.getAttribute(CssTrackedApp.linkUsagesAttribute)).to.equal('1');
 
-            // Dispatch the BEFORE_ROUTING event
             window.dispatchEvent(new Event(ilcEvents.BEFORE_ROUTING));
             await newApp.unmount();
 
