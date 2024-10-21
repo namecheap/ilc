@@ -275,6 +275,28 @@ describe('i18n', () => {
                     sinon.assert.calledWith(reply.redirect, '/test');
                 });
 
+                it('en-US with malformed url', async () => {
+                    const detectedI18nConfig = {
+                        locale: 'en-US',
+                        currency: 'USD',
+                    };
+
+                    i18nParamsDetectionPlugin.detectI18nConfig.onFirstCall().returns(detectedI18nConfig);
+
+                    const req = getReqMock('/ua///test.com');
+
+                    await onRequest(req, reply);
+
+                    const [providedReqRaw, , providedI18nConfig] =
+                        i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+
+                    chai.expect(providedReqRaw).to.be.eql(req.raw);
+
+                    chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
+
+                    sinon.assert.calledWith(reply.redirect, '/test.com');
+                });
+
                 it('en-us', async () => {
                     const detectedI18nConfig = {
                         locale: 'en-us',
