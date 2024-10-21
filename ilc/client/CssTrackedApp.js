@@ -4,6 +4,7 @@ export class CssTrackedApp {
     #originalApp;
     #cssLinkUri;
     #delayCssRemoval;
+    // used to prevent removing CSS immediately after unmounting
     #isRouteChanged = false;
     #routeChangeListener;
 
@@ -22,8 +23,11 @@ export class CssTrackedApp {
         this.#cssLinkUri = cssLink;
         this.#delayCssRemoval = delayCssRemoval;
 
-        // add route change listener for embedded apps
         if (!delayCssRemoval) {
+            // While CSS for an application rendered by another application is not always immediately necessary upon unmount, there is a non-trivial case to consider:
+            // - When the route changes and a spinner is enabled in the registry, the root application is unmounted and destroyed.
+            // - ILC then shows a copy of the previously rendered DOM node.
+            // - Which leads to a situation where both the root and inner applications unmount synchronously. Despite being unmounted, their styles are still required until the route transition is complete.
             this.#addRouteChangeListener();
         }
     }
@@ -128,6 +132,7 @@ export class CssTrackedApp {
     }
 
     #shouldDelayRemoval() {
+        // If the route is changing, we should delay CSS removal to prevent visual glitches.
         return this.#delayCssRemoval || this.#isRouteChanged;
     }
 
