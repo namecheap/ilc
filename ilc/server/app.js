@@ -53,6 +53,7 @@ module.exports = (registryService, pluginManager, context) => {
                 const i18nOnRequest = i18n.onRequestFactory(
                     registryConfig.settings.i18n,
                     pluginManager.getI18nParamsDetectionPlugin(),
+                    registryConfig.settings.trailingSlash,
                 );
 
                 await i18nOnRequest(req, reply);
