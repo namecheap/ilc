@@ -201,6 +201,27 @@ describe('i18n', () => {
                 sinon.assert.calledWithExactly(reply.redirect, '/ua/test');
             });
 
+            it('redirects trailing slash with 301 code', async () => {
+                const detectedI18nConfig = {
+                    locale: 'en-US',
+                    currency: 'USD',
+                };
+
+                i18nParamsDetectionPlugin.detectI18nConfig.onFirstCall().returns(detectedI18nConfig);
+
+                const req = getReqMock('///');
+
+                await onRequest(req, reply);
+
+                const [providedReqRaw, , providedI18nConfig] =
+                    i18nParamsDetectionPlugin.detectI18nConfig.getCalls()[0].args;
+
+                chai.expect(providedReqRaw).to.be.eql(req.raw);
+                chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
+
+                sinon.assert.calledWithExactly(reply.redirect, 301, '/');
+            });
+
             it('ua-ua, redirects to URL with correct lang code', async () => {
                 const detectedI18nConfig = {
                     locale: 'ua-ua',
