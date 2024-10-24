@@ -50,10 +50,6 @@ const onRequestFactory =
                 containsOnlySlashes(fixedUrl) &&
                 containsOnlySlashes(req.raw.url);
 
-            if (containsOnlySlashes(req.raw.url) && !shouldSkipRedirectForSlashes) {
-                return reply.redirect(301, '/');
-            }
-
             if (fixedUrl !== req.raw.url && !shouldSkipRedirectForSlashes) {
                 return reply.redirect(fixedUrl);
             }
