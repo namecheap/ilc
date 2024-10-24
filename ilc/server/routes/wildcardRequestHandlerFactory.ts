@@ -43,8 +43,12 @@ export function wildcardRequestHandlerFactory(
         const url = req.raw.url;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
         const processedUrl = urlProcessor.process(url);
+
         if (processedUrl !== url) {
-            reply.redirect(processedUrl);
+            reply.redirect(
+                registryConfig.settings.trailingSlash === UrlProcessor.routerHasTo.redirectToTrailingSlash ? 301 : 302,
+                processedUrl,
+            );
             return;
         }
 

@@ -4,24 +4,34 @@ const nock = require('nock');
 const config = require('config');
 const helpers = require('../tests/helpers');
 const { context } = require('./context/context');
-
 const createApp = require('./app');
 const sinon = require('sinon');
+
+async function createTestServer(mockRegistryOptions = {}, mockPluginOptions = {}) {
+    const app = createApp(
+        helpers.getRegistryMock(mockRegistryOptions),
+        helpers.getPluginManagerMock(mockPluginOptions),
+        context,
+    );
+
+    await app.ready();
+    app.server.listen(0);
+
+    const { port } = app.server.address();
+    const address = `127.0.0.1:${port}`;
+    const server = supertest(app.server);
+
+    return { app, server, address };
+}
 
 describe('App', () => {
     let app;
     let server;
-    let address;
 
     before(async () => {
-        app = createApp(helpers.getRegistryMock(), helpers.getPluginManagerMock(), context);
-        await app.ready();
-        app.server.listen(0);
-
-        const { port } = app.server.address();
-        address = `127.0.0.1:${port}`;
-
-        server = supertest(app.server);
+        const serverInstance = await createTestServer();
+        app = serverInstance.app;
+        server = serverInstance.server;
     });
 
     after(() => {
@@ -42,5 +52,33 @@ describe('App', () => {
 
     it('should parse "invalid" urls', async () => {
         await server.get('///').expect(200);
+    });
+
+    describe('Redirect with trailing slash', () => {
+        let app;
+        let server;
+
+        beforeEach(async () => {
+            const serverInstance = await createTestServer({
+                settings: {
+                    trailingSlash: 'redirectToTrailingSlash',
+                },
+            });
+
+            app = serverInstance.app;
+            server = serverInstance.server;
+        });
+
+        afterEach(() => {
+            if (app && app.server && app.server.listening) {
+                app.server.close();
+            }
+        });
+
+        it('should reply with 301 in case of redirect /someRoute -> /someRoute/', async () => {
+            const response = await server.get('/someRoute').expect(301);
+
+            chai.expect(response.headers.location).to.be.eql('/someRoute/');
+        });
     });
 });
