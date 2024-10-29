@@ -142,21 +142,31 @@ describe('CssTrackedApp', function () {
         const link = appendCssToPage(cssLink);
         link.setAttribute(CssTrackedApp.linkUsagesAttribute, '1');
 
+        const clock = sinon.useFakeTimers();
+
         const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
         await cssWrap.unmount();
+        clock.tick(300);
 
-        expect(link.parentNode).to.equal(null);
+        expect(document.querySelector(`link[href="${cssLink}"]`)).to.be.null;
+
+        clock.restore();
     });
 
     it('should remove CSS on umount if no usages have been set (i.e. app is rendered on SSR)', async () => {
         const originalApp = createOriginalAppFake(Promise.resolve('does_not_matter'));
         const cssLink = 'https://mycdn.me/styles.css';
-        const link = appendCssToPage(cssLink);
+
+        const clock = sinon.useFakeTimers();
 
         const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
         await cssWrap.unmount();
 
-        expect(link.parentNode).to.equal(null);
+        clock.tick(300);
+
+        expect(document.querySelector(`link[href="${cssLink}"]`)).to.be.null;
+
+        clock.restore();
     });
 
     it('application remount restores CSS into DOM', async () => {
@@ -167,10 +177,13 @@ describe('CssTrackedApp', function () {
         //   app is rendered on page via SSR, CSS link has come with the response
         appendCssToPage(cssLink);
         const cssWrap = new CssTrackedApp(originalApp, cssLink, false).getDecoratedApp();
+
+        const clock = sinon.useFakeTimers();
         await cssWrap.mount();
 
         //   route is changed and app is unmounted and CSS is removed
         await cssWrap.unmount();
+        clock.tick(300);
 
         //   app is loaded and mounted one more time via dynamic load, (i.e. app is embedded into another app) (here css should be injected into DOM again)
         await cssWrap.mount();
@@ -179,8 +192,12 @@ describe('CssTrackedApp', function () {
         expect(newLink.getAttribute(CssTrackedApp.linkUsagesAttribute)).to.equal('1');
 
         //   dynamically mounted app is unmounted, and CSS is removed from DOM again
+
         await cssWrap.unmount();
+        clock.tick(300);
+
         expect(newLink.parentNode).to.be.null;
+        clock.restore();
     });
 
     it('should return parcels if original app contains them', () => {
@@ -242,15 +259,19 @@ describe('CssTrackedApp', function () {
         });
 
         it('should remove link if embedded app is unmounted without route change', async () => {
+            const clock = sinon.useFakeTimers();
             await newApp.mount();
 
             let link = document.querySelector(`link[href="${cssLink}"]`);
             expect(link.getAttribute(CssTrackedApp.linkUsagesAttribute)).to.equal('1');
 
             await newApp.unmount();
+            clock.tick(300);
 
             link = document.querySelector(`link[href="${cssLink}"]`);
             expect(link).to.be.null;
+
+            clock.restore();
         });
     });
 });
