@@ -127,7 +127,15 @@ export class CssTrackedApp {
         if (this.#shouldDelayRemoval()) {
             this.#markLinkForRemoval(link);
         } else {
-            link.remove();
+            /**
+             * Use timeout to delay the CSS removal and avoid visual glitches.
+             * Removing the CSS immediately in componentWillUnmount can sometimes
+             * lead to a brief visual glitch where the component's styles are
+             * removed before the component is fully unmounted from the DOM.
+             * The setTimeout() delay ensures that the CSS is removed after the
+             * component has been unmounted, preventing this visual issue.
+             */
+            setTimeout(() => link.remove(), 300);
         }
     }
 
