@@ -67,7 +67,7 @@ export class BundleLoader {
                     ? new CssTrackedApp(
                           rawCallbacks,
                           applicationConfig.cssBundle,
-                          this.#delayCssRemoval,
+                        { delayCssRemoval: this.#delayCssRemoval },
                       ).getDecoratedApp()
                     : rawCallbacks;
             return application;
