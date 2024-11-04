@@ -23,14 +23,10 @@ export class CssTrackedApp {
     private routeChangeListener?: RouteChangeCallback;
     private options: Required<CssTrackedOptions>;
 
-    constructor(
-        originalApp: ILCAdapter,
-        cssLink: string,
-        options: CssTrackedOptions = {}
-    ) {
+    constructor(originalApp: ILCAdapter, cssLink: string, options: CssTrackedOptions = {}) {
         const defaultOptions: Required<CssTrackedOptions> = {
             removeCssTimeout: 300,
-            delayCssRemoval: false
+            delayCssRemoval: false,
         };
 
         this.originalApp = originalApp;
@@ -76,9 +72,7 @@ export class CssTrackedApp {
 
         return newInstanceResult.then((newInstance: ILCAdapter) => {
             const requiredMethods: (keyof ILCAdapter)[] = ['mount', 'unmount', 'bootstrap'];
-            const isIlcAdapter = requiredMethods.every(
-                (m) => typeof newInstance[m] === 'function'
-            );
+            const isIlcAdapter = requiredMethods.every((m) => typeof newInstance[m] === 'function');
             if (!isIlcAdapter) {
                 return newInstance;
             }

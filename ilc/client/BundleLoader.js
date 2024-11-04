@@ -64,11 +64,9 @@ export class BundleLoader {
             });
             const application =
                 typeof applicationConfig.cssBundle === 'string' && injectGlobalCss !== false
-                    ? new CssTrackedApp(
-                          rawCallbacks,
-                          applicationConfig.cssBundle,
-                        { delayCssRemoval: this.#delayCssRemoval },
-                      ).getDecoratedApp()
+                    ? new CssTrackedApp(rawCallbacks, applicationConfig.cssBundle, {
+                          delayCssRemoval: this.#delayCssRemoval,
+                      }).getDecoratedApp()
                     : rawCallbacks;
             return application;
         });

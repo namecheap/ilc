@@ -116,12 +116,12 @@ describe('CssTrackedApp', function () {
         link.setAttribute(CssTrackedApp.linkUsagesAttribute, '1');
 
         const cssWrap = new CssTrackedApp(originalApp, cssLink, {
-            delayCssRemoval: true
+            delayCssRemoval: true,
         }).getDecoratedApp();
         await cssWrap.unmount();
 
         const cssWrap2 = new CssTrackedApp(originalApp, cssLink, {
-            delayCssRemoval: true
+            delayCssRemoval: true,
         }).getDecoratedApp();
         await cssWrap2.mount();
 
@@ -178,7 +178,7 @@ describe('CssTrackedApp', function () {
         const cssLink = 'https://mycdn.me/styles.css';
 
         const cssWrap = new CssTrackedApp(originalApp, cssLink, {
-            removeCssTimeout: 0
+            removeCssTimeout: 0,
         }).getDecoratedApp();
         await cssWrap.unmount();
 
@@ -234,7 +234,7 @@ describe('CssTrackedApp', function () {
             const link = appendCssToPage(cssLink);
 
             const cssWrap = new CssTrackedApp(originalApp, cssLink, {
-                delayCssRemoval: true
+                delayCssRemoval: true,
             }).getDecoratedApp();
             await cssWrap.unmount();
 
