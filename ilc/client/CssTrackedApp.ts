@@ -4,7 +4,7 @@ import { AppConfig } from './types/AppConfig';
 import { CssTrackedOptions } from './types/CssTrackedOptions';
 import { DecoratedApp } from './types/DecoratedApp';
 
-export interface CreateNewArgs {
+interface CreateNewArgs {
     appConfig?: AppConfig;
 }
 
