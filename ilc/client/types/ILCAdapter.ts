@@ -1,7 +1,10 @@
-export interface ILCAdapter {
-    mount: (...args: any[]) => Promise<any>;
-    unmount: (...args: any[]) => Promise<any>;
-    bootstrap: (...args: any[]) => Promise<any>;
-    update?: (...args: any[]) => Promise<any>;
-    createNew?: (...args: any[]) => Promise<any>;
-}
+import { LifeCycles } from 'ilc-sdk/app';
+import { AppConfig } from './AppConfig';
+
+export type CreateNewReturnType = Promise<ILCAdapter> | undefined | any;
+
+export type CreateNewArgs = [{ appConfig?: AppConfig }, ...any[]];
+
+export type ILCAdapter = LifeCycles<any> & {
+    createNew?: (...args: CreateNewArgs) => CreateNewReturnType;
+};

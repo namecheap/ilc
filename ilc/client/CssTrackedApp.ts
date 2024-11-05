@@ -1,16 +1,11 @@
 import ilcEvents from './constants/ilcEvents';
-import { ILCAdapter } from './types/ILCAdapter';
-import { AppConfig } from './types/AppConfig';
+import { CreateNewArgs, CreateNewReturnType, ILCAdapter } from './types/ILCAdapter';
 import { CssTrackedOptions } from './types/CssTrackedOptions';
 import { DecoratedApp } from './types/DecoratedApp';
-
-interface CreateNewArgs {
-    appConfig?: AppConfig;
-}
+import { LifeCycleFn } from 'single-spa';
+import { LifeCycleProps } from './types/LifeCycleProps';
 
 type RouteChangeCallback = () => void;
-
-type CreateNewReturnType = Promise<ILCAdapter> | undefined | any;
 
 export class CssTrackedApp {
     static readonly linkUsagesAttribute: string = 'data-ilc-usages';
@@ -57,7 +52,7 @@ export class CssTrackedApp {
         };
     };
 
-    createNew = (...args: [CreateNewArgs, ...any[]]): CreateNewReturnType => {
+    createNew = (...args: CreateNewArgs): CreateNewReturnType => {
         if (!this.originalApp.createNew) {
             return undefined;
         }
@@ -84,7 +79,7 @@ export class CssTrackedApp {
         });
     };
 
-    mount = async (...args: any[]): Promise<any> => {
+    mount = async (...args: LifeCycleProps<any>): Promise<any> => {
         const link = this.findLink();
         if (link === null) {
             await this.appendCssLink();
@@ -94,12 +89,12 @@ export class CssTrackedApp {
             link.removeAttribute(CssTrackedApp.markedForRemovalAttribute);
         }
 
-        return await this.originalApp.mount(...args);
+        return this.callLifeCycleFn(this.originalApp.mount, args);
     };
 
-    unmount = async (...args: any[]): Promise<any> => {
+    unmount = async (...args: LifeCycleProps<any>): Promise<any> => {
         try {
-            return this.originalApp.unmount(...args);
+            return this.callLifeCycleFn(this.originalApp.unmount, args);
         } finally {
             const link = this.findLink();
             if (link != null) {
@@ -109,12 +104,12 @@ export class CssTrackedApp {
         }
     };
 
-    update = async (...args: any[]): Promise<any | undefined> => {
+    update = async (...args: LifeCycleProps<any>): Promise<any | undefined> => {
         if (!this.originalApp.update) {
             return undefined;
         }
 
-        return this.originalApp.update(...args);
+        return this.callLifeCycleFn(this.originalApp.update, args);
     };
 
     static removeAllNodesPendingRemoval(): void {
@@ -194,5 +189,15 @@ export class CssTrackedApp {
             window.removeEventListener(ilcEvents.BEFORE_ROUTING, this.routeChangeListener);
             this.routeChangeListener = undefined;
         }
+    }
+
+    private async callLifeCycleFn<T>(
+        lifecycle: LifeCycleFn<T> | Array<LifeCycleFn<T>>,
+        ...args: Parameters<LifeCycleFn<T>>
+    ): Promise<any> {
+        if (Array.isArray(lifecycle)) {
+            return Promise.all(lifecycle.map((fn) => fn(...args)));
+        }
+        return await lifecycle(...args);
     }
 }
