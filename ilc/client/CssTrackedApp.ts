@@ -3,7 +3,6 @@ import { CreateNewArgs, CreateNewReturnType, ILCAdapter } from './types/ILCAdapt
 import { CssTrackedOptions } from './types/CssTrackedOptions';
 import { DecoratedApp } from './types/DecoratedApp';
 import { LifeCycleFn } from 'single-spa';
-import { LifeCycleProps } from './types/LifeCycleProps';
 
 type RouteChangeCallback = () => void;
 
@@ -79,7 +78,7 @@ export class CssTrackedApp {
         });
     };
 
-    mount = async (...args: LifeCycleProps<any>): Promise<any> => {
+    mount = async (...args: Parameters<LifeCycleFn<any>>): Promise<any> => {
         const link = this.findLink();
         if (link === null) {
             await this.appendCssLink();
@@ -89,12 +88,12 @@ export class CssTrackedApp {
             link.removeAttribute(CssTrackedApp.markedForRemovalAttribute);
         }
 
-        return this.callLifeCycleFn(this.originalApp.mount, args);
+        return this.callLifeCycleFn(this.originalApp.mount, ...args);
     };
 
-    unmount = async (...args: LifeCycleProps<any>): Promise<any> => {
+    unmount = async (...args: Parameters<LifeCycleFn<any>>): Promise<any> => {
         try {
-            return this.callLifeCycleFn(this.originalApp.unmount, args);
+            return this.callLifeCycleFn(this.originalApp.unmount, ...args);
         } finally {
             const link = this.findLink();
             if (link != null) {
@@ -104,12 +103,12 @@ export class CssTrackedApp {
         }
     };
 
-    update = async (...args: LifeCycleProps<any>): Promise<any | undefined> => {
+    update = async (...args: Parameters<LifeCycleFn<any>>): Promise<any | undefined> => {
         if (!this.originalApp.update) {
             return undefined;
         }
 
-        return this.callLifeCycleFn(this.originalApp.update, args);
+        return this.callLifeCycleFn(this.originalApp.update, ...args);
     };
 
     static removeAllNodesPendingRemoval(): void {
@@ -196,8 +195,10 @@ export class CssTrackedApp {
         ...args: Parameters<LifeCycleFn<T>>
     ): Promise<any> {
         if (Array.isArray(lifecycle)) {
+            // Map through lifecycle array and call each function with spread args
             return Promise.all(lifecycle.map((fn) => fn(...args)));
         }
-        return await lifecycle(...args);
+        // Call the single lifecycle function with spread args
+        return lifecycle(...args);
     }
 }
