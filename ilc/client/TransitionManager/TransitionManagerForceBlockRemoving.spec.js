@@ -103,7 +103,6 @@ describe('TransitionManager Force Block removal', () => {
 
     afterEach(() => {
         slots.removeSlots();
-        console.log(document.body.innerHTML);
         clock.restore();
         removePageTransactionListeners();
         logger.warn.resetHistory();

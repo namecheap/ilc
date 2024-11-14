@@ -321,7 +321,7 @@ jobs:
           fullCoverageDiff: true
           autorun: false
           postComment: false
-          oldCodeCoveragePath: ./dest-client-side-tests-artifacts/coverage/coverage-summary.json
+          oldCodeCoveragePath: ./dest-client-side-tests-artifacts/coverage/chrome/coverage-summary.json # remove "chrome after merge PR fix cpu
           newCodeCoveragePath: ./src-client-side-tests-artifacts/coverage/coverage-summary.json
           total_delta: 2
       - name: Merge coverage report for registry
@@ -336,7 +336,7 @@ jobs:
           fullCoverageDiff: true
           autorun: false
           postComment: false
-          oldCodeCoveragePath: ./dest-merged-registry-tests-artifacts/coverage/chrome/coverage-summary.json # remove "chrome after merge PR fix cpu
+          oldCodeCoveragePath: ./dest-merged-registry-tests-artifacts/coverage/coverage-summary.json
           newCodeCoveragePath: ./src-merged-registry-tests-artifacts/coverage/coverage-summary.json
           total_delta: 2
       - name: Compose comment

@@ -17,7 +17,7 @@ module.exports = class Registry {
 
     /**
      * @param {string} address - registry address. Ex: http://registry:8080/
-     * @param {Function} cacheWrapper - cache provider
+     * @param {Class} cacheWrapper - cache provider
      * @param {Object} logger - log provider that implements "console" interface
      */
     constructor(address, cacheWrapper, logger) {

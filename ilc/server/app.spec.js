@@ -1,11 +1,8 @@
 const chai = require('chai');
 const supertest = require('supertest');
-const nock = require('nock');
-const config = require('config');
 const helpers = require('../tests/helpers');
 const { context } = require('./context/context');
 const createApp = require('./app');
-const sinon = require('sinon');
 
 async function createTestServer(mockRegistryOptions = {}, mockPluginOptions = {}) {
     const app = createApp(

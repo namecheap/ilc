@@ -6,7 +6,6 @@ const config = require('config');
 const fs = require('fs');
 const path = require('path');
 const { StatusCodes, ReasonPhrases } = require('http-status-codes');
-const localStorage = require('../../common/localStorage');
 const helpers = require('../../tests/helpers');
 const { context } = require('../context/context');
 const ErrorHandler = require('./ErrorHandler');
@@ -23,7 +22,7 @@ describe('ErrorHandler', () => {
     let server;
     let address;
 
-    before(async () => {
+    beforeEach(async () => {
         app = createApp(helpers.getRegistryMock(), helpers.getPluginManagerMock(), context);
         await app.ready();
         app.server.listen(0);
@@ -35,10 +34,6 @@ describe('ErrorHandler', () => {
     });
 
     afterEach(() => {
-        localStorage.clear();
-    });
-
-    after(() => {
         app.server.close();
     });
 

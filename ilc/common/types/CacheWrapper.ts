@@ -3,9 +3,15 @@ export interface CacheResult<T> {
     cachedAt: number;
 }
 
-interface CacheParams {
+export interface CacheParams {
     name: string;
     cacheForSeconds?: number;
+}
+export type CacheHashFn = (value: string) => string;
+
+export interface CacheStorage {
+    getItem<T>(key: string): CacheResult<T> | null;
+    setItem(key: string, cache: CacheResult<unknown>): void;
 }
 
 export interface CacheWrapper {

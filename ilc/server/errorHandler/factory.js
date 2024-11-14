@@ -1,9 +1,10 @@
-const newrelic = require('newrelic');
+import newrelic from 'newrelic';
+import reportPlugin from '../plugins/reportingPlugin';
+import { registryFactory } from '../registry/factory';
+import ErrorHandler from './ErrorHandler';
 
-const registryService = require('../registry/factory');
-const ErrorHandler = require('./ErrorHandler');
-
-const reportingPluginManager = require('../plugins/reportingPlugin');
-const logger = reportingPluginManager.getLogger();
-
-module.exports = new ErrorHandler(registryService, newrelic, logger);
+export const errorHandlerFactory = () => {
+    const logger = reportPlugin.getLogger();
+    const registryService = registryFactory();
+    return new ErrorHandler(registryService, newrelic, logger);
+};

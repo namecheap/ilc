@@ -3,7 +3,6 @@ import { getIlcConfigRoot } from './getIlcConfigRoot';
 describe('IlcConfigRoot', () => {
     it('IlcConfigRoot should init', () => {
         const configRoot = getIlcConfigRoot();
-        console.log(configRoot.getConfigForApps());
         expect(configRoot).to.be.an('object');
     });
     it('IlcConfigRoot should return singleton', () => {

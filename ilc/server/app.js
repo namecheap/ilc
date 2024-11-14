@@ -1,11 +1,12 @@
+import config from 'config';
+import fastify from 'fastify';
 import { AsyncResource } from 'node:async_hooks';
+import { pingPluginFactroy } from './routes/pingPluginFactory';
 import { renderTemplateHandlerFactory } from './routes/renderTemplateHandlerFactory';
 import { wildcardRequestHandlerFactory } from './routes/wildcardRequestHandlerFactory';
+import { errorHandlerFactory } from './errorHandler/factory';
 
-const config = require('config');
-const fastify = require('fastify');
 const serveStatic = require('./serveStatic');
-const errorHandlingService = require('./errorHandler/factory');
 const i18n = require('./i18n');
 const Application = require('./application/application');
 const reportingPluginManager = require('./plugins/reportingPlugin');
@@ -17,7 +18,7 @@ const { isStaticFile, isHealthCheck } = require('./utils/utils');
  */
 module.exports = (registryService, pluginManager, context) => {
     const reportingPlugin = reportingPluginManager.getInstance();
-
+    const errorHandler = errorHandlerFactory();
     const appConfig = Application.getConfig(reportingPlugin);
     const logger = reportingPluginManager.getLogger();
     const accessLogger = new AccessLogger(config, logger);
@@ -95,18 +96,22 @@ module.exports = (registryService, pluginManager, context) => {
         app.use(config.get('static.internalUrl'), serveStatic(config.get('productionMode')));
     }
 
-    app.register(require('./ping'));
+    const pingPlugin = pingPluginFactroy(registryService);
+    app.register(pingPlugin);
 
-    app.get('/_ilc/api/v1/registry/template/:templateName', renderTemplateHandlerFactory(registryService));
+    app.get(
+        '/_ilc/api/v1/registry/template/:templateName',
+        renderTemplateHandlerFactory(registryService, errorHandler),
+    );
 
     // Route to test 500 page appearance
     app.get('/_ilc/500', async () => {
         throw new Error('500 page test error');
     });
 
-    app.all('*', wildcardRequestHandlerFactory(logger, registryService, pluginManager));
+    app.all('*', wildcardRequestHandlerFactory(logger, registryService, errorHandler, pluginManager));
 
-    app.setErrorHandler(errorHandlingService.handleError);
+    app.setErrorHandler(errorHandler.handleError);
 
     return app;
 };
