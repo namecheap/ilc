@@ -1,6 +1,6 @@
 import type { Logger } from 'ilc-plugins-sdk';
 import type { RegistryConfig } from './RegistryConfig';
-import { CacheResult } from './CacheWrapper';
+import { CacheResult } from '../../common/types/CacheWrapper';
 
 export interface TransformedRegistryConfig extends RegistryConfig {
     // TODO

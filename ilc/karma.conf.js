@@ -19,9 +19,9 @@ module.exports = function (config) {
     const files = config.glob
         ? [config.glob]
         : [
-              'client/**/*.spec.js',
-              'common/**/*.spec.js',
-              'systemjs/**/*.spec.js',
+              'client/**/*.spec.+(js|ts)',
+              'common/**/*.spec.+(js|ts)',
+              'systemjs/**/*.spec.+(js|ts)',
               {
                   pattern: 'systemjs/spec/fixtures/**/*.js',
                   included: false,
@@ -41,7 +41,7 @@ module.exports = function (config) {
             },
         },
         customContextFile: './tests/karma.index.html',
-        frameworks: ['parallel', 'mocha', 'chai', 'sinon'],
+        frameworks: ['parallel', 'mocha', 'chai', 'sinon', 'webpack'],
         plugins: [
             'karma-parallel',
             'karma-chrome-launcher',
@@ -50,7 +50,7 @@ module.exports = function (config) {
             'karma-chai',
             'karma-sinon',
 
-            'karma-coverage',
+            'karma-coverage-istanbul-reporter',
             'karma-mocha-reporter',
 
             'karma-webpack',
@@ -58,11 +58,11 @@ module.exports = function (config) {
         ],
         files,
         preprocessors: {
-            'client/**/*.spec.js': ['webpack', 'sourcemap'],
-            'common/**/*.spec.js': ['webpack', 'sourcemap'],
-            'systemjs/**/*.spec.js': ['webpack', 'sourcemap'],
+            'client/**/*.spec.+(js|ts)': ['webpack', 'sourcemap'],
+            'common/**/*.spec.+(js|ts)': ['webpack', 'sourcemap'],
+            'systemjs/**/*.spec.+(js|ts)': ['webpack', 'sourcemap'],
         },
-        reporters: ['mocha', 'coverage'],
+        reporters: ['mocha', 'coverage-istanbul'],
         mochaReporter: {
             showDiff: true,
         },
@@ -79,6 +79,45 @@ module.exports = function (config) {
             },
             check: {
                 global: getThresholds(),
+                each: getThresholds(),
+            },
+            watermarks: {
+                ...nycConfig.watermarks,
+            },
+        },
+        coverageIstanbulReporter: {
+            // reports can be any that are listed here: https://github.com/istanbuljs/istanbuljs/tree/73c25ce79f91010d1ff073aa6ff3fd01114f90db/packages/istanbul-reports/lib
+            reports: nycConfig.reporter,
+
+            // base output directory. If you include %browser% in the path it will be replaced with the karma browser name
+            dir: path.join(__dirname, '.karma_output', 'coverage'),
+
+            // Combines coverage information from multiple browsers into one report rather than outputting a report
+            // for each browser.
+            combineBrowserReports: true,
+
+            // if using webpack and pre-loaders, work around webpack breaking the source path
+            fixWebpackSourcePaths: true,
+
+            // Omit files with no statements, no functions and no branches covered from the report
+            skipFilesWithNoCoverage: true,
+
+            // Most reporters accept additional config options. You can pass these through the `report-config` option
+            'report-config': {
+                // all options available at: https://github.com/istanbuljs/istanbuljs/blob/73c25ce79f91010d1ff073aa6ff3fd01114f90db/packages/istanbul-reports/lib/html/index.js#L257-L261
+                html: {
+                    // outputs the report in ./coverage/html
+                    subdir: 'html',
+                },
+            },
+
+            // enforce percentage thresholds
+            // anything under these percentages will cause karma to fail with an exit code of 1 if not running in watch mode
+            thresholds: {
+                emitWarning: false, // set to `true` to not fail the test command when thresholds are not met
+                // thresholds for all files
+                global: getThresholds(),
+                // thresholds per file
                 each: getThresholds(),
             },
             watermarks: {

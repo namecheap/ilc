@@ -4,7 +4,7 @@ import { PluginManager } from 'ilc-plugins-sdk/browser';
 
 import { PluginsLoader } from './PluginsLoader';
 import UrlProcessor from '../common/UrlProcessor';
-import { appIdToNameAndSlot, removeQueryParams, addTrailingSlashToPath } from '../common/utils';
+import { appIdToNameAndSlot, addTrailingSlashToPath } from '../common/utils';
 
 import { setNavigationErrorHandler, addNavigationHook } from './navigationEvents/setupEvents';
 
@@ -20,7 +20,7 @@ import {
 
 import { triggerAppChange } from './navigationEvents';
 
-import registryService from './registry/factory';
+import { registryFactory } from './registry/factory';
 
 import Router from './ClientRouter';
 import initIlcState from './initIlcState';
@@ -72,7 +72,6 @@ export class Client {
 
     constructor(config) {
         this.#configRoot = config;
-        this.#registryService = registryService;
 
         const pluginsLoader = new PluginsLoader();
         this.#pluginManager = new PluginManager(...pluginsLoader.load());
@@ -81,6 +80,7 @@ export class Client {
 
         this.#logger = reportingPlugin.logger;
 
+        this.#registryService = registryFactory(this.#logger);
         this.#errorHandlerManager = new ErrorHandlerManager(this.#logger, this.#registryService);
 
         const transitionTimeout = 60000;

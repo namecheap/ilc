@@ -6,32 +6,32 @@
     const resourcesMap = {};
 
     const existingResolve = systemJSPrototype.resolve;
-    systemJSPrototype.resolve = function (id, parentUrl) {
-        const existingHookResult = existingResolve.call(this, id, parentUrl);
-        if (id === existingHookResult) {
+    systemJSPrototype.resolve = function (moduleId, parentUrl) {
+        const existingHookResult = existingResolve.call(this, moduleId, parentUrl);
+        if (moduleId === existingHookResult) {
             //unnamed module
             return existingHookResult;
         }
 
-        if (resourcesMap[id] === undefined) {
-            resourcesMap[id] = {
-                name: id,
+        if (resourcesMap[moduleId] === undefined) {
+            resourcesMap[moduleId] = {
+                name: moduleId,
                 src: existingHookResult,
                 dependants: [],
             };
         }
 
-        if (parentUrl !== undefined && !resourcesMap[id].dependants.includes(parentUrl)) {
-            resourcesMap[id].dependants.push(parentUrl);
+        if (parentUrl !== undefined && !resourcesMap[moduleId].dependants.includes(parentUrl)) {
+            resourcesMap[moduleId].dependants.push(parentUrl);
         }
 
         // custom hook here
         return existingHookResult;
     };
 
-    systemJSPrototype.getModuleInfo = function (id) {
-        if (resourcesMap[id] !== undefined) {
-            return resourcesMap[id];
+    systemJSPrototype.getModuleInfo = function (moduleId) {
+        if (resourcesMap[moduleId] !== undefined) {
+            return resourcesMap[moduleId];
         }
 
         for (let ii in resourcesMap) {
@@ -39,7 +39,7 @@
                 continue;
             }
 
-            if (resourcesMap[ii].src === id) {
+            if (resourcesMap[ii].src === moduleId) {
                 return resourcesMap[ii];
             }
         }

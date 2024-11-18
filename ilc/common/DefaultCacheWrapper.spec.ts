@@ -1,7 +1,9 @@
+import { type ExtendedError } from '@namecheap/error-extender';
 import chai from 'chai';
+import { type Logger } from 'ilc-plugins-sdk';
 import sinon from 'sinon';
-import localStorage from './localStorage';
-import CacheWrapper from './CacheWrapper';
+import { DefaultCacheWrapper } from './DefaultCacheWrapper';
+import { CacheParams, CacheResult, CacheStorage } from './types/CacheWrapper';
 import { TimeoutError } from './utils';
 
 /**
@@ -11,15 +13,17 @@ async function setImmediatePromise() {
     return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-describe('CacheWrapper', () => {
-    let wrappedFn, clock;
+describe('DefaultCacheWrapper', () => {
+    let wrappedFn: (...args: any[]) => Promise<CacheResult<unknown>>;
+    let clock: sinon.SinonFakeTimers;
+    let storageMock: CacheStorage;
 
     const fn = sinon.stub();
     const createHash = sinon.stub();
-    const logger = {
+    const loggerMock = {
         error: sinon.stub(),
-        info: function () {},
-    };
+        info: sinon.stub(),
+    } as unknown as sinon.SinonStubbedInstance<Logger>;
 
     const fnError = new Error('Error message');
     const fnArgs = ['firstArg', 'secondArg', 'thirdArg'];
@@ -38,20 +42,24 @@ describe('CacheWrapper', () => {
     };
 
     beforeEach(() => {
-        const cacheWrapper = new CacheWrapper(localStorage, logger);
+        const storageMockCache: Record<string, CacheResult<any>> = {};
+        storageMock = {
+            getItem: (key) => storageMockCache[key] ?? null,
+            setItem: (key, cache) => (storageMockCache[key] = cache),
+        };
+        const cacheWrapper = new DefaultCacheWrapper(storageMock, loggerMock, null);
         wrappedFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
     });
 
     afterEach(() => {
         fn.reset();
-        logger.error.reset();
-        localStorage.clear();
+        loggerMock.error.reset();
         clock?.restore();
     });
 
     it('should throw error if uses without "name"', async () => {
-        const cacheWrapper = new CacheWrapper(localStorage, logger);
-        chai.expect(() => cacheWrapper.wrap(fn, { name: undefined })).to.throw(
+        const cacheWrapper = new DefaultCacheWrapper(storageMock, loggerMock, null);
+        chai.expect(() => cacheWrapper.wrap(fn, { name: undefined } as unknown as CacheParams)).to.throw(
             'To wrap your function you should provide unique "name" to argument, to create hash-id of result of your function',
         );
     });
@@ -97,7 +105,15 @@ describe('CacheWrapper', () => {
     });
 
     it('should return the same value in case of concurrent invocation', async () => {
-        fn.withArgs().callsFake(() => new Promise((resolve) => setTimeout(() => resolve(data), 100)));
+        fn.withArgs().callsFake(
+            () =>
+                new Promise((resolve) =>
+                    setTimeout(() => {
+                        console.log('CALLED');
+                        return resolve(data);
+                    }, 100),
+                ),
+        );
 
         const [firstValue, secondValue, thirdValue] = await Promise.all([wrappedFn(), wrappedFn(), wrappedFn()]);
 
@@ -106,13 +122,13 @@ describe('CacheWrapper', () => {
     });
 
     it('should return a stale value while it requests new data in the background', async () => {
-        const cacheWrapper = new CacheWrapper(localStorage, logger, null, createHash);
+        const cacheWrapper = new DefaultCacheWrapper(storageMock, loggerMock, null, createHash);
         wrappedFn = cacheWrapper.wrap(fn, cacheParams);
         fn.withArgs(...fnArgs).returns(Promise.resolve(newData));
         createHash
             .withArgs(cacheParams.name + cacheParams.cacheForSeconds + JSON.stringify(fnArgs))
             .returns(cachedValueKey);
-        localStorage.setItem(cachedValueKey, JSON.stringify(prevCachedValue));
+        storageMock.setItem(cachedValueKey, prevCachedValue);
 
         const firstValue = await wrappedFn(...fnArgs);
         await setImmediatePromise(); // Promise.race() in implemantion blocks cache update in same event loop tick so need to run additional tick in test
@@ -156,14 +172,18 @@ describe('CacheWrapper', () => {
         const secondValue = await wrappedFn();
         chai.expect(fn.calledTwice).to.be.true;
         chai.expect(secondValue).to.deep.equal({ cachedAt: 0, data });
-        chai.expect(logger.error.called).to.be.false;
+        chai.expect(loggerMock.error.called).to.be.false;
 
         // timeout exceed
         await clock.tickAsync(cacheParams.cacheForSeconds * 1000);
-        chai.expect(logger.error.calledOnce).to.be.true;
-        chai.expect(logger.error.getCall(0).args[0].cause).to.be.instanceof(TimeoutError);
-        chai.expect(logger.error.getCall(0).args[0].message).to.eq('Error during cache update function execution');
-        chai.expect(logger.error.getCall(0).args[0].cause.message).to.eq('Cache testCacheName update timeout 60s');
+        chai.expect(loggerMock.error.calledOnce).to.be.true;
+        chai.expect((loggerMock.error.getCall(0).args[0] as ExtendedError).cause).to.be.instanceof(TimeoutError);
+        chai.expect((loggerMock.error.getCall(0).args[0] as ExtendedError).message).to.eq(
+            'Error during cache update function execution',
+        );
+        chai.expect((loggerMock.error.getCall(0).args[0] as ExtendedError).cause.message).to.eq(
+            'Cache testCacheName update timeout 60s',
+        );
 
         // update cache after error
         const thirdValue = await wrappedFn(); // this request will still return stale value since we do not wait for promises after 1st execution
@@ -174,17 +194,17 @@ describe('CacheWrapper', () => {
         const fourthValue = await wrappedFn();
         chai.expect(fn.calledThrice).to.be.true;
         chai.expect(fourthValue).to.deep.equal({ cachedAt: 7200, data: newData });
-        chai.expect(logger.error.calledOnce).to.be.true;
+        chai.expect(loggerMock.error.calledOnce).to.be.true;
     });
 
     describe('Multiple wrappers', () => {
-        let wrappedFirstFn;
-        let wrappedSecondFn;
-        let wrappedThirdFn;
+        let wrappedFirstFn: () => {};
+        let wrappedSecondFn: () => {};
+        let wrappedThirdFn: () => {};
 
         describe('with same name and cacheForSeconds', () => {
             beforeEach(() => {
-                const cacheWrapper = new CacheWrapper(localStorage, logger);
+                const cacheWrapper = new DefaultCacheWrapper(storageMock, loggerMock, null);
 
                 wrappedFirstFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
                 wrappedSecondFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
@@ -216,12 +236,12 @@ describe('CacheWrapper', () => {
         });
 
         describe('with same name and cacheForSeconds', () => {
-            let fn;
+            let fn: sinon.SinonStub;
 
             beforeEach(() => {
                 fn = sinon.stub();
 
-                const cacheWrapper = new CacheWrapper(localStorage, logger);
+                const cacheWrapper = new DefaultCacheWrapper(storageMock, loggerMock, null);
 
                 wrappedFirstFn = cacheWrapper.wrap(fn, { name: 'testCacheName', cacheForSeconds: 100 });
                 wrappedSecondFn = cacheWrapper.wrap(fn, { name: 'testCacheName', cacheForSeconds: 200 });
@@ -241,7 +261,7 @@ describe('CacheWrapper', () => {
     });
 
     describe('Correct cache date', () => {
-        let clock;
+        let clock: sinon.SinonFakeTimers;
 
         beforeEach(() => (clock = sinon.useFakeTimers()));
 
@@ -250,12 +270,13 @@ describe('CacheWrapper', () => {
         it('should set correct date now when saving new data to cache', async () => {
             const setItem = sinon.stub();
 
-            const cacheWrapper = new CacheWrapper(
+            const cacheWrapper = new DefaultCacheWrapper(
                 {
                     setItem,
                     getItem: () => null,
                 },
-                logger,
+                loggerMock,
+                null,
             );
 
             wrappedFn = cacheWrapper.wrap(
@@ -269,25 +290,19 @@ describe('CacheWrapper', () => {
             );
 
             await wrappedFn();
-
-            chai.expect(
-                setItem.calledWith(
-                    sinon.match.any,
-                    JSON.stringify({
-                        data: 'data',
-                        cachedAt: 50,
-                    }),
-                ),
-            ).to.be.true;
+            sinon.assert.calledWith(setItem, sinon.match.any, {
+                data: 'data',
+                cachedAt: 50,
+            });
         });
     });
 
     describe('when requesting new data fails in the foreground but cache has a stale value', () => {
         beforeEach(() => {
-            const cacheWrapper = new CacheWrapper(localStorage, logger, null, createHash);
+            const cacheWrapper = new DefaultCacheWrapper(storageMock, loggerMock, undefined, createHash);
             wrappedFn = cacheWrapper.wrap(fn, cacheParams);
             fn.withArgs(...fnArgs).returns(Promise.reject(fnError));
-            localStorage.setItem(cachedValueKey, JSON.stringify(prevCachedValue));
+            storageMock.setItem(cachedValueKey, prevCachedValue);
             createHash.withArgs(JSON.stringify(fnArgs)).returns(cachedValueKey);
         });
 
@@ -304,9 +319,11 @@ describe('CacheWrapper', () => {
             await wrappedFn(...fnArgs);
             await setImmediatePromise(); // Promise.race blocks promise resolving is same event loop tick, need to switch it manually
 
-            chai.expect(logger.error.calledOnce).to.be.true;
-            chai.expect(logger.error.getCall(0).args[0]).to.be.instanceof(Error);
-            chai.expect(logger.error.getCall(0).args[0].message).to.eq('Error during cache update function execution');
+            chai.expect(loggerMock.error.calledOnce).to.be.true;
+            chai.expect(loggerMock.error.getCall(0).args[0]).to.be.instanceof(Error);
+            chai.expect((loggerMock.error.getCall(0).args[0] as ExtendedError).message).to.eq(
+                'Error during cache update function execution',
+            );
             chai.expect(fn.calledOnce).to.be.true;
         });
     });

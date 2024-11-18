@@ -1,9 +1,10 @@
 import config from 'config';
 import newrelic from 'newrelic';
 
+import type { RequestHandler } from 'fastify';
+import type { Logger, PluginManager } from 'ilc-plugins-sdk';
 import { SlotCollection } from '../../common/Slot/SlotCollection';
 import UrlProcessor from '../../common/UrlProcessor';
-import errorHandlingService from '../errorHandler/factory';
 import GuardManager from '../GuardManager';
 import i18n from '../i18n';
 import CspBuilderService from '../services/CspBuilderService';
@@ -11,15 +12,14 @@ import tailorFactory from '../tailor/factory';
 import mergeConfigs from '../tailor/merge-configs';
 import parseOverrideConfig from '../tailor/parse-override-config';
 import ServerRouter from '../tailor/server-router';
+import { ErrorHandler } from '../types/ErrorHandler';
 import { PatchedHttpRequest } from '../types/PatchedHttpRequest';
 import { Registry, TransformedRegistryConfig } from '../types/Registry';
-
-import type { RequestHandler } from 'fastify';
-import type { Logger, PluginManager } from 'ilc-plugins-sdk';
 
 export function wildcardRequestHandlerFactory(
     logger: Logger,
     registryService: Registry,
+    errorHandlingService: ErrorHandler,
     pluginManager: PluginManager,
 ): RequestHandler<PatchedHttpRequest> {
     const guardManager = new GuardManager(pluginManager);
@@ -31,6 +31,7 @@ export function wildcardRequestHandlerFactory(
 
     const tailor = tailorFactory(
         registryService,
+        errorHandlingService,
         config.get('cdnUrl'),
         config.get('newrelic.customClientJsWrapper'),
         autoInjectNrMonitoring,

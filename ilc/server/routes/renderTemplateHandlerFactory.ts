@@ -1,12 +1,14 @@
 import type { RequestHandler } from 'fastify';
 import { StatusCodes } from 'http-status-codes';
-
-import errorHandlingService from '../errorHandler/factory';
 import { NotFoundRegistryError, ValidationRegistryError } from '../registry/errors';
-import Registry from '../registry/Registry';
+import { ErrorHandler } from '../types/ErrorHandler';
 import { PatchedHttpRequest } from '../types/PatchedHttpRequest';
+import { Registry } from '../types/Registry';
 
-export function renderTemplateHandlerFactory(registryService: Registry): RequestHandler<PatchedHttpRequest> {
+export function renderTemplateHandlerFactory(
+    registryService: Registry,
+    errorHandlingService: ErrorHandler,
+): RequestHandler<PatchedHttpRequest> {
     return async (req, reply) => {
         const currentDomain = req.hostname;
         const locale = req.raw.ilcState?.locale;

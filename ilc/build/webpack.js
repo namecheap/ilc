@@ -1,14 +1,16 @@
 /* eslint-env node */
 const fs = require('fs');
 const path = require('path');
-const { DefinePlugin } = require('webpack');
-const WrapperPlugin = require('wrapper-webpack-plugin');
+const { DefinePlugin, BannerPlugin, Compilation } = require('webpack');
 const { DuplicateIlcPluginsWebpackPlugin, ResolveIlcDefaultPluginsWebpackPlugin } = require('ilc-plugins-sdk/webpack');
 
 const { Environment } = require('../common/Environment');
 const ilcPluginsPath = path.resolve(__dirname, '../../node_modules/');
 
 const environment = new Environment(process.env);
+
+const systemJsBundleFile = path.resolve(__dirname, '../public/system.js');
+const systemJsBanner = () => fs.readFileSync(systemJsBundleFile, 'utf-8');
 
 module.exports = {
     entry: path.resolve(__dirname, '../client.js'),
@@ -47,10 +49,11 @@ module.exports = {
     },
     plugins: [
         new DuplicateIlcPluginsWebpackPlugin(ilcPluginsPath),
-        new WrapperPlugin({
+        new BannerPlugin({
             test: /\.js$/,
-            header: () => fs.readFileSync(path.resolve(__dirname, '../public/system.js')),
-            afterOptimizations: true,
+            banner: systemJsBanner,
+            raw: true,
+            stage: Compilation.PROCESS_ASSETS_STAGE_REPORT + 1,
         }),
         new DefinePlugin({
             LEGACY_PLUGINS_DISCOVERY_ENABLED: JSON.stringify(environment.isLegacyPluginsDiscoveryEnabled()),

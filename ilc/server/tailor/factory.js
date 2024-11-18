@@ -6,7 +6,6 @@ const newrelic = require('newrelic');
 const Tailor = require('@namecheap/tailorx');
 const fetchTemplate = require('./fetch-template');
 const filterHeaders = require('./filter-headers');
-const errorHandlingService = require('../errorHandler/factory');
 const errorHandlerSetup = require('./error-handler');
 const fragmentHooks = require('./fragment-hooks');
 const ConfigsInjector = require('./configs-injector');
@@ -15,6 +14,7 @@ const requestFragment = require('./request-fragment');
 
 module.exports = function (
     registryService,
+    errorHandlingService,
     cdnUrl,
     nrCustomClientJsWrapper = null,
     nrAutomaticallyInjectClientScript = true,

@@ -1,7 +1,7 @@
 {
     "spec": [
-        "server/**/*.spec.js",
-        "common/**/*.spec.js"
+        "server/**/*.spec.{js,ts}",
+        "common/**/*.spec.{js,ts}"
     ],
     "require": "ts-node/register",
     "timeout": 5000,

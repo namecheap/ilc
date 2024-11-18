@@ -53,7 +53,6 @@ describe('TransitionBlocker', () => {
 
         it('Should set onDestroy callback', () => {
             transitionBlocker.destroy();
-            console.log(cancelTokenSpy.callCount);
             expect(cancelTokenSpy.callCount).to.be.equal(1);
         });
 

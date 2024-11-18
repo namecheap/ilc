@@ -22,6 +22,17 @@ const config = {
     },
 };
 
+config.module.rules.push({
+    test: /\.(js|ts)$/,
+    /**
+     * Control coveraage files
+     */
+    exclude: /(node_modules|\.spec\.(js|ts)$|tests\/)/,
+    loader: '@jsdevtools/coverage-istanbul-loader',
+    enforce: 'post',
+    options: { esModules: true },
+});
+
 config.resolve.alias['nock'] = false;
 config.resolve.alias['timers'] = false;
 
