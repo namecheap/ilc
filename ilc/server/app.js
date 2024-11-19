@@ -61,7 +61,7 @@ module.exports = (registryService, pluginManager, context) => {
 
                 doneWithContext();
             } catch (error) {
-                errorHandlingService.handleError(error, req, reply);
+                errorHandler.handleError(error, req, reply);
             }
         });
     });
@@ -87,7 +87,7 @@ module.exports = (registryService, pluginManager, context) => {
                 });
                 done();
             } catch (error) {
-                errorHandlingService.noticeError(error);
+                errorHandler.noticeError(error);
             }
         }, req.raw);
     });
