@@ -77,5 +77,17 @@ describe('App', () => {
 
             chai.expect(response.headers.location).to.be.eql('/someRoute/');
         });
+
+        it('should reply with 302 in case of open redirect attempt but lead to correct route', async () => {
+            const response = await server.get('//google.com//').expect(302);
+
+            chai.expect(response.headers.location).to.be.eql('/google.com/');
+        });
+
+        it('should reply with 302 in case of open redirect attempt but lead to correct route for complex route', async () => {
+            const response = await server.get('//google.com//someRoute//').expect(302);
+
+            chai.expect(response.headers.location).to.be.eql('/google.com/someRoute/');
+        });
     });
 });
