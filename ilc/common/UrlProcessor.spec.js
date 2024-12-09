@@ -201,6 +201,15 @@ describe('UrlProcessor', () => {
                     new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash).process(urlWithQueryAndHash),
                 ).to.be.equal(urlWithQueryAndHashAndTrailingSlashAtTheEnd);
             });
+
+            it('when the path starts with multiple slashes and ends with multiple slashes', () => {
+                const input = 'https://original.url//google.com//';
+                const expected = 'https://original.url/google.com/';
+
+                const urlProcessor = new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash);
+
+                chai.expect(urlProcessor.process(input)).to.be.equal(expected, `Failed for input: ${input}`);
+            });
         });
     });
 });

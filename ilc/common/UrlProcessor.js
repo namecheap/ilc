@@ -54,7 +54,13 @@ class UrlProcessor {
                 break;
             }
         }
-        return parsedUrl.toString().replace(this.#fakeBaseInCasesWhereUrlIsRelative, '');
+
+        let resultUrl = parsedUrl.toString().replace(this.#fakeBaseInCasesWhereUrlIsRelative, '');
+
+        // Strip any trailing double slashes from the pathname, if present
+        resultUrl = resultUrl.replace(/\/{2,}$/g, '/');
+
+        return resultUrl;
     };
 }
 
