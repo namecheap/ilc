@@ -42,16 +42,20 @@ const onRequestFactory =
         );
 
         if (!req.raw.url.startsWith('/_ilc/')) {
-            const fixedUrl = IlcIntl.localizeUrl(i18nConfig, req.raw.url, { locale: pluginProcessedI18nConfig.locale });
+            const localizedUrl = IlcIntl.localizeUrl(i18nConfig, req.raw.url, {
+                locale: pluginProcessedI18nConfig.locale,
+            });
 
             const containsOnlySlashes = (url) => /^\/+$/.test(url);
             const shouldSkipRedirectForSlashes =
                 registryTrailingSlashSetting === UrlProcessor.routerHasTo.doNothing &&
-                containsOnlySlashes(fixedUrl) &&
+                containsOnlySlashes(localizedUrl) &&
                 containsOnlySlashes(req.raw.url);
 
-            if (fixedUrl !== req.raw.url && !shouldSkipRedirectForSlashes) {
-                return reply.redirect(fixedUrl);
+            if (localizedUrl !== req.raw.url && !shouldSkipRedirectForSlashes) {
+                const urlProcessor = new UrlProcessor(registryTrailingSlashSetting);
+                // Even if the localization triggered redirect we still need to ensure it is open-redirect safe
+                return reply.redirect(urlProcessor.process(localizedUrl));
             }
         }
 
