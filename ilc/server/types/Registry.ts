@@ -1,11 +1,16 @@
 import type { Logger } from 'ilc-plugins-sdk';
-import type { RegistryConfig } from './RegistryConfig';
+import type { RegistryConfig, Route, SpecialRoute } from './RegistryConfig';
 import { CacheResult } from '../../common/types/CacheWrapper';
 
-export interface TransformedRegistryConfig extends RegistryConfig {
+export type TransformedRoute = Omit<Route, 'domain'>;
+export type TransformedSpecialRoute = Omit<SpecialRoute, 'domain' | 'specialRole'>;
+
+export type TransformedRegistryConfig = RegistryConfig & {
+    routes: TransformedRoute[];
+    specialRoutes: Record<string, TransformedSpecialRoute>;
     // TODO
     // Define any additional properties for the transformed config here
-}
+};
 
 interface RegistryOptions {
     filter?: {

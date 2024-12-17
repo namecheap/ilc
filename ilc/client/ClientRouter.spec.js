@@ -137,7 +137,6 @@ describe('client router', () => {
 
     const specialRoutes = {
         404: {
-            route: '/404',
             next: false,
             template: 'errorsTemplate',
             slots: {},

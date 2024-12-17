@@ -2,7 +2,7 @@ import deepmerge from 'deepmerge';
 import debug from 'debug';
 import EventEmitter from 'eventemitter3';
 
-import Router from '../common/router/Router';
+import { Router } from '../common/router/Router';
 import * as errors from '../common/router/errors';
 import { isSpecialUrl } from 'ilc-sdk/app';
 import { triggerAppChange } from './navigationEvents';

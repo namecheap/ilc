@@ -98,7 +98,6 @@ describe('merge configs', () => {
     const specialRoutes = {
         404: {
             routeId: 'errorsRoute',
-            route: '/404',
             next: false,
             orderPos: 50,
             template: 'errorsTemplate',
