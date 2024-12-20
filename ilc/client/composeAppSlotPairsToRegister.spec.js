@@ -4,6 +4,10 @@ import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
 import { getIlcConfigRoot } from './configuration/getIlcConfigRoot';
 
 describe('select slots to register', () => {
+    const configRoot = getIlcConfigRoot();
+    after(() => {
+        sinon.stub(configRoot, 'registryConfiguration').restore();
+    });
     it('should select slots without any duplicated apps of slots from provided routes', () => {
         const routes = [
             {
@@ -107,10 +111,9 @@ describe('select slots to register', () => {
             },
         ];
 
-        const configRoot = getIlcConfigRoot();
         const registryConf = getRegistryMock().getConfig();
         registryConf.routes = routes;
-        configRoot.registryConfiguration = registryConf;
+        sinon.stub(configRoot, 'registryConfiguration').value(registryConf);
 
         const composedAppsJsonified = composeAppSlotPairsToRegister(configRoot).map((item) => item.toJSON());
 

@@ -1,13 +1,11 @@
 const _ = require('lodash');
 const deepmerge = require('deepmerge');
 
-const errors = require('../../common/router/errors');
-const Router = require('../../common/router/Router');
+const { RouterError } = require('../../common/router/errors');
+const { Router } = require('../../common/router/Router');
 const { makeAppId } = require('../../common/utils');
 
 module.exports = class ServerRouter {
-    errors = errors;
-
     /** @type Console */
     #logger;
     /** @type http.IncomingMessage */
@@ -65,7 +63,7 @@ module.exports = class ServerRouter {
 
                 const ssrOpts = _.pick(row.appInfo.ssr, ['src', 'timeout', 'ignoreInvalidSsl']);
                 if (!ssrOpts.src || typeof ssrOpts.src !== 'string') {
-                    throw new this.errors.RouterError({ message: 'No url specified for fragment!', data: { appInfo } });
+                    throw new RouterError({ message: 'No url specified for fragment!', data: { appInfo } });
                 }
 
                 if (ssrOpts.ignoreInvalidSsl === true) {
@@ -132,7 +130,7 @@ module.exports = class ServerRouter {
                 const appInfo = apps[appName];
 
                 if (appInfo === undefined) {
-                    throw new this.errors.RouterError({ message: "Can't find info about app.", data: { appName } });
+                    throw new RouterError({ message: "Can't find info about app.", data: { appName } });
                 }
                 if (appInfo.ssr === undefined) {
                     return res;

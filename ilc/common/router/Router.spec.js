@@ -1,6 +1,7 @@
 const chai = require('chai');
 
-const Router = require('./Router');
+const { NoRouteMatchError, NoBaseTemplateMatchError } = require('./errors');
+const { Router } = require('./Router');
 
 describe('Router', () => {
     const registryConfig = Object.freeze({
@@ -90,7 +91,6 @@ describe('Router', () => {
         ],
         specialRoutes: {
             404: {
-                route: '/404',
                 next: false,
                 template: 'errorsTemplate',
                 slots: {
@@ -119,7 +119,7 @@ describe('Router', () => {
             });
             const reqUrl = '/nonexistent';
 
-            chai.expect(router.match.bind(router, reqUrl)).to.throw(router.errors.NoRouteMatchError);
+            chai.expect(router.match.bind(router, reqUrl)).to.throw(NoRouteMatchError);
         });
 
         it('should throw an error when a route does not have a template', () => {
@@ -137,7 +137,7 @@ describe('Router', () => {
             });
             const reqUrl = '/no-template';
 
-            chai.expect(router.match.bind(router, reqUrl)).to.throw(router.errors.NoBaseTemplateMatchError);
+            chai.expect(router.match.bind(router, reqUrl)).to.throw(NoBaseTemplateMatchError);
         });
 
         describe('when a route equals "*"', () => {
@@ -194,7 +194,6 @@ describe('Router', () => {
                 const reqUrl = '/nonexistent?prop=value';
 
                 chai.expect(router.match(reqUrl)).to.be.eql({
-                    route: '/404',
                     basePath: '/',
                     reqUrl,
                     template: 'errorsTemplate',
@@ -380,7 +379,6 @@ describe('Router', () => {
                 const reqUrl = '/launchpad/something';
 
                 chai.expect(router.match(reqUrl)).to.be.eql({
-                    route: '/404',
                     basePath: '/',
                     reqUrl,
                     template: 'errorsTemplate',
@@ -448,7 +446,6 @@ describe('Router', () => {
                 const reqUrl = '/launchpad/something';
 
                 chai.expect(router.match(reqUrl)).to.be.eql({
-                    route: '/404',
                     basePath: '/',
                     reqUrl,
                     template: 'errorsTemplate',
@@ -532,7 +529,6 @@ describe('Router', () => {
                 const reqUrl = '/launchpad-SOME_TRAILING_TEXT_FOO_BAR_BAZ';
 
                 chai.expect(router.match(reqUrl)).to.be.eql({
-                    route: '/404',
                     basePath: '/',
                     reqUrl,
                     template: 'errorsTemplate',
@@ -550,7 +546,6 @@ describe('Router', () => {
             const reqUrl = '/tst';
 
             chai.expect(router.matchSpecial(reqUrl, 404)).to.be.eql({
-                route: '/404',
                 basePath: '/',
                 reqUrl,
                 template: 'errorsTemplate',
@@ -568,7 +563,7 @@ describe('Router', () => {
             const router = new Router(registryConfig);
             const reqUrl = '/tst';
 
-            chai.expect(() => router.matchSpecial(reqUrl, 999)).to.throw(router.errors.NoRouteMatchError);
+            chai.expect(() => router.matchSpecial(reqUrl, 999)).to.throw(NoRouteMatchError);
         });
 
         it('should throw an error when a special route does not have a template', () => {
@@ -576,7 +571,6 @@ describe('Router', () => {
                 routes: registryConfig.routes,
                 specialRoutes: {
                     404: {
-                        route: '/404',
                         next: false,
                         template: '',
                         slots: {
@@ -592,7 +586,7 @@ describe('Router', () => {
             });
             const reqUrl = '/no-template';
 
-            chai.expect(() => router.matchSpecial(reqUrl, '404')).to.throw(router.errors.NoBaseTemplateMatchError);
+            chai.expect(() => router.matchSpecial(reqUrl, '404')).to.throw(NoBaseTemplateMatchError);
         });
     });
 });
