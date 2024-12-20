@@ -70,7 +70,7 @@ describe('TransitionHooksExecutor', () => {
 
             const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(transitionHooksExecutor.hasAccessTo('/router/does/not/have/route')).to.be.true;
+            chai.expect(transitionHooksExecutor.shouldNavigate('/router/does/not/have/route')).to.be.true;
         });
 
         it(`if none of hooks returns "${actionTypes.stopNavigation}" or "${actionTypes.redirect}" action types`, () => {
@@ -87,7 +87,7 @@ describe('TransitionHooksExecutor', () => {
 
             const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(transitionHooksExecutor.hasAccessTo(url)).to.be.true;
+            chai.expect(transitionHooksExecutor.shouldNavigate(url)).to.be.true;
 
             for (const hook of hooks) {
                 sinon.assert.calledOnceWithExactly(hook, {
@@ -115,7 +115,7 @@ describe('TransitionHooksExecutor', () => {
 
             const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(transitionHooksExecutor.hasAccessTo(url)).to.be.false;
+            chai.expect(transitionHooksExecutor.shouldNavigate(url)).to.be.false;
             sinon.assert.calledOnce(errorHandler);
             chai.expect(errorHandler.getCall(0).args[0]).to.have.property('cause', error);
             chai.expect(errorHandler.getCall(0).args[0]).to.be.instanceOf(TransitionHookError);
@@ -152,7 +152,7 @@ describe('TransitionHooksExecutor', () => {
 
             const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(transitionHooksExecutor.hasAccessTo(url)).to.be.false;
+            chai.expect(transitionHooksExecutor.shouldNavigate(url)).to.be.false;
             sinon.assert.calledOnceWithExactly(
                 logger.info,
                 `ILC: Stopped navigation due to the Route Guard with index #${1}`,
@@ -185,7 +185,7 @@ describe('TransitionHooksExecutor', () => {
 
             const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(transitionHooksExecutor.hasAccessTo(url)).to.be.false;
+            chai.expect(transitionHooksExecutor.shouldNavigate(url)).to.be.false;
             sinon.assert.notCalled(router.navigateToUrl);
 
             for (const hook of [hooks[0], hooks[1]]) {

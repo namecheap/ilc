@@ -17,7 +17,7 @@ export default class TransitionHooksExecutor {
         this.#logger = logger;
     }
 
-    hasAccessTo(url) {
+    shouldNavigate(url) {
         const route = this.#router.match(url);
         // This code is executed before the router change, so current = previous
         const prevRoute = this.#router.getCurrentRoute();
