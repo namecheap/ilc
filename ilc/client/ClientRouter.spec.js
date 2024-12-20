@@ -149,16 +149,15 @@ describe('client router', () => {
         specialRoutes,
     };
 
-    let router, configRoot, originalConfig;
+    let router, configRoot;
 
     before(() => {
         configRoot = getIlcConfigRoot();
-        originalConfig = configRoot.registryConfiguration;
-        configRoot.registryConfiguration = registryConfig;
+        sinon.stub(configRoot, 'registryConfiguration').value(registryConfig);
     });
 
     after(() => {
-        configRoot.registryConfiguration = originalConfig;
+        sinon.stub(configRoot, 'registryConfiguration').restore();
     });
 
     afterEach(() => {
@@ -684,7 +683,7 @@ describe('client router', () => {
             const nonPrimaryKind = 'regular';
             const appId = 'mounted_app__at__some_place';
             const configRoot = getIlcConfigRoot();
-            configRoot.registryConfiguration = {
+            const registryConfiguration = {
                 ...registryConfig,
                 apps: {
                     ...registryConfig.apps,
@@ -693,6 +692,7 @@ describe('client router', () => {
                     },
                 },
             };
+            sinon.stub(configRoot, 'registryConfiguration').value(registryConfiguration);
 
             router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
 
@@ -814,7 +814,7 @@ describe('client router', () => {
             };
 
             const configRoot = getIlcConfigRoot();
-            configRoot.registryConfiguration = customRegistryConfig;
+            sinon.stub(configRoot, 'registryConfiguration').value(customRegistryConfig);
 
             history.replaceState({}, undefined, '/');
             router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
@@ -868,7 +868,7 @@ describe('client router', () => {
             };
 
             const configRoot = getIlcConfigRoot();
-            configRoot.registryConfiguration = customRegistryConfig;
+            sinon.stub(configRoot, 'registryConfiguration').value(customRegistryConfig);
 
             history.replaceState({}, undefined, '/');
             router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
@@ -928,7 +928,7 @@ describe('client router', () => {
             };
 
             const configRoot = getIlcConfigRoot();
-            configRoot.registryConfiguration = customRegistryConfig;
+            sinon.stub(configRoot, 'registryConfiguration').value(customRegistryConfig);
 
             history.replaceState({}, undefined, '/');
             router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
