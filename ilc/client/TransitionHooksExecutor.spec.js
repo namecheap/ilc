@@ -1,11 +1,11 @@
 import chai from 'chai';
 import sinon from 'sinon';
 
-import errors from '../common/guard/errors';
+import { TransitionHookError } from '../common/guard/errors';
 import actionTypes from '../common/guard/actionTypes';
-import GuardManager from './GuardManager';
+import TransitionHooksExecutor from './TransitionHooksExecutor';
 
-describe('GuardManager', () => {
+describe('TransitionHooksExecutor', () => {
     let clock;
 
     const route = Object.freeze({
@@ -68,9 +68,9 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns({ specialRole: 404 });
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
+            const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(guardManager.hasAccessTo('/router/does/not/have/route')).to.be.true;
+            chai.expect(transitionHooksExecutor.hasAccessTo('/router/does/not/have/route')).to.be.true;
         });
 
         it(`if none of hooks returns "${actionTypes.stopNavigation}" or "${actionTypes.redirect}" action types`, () => {
@@ -85,9 +85,9 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
+            const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(guardManager.hasAccessTo(url)).to.be.true;
+            chai.expect(transitionHooksExecutor.hasAccessTo(url)).to.be.true;
 
             for (const hook of hooks) {
                 sinon.assert.calledOnceWithExactly(hook, {
@@ -113,12 +113,12 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
+            const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(guardManager.hasAccessTo(url)).to.be.false;
+            chai.expect(transitionHooksExecutor.hasAccessTo(url)).to.be.false;
             sinon.assert.calledOnce(errorHandler);
             chai.expect(errorHandler.getCall(0).args[0]).to.have.property('cause', error);
-            chai.expect(errorHandler.getCall(0).args[0]).to.be.instanceOf(errors.GuardTransitionHookError);
+            chai.expect(errorHandler.getCall(0).args[0]).to.be.instanceOf(TransitionHookError);
             chai.expect(errorHandler.getCall(0).args[0].data).to.be.eql({
                 hookIndex: 1,
                 url,
@@ -150,9 +150,9 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
+            const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(guardManager.hasAccessTo(url)).to.be.false;
+            chai.expect(transitionHooksExecutor.hasAccessTo(url)).to.be.false;
             sinon.assert.calledOnceWithExactly(
                 logger.info,
                 `ILC: Stopped navigation due to the Route Guard with index #${1}`,
@@ -183,9 +183,9 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
+            const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(guardManager.hasAccessTo(url)).to.be.false;
+            chai.expect(transitionHooksExecutor.hasAccessTo(url)).to.be.false;
             sinon.assert.notCalled(router.navigateToUrl);
 
             for (const hook of [hooks[0], hooks[1]]) {
@@ -204,7 +204,7 @@ describe('GuardManager', () => {
 
             sinon.assert.calledWithExactly(
                 logger.info,
-                `ILC: Redirect from "${route.reqUrl}" to "${url}" due to the Route Guard with index #${1}`,
+                `ILC: Redirect from "${route.reqUrl}" to "${url}" due to the Transition Hook with index #${1}`,
             );
             sinon.assert.calledWithExactly(router.navigateToUrl, url);
         });

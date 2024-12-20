@@ -1,7 +1,10 @@
-import errors from '../common/guard/errors';
+import { TransitionHookError } from '../common/guard/errors';
 import actionTypes from '../common/guard/actionTypes';
 
-export default class GuardManager {
+/**
+ * Executes ILC Transition plugin's hooks
+ */
+export default class TransitionHooksExecutor {
     #router;
     #transitionHooksPlugin;
     #errorHandler;
@@ -58,7 +61,7 @@ export default class GuardManager {
                         this.#logger.info(
                             `ILC: Redirect from "${route.reqUrl}" to "${
                                 action.newLocation
-                            }" due to the Route Guard with index #${hooks.indexOf(hook)}`,
+                            }" due to the Transition Hook with index #${hooks.indexOf(hook)}`,
                         );
                         this.#router.navigateToUrl(action.newLocation);
                     });
@@ -68,7 +71,7 @@ export default class GuardManager {
                 const hookIndex = hooks.indexOf(hook);
 
                 this.#errorHandler(
-                    new errors.GuardTransitionHookError({
+                    new TransitionHookError({
                         message: `An error has occurred while executing "${hookIndex}" transition hook for the following URL: "${url}".`,
                         data: {
                             hookIndex,

@@ -5,13 +5,13 @@ import type { RequestHandler } from 'fastify';
 import type { Logger, PluginManager } from 'ilc-plugins-sdk';
 import { SlotCollection } from '../../common/Slot/SlotCollection';
 import UrlProcessor from '../../common/UrlProcessor';
-import GuardManager from '../GuardManager';
 import i18n from '../i18n';
 import CspBuilderService from '../services/CspBuilderService';
 import tailorFactory from '../tailor/factory';
 import mergeConfigs from '../tailor/merge-configs';
 import parseOverrideConfig from '../tailor/parse-override-config';
 import ServerRouter from '../tailor/server-router';
+import { TransitionHooksExecutor } from '../TransitionHooksExecutor';
 import { ErrorHandler } from '../types/ErrorHandler';
 import { PatchedHttpRequest } from '../types/PatchedHttpRequest';
 import { Registry, TransformedRegistryConfig } from '../types/Registry';
@@ -22,7 +22,7 @@ export function wildcardRequestHandlerFactory(
     errorHandlingService: ErrorHandler,
     pluginManager: PluginManager,
 ): RequestHandler<PatchedHttpRequest> {
-    const guardManager = new GuardManager(pluginManager);
+    const transitionHooksExecutor = new TransitionHooksExecutor(pluginManager);
     const autoInjectNrMonitoringConfig = config.get('newrelic.automaticallyInjectBrowserMonitoring');
     const autoInjectNrMonitoring =
         typeof autoInjectNrMonitoringConfig === 'boolean'
@@ -73,12 +73,13 @@ export function wildcardRequestHandlerFactory(
         const unlocalizedUrl = i18n.unlocalizeUrl(finalRegistryConfig.settings.i18n, url);
         req.raw.router = new ServerRouter(req.log, req.raw, unlocalizedUrl);
 
-        const redirectTo = await guardManager.redirectTo(req);
+        const redirectTo = await transitionHooksExecutor.redirectTo(req);
 
         if (redirectTo) {
             reply.redirect(
+                redirectTo.code,
                 urlProcessor.process(
-                    i18n.localizeUrl(finalRegistryConfig.settings.i18n, redirectTo, {
+                    i18n.localizeUrl(finalRegistryConfig.settings.i18n, redirectTo.location, {
                         locale: req.raw.ilcState?.locale,
                     }),
                 ),
