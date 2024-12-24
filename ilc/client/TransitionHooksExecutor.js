@@ -1,5 +1,5 @@
-import { TransitionHookError } from '../common/guard/errors';
-import actionTypes from '../common/guard/actionTypes';
+import { TransitionHookError } from '../common/transition-hooks/errors';
+import { ActionType } from '../common/transition-hooks/ActionType';
 
 /**
  * Executes ILC Transition plugin's hooks
@@ -17,7 +17,7 @@ export default class TransitionHooksExecutor {
         this.#logger = logger;
     }
 
-    hasAccessTo(url) {
+    shouldNavigate(url) {
         const route = this.#router.match(url);
         // This code is executed before the router change, so current = previous
         const prevRoute = this.#router.getCurrentRoute();
@@ -47,14 +47,14 @@ export default class TransitionHooksExecutor {
                     navigate: this.#router.navigateToUrl,
                 });
 
-                if (action.type === actionTypes.stopNavigation) {
+                if (action.type === ActionType.stopNavigation) {
                     this.#logger.info(
                         `ILC: Stopped navigation due to the Route Guard with index #${hooks.indexOf(hook)}`,
                     );
                     return false;
                 }
 
-                if (action.type === actionTypes.redirect) {
+                if (action.type === ActionType.redirect) {
                     // Need to add redirect callback to queued tasks
                     // because it should be executed after micro tasks that can be added after the end of this method
                     setTimeout(() => {

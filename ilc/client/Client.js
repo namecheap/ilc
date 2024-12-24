@@ -268,7 +268,7 @@ export class Client {
     }
 
     #configure() {
-        addNavigationHook((url) => (this.#transitionHooksExecutor.hasAccessTo(url) ? url : null));
+        addNavigationHook((url) => (this.#transitionHooksExecutor.shouldNavigate(url) ? url : null));
         addNavigationHook((url) => this.#urlProcessor.process(url));
 
         // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API

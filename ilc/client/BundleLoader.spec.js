@@ -22,7 +22,6 @@ describe('BundleLoader', () => {
         delete: sinon.stub(),
     };
     let registry;
-    let registryConfigurationStub;
     const configRoot = getIlcConfigRoot();
 
     const mockFactoryFn = () => {};
@@ -54,12 +53,12 @@ describe('BundleLoader', () => {
                 },
             },
         }).getConfig();
-        registryConfigurationStub = sinon.stub(configRoot, 'registryConfiguration').value(registry);
+        sinon.stub(configRoot, 'registryConfiguration').value(registry);
     });
 
     afterEach(() => {
         SystemJs.import.reset();
-        registryConfigurationStub.restore();
+        sinon.stub(configRoot, 'registryConfiguration').restore();
     });
 
     describe('preloadApp()', () => {

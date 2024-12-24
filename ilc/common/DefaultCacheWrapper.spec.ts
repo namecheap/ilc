@@ -105,15 +105,7 @@ describe('DefaultCacheWrapper', () => {
     });
 
     it('should return the same value in case of concurrent invocation', async () => {
-        fn.withArgs().callsFake(
-            () =>
-                new Promise((resolve) =>
-                    setTimeout(() => {
-                        console.log('CALLED');
-                        return resolve(data);
-                    }, 100),
-                ),
-        );
+        fn.withArgs().callsFake(() => new Promise((resolve) => setTimeout(() => resolve(data), 100)));
 
         const [firstValue, secondValue, thirdValue] = await Promise.all([wrappedFn(), wrappedFn(), wrappedFn()]);
 

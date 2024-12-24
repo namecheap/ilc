@@ -6,27 +6,25 @@ export type Slot = {
     props: {};
 };
 
-export type Route = {
+type BaseRoute = {
     slots: Record<string, Slot>;
     meta: {};
-    routeId?: number;
-    route: string;
     next: boolean;
-    template?: string;
-    orderPos: number;
     versionId: string;
     domain?: string;
 };
 
-export type SpecialRoute = {
-    slots: Record<string, Slot>;
-    meta: {};
+export type Route = BaseRoute & {
+    routeId?: number;
+    route: string;
+    template?: string;
+    orderPos: number;
+};
+
+export type SpecialRoute = BaseRoute & {
     routeId: number;
-    next: boolean;
     template: string;
     specialRole: string;
-    versionId: string;
-    domain?: string;
 };
 
 export interface RegistryConfig {

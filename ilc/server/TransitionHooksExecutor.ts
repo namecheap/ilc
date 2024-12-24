@@ -1,5 +1,7 @@
 import { PluginManager, TransitionHooksPlugin } from 'ilc-plugins-sdk';
-import { TransitionHookError } from '../common/guard/errors';
+import { TransitionHookError } from '../common/transition-hooks/errors';
+import { FastifyRequest } from 'fastify';
+import { PatchedHttpRequest } from './types/PatchedHttpRequest';
 
 type TransitionResult = {
     location: string;
@@ -13,7 +15,10 @@ export class TransitionHooksExecutor {
         this.transitionHooksPlugin = pluginManager.getTransitionHooksPlugin();
     }
 
-    async redirectTo(req: any): Promise<TransitionResult | null> {
+    async redirectTo(req: FastifyRequest<PatchedHttpRequest>): Promise<TransitionResult | null> {
+        if (!req.raw.router) {
+            throw new Error('Router not initialized');
+        }
         const route = req.raw.router.getRoute();
 
         if (route.specialRole !== null) {
@@ -33,6 +38,7 @@ export class TransitionHooksExecutor {
                         meta: route.meta,
                         url: route.reqUrl,
                         hostname: req.hostname,
+                        route: route.route,
                     },
                     log: req.log,
                     req: req.raw,
@@ -41,7 +47,7 @@ export class TransitionHooksExecutor {
                 if (action.type === 'redirect' && action.newLocation) {
                     const code = action.code ?? 302;
                     if (code < 300 || code > 308) {
-                        throw new TransitionHookError({ message: 'Invlid redirect code' });
+                        throw new TransitionHookError({ message: 'Invalid redirect code' });
                     }
                     return {
                         location: action.newLocation,

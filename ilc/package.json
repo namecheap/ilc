@@ -35,7 +35,7 @@
     "fast-glob": "^3.3.2",
     "fastify": "^2.15.3",
     "http-status-codes": "^2.3.0",
-    "ilc-plugins-sdk": "^2.2.0",
+    "ilc-plugins-sdk": "^2.3.0",
     "ilc-sdk": "^5.2.4",
     "is-url": "^1.2.4",
     "js-cookie": "^2.2.1",
