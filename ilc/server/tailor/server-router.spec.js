@@ -370,7 +370,6 @@ describe('server router', () => {
         const router = new ServerRouter(logger, request, request.url);
 
         chai.expect(router.getRoute()).to.be.eql({
-            route: registryConfig.specialRoutes['404'].route,
             basePath: '/',
             reqUrl: request.url,
             template: registryConfig.specialRoutes['404'].template,

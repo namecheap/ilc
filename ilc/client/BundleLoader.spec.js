@@ -53,12 +53,12 @@ describe('BundleLoader', () => {
                 },
             },
         }).getConfig();
-
-        configRoot.registryConfiguration = registry;
+        sinon.stub(configRoot, 'registryConfiguration').value(registry);
     });
 
     afterEach(() => {
         SystemJs.import.reset();
+        sinon.stub(configRoot, 'registryConfiguration').restore();
     });
 
     describe('preloadApp()', () => {

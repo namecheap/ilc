@@ -1,11 +1,11 @@
 import chai from 'chai';
 import sinon from 'sinon';
 
-import errors from '../common/guard/errors';
-import actionTypes from '../common/guard/actionTypes';
-import GuardManager from './GuardManager';
+import { TransitionHookError } from '../common/transition-hooks/errors';
+import { ActionType } from '../common/transition-hooks/ActionType';
+import TransitionHooksExecutor from './TransitionHooksExecutor';
 
-describe('GuardManager', () => {
+describe('TransitionHooksExecutor', () => {
     let clock;
 
     const route = Object.freeze({
@@ -64,20 +64,20 @@ describe('GuardManager', () => {
 
     describe('should have access to a provided URL', () => {
         it('if router does not have a route that matches a provided URL', () => {
-            const hooks = [sinon.stub().returns({ type: actionTypes.stopNavigation })];
+            const hooks = [sinon.stub().returns({ type: ActionType.stopNavigation })];
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns({ specialRole: 404 });
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
+            const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(guardManager.hasAccessTo('/router/does/not/have/route')).to.be.true;
+            chai.expect(transitionHooksExecutor.shouldNavigate('/router/does/not/have/route')).to.be.true;
         });
 
-        it(`if none of hooks returns "${actionTypes.stopNavigation}" or "${actionTypes.redirect}" action types`, () => {
+        it(`if none of hooks returns "${ActionType.stopNavigation}" or "${ActionType.redirect}" action types`, () => {
             const url = '/every/hook/does/not/return/stop/navigation';
             const hooks = [
-                sinon.stub().returns({ type: actionTypes.continue }),
-                sinon.stub().returns({ type: actionTypes.continue }),
+                sinon.stub().returns({ type: ActionType.continue }),
+                sinon.stub().returns({ type: ActionType.continue }),
                 sinon.stub().returns({ type: null }),
                 sinon.stub().returns({ type: undefined }),
             ];
@@ -85,9 +85,9 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
+            const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(guardManager.hasAccessTo(url)).to.be.true;
+            chai.expect(transitionHooksExecutor.shouldNavigate(url)).to.be.true;
 
             for (const hook of hooks) {
                 sinon.assert.calledOnceWithExactly(hook, {
@@ -104,7 +104,7 @@ describe('GuardManager', () => {
             const error = new Error('Hi there! I am an error. So, should be shown 500 error page in this case');
             const url = '/some/hook/returns/stop/navigation';
             const hooks = [
-                sinon.stub().returns({ type: actionTypes.continue }),
+                sinon.stub().returns({ type: ActionType.continue }),
                 sinon.stub().throws(error),
                 sinon.stub().returns({ type: true }),
                 sinon.stub().returns({ type: 0 }),
@@ -113,12 +113,12 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
+            const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(guardManager.hasAccessTo(url)).to.be.false;
+            chai.expect(transitionHooksExecutor.shouldNavigate(url)).to.be.false;
             sinon.assert.calledOnce(errorHandler);
             chai.expect(errorHandler.getCall(0).args[0]).to.have.property('cause', error);
-            chai.expect(errorHandler.getCall(0).args[0]).to.be.instanceOf(errors.GuardTransitionHookError);
+            chai.expect(errorHandler.getCall(0).args[0]).to.be.instanceOf(TransitionHookError);
             chai.expect(errorHandler.getCall(0).args[0].data).to.be.eql({
                 hookIndex: 1,
                 url,
@@ -138,11 +138,11 @@ describe('GuardManager', () => {
             }
         });
 
-        it(`if some of hooks returns "${actionTypes.stopNavigation}" action type`, () => {
+        it(`if some of hooks returns "${ActionType.stopNavigation}" action type`, () => {
             const url = '/some/hook/returns/stop/navigation';
             const hooks = [
-                sinon.stub().returns({ type: actionTypes.continue }),
-                sinon.stub().returns({ type: actionTypes.stopNavigation }),
+                sinon.stub().returns({ type: ActionType.continue }),
+                sinon.stub().returns({ type: ActionType.stopNavigation }),
                 sinon.stub().returns({ type: true }),
                 sinon.stub().returns({ type: 0 }),
             ];
@@ -150,9 +150,9 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
+            const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(guardManager.hasAccessTo(url)).to.be.false;
+            chai.expect(transitionHooksExecutor.shouldNavigate(url)).to.be.false;
             sinon.assert.calledOnceWithExactly(
                 logger.info,
                 `ILC: Stopped navigation due to the Route Guard with index #${1}`,
@@ -171,11 +171,11 @@ describe('GuardManager', () => {
             }
         });
 
-        it(`if some of hooks returns "${actionTypes.redirect}" action type`, async () => {
+        it(`if some of hooks returns "${ActionType.redirect}" action type`, async () => {
             const url = '/some/hook/returns/redirect/navigation';
             const hooks = [
-                sinon.stub().returns({ type: actionTypes.continue }),
-                sinon.stub().returns({ type: actionTypes.redirect, newLocation: url }),
+                sinon.stub().returns({ type: ActionType.continue }),
+                sinon.stub().returns({ type: ActionType.redirect, newLocation: url }),
                 sinon.stub().returns({ type: false }),
                 sinon.stub().returns({ type: 1 }),
             ];
@@ -183,9 +183,9 @@ describe('GuardManager', () => {
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
             router.match.returns(route);
 
-            const guardManager = new GuardManager(router, pluginManager, errorHandler, logger);
+            const transitionHooksExecutor = new TransitionHooksExecutor(router, pluginManager, errorHandler, logger);
 
-            chai.expect(guardManager.hasAccessTo(url)).to.be.false;
+            chai.expect(transitionHooksExecutor.shouldNavigate(url)).to.be.false;
             sinon.assert.notCalled(router.navigateToUrl);
 
             for (const hook of [hooks[0], hooks[1]]) {
@@ -204,7 +204,7 @@ describe('GuardManager', () => {
 
             sinon.assert.calledWithExactly(
                 logger.info,
-                `ILC: Redirect from "${route.reqUrl}" to "${url}" due to the Route Guard with index #${1}`,
+                `ILC: Redirect from "${route.reqUrl}" to "${url}" due to the Transition Hook with index #${1}`,
             );
             sinon.assert.calledWithExactly(router.navigateToUrl, url);
         });

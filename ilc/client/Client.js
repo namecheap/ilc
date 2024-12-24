@@ -26,7 +26,7 @@ import Router from './ClientRouter';
 import initIlcState from './initIlcState';
 import I18n from './i18n';
 
-import GuardManager from './GuardManager';
+import TransitionHooksExecutor from './TransitionHooksExecutor';
 import ParcelApi from './ParcelApi';
 import { BundleLoader } from './BundleLoader';
 import { registerApplications } from './registerSpaApps';
@@ -62,7 +62,7 @@ export class Client {
 
     #router;
 
-    #guardManager;
+    #transitionHooksExecutor;
 
     #urlProcessor;
 
@@ -114,7 +114,7 @@ export class Client {
             singleSpa,
             this.#transitionManager.handlePageTransition.bind(this.#transitionManager),
         );
-        this.#guardManager = new GuardManager(
+        this.#transitionHooksExecutor = new TransitionHooksExecutor(
             this.#router,
             this.#pluginManager,
             this.#onCriticalInternalError.bind(this),
@@ -268,7 +268,7 @@ export class Client {
     }
 
     #configure() {
-        addNavigationHook((url) => (this.#guardManager.hasAccessTo(url) ? url : null));
+        addNavigationHook((url) => (this.#transitionHooksExecutor.shouldNavigate(url) ? url : null));
         addNavigationHook((url) => this.#urlProcessor.process(url));
 
         // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
