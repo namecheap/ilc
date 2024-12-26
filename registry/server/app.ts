@@ -47,7 +47,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
             {
                 session: {
                     secret: config.get('auth.sessionSecret'),
-                    cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production' },
+                    cookie: { httpOnly: true, secure: config.get('auth.cookieSecure') },
                 },
             },
             getLogger(),

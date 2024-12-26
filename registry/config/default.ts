@@ -25,6 +25,7 @@ module.exports = {
     },
     auth: {
         sessionSecret: 'zaM7%#BjyZZ3A5zV@Mpt',
+        cookieSecure: false,
     },
     http: {
         requestLimit: '1mb',
