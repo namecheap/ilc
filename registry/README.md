@@ -76,3 +76,7 @@ This command ignores `.env` file
 ```bash
 $ npm run test:postgres
 ```
+
+## Secure session on production
+
+To set the session cookie as secure, set the environment variable AUTH_COOKIE_SECURE=true. Note that you will need to use an HTTPS forward proxy to access the registry admin panel.

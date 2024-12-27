@@ -18,4 +18,6 @@ ADD ./ /codebase
 
 RUN npm run build
 
+ENTRYPOINT ["sh", "./scripts/docker-entrypoint.sh"]
+
 CMD ["npm", "run", "start-docker"]
