@@ -1,9 +1,6 @@
 import { TransitionHookError } from '../common/transition-hooks/errors';
 import { ActionType } from '../common/transition-hooks/ActionType';
 
-/**
- * Executes ILC Transition plugin's hooks
- */
 export default class TransitionHooksExecutor {
     #router;
     #transitionHooksPlugin;
@@ -38,11 +35,13 @@ export default class TransitionHooksExecutor {
                         meta: route.meta,
                         url: route.reqUrl,
                         hostname: window.location.host,
+                        route: route.route,
                     },
                     prevRoute: {
                         meta: prevRoute.meta,
                         url: prevRoute.reqUrl,
                         hostname: window.location.host,
+                        route: route.route,
                     },
                     navigate: this.#router.navigateToUrl,
                 });
