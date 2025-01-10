@@ -14,6 +14,7 @@ describe('TransitionHooksExecutor', () => {
             protected: true,
         },
         reqUrl: '/some/url',
+        route: '/some/url',
     });
     const prevRoute = Object.freeze({
         specialRole: null,
@@ -21,6 +22,7 @@ describe('TransitionHooksExecutor', () => {
             protected: true,
         },
         reqUrl: '/other/url',
+        route: '/other/url',
     });
 
     const errorHandler = sinon.spy((err) => console.error(err));
@@ -91,8 +93,13 @@ describe('TransitionHooksExecutor', () => {
 
             for (const hook of hooks) {
                 sinon.assert.calledOnceWithExactly(hook, {
-                    route: { meta: route.meta, url: route.reqUrl, hostname: window.location.host },
-                    prevRoute: { meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.host },
+                    route: { meta: route.meta, url: route.reqUrl, hostname: window.location.host, route: route.route },
+                    prevRoute: {
+                        meta: prevRoute.meta,
+                        url: prevRoute.reqUrl,
+                        hostname: window.location.host,
+                        route: route.route,
+                    },
                     navigate: router.navigateToUrl,
                 });
             }
@@ -127,8 +134,13 @@ describe('TransitionHooksExecutor', () => {
 
             for (const hook of [hooks[0], hooks[1]]) {
                 sinon.assert.calledOnceWithExactly(hook, {
-                    route: { meta: route.meta, url: route.reqUrl, hostname: window.location.host },
-                    prevRoute: { meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.host },
+                    route: { meta: route.meta, url: route.reqUrl, hostname: window.location.host, route: route.route },
+                    prevRoute: {
+                        meta: prevRoute.meta,
+                        url: prevRoute.reqUrl,
+                        hostname: window.location.host,
+                        route: route.route,
+                    },
                     navigate: router.navigateToUrl,
                 });
             }
@@ -160,8 +172,13 @@ describe('TransitionHooksExecutor', () => {
 
             for (const hook of [hooks[0], hooks[1]]) {
                 sinon.assert.calledOnceWithExactly(hook, {
-                    route: { meta: route.meta, url: route.reqUrl, hostname: window.location.host },
-                    prevRoute: { meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.host },
+                    route: { meta: route.meta, url: route.reqUrl, hostname: window.location.host, route: route.route },
+                    prevRoute: {
+                        meta: prevRoute.meta,
+                        url: prevRoute.reqUrl,
+                        hostname: window.location.host,
+                        route: route.route,
+                    },
                     navigate: router.navigateToUrl,
                 });
             }
@@ -190,8 +207,13 @@ describe('TransitionHooksExecutor', () => {
 
             for (const hook of [hooks[0], hooks[1]]) {
                 sinon.assert.calledOnceWithExactly(hook, {
-                    route: { meta: route.meta, url: route.reqUrl, hostname: window.location.host },
-                    prevRoute: { meta: prevRoute.meta, url: prevRoute.reqUrl, hostname: window.location.host },
+                    route: { meta: route.meta, url: route.reqUrl, hostname: window.location.host, route: route.route },
+                    prevRoute: {
+                        meta: prevRoute.meta,
+                        url: prevRoute.reqUrl,
+                        hostname: window.location.host,
+                        route: route.route,
+                    },
                     navigate: router.navigateToUrl,
                 });
             }
