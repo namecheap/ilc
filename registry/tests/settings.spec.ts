@@ -9,7 +9,25 @@ const url = '/api/v1/settings';
 
 const cspValue = JSON.stringify({
     defaultSrc: ['https://test.com'],
+    connectSrc: ['https://connect.test.com'],
+    scriptSrc: ['https://scripts.test.com'],
+    styleSrc: ['https://styles.test.com'],
+    fontSrc: ['https://fonts.test.com'],
+    imgSrc: ['https://images.test.com'],
+    workerSrc: ['https://workers.test.com'],
+    frameSrc: ['https://frames.test.com'],
     reportUri: 'a/b',
+    mediaSrc: ['https://media.test.com'],
+    childSrc: ['https://child.test.com'],
+    formAction: ['https://form.test.com'],
+    manifestSrc: ['https://manifest.test.com'],
+    objectSrc: ['https://object.test.com'],
+    scriptSrcAttr: ['https://scriptattr.test.com'],
+    scriptSrcElem: ['https://scriptelem.test.com'],
+    baseUri: ['https://base.test.com'],
+    frameAncestors: ['https://ancestors.test.com'],
+    sandbox: ['allow-scripts'],
+    upgradeInsecureRequests: true,
 });
 
 describe(url, () => {
@@ -268,11 +286,6 @@ describe(url, () => {
         it('should return default setting value if setting supports domain override but not overridden for passed domain', async () => {
             const domainHelper = await createDomain();
             const domainId = domainHelper.getResponse().id;
-            const uniqueEntityPayload = {
-                domainId,
-                key: SettingKeys.CspConfig,
-                value: cspValue,
-            };
 
             try {
                 const queryFilter = encodeURIComponent(JSON.stringify({ domainName: 'test-settings.com' }));
@@ -537,9 +550,53 @@ describe(url, () => {
                     .put(urlJoin(url, SettingKeys.CspConfig))
                     .send({
                         key: SettingKeys.CspConfig,
+                        value: 'invalid',
+                    })
+                    .expect(422, '"value" failed custom validation because Invalid JSON');
+
+                chai.expect(response.body).to.deep.equal({});
+            } finally {
+                await req
+                    .put(urlJoin(url, SettingKeys.CspConfig))
+                    .send({
+                        key: SettingKeys.CspConfig,
+                        value: null,
+                    })
+                    .expect(200);
+            }
+        });
+
+        it(`should not update ${SettingKeys.CspConfig} if the value is not object`, async () => {
+            try {
+                const response = await req
+                    .put(urlJoin(url, SettingKeys.CspConfig))
+                    .send({
+                        key: SettingKeys.CspConfig,
                         value: 'true',
                     })
-                    .expect(422, '"value" contains an invalid value');
+                    .expect(422, '"value" failed custom validation because "value" must be of type object');
+
+                chai.expect(response.body).to.deep.equal({});
+            } finally {
+                await req
+                    .put(urlJoin(url, SettingKeys.CspConfig))
+                    .send({
+                        key: SettingKeys.CspConfig,
+                        value: null,
+                    })
+                    .expect(200);
+            }
+        });
+
+        it(`should not update ${SettingKeys.CspConfig} if the csp directive is not allowed`, async () => {
+            try {
+                const response = await req
+                    .put(urlJoin(url, SettingKeys.CspConfig))
+                    .send({
+                        key: SettingKeys.CspConfig,
+                        value: JSON.stringify({ invalid: ['https://test.com'], reportUri: 'a/b' }),
+                    })
+                    .expect(422, '"value" failed custom validation because "invalid" is not allowed');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
