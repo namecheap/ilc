@@ -12,6 +12,17 @@ module.exports = class CspBuilderService {
         workerSrc: 'worker-src',
         frameSrc: 'frame-src',
         reportUri: 'report-uri',
+        mediaSrc: 'media-src',
+        childSrc: 'child-src',
+        formAction: 'form-action',
+        manifestSrc: 'manifest-src',
+        objectSrc: 'object-src',
+        scriptSrcAttr: 'script-src-attr',
+        scriptSrcElem: 'script-src-elem',
+        baseUri: 'base-uri',
+        frameAncestors: 'frame-ancestors',
+        sandbox: 'sandbox',
+        upgradeInsecureRequests: 'upgrade-insecure-requests',
     };
 
     #reportingDirectives = [this.#cspDirectiveMap.reportUri];
@@ -55,13 +66,17 @@ module.exports = class CspBuilderService {
             .filter(this.#filterOutReportingDirectives.bind(this))
             .map((cspDirective) => {
                 const cspDirectiveName = this.#cspDirectiveMap[cspDirective];
-                let directiveValueArray = this.#cspJson[cspDirective];
+                const cspDirectiveValue = this.#cspJson[cspDirective];
 
-                if (this.#localEnv) {
-                    directiveValueArray = directiveValueArray.concat(this.#getLocalhosts());
+                if (cspDirectiveValue === true) {
+                    return cspDirectiveName;
                 }
 
-                return `${cspDirectiveName} ${directiveValueArray.join(this.#spaceSeparator)}`;
+                const cspDirectiveValueFinal = this.#localEnv
+                    ? cspDirectiveValue.concat(this.#getLocalhosts())
+                    : cspDirectiveValue;
+
+                return `${cspDirectiveName} ${cspDirectiveValueFinal.join(this.#spaceSeparator)}`;
             })
             .join(this.#semiColonSeparator);
 

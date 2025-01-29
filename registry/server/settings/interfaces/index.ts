@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import { cspSchema } from './cspSchema';
+import { joiErrorToResponse } from '../../util/helpers';
 
 export enum SettingKeys {
     BaseUrl = 'baseUrl',
@@ -157,13 +158,13 @@ const valueSchema = Joi.alternatives().conditional('key', {
                     try {
                         cspConfig = JSON.parse(value);
                     } catch (error) {
-                        return helpers.error('any.invalid');
+                        return helpers.error('any.custom', { error: { message: 'Invalid JSON' } });
                     }
 
                     const result = cspSchema.validate(cspConfig);
 
                     if (result.error) {
-                        return helpers.error('any.invalid');
+                        return helpers.error('any.custom', { error: { message: joiErrorToResponse(result.error) } });
                     }
 
                     return result.value;
