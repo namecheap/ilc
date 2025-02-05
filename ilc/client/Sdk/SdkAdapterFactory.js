@@ -10,7 +10,7 @@ export class SdkAdapterFactory {
     getSdkAdapter(appId) {
         return {
             appId,
-            intl: this.#i18n ? this.#i18n.getAdapter() : null,
+            intl: this.#i18n ? this.#i18n.getAdapter() : undefined,
             trigger404Page: (withCustomContent) => {
                 if (withCustomContent) {
                     return;
