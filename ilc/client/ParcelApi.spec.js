@@ -18,7 +18,7 @@ describe('ParcelApi', () => {
     const bundleLoader = {
         loadAppWithCss: sinon.stub(),
     };
-    const getAppSdkAdapter = () => ({ intl: null });
+    const getAppSdkAdapter = () => ({ intl: undefined });
     let registry;
 
     beforeEach(() => {
