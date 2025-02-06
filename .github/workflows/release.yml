@@ -1,84 +1,83 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+    release:
+        types: [published]
 
 jobs:
-  build:
+    build:
+        runs-on: ubuntu-latest
 
-    runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
 
-    steps:
-      - uses: actions/checkout@v1
+            - name: Docker registry auth
+              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
 
-      - name: Docker registry auth
-        run: echo "${{ secrets.DOCKER_HUB_TOKEN_NC }}" | docker login --username namecheaprnd --password-stdin
+            - name: Calculate tags
+              id: tags
+              run: |
+                  function isSemver() {
+                    echo "${1}" | grep -Eq '^refs/tags/v?([0-9]+)\.([0-9]+)\.([0-9]+)(-[a-zA-Z]+(\.[0-9]+)?)?$'
+                  }
 
-      - name: Calculate tags
-        id: tags
-        run: |
-          function isSemver() {
-            echo "${1}" | grep -Eq '^refs/tags/v?([0-9]+)\.([0-9]+)\.([0-9]+)(-[a-zA-Z]+(\.[0-9]+)?)?$'
-          }
+                  echo $GITHUB_REF
+                  if ! isSemver "${GITHUB_REF}"; then
+                    echo "Invalid tag name format. Use semver style. Ex: v1.2.3"
+                    exit 1
+                  fi
 
-          echo $GITHUB_REF
-          if ! isSemver "${GITHUB_REF}"; then
-            echo "Invalid tag name format. Use semver style. Ex: v1.2.3"
-            exit 1
-          fi
+                  DOCKER_TAGS=$(echo ${GITHUB_REF} | sed -e "s/refs\/tags\///g" | sed -E "s/v?([0-9]+)\.([0-9]+)\.([0-9]+)(-[a-zA-Z]+(\.[0-9]+)?)?/\1.\2.\3\4 \1.\2\4 \1\4/g")
 
-          DOCKER_TAGS=$(echo ${GITHUB_REF} | sed -e "s/refs\/tags\///g" | sed -E "s/v?([0-9]+)\.([0-9]+)\.([0-9]+)(-[a-zA-Z]+(\.[0-9]+)?)?/\1.\2.\3\4 \1.\2\4 \1\4/g")
+                  echo "Tags that will be used: $DOCKER_TAGS"
+                  echo ::set-output name=docker_tags::$DOCKER_TAGS
+                  echo ::set-output name=tag::$(echo $GITHUB_REF | cut -d / -f 3)
 
-          echo "Tags that will be used: $DOCKER_TAGS"
-          echo ::set-output name=docker_tags::$DOCKER_TAGS
-          echo ::set-output name=tag::$(echo $GITHUB_REF | cut -d / -f 3)
+            - name: Install regctl
+              run: |
+                  curl -L https://github.com/regclient/regclient/releases/download/v0.3.10/regctl-linux-amd64 > ./regctl
+                  chmod 755 ./regctl
 
-      - name: Install regctl
-        run: |
-          curl -L https://github.com/regclient/regclient/releases/download/v0.3.10/regctl-linux-amd64 > ./regctl
-          chmod 755 ./regctl
+            - name: Push images
+              run: |
+                  TAGS="${{ steps.tags.outputs.docker_tags }}"
 
-      - name: Push images
-        run: |
-          TAGS="${{ steps.tags.outputs.docker_tags }}"
+                  for i in ${TAGS//,/ }
+                  do
+                      ./regctl image copy namecheap/ilc:${GITHUB_SHA:0:7} namecheap/ilc:$i
+                      ./regctl image copy namecheap/ilc_registry:${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
+                  done
 
-          for i in ${TAGS//,/ }
-          do
-              ./regctl image copy namecheap/ilc:${GITHUB_SHA:0:7} namecheap/ilc:$i
-              ./regctl image copy namecheap/ilc_registry:${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
-          done
+            - name: Get release description
+              id: get_release
+              uses: octokit/request-action@v2.x
+              with:
+                  route: GET /repos/:repository/releases/tags/:tag_name
+                  repository: ${{ github.repository }}
+                  tag_name: ${{ steps.tags.outputs.tag }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get release description
-        id: get_release
-        uses: octokit/request-action@v2.x
-        with:
-          route: GET /repos/:repository/releases/tags/:tag_name
-          repository: ${{ github.repository }}
-          tag_name: ${{ steps.tags.outputs.tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Parse release info
+              id: parse_release
+              uses: gr2m/get-json-paths-action@v1.x
+              with:
+                  json: ${{ steps.get_release.outputs.data }}
+                  id: 'id'
+                  body: 'body'
 
-      - name: Parse release info
-        id: parse_release
-        uses: gr2m/get-json-paths-action@v1.x
-        with:
-          json: ${{ steps.get_release.outputs.data }}
-          id: "id"
-          body: "body"
+            - name: Update release description
+              uses: octokit/request-action@v2.x
+              with:
+                  route: PATCH /repos/:repository/releases/:release_id
+                  repository: ${{ github.repository }}
+                  release_id: ${{ steps.parse_release.outputs.id }}
+                  body: |
+                      |
+                      ${{ steps.parse_release.outputs.body }}
 
-      - name: Update release description
-        uses: octokit/request-action@v2.x
-        with:
-          route: PATCH /repos/:repository/releases/:release_id
-          repository: ${{ github.repository }}
-          release_id: ${{ steps.parse_release.outputs.id }}
-          body: |
-            |
-            ${{ steps.parse_release.outputs.body }}
-
-            **Docker images:**
-            - [namecheap/ilc](https://hub.docker.com/r/namecheap/ilc): `${{ steps.tags.outputs.docker_tags }}`
-            - [namecheap/ilc_registry](https://hub.docker.com/r/namecheap/ilc_registry): `${{ steps.tags.outputs.docker_tags }}`
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                      **Docker images:**
+                      - [namecheap/ilc](https://hub.docker.com/r/namecheap/ilc): `${{ steps.tags.outputs.docker_tags }}`
+                      - [namecheap/ilc_registry](https://hub.docker.com/r/namecheap/ilc_registry): `${{ steps.tags.outputs.docker_tags }}`
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
