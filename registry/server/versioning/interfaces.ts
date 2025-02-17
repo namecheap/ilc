@@ -1,3 +1,5 @@
+import { type Knex } from 'knex';
+
 export enum EntityTypes {
     apps = 'apps',
     routes = 'routes',
@@ -10,8 +12,10 @@ export enum EntityTypes {
     settings_domain_value = 'settings_domain_value',
 }
 
-export interface OperationConf {
+export interface OperationConfig {
     type: EntityTypes | keyof typeof EntityTypes;
+    trxProvider?: Knex.TransactionProvider;
+    trx?: Knex.Transaction;
     id?: string | number;
 }
 

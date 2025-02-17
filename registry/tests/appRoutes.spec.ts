@@ -286,8 +286,8 @@ describe(`Tests ${example.url}`, () => {
                     'Specified "orderPos" value already exists for routes with provided "domainId"',
                 );
             } finally {
-                routeId1 && (await req.delete(example.url + routeId1));
-                routeId2 && (await req.delete(example.url + routeId2));
+                routeId1 && (await req.delete(example.url + routeId1).expect(204));
+                routeId2 && (await req.delete(example.url + routeId2).expect(204));
             }
         });
 

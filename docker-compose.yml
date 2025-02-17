@@ -82,6 +82,7 @@ services:
             - '5432:5432'
         volumes:
             - postgres:/var/lib/postgresql/data
+            - .:/usr/src/ilc
         healthcheck:
             test: ['CMD-SHELL', "sh -c 'pg_isready -U root -d ilc'"]
             interval: 3s

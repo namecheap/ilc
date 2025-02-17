@@ -1,8 +1,9 @@
 import type { Knex } from 'knex';
 
-import versioningService, { OperationConf } from '../versioning/services/Versioning';
+import versioningService, { OperationConfig } from '../versioning/services/Versioning';
 import { Tables } from './structure';
 import { EntityTypes, VersionedRecord } from '../versioning/interfaces';
+import { User } from '../../typings/User';
 
 type ColumnDescriptor = Knex.ColumnDescriptor<{}, {}[]>;
 
@@ -26,8 +27,8 @@ interface SelectVersionedRows<TRecord extends {} = any, TResult = unknown> {
 
 export interface VersionedKnex<TRecord extends {} = any, TResult = any> extends Knex {
     versioning(
-        user: any,
-        conf: OperationConf,
+        user: User | undefined,
+        conf: OperationConfig,
         callback: (transaction: Knex.Transaction) => Promise<void | number>,
     ): Promise<number>;
 

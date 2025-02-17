@@ -1,3 +1,5 @@
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import http from 'http';
 import supertest from 'supertest';
 import app from '../server/app';
@@ -38,4 +40,5 @@ export function getServerAddress(server: http.Server): string {
     return `${address == '::' ? '127.0.0.1' : address}:${port}`;
 }
 
+chai.use(chaiAsPromised);
 export { expect } from 'chai';

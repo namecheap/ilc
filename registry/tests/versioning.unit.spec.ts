@@ -15,13 +15,13 @@ const testUser: User = Object.freeze({
 
 describe('Versioning Unit', () => {
     let db: VersionedKnex;
-    let versionSevice: Versioning;
+    let versionService: Versioning;
     before(async function () {
         this.timeout(10 * 1000);
 
         db = dbFactory();
-        versionSevice = new Versioning(versioningConfig);
-        versionSevice.setDb(db);
+        versionService = new Versioning(versioningConfig);
+        versionService.setDb(db);
 
         await db.migrate.latest({
             directory: path.join(__dirname, '../server/migrations'),
@@ -146,7 +146,7 @@ describe('Versioning Unit', () => {
                 await db(entityType).where({ name: entityId }).update(changeSetWithTheSameExistedData).transacting(trx);
             });
 
-            expect(changeId).to.be.undefined;
+            expect(changeId).to.be.null;
         });
 
         it('Should log entity deletion', async () => {
@@ -169,6 +169,58 @@ describe('Versioning Unit', () => {
             expect(changeData.data_after).to.be.null;
             expect(changeData.created_by).to.equal(testUser.identifier);
         });
+
+        it('should work with external transaction (commit)', async () => {
+            const entityId = '@portal/navbar';
+            const entityType = 'apps';
+            const changeSet = { kind: 'regular' };
+
+            const trxProvider = db.transactionProvider();
+            const changeId = await db.versioning(
+                testUser,
+                { type: entityType, id: entityId, trxProvider },
+                async (trx) => {
+                    await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
+                },
+            );
+            const trx = await trxProvider();
+            await trx.commit();
+
+            const changeData = await db('versioning').first().where('id', changeId);
+            expect(changeData.entity_type).to.equal(entityType);
+            expect(changeData.entity_id).to.equal(entityId);
+            expect(JSON.parse(changeData.data_after)).to.deep.eq(
+                _.merge(JSON.parse(changeData.data), { data: changeSet }),
+            );
+            expect(changeData.created_by).to.equal(testUser.identifier);
+        });
+        it('should work with external transaction (rollback)', async () => {
+            const entityId = '@portal/navbar';
+            const entityType = 'apps';
+            const changeSet = { kind: 'primary' };
+
+            const trxProvider = db.transactionProvider();
+            await db.versioning(testUser, { type: entityType, id: entityId, trxProvider }, async (trx) => {
+                await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
+            });
+            const trx = await trxProvider();
+            await trx.rollback();
+            const [row] = await db(entityType).select('*').where({ name: entityId });
+            expect(row.kind).equal('essential'); // default value
+        });
+        it('should work with external transaction (rollback throw)', async () => {
+            const entityId = '@portal/navbar';
+            const entityType = 'apps';
+            const changeSet = { kind: 'invalid' };
+
+            const trxProvider = db.transactionProvider();
+            await expect(
+                db.versioning(testUser, { type: entityType, id: entityId, trxProvider }, async (trx) => {
+                    await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
+                }),
+            ).eventually.rejectedWith('SQLITE_CONSTRAINT: CHECK constraint failed: kind');
+            await (await trxProvider()).rollback();
+        });
     });
 
     describe('revertOperation', () => {
@@ -185,7 +237,7 @@ describe('Versioning Unit', () => {
                     .transacting(trx);
             });
 
-            const revertChangeId = await versionSevice.revertOperation(testUser, changeId);
+            const revertChangeId = await versionService.revertOperation(testUser, changeId);
 
             const entityRow = await db(entityType).first().where('name', entityId);
             expect(entityRow).to.be.undefined;
@@ -210,7 +262,7 @@ describe('Versioning Unit', () => {
                 await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
             });
 
-            const revertChangeId = await versionSevice.revertOperation(testUser, changeId);
+            const revertChangeId = await versionService.revertOperation(testUser, changeId);
 
             const entityRowAfter = await db(entityType).first().where('name', entityId);
             expect(entityRowBefore).to.be.eql(entityRowAfter);
@@ -236,7 +288,7 @@ describe('Versioning Unit', () => {
 
             expect(await db(entityType).first().where('name', entityId)).to.be.undefined;
 
-            const revertChangeId = await versionSevice.revertOperation(testUser, changeId);
+            const revertChangeId = await versionService.revertOperation(testUser, changeId);
 
             const entityRowAfter = await db(entityType).first().where('name', entityId);
             expect(entityRowBefore).to.be.eql(entityRowAfter);

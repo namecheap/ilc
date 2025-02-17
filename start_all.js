@@ -2,6 +2,7 @@ const concurrently = require('concurrently');
 
 let runWithApps = true;
 let noWatch = false;
+let noSeed = false;
 
 const myCmd = process.argv.slice(2).join(' ').trim();
 if (myCmd.includes('--no-apps')) {
@@ -9,6 +10,9 @@ if (myCmd.includes('--no-apps')) {
 }
 if (myCmd.includes('--no-watch')) {
     noWatch = true;
+}
+if (myCmd.includes('--no-seed')) {
+    noSeed = true;
 }
 
 const commands = [
@@ -19,7 +23,7 @@ const commands = [
     },
     {
         cwd: 'registry',
-        command: `npm run migrate && npm run seed && npm run ${noWatch ? 'start' : 'dev'}`,
+        command: `npm run migrate ${noSeed ? '' : '&& npm run seed'} && npm run ${noWatch ? 'start' : 'dev'}`,
         name: 'registry',
     },
     {
