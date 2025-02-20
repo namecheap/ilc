@@ -79,7 +79,22 @@ export function parseJSON<T extends JSONValue>(value: unknown): T {
     }
 }
 
-export const stringifyJSON = _.curry((pathes: string[], data: any) =>
+interface StringifyJSON {
+    <T extends object, K extends keyof T>(
+        keys: K[],
+        obj: T,
+    ): Omit<T, K> & {
+        [P in K]: string;
+    };
+    <K extends string>(
+        keys: K[],
+    ): <T extends object>(
+        obj: T,
+    ) => Omit<T, K> & {
+        [P in K]: string;
+    };
+}
+export const stringifyJSON: StringifyJSON = _.curry((pathes: string[], data: any) =>
     _.reduce(
         (stringifiedData: any, path: string) =>
             _.cond([

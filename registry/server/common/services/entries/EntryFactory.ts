@@ -2,6 +2,7 @@ import { IncorrectEntryError } from './error/IncorrectEntryError';
 import { SharedLibEntry } from './SharedLibEntry';
 import { EntryError } from './error/EntryError';
 import { ApplicationEntry } from './ApplicationEntry';
+import db from '../../../db';
 
 export class EntryFactory {
     private static resourceIdentifiers = {
@@ -25,7 +26,7 @@ export class EntryFactory {
     }
 
     public static getAppInstance(identifier?: string) {
-        return new ApplicationEntry(identifier);
+        return new ApplicationEntry(db, identifier);
     }
 
     private static getEntityIdentifier(identifier: string, resourceIdentifiers: string) {

@@ -5,14 +5,18 @@ import { ValidationFqrnError } from './error/ValidationFqrnError';
 import { NotFoundSharedLibraryError } from './error/NotFoundSharedLibraryError';
 import { AssetsDiscoveryProcessor } from '../assets/AssetsDiscoveryProcessor';
 import { AssetsValidator } from '../assets/AssetsValidator';
-import { Entry } from './Entry';
+import { CommonOptions, Entry } from './Entry';
+import { User } from '../../../../typings/User';
 
 export class SharedLibEntry implements Entry {
     private entityName = 'shared_libs' as const;
 
     constructor(private identifier?: string) {}
+    upsert(entity: unknown, options: CommonOptions): Promise<unknown> {
+        throw new Error('Method not implemented.');
+    }
 
-    public async patch(params: unknown, { user }: { user: any }) {
+    public async patch(params: unknown, { user }: { user?: User }) {
         if (!this.identifier) {
             throw new ValidationFqrnError('Patch does not invoked because instance was initialized w/o identifier');
         }
@@ -45,7 +49,7 @@ export class SharedLibEntry implements Entry {
         return updatedSharedLib;
     }
 
-    public async create(sharedLibDTO: SharedLib, { user }: { user: any }) {
+    public async create(sharedLibDTO: SharedLib, { user }: { user?: User }) {
         const sharedLibraryManifest = await this.getManifest(sharedLibDTO.assetsDiscoveryUrl);
 
         const sharedLibEntity = {

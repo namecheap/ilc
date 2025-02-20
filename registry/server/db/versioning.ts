@@ -7,18 +7,31 @@ import { User } from '../../typings/User';
 
 type ColumnDescriptor = Knex.ColumnDescriptor<{}, {}[]>;
 
-interface SelectVersioned<TRecord extends {} = any, TResult = unknown> {
+interface SelectVersioned<TRecord extends {} = any, TResult = unknown[]> extends Knex.QueryInterface<TRecord, TResult> {
+    <TTable extends Knex.TableNames>(
+        table: TTable,
+        key: string,
+        entityType: EntityTypes,
+        columns: ColumnDescriptor[],
+    ): Knex.QueryBuilder<Knex.TableType<TTable>, VersionedRecord<Knex.ResolveTableType<Knex.TableType<TTable>>>[]>;
     <TResult2 = TResult>(
-        table: string,
+        table: Knex.TableDescriptor | Knex.AliasDict,
         key: string,
         entityType: EntityTypes,
         columns: ColumnDescriptor[],
     ): Knex.QueryBuilder<TRecord, VersionedRecord<TResult2>>;
 }
 
-interface SelectVersionedRows<TRecord extends {} = any, TResult = unknown> {
+interface SelectVersionedRows<TRecord extends {} = any, TResult = unknown[]>
+    extends Knex.QueryInterface<TRecord, TResult> {
+    <TTable extends Knex.TableNames>(
+        table: TTable,
+        key: string,
+        entityType: EntityTypes,
+        columns: ColumnDescriptor[],
+    ): Knex.QueryBuilder<Knex.TableType<TTable>, VersionedRecord<Knex.ResolveTableType<Knex.TableType<TTable>>>[]>;
     <TResult2 = TResult>(
-        table: string,
+        table: Knex.TableDescriptor | Knex.AliasDict,
         key: string,
         entityType: EntityTypes,
         columns: ColumnDescriptor[],
@@ -38,7 +51,7 @@ export interface VersionedKnex<TRecord extends {} = any, TResult = any> extends 
 }
 
 function selectVersionedRows(knex: VersionedKnex) {
-    return function (table: string, key: string, entityType: EntityTypes, columns: ColumnDescriptor[]) {
+    return function (table: Knex.TableNames, key: string, entityType: EntityTypes, columns: ColumnDescriptor[]) {
         return knex
             .leftJoin(
                 knex
@@ -57,7 +70,7 @@ function selectVersionedRows(knex: VersionedKnex) {
 }
 
 function selectVersionedRowsFrom(knex: VersionedKnex) {
-    return function (table: string, key: string, entityType: EntityTypes, columns: ColumnDescriptor[]) {
+    return function (table: Knex.TableNames, key: string, entityType: EntityTypes, columns: ColumnDescriptor[]) {
         return knex.selectVersionedRows(table, key, entityType, columns).from(table);
     };
 }

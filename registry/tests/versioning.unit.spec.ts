@@ -15,17 +15,21 @@ const testUser: User = Object.freeze({
 
 describe('Versioning Unit', () => {
     let db: VersionedKnex;
+    let reset: () => Promise<void>;
     let versionService: Versioning;
     before(async function () {
         this.timeout(10 * 1000);
 
-        db = dbFactory();
+        ({ db, reset } = dbFactory());
         versionService = new Versioning(versioningConfig);
         versionService.setDb(db);
 
         await db.migrate.latest({
             directory: path.join(__dirname, '../server/migrations'),
         });
+    });
+    after(async () => {
+        await reset();
     });
 
     beforeEach(async function () {
@@ -86,7 +90,7 @@ describe('Versioning Unit', () => {
             const entityData = {
                 orderPos: 999,
                 route: '/tst',
-                next: 0,
+                next: false,
                 templateName: null,
                 meta: JSON.stringify({ first: 'value' }),
                 domainId: null,
@@ -112,7 +116,7 @@ describe('Versioning Unit', () => {
             expect(changeData.data).to.be.null;
             expect(changeData.data_after).to.equal(
                 JSON.stringify({
-                    data: entityData,
+                    data: { ...entityData, next: 0 }, // SQLite does not support boolean
                     related: { [entityRelationType]: [entityRelationData] },
                 }),
             );
@@ -122,7 +126,7 @@ describe('Versioning Unit', () => {
         it('Should log entity modification', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSet = { kind: 'primary' };
+            const changeSet = { kind: 'primary' as const };
 
             const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
                 await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
@@ -140,7 +144,7 @@ describe('Versioning Unit', () => {
         it('Should NOT log entity modification which does not have actual changes', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSetWithTheSameExistedData = { kind: 'essential' };
+            const changeSetWithTheSameExistedData = { kind: 'essential' as const };
 
             const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
                 await db(entityType).where({ name: entityId }).update(changeSetWithTheSameExistedData).transacting(trx);
@@ -173,7 +177,7 @@ describe('Versioning Unit', () => {
         it('should work with external transaction (commit)', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSet = { kind: 'regular' };
+            const changeSet = { kind: 'regular' as const };
 
             const trxProvider = db.transactionProvider();
             const changeId = await db.versioning(
@@ -197,7 +201,7 @@ describe('Versioning Unit', () => {
         it('should work with external transaction (rollback)', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSet = { kind: 'primary' };
+            const changeSet = { kind: 'primary' as const };
 
             const trxProvider = db.transactionProvider();
             await db.versioning(testUser, { type: entityType, id: entityId, trxProvider }, async (trx) => {
@@ -211,7 +215,7 @@ describe('Versioning Unit', () => {
         it('should work with external transaction (rollback throw)', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSet = { kind: 'invalid' };
+            const changeSet = { kind: 'invalid' as any };
 
             const trxProvider = db.transactionProvider();
             await expect(
@@ -254,7 +258,7 @@ describe('Versioning Unit', () => {
         it('Should revert entity modification', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSet = { kind: 'primary' };
+            const changeSet = { kind: 'primary' as const };
 
             const entityRowBefore = await db(entityType).first().where('name', entityId);
 
