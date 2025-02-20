@@ -122,7 +122,7 @@ describe('Versioning Unit', () => {
         it('Should log entity modification', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSet = { kind: 'primary' };
+            const changeSet = { kind: 'primary' as const };
 
             const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
                 await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
@@ -140,7 +140,7 @@ describe('Versioning Unit', () => {
         it('Should NOT log entity modification which does not have actual changes', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSetWithTheSameExistedData = { kind: 'essential' };
+            const changeSetWithTheSameExistedData = { kind: 'essential' as const };
 
             const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
                 await db(entityType).where({ name: entityId }).update(changeSetWithTheSameExistedData).transacting(trx);
@@ -173,7 +173,7 @@ describe('Versioning Unit', () => {
         it('should work with external transaction (commit)', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSet = { kind: 'regular' };
+            const changeSet = { kind: 'regular' as const };
 
             const trxProvider = db.transactionProvider();
             const changeId = await db.versioning(
@@ -197,7 +197,7 @@ describe('Versioning Unit', () => {
         it('should work with external transaction (rollback)', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSet = { kind: 'primary' };
+            const changeSet = { kind: 'primary' as const };
 
             const trxProvider = db.transactionProvider();
             await db.versioning(testUser, { type: entityType, id: entityId, trxProvider }, async (trx) => {
@@ -211,7 +211,7 @@ describe('Versioning Unit', () => {
         it('should work with external transaction (rollback throw)', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSet = { kind: 'invalid' };
+            const changeSet = { kind: 'invalid' as any };
 
             const trxProvider = db.transactionProvider();
             await expect(
@@ -254,7 +254,7 @@ describe('Versioning Unit', () => {
         it('Should revert entity modification', async () => {
             const entityId = '@portal/navbar';
             const entityType = 'apps';
-            const changeSet = { kind: 'primary' };
+            const changeSet = { kind: 'primary' as const };
 
             const entityRowBefore = await db(entityType).first().where('name', entityId);
 

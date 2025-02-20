@@ -3,9 +3,9 @@ import { PaginatedResult } from '../../../typings/PaginatedResult';
 import db, { VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
-import { EntityTypes } from '../../versioning/interfaces';
-import App from '../interfaces';
 import { normalizeArray } from '../../util/normalizeArray';
+import { EntityTypes } from '../../versioning/interfaces';
+import { App } from '../interfaces';
 
 export interface AppsGetListFilters {
     q?: string;
@@ -24,7 +24,7 @@ export class AppsRepository {
 
     async getList(filters: AppsGetListFilters, options: AppsGetListOptions): Promise<PaginatedResult<App>> {
         const { db } = this;
-        const query = db.selectVersionedRowsFrom<App>(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]);
+        const query = db.selectVersionedRowsFrom(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]);
 
         this.addFilterByName(query, filters);
         this.addFilterByKind(query, filters);
