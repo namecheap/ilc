@@ -1,4 +1,4 @@
-import React, {Fragment} from 'react';
+import React, { Fragment } from 'react';
 import {
     Create,
     Edit,
@@ -21,7 +21,8 @@ import * as validators from '../validators';
 import Title from './Title';
 import { APP_KINDS_WITH_WRAPPER } from '../constants';
 
-const selectHasAssetsDiscoveryUrl = (formData) => formData.assetsDiscoveryUrl && formData.assetsDiscoveryUrl.length !== 0;
+const selectHasAssetsDiscoveryUrl = (formData) =>
+    formData.assetsDiscoveryUrl && formData.assetsDiscoveryUrl.length !== 0;
 const selectWarnMessageDueToAssetsDiscoveryUrl = (formData) => {
     if (!selectHasAssetsDiscoveryUrl(formData)) {
         return '';
@@ -45,32 +46,33 @@ const validateApp = (values) => {
     return errors;
 };
 
-const InputForm = ({mode = 'edit', ...props}) => {
+const InputForm = ({ mode = 'edit', ...props }) => {
     return (
         <TabbedForm initialValues={{ dependencies: [] }} {...props}>
             <FormTab label="Summary">
-                {mode === 'edit'
-                    ? <TextField source="name" />
-                    : <TextInput source="name" fullWidth validate={validators.required} />}
-                <SelectInput
-                    source="kind"
-                    choices={APP_KINDS_WITH_WRAPPER}
-                    validate={validators.required}
-                />
+                {mode === 'edit' ? (
+                    <TextField source="name" />
+                ) : (
+                    <TextInput source="name" fullWidth validate={validators.required} />
+                )}
+                <SelectInput source="kind" choices={APP_KINDS_WITH_WRAPPER} validate={validators.required} />
                 <ReferenceInput source="enforceDomain" reference="router_domains">
                     <SelectInput resettable optionText="domainName" />
                 </ReferenceInput>
                 <FormDataConsumer>
-                    {({ formData, ...rest }) => formData.kind !== 'wrapper' &&
-                        <ReferenceInput
-                            reference="app"
-                            source="wrappedWith"
-                            label="Wrapped with"
-                            filter={{kind: 'wrapper'}}
-                            allowEmpty {...rest}
-                        >
-                            <SelectInput optionText="name" />
-                        </ReferenceInput>
+                    {({ formData, ...rest }) =>
+                        formData.kind !== 'wrapper' && (
+                            <ReferenceInput
+                                reference="app"
+                                source="wrappedWith"
+                                label="Wrapped with"
+                                filter={{ kind: 'wrapper' }}
+                                allowEmpty
+                                {...rest}
+                            >
+                                <SelectInput optionText="name" />
+                            </ReferenceInput>
+                        )
                     }
                 </FormDataConsumer>
                 <JsonField
@@ -83,23 +85,54 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     source="adminNotes"
                     label="Admin notes (store here some information about the app, e.g. link to git repository, names of the app owners etc)."
                 />
+                <TextInput source="namespace" label="Namespace" />
             </FormTab>
             <FormTab label="Assets">
                 <FormDataConsumer>
-                    {({formData}) => {
+                    {({ formData }) => {
                         const hasAssetsDiscoveryUrl = selectHasAssetsDiscoveryUrl(formData);
                         const assetsDiscoveryUrlWarningText = selectWarnMessageDueToAssetsDiscoveryUrl(formData);
 
                         return (
                             <Fragment>
-                                <TextInput fullWidth resettable type="url" source="assetsDiscoveryUrl" helperText={assetsDiscoveryUrlWarningText} />
-                                <TextInput fullWidth resettable type="url" source="spaBundle" disabled={hasAssetsDiscoveryUrl} />
-                                <TextInput fullWidth resettable type="url" source="cssBundle" validate={validators.url} />
-                                <TextInput fullWidth resettable type="url" source="l10nManifest" validate={validators.url} />
+                                <TextInput
+                                    fullWidth
+                                    resettable
+                                    type="url"
+                                    source="assetsDiscoveryUrl"
+                                    helperText={assetsDiscoveryUrlWarningText}
+                                />
+                                <TextInput
+                                    fullWidth
+                                    resettable
+                                    type="url"
+                                    source="spaBundle"
+                                    disabled={hasAssetsDiscoveryUrl}
+                                />
+                                <TextInput
+                                    fullWidth
+                                    resettable
+                                    type="url"
+                                    source="cssBundle"
+                                    validate={validators.url}
+                                />
+                                <TextInput
+                                    fullWidth
+                                    resettable
+                                    type="url"
+                                    source="l10nManifest"
+                                    validate={validators.url}
+                                />
                                 <ArrayInput source="dependencies">
                                     <SimpleFormIterator>
                                         <TextInput fullWidth label="Name" source="key" validate={validators.required} />
-                                        <TextInput fullWidth label="URL" type="url" source="value" validate={[validators.required, validators.url]} />
+                                        <TextInput
+                                            fullWidth
+                                            label="URL"
+                                            type="url"
+                                            source="value"
+                                            validate={[validators.required, validators.url]}
+                                        />
                                     </SimpleFormIterator>
                                 </ArrayInput>
                             </Fragment>
@@ -116,7 +149,10 @@ const InputForm = ({mode = 'edit', ...props}) => {
                     <AutocompleteArrayInput />
                 </ReferenceArrayInput>
                 <JsonField source="props" label="Properties that will be passed to application" />
-                <JsonField source="ssrProps" label="Properties that will be added to main props at SSR request, allow to override certain values" />
+                <JsonField
+                    source="ssrProps"
+                    label="Properties that will be added to main props at SSR request, allow to override certain values"
+                />
             </FormTab>
         </TabbedForm>
     );

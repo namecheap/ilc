@@ -89,7 +89,7 @@ export class ApplicationEntry implements Entry {
         await this.db.versioning(user, { type: EntityTypes.apps, id: appEntity.name, trxProvider }, async (trx) => {
             await this.db(Tables.Apps)
                 .insert(this.stringifyEntityValues(appEntity))
-                .onConflict('name')
+                .onConflict(this.db.raw('(name, namespace) WHERE namespace IS NOT NULL'))
                 .merge()
                 .transacting(trx);
         });

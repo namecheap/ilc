@@ -12,14 +12,10 @@ function isString(value: unknown): value is string {
 export const request = async () => supertest(await app(false));
 export const requestWithAuth = async () => supertest(await app(true));
 
-let dbInstanceNum = 0;
 export function dbFactory() {
     const db = dbFactoryOrig({
         client: 'sqlite3',
-        connection: {
-            filename: `file:memdb${dbInstanceNum}?mode=memory`,
-            flags: ['OPEN_URI'],
-        },
+        connection: ':memory:',
         useNullAsDefault: true,
         pool: {
             afterCreate: (conn: any, done: Function) => {

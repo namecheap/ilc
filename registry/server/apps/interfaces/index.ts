@@ -23,6 +23,7 @@ export interface App {
     adminNotes?: string | null;
     enforceDomain?: number | null;
     l10nManifest?: string | null;
+    namespace?: string | null;
 }
 
 export interface AppSsr {
@@ -84,6 +85,7 @@ const commonApp = {
     enforceDomain: Joi.number().default(null),
     l10nManifest: Joi.string().max(255).default(null),
     versionId: Joi.string().strip(),
+    namespace: Joi.string(),
 };
 
 export const partialAppSchema = Joi.object<App>({

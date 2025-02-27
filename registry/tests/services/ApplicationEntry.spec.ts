@@ -11,6 +11,7 @@ const appPayload = {
     props: {
         a: 1,
     },
+    namespace: 'ns1',
 };
 
 const user: User = Object.freeze({
@@ -48,7 +49,7 @@ describe('ApplicationEntry', () => {
             });
         });
         it('should update item', async () => {
-            await db(Tables.Apps).insert({ name: '@portal/upsert2', kind: 'regular' });
+            await db(Tables.Apps).insert({ name: '@portal/upsert2', kind: 'regular', namespace: 'ns1' });
             const service = new ApplicationEntry(db);
             const trxProvider = db.transactionProvider();
             await service.upsert({ ...appPayload, name: '@portal/upsert2' }, { user, trxProvider });
@@ -64,7 +65,7 @@ describe('ApplicationEntry', () => {
             });
         });
         it('should cancel upsert', async () => {
-            await db(Tables.Apps).insert({ name: '@portal/upsert3', kind: 'regular' });
+            await db(Tables.Apps).insert({ name: '@portal/upsert3', kind: 'regular', namespace: 'ns1' });
             const service = new ApplicationEntry(db);
             const trxProvider = db.transactionProvider();
             await service.upsert({ ...appPayload, name: '@portal/upsert3', kind: 'primary' }, { user, trxProvider });
@@ -73,6 +74,27 @@ describe('ApplicationEntry', () => {
             const app = await db(Tables.Apps).first().where({ name: '@portal/upsert3' });
             expect(app).to.include({
                 name: '@portal/upsert3',
+                kind: 'regular',
+                props: null,
+                ssrProps: null,
+                ssr: null,
+            });
+        });
+        it('should throw on constraint fail', async () => {
+            await db(Tables.Apps).insert({ name: '@portal/upsert4', kind: 'regular', namespace: 'ns1' });
+            const service = new ApplicationEntry(db);
+            const trxProvider = db.transactionProvider();
+            await expect(
+                service.upsert(
+                    { ...appPayload, name: '@portal/upsert4', kind: 'primary', namespace: 'ns2' },
+                    { user, trxProvider },
+                ),
+            ).eventually.rejectedWith('UNIQUE constraint failed');
+            const trx = await trxProvider();
+            await trx.rollback();
+            const app = await db(Tables.Apps).first().where({ name: '@portal/upsert4' });
+            expect(app).to.include({
+                name: '@portal/upsert4',
                 kind: 'regular',
                 props: null,
                 ssrProps: null,
