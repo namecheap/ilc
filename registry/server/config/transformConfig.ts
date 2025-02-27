@@ -4,6 +4,8 @@ import { parseJSON } from '../common/services/json';
 import { appendDigest } from '../util/hmac';
 import { VersionedRecord } from '../versioning/interfaces';
 import RouterDomains from '../routerDomains/interfaces';
+import { AppRoute, AppRouteSlot } from '../appRoutes/interfaces';
+import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 
 type Dict = Record<string, any>;
 type TransformedApp = VersionedRecord<Omit<App, 'enforceDomain'>> & {
@@ -13,7 +15,7 @@ type TransformedApp = VersionedRecord<Omit<App, 'enforceDomain'>> & {
     ssrProps: Dict | null;
     enforceDomain?: string;
 };
-type ResponseApp = Pick<
+export type AppDto = Pick<
     TransformedApp,
     | 'kind'
     | 'ssr'
@@ -36,7 +38,7 @@ export function transformApps(
     apps: VersionedRecord<App>[],
     routerDomains: RouterDomains[],
     sharedProps: any[],
-): Record<string, ResponseApp> {
+): Record<string, AppDto> {
     return apps.reduce(
         (acc, app) => {
             const getDomainName = (domainId: number) => routerDomains.find((x) => x.id === domainId)?.domainName;
@@ -82,6 +84,79 @@ export function transformApps(
 
             return acc;
         },
-        {} as Record<string, ResponseApp>,
+        {} as Record<string, AppDto>,
+    );
+}
+
+type AppSlotDto = {
+    appName: string;
+    props: Record<string, any>;
+    kind: string;
+};
+export type AppRouteDto = {
+    routeId: number;
+    route?: string;
+    next: boolean;
+    template?: string;
+    specialRole?: string;
+    domain?: string;
+    orderPos?: number;
+    versionId: string;
+    meta: Record<string, any>;
+    slots: Record<string, AppSlotDto>;
+};
+
+function transformAppRouteSlot(dbRoute: VersionedRecord<AppRoute & AppRouteSlot>): AppSlotDto {
+    return {
+        appName: dbRoute.appName,
+        props: dbRoute.props !== null ? parseJSON(dbRoute.props) : {},
+        kind: dbRoute.kind!,
+    };
+}
+
+export function transformRoutes(
+    dbRoutes: VersionedRecord<AppRoute & AppRouteSlot>[],
+    routerDomains: RouterDomains[],
+): {
+    routes: AppRouteDto[];
+    specialRoutes: AppRouteDto[];
+} {
+    return dbRoutes.reduce(
+        (acc, dbRoute) => {
+            const transformedRoute = transformSpecialRoutesForConsumer(dbRoute);
+            const collection = transformedRoute.specialRole ? acc.specialRoutes : acc.routes;
+            const routeDto = collection.find(({ routeId }) => routeId === dbRoute.routeId);
+            if (routeDto) {
+                if (dbRoute.name !== null) {
+                    routeDto.slots[dbRoute.name] = transformAppRouteSlot(dbRoute);
+                }
+            } else {
+                const newAppRouteDto = {
+                    routeId: dbRoute.routeId ?? undefined,
+                    route: transformedRoute.route,
+                    next: !!transformedRoute.next,
+                    template: transformedRoute.templateName ?? undefined,
+                    specialRole: transformedRoute.specialRole,
+                    domain:
+                        transformedRoute.domainId === null
+                            ? undefined
+                            : routerDomains.find(({ id }) => id === transformedRoute.domainId)?.domainName,
+                    orderPos: transformedRoute.orderPos ?? undefined,
+                    versionId: appendDigest(dbRoute.versionId, 'route'),
+                    slots: {} as Record<string, AppSlotDto>,
+                    meta: parseJSON<Record<string, any>>(transformedRoute.meta),
+                };
+                if (dbRoute.name !== null) {
+                    newAppRouteDto.slots[dbRoute.name] = transformAppRouteSlot(dbRoute);
+                }
+                collection.push(newAppRouteDto);
+            }
+
+            return acc;
+        },
+        {
+            routes: [] as AppRouteDto[],
+            specialRoutes: [] as AppRouteDto[],
+        },
     );
 }

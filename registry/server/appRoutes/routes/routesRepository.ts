@@ -1,33 +1,72 @@
-import db from '../../db';
+import _ from 'lodash/fp';
+import { Knex } from 'knex';
+import db, { type VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
-import { EntityTypes } from '../../versioning/interfaces';
+import { EntityTypes, VersionedRecord, VersionRow } from '../../versioning/interfaces';
+import { AppRoute, AppRouteSlot, AppRouteSlotDto } from '../interfaces';
+import { extractInsertedId } from '../../util/db';
+import { prepareAppRouteToSave, prepareAppRouteSlotsToSave } from '../services/prepareAppRoute';
+import { User } from '../../../typings/User';
 
-export const getRoutesById = (appRouteId: number) => {
-    const query = db
-        .selectVersionedRows(Tables.Routes, 'id', EntityTypes.routes, [
-            'routes.id as _routeId',
-            'routes.*',
-            'route_slots.*',
-        ])
-        .from(Tables.Routes)
-        .leftJoin('route_slots', 'route_slots.routeId', 'routes.id');
-    return query.then((appRoutes) => {
-        return appRoutes.reduce((acc, appRoute) => {
-            appRoute.versionId = appendDigest(appRoute.versionId, 'route');
-            // "where" with alias doesn't work in MySql, and "having" without "groupBy" doesn't work in SQLite
-            // thats why filtering better to do here
-            if (appRoute._routeId === appRouteId) {
-                // if there are no slots - then we will receive "id" and "routeId" as "null", due to result of "leftJoin".
-                if (appRoute.routeId === null) {
-                    appRoute.routeId = appRoute._routeId;
+type AppRouteDto = VersionedRecord<Omit<AppRoute, 'id'>> & AppRouteSlot;
+
+export class RoutesRepository {
+    constructor(private readonly db: VersionedKnex) {}
+
+    public getRoutesById(appRouteId: number) {
+        type QueryResult = AppRouteDto & {
+            _routeId?: number;
+        };
+        const query = this.db
+            .selectVersionedRows<QueryResult>(Tables.Routes, 'id', EntityTypes.routes, [
+                'routes.id as _routeId',
+                'routes.*',
+                'route_slots.*',
+            ])
+            .from(Tables.Routes)
+            .leftJoin('route_slots', 'route_slots.routeId', 'routes.id');
+        return query.then((appRoutes) => {
+            return appRoutes.reduce((acc, appRoute) => {
+                appRoute.versionId = appendDigest(appRoute.versionId, 'route');
+                // "where" with alias doesn't work in MySql, and "having" without "groupBy" doesn't work in SQLite
+                // thats why filtering better to do here
+                if (appRoute._routeId === appRouteId) {
+                    // if there are no slots - then we will receive "id" and "routeId" as "null", due to result of "leftJoin".
+                    if (appRoute.routeId === null) {
+                        appRoute.routeId = appRoute._routeId;
+                    }
+                    delete appRoute._routeId;
+
+                    acc.push(appRoute);
                 }
-                delete appRoute._routeId;
 
-                acc.push(appRoute);
-            }
+                return acc;
+            }, [] as AppRouteDto[]);
+        });
+    }
 
-            return acc;
-        }, []);
-    });
-};
+    public async upsert(
+        appRoute: AppRoute,
+        appRouteSlots: Record<string, AppRouteSlotDto>,
+        user: User,
+        trxProvider: Knex.TransactionProvider,
+    ) {
+        await this.db.versioning(user, { type: EntityTypes.routes, trxProvider }, async (trx) => {
+            const result = await this.db(Tables.Routes)
+                .insert(prepareAppRouteToSave(appRoute), 'id')
+                .onConflict(this.db.raw('(route, namespace) WHERE namespace IS NOT NULL'))
+                .merge()
+                .transacting(trx);
+            const savedAppRouteId = extractInsertedId(result as { id: number }[]);
+            await this.db(Tables.RouteSlots).where('routeId', savedAppRouteId).delete().transacting(trx);
+            await this.db
+                .batchInsert(Tables.RouteSlots, prepareAppRouteSlotsToSave(appRouteSlots, savedAppRouteId))
+                .transacting(trx);
+            return extractInsertedId(result as { id: number }[]);
+        });
+    }
+}
+
+// TODO: implement factory and IoC Container
+export const routesRepository = new RoutesRepository(db);

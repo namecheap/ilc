@@ -9,6 +9,21 @@ const Joi = JoiDefault.defaults((schema) => {
     return schema.empty(null);
 });
 
+export interface AppRouteSlot {
+    id?: number;
+    routeId: number;
+    name: string;
+    appName: string;
+    props?: string | null;
+    kind?: string | null;
+}
+
+export interface AppRouteSlotDto {
+    appName: string;
+    props?: object;
+    kind?: 'primary' | 'essential' | 'regular' | null;
+}
+
 const commonAppRouteSlot = {
     name: Joi.string().trim().min(1).max(255),
     appName: appNameSchema.external(async (value) => {
@@ -37,15 +52,13 @@ export interface AppRoute {
     id?: number;
     orderPos?: number | null;
     route: string;
-    next: boolean;
+    next?: boolean;
     templateName?: string | null;
-    meta: object | string;
-    specialRole?: string;
+    meta?: object | string | null;
     domainId?: number | null;
     domainIdIdxble?: number | null;
+    namespace?: string | null;
 }
-
-export type AppRouteDto = Omit<AppRoute, 'next' | 'route'>;
 
 const commonAppRoute = {
     specialRole: Joi.string().valid('404'),
@@ -57,6 +70,7 @@ const commonAppRoute = {
     domainId: Joi.number().default(null),
     meta: Joi.object().default({}),
     versionId: Joi.string().strip(),
+    namespace: Joi.string(),
 };
 
 export const partialAppRouteSchema = Joi.object({
@@ -92,7 +106,7 @@ export const appRouteSchema = Joi.object({
             .orderBy('orderPos', 'desc');
 
         if (lastRoute) {
-            value.orderPos = parseInt(lastRoute.orderPos) + 10;
+            value.orderPos = lastRoute.orderPos ?? 0 + 10;
         } else {
             value.orderPos = 10;
         }

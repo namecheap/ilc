@@ -13,7 +13,7 @@
         "knex": "knex",
         "migrate": "dotenv -- knex --knexfile config/knexfile.ts migrate:latest",
         "migrate:make": "knex --knexfile config/knexfile.ts migrate:make",
-        "migrate:rollback": "knex --knexfile config/knexfile.ts migrate:rollback",
+        "migrate:rollback": "dotenv -- knex --knexfile config/knexfile.ts migrate:rollback",
         "seed": "dotenv -- knex --knexfile config/knexfile.ts seed:run",
         "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
         "test": "cross-env-shell DB_CLIENT=sqlite3 npm run reset && cross-env NODE_ENV=test NODE_CONFIG_ENV=sqlite-test mocha",

@@ -116,7 +116,7 @@ describe('Versioning Unit', () => {
             expect(changeData.data).to.be.null;
             expect(changeData.data_after).to.equal(
                 JSON.stringify({
-                    data: { ...entityData, next: 0 }, // SQLite does not support boolean
+                    data: { ...entityData, next: 0, namespace: null }, // SQLite does not support boolean
                     related: { [entityRelationType]: [entityRelationData] },
                 }),
             );
