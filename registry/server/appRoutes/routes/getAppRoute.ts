@@ -5,7 +5,7 @@ import validateRequestFactory from '../../common/services/validateRequest';
 import { prepareAppRouteToRespond } from '../services/prepareAppRoute';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForConsumer } from '../services/transformSpecialRoutes';
-import { routesRepository } from './routesRepository';
+import { routesRepository } from './RoutesRepository';
 
 type GetAppRouteRequestParams = {
     id: string;

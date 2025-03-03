@@ -4,6 +4,7 @@ import { appNameSchema } from '../../apps/interfaces';
 import db from '../../db';
 import { getJoiErr } from '../../util/helpers';
 import { templateNameSchema } from '../../templates/routes/validation';
+import { isPostgres } from '../../util/db';
 
 const Joi = JoiDefault.defaults((schema) => {
     return schema.empty(null);
@@ -60,6 +61,19 @@ export interface AppRoute {
     namespace?: string | null;
 }
 
+type AppRouteDto = {
+    specialRole?: string;
+    orderPos?: number;
+    route: string;
+    next: boolean;
+    templateName: string | null;
+    slots: Record<string, AppRouteSlotDto>;
+    domainId: number | null;
+    meta: Record<string, any>;
+    versionId: string;
+    namespace: string | null;
+};
+
 const commonAppRoute = {
     specialRole: Joi.string().valid('404'),
     orderPos: Joi.number(),
@@ -83,12 +97,12 @@ const conditionSpecialRole = {
     otherwise: Joi.required(),
 };
 
-export const appRouteSchema = Joi.object({
+export const appRouteSchema = Joi.object<AppRouteDto>({
     ...commonAppRoute,
     orderPos: commonAppRoute.orderPos.when('specialRole', {
         is: Joi.exist(),
         then: Joi.forbidden(),
-        otherwise: Joi.optional().default(null),
+        otherwise: Joi.optional(),
     }),
     route: commonAppRoute.route.when('specialRole', conditionSpecialRole),
     next: commonAppRoute.next.when('specialRole', {
@@ -96,7 +110,7 @@ export const appRouteSchema = Joi.object({
         then: Joi.forbidden(),
     }),
 }).external(async (value) => {
-    if (value.orderPos === null) {
+    if (value.orderPos === undefined && !isPostgres(db)) {
         const lastRoute = await db('routes')
             .first('orderPos')
             .where(function () {

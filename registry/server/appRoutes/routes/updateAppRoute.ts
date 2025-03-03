@@ -9,11 +9,10 @@ import {
     prepareAppRouteToRespond,
     prepareAppRouteToSave,
 } from '../services/prepareAppRoute';
-import { stringifyJSON } from '../../common/services/json';
 import { partialAppRouteSchema } from '../interfaces';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
-import { routesRepository } from './routesRepository';
+import { routesRepository } from './RoutesRepository';
 
 type UpdateAppRouteRequestParams = {
     id: string;

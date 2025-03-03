@@ -77,7 +77,7 @@ export class ApplicationEntry implements Entry {
     }
 
     public async upsert(params: unknown, { user, trxProvider }: CommonOptions): Promise<void> {
-        const appDto = await appSchema.validateAsync(params, {});
+        const appDto = await appSchema.validateAsync(params, { noDefaults: true, externals: true });
 
         const appManifest = await this.getManifest(appDto.assetsDiscoveryUrl);
 

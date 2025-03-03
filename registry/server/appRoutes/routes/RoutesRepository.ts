@@ -4,7 +4,7 @@ import db, { type VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes, VersionedRecord, VersionRow } from '../../versioning/interfaces';
-import { AppRoute, AppRouteSlot, AppRouteSlotDto } from '../interfaces';
+import { AppRoute, appRouteSchema, AppRouteSlot, AppRouteSlotDto, appRouteSlotSchema } from '../interfaces';
 import { extractInsertedId } from '../../util/db';
 import { prepareAppRouteToSave, prepareAppRouteSlotsToSave } from '../services/prepareAppRoute';
 import { User } from '../../../typings/User';
@@ -46,12 +46,12 @@ export class RoutesRepository {
         });
     }
 
-    public async upsert(
-        appRoute: AppRoute,
-        appRouteSlots: Record<string, AppRouteSlotDto>,
-        user: User,
-        trxProvider: Knex.TransactionProvider,
-    ) {
+    public async upsert(params: unknown, user: User, trxProvider: Knex.TransactionProvider) {
+        const { slots, ...appRoute } = await appRouteSchema.validateAsync(params, {
+            noDefaults: true,
+            externals: false,
+        });
+
         await this.db.versioning(user, { type: EntityTypes.routes, trxProvider }, async (trx) => {
             const result = await this.db(Tables.Routes)
                 .insert(prepareAppRouteToSave(appRoute), 'id')
@@ -61,7 +61,7 @@ export class RoutesRepository {
             const savedAppRouteId = extractInsertedId(result as { id: number }[]);
             await this.db(Tables.RouteSlots).where('routeId', savedAppRouteId).delete().transacting(trx);
             await this.db
-                .batchInsert(Tables.RouteSlots, prepareAppRouteSlotsToSave(appRouteSlots, savedAppRouteId))
+                .batchInsert(Tables.RouteSlots, prepareAppRouteSlotsToSave(slots, savedAppRouteId))
                 .transacting(trx);
             return extractInsertedId(result as { id: number }[]);
         });

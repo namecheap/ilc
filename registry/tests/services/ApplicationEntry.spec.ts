@@ -44,7 +44,7 @@ describe('ApplicationEntry', () => {
                 name: '@portal/upsert1',
                 kind: 'primary',
                 props: '{"a":1}',
-                ssrProps: '{}',
+                ssrProps: null,
                 ssr: null,
             });
         });
@@ -60,8 +60,30 @@ describe('ApplicationEntry', () => {
                 name: '@portal/upsert2',
                 kind: 'primary',
                 props: '{"a":1}',
-                ssrProps: '{}',
+                ssrProps: null,
                 ssr: null,
+            });
+        });
+        it('should not rewrite existing properties if not applied', async () => {
+            await db(Tables.Apps).insert({
+                name: '@portal/upsert6',
+                kind: 'regular',
+                namespace: 'ns1',
+                l10nManifest: 'existing',
+            });
+            const service = new ApplicationEntry(db);
+            const trxProvider = db.transactionProvider();
+            await service.upsert({ ...appPayload, name: '@portal/upsert6' }, { user, trxProvider });
+            const trx = await trxProvider();
+            await trx.commit();
+            const app = await db(Tables.Apps).first().where({ name: '@portal/upsert6' });
+            expect(app).to.deep.include({
+                name: '@portal/upsert6',
+                kind: 'primary',
+                props: '{"a":1}',
+                ssrProps: null,
+                ssr: null,
+                l10nManifest: 'existing',
             });
         });
         it('should cancel upsert', async () => {
@@ -79,6 +101,20 @@ describe('ApplicationEntry', () => {
                 ssrProps: null,
                 ssr: null,
             });
+        });
+        it('should throw on validation error', async () => {
+            const service = new ApplicationEntry(db);
+            const trxProvider = db.transactionProvider();
+            await expect(
+                service.upsert(
+                    { ...appPayload, name: '@portal/upsert4', kind: 'unknown', namespace: 'ns1' },
+                    { user, trxProvider },
+                ),
+            ).eventually.rejectedWith('"kind" must be one of [primary, essential, regular, wrapper]');
+            const trx = await trxProvider();
+            await trx.rollback();
+            const app = await db(Tables.Apps).first().where({ name: '@portal/upsert4' });
+            expect(app).to.undefined;
         });
         it('should throw on constraint fail', async () => {
             await db(Tables.Apps).insert({ name: '@portal/upsert4', kind: 'regular', namespace: 'ns1' });

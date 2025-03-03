@@ -36,6 +36,7 @@ export function transformSpecialRoutesForDB({ specialRole, ...appRouteData }: Co
 
     return {
         ...appRouteData,
+        orderPos: null,
         route: makeSpecialRoute(specialRole!),
     };
 }
