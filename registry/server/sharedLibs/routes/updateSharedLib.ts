@@ -3,7 +3,7 @@ import Joi from 'joi';
 
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import SharedLib, { sharedLibNameSchema, partialSharedLibSchema } from '../interfaces';
+import { sharedLibNameSchema, partialSharedLibSchema } from '../interfaces';
 import { EntryFactory } from '../../common/services/entries/EntryFactory';
 import { NotFoundFqrnError } from '../../common/services/entries/error/NotFoundFqrnError';
 import { ValidationFqrnError } from '../../common/services/entries/error/ValidationFqrnError';

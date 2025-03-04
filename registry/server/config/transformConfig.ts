@@ -6,6 +6,7 @@ import { VersionedRecord } from '../versioning/interfaces';
 import RouterDomains from '../routerDomains/interfaces';
 import { AppRoute, AppRouteSlot } from '../appRoutes/interfaces';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
+import { SharedLib } from '../sharedLibs/interfaces';
 
 type Dict = Record<string, any>;
 type TransformedApp = VersionedRecord<Omit<App, 'enforceDomain'>> & {
@@ -132,6 +133,8 @@ export function transformRoutes(
                 }
             } else {
                 const newAppRouteDto = {
+                    slots: {} as Record<string, AppSlotDto>,
+                    meta: transformedRoute.meta ? <Record<string, any>>transformedRoute.meta : {},
                     routeId: dbRoute.routeId ?? undefined,
                     route: transformedRoute.route,
                     next: !!transformedRoute.next,
@@ -143,8 +146,6 @@ export function transformRoutes(
                             : routerDomains.find(({ id }) => id === transformedRoute.domainId)?.domainName,
                     orderPos: transformedRoute.orderPos ?? undefined,
                     versionId: appendDigest(dbRoute.versionId, 'route'),
-                    slots: {} as Record<string, AppSlotDto>,
-                    meta: parseJSON<Record<string, any>>(transformedRoute.meta),
                 };
                 if (dbRoute.name !== null) {
                     newAppRouteDto.slots[dbRoute.name] = transformAppRouteSlot(dbRoute);
@@ -157,6 +158,32 @@ export function transformRoutes(
         {
             routes: [] as AppRouteDto[],
             specialRoutes: [] as AppRouteDto[],
+        },
+    );
+}
+
+type DynamicLibDto = {
+    spaBundle: string;
+    l10nManifest?: string | null;
+    versionId: string;
+};
+export function transformSharedLibs(sharedLibs: VersionedRecord<SharedLib>[]): {
+    sharedLibs: Record<string, string>;
+    dynamicLibs: Record<string, DynamicLibDto>;
+} {
+    return sharedLibs.reduce(
+        (acc, lib) => {
+            acc.sharedLibs[lib.name] = lib.spaBundle;
+            acc.dynamicLibs[lib.name] = {
+                spaBundle: lib.spaBundle,
+                l10nManifest: lib.l10nManifest,
+                versionId: appendDigest(lib.versionId, 'sharedLib'),
+            };
+            return acc;
+        },
+        {
+            sharedLibs: {} as Record<string, string>,
+            dynamicLibs: {} as Record<string, DynamicLibDto>,
         },
     );
 }

@@ -22,7 +22,7 @@ export class EntryFactory {
     }
 
     public static getSharedLibInstance(identifier?: string) {
-        return new SharedLibEntry(identifier);
+        return new SharedLibEntry(db, identifier);
     }
 
     public static getAppInstance(identifier?: string) {

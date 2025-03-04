@@ -6,7 +6,7 @@ import { Tables } from '../db/structure';
 import settingsService from '../settings/services/SettingsService';
 import { appendDigest } from '../util/hmac';
 import { EntityTypes } from '../versioning/interfaces';
-import { AppRouteDto, transformApps, transformRoutes } from './transformConfig';
+import { AppRouteDto, transformApps, transformRoutes, transformSharedLibs } from './transformConfig';
 
 const router = express.Router();
 
@@ -53,15 +53,10 @@ router.get('/', async (req, res) => {
 
     data.settings = settings;
 
-    data.sharedLibs = sharedLibs.reduce((acc, { name, spaBundle }) => {
-        acc[name] = spaBundle;
-        return acc;
-    }, {});
+    const { sharedLibs: sharedLibsDtos, dynamicLibs } = transformSharedLibs(sharedLibs);
 
-    data.dynamicLibs = sharedLibs.reduce((acc, { name, spaBundle, l10nManifest, versionId }) => {
-        acc[name] = { spaBundle, l10nManifest, versionId: appendDigest(versionId, 'sharedLib') };
-        return acc;
-    }, {});
+    data.sharedLibs = sharedLibsDtos;
+    data.dynamicLibs = dynamicLibs;
 
     return res.send(data);
 });

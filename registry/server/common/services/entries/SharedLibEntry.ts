@@ -1,20 +1,19 @@
-import db from '../../../db';
-import SharedLib from '../../../sharedLibs/interfaces';
-import { partialSharedLibSchema } from '../../../sharedLibs/interfaces';
-import { ValidationFqrnError } from './error/ValidationFqrnError';
-import { NotFoundSharedLibraryError } from './error/NotFoundSharedLibraryError';
+import { User } from '../../../../typings/User';
+import { type VersionedKnex } from '../../../db';
+import { Tables } from '../../../db/structure';
+import { partialSharedLibSchema, SharedLib, sharedLibSchema } from '../../../sharedLibs/interfaces';
+import { EntityTypes } from '../../../versioning/interfaces';
 import { AssetsDiscoveryProcessor } from '../assets/AssetsDiscoveryProcessor';
 import { AssetsValidator } from '../assets/AssetsValidator';
 import { CommonOptions, Entry } from './Entry';
-import { User } from '../../../../typings/User';
+import { NotFoundSharedLibraryError } from './error/NotFoundSharedLibraryError';
+import { ValidationFqrnError } from './error/ValidationFqrnError';
 
 export class SharedLibEntry implements Entry {
-    private entityName = 'shared_libs' as const;
-
-    constructor(private identifier?: string) {}
-    upsert(entity: unknown, options: CommonOptions): Promise<unknown> {
-        throw new Error('Method not implemented.');
-    }
+    constructor(
+        private readonly db: VersionedKnex,
+        private identifier?: string,
+    ) {}
 
     public async patch(params: unknown, { user }: { user?: User }) {
         if (!this.identifier) {
@@ -40,11 +39,11 @@ export class SharedLibEntry implements Entry {
             ...sharedLibraryManifest,
         };
 
-        await db.versioning(user, { type: this.entityName, id: this.identifier }, async (trx) => {
-            await db(this.entityName).where({ name: this.identifier }).update(sharedLibEntity).transacting(trx);
+        await this.db.versioning(user, { type: EntityTypes.shared_libs, id: this.identifier }, async (trx) => {
+            await this.db(Tables.SharedLibs).where({ name: this.identifier }).update(sharedLibEntity).transacting(trx);
         });
 
-        const [updatedSharedLib] = await db.select().from<SharedLib>(this.entityName).where('name', this.identifier);
+        const [updatedSharedLib] = await this.db(Tables.SharedLibs).select().where('name', this.identifier);
 
         return updatedSharedLib;
     }
@@ -57,16 +56,34 @@ export class SharedLibEntry implements Entry {
             ...sharedLibraryManifest,
         };
 
-        await db.versioning(user, { type: this.entityName, id: sharedLibEntity.name }, async (trx) => {
-            await db(this.entityName).insert(sharedLibEntity).transacting(trx);
+        await this.db.versioning(user, { type: EntityTypes.shared_libs, id: sharedLibEntity.name }, async (trx) => {
+            await this.db(Tables.SharedLibs).insert(sharedLibEntity).transacting(trx);
         });
 
-        const [savedSharedLib] = await db.select().from<SharedLib>(this.entityName).where('name', sharedLibEntity.name);
+        const [savedSharedLib] = await this.db(Tables.SharedLibs).select().where('name', sharedLibEntity.name);
 
         return savedSharedLib;
     }
+    public async upsert(entity: unknown, { user, trxProvider }: CommonOptions): Promise<void> {
+        const sharedLibDto = await sharedLibSchema.validateAsync(entity, { noDefaults: true });
 
-    private async getManifest(assetsDiscoveryUrl: string | undefined) {
+        const sharedLibManifest = await this.getManifest(sharedLibDto.assetsDiscoveryUrl);
+
+        const sharedLibEntity = {
+            ...sharedLibDto,
+            ...sharedLibManifest,
+        };
+
+        await this.db.versioning(
+            user,
+            { type: EntityTypes.shared_libs, id: sharedLibEntity.name, trxProvider },
+            async (trx) => {
+                await this.db(Tables.SharedLibs).insert(sharedLibEntity).onConflict('name').merge().transacting(trx);
+            },
+        );
+    }
+
+    private async getManifest(assetsDiscoveryUrl: string | null | undefined) {
         if (!assetsDiscoveryUrl) {
             return {};
         }
@@ -78,7 +95,7 @@ export class SharedLibEntry implements Entry {
     }
 
     private async verifyExistence(identifier: string) {
-        const countToUpdate = await db('shared_libs').where({
+        const countToUpdate = await this.db(Tables.SharedLibs).where({
             name: this.identifier,
         });
         if (countToUpdate.length === 0) {
