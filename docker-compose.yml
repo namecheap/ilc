@@ -1,4 +1,3 @@
-version: '2.4'
 services:
     registry:
         image: namecheap/ilc_registry:latest
@@ -6,28 +5,28 @@ services:
             - '4001:4001'
         environment:
             NODE_ENV: production
-            DB_CLIENT: mysql
-            # DB_CLIENT: pg
-            DB_HOST: mysql
-            # DB_HOST: postgres
+            # DB_CLIENT: mysql
+            DB_CLIENT: pg
+            # DB_HOST: mysql
+            DB_HOST: postgres
             DB_USER: root
             DB_PASSWORD: pwd
             DB_NAME: ilc
             DB_SEED: true
         depends_on:
-            mysql:
+            # mysql:
+            #     condition: service_healthy
+            postgres:
                 condition: service_healthy
-            # postgres:
-            #   condition: service_healthy
     registry_worker:
         image: namecheap/ilc_registry:latest
         command: ['npm', 'run', 'assetsdiscovery']
         environment:
             NODE_ENV: production
-            DB_CLIENT: mysql
-            # DB_CLIENT: pg
-            DB_HOST: mysql
-            # DB_HOST: postgres
+            # DB_CLIENT: mysql
+            DB_CLIENT: pg
+            # DB_HOST: mysql
+            DB_HOST: postgres
             DB_USER: root
             DB_PASSWORD: pwd
             DB_NAME: ilc

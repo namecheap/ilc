@@ -134,7 +134,7 @@ export function transformRoutes(
             } else {
                 const newAppRouteDto = {
                     slots: {} as Record<string, AppSlotDto>,
-                    meta: transformedRoute.meta ? <Record<string, any>>transformedRoute.meta : {},
+                    meta: (transformedRoute.meta ? parseJSON(transformedRoute.meta) : {}) as Record<string, any>,
                     routeId: dbRoute.routeId ?? undefined,
                     route: transformedRoute.route,
                     next: !!transformedRoute.next,
