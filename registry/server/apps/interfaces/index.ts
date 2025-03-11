@@ -6,20 +6,24 @@ const Joi = JoiDefault.defaults((schema) => {
     return schema.empty(null);
 });
 
-export default interface App {
+export interface App {
     name: string;
-    spaBundle: string;
-    cssBundle: string;
-    assetsDiscoveryUrl?: string;
-    dependencies?: string; // JSON({ [packageName: string]: string })
-    props?: string; // JSON({ [propName: string]: any })
-    ssrProps?: string; // JSON({ [propName: string]: any })
-    configSelector?: string; // JSON(string[])
-    ssr: string; // JSON({ src: string, timeout: number })
-    wrappedWith?: string;
-    discoveryMetadata?: string; // JSON({ [propName: string]: any })
-    adminNotes?: string;
-    l10nManifest?: string;
+    spaBundle?: string | null;
+    cssBundle?: string | null;
+    assetsDiscoveryUrl?: string | null;
+    assetsDiscoveryUpdatedAt?: number | null;
+    dependencies?: string | null; // JSON({ [packageName: string]: string })
+    props?: string | null; // JSON({ [propName: string]: any })
+    ssrProps?: string | null; // JSON({ [propName: string]: any })
+    configSelector?: string | string[] | null; // JSON(string[])
+    ssr?: string | null; // JSON({ src: string, timeout: number })
+    kind: 'primary' | 'regular' | 'essential' | 'wrapper';
+    wrappedWith?: string | null;
+    discoveryMetadata?: string | null; // JSON({ [propName: string]: any })
+    adminNotes?: string | null;
+    enforceDomain?: number | null;
+    l10nManifest?: string | null;
+    namespace?: string | null;
 }
 
 export interface AppSsr {
@@ -81,6 +85,7 @@ const commonApp = {
     enforceDomain: Joi.number().default(null),
     l10nManifest: Joi.string().max(255).default(null),
     versionId: Joi.string().strip(),
+    namespace: Joi.string(),
 };
 
 export const partialAppSchema = Joi.object<App>({

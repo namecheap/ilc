@@ -5,6 +5,7 @@ export async function up(knex: Knex): Promise<any> {
         .then(() => knex('routes').select())
         .then((rows) => {
             const promises = rows.map((row) => {
+                // @ts-expect-error no such field in recent version
                 if (!row.specialRole) {
                     return;
                 }
@@ -12,8 +13,10 @@ export async function up(knex: Knex): Promise<any> {
                 return knex('routes')
                     .where('id', row.id)
                     .update({
+                        // @ts-expect-error no such field in recent version
                         route: `special:${row.specialRole}`,
                         orderPos: null,
+                        // @ts-expect-error no such field in recent version
                         specialRole: null,
                     });
             });
@@ -37,6 +40,7 @@ export async function down(knex: Knex): Promise<any> {
                     .update({
                         route: '',
                         orderPos: --specialOrderPos,
+                        // @ts-expect-error no such field in recent version
                         specialRole: row.route.replace('special:', ''),
                     });
             });

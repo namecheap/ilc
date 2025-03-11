@@ -3,7 +3,7 @@ import db, { VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
-import SharedLib from '../interfaces';
+import { SharedLib } from '../interfaces';
 
 export interface SharedLibsGetListFilters {
     name?: string;

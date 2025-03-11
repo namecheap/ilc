@@ -1,13 +1,13 @@
 {
-  "compilerOptions": {
-    "outDir": "dist",
-    "module": "commonjs",
-    "target": "es6",
-    "allowJs": true,
-    "strict": true,
-    "sourceMap": true,
-    "esModuleInterop": true
-  },
-  "exclude": ["node_modules", "public"],
-  "include": ["**/*.ts", "**/*.js"]
+    "compilerOptions": {
+        "outDir": "dist",
+        "module": "commonjs",
+        "target": "es6",
+        "allowJs": true,
+        "strict": true,
+        "sourceMap": true,
+        "esModuleInterop": true
+    },
+    "exclude": ["node_modules", "public", "dist"],
+    "include": ["**/*.ts", "**/*.js"]
 }

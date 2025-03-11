@@ -1,15 +1,13 @@
 import { Request, Response } from 'express';
-import _ from 'lodash/fp';
 
-import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import { stringifyJSON } from '../../common/services/json';
-import { prepareAppRouteToSave } from '../services/prepareAppRoute';
-import { appRouteSchema } from '../interfaces';
-import { retrieveAppRouteFromDB } from './getAppRoute';
-import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
-import { defined, getJoiErr, joiErrorToResponse } from '../../util/helpers';
+import db from '../../db';
 import { extractInsertedId, handleForeignConstraintError } from '../../util/db';
+import { defined, getJoiErr, joiErrorToResponse } from '../../util/helpers';
+import { appRouteSchema } from '../interfaces';
+import { prepareAppRouteSlotsToSave, prepareAppRouteToSave } from '../services/prepareAppRoute';
+import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
+import { retrieveAppRouteFromDB } from './getAppRoute';
 
 const validateRequestBeforeCreateAppRoute = validateRequestFactory([
     {
@@ -48,25 +46,10 @@ const createAppRoute = async (req: Request, res: Response) => {
     try {
         await db.versioning(req.user, { type: 'routes' }, async (transaction) => {
             const result = await db('routes').insert(prepareAppRouteToSave(appRoute), 'id').transacting(transaction);
-            savedAppRouteId = extractInsertedId(result);
+            savedAppRouteId = extractInsertedId(result as { id: number }[]);
 
             await db
-                .batchInsert(
-                    'route_slots',
-                    _.compose(
-                        _.map((appRouteSlotName) =>
-                            _.compose(
-                                stringifyJSON(['props']),
-                                _.assign({
-                                    name: appRouteSlotName,
-                                    routeId: savedAppRouteId,
-                                }),
-                                _.get(appRouteSlotName),
-                            )(appRouteSlots),
-                        ),
-                        _.keys,
-                    )(appRouteSlots),
-                )
+                .batchInsert('route_slots', prepareAppRouteSlotsToSave(appRouteSlots, savedAppRouteId))
                 .transacting(transaction);
 
             return savedAppRouteId;

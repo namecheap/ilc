@@ -1,18 +1,21 @@
-import db from '../../../db';
-import { ValidationFqrnError } from './error/ValidationFqrnError';
+import { App, appSchema, partialAppSchema } from '../../../apps/interfaces';
+import { VersionedKnex } from '../../../db';
+import { Tables } from '../../../db/structure';
+import { EntityTypes } from '../../../versioning/interfaces';
 import { AssetsDiscoveryProcessor } from '../assets/AssetsDiscoveryProcessor';
 import { AssetsValidator } from '../assets/AssetsValidator';
-import App, { partialAppSchema } from '../../../apps/interfaces';
-import { Entry } from './Entry';
 import { stringifyJSON } from '../json';
+import { CommonOptions, Entry } from './Entry';
 import { NotFoundApplicationError } from './error/NotFoundApplicationError';
+import { ValidationFqrnError } from './error/ValidationFqrnError';
 
 export class ApplicationEntry implements Entry {
-    private entityName = 'apps' as const;
+    constructor(
+        private readonly db: VersionedKnex,
+        private identifier?: string,
+    ) {}
 
-    constructor(private identifier?: string) {}
-
-    public async patch(params: unknown, { user }: { user: any }) {
+    public async patch(params: unknown, { user }: CommonOptions): Promise<App> {
         if (!this.identifier) {
             throw new ValidationFqrnError('Patch does not invoked because instance was initialized w/o identifier');
         }
@@ -37,26 +40,26 @@ export class ApplicationEntry implements Entry {
             ...appManifest,
         };
 
-        await db.versioning(user, { type: this.entityName, id: this.identifier }, async (trx) => {
-            await db(this.entityName)
+        await this.db.versioning(user, { type: EntityTypes.apps, id: this.identifier }, async (trx) => {
+            await this.db(Tables.Apps)
                 .where({ name: this.identifier })
                 .update(this.stringifyEntityValues(appEntity))
                 .transacting(trx);
         });
 
-        const [updatedApp] = await db.select().from<App>(this.entityName).where('name', this.identifier);
+        const [updatedApp] = await this.db.select().from(Tables.Apps).where('name', this.identifier);
 
         return updatedApp;
     }
 
-    private stringifyEntityValues(object: Record<string, any>) {
+    private stringifyEntityValues<T extends Partial<App>>(object: T) {
         return stringifyJSON(
             ['dependencies', 'props', 'ssrProps', 'ssr', 'configSelector', 'discoveryMetadata'],
             object,
         );
     }
 
-    public async create(appDTO: App, { user }: { user: any }) {
+    public async create(appDTO: App, { user }: CommonOptions) {
         const appManifest = await this.getManifest(appDTO.assetsDiscoveryUrl);
 
         const appEntity = {
@@ -64,13 +67,32 @@ export class ApplicationEntry implements Entry {
             ...appManifest,
         };
 
-        await db.versioning(user, { type: 'apps', id: appEntity.name }, async (trx) => {
-            await db('apps').insert(this.stringifyEntityValues(appEntity)).transacting(trx);
+        await this.db.versioning(user, { type: EntityTypes.apps, id: appEntity.name }, async (trx) => {
+            await this.db(Tables.Apps).insert(this.stringifyEntityValues(appEntity)).transacting(trx);
         });
 
-        const [savedApp] = await db.select().from<App>(this.entityName).where('name', appEntity.name);
+        const [savedApp] = await this.db.select().from(Tables.Apps).where('name', appEntity.name);
 
         return savedApp;
+    }
+
+    public async upsert(params: unknown, { user, trxProvider }: CommonOptions): Promise<void> {
+        const appDto = await appSchema.validateAsync(params, { noDefaults: true, externals: true });
+
+        const appManifest = await this.getManifest(appDto.assetsDiscoveryUrl);
+
+        const appEntity = {
+            ...appDto,
+            ...appManifest,
+        };
+
+        await this.db.versioning(user, { type: EntityTypes.apps, id: appEntity.name, trxProvider }, async (trx) => {
+            await this.db(Tables.Apps)
+                .insert(this.stringifyEntityValues(appEntity))
+                .onConflict(this.db.raw('(name, namespace) WHERE namespace IS NOT NULL'))
+                .merge()
+                .transacting(trx);
+        });
     }
 
     private cleanComplexDefaultKeys(appDTO: Omit<App, 'name'>, params: unknown) {
@@ -81,7 +103,7 @@ export class ApplicationEntry implements Entry {
                 const typedKey = key as keyof Omit<App, 'name'>;
 
                 if (typeof assertedParams[typedKey] !== 'undefined') {
-                    partialApp[typedKey] = appDTO[typedKey];
+                    partialApp[typedKey] = appDTO[typedKey] as any;
                 }
 
                 return partialApp;
@@ -91,7 +113,7 @@ export class ApplicationEntry implements Entry {
         return appDTO;
     }
 
-    private async getManifest(assetsDiscoveryUrl: string | undefined) {
+    private async getManifest(assetsDiscoveryUrl: string | undefined | null) {
         if (!assetsDiscoveryUrl) {
             return {};
         }
@@ -103,7 +125,7 @@ export class ApplicationEntry implements Entry {
     }
 
     private async verifyExistence(identifier: string) {
-        const countToUpdate = await db(this.entityName).where({
+        const countToUpdate = await this.db(Tables.Apps).where({
             name: this.identifier,
         });
         if (countToUpdate.length === 0) {

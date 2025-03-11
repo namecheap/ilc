@@ -4,12 +4,15 @@ import _ from 'lodash/fp';
 
 import db from '../../db';
 import validateRequestFactory from '../../common/services/validateRequest';
-import { prepareAppRouteToRespond, prepareAppRouteToSave } from '../services/prepareAppRoute';
-import { stringifyJSON } from '../../common/services/json';
+import {
+    prepareAppRouteSlotsToSave,
+    prepareAppRouteToRespond,
+    prepareAppRouteToSave,
+} from '../services/prepareAppRoute';
 import { partialAppRouteSchema } from '../interfaces';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
-import { getRoutesById } from './routesRepository';
+import { routesService, RoutesService } from './RoutesService';
 
 type UpdateAppRouteRequestParams = {
     id: string;
@@ -45,26 +48,11 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
 
         await db('route_slots').where('routeId', appRouteId).delete().transacting(transaction);
         await db
-            .batchInsert(
-                'route_slots',
-                _.compose(
-                    _.map((appRouteSlotName) =>
-                        _.compose(
-                            stringifyJSON(['props']),
-                            _.assign({
-                                name: appRouteSlotName,
-                                routeId: appRouteId,
-                            }),
-                            _.get(appRouteSlotName),
-                        )(appRouteSlots),
-                    ),
-                    _.keys,
-                )(appRouteSlots),
-            )
+            .batchInsert('route_slots', prepareAppRouteSlotsToSave(appRouteSlots, appRouteId))
             .transacting(transaction);
     });
 
-    const updatedAppRoute = await getRoutesById(appRouteId);
+    const updatedAppRoute = await routesService.getRoutesById(appRouteId);
 
     res.status(200).send(prepareAppRouteToRespond(updatedAppRoute));
 };
