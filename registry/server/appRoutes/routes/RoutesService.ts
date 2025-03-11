@@ -11,7 +11,7 @@ import { User } from '../../../typings/User';
 
 type AppRouteDto = VersionedRecord<Omit<AppRoute, 'id'>> & AppRouteSlot;
 
-export class RoutesRepository {
+export class RoutesService {
     constructor(private readonly db: VersionedKnex) {}
 
     public getRoutesById(appRouteId: number) {
@@ -69,4 +69,4 @@ export class RoutesRepository {
 }
 
 // TODO: implement factory and IoC Container
-export const routesRepository = new RoutesRepository(db);
+export const routesService = new RoutesService(db);

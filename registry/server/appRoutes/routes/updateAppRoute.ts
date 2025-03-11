@@ -12,7 +12,7 @@ import {
 import { partialAppRouteSchema } from '../interfaces';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
-import { routesRepository } from './RoutesRepository';
+import { routesService, RoutesService } from './RoutesService';
 
 type UpdateAppRouteRequestParams = {
     id: string;
@@ -52,7 +52,7 @@ const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Re
             .transacting(transaction);
     });
 
-    const updatedAppRoute = await routesRepository.getRoutesById(appRouteId);
+    const updatedAppRoute = await routesService.getRoutesById(appRouteId);
 
     res.status(200).send(prepareAppRouteToRespond(updatedAppRoute));
 };

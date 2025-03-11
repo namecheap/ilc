@@ -2,7 +2,7 @@ import path from 'path';
 import { VersionedKnex } from '../../server/db';
 import { User } from '../../typings/User';
 import { dbFactory, expect } from '../common';
-import { RoutesRepository } from '../../server/appRoutes/routes/RoutesRepository';
+import { RoutesService } from '../../server/appRoutes/routes/RoutesService';
 import { Tables } from '../../server/db/structure';
 
 const user: User = Object.freeze({
@@ -29,7 +29,7 @@ const appRoute = {
     },
 };
 
-describe('RoutesRepository', () => {
+describe('RoutesService', () => {
     let db: VersionedKnex;
     let reset: () => Promise<void>;
     before(async () => {
@@ -45,7 +45,7 @@ describe('RoutesRepository', () => {
     });
     describe('upsert', () => {
         it('should create item', async () => {
-            const service = new RoutesRepository(db);
+            const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
             await service.upsert(appRoute, user, trxProvider);
             const trx = await trxProvider();
@@ -74,7 +74,7 @@ describe('RoutesRepository', () => {
                 namespace: 'ns1',
                 orderPos: 2,
             });
-            const service = new RoutesRepository(db);
+            const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
             await service.upsert({ ...appRoute, route: '/upsert2', namespace: 'ns1', orderPos: 22 }, user, trxProvider);
             const trx = await trxProvider();
@@ -104,7 +104,7 @@ describe('RoutesRepository', () => {
                 meta: '{"e":1}',
                 orderPos: 6,
             });
-            const service = new RoutesRepository(db);
+            const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
             const { meta, ...rest } = appRoute;
             await service.upsert({ ...rest, route: '/upsert6', namespace: 'ns1', orderPos: 6 }, user, trxProvider);
@@ -121,7 +121,7 @@ describe('RoutesRepository', () => {
         });
         it('should cancel upsert', async () => {
             await db(Tables.Routes).insert({ route: '/upsert3', namespace: 'ns1', orderPos: 3 });
-            const service = new RoutesRepository(db);
+            const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
             await service.upsert(
                 {
@@ -157,7 +157,7 @@ describe('RoutesRepository', () => {
         });
         it('should throw on constraint fail', async () => {
             await db(Tables.Routes).insert({ route: '/upsert4', namespace: 'ns1', orderPos: 4 });
-            const service = new RoutesRepository(db);
+            const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
             await expect(
                 service.upsert({ ...appRoute, route: '/upsert4', namespace: 'ns1', orderPos: 1 }, user, trxProvider),
@@ -178,7 +178,7 @@ describe('RoutesRepository', () => {
             expect(slots).to.have.length(0);
         });
         it('should throw on validation error', async () => {
-            const service = new RoutesRepository(db);
+            const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
             await expect(
                 service.upsert(
@@ -195,7 +195,7 @@ describe('RoutesRepository', () => {
             expect(slots).to.have.length(0);
         });
         it('should throw on validation error', async () => {
-            const service = new RoutesRepository(db);
+            const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
             await expect(
                 service.upsert(
@@ -221,7 +221,7 @@ describe('RoutesRepository', () => {
                 kind: 'regular',
             });
 
-            const service = new RoutesRepository(db);
+            const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
             await service.upsert({ ...appRoute, route: '/upsert5', namespace: 'ns2', orderPos: 55 }, user, trxProvider);
             const trx = await trxProvider();

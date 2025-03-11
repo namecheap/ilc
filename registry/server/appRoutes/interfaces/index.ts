@@ -97,6 +97,8 @@ const conditionSpecialRole = {
     otherwise: Joi.required(),
 };
 
+const manualOrderPosIncrement = !isPostgres(db);
+
 export const appRouteSchema = Joi.object<AppRouteDto>({
     ...commonAppRoute,
     orderPos: commonAppRoute.orderPos.when('specialRole', {
@@ -110,7 +112,7 @@ export const appRouteSchema = Joi.object<AppRouteDto>({
         then: Joi.forbidden(),
     }),
 }).external(async (value) => {
-    if (value.orderPos === undefined && !isPostgres(db)) {
+    if (value.orderPos === undefined && manualOrderPosIncrement) {
         const lastRoute = await db('routes')
             .first('orderPos')
             .where(function () {
