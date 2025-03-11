@@ -3,7 +3,7 @@ import { CacheResult, CacheStorage } from '../../common/types/CacheWrapper';
 export class BrowserCacheStorage implements CacheStorage {
     constructor(private readonly storage: Storage) {}
 
-    getItem<T>(key: string): CacheResult<T> {
+    getItem<T>(key: string): CacheResult<T> | null {
         const cache = this.storage.getItem(key);
         return cache ? JSON.parse(cache) : null;
     }
