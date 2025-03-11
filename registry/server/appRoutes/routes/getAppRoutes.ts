@@ -1,13 +1,12 @@
 import { Request, Response } from 'express';
-import App from '../../apps/interfaces';
 
 import db from '../../db';
-import { AppRoute } from '../interfaces';
-import { prepareAppRoutesToRespond } from '../services/prepareAppRoute';
-import { transformSpecialRoutesForConsumer, SPECIAL_PREFIX } from '../services/transformSpecialRoutes';
 import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
+import { AppRoute } from '../interfaces';
+import { prepareAppRoutesToRespond } from '../services/prepareAppRoute';
+import { SPECIAL_PREFIX, transformSpecialRoutesForConsumer } from '../services/transformSpecialRoutes';
 
 const getAppRoutes = async (req: Request, res: Response) => {
     const filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};

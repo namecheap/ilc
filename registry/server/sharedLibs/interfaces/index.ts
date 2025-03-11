@@ -4,12 +4,13 @@ const Joi = JoiDefault.defaults((schema) => {
     return schema.empty(null);
 });
 
-export default interface SharedLib {
+export interface SharedLib {
     name: string;
     spaBundle: string;
-    assetsDiscoveryUrl?: string;
-    adminNotes?: string;
-    l10nManifest?: string;
+    assetsDiscoveryUrl?: string | null;
+    assetsDiscoveryUpdatedAt?: number | null;
+    adminNotes?: string | null;
+    l10nManifest?: string | null;
 }
 
 export const sharedLibNameSchema = Joi.string().trim().min(1);

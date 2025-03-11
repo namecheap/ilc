@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 
-import validateRequestFactory from '../../common/services/validateRequest';
-import preProcessResponse from '../../common/services/preProcessResponse';
-import App, { appSchema } from '../interfaces';
-import { EntryFactory } from '../../common/services/entries/EntryFactory';
 import Joi from 'joi';
-import { joiErrorToResponse } from '../../util/helpers';
 import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';
+import { EntryFactory } from '../../common/services/entries/EntryFactory';
+import preProcessResponse from '../../common/services/preProcessResponse';
+import validateRequestFactory from '../../common/services/validateRequest';
+import { joiErrorToResponse } from '../../util/helpers';
+import { App, appSchema } from '../interfaces';
 
 const validateRequestBeforeCreateApp = validateRequestFactory([
     {

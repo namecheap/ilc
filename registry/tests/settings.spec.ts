@@ -49,7 +49,7 @@ describe(url, () => {
                 },
             };
 
-            await req.post(template500Payload.url).send(template500Payload.payload);
+            await req.post(template500Payload.url).send(template500Payload.payload).expect(200);
 
             const payload = {
                 url: '/api/v1/router_domains/',
@@ -59,15 +59,15 @@ describe(url, () => {
                 },
             };
 
-            const domainResponse = await req.post(payload.url).send(payload.correct);
+            const domainResponse = await req.post(payload.url).send(payload.correct).expect(200);
 
             const domainId = domainResponse.body.id;
 
             return {
                 getResponse: () => ({ id: domainId }),
                 destory: async () => {
-                    await req.delete(`${payload.url}${domainId}`);
-                    await req.delete(template500Payload.url + template500Payload.payload.name);
+                    await req.delete(`${payload.url}${domainId}`).expect(204);
+                    await req.delete(template500Payload.url + template500Payload.payload.name).expect(204);
                 },
             };
         };

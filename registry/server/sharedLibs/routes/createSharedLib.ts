@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import SharedLib, { sharedLibSchema } from '../interfaces';
+import { SharedLib, sharedLibSchema } from '../interfaces';
 import { EntryFactory } from '../../common/services/entries/EntryFactory';
 import Joi from 'joi';
 import { joiErrorToResponse } from '../../util/helpers';

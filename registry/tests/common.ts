@@ -1,7 +1,9 @@
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import http from 'http';
 import supertest from 'supertest';
 import app from '../server/app';
-import { dbFactory as dbFactoryOrig } from '../server/db';
+import { dbFactory as dbFactoryOrig, knexConfig } from '../server/db';
 
 function isString(value: unknown): value is string {
     return typeof value === 'string';
@@ -11,7 +13,7 @@ export const request = async () => supertest(await app(false));
 export const requestWithAuth = async () => supertest(await app(true));
 
 export function dbFactory() {
-    return dbFactoryOrig({
+    const db = dbFactoryOrig({
         client: 'sqlite3',
         connection: ':memory:',
         useNullAsDefault: true,
@@ -21,6 +23,14 @@ export function dbFactory() {
             },
         },
     });
+
+    return {
+        db,
+        reset: async () => {
+            await db.destroy();
+            dbFactoryOrig(knexConfig); // reset Knex instances singletone, otherwise test continue to use old instace
+        },
+    };
 }
 
 export function getServerAddress(server: http.Server): string {
@@ -38,4 +48,5 @@ export function getServerAddress(server: http.Server): string {
     return `${address == '::' ? '127.0.0.1' : address}:${port}`;
 }
 
+chai.use(chaiAsPromised);
 export { expect } from 'chai';

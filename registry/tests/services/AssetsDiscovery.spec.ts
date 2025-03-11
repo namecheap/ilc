@@ -30,6 +30,7 @@ describe('AssetsDiscovery', () => {
             spaBundle: 'oldBundle.js',
             cssBundle: 'oldStyle.css',
             assetsDiscoveryUpdatedAt: null,
+            kind: 'regular',
         });
 
         assetsDiscovery.start(200);
@@ -37,7 +38,7 @@ describe('AssetsDiscovery', () => {
         // since the process is async we need to wait for record is updated, but not more than expected timings
         await waitFor(async () => {
             let app = await db('apps').where('name', 'TestApp').first();
-            return app.assetsDiscoveryUpdatedAt != null;
+            return app?.assetsDiscoveryUpdatedAt != null;
         });
 
         const updatedApp = await db('apps').where('name', 'TestApp').first();
@@ -54,6 +55,7 @@ describe('AssetsDiscovery', () => {
                 assetsDiscoveryUrl: 'http://example.com/assets1',
                 spaBundle: 'oldBundle1.js',
                 cssBundle: 'oldStyle1.css',
+                kind: 'regular' as const,
                 assetsDiscoveryUpdatedAt: null,
             },
             {
@@ -61,6 +63,7 @@ describe('AssetsDiscovery', () => {
                 assetsDiscoveryUrl: 'http://example.com/assets2',
                 spaBundle: 'oldBundle2.js',
                 cssBundle: 'oldStyle2.css',
+                kind: 'regular' as const,
                 assetsDiscoveryUpdatedAt: null,
             },
             {
@@ -68,6 +71,7 @@ describe('AssetsDiscovery', () => {
                 assetsDiscoveryUrl: 'http://example.com/assets3',
                 spaBundle: 'oldBundle3.js',
                 cssBundle: 'oldStyle3.css',
+                kind: 'regular' as const,
                 assetsDiscoveryUpdatedAt: null,
             },
         ];
