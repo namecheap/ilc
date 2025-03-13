@@ -76,13 +76,13 @@ describe('RoutesService', () => {
             });
             const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
-            await service.upsert({ ...appRoute, route: '/upsert2', namespace: 'ns1', orderPos: 22 }, user, trxProvider);
+            await service.upsert({ ...appRoute, route: '/upsert22', namespace: 'ns1', orderPos: 2 }, user, trxProvider);
             const trx = await trxProvider();
             await trx.commit();
-            const route = await db(Tables.Routes).first().where({ route: '/upsert2' });
+            const route = await db(Tables.Routes).first().where({ orderPos: 2 });
             expect(route).to.deep.include({
-                orderPos: 22,
-                route: '/upsert2',
+                orderPos: 2,
+                route: '/upsert22',
                 next: 0,
                 meta: '{"a":1}',
                 domainId: null,
@@ -126,9 +126,9 @@ describe('RoutesService', () => {
             await service.upsert(
                 {
                     ...appRoute,
-                    route: '/upsert3',
+                    route: '/upsert33',
                     namespace: 'ns1',
-                    orderPos: 33,
+                    orderPos: 3,
                     slots: {
                         upsert3: {
                             appName: '@portal/upsert',
