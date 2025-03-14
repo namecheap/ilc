@@ -55,7 +55,7 @@ export class RoutesService {
         await this.db.versioning(user, { type: EntityTypes.routes, trxProvider }, async (trx) => {
             const result = await this.db(Tables.Routes)
                 .insert(prepareAppRouteToSave(appRoute), 'id')
-                .onConflict(this.db.raw('("orderPos", namespace) WHERE namespace IS NOT NULL'))
+                .onConflict(this.db.raw('("orderPos", "domainIdIdxble", namespace) WHERE namespace IS NOT NULL'))
                 .merge()
                 .transacting(trx);
             const savedAppRouteId = extractInsertedId(result as { id: number }[]);
