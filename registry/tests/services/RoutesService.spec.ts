@@ -262,5 +262,63 @@ describe('RoutesService', () => {
                 kind: 'regular',
             });
         });
+        it('should create a new route if domainId is different', async () => {
+            const [route] = await db(Tables.Routes)
+                .insert({ route: '/upsert8', namespace: 'ns1', orderPos: 8 })
+                .returning('*');
+            await db(Tables.RouteSlots).insert({
+                routeId: route.id!,
+                name: 'slot0',
+                appName: '@portal/upsert',
+                props: '{"a":1}',
+                kind: 'regular',
+            });
+            await db(Tables.RouterDomains).insert({ id: 2, domainName: 'localhost', template500: 'master' });
+
+            const service = new RoutesService(db);
+            const trxProvider = db.transactionProvider();
+            await service.upsert(
+                { ...appRoute, route: '/upsert8', namespace: 'ns1', orderPos: 8, domainId: 2 },
+                user,
+                trxProvider,
+            );
+            const trx = await trxProvider();
+            await trx.commit();
+            const [route0, route1] = await db(Tables.Routes).select().where({ route: '/upsert8' }).orderBy('id', 'asc');
+            expect(route0).to.deep.include({
+                orderPos: 8,
+                route: '/upsert8',
+                next: 0,
+                meta: null,
+                domainId: null,
+                namespace: 'ns1',
+            });
+            expect(route1).to.deep.include({
+                orderPos: 8,
+                route: '/upsert8',
+                next: 0,
+                meta: '{"a":1}',
+                domainId: 2,
+                namespace: 'ns1',
+            });
+            const [slot0, slot1] = await db(Tables.RouteSlots)
+                .select()
+                .where('routeId', 'in', [route0.id, route1.id])
+                .orderBy('routeId', 'asc');
+            expect(slot1).to.deep.include({
+                routeId: route1?.id,
+                appName: '@portal/upsert',
+                name: 'slot1',
+                props: '{"a":1}',
+                kind: 'regular',
+            });
+            expect(slot0).to.deep.include({
+                routeId: route0?.id,
+                appName: '@portal/upsert',
+                name: 'slot0',
+                props: '{"a":1}',
+                kind: 'regular',
+            });
+        });
     });
 });
