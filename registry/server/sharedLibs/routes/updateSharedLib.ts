@@ -45,7 +45,7 @@ const updateSharedLib = async (req: Request<UpdateSharedLibRequestParams>, res: 
         } else if (error instanceof Joi.ValidationError) {
             return res.status(422).send(joiErrorToResponse(error));
         } else if (error instanceof AssetsManifestError) {
-            return res.status(error.code).send(error.message);
+            return res.status(422).send(error.message);
         }
         throw error;
     }

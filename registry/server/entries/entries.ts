@@ -36,7 +36,7 @@ EntriesRouter.patch('/:fqrn', async (request: Request<{ fqrn: string }>, respons
             return response.status(422).send(joiErrorToResponse(error));
         }
         if (error instanceof AssetsManifestError) {
-            return response.status(error.code).send(error.message);
+            return response.status(422).send(error.message);
         }
         throw error;
     }
