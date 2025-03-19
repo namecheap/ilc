@@ -25,10 +25,11 @@ export class AssetsManifestReader {
             });
 
             assetsManifestContent = response.data;
-        } catch (error) {
-            throw new AssetsManifestError(
-                `"assetsDiscoveryUrl" ${assetsManifestUrl} is not available. Check the url via browser manually.`,
-            );
+        } catch (error: any) {
+            throw new AssetsManifestError({
+                message: `"assetsDiscoveryUrl" ${assetsManifestUrl} is not available. Check the url via browser manually.`,
+                cause: error,
+            });
         }
 
         return this.validate(assetsManifestContent);

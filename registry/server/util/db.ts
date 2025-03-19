@@ -4,6 +4,9 @@ import { Knex } from 'knex';
 import { ForeignConstraintError } from '../errorHandler/httpErrors';
 import { getLogger } from './logger';
 
+export const PG_UNIQUE_VIOLATION_CODE = '23505';
+export const PG_FOREIGN_KEY_VIOLATION_CODE = '23503';
+
 export function isMySQL(knex: Knex): boolean {
     return ['mysql', 'mariasql', 'mariadb'].indexOf(knex.client.dialect) > -1;
 }

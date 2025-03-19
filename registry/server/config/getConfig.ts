@@ -1,4 +1,4 @@
-import express from 'express';
+import { type RequestHandler } from 'express';
 
 import { AppRoute, AppRouteSlot } from '../appRoutes/interfaces';
 import knex from '../db';
@@ -8,9 +8,7 @@ import { appendDigest } from '../util/hmac';
 import { EntityTypes } from '../versioning/interfaces';
 import { AppRouteDto, transformApps, transformRoutes, transformSharedLibs } from './transformConfig';
 
-const router = express.Router();
-
-router.get('/', async (req, res) => {
+export const getConfig: RequestHandler = async (req, res) => {
     let domainName = req.query.domainName ? req.query.domainName : undefined;
     domainName = typeof domainName === 'string' ? domainName : undefined;
 
@@ -59,6 +57,4 @@ router.get('/', async (req, res) => {
     data.dynamicLibs = dynamicLibs;
 
     return res.send(data);
-});
-
-export default router;
+};

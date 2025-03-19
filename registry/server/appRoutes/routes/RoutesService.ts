@@ -1,13 +1,12 @@
-import _ from 'lodash/fp';
 import { Knex } from 'knex';
+import { User } from '../../../typings/User';
 import db, { type VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
+import { extractInsertedId, PG_UNIQUE_VIOLATION_CODE } from '../../util/db';
 import { appendDigest } from '../../util/hmac';
-import { EntityTypes, VersionedRecord, VersionRow } from '../../versioning/interfaces';
-import { AppRoute, appRouteSchema, AppRouteSlot, AppRouteSlotDto, appRouteSlotSchema } from '../interfaces';
-import { extractInsertedId } from '../../util/db';
-import { prepareAppRouteToSave, prepareAppRouteSlotsToSave } from '../services/prepareAppRoute';
-import { User } from '../../../typings/User';
+import { EntityTypes, VersionedRecord } from '../../versioning/interfaces';
+import { AppRoute, appRouteSchema, AppRouteSlot } from '../interfaces';
+import { prepareAppRouteSlotsToSave, prepareAppRouteToSave } from '../services/prepareAppRoute';
 
 type AppRouteDto = VersionedRecord<Omit<AppRoute, 'id'>> & AppRouteSlot;
 
@@ -65,6 +64,16 @@ export class RoutesService {
                 .transacting(trx);
             return extractInsertedId(result as { id: number }[]);
         });
+    }
+
+    public isOrderPosError(error: any) {
+        const sqliteErrorOrderPos = 'UNIQUE constraint failed: routes.orderPos, routes.domainIdIdxble';
+        const constraint = 'routes_orderpos_and_domainIdIdxble_unique';
+        return (
+            (error.code === PG_UNIQUE_VIOLATION_CODE && error.constraint === constraint) ||
+            error?.message.includes(sqliteErrorOrderPos) ||
+            error?.message.includes(constraint)
+        );
     }
 }
 

@@ -1,3 +1,3 @@
-export class AssetsManifestError extends Error {
-    public code = 422;
-}
+import { extendError } from '../../../../util/extendError';
+
+export const AssetsManifestError = extendError('AssetsManifestError', { defaultData: {} });

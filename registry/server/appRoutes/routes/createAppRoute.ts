@@ -8,6 +8,7 @@ import { appRouteSchema } from '../interfaces';
 import { prepareAppRouteSlotsToSave, prepareAppRouteToSave } from '../services/prepareAppRoute';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
 import { retrieveAppRouteFromDB } from './getAppRoute';
+import { routesService } from './RoutesService';
 
 const validateRequestBeforeCreateAppRoute = validateRequestFactory([
     {
@@ -54,23 +55,20 @@ const createAppRoute = async (req: Request, res: Response) => {
 
             return savedAppRouteId;
         });
-    } catch (e) {
-        let { message } = e as Error;
-
-        // error messages for uniq constraint "orderPos" and "domainId"
-        const sqliteErrorOrderPos = 'UNIQUE constraint failed: routes.orderPos, routes.domainIdIdxble';
-        const mysqlErrorOrderPos = 'routes_orderpos_and_domainIdIdxble_unique';
-
-        if (message.includes(sqliteErrorOrderPos) || message.includes(mysqlErrorOrderPos)) {
+    } catch (error) {
+        if (routesService.isOrderPosError(error)) {
             res.status(422);
             return res.send(
                 joiErrorToResponse(
-                    getJoiErr('route', `Specified "orderPos" value already exists for routes with provided "domainId"`),
+                    getJoiErr(
+                        'orderPos',
+                        `Specified "orderPos" value already exists for routes with provided "domainId"`,
+                    ),
                 ),
             );
         }
-        handleForeignConstraintError(e as Error);
-        throw e;
+        handleForeignConstraintError(error as Error);
+        throw error;
     }
 
     const savedAppRoute = await retrieveAppRouteFromDB(defined(savedAppRouteId));
