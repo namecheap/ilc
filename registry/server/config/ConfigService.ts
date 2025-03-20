@@ -32,9 +32,15 @@ export class ConfigService {
 
         const trxProvider = this.db.transactionProvider();
         try {
-            await Promise.all(payload.apps?.map((x) => appInstance.upsert(x, { user, trxProvider })) ?? []);
+            await Promise.all(
+                payload.apps?.map((x) => appInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })) ?? [],
+            );
             await Promise.all(payload.routes?.map((x) => routesService.upsert(x, user, trxProvider)) ?? []);
-            await Promise.all(payload.sharedLibs?.map((x) => sharedLibInstance.upsert(x, { user, trxProvider })) ?? []);
+            await Promise.all(
+                payload.sharedLibs?.map((x) =>
+                    sharedLibInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun }),
+                ) ?? [],
+            );
             const trx = await trxProvider();
             if (dryRun) {
                 await trx.rollback();
