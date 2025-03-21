@@ -258,19 +258,6 @@ describe('Tests /api/v1/config', () => {
             if (!isPostgres(db)) {
                 return this.skip();
             }
-
-            nock('https://localhost:8080')
-                .get('/sample-nodejs/assets-discovery.json')
-                .reply(200, {
-                    dependencies: {},
-                    spaBundle: '/app/app.f2a9523cffaa06996119.js',
-                    cssBundle: '/app/app.fdfd17cfd0267be2c165.css',
-                })
-                .persist();
-        });
-
-        after(() => {
-            nock.cleanAll();
         });
 
         it('should validate successfully', async () => {
@@ -343,26 +330,6 @@ describe('Tests /api/v1/config', () => {
                 .expect(200, {
                     valid: false,
                     details: 'Specified wrapper app is not a wrapper.',
-                });
-        });
-        it('should fail on invalid asset discovery url', async () => {
-            await req
-                .post('/api/v1/config/validate')
-                .send({
-                    ...body,
-                    apps: [
-                        ...body.apps,
-                        {
-                            ...app,
-                            name: 'app3',
-                            assetsDiscoveryUrl: 'http://localhost:1/1.json',
-                        },
-                    ],
-                })
-                .expect(200, {
-                    valid: false,
-                    details:
-                        '"assetsDiscoveryUrl" http://localhost:1/1.json is not available. Check the url via browser manually.',
                 });
         });
         it('should fail on invalid route domainId', async () => {

@@ -9,6 +9,10 @@ import { CommonOptions, Entry } from './Entry';
 import { NotFoundApplicationError } from './error/NotFoundApplicationError';
 import { ValidationFqrnError } from './error/ValidationFqrnError';
 
+type UpsertOptions = CommonOptions & {
+    fetchManifest?: boolean;
+};
+
 export class ApplicationEntry implements Entry {
     constructor(
         private readonly db: VersionedKnex,
@@ -76,10 +80,10 @@ export class ApplicationEntry implements Entry {
         return savedApp;
     }
 
-    public async upsert(params: unknown, { user, trxProvider }: CommonOptions): Promise<void> {
+    public async upsert(params: unknown, { user, trxProvider, fetchManifest = true }: UpsertOptions): Promise<void> {
         const appDto = await appSchema.validateAsync(params, { noDefaults: true, externals: true });
 
-        const appManifest = await this.getManifest(appDto.assetsDiscoveryUrl);
+        const appManifest = fetchManifest ? await this.getManifest(appDto.assetsDiscoveryUrl) : {};
 
         const appEntity = {
             ...appDto,
