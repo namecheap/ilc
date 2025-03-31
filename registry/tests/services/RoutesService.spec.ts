@@ -38,7 +38,10 @@ describe('RoutesService', () => {
             directory: path.join(__dirname, '../../server/migrations'),
         });
         await db('apps').insert({ name: '@portal/upsert', kind: 'primary' });
-        await db('templates').insert({ name: 'master', content: 'content' });
+        await db('templates').insert([
+            { name: 'master', content: 'content' },
+            { name: 'masteradmin', content: 'content' },
+        ]);
     });
     after(async () => {
         await reset();
@@ -97,17 +100,21 @@ describe('RoutesService', () => {
                 kind: 'regular',
             });
         });
-        it('should not rewrite existing properties if not specified', async () => {
+        it('should set default value if not specified', async () => {
             await db(Tables.Routes).insert({
                 route: '/upsert6',
                 namespace: 'ns1',
-                meta: '{"e":1}',
+                templateName: 'masteradmin',
                 orderPos: 6,
             });
             const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
             const { meta, ...rest } = appRoute;
-            await service.upsert({ ...rest, route: '/upsert6', namespace: 'ns1', orderPos: 6 }, user, trxProvider);
+            await service.upsert(
+                { ...rest, route: '/upsert6', namespace: 'ns1', orderPos: 6, templateName: undefined },
+                user,
+                trxProvider,
+            );
             const trx = await trxProvider();
             await trx.commit();
             const route = await db(Tables.Routes).first().where({ route: '/upsert6' });
@@ -115,7 +122,7 @@ describe('RoutesService', () => {
                 orderPos: 6,
                 route: '/upsert6',
                 next: 0,
-                meta: '{"e":1}',
+                templateName: null,
                 domainId: null,
             });
         });
@@ -318,6 +325,38 @@ describe('RoutesService', () => {
                 name: 'slot0',
                 props: '{"a":1}',
                 kind: 'regular',
+            });
+        });
+        it('should delete by namespace', async () => {
+            await db(Tables.Routes).insert([
+                { id: 20, route: '/upsert9', namespace: 'ns1', orderPos: 9 },
+                { id: 21, route: '/upsert10', namespace: 'ns1', orderPos: 10 },
+                { id: 22, route: '/upsert11', namespace: 'ns2', orderPos: 11 },
+            ]);
+            await db(Tables.RouteSlots).insert([
+                { routeId: 20, name: 'slot0', appName: '@portal/upsert', props: '{"a":1}', kind: 'regular' },
+                { routeId: 21, name: 'slot1', appName: '@portal/upsert', props: '{"a":1}', kind: 'regular' },
+                { routeId: 22, name: 'slot2', appName: '@portal/upsert', props: '{"a":1}', kind: 'regular' },
+            ]);
+            const service = new RoutesService(db);
+            const trxProvider = db.transactionProvider();
+            await service.deleteByNamespace('ns1', [2], { user, trxProvider });
+            const trx = await trxProvider();
+            await trx.commit();
+            const route1 = await db(Tables.Routes).first().where({ route: '/upsert9' });
+            expect(route1).to.be.undefined;
+            const route2 = await db(Tables.Routes).first().where({ route: '/upsert10' });
+            expect(route2).to.be.undefined;
+            const route3 = await db(Tables.Routes).first().where({ route: '/upsert11' });
+            expect(route3).to.deep.include({
+                route: '/upsert11',
+            });
+            const slots = await db(Tables.RouteSlots).select().where({ routeId: 22 });
+            expect(slots).to.have.length(1);
+            expect(slots[0]).to.deep.include({
+                routeId: 22,
+                appName: '@portal/upsert',
+                name: 'slot2',
             });
         });
     });

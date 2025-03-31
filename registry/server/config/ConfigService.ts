@@ -1,12 +1,15 @@
+import { Knex } from 'knex';
 import { App } from 'supertest/types';
-import db, { VersionedKnex } from '../db';
-import { AppRouteDto } from './transformConfig';
-import { EntryFactory } from '../common/services/entries/EntryFactory';
-import { SharedLib } from '../sharedLibs/interfaces';
 import { User } from '../../typings/User';
 import { routesService } from '../appRoutes/routes/RoutesService';
+import { EntryFactory } from '../common/services/entries/EntryFactory';
+import db, { VersionedKnex } from '../db';
+import { SharedLib } from '../sharedLibs/interfaces';
 import { isPostgres, PG_FOREIGN_KEY_VIOLATION_CODE } from '../util/db';
 import { getJoiErr } from '../util/helpers';
+import { AppRouteDto } from './transformConfig';
+import { ApplicationEntry } from '../common/services/entries/ApplicationEntry';
+import { SharedLibEntry } from '../common/services/entries/SharedLibEntry';
 
 type UpsertPayload = {
     apps?: App[];
@@ -16,13 +19,17 @@ type UpsertPayload = {
 
 type UpsertParams = {
     user: User;
+    trxProvider: Knex.TransactionProvider;
     dryRun?: boolean;
 };
 
 export class ConfigService {
     constructor(private readonly db: VersionedKnex) {}
 
-    async upsert(payload: UpsertPayload, { user, dryRun }: UpsertParams) {
+    async upsert(payload: UpsertPayload, { user, dryRun }: Omit<UpsertParams, 'trxProvider'>): Promise<void> {
+        if (!payload.apps && !payload.routes && !payload.sharedLibs) {
+            throw new Error('At least one of the following parameters should be provided: apps, routes, sharedLibs');
+        }
         const appInstance = EntryFactory.getAppInstance();
         const sharedLibInstance = EntryFactory.getSharedLibInstance();
 
@@ -31,27 +38,111 @@ export class ConfigService {
         }
 
         const trxProvider = this.db.transactionProvider();
+        const trx = await trxProvider();
+
         try {
-            await Promise.all(
-                payload.apps?.map((x) => appInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })) ?? [],
-            );
-            await Promise.all(payload.routes?.map((x) => routesService.upsert(x, user, trxProvider)) ?? []);
-            await Promise.all(
-                payload.sharedLibs?.map((x) =>
-                    sharedLibInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun }),
-                ) ?? [],
-            );
-            const trx = await trxProvider();
+            const upsertedAppsByNamespace = await this.upsertApps(payload.apps, appInstance, {
+                user,
+                trxProvider,
+                dryRun,
+            });
+            const upsertedRoutesByNamespace = await this.upsertRoutes(payload.routes, { user, trxProvider });
+
+            await this.upsertSharedLibs(payload.sharedLibs, sharedLibInstance, { user, trxProvider, dryRun });
+            await this.deleteRoutesByNamespace(upsertedRoutesByNamespace, { user, trxProvider });
+            await this.deleteAppsByNamespace(upsertedAppsByNamespace, appInstance, { user, trxProvider });
+
             if (dryRun) {
                 await trx.rollback();
             } else {
                 await trx.commit();
             }
         } catch (error) {
-            const trx = await trxProvider();
             await trx.rollback();
             throw error;
         }
+    }
+
+    private async upsertApps(
+        apps: App[] | undefined,
+        appInstance: ApplicationEntry,
+        { user, trxProvider, dryRun }: UpsertParams,
+    ): Promise<Record<string, string[]>> {
+        const upsertedApps = await Promise.all(
+            apps?.map((x) => appInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })) ?? [],
+        );
+
+        return upsertedApps.reduce(
+            (acc, app) => {
+                if (app.namespace) {
+                    acc[app.namespace] = acc[app.namespace] || [];
+                    acc[app.namespace].push(app.name);
+                }
+                return acc;
+            },
+            {} as Record<string, string[]>,
+        );
+    }
+
+    private async upsertRoutes(
+        routes: AppRouteDto[] | undefined,
+        { user, trxProvider }: UpsertParams,
+    ): Promise<Record<string, number[]>> {
+        const upsertedRoutes = await Promise.all(routes?.map((x) => routesService.upsert(x, user, trxProvider)) ?? []);
+
+        return upsertedRoutes.reduce(
+            (acc, route) => {
+                if (route.namespace) {
+                    acc[route.namespace] = acc[route.namespace] || [];
+                    acc[route.namespace].push(route.id!);
+                }
+                return acc;
+            },
+            {} as Record<string, number[]>,
+        );
+    }
+
+    private async upsertSharedLibs(
+        sharedLibs: SharedLib[] | undefined,
+        sharedLibInstance: SharedLibEntry,
+        { user, trxProvider, dryRun }: UpsertParams,
+    ): Promise<void> {
+        await Promise.all(
+            sharedLibs?.map((x) => sharedLibInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })) ?? [],
+        );
+    }
+
+    private async deleteRoutesByNamespace(
+        upsertedRoutesByNamespace: Record<string, number[]>,
+        { user, trxProvider }: UpsertParams,
+    ): Promise<void> {
+        await Promise.all(
+            Object.keys(upsertedRoutesByNamespace).map(
+                (namespace) =>
+                    namespace &&
+                    routesService.deleteByNamespace(namespace, upsertedRoutesByNamespace[namespace], {
+                        user,
+                        trxProvider,
+                    }),
+            ),
+        );
+    }
+
+    private async deleteAppsByNamespace(
+        upsertedAppsByNamespace: Record<string, string[]>,
+        appInstance: ApplicationEntry,
+        { user, trxProvider }: UpsertParams,
+    ): Promise<void> {
+        await Promise.all(
+            Object.keys(upsertedAppsByNamespace).map(
+                (namespace) =>
+                    namespace &&
+                    appInstance.deleteByNamespace(namespace, upsertedAppsByNamespace[namespace], {
+                        user,
+                        trxProvider,
+                    }),
+            ),
+        );
     }
 
     mapError(error: any): Error {

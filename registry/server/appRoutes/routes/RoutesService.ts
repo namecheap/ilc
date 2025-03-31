@@ -45,25 +45,51 @@ export class RoutesService {
         });
     }
 
-    public async upsert(params: unknown, user: User, trxProvider: Knex.TransactionProvider) {
+    /**
+     * @returns routeId
+     */
+    public async upsert(params: unknown, user: User, trxProvider: Knex.TransactionProvider): Promise<AppRoute> {
         const { slots, ...appRoute } = await appRouteSchema.validateAsync(params, {
-            noDefaults: true,
+            noDefaults: false,
             externals: false,
         });
 
+        let savedAppRouteId;
         await this.db.versioning(user, { type: EntityTypes.routes, trxProvider }, async (trx) => {
             const result = await this.db(Tables.Routes)
                 .insert(prepareAppRouteToSave(appRoute), 'id')
                 .onConflict(this.db.raw('("orderPos", "domainIdIdxble", namespace) WHERE namespace IS NOT NULL'))
                 .merge()
                 .transacting(trx);
-            const savedAppRouteId = extractInsertedId(result as { id: number }[]);
+            savedAppRouteId = extractInsertedId(result as { id: number }[]);
             await this.db(Tables.RouteSlots).where('routeId', savedAppRouteId).delete().transacting(trx);
             await this.db
                 .batchInsert(Tables.RouteSlots, prepareAppRouteSlotsToSave(slots, savedAppRouteId))
                 .transacting(trx);
-            return extractInsertedId(result as { id: number }[]);
+            return savedAppRouteId;
         });
+        return { ...appRoute, id: savedAppRouteId };
+    }
+
+    public async deleteByNamespace(
+        namespace: string,
+        exclude: number[],
+        { user, trxProvider }: { user: User; trxProvider: Knex.TransactionProvider },
+    ) {
+        const trx = await trxProvider?.();
+        const routeIdsToDelete = await this.db(Tables.Routes)
+            .select('id')
+            .where({ namespace })
+            .whereNotIn('id', exclude)
+            .transacting(trx);
+
+        await Promise.all(
+            routeIdsToDelete.map(async (route) => {
+                await this.db.versioning(user, { type: EntityTypes.routes, id: route.id, trxProvider }, async (trx) => {
+                    await this.db(Tables.Routes).delete().where({ id: route.id }).transacting(trx);
+                });
+            }),
+        );
     }
 
     public isOrderPosError(error: any) {

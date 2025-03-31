@@ -69,7 +69,7 @@ export class SharedLibEntry implements Entry {
         return savedSharedLib;
     }
     public async upsert(entity: unknown, { user, trxProvider, fetchManifest = true }: UpsertOptions): Promise<void> {
-        const sharedLibDto = await sharedLibSchema.validateAsync(entity, { noDefaults: true });
+        const sharedLibDto = await sharedLibSchema.validateAsync(entity, { noDefaults: false });
 
         const sharedLibManifest = fetchManifest
             ? await this.getManifest(sharedLibDto.assetsDiscoveryUrl)

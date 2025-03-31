@@ -44,7 +44,7 @@ describe('ApplicationEntry', () => {
                 name: '@portal/upsert1',
                 kind: 'primary',
                 props: '{"a":1}',
-                ssrProps: null,
+                ssrProps: '{}',
                 ssr: null,
             });
         });
@@ -60,16 +60,20 @@ describe('ApplicationEntry', () => {
                 name: '@portal/upsert2',
                 kind: 'primary',
                 props: '{"a":1}',
-                ssrProps: null,
+                ssrProps: '{}',
                 ssr: null,
             });
         });
-        it('should not rewrite existing properties if not applied', async () => {
+        it('should not rewrite specific properties if not applied', async () => {
             await db(Tables.Apps).insert({
                 name: '@portal/upsert6',
                 kind: 'regular',
                 namespace: 'ns1',
                 l10nManifest: 'existing',
+                spaBundle: 'existing',
+                cssBundle: 'existing',
+                adminNotes: 'existing',
+                assetsDiscoveryUrl: 'existing',
             });
             const service = new ApplicationEntry(db);
             const trxProvider = db.transactionProvider();
@@ -81,9 +85,14 @@ describe('ApplicationEntry', () => {
                 name: '@portal/upsert6',
                 kind: 'primary',
                 props: '{"a":1}',
-                ssrProps: null,
+                ssrProps: '{}',
                 ssr: null,
                 l10nManifest: 'existing',
+                spaBundle: 'existing',
+                cssBundle: 'existing',
+                namespace: 'ns1',
+                adminNotes: 'existing',
+                assetsDiscoveryUrl: null, // has default null
             });
         });
         it('should cancel upsert', async () => {
@@ -135,6 +144,26 @@ describe('ApplicationEntry', () => {
                 props: null,
                 ssrProps: null,
                 ssr: null,
+            });
+        });
+        it('should delete by namespace', async () => {
+            await db(Tables.Apps).insert({ name: '@portal/upsert5', kind: 'regular', namespace: 'ns1' });
+            await db(Tables.Apps).insert({ name: '@portal/upsert5_1', kind: 'regular', namespace: 'ns1' });
+            await db(Tables.Apps).insert({ name: '@portal/upsert5_2', kind: 'regular', namespace: 'ns2' });
+            const service = new ApplicationEntry(db);
+            const trxProvider = db.transactionProvider();
+            await service.deleteByNamespace('ns1', ['@portal/upsert5_1'], { user, trxProvider });
+            const trx = await trxProvider();
+            await trx.commit();
+            const app1 = await db(Tables.Apps).first().where({ name: '@portal/upsert5' });
+            expect(app1).to.undefined;
+            const app2 = await db(Tables.Apps).first().where({ name: '@portal/upsert5_1' });
+            expect(app2).to.deep.include({
+                name: '@portal/upsert5_1',
+            });
+            const app3 = await db(Tables.Apps).first().where({ name: '@portal/upsert5_2' });
+            expect(app3).to.deep.include({
+                name: '@portal/upsert5_2',
             });
         });
     });
