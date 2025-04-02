@@ -1,11 +1,11 @@
 import type { Logger } from 'ilc-plugins-sdk';
-import type { RegistryConfig, Route, SpecialRoute } from './RegistryConfig';
 import { CacheResult } from '../../common/types/CacheWrapper';
+import type { RegistryConfig, Route, SpecialRoute } from './RegistryConfig';
 
 export type TransformedRoute = Omit<Route, 'domain'>;
 export type TransformedSpecialRoute = Omit<SpecialRoute, 'domain' | 'specialRole'>;
 
-export type TransformedRegistryConfig = RegistryConfig & {
+export type TransformedRegistryConfig = Omit<RegistryConfig, 'routes' | 'specialRoutes'> & {
     routes: TransformedRoute[];
     specialRoutes: Record<string, TransformedSpecialRoute>;
     // TODO
@@ -36,4 +36,5 @@ export interface Registry {
     getConfig(options?: RegistryOptions): Promise<TransformedRegistryConfig>;
 
     getTemplate(templateName: string, options?: TemplateOptions): Promise<CacheResult<Template>>;
+    resolveDomainId(domainName: string): Promise<number>;
 }
