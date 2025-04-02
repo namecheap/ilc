@@ -27,7 +27,30 @@ export type SpecialRoute = BaseRoute & {
     specialRole: string;
 };
 
+export type App = {
+    kind?: string;
+    ssr?: {
+        timeout?: number;
+        src?: string;
+    };
+    props?: Record<string, any>;
+    ssrProps?: Record<string, any>;
+    spaBundle?: string;
+    cssBundle?: string;
+    enforceDomain?: string;
+    wrappedWith?: string;
+    l10nManifest?: string;
+    versionId?: string;
+};
+
+export type DynamicLib = {
+    spaBundle: string;
+    l10nManifest?: string;
+    versionId: string;
+};
+
 export interface RegistryConfig {
+    apps: Record<string, App>;
     settings: {
         trailingSlash?: string;
         overrideConfigTrustedOrigins?: string;
@@ -59,4 +82,6 @@ export interface RegistryConfig {
     };
     routes: Route[];
     specialRoutes: SpecialRoute[];
+    sharedLibs: Record<string, string>;
+    dynamicLibs: Record<string, DynamicLib>;
 }
