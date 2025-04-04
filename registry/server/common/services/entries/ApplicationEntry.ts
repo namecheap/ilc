@@ -104,14 +104,14 @@ export class ApplicationEntry implements Entry {
 
     public async deleteByNamespace(
         namespace: string,
-        exclude: string[],
+        excludeNames: string[],
         { user, trxProvider }: { user: User; trxProvider: Knex.TransactionProvider },
     ) {
         const trx = await trxProvider?.();
         const appNamesToDelete = await this.db(Tables.Apps)
             .select('name')
             .where({ namespace })
-            .whereNotIn('name', exclude)
+            .whereNotIn('name', excludeNames)
             .transacting(trx);
         await Promise.all(
             appNamesToDelete.map(async (app) => {

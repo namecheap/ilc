@@ -1,15 +1,16 @@
 import { Knex } from 'knex';
-import { App } from 'supertest/types';
 import { User } from '../../typings/User';
+import { AppRoute } from '../appRoutes/interfaces';
 import { routesService } from '../appRoutes/routes/RoutesService';
+import { App } from '../apps/interfaces';
+import { ApplicationEntry } from '../common/services/entries/ApplicationEntry';
 import { EntryFactory } from '../common/services/entries/EntryFactory';
+import { SharedLibEntry } from '../common/services/entries/SharedLibEntry';
 import db, { VersionedKnex } from '../db';
 import { SharedLib } from '../sharedLibs/interfaces';
 import { isPostgres, PG_FOREIGN_KEY_VIOLATION_CODE } from '../util/db';
 import { getJoiErr } from '../util/helpers';
 import { AppRouteDto } from './transformConfig';
-import { ApplicationEntry } from '../common/services/entries/ApplicationEntry';
-import { SharedLibEntry } from '../common/services/entries/SharedLibEntry';
 
 type UpsertPayload = {
     apps?: App[];
@@ -41,16 +42,19 @@ export class ConfigService {
         const trx = await trxProvider();
 
         try {
-            const upsertedAppsByNamespace = await this.upsertApps(payload.apps, appInstance, {
+            const upsertedApps = await this.upsertApps(payload.apps, appInstance, {
                 user,
                 trxProvider,
                 dryRun,
             });
-            const upsertedRoutesByNamespace = await this.upsertRoutes(payload.routes, { user, trxProvider });
+            const upsertedRoutes = await this.upsertRoutes(payload.routes, { user, trxProvider });
+
+            const groupedApps = this.groupByNamespace(upsertedApps, 'name');
+            const groupedRoutes = this.groupByNamespace(upsertedRoutes, 'id');
 
             await this.upsertSharedLibs(payload.sharedLibs, sharedLibInstance, { user, trxProvider, dryRun });
-            await this.deleteRoutesByNamespace(upsertedRoutesByNamespace, { user, trxProvider });
-            await this.deleteAppsByNamespace(upsertedAppsByNamespace, appInstance, { user, trxProvider });
+            await this.deleteRoutesByNamespace(groupedRoutes, { user, trxProvider });
+            await this.deleteAppsByNamespace(groupedApps, appInstance, { user, trxProvider });
 
             if (dryRun) {
                 await trx.rollback();
@@ -67,39 +71,17 @@ export class ConfigService {
         apps: App[] | undefined,
         appInstance: ApplicationEntry,
         { user, trxProvider, dryRun }: UpsertParams,
-    ): Promise<Record<string, string[]>> {
-        const upsertedApps = await Promise.all(
+    ): Promise<App[]> {
+        return await Promise.all(
             apps?.map((x) => appInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })) ?? [],
-        );
-
-        return upsertedApps.reduce(
-            (acc, app) => {
-                if (app.namespace) {
-                    acc[app.namespace] = acc[app.namespace] || [];
-                    acc[app.namespace].push(app.name);
-                }
-                return acc;
-            },
-            {} as Record<string, string[]>,
         );
     }
 
     private async upsertRoutes(
         routes: AppRouteDto[] | undefined,
         { user, trxProvider }: UpsertParams,
-    ): Promise<Record<string, number[]>> {
-        const upsertedRoutes = await Promise.all(routes?.map((x) => routesService.upsert(x, user, trxProvider)) ?? []);
-
-        return upsertedRoutes.reduce(
-            (acc, route) => {
-                if (route.namespace) {
-                    acc[route.namespace] = acc[route.namespace] || [];
-                    acc[route.namespace].push(route.id!);
-                }
-                return acc;
-            },
-            {} as Record<string, number[]>,
-        );
+    ): Promise<(AppRoute & { id: number })[]> {
+        return await Promise.all(routes?.map((x) => routesService.upsert(x, user, trxProvider)) ?? []);
     }
 
     private async upsertSharedLibs(
@@ -145,7 +127,7 @@ export class ConfigService {
         );
     }
 
-    mapError(error: any): Error {
+    public mapError(error: any): Error {
         if (routesService.isOrderPosError(error)) {
             return getJoiErr(
                 'orderPos',
@@ -163,6 +145,22 @@ export class ConfigService {
         }
 
         return error;
+    }
+
+    private groupByNamespace<T extends { namespace?: string | null }, K extends keyof T>(
+        items: T[],
+        key: K,
+    ): Record<string, T[K][]> {
+        return items.reduce(
+            (acc, item) => {
+                if (item.namespace) {
+                    acc[item.namespace] = acc[item.namespace] || [];
+                    acc[item.namespace].push(item[key]);
+                }
+                return acc;
+            },
+            {} as Record<string, T[K][]>,
+        );
     }
 }
 

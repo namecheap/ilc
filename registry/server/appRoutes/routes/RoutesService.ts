@@ -48,7 +48,11 @@ export class RoutesService {
     /**
      * @returns routeId
      */
-    public async upsert(params: unknown, user: User, trxProvider: Knex.TransactionProvider): Promise<AppRoute> {
+    public async upsert(
+        params: unknown,
+        user: User,
+        trxProvider: Knex.TransactionProvider,
+    ): Promise<AppRoute & { id: number }> {
         const { slots, ...appRoute } = await appRouteSchema.validateAsync(params, {
             noDefaults: false,
             externals: false,
@@ -71,19 +75,19 @@ export class RoutesService {
                 .transacting(trx);
             return savedAppRouteId;
         });
-        return { ...appRoute, id: savedAppRouteId };
+        return { ...appRoute, id: savedAppRouteId! };
     }
 
     public async deleteByNamespace(
         namespace: string,
-        exclude: number[],
+        excludeIds: number[],
         { user, trxProvider }: { user: User; trxProvider: Knex.TransactionProvider },
     ) {
         const trx = await trxProvider?.();
         const routeIdsToDelete = await this.db(Tables.Routes)
             .select('id')
             .where({ namespace })
-            .whereNotIn('id', exclude)
+            .whereNotIn('id', excludeIds)
             .transacting(trx);
 
         await Promise.all(
