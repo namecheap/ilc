@@ -37,11 +37,12 @@ describe('RoutesService', () => {
         await db.migrate.latest({
             directory: path.join(__dirname, '../../server/migrations'),
         });
-        await db('apps').insert({ name: '@portal/upsert', kind: 'primary' });
-        await db('templates').insert([
+        await db(Tables.Apps).insert({ name: '@portal/upsert', kind: 'primary' });
+        await db(Tables.Templates).insert([
             { name: 'master', content: 'content' },
             { name: 'masteradmin', content: 'content' },
         ]);
+        await db(Tables.RouterDomains).insert({ id: 1, domainName: 'example.com', template500: 'master' });
     });
     after(async () => {
         await reset();
@@ -104,26 +105,29 @@ describe('RoutesService', () => {
             await db(Tables.Routes).insert({
                 route: '/upsert6',
                 namespace: 'ns1',
-                templateName: 'masteradmin',
                 orderPos: 6,
+                next: true,
+                templateName: 'masteradmin',
+                meta: '{"a":1}',
+                domainId: 1,
             });
             const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
-            const { meta, ...rest } = appRoute;
             await service.upsert(
-                { ...rest, route: '/upsert6', namespace: 'ns1', orderPos: 6, templateName: undefined },
+                { route: '/upsert6_1', namespace: 'ns1', domainId: 1, orderPos: 6 },
                 user,
                 trxProvider,
             );
             const trx = await trxProvider();
             await trx.commit();
-            const route = await db(Tables.Routes).first().where({ route: '/upsert6' });
+            const route = await db(Tables.Routes).first().where({ route: '/upsert6_1' });
             expect(route).to.deep.include({
                 orderPos: 6,
-                route: '/upsert6',
+                route: '/upsert6_1',
                 next: 0,
                 templateName: null,
-                domainId: null,
+                domainId: 1,
+                meta: '{}',
             });
         });
         it('should cancel upsert', async () => {

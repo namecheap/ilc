@@ -65,7 +65,33 @@ describe('ApplicationEntry', () => {
             });
         });
         it('should not rewrite specific properties if not applied', async () => {
+            await db(Tables.Templates).insert({ name: '500', content: '' });
+            await db(Tables.RouterDomains).insert({ id: 1, domainName: 'example.com', template500: '500' });
             await db(Tables.Apps).insert({
+                name: '@portal/upsert6',
+                kind: 'primary',
+                namespace: 'ns1',
+                l10nManifest: 'existing',
+                spaBundle: 'existing',
+                cssBundle: 'existing',
+                adminNotes: 'existing',
+                assetsDiscoveryUrl: 'existing',
+                dependencies: '{"a": 1}',
+                props: '{"a": 1}',
+                ssrProps: '{"a": 1}',
+                discoveryMetadata: '{"a": 1}',
+                enforceDomain: 1,
+                ssr: '{"src": "http://localhost/ssr", "timeout": 100}',
+                configSelector: '["react"]',
+                wrappedWith: '@portal/upsert1',
+            });
+            const service = new ApplicationEntry(db);
+            const trxProvider = db.transactionProvider();
+            await service.upsert({ name: '@portal/upsert6', namespace: 'ns1' }, { user, trxProvider });
+            const trx = await trxProvider();
+            await trx.commit();
+            const app = await db(Tables.Apps).first().where({ name: '@portal/upsert6' });
+            expect(app).to.deep.include({
                 name: '@portal/upsert6',
                 kind: 'regular',
                 namespace: 'ns1',
@@ -73,26 +99,15 @@ describe('ApplicationEntry', () => {
                 spaBundle: 'existing',
                 cssBundle: 'existing',
                 adminNotes: 'existing',
-                assetsDiscoveryUrl: 'existing',
-            });
-            const service = new ApplicationEntry(db);
-            const trxProvider = db.transactionProvider();
-            await service.upsert({ ...appPayload, name: '@portal/upsert6' }, { user, trxProvider });
-            const trx = await trxProvider();
-            await trx.commit();
-            const app = await db(Tables.Apps).first().where({ name: '@portal/upsert6' });
-            expect(app).to.deep.include({
-                name: '@portal/upsert6',
-                kind: 'primary',
-                props: '{"a":1}',
+                assetsDiscoveryUrl: null,
+                dependencies: '{}',
+                props: '{}',
                 ssrProps: '{}',
+                discoveryMetadata: '{}',
+                enforceDomain: null,
                 ssr: null,
-                l10nManifest: 'existing',
-                spaBundle: 'existing',
-                cssBundle: 'existing',
-                namespace: 'ns1',
-                adminNotes: 'existing',
-                assetsDiscoveryUrl: null, // has default null
+                configSelector: '[]',
+                wrappedWith: null,
             });
         });
         it('should cancel upsert', async () => {

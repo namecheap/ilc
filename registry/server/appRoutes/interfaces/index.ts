@@ -38,7 +38,7 @@ const commonAppRouteSlot = {
         return value;
     }),
     props: Joi.object().default({}),
-    kind: Joi.string().valid('primary', 'essential', 'regular', null),
+    kind: Joi.string().valid('primary', 'essential', 'regular', null).default(null),
 };
 
 export const appRouteSlotSchema = Joi.object({
@@ -79,7 +79,7 @@ const commonAppRoute = {
     orderPos: Joi.number(),
     route: Joi.string().trim().max(255),
     next: Joi.bool().default(false),
-    templateName: templateNameSchema.allow(null),
+    templateName: templateNameSchema.allow(null).default(null),
     slots: Joi.object().pattern(commonAppRouteSlot.name, appRouteSlotSchema),
     domainId: Joi.number().default(null),
     meta: Joi.object().default({}),

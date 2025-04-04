@@ -61,6 +61,9 @@ export class RoutesService {
                 .onConflict(this.db.raw('("orderPos", "domainIdIdxble", namespace) WHERE namespace IS NOT NULL'))
                 .merge()
                 .transacting(trx);
+            if (appRoute.orderPos) {
+                await this.db(Tables.Routes).syncSequence('orderPos', 10, 0).transacting(trx);
+            }
             savedAppRouteId = extractInsertedId(result as { id: number }[]);
             await this.db(Tables.RouteSlots).where('routeId', savedAppRouteId).delete().transacting(trx);
             await this.db

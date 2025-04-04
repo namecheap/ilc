@@ -777,5 +777,77 @@ describe('Tests /api/v1/config', () => {
                 await req.delete('/api/v1/app/app4');
             }
         });
+
+        it('when orderPos removed should assign highest one', async () => {
+            let routeIds = [];
+            let config;
+            try {
+                await req
+                    .put('/api/v1/config')
+                    .send({
+                        routes: [
+                            {
+                                route: '/route1/',
+                                namespace: 'ns1',
+                            },
+                        ],
+                    })
+                    .expect(204);
+                ({ body: config } = await req.get('/api/v1/config').expect(200));
+                expect(config.routes[0]).to.deep.include({
+                    route: '/route1/',
+                });
+                const orderPos = config.routes[0].orderPos;
+                const nextOrderPos = orderPos + 10;
+                await req
+                    .put('/api/v1/config')
+                    .send({
+                        routes: [
+                            {
+                                route: '/route2/',
+                                orderPos: nextOrderPos,
+                                namespace: 'ns2',
+                            },
+                        ],
+                    })
+                    .expect(204);
+                ({ body: config } = await req.get('/api/v1/config').expect(200));
+                expect(config.routes[1]).to.deep.include({
+                    route: '/route2/',
+                    orderPos: nextOrderPos,
+                });
+                const res = await req
+                    .put('/api/v1/config')
+                    .send({
+                        routes: [
+                            {
+                                route: '/route3/',
+                                namespace: 'ns3',
+                            },
+                            {
+                                route: '/route4/',
+                                namespace: 'ns3',
+                            },
+                        ],
+                    })
+                    .expect(204);
+                ({ body: config } = await req.get('/api/v1/config').expect(200));
+                console.log('🚀 ~ it ~ config:', config);
+                expect(config.routes[2]).to.deep.include({
+                    route: '/route3/',
+                    orderPos: nextOrderPos + 10,
+                });
+                expect(config.routes[3]).to.deep.include({
+                    route: '/route4/',
+                    orderPos: nextOrderPos + 20,
+                });
+                routeIds = config.routes.map((x: any) => x.routeId);
+            } finally {
+                await req.delete(`/api/v1/route/${routeIds[0]}`);
+                await req.delete(`/api/v1/route/${routeIds[1]}`);
+                await req.delete(`/api/v1/route/${routeIds[2]}`);
+                await req.delete(`/api/v1/route/${routeIds[3]}`);
+            }
+        });
     });
 });
