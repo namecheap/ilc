@@ -6,9 +6,14 @@ export type Slot = {
     props: {};
 };
 
+export type RouteMeta = {
+    canonicalUrl?: string;
+    [key: string]: unknown;
+};
+
 type BaseRoute = {
     slots: Record<string, Slot>;
-    meta: {};
+    meta: RouteMeta;
     next: boolean;
     versionId: string;
     domain?: string;

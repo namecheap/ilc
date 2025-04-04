@@ -53,6 +53,7 @@ module.exports = class ConfigsInjector {
             url,
             locale,
             registryConfig.settings?.i18n,
+            route.meta,
         );
 
         const headHtmlContent = this.#wrapWithIgnoreDuringParsing(

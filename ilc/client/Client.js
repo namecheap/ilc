@@ -128,7 +128,7 @@ export class Client {
         const hrefLangHandler = new HrefLangHandler(this.#configRoot.getSettingsByKey('i18n'), this.#logger);
         hrefLangHandler.start();
 
-        const canonicalTagHandler = new CanonicalTagHandler(this.#i18n, this.#logger);
+        const canonicalTagHandler = new CanonicalTagHandler(this.#i18n, this.#logger, this.#router);
         canonicalTagHandler.start();
 
         this.#preheat();
