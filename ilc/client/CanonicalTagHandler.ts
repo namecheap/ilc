@@ -26,7 +26,7 @@ export class CanonicalTagHandler {
     private handleRoutingChange = (event: Event): void => {
         const canonicalTag = document.querySelector('link[rel="canonical"][data-ilc="1"]');
         if (!canonicalTag) {
-            this.logger?.error('CanonicalTagHandler: Can not find canonical tag on the page');
+            this.logger.error('CanonicalTagHandler: Can not find canonical tag on the page');
             return;
         }
 
@@ -46,7 +46,7 @@ export class CanonicalTagHandler {
     private determineCanonicalUrl(defaultUrl: string): string {
         try {
             const currentRoute = this.router.getCurrentRoute();
-            const routeCanonicalUrl = currentRoute?.meta?.canonicalUrl;
+            const routeCanonicalUrl = currentRoute.meta?.canonicalUrl;
 
             if (!routeCanonicalUrl) {
                 return defaultUrl;
@@ -56,7 +56,7 @@ export class CanonicalTagHandler {
 
             return `${origin}${routeCanonicalUrl.startsWith('/') ? '' : '/'}${routeCanonicalUrl}`;
         } catch (error) {
-            this.logger?.error('CanonicalTagHandler: Error getting current route', error as Error);
+            this.logger.error('CanonicalTagHandler: Error getting current route', error as Error);
             return defaultUrl;
         }
     }

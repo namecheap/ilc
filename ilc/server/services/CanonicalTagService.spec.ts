@@ -42,7 +42,18 @@ describe('CanonicalTagService', () => {
         configStub.withArgs('client.protocol').returns(protocol);
 
         localizeUrlStub = sandbox.stub(IlcIntl, 'localizeUrl');
-        localizeUrlStub.callsFake((config, url, options) => `${url}?locale=${options.locale || 'default'}`);
+        localizeUrlStub.callsFake((config, url, options) => {
+            const locale = options.locale || 'default';
+            const urlObj = new URL(url);
+            const path = urlObj.pathname;
+
+            if (locale === config.default.locale) {
+                return url;
+            }
+
+            const localizedPath = `/${locale}${path.startsWith('/') ? path : `/${path}`}`;
+            return `${urlObj.protocol}//${urlObj.host}${localizedPath}`;
+        });
 
         addTrailingSlashStub = sandbox.stub(utils, 'addTrailingSlash');
         addTrailingSlashStub.callsFake((url) => (url.endsWith('/') ? url : `${url}/`));
@@ -57,14 +68,14 @@ describe('CanonicalTagService', () => {
 
     it('should generate canonical tag with default URL when no custom URL is provided', () => {
         const fullUrl = `${protocol}://${domain}${url}`;
-        localizeUrlStub.withArgs(i18nConfig, fullUrl, { locale }).returns(`${fullUrl}?locale=${locale}`);
-        addTrailingSlashStub.withArgs(`${fullUrl}?locale=${locale}`).returns(`${fullUrl}?locale=${locale}/`);
+        localizeUrlStub.withArgs(i18nConfig, fullUrl, { locale }).returns(fullUrl);
+        addTrailingSlashStub.withArgs(fullUrl).returns(`${fullUrl}/`);
 
         const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, locale, i18nConfig);
 
-        chai.expect(result).to.equal(`<link rel="canonical" href="${fullUrl}?locale=${locale}/" data-ilc="1" />`);
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullUrl}/" data-ilc="1" />`);
         chai.expect(localizeUrlStub.calledWith(i18nConfig, fullUrl, { locale })).to.be.true;
-        chai.expect(addTrailingSlashStub.calledWith(`${fullUrl}?locale=${locale}`)).to.be.true;
+        chai.expect(addTrailingSlashStub.calledWith(fullUrl)).to.be.true;
     });
 
     it('should generate canonical tag with custom URL when provided in route metadata', () => {
@@ -72,34 +83,27 @@ describe('CanonicalTagService', () => {
         const routeMeta = { canonicalUrl: customPath };
         const fullCustomUrl = `${protocol}://${domain}${customPath}`;
 
-        localizeUrlStub.withArgs(i18nConfig, fullCustomUrl, { locale }).returns(`${fullCustomUrl}?locale=${locale}`);
-        addTrailingSlashStub
-            .withArgs(`${fullCustomUrl}?locale=${locale}`)
-            .returns(`${fullCustomUrl}?locale=${locale}/`);
+        localizeUrlStub.withArgs(i18nConfig, fullCustomUrl, { locale }).returns(fullCustomUrl);
+        addTrailingSlashStub.withArgs(fullCustomUrl).returns(fullCustomUrl);
 
         const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, locale, i18nConfig, routeMeta);
 
-        chai.expect(result).to.equal(`<link rel="canonical" href="${fullCustomUrl}?locale=${locale}/" data-ilc="1" />`);
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullCustomUrl}" data-ilc="1" />`);
         chai.expect(localizeUrlStub.calledWith(i18nConfig, fullCustomUrl, { locale })).to.be.true;
-        chai.expect(addTrailingSlashStub.calledWith(`${fullCustomUrl}?locale=${locale}`)).to.be.true;
+        chai.expect(addTrailingSlashStub.calledWith(fullCustomUrl)).to.be.true;
     });
 
     it('should use default locale when no locale is provided', () => {
         const defaultLocale = i18nConfig.default.locale;
         const fullUrl = `${protocol}://${domain}${url}`;
 
-        localizeUrlStub
-            .withArgs(i18nConfig, fullUrl, { locale: defaultLocale })
-            .returns(`${fullUrl}?locale=${defaultLocale}`);
-        addTrailingSlashStub
-            .withArgs(`${fullUrl}?locale=${defaultLocale}`)
-            .returns(`${fullUrl}?locale=${defaultLocale}/`);
+        removeQueryParamsStub.withArgs(fullUrl).returns(fullUrl);
+        localizeUrlStub.withArgs(i18nConfig, fullUrl, { locale: defaultLocale }).returns(fullUrl);
+        addTrailingSlashStub.withArgs(fullUrl).returns(`${fullUrl}/`);
 
         const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, undefined, i18nConfig);
 
-        chai.expect(result).to.equal(
-            `<link rel="canonical" href="${fullUrl}?locale=${defaultLocale}/" data-ilc="1" />`,
-        );
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullUrl}/" data-ilc="1" />`);
         chai.expect(localizeUrlStub.calledWith(i18nConfig, fullUrl, { locale: defaultLocale })).to.be.true;
     });
 
