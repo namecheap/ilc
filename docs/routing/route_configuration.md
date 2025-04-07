@@ -71,9 +71,6 @@ ILC also supports custom plugins. You can learn more about them in the [ilc-plug
     }
     ```
 
-    !!! warning "Relative URLs Only"
-    Only relative URLs are supported for canonical URLs. Absolute URLs will be ignored, and the default URL will be used instead.
-
 ### Access the protected page
 
 In the basic scenario, the required condition to access the protected page is to press the `confirm` button. In real world scenarios, you can set any conditions (for example, authorization form).
