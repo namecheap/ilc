@@ -58,16 +58,22 @@ export class RoutesService {
             externals: false,
         });
 
-        let savedAppRouteId;
+        let savedAppRouteId: number;
         await this.db.versioning(user, { type: EntityTypes.routes, trxProvider }, async (trx) => {
+            const appRouteRecord = prepareAppRouteToSave(appRoute);
+            const appRouteRecordWithOrderPos = appRouteRecord.orderPos
+                ? appRouteRecord
+                : {
+                      ...appRouteRecord,
+                      orderPos:
+                          (await this.findExistingOrderPos(appRoute, trx)) ??
+                          (await this.getNextOrderPos(appRouteRecord.domainId, trx)),
+                  };
             const result = await this.db(Tables.Routes)
-                .insert(prepareAppRouteToSave(appRoute), 'id')
+                .insert(appRouteRecordWithOrderPos, 'id')
                 .onConflict(this.db.raw('("orderPos", "domainIdIdxble", namespace) WHERE namespace IS NOT NULL'))
                 .merge()
                 .transacting(trx);
-            if (appRoute.orderPos) {
-                await this.db(Tables.Routes).syncSequence('orderPos', 10, 0).transacting(trx);
-            }
             savedAppRouteId = extractInsertedId(result as { id: number }[]);
             await this.db(Tables.RouteSlots).where('routeId', savedAppRouteId).delete().transacting(trx);
             await this.db
@@ -107,6 +113,26 @@ export class RoutesService {
             error?.message.includes(sqliteErrorOrderPos) ||
             error?.message.includes(constraint)
         );
+    }
+
+    public async getNextOrderPos(domainId: number | null, trx: Knex.Transaction) {
+        const [{ max }] = await this.db(Tables.Routes)
+            .max('orderPos')
+            .where(function () {
+                this.where({ domainId });
+                this.whereNotNull('orderPos');
+            })
+            .transacting(trx);
+
+        return max ? max + 10 : 10;
+    }
+
+    private async findExistingOrderPos(appRoute: AppRoute, trx: Knex.Transaction): Promise<number | undefined | null> {
+        const existingRoute = await this.db(Tables.Routes)
+            .first('orderPos')
+            .where({ route: appRoute.route, domainId: appRoute.domainId, namespace: appRoute.namespace })
+            .transacting(trx);
+        return existingRoute?.orderPos;
     }
 }
 

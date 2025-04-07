@@ -525,7 +525,7 @@ describe('Tests /api/v1/config', () => {
                     routeId: 36,
                     route: '/app1/*',
                     next: false,
-                    orderPos: 70,
+                    orderPos: 10,
                 });
                 expect(config.routes[1]).to.deep.include({
                     slots: {
@@ -541,7 +541,7 @@ describe('Tests /api/v1/config', () => {
                     routeId: 37,
                     route: '/app2/*',
                     next: false,
-                    orderPos: 80,
+                    orderPos: 20,
                 });
                 expect(config.dynamicLibs.lib1).to.include({
                     spaBundle: 'https://localhost:8080/sample-nodejs/app.47b9b19062e648845f15.js',
@@ -601,10 +601,10 @@ describe('Tests /api/v1/config', () => {
                         },
                     },
                     meta: {},
-                    routeId: 40,
+                    routeId: 39,
                     route: '/app2/*',
                     next: false,
-                    orderPos: 110,
+                    orderPos: 20,
                 });
 
                 routeIds = config.routes.map((x: any) => x.routeId);
@@ -751,7 +751,6 @@ describe('Tests /api/v1/config', () => {
                     routeId: 43,
                     route: '/app3/*',
                     next: false,
-                    orderPos: 140,
                 });
                 expect(config.routes[1]).to.deep.include({
                     slots: {
@@ -767,7 +766,6 @@ describe('Tests /api/v1/config', () => {
                     routeId: 44,
                     route: '/app4/*',
                     next: false,
-                    orderPos: 150,
                 });
                 routeIds = config.routes.map((x: any) => x.routeId);
             } finally {
@@ -832,7 +830,6 @@ describe('Tests /api/v1/config', () => {
                     })
                     .expect(204);
                 ({ body: config } = await req.get('/api/v1/config').expect(200));
-                console.log('🚀 ~ it ~ config:', config);
                 expect(config.routes[2]).to.deep.include({
                     route: '/route3/',
                     orderPos: nextOrderPos + 10,
@@ -848,6 +845,35 @@ describe('Tests /api/v1/config', () => {
                 await req.delete(`/api/v1/route/${routeIds[2]}`);
                 await req.delete(`/api/v1/route/${routeIds[3]}`);
             }
+        });
+        it('should not change existing orderPos if not provided', async () => {
+            await req.put('/api/v1/config').send({
+                routes: [
+                    {
+                        route: '/route1/',
+                        namespace: 'ns1',
+                    },
+                ],
+            });
+            let config;
+            ({ body: config } = await req.get('/api/v1/config').expect(200));
+            expect(config.routes[0]).to.deep.include({
+                route: '/route1/',
+            });
+            const orderPos = config.routes[0].orderPos;
+            await req.put('/api/v1/config').send({
+                routes: [
+                    {
+                        route: '/route1/',
+                        namespace: 'ns1',
+                    },
+                ],
+            });
+            ({ body: config } = await req.get('/api/v1/config').expect(200));
+            expect(config.routes[0]).to.deep.include({
+                route: '/route1/',
+                orderPos,
+            });
         });
     });
 });

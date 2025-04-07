@@ -42,17 +42,17 @@ export class ConfigService {
         const trx = await trxProvider();
 
         try {
-            const upsertedApps = await this.upsertApps(payload.apps, appInstance, {
+            const upsertedApps = await this.upsertApps(payload.apps ?? [], appInstance, {
                 user,
                 trxProvider,
                 dryRun,
             });
-            const upsertedRoutes = await this.upsertRoutes(payload.routes, { user, trxProvider });
+            const upsertedRoutes = await this.upsertRoutes(payload.routes ?? [], { user, trxProvider });
 
             const groupedApps = this.groupByNamespace(upsertedApps, 'name');
             const groupedRoutes = this.groupByNamespace(upsertedRoutes, 'id');
 
-            await this.upsertSharedLibs(payload.sharedLibs, sharedLibInstance, { user, trxProvider, dryRun });
+            await this.upsertSharedLibs(payload.sharedLibs ?? [], sharedLibInstance, { user, trxProvider, dryRun });
             await this.deleteRoutesByNamespace(groupedRoutes, { user, trxProvider });
             await this.deleteAppsByNamespace(groupedApps, appInstance, { user, trxProvider });
 
@@ -68,29 +68,32 @@ export class ConfigService {
     }
 
     private async upsertApps(
-        apps: App[] | undefined,
+        apps: App[],
         appInstance: ApplicationEntry,
         { user, trxProvider, dryRun }: UpsertParams,
     ): Promise<App[]> {
-        return await Promise.all(
-            apps?.map((x) => appInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })) ?? [],
-        );
+        return await Promise.all(apps.map((x) => appInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })));
     }
 
     private async upsertRoutes(
-        routes: AppRouteDto[] | undefined,
+        routes: AppRouteDto[],
         { user, trxProvider }: UpsertParams,
     ): Promise<(AppRoute & { id: number })[]> {
-        return await Promise.all(routes?.map((x) => routesService.upsert(x, user, trxProvider)) ?? []);
+        const results: (AppRoute & { id: number })[] = [];
+        for (const route of routes) {
+            const result = await routesService.upsert(route, user, trxProvider);
+            results.push(result);
+        }
+        return results;
     }
 
     private async upsertSharedLibs(
-        sharedLibs: SharedLib[] | undefined,
+        sharedLibs: SharedLib[],
         sharedLibInstance: SharedLibEntry,
         { user, trxProvider, dryRun }: UpsertParams,
     ): Promise<void> {
         await Promise.all(
-            sharedLibs?.map((x) => sharedLibInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })) ?? [],
+            sharedLibs.map((x) => sharedLibInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })),
         );
     }
 
