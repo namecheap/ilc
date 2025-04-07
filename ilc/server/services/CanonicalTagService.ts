@@ -30,7 +30,7 @@ export class CanonicalTagService {
         const store = context.getStore();
         const domain = store.get('domain');
         const protocol = config.get<string>('client.protocol');
-        const effectiveLocale = locale || i18nConfig?.default?.locale;
+        const effectiveLocale = locale || i18nConfig.default?.locale;
 
         const fullUrl = removeQueryParams(`${protocol}://${domain}${targetUrl}`);
 

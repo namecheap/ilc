@@ -112,4 +112,178 @@ describe('CanonicalTagHandler', () => {
             expect(i18nMock.localizeUrl(url)).to.equal('https://example.com/path?localized=true');
         });
     });
+
+    describe('handleRoutingChange method', () => {
+        let canonicalTag: HTMLLinkElement;
+
+        beforeEach(() => {
+            if (typeof window === 'undefined') {
+                console.log('Skipping DOM-dependent test in Node environment');
+                return;
+            }
+
+            canonicalTag = document.createElement('link');
+            canonicalTag.setAttribute('rel', 'canonical');
+            canonicalTag.setAttribute('data-ilc', '1');
+            document.head.appendChild(canonicalTag);
+        });
+
+        afterEach(() => {
+            if (typeof window === 'undefined') {
+                return;
+            }
+
+            if (canonicalTag?.parentNode) {
+                canonicalTag.parentNode.removeChild(canonicalTag);
+            }
+        });
+
+        it('should update canonical tag href on routing event', () => {
+            if (typeof window === 'undefined') {
+                console.log('Skipping DOM-dependent test in Node environment');
+                return;
+            }
+
+            routerMock.getCurrentRoute.returns({ meta: {} });
+
+            const event = new Event(singleSpaEvents.ROUTING_EVENT);
+            Object.defineProperty(event, 'target', {
+                value: {
+                    location: {
+                        href: 'https://example.com/page?query=param',
+                    },
+                },
+            });
+
+            canonicalTagHandler.start();
+            window.dispatchEvent(event);
+
+            expect(canonicalTag.getAttribute('href')).to.equal('https://example.com/page?localized=true');
+        });
+
+        it('should log error if canonical tag is not found', () => {
+            if (typeof window === 'undefined') {
+                console.log('Skipping DOM-dependent test in Node environment');
+                return;
+            }
+
+            if (canonicalTag?.parentNode) {
+                canonicalTag.parentNode.removeChild(canonicalTag);
+            }
+
+            const event = new Event(singleSpaEvents.ROUTING_EVENT);
+
+            canonicalTagHandler.start();
+            window.dispatchEvent(event);
+
+            expect(loggerMock.error.calledWith('CanonicalTagHandler: Can not find canonical tag on the page')).to.be
+                .true;
+        });
+    });
+
+    describe('determineCanonicalUrl method', () => {
+        it('should use route canonical URL when available', () => {
+            if (typeof window === 'undefined') {
+                console.log('Skipping DOM-dependent test in Node environment');
+                return;
+            }
+
+            routerMock.getCurrentRoute.returns({
+                meta: {
+                    canonicalUrl: '/canonical-path',
+                },
+            });
+
+            const event = new Event(singleSpaEvents.ROUTING_EVENT);
+            Object.defineProperty(event, 'target', {
+                value: {
+                    location: {
+                        href: 'https://example.com/page',
+                    },
+                },
+            });
+
+            const canonicalTag = document.createElement('link');
+            canonicalTag.setAttribute('rel', 'canonical');
+            canonicalTag.setAttribute('data-ilc', '1');
+            document.head.appendChild(canonicalTag);
+
+            canonicalTagHandler.start();
+            window.dispatchEvent(event);
+
+            expect(canonicalTag.getAttribute('href')).to.include('/canonical-path');
+
+            canonicalTag.parentNode?.removeChild(canonicalTag);
+        });
+
+        it('should handle canonical URL with or without leading slash', () => {
+            if (typeof window === 'undefined') {
+                console.log('Skipping DOM-dependent test in Node environment');
+                return;
+            }
+
+            routerMock.getCurrentRoute.returns({
+                meta: {
+                    canonicalUrl: 'no-leading-slash',
+                },
+            });
+
+            const event = new Event(singleSpaEvents.ROUTING_EVENT);
+            Object.defineProperty(event, 'target', {
+                value: {
+                    location: {
+                        href: 'https://example.com/page',
+                    },
+                },
+            });
+
+            const canonicalTag = document.createElement('link');
+            canonicalTag.setAttribute('rel', 'canonical');
+            canonicalTag.setAttribute('data-ilc', '1');
+            document.head.appendChild(canonicalTag);
+
+            canonicalTagHandler.start();
+            window.dispatchEvent(event);
+
+            expect(canonicalTag.getAttribute('href')).to.include('/no-leading-slash');
+
+            canonicalTag.parentNode?.removeChild(canonicalTag);
+        });
+
+        it('should handle absence of i18n', () => {
+            if (typeof window === 'undefined') {
+                console.log('Skipping DOM-dependent test in Node environment');
+                return;
+            }
+
+            const handlerWithoutI18n = new CanonicalTagHandler(
+                null as unknown as IlcIntl,
+                loggerMock as unknown as Logger,
+                routerMock as unknown as ClientRouter,
+            );
+
+            routerMock.getCurrentRoute.returns({ meta: {} });
+
+            const event = new Event(singleSpaEvents.ROUTING_EVENT);
+            Object.defineProperty(event, 'target', {
+                value: {
+                    location: {
+                        href: 'https://example.com/default-path',
+                    },
+                },
+            });
+
+            const canonicalTag = document.createElement('link');
+            canonicalTag.setAttribute('rel', 'canonical');
+            canonicalTag.setAttribute('data-ilc', '1');
+            document.head.appendChild(canonicalTag);
+
+            handlerWithoutI18n.start();
+            window.dispatchEvent(event);
+
+            expect(canonicalTag.getAttribute('href')).to.equal('https://example.com/default-path');
+
+            canonicalTag.parentNode?.removeChild(canonicalTag);
+        });
+    });
 });

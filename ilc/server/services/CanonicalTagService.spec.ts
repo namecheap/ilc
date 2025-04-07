@@ -117,4 +117,75 @@ describe('CanonicalTagService', () => {
 
         chai.expect(result).to.equal(`<link rel="canonical" href="${fullCustomUrl}?locale=${locale}/" data-ilc="1" />`);
     });
+
+    it('should handle case when locale is undefined', () => {
+        const i18nConfig: IntlAdapterConfig = {
+            default: {
+                locale: 'en',
+                currency: 'USD',
+            },
+            supported: {
+                locale: ['en', 'es', 'fr'],
+                currency: ['USD'],
+            },
+            routingStrategy: RoutingStrategy.PrefixExceptDefault,
+        };
+
+        const fullUrl = `${protocol}://${domain}${url}`;
+
+        const undefinedLocale = undefined;
+
+        localizeUrlStub
+            .withArgs(i18nConfig, fullUrl, { locale: i18nConfig.default.locale })
+            .returns(`${fullUrl}?locale=${i18nConfig.default.locale}`);
+
+        addTrailingSlashStub
+            .withArgs(`${fullUrl}?locale=${i18nConfig.default.locale}`)
+            .returns(`${fullUrl}?locale=${i18nConfig.default.locale}/`);
+
+        const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, undefinedLocale, i18nConfig);
+
+        chai.expect(localizeUrlStub.calledWith(i18nConfig, fullUrl, { locale: i18nConfig.default.locale })).to.be.true;
+
+        chai.expect(result).to.equal(
+            `<link rel="canonical" href="${fullUrl}?locale=${i18nConfig.default.locale}/" data-ilc="1" />`,
+        );
+    });
+
+    it('should handle case when both locale is undefined and i18nConfig has no default locale set', () => {
+        const partialI18nConfig = {
+            supported: {
+                locale: ['en'],
+                currency: ['USD'],
+            },
+            routingStrategy: RoutingStrategy.PrefixExceptDefault,
+        } as IntlAdapterConfig;
+
+        const fullUrl = `${protocol}://${domain}${url}`;
+        const undefinedLocale = undefined;
+
+        localizeUrlStub.withArgs(partialI18nConfig, fullUrl, { locale: undefined }).returns(`${fullUrl}?no-locale`);
+
+        addTrailingSlashStub.withArgs(`${fullUrl}?no-locale`).returns(`${fullUrl}?no-locale/`);
+
+        const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, undefinedLocale, partialI18nConfig);
+
+        chai.expect(localizeUrlStub.calledWith(partialI18nConfig, fullUrl, { locale: undefined })).to.be.true;
+
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullUrl}?no-locale/" data-ilc="1" />`);
+    });
+
+    it('should handle case when i18nConfig is null', () => {
+        const fullUrl = `${protocol}://${domain}${url}`;
+        const locale = 'en';
+
+        localizeUrlStub.withArgs(null, fullUrl, { locale }).returns(fullUrl);
+
+        addTrailingSlashStub.withArgs(fullUrl).returns(`${fullUrl}/`);
+
+        const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, locale, null as any);
+
+        chai.expect(localizeUrlStub.calledWith(null, fullUrl, { locale })).to.be.true;
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullUrl}/" data-ilc="1" />`);
+    });
 });
