@@ -1,12 +1,8 @@
 import { IlcIntl } from 'ilc-sdk/app';
 import singleSpaEvents from './constants/singleSpaEvents';
 import { removeQueryParams } from '../common/utils';
-import { Route } from '../server/types/RegistryConfig';
+import { ClientRouter } from '../common/types/Router';
 import type { Logger } from 'ilc-plugins-sdk';
-
-interface ClientRouter {
-    getCurrentRoute(): Route;
-}
 
 export class CanonicalTagHandler {
     constructor(
@@ -16,17 +12,16 @@ export class CanonicalTagHandler {
     ) {}
 
     start(): void {
-        window.addEventListener(singleSpaEvents.ROUTING_EVENT, this.handleRoutingChange as EventListener);
+        window.addEventListener(singleSpaEvents.ROUTING_EVENT, this.handleRoutingChange);
     }
 
     stop(): void {
-        window.removeEventListener(singleSpaEvents.ROUTING_EVENT, this.handleRoutingChange as EventListener);
+        window.removeEventListener(singleSpaEvents.ROUTING_EVENT, this.handleRoutingChange);
     }
 
     private handleRoutingChange = (event: Event): void => {
-        const canonicalTag = document.querySelector('link[rel="canonical"][data-ilc="1"]');
+        const canonicalTag = this.findCanonicalTag();
         if (!canonicalTag) {
-            this.logger.error('CanonicalTagHandler: Can not find canonical tag on the page');
             return;
         }
 
@@ -36,6 +31,20 @@ export class CanonicalTagHandler {
 
         canonicalTag.setAttribute('href', localizedUrl);
     };
+
+    /**
+     * Finds the canonical tag in the document
+     *
+     * @returns The canonical tag element or null if not found
+     */
+    private findCanonicalTag(): HTMLLinkElement | null {
+        const canonicalTag = document.querySelector('link[rel="canonical"][data-ilc="1"]');
+        if (!canonicalTag) {
+            this.logger.error('CanonicalTagHandler: Can not find canonical tag on the page');
+            return null;
+        }
+        return canonicalTag as HTMLLinkElement;
+    }
 
     /**
      * Determines the canonical URL based on router configuration

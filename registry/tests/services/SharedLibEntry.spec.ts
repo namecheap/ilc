@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { ApplicationEntry } from '../../server/common/services/entries/ApplicationEntry';
 import { VersionedKnex } from '../../server/db';
 import { Tables } from '../../server/db/structure';
 import { User } from '../../typings/User';
@@ -45,7 +44,12 @@ describe('SharedLibraryEntry', () => {
             });
         });
         it('should update item', async () => {
-            await db(Tables.SharedLibs).insert({ name: '@portal/upsert2', spaBundle: '', l10nManifest: 'existing' });
+            await db(Tables.SharedLibs).insert({
+                name: '@portal/upsert2',
+                assetsDiscoveryUrl: '',
+                spaBundle: 'https://example.com/lib1.js',
+                l10nManifest: 'existing',
+            });
             const service = new SharedLibEntry(db);
             const trxProvider = db.transactionProvider();
             await service.upsert({ ...sharedLibPayload, name: '@portal/upsert2' }, { user, trxProvider });
@@ -86,22 +90,26 @@ describe('SharedLibraryEntry', () => {
             const lib = await db(Tables.SharedLibs).first().where({ name: '@portal/upsert4' });
             expect(lib).to.undefined;
         });
-        it('should not rewrite existing properties if not applied', async () => {
+        it('should not rewrite specific properties if not applied', async () => {
             await db(Tables.SharedLibs).insert({
                 name: '@portal/upsert6',
                 spaBundle: 'http://localhost/new',
+                assetsDiscoveryUrl: 'http://localhost/new',
                 l10nManifest: 'existing',
+                adminNotes: 'existing',
             });
             const service = new SharedLibEntry(db);
             const trxProvider = db.transactionProvider();
-            await service.upsert({ ...sharedLibPayload, name: '@portal/upsert6' }, { user, trxProvider });
+            await service.upsert({ name: '@portal/upsert6', spaBundle: 'http://localhost/new' }, { user, trxProvider });
             const trx = await trxProvider();
             await trx.commit();
             const lib = await db(Tables.SharedLibs).first().where({ name: '@portal/upsert6' });
             expect(lib).to.deep.include({
                 name: '@portal/upsert6',
-                spaBundle: 'https://example.com/lib2.js',
+                assetsDiscoveryUrl: null,
+                spaBundle: 'http://localhost/new',
                 l10nManifest: 'existing',
+                adminNotes: 'existing',
             });
         });
     });

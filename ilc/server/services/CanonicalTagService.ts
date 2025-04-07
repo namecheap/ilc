@@ -2,7 +2,7 @@ import config from 'config';
 import { IlcIntl, IntlAdapterConfig } from 'ilc-sdk/app';
 import { context } from '../context/context';
 import { removeQueryParams, addTrailingSlash } from '../../common/utils';
-import { RouteMeta } from '../types/RegistryConfig';
+import { RouteMeta } from '../../common/types/Router';
 
 export class CanonicalTagService {
     /**

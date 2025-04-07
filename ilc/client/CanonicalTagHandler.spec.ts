@@ -4,12 +4,8 @@ import { CanonicalTagHandler } from '../client/CanonicalTagHandler';
 import singleSpaEvents from '../client/constants/singleSpaEvents';
 import { IlcIntl } from 'ilc-sdk/app';
 import type { Logger } from 'ilc-plugins-sdk';
-import { Route } from '../server/types/RegistryConfig';
+import { ClientRouter } from '../common/types/Router';
 import * as utils from '../common/utils';
-
-interface ClientRouter {
-    getCurrentRoute(): Route;
-}
 
 describe('CanonicalTagHandler', () => {
     let canonicalTagHandler: CanonicalTagHandler;

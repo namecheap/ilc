@@ -1,36 +1,4 @@
-// TODO finish with all values
-
-export type Slot = {
-    appName: string;
-    kind: 'primary' | 'essential' | 'regular' | null;
-    props: {};
-};
-
-export type RouteMeta = {
-    canonicalUrl?: string;
-    [key: string]: unknown;
-};
-
-type BaseRoute = {
-    slots: Record<string, Slot>;
-    meta: RouteMeta;
-    next: boolean;
-    versionId: string;
-    domain?: string;
-};
-
-export type Route = BaseRoute & {
-    routeId?: number;
-    route: string;
-    template?: string;
-    orderPos: number;
-};
-
-export type SpecialRoute = BaseRoute & {
-    routeId: number;
-    template: string;
-    specialRole: string;
-};
+import type { Route, SpecialRoute } from '../../common/types/Router';
 
 export type App = {
     kind?: string;
