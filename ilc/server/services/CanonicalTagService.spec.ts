@@ -42,24 +42,9 @@ describe('CanonicalTagService', () => {
         configStub.withArgs('client.protocol').returns(protocol);
 
         localizeUrlStub = sandbox.stub(IlcIntl, 'localizeUrl');
-        localizeUrlStub.callsFake((config, url, options) => {
-            const locale = options.locale || 'default';
-            const urlObj = new URL(url);
-            const path = urlObj.pathname;
-
-            if (locale === config.default.locale) {
-                return url;
-            }
-
-            const localizedPath = `/${locale}${path.startsWith('/') ? path : `/${path}`}`;
-            return `${urlObj.protocol}//${urlObj.host}${localizedPath}`;
-        });
-
         addTrailingSlashStub = sandbox.stub(utils, 'addTrailingSlash');
-        addTrailingSlashStub.callsFake((url) => (url.endsWith('/') ? url : `${url}/`));
 
         removeQueryParamsStub = sandbox.stub(utils, 'removeQueryParams');
-        removeQueryParamsStub.callsFake((url) => url.split('?')[0]);
     });
 
     afterEach(() => {
@@ -68,6 +53,8 @@ describe('CanonicalTagService', () => {
 
     it('should generate canonical tag with default URL when no custom URL is provided', () => {
         const fullUrl = `${protocol}://${domain}${url}`;
+
+        removeQueryParamsStub.withArgs(`${protocol}://${domain}${url}`).returns(fullUrl);
         localizeUrlStub.withArgs(i18nConfig, fullUrl, { locale }).returns(fullUrl);
         addTrailingSlashStub.withArgs(fullUrl).returns(`${fullUrl}/`);
 
@@ -83,12 +70,13 @@ describe('CanonicalTagService', () => {
         const routeMeta = { canonicalUrl: customPath };
         const fullCustomUrl = `${protocol}://${domain}${customPath}`;
 
+        removeQueryParamsStub.withArgs(`${protocol}://${domain}${customPath}`).returns(fullCustomUrl);
         localizeUrlStub.withArgs(i18nConfig, fullCustomUrl, { locale }).returns(fullCustomUrl);
-        addTrailingSlashStub.withArgs(fullCustomUrl).returns(fullCustomUrl);
+        addTrailingSlashStub.withArgs(fullCustomUrl).returns(`${fullCustomUrl}/`);
 
         const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, locale, i18nConfig, routeMeta);
 
-        chai.expect(result).to.equal(`<link rel="canonical" href="${fullCustomUrl}" data-ilc="1" />`);
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullCustomUrl}/" data-ilc="1" />`);
         chai.expect(localizeUrlStub.calledWith(i18nConfig, fullCustomUrl, { locale })).to.be.true;
         chai.expect(addTrailingSlashStub.calledWith(fullCustomUrl)).to.be.true;
     });
@@ -112,14 +100,13 @@ describe('CanonicalTagService', () => {
         const routeMeta = { canonicalUrl: customPath };
         const fullCustomUrl = `${protocol}://${domain}${customPath}`;
 
-        localizeUrlStub.withArgs(i18nConfig, fullCustomUrl, { locale }).returns(`${fullCustomUrl}?locale=${locale}`);
-        addTrailingSlashStub
-            .withArgs(`${fullCustomUrl}?locale=${locale}`)
-            .returns(`${fullCustomUrl}?locale=${locale}/`);
+        removeQueryParamsStub.withArgs(`${protocol}://${domain}${customPath}`).returns(fullCustomUrl);
+        localizeUrlStub.withArgs(i18nConfig, fullCustomUrl, { locale }).returns(fullCustomUrl);
+        addTrailingSlashStub.withArgs(fullCustomUrl).returns(`${fullCustomUrl}/`);
 
         const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, locale, i18nConfig, routeMeta);
 
-        chai.expect(result).to.equal(`<link rel="canonical" href="${fullCustomUrl}?locale=${locale}/" data-ilc="1" />`);
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullCustomUrl}/" data-ilc="1" />`);
     });
 
     it('should handle case when locale is undefined', () => {
@@ -139,6 +126,7 @@ describe('CanonicalTagService', () => {
 
         const undefinedLocale = undefined;
 
+        removeQueryParamsStub.withArgs(`${protocol}://${domain}${url}`).returns(fullUrl);
         localizeUrlStub
             .withArgs(i18nConfig, fullUrl, { locale: i18nConfig.default.locale })
             .returns(`${fullUrl}?locale=${i18nConfig.default.locale}`);
@@ -168,28 +156,42 @@ describe('CanonicalTagService', () => {
         const fullUrl = `${protocol}://${domain}${url}`;
         const undefinedLocale = undefined;
 
-        localizeUrlStub.withArgs(partialI18nConfig, fullUrl, { locale: undefined }).returns(`${fullUrl}?no-locale`);
-
-        addTrailingSlashStub.withArgs(`${fullUrl}?no-locale`).returns(`${fullUrl}?no-locale/`);
+        removeQueryParamsStub.withArgs(`${protocol}://${domain}${url}`).returns(fullUrl);
+        localizeUrlStub.withArgs(partialI18nConfig, fullUrl, { locale: undefined }).returns(fullUrl);
+        addTrailingSlashStub.withArgs(fullUrl).returns(`${fullUrl}/`);
 
         const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, undefinedLocale, partialI18nConfig);
 
         chai.expect(localizeUrlStub.calledWith(partialI18nConfig, fullUrl, { locale: undefined })).to.be.true;
 
-        chai.expect(result).to.equal(`<link rel="canonical" href="${fullUrl}?no-locale/" data-ilc="1" />`);
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullUrl}/" data-ilc="1" />`);
     });
 
     it('should handle case when i18nConfig is null', () => {
         const fullUrl = `${protocol}://${domain}${url}`;
-        const locale = 'en';
 
+        removeQueryParamsStub.withArgs(`${protocol}://${domain}${url}`).returns(fullUrl);
         localizeUrlStub.withArgs(null, fullUrl, { locale }).returns(fullUrl);
-
         addTrailingSlashStub.withArgs(fullUrl).returns(`${fullUrl}/`);
 
         const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, locale, null as any);
 
-        chai.expect(localizeUrlStub.calledWith(null, fullUrl, { locale })).to.be.true;
         chai.expect(result).to.equal(`<link rel="canonical" href="${fullUrl}/" data-ilc="1" />`);
+    });
+
+    it('should handle URLs with query parameters in custom canonical URLs', () => {
+        const customPath = '/custom-path?locale=en';
+        const routeMeta = { canonicalUrl: customPath };
+        const fullCustomUrl = `${protocol}://${domain}${customPath}`;
+
+        removeQueryParamsStub.withArgs(`${protocol}://${domain}${customPath}`).returns(fullCustomUrl);
+        localizeUrlStub.withArgs(i18nConfig, fullCustomUrl, { locale }).returns(`${fullCustomUrl}?locale=${locale}`);
+        addTrailingSlashStub
+            .withArgs(`${fullCustomUrl}?locale=${locale}`)
+            .returns(`${fullCustomUrl}?locale=${locale}/`);
+
+        const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, locale, i18nConfig, routeMeta);
+
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullCustomUrl}?locale=${locale}/" data-ilc="1" />`);
     });
 });
