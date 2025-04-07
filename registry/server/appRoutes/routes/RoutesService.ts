@@ -45,25 +45,64 @@ export class RoutesService {
         });
     }
 
-    public async upsert(params: unknown, user: User, trxProvider: Knex.TransactionProvider) {
+    /**
+     * @returns routeId
+     */
+    public async upsert(
+        params: unknown,
+        user: User,
+        trxProvider: Knex.TransactionProvider,
+    ): Promise<AppRoute & { id: number }> {
         const { slots, ...appRoute } = await appRouteSchema.validateAsync(params, {
-            noDefaults: true,
+            noDefaults: false,
             externals: false,
         });
 
+        let savedAppRouteId: number;
         await this.db.versioning(user, { type: EntityTypes.routes, trxProvider }, async (trx) => {
+            const appRouteRecord = prepareAppRouteToSave(appRoute);
+            const appRouteRecordWithOrderPos = appRouteRecord.orderPos
+                ? appRouteRecord
+                : {
+                      ...appRouteRecord,
+                      orderPos:
+                          (await this.findExistingOrderPos(appRoute, trx)) ??
+                          (await this.getNextOrderPos(appRouteRecord.domainId, trx)),
+                  };
             const result = await this.db(Tables.Routes)
-                .insert(prepareAppRouteToSave(appRoute), 'id')
+                .insert(appRouteRecordWithOrderPos, 'id')
                 .onConflict(this.db.raw('("orderPos", "domainIdIdxble", namespace) WHERE namespace IS NOT NULL'))
                 .merge()
                 .transacting(trx);
-            const savedAppRouteId = extractInsertedId(result as { id: number }[]);
+            savedAppRouteId = extractInsertedId(result as { id: number }[]);
             await this.db(Tables.RouteSlots).where('routeId', savedAppRouteId).delete().transacting(trx);
             await this.db
                 .batchInsert(Tables.RouteSlots, prepareAppRouteSlotsToSave(slots, savedAppRouteId))
                 .transacting(trx);
-            return extractInsertedId(result as { id: number }[]);
+            return savedAppRouteId;
         });
+        return { ...appRoute, id: savedAppRouteId! };
+    }
+
+    public async deleteByNamespace(
+        namespace: string,
+        excludeIds: number[],
+        { user, trxProvider }: { user: User; trxProvider: Knex.TransactionProvider },
+    ) {
+        const trx = await trxProvider?.();
+        const routeIdsToDelete = await this.db(Tables.Routes)
+            .select('id')
+            .where({ namespace })
+            .whereNotIn('id', excludeIds)
+            .transacting(trx);
+
+        await Promise.all(
+            routeIdsToDelete.map(async (route) => {
+                await this.db.versioning(user, { type: EntityTypes.routes, id: route.id, trxProvider }, async (trx) => {
+                    await this.db(Tables.Routes).delete().where({ id: route.id }).transacting(trx);
+                });
+            }),
+        );
     }
 
     public isOrderPosError(error: any) {
@@ -74,6 +113,26 @@ export class RoutesService {
             error?.message.includes(sqliteErrorOrderPos) ||
             error?.message.includes(constraint)
         );
+    }
+
+    public async getNextOrderPos(domainId: number | null, trx: Knex.Transaction) {
+        const [{ max }] = await this.db(Tables.Routes)
+            .max('orderPos')
+            .where(function () {
+                this.where({ domainId });
+                this.whereNotNull('orderPos');
+            })
+            .transacting(trx);
+
+        return max ? max + 10 : 10;
+    }
+
+    private async findExistingOrderPos(appRoute: AppRoute, trx: Knex.Transaction): Promise<number | undefined | null> {
+        const existingRoute = await this.db(Tables.Routes)
+            .first('orderPos')
+            .where({ route: appRoute.route, domainId: appRoute.domainId, namespace: appRoute.namespace })
+            .transacting(trx);
+        return existingRoute?.orderPos;
     }
 }
 

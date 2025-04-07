@@ -46,7 +46,14 @@ const createAppRoute = async (req: Request, res: Response) => {
 
     try {
         await db.versioning(req.user, { type: 'routes' }, async (transaction) => {
-            const result = await db('routes').insert(prepareAppRouteToSave(appRoute), 'id').transacting(transaction);
+            const appRouteRecord = prepareAppRouteToSave(appRoute);
+            if (appRouteRecord.orderPos === undefined) {
+                appRouteRecord.orderPos = await routesService.getNextOrderPos(
+                    appRouteRecord.domainId ?? null,
+                    transaction,
+                );
+            }
+            const result = await db('routes').insert(appRouteRecord, 'id').transacting(transaction);
             savedAppRouteId = extractInsertedId(result as { id: number }[]);
 
             await db
