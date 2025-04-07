@@ -8,13 +8,16 @@ ILC checks the exact match of domain names. It means that `secure.example.com` i
 
 ![ILC registry domains field](../assets/routes/domain-field.png)
 
-!!! note "" - Domain name must be without protocol. - Empty `Domain Name` field means the main app domain. - To add a new domain, go to the **Router domains** section in the sidebar.
-
+!!! note ""
+    - Domain name must be without protocol.
+    - Empty `Domain Name` field means the main app domain.
+    - To add a new domain, go to the **Router domains** section in the sidebar.
+        
         ??? tip "Add a new domain"
             ![ILC registry domains menu](../assets/routes/domain-create.png)
 
 !!! note ""
-ILC renders applications for only one domain at the same time. To add one header to several domains, you need to create the same route several times specifying the required domain for each route.
+    ILC renders applications for only one domain at the same time. To add one header to several domains, you need to create the same route several times specifying the required domain for each route.
 
     For example:
 
@@ -34,11 +37,11 @@ Template is an HTML file that is used to build the structure of your page. If it
 ![ILC registry template field](../assets/routes/template-field.png)
 
 !!! warning "Important note"
-There must be at least one template in the routing chain.
+    There must be at least one template in the routing chain.
 
     ??? tip "Create a template"
         To create a template, go to the **Templates** section in the sidebar.
-
+        
         ![ILC registry template menu](../assets/routes/template-create.png)
 
 ## Route metadata
@@ -46,12 +49,12 @@ There must be at least one template in the routing chain.
 The `Metadata` field is handled by plugins, not by ILC. For example, ILC has the [Transition hooks](https://github.com/namecheap/ilc-plugins-sdk/tree/master/src/plugins/transitionHooks) plugin installed by default. This plugin determines whether the page should be protected. If yes, it will grant access to the protected page only after the user fulfills the required conditions.
 
 !!! info ""
-ILC also supports custom plugins. You can learn more about them in the [ilc-plugins-sdk repository](https://github.com/namecheap/ilc-plugins-sdk)
+    ILC also supports custom plugins. You can learn more about them in the [ilc-plugins-sdk repository](https://github.com/namecheap/ilc-plugins-sdk)
 
 ### Supported options
 
--   `protected`. Type: `boolean`
-
+- `protected`. Type: `boolean`
+    
     ![Route meta field in ILC registry](../assets/route_meta_field.gif)
 
 -   `canonicalUrl`. Type: `string`
@@ -83,21 +86,21 @@ More information about the Transition hooks plugin is available in the [ILC tran
 
 Slot configuration defines the main settings of a route:
 
--   Application.
--   Where the application should be displayed.
--   How critical the application is for the site.
--   Create/change application properties.
+- Application.
+- Where the application should be displayed.
+- How critical the application is for the site.
+- Create/change application properties.
 
 ![ILC slot configuration](../assets/routes/slot-configuration1.png)
 ![ILC slot configuration](../assets/routes/slot-configuration2.png)
 
 !!! tip ""
-If you want to render a page as plain HTML, leave the slot properties empty and ensure that the current route uses the HTML template with no `ilc-slot` tags.
+    If you want to render a page as plain HTML, leave the slot properties empty and ensure that the current route uses the HTML template with no `ilc-slot` tags.
 
 ### Configuration
 
 1. **Slot name**
-
+    
     Slot name refers to the value of the `id` attribute of the corresponding `ilc-slot` in the ILC templates. Your application will be rendered inside the `ilc-slot` with the `id` that you specify in the `Slot name`.
 
     ```html
@@ -111,7 +114,7 @@ If you want to render a page as plain HTML, leave the slot properties empty and 
     ```
 
     !!! warning "Important note"
-    You can have only one application per slot. If you add multiple applications to one slot, only the latter one will be rendered.
+        You can have only one application per slot. If you add multiple applications to one slot, only the latter one will be rendered.
 
 1. **App name**
 
@@ -120,7 +123,7 @@ If you want to render a page as plain HTML, leave the slot properties empty and 
 1. **App type**
 
     There are the following app types:
-
+     
     - **Primary**: set for the vital applications of your **site**. If the application crashes on the server side, ILC won't render it on the client side, and will immediately render an error.
     - **Essential**: set for the vital applications for the **user** (for example, header). If the application crashes on the server side, ILC will try to render it on the client side. It will render an error only if the application crashes on both server and client sides.
     - **Regular**: set for non-critical applications (for example, footer). If the application crashes on both server and client sides, ILC won't render it on the client side and will ignore errors from it.
