@@ -21,6 +21,7 @@ module.exports = {
     },
     exclude: [
         '**/*.spec.js',
+        '**/*.spec.ts',
         '**/*.conf.js',
         '**/*.config.js',
         'newrelic.js',
