@@ -116,11 +116,9 @@ describe('setupEvents', () => {
                 chai.expect(popstateEventHandler.called).to.be.false;
                 chai.expect(beforeRoutingEventHandler.called).to.be.false;
                 chai.expect(window.location.href).to.be.eql(prevHref);
-                chai.expect(
-                    errorHandler.calledOnceWithExactly(error, {
-                        hookIndex: 1,
-                    }),
-                ).to.be.true;
+                sinon.assert.calledOnceWithExactly(errorHandler, error, {
+                    hookIndex: 1,
+                });
                 chai.expect(anotherErrorHandler.called).to.be.false;
             });
 
