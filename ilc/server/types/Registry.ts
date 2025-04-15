@@ -1,6 +1,7 @@
 import type { Logger } from 'ilc-plugins-sdk';
 import { CacheResult } from '../../common/types/CacheWrapper';
-import type { RegistryConfig, Route, SpecialRoute } from './RegistryConfig';
+import type { Route, SpecialRoute } from '../../common/types/Router';
+import type { RegistryConfig } from './RegistryConfig';
 
 export type TransformedRoute = Omit<Route, 'domain'>;
 export type TransformedSpecialRoute = Omit<SpecialRoute, 'domain' | 'specialRole'>;
