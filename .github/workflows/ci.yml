@@ -272,10 +272,28 @@ jobs:
                   cache: 'npm'
                   cache-dependency-path: '**/package-lock.json'
 
-            - name: Install dependencies
-              run: npm install --verbose
-              env:
-                  NODE_OPTIONS: '--max-old-space-size=4096'
+            - name: Install root dependencies without postinstall
+              run: npm install --ignore-scripts
+
+            - name: Install ILC dependencies
+              working-directory: ./ilc
+              run: npm ci
+              timeout-minutes: 15
+
+            - name: Install Registry dependencies
+              working-directory: ./registry
+              run: npm ci
+              timeout-minutes: 15
+
+            - name: Install Registry UI dependencies
+              working-directory: ./registry/client
+              run: npm ci
+              timeout-minutes: 15
+
+            - name: Install E2E dependencies
+              working-directory: ./e2e
+              run: npm ci
+              timeout-minutes: 15
 
             - name: Build ILC & Registry
               run: npm run build
