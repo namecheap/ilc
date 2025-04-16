@@ -1,29 +1,33 @@
-import type { Route, SpecialRoute } from '../../common/types/Router';
+// TODO finish with all values
 
-export type App = {
-    kind?: string;
-    ssr?: {
-        timeout?: number;
-        src?: string;
-    };
-    props?: Record<string, any>;
-    ssrProps?: Record<string, any>;
-    spaBundle?: string;
-    cssBundle?: string;
-    enforceDomain?: string;
-    wrappedWith?: string;
-    l10nManifest?: string;
-    versionId?: string;
+export type Slot = {
+    appName: string;
+    kind: 'primary' | 'essential' | 'regular' | null;
+    props: {};
 };
 
-export type DynamicLib = {
-    spaBundle: string;
-    l10nManifest?: string;
+type BaseRoute = {
+    slots: Record<string, Slot>;
+    meta: {};
+    next: boolean;
     versionId: string;
+    domain?: string;
+};
+
+export type Route = BaseRoute & {
+    routeId?: number;
+    route: string;
+    template?: string;
+    orderPos: number;
+};
+
+export type SpecialRoute = BaseRoute & {
+    routeId: number;
+    template: string;
+    specialRole: string;
 };
 
 export interface RegistryConfig {
-    apps: Record<string, App>;
     settings: {
         trailingSlash?: string;
         overrideConfigTrustedOrigins?: string;
@@ -55,6 +59,4 @@ export interface RegistryConfig {
     };
     routes: Route[];
     specialRoutes: SpecialRoute[];
-    sharedLibs: Record<string, string>;
-    dynamicLibs: Record<string, DynamicLib>;
 }

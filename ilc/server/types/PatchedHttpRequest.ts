@@ -1,6 +1,7 @@
 import { IncomingMessage } from 'http';
+import { IlcRegistryConfig } from 'ilc-plugins-sdk/browser';
 import ServerRouter from '../tailor/server-router';
-import { TransformedRegistryConfig } from './Registry';
+import { RegistryConfig } from './RegistryConfig';
 
 export interface IlcState {
     locale?: string;
@@ -12,5 +13,5 @@ export interface PatchedHttpRequest extends IncomingMessage {
     ldeRelated?: boolean;
     router?: ServerRouter;
     ilcState?: IlcState;
-    registryConfig?: TransformedRegistryConfig;
+    registryConfig?: RegistryConfig;
 }

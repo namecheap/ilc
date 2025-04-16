@@ -1,10 +1,20 @@
 import deepmerge from 'deepmerge';
 import { TransformedRegistryConfig, TransformedRoute, TransformedSpecialRoute } from '../../server/types/Registry';
-import { RouterMatch, Slot } from '../../common/types/Router';
+import { Slot } from '../../server/types/RegistryConfig';
 import { NoBaseTemplateMatchError, NoRouteMatchError } from './errors';
 
 type CompiledRoute = TransformedRoute & {
     routeExp: RegExp;
+};
+
+type RouterMatch = {
+    basePath: string;
+    reqUrl: string;
+    route?: string;
+    template: string;
+    specialRole: number | null;
+    meta: {};
+    slots: Record<string, Slot>;
 };
 
 export class Router {
@@ -83,7 +93,7 @@ export class Router {
 
     validateResultingRoute(route: RouterMatch) {
         if (!route.template) {
-            throw new NoBaseTemplateMatchError();
+            throw new NoBaseTemplateMatchError({ data: { route: route } });
         }
     }
 

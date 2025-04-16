@@ -16,10 +16,10 @@ export interface SharedLib {
 export const sharedLibNameSchema = Joi.string().trim().min(1);
 
 const commonSharedLib = {
-    spaBundle: Joi.string().trim().uri(),
+    spaBundle: Joi.string().trim().uri().default(null),
     assetsDiscoveryUrl: Joi.string().trim().uri().default(null),
-    adminNotes: Joi.string().trim(),
-    l10nManifest: Joi.string().max(255),
+    adminNotes: Joi.string().trim().default(null),
+    l10nManifest: Joi.string().max(255).default(null),
     versionId: Joi.string().strip(),
 };
 

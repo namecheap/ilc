@@ -46,8 +46,8 @@ export interface AppDependencies {
 export const appNameSchema = Joi.string().trim().min(1);
 
 const commonApp = {
-    spaBundle: Joi.string().trim().uri(),
-    cssBundle: Joi.string().trim().uri(),
+    spaBundle: Joi.string().trim().uri().default(null),
+    cssBundle: Joi.string().trim().uri().default(null),
     assetsDiscoveryUrl: Joi.string().trim().uri().default(null),
     dependencies: Joi.object().default({}),
     props: Joi.object().default({}),
@@ -60,7 +60,7 @@ const commonApp = {
         .and('src', 'timeout')
         .empty({})
         .default(null),
-    kind: Joi.string().valid('primary', 'essential', 'regular', 'wrapper').default('regular'),
+    kind: Joi.string().valid('primary', 'essential', 'regular', 'wrapper'),
     wrappedWith: Joi.when('kind', {
         is: 'wrapper',
         then: Joi.any().custom(() => null),
@@ -81,9 +81,9 @@ const commonApp = {
             }),
     }),
     discoveryMetadata: Joi.object().default({}),
-    adminNotes: Joi.string().trim(),
+    adminNotes: Joi.string().trim().default(null),
     enforceDomain: Joi.number().default(null),
-    l10nManifest: Joi.string().max(255),
+    l10nManifest: Joi.string().max(255).default(null),
     versionId: Joi.string().strip(),
     namespace: Joi.string(),
 };

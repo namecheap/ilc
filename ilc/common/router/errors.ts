@@ -18,5 +18,6 @@ export const NoBaseTemplateMatchError = extendError('NoBaseTemplateMatchError', 
     defaultData: {
         code: TEMPLATE_NOT_FOUND_CODE,
         presentable: 'Template not found',
+        route: {},
     },
 });

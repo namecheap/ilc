@@ -6,12 +6,7 @@ import { PluginsLoader } from './PluginsLoader';
 import UrlProcessor from '../common/UrlProcessor';
 import { appIdToNameAndSlot, addTrailingSlashToPath } from '../common/utils';
 
-import {
-    setNavigationErrorHandler,
-    addNavigationHook,
-    unsetNavigationErrorHandler,
-    removeNavigationHook,
-} from './navigationEvents/setupEvents';
+import { setNavigationErrorHandler, addNavigationHook } from './navigationEvents/setupEvents';
 
 import {
     CorsError,
@@ -74,10 +69,6 @@ export class Client {
     #bundleLoader;
 
     #sdkFactoryBuilder;
-    #navigationHooks = [
-        (url) => (this.#transitionHooksExecutor.shouldNavigate(url) ? url : null),
-        (url) => this.#urlProcessor.process(url),
-    ];
 
     constructor(config) {
         this.#configRoot = config;
@@ -137,7 +128,7 @@ export class Client {
         const hrefLangHandler = new HrefLangHandler(this.#configRoot.getSettingsByKey('i18n'), this.#logger);
         hrefLangHandler.start();
 
-        const canonicalTagHandler = new CanonicalTagHandler(this.#i18n, this.#logger, this.#router);
+        const canonicalTagHandler = new CanonicalTagHandler(this.#i18n, this.#logger);
         canonicalTagHandler.start();
 
         this.#preheat();
@@ -277,7 +268,8 @@ export class Client {
     }
 
     #configure() {
-        this.#navigationHooks.forEach(addNavigationHook);
+        addNavigationHook((url) => (this.#transitionHooksExecutor.shouldNavigate(url) ? url : null));
+        addNavigationHook((url) => this.#urlProcessor.process(url));
 
         // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
         // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
@@ -329,7 +321,7 @@ export class Client {
             throw new Error('onRouteChange should pass function handler as first argument');
         }
 
-        const wrappedHandler = (event) => {
+        window.addEventListener(singleSpaEvents.ROUTING_EVENT, (event) => {
             const route = this.#router.getCurrentRoute();
             const ilcEvent = new CustomEvent('ilc:onRouteChange', {
                 detail: {
@@ -338,11 +330,9 @@ export class Client {
                 },
             });
             handler(event, ilcEvent);
-        };
+        });
 
-        window.addEventListener(singleSpaEvents.ROUTING_EVENT, wrappedHandler);
-
-        return () => window.removeEventListener(singleSpaEvents.ROUTING_EVENT, wrappedHandler);
+        return () => window.removeEventListener(singleSpaEvents.ROUTING_EVENT, handler);
     }
 
     #matchCurrentRoute(url) {
@@ -412,14 +402,5 @@ export class Client {
         const { appName } = appIdToNameAndSlot(appId);
         this.#bundleLoader.unloadApp(appName);
         await singleSpa.unloadApplication(appId);
-    }
-
-    /**
-     * Unit tests method
-     */
-    destroy() {
-        this.#transitionManager.removeEventListeners();
-        unsetNavigationErrorHandler();
-        this.#navigationHooks.forEach(removeNavigationHook);
     }
 }

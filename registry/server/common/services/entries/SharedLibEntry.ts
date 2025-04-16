@@ -9,10 +9,6 @@ import { CommonOptions, Entry } from './Entry';
 import { NotFoundSharedLibraryError } from './error/NotFoundSharedLibraryError';
 import { ValidationFqrnError } from './error/ValidationFqrnError';
 
-type UpsertOptions = CommonOptions & {
-    fetchManifest?: boolean;
-};
-
 export class SharedLibEntry implements Entry {
     constructor(
         private readonly db: VersionedKnex,
@@ -68,12 +64,10 @@ export class SharedLibEntry implements Entry {
 
         return savedSharedLib;
     }
-    public async upsert(entity: unknown, { user, trxProvider, fetchManifest = true }: UpsertOptions): Promise<void> {
-        const sharedLibDto = await sharedLibSchema.validateAsync(entity, { noDefaults: false });
+    public async upsert(entity: unknown, { user, trxProvider }: CommonOptions): Promise<void> {
+        const sharedLibDto = await sharedLibSchema.validateAsync(entity, { noDefaults: true });
 
-        const sharedLibManifest = fetchManifest
-            ? await this.getManifest(sharedLibDto.assetsDiscoveryUrl)
-            : { spaBundle: '' };
+        const sharedLibManifest = await this.getManifest(sharedLibDto.assetsDiscoveryUrl);
 
         const sharedLibEntity = {
             ...sharedLibDto,

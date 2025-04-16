@@ -1,5 +1,3 @@
-import { Knex } from 'knex';
-import { User } from '../../../../typings/User';
 import { App, appSchema, partialAppSchema } from '../../../apps/interfaces';
 import { VersionedKnex } from '../../../db';
 import { Tables } from '../../../db/structure';
@@ -10,10 +8,6 @@ import { stringifyJSON } from '../json';
 import { CommonOptions, Entry } from './Entry';
 import { NotFoundApplicationError } from './error/NotFoundApplicationError';
 import { ValidationFqrnError } from './error/ValidationFqrnError';
-
-type UpsertOptions = CommonOptions & {
-    fetchManifest?: boolean;
-};
 
 export class ApplicationEntry implements Entry {
     constructor(
@@ -82,10 +76,10 @@ export class ApplicationEntry implements Entry {
         return savedApp;
     }
 
-    public async upsert(params: unknown, { user, trxProvider, fetchManifest = true }: UpsertOptions): Promise<App> {
-        const appDto = await appSchema.validateAsync(params, { noDefaults: false, externals: true });
+    public async upsert(params: unknown, { user, trxProvider }: CommonOptions): Promise<void> {
+        const appDto = await appSchema.validateAsync(params, { noDefaults: true, externals: true });
 
-        const appManifest = fetchManifest ? await this.getManifest(appDto.assetsDiscoveryUrl) : {};
+        const appManifest = await this.getManifest(appDto.assetsDiscoveryUrl);
 
         const appEntity = {
             ...appDto,
@@ -99,27 +93,6 @@ export class ApplicationEntry implements Entry {
                 .merge()
                 .transacting(trx);
         });
-        return appEntity;
-    }
-
-    public async deleteByNamespace(
-        namespace: string,
-        excludeNames: string[],
-        { user, trxProvider }: { user: User; trxProvider: Knex.TransactionProvider },
-    ) {
-        const trx = await trxProvider?.();
-        const appNamesToDelete = await this.db(Tables.Apps)
-            .select('name')
-            .where({ namespace })
-            .whereNotIn('name', excludeNames)
-            .transacting(trx);
-        await Promise.all(
-            appNamesToDelete.map(async (app) => {
-                await this.db.versioning(user, { type: EntityTypes.apps, id: app.name, trxProvider }, async (trx) => {
-                    await this.db(Tables.Apps).delete().where({ name: app.name }).transacting(trx);
-                });
-            }),
-        );
     }
 
     private cleanComplexDefaultKeys(appDTO: Omit<App, 'name'>, params: unknown) {

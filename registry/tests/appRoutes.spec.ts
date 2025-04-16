@@ -910,6 +910,7 @@ describe(`Tests ${example.url}`, () => {
     describe('Delete', () => {
         it("should not delete any record if record doesn't exist", async () => {
             const response = await req.delete(example.url + 123).expect(404, 'Not found');
+
             expect(response.body).deep.equal({});
         });
 
