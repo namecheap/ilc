@@ -1,10 +1,10 @@
 const spawnSync = require('child_process').spawnSync;
 
 const commands = [
-    { command: 'cd ./ilc/ && npm i', name: 'ilc' },
-    { command: 'cd ./registry/ && npm i', name: 'registry' },
-    { command: 'cd ./registry/client && npm i', name: 'registry:ui' },
-    { command: 'cd ./e2e && npm i', name: 'e2e' },
+    { command: 'cd ./ilc/ && npm ci', name: 'ilc' },
+    { command: 'cd ./registry/ && npm ci', name: 'registry' },
+    { command: 'cd ./registry/client && npm ci', name: 'registry:ui' },
+    { command: 'cd ./e2e && npm ci', name: 'e2e' },
 ];
 
 commands.forEach((cmd) => {
