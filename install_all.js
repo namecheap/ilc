@@ -10,6 +10,9 @@ const commands = [
 commands.forEach((cmd) => {
     console.log('');
     console.log('');
+
+    spawnSync('npm config set network-concurrency 4', { shell: true });
+
     console.log(`Installing packages for "${cmd.name}"... Calling: ${cmd.command}`);
     console.log('');
     const res = spawnSync(cmd.command, { shell: true, killSignal: 'SIGKILL', stdio: 'inherit' });
