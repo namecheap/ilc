@@ -13,7 +13,7 @@ declare module 'knex' {
         interface QueryBuilder<TRecord extends {} = any, TResult = any> {
             // See file db.ts for implementation
             range(value: string | null | undefined): QueryBuilder<TRecord, RangeResult<TResult>>;
-            syncSequence(column?: string, step?: number, defaultValue?: number): QueryBuilder<TRecord, number>;
+            syncSequence(column?: string): QueryBuilder<TRecord, number>;
             cascadeTruncate(): QueryBuilder<TRecord, void>;
         }
     }

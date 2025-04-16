@@ -24,7 +24,7 @@
         "@namecheap/tailorx": "^8.2.1",
         "@newrelic/native-metrics": "^11.0.0",
         "agentkeepalive": "^4.5.0",
-        "axios": "^1.8.2",
+        "axios": "^1.7.7",
         "cidr-matcher": "^2.1.1",
         "config": "^3.3.12",
         "cookie": "^0.6.0",
