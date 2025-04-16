@@ -323,7 +323,7 @@ jobs:
                   postComment: false
                   oldCodeCoveragePath: ./dest-client-side-tests-artifacts/coverage/coverage-summary.json
                   newCodeCoveragePath: ./src-client-side-tests-artifacts/coverage/coverage-summary.json
-                  total_delta: 10
+                  total_delta: 2
             - name: Merge coverage report for registry
               run: |
                   bash .github/workflows/merge-registry-coverage.sh dest
