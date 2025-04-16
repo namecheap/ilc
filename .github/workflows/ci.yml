@@ -274,6 +274,8 @@ jobs:
 
             - name: Install dependencies
               run: npm install --verbose
+              env:
+                  NODE_OPTIONS: '--max-old-space-size=4096'
 
             - name: Build ILC & Registry
               run: npm run build
