@@ -277,17 +277,17 @@ jobs:
 
             - name: Install ILC dependencies
               working-directory: ./ilc
-              run: npm ci
+              run: npm ci --verbose
               timeout-minutes: 15
 
             - name: Install Registry dependencies
               working-directory: ./registry
-              run: npm ci
+              run: npm ci --verbose
               timeout-minutes: 15
 
             - name: Install Registry UI dependencies
               working-directory: ./registry/client
-              run: npm ci
+              run: npm ci --verbose
               timeout-minutes: 15
 
             - name: Install E2E dependencies
