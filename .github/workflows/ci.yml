@@ -282,6 +282,14 @@ jobs:
               working-directory: e2e
               run: docker build -t ilc-e2e-tests .
 
+            - name: Start ilc-demo-apps container
+              run: |
+                  docker rm -f ilc-demo-apps || true
+                  docker pull namecheap/ilc-demo-apps
+                  docker run -d --name ilc-demo-apps --add-host=host.docker.internal:host-gateway \
+                    -e PUBLIC_HOST=${{ env.ILC_HOST || '127.0.0.1' }} \
+                    -p 8234-8240:8234-8240 namecheap/ilc-demo-apps
+
             - name: Run E2E tests in container
               run: |
                   docker run --rm --add-host=host.docker.internal:host-gateway \
