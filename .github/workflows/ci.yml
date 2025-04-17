@@ -260,7 +260,7 @@ jobs:
                     POSTGRES_DB: ilc
                 ports:
                     - 5432:5432
-                options: --name=postgres --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+                options: --name=postgres --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries=5
 
         steps:
             - uses: actions/checkout@v4
@@ -278,17 +278,21 @@ jobs:
             - name: Build ILC & Registry
               run: npm run build
 
-            - name: Run E2E tests
+            - name: Build E2E test container
               working-directory: e2e
-              run: npm run start:verbose
-              env:
-                  DB_CLIENT: ${{ matrix.database.client }}
-                  DB_HOST: localhost
-                  DB_PORT: ${{ matrix.database.port }}
-                  DB_USER: root
-                  DB_PASSWORD: pwd
-                  DB_NAME: ilc
-                  ILC_HOST: host.docker.internal
+              run: docker build -t ilc-e2e-tests .
+
+            - name: Run E2E tests in container
+              run: |
+                  docker run --rm --add-host=host.docker.internal:host-gateway \
+                    -e DB_CLIENT=${{ matrix.database.client }} \
+                    -e DB_HOST=localhost \
+                    -e DB_PORT=${{ matrix.database.port }} \
+                    -e DB_USER=root \
+                    -e DB_PASSWORD=pwd \
+                    -e DB_NAME=ilc \
+                    -e ILC_HOST=host.docker.internal \
+                    ilc-e2e-tests
 
             - uses: actions/upload-artifact@v4
               if: failure()
