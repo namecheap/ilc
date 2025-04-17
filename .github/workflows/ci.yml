@@ -167,9 +167,6 @@ jobs:
                     - client: mysql
                       host: mysql
                       port: 3306
-                    - client: pg
-                      host: postgres
-                      port: 5432
                 exclude:
                     - branch:
                           ref: ''
@@ -239,9 +236,6 @@ jobs:
                     - client: mysql
                       host: mysql
                       port: 3306
-                    - client: pg
-                      host: postgres
-                      port: 5432
 
         services:
             mysql:
@@ -252,15 +246,6 @@ jobs:
                 ports:
                     - 3306:3306
                 options: --name=mysql --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-            postgres:
-                image: postgres:15.4-alpine
-                env:
-                    POSTGRES_USER: root
-                    POSTGRES_PASSWORD: pwd
-                    POSTGRES_DB: ilc
-                ports:
-                    - 5432:5432
-                options: --name=postgres --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
         steps:
             - uses: actions/checkout@v4
