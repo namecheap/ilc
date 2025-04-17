@@ -231,7 +231,7 @@ jobs:
 
     e2e_tests:
         name: Run E2E tests
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-latest
         strategy:
             fail-fast: false
             matrix:
