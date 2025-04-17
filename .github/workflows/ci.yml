@@ -273,6 +273,9 @@ jobs:
                   cache: 'npm'
                   cache-dependency-path: '**/package-lock.json'
 
+            - id: sha7
+              run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
             - name: Build E2E test container
               working-directory: e2e
               run: docker build -t ilc-e2e-tests .
