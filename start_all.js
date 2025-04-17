@@ -39,7 +39,9 @@ if (!noWatch) {
 if (runWithApps) {
     commands.push({
         command:
-            'docker rm -f ilc-demo-apps && docker pull namecheap/ilc-demo-apps && docker run --rm --name ilc-demo-apps -p 8234-8240:8234-8240 namecheap/ilc-demo-apps',
+            'docker rm -f ilc-demo-apps && docker pull namecheap/ilc-demo-apps && docker run --rm --name ilc-demo-apps --add-host=host.docker.internal:host-gateway -e PUBLIC_HOST=' +
+            (process.env.ILC_HOST || '127.0.0.1') +
+            ' -p 8234-8240:8234-8240 namecheap/ilc-demo-apps',
         name: 'demo-apps',
     });
 }
