@@ -272,28 +272,12 @@ jobs:
                   cache: 'npm'
                   cache-dependency-path: '**/package-lock.json'
 
-            - name: Install root dependencies without postinstall
-              run: npm install --ignore-scripts
-
-            - name: Install ILC dependencies
-              working-directory: ./ilc
-              run: npm ci --verbose
-              timeout-minutes: 15
-
-            - name: Install Registry dependencies
-              working-directory: ./registry
-              run: npm ci --verbose
-              timeout-minutes: 15
-
-            - name: Install Registry UI dependencies
-              working-directory: ./registry/client
-              run: npm ci --verbose
-              timeout-minutes: 15
-
-            - name: Install E2E dependencies
-              working-directory: ./e2e
-              run: npm ci
-              timeout-minutes: 15
+            - name: Install dependencies
+              run: npm install
+              env:
+                  NPM_CONFIG_FETCH_RETRIES: 3
+                  NPM_CONFIG_FETCH_TIMEOUT: 10000
+                  NODE_OPTIONS: '--max-old-space-size=4096'
 
             - name: Build ILC & Registry
               run: npm run build
