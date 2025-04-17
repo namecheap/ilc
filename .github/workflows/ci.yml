@@ -275,9 +275,7 @@ jobs:
             - name: Install dependencies
               run: npm install
               env:
-                  NPM_CONFIG_FETCH_RETRIES: 3
-                  NPM_CONFIG_FETCH_TIMEOUT: 10000
-                  NODE_OPTIONS: '--max-old-space-size=4096'
+                  NODE_OPTIONS: '--max-old-space-size=8192'
 
             - name: Build ILC & Registry
               run: npm run build
