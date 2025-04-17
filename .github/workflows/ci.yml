@@ -282,6 +282,18 @@ jobs:
               working-directory: e2e
               run: docker build -t ilc-e2e-tests .
 
+            - name: Start registry container
+              run: |
+                  docker rm -f registry || true
+                  docker pull namecheap/ilc-registry:latest
+                  docker run -d --name registry --add-host=host.docker.internal:host-gateway -p 4001:4001 namecheap/ilc-registry:latest
+
+            - name: Start ilc container
+              run: |
+                  docker rm -f ilc || true
+                  docker pull namecheap/ilc_tmp:${{ env.SHA }}
+                  docker run -d --name ilc --add-host=host.docker.internal:host-gateway -p 8233:8233 namecheap/ilc_tmp:${{ env.SHA }}
+
             - name: Start ilc-demo-apps container
               run: |
                   docker rm -f ilc-demo-apps || true
