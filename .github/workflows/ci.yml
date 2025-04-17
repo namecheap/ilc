@@ -232,6 +232,7 @@ jobs:
     e2e_tests:
         name: Run E2E tests
         runs-on: ubuntu-latest
+        needs: [build_ilc, build_registry]
         strategy:
             fail-fast: false
             matrix:
@@ -272,33 +273,30 @@ jobs:
                   cache: 'npm'
                   cache-dependency-path: '**/package-lock.json'
 
-            - name: Install dependencies
-              run: npm install
-
-            - name: Build ILC & Registry
-              run: npm run build
-
             - name: Build E2E test container
               working-directory: e2e
               run: docker build -t ilc-e2e-tests .
 
+            - name: Docker registry auth
+              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
+
+            - name: Reset registry state
+              run: bash ./registry/scripts/reset.sh
+
             - name: Start registry container
               run: |
-                  docker rm -f registry || true
-                  docker pull namecheap/ilc-registry:latest
-                  docker run -d --name registry --add-host=host.docker.internal:host-gateway -p 4001:4001 namecheap/ilc-registry:latest
+                  docker run -d --name registry --add-host=host.docker.internal:host-gateway --network ${{ job.container.network }} -p 4001:4001 namecheap/ilc_tmp:reg_${{ env.SHA }}
 
             - name: Start ilc container
               run: |
-                  docker rm -f ilc || true
-                  docker pull namecheap/ilc_tmp:${{ env.SHA }}
-                  docker run -d --name ilc --add-host=host.docker.internal:host-gateway -p 8233:8233 namecheap/ilc_tmp:${{ env.SHA }}
+                  docker run -d --name ilc --add-host=host.docker.internal:host-gateway --network ${{ job.container.network }} -p 8233:8233 namecheap/ilc_tmp:${{ env.SHA }}
 
             - name: Start ilc-demo-apps container
               run: |
                   docker rm -f ilc-demo-apps || true
                   docker pull namecheap/ilc-demo-apps
                   docker run -d --name ilc-demo-apps --add-host=host.docker.internal:host-gateway \
+                    --network ${{ job.container.network }} \
                     -e PUBLIC_HOST=${{ env.ILC_HOST || '127.0.0.1' }} \
                     -p 8234-8240:8234-8240 namecheap/ilc-demo-apps
 
@@ -312,6 +310,7 @@ jobs:
                     -e DB_PASSWORD=pwd \
                     -e DB_NAME=ilc \
                     -e ILC_HOST=host.docker.internal \
+                    --network ${{ job.container.network }} \
                     ilc-e2e-tests
 
             - uses: actions/upload-artifact@v4
