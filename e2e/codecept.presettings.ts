@@ -16,15 +16,15 @@ const appPorts = {
 };
 
 const resources = [
-    `http-get://127.0.0.1:${appPorts.navigation}`,
-    `http-get://127.0.0.1:${appPorts.people}`,
-    `http-get://127.0.0.1:${appPorts.planets}`,
-    `http-get://127.0.0.1:${appPorts.news}/_spa/dev/assets-discovery`,
-    `http-get://127.0.0.1:${appPorts.system}/index.js`,
-    `http-get://127.0.0.1:${appPorts.fetchWithCache}`,
-    `http-get://127.0.0.1:${appPorts.ilc}/ping`,
-    `http-get://127.0.0.1:${appPorts.registry}/ping`,
-    `http-get://127.0.0.1:${appPorts.wrapper}/client-entry.js`,
+    `http-get://${process.env.ILC_HOST || '127.0.0.1'}:${appPorts.navigation}`,
+    `http-get://${process.env.ILC_HOST || '127.0.0.1'}:${appPorts.people}`,
+    `http-get://${process.env.ILC_HOST || '127.0.0.1'}:${appPorts.planets}`,
+    `http-get://${process.env.ILC_HOST || '127.0.0.1'}:${appPorts.news}/_spa/dev/assets-discovery`,
+    `http-get://${process.env.ILC_HOST || '127.0.0.1'}:${appPorts.system}/index.js`,
+    `http-get://${process.env.ILC_HOST || '127.0.0.1'}:${appPorts.fetchWithCache}`,
+    `http-get://${process.env.ILC_HOST || '127.0.0.1'}:${appPorts.ilc}/ping`,
+    `http-get://${process.env.ILC_HOST || '127.0.0.1'}:${appPorts.registry}/ping`,
+    `http-get://${process.env.ILC_HOST || '127.0.0.1'}:${appPorts.wrapper}/client-entry.js`,
 ];
 
 let childProcess: ExecaChildProcess<string>;

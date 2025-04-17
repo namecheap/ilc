@@ -288,6 +288,7 @@ jobs:
                   DB_USER: root
                   DB_PASSWORD: pwd
                   DB_NAME: ilc
+                  ILC_HOST: host.docker.internal
 
             - uses: actions/upload-artifact@v4
               if: failure()
