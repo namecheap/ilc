@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { bootstrap, teardown } from './codecept.presettings';
+import { bootstrap } from './codecept.presettings';
 
 const outputDir = path.join(__dirname, '.codecept_output');
 
@@ -58,7 +58,6 @@ export const config: CodeceptJS.MainConfig = {
         },
     },
     bootstrap,
-    teardown,
     hooks: [],
     plugins: {
         screenshotOnFail: {
