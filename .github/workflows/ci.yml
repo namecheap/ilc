@@ -292,7 +292,16 @@ jobs:
 
             - name: Start ilc container
               run: |
-                  docker run -d --name ilc --add-host=host.docker.internal:host-gateway --network ${{ job.container.network }} -p 8233:8233 namecheap/ilc_tmp:${{ env.SHA }}
+                  docker run -d --name ilc \
+                  --add-host=host.docker.internal:host-gateway \
+                  --network ${{ job.container.network }} \
+                  -p 80:8233 \
+                  -p 8233:8233 \
+                  -p 8234-8240:8234-8240 \
+                  -e NODE_ENV=production \
+                  -e REGISTRY_ADDR='http://host.docker.internal:4001' \
+                  -e OVERRIDE_CONFIG_TRUSTED_ORIGINS=all \
+                  namecheap/ilc_tmp:${{ env.SHA }}
 
             - name: Start ilc-demo-apps container
               run: |
