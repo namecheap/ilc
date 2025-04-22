@@ -16,6 +16,8 @@ export const config: CodeceptJS.MainConfig = {
             windowSize: '1200x900',
             chrome: {
                 headless: process.env.SHOW_UI === 'true' ? false : 'new',
+                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+                args: ['--no-sandbox', '--disable-dev-shm-usage'],
             },
         },
         MockRequestHelper: {

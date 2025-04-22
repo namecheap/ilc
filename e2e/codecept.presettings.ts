@@ -24,21 +24,6 @@ const resources = [
     `http-get://${process.env.ILC_HOST || '127.0.0.1'}:${appPorts.wrapper}/client-entry.js`,
 ];
 
-async function logHttpResponse(url: string) {
-    try {
-        const response = await fetch(url);
-        console.log(`[DEBUG] ${url} responded with status ${response.status}`);
-        console.log(`[DEBUG] Response body:`, response.body);
-    } catch (err: any) {
-        if (err.response) {
-            console.error(`[ERROR] ${url} responded with status ${err.response.status}`);
-            console.error(`[ERROR] Response body:`, err.response.data);
-        } else {
-            console.error(`[ERROR] Could not reach ${url}:`, err.message);
-        }
-    }
-}
-
 export async function bootstrap() {
     try {
         await new Promise((resolve, reject) => {

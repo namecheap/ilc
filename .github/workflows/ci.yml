@@ -276,10 +276,6 @@ jobs:
             - id: sha7
               run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-            - name: Build E2E test container
-              working-directory: e2e
-              run: docker build -t ilc-e2e-tests .
-
             - name: Docker registry auth
               run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
 
@@ -288,15 +284,7 @@ jobs:
 
             - name: Start registry container
               run: |
-                  docker run -d --name registry --add-host=host.docker.internal:host-gateway --network ${{ job.container.network }} -p 4001:4001 namecheap/ilc_tmp:reg_${{ env.SHA }}
-
-            - name: Migrate registry database
-              run: |
-                  docker exec registry npm run migrate
-
-            - name: Seed registry database
-              run: |
-                  docker exec registry npm run seed
+                  docker run -d --name registry --add-host=host.docker.internal:host-gateway -e DB_SEED=true --network ${{ job.container.network }} -p 4001:4001 namecheap/ilc_tmp:reg_${{ env.SHA }}
 
             - name: Start ilc container
               run: |
@@ -322,7 +310,8 @@ jobs:
 
             - name: Run E2E tests in container
               run: |
-                  docker run --rm --add-host=host.docker.internal:host-gateway \
+                  docker run --rm \
+                    --add-host=host.docker.internal:host-gateway \
                     -e DB_CLIENT=${{ matrix.database.client }} \
                     -e DB_HOST=localhost \
                     -e DB_PORT=${{ matrix.database.port }} \
@@ -331,15 +320,9 @@ jobs:
                     -e DB_NAME=ilc \
                     -e ILC_HOST=host.docker.internal \
                     --network ${{ job.container.network }} \
-                    ilc-e2e-tests
-
-            - name: Print ilc container logs (on failure)
-              if: failure()
-              run: docker logs ilc
-
-            - name: Print registry container logs (on failure)
-              if: failure()
-              run: docker logs registry
+                    -v ${{ github.workspace }}/e2e:/tests \
+                    -w /tests \
+                    codeceptjs/codeceptjs
 
             - uses: actions/upload-artifact@v4
               if: failure()
