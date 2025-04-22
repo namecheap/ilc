@@ -325,6 +325,10 @@ jobs:
                     --network ${{ job.container.network }} \
                     ilc-e2e-tests
 
+            - name: Print ilc container logs (on failure)
+              if: failure()
+              run: docker logs ilc
+
             - uses: actions/upload-artifact@v4
               if: failure()
               with:
