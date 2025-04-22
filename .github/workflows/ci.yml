@@ -310,7 +310,7 @@ jobs:
                   docker run -d --name ilc-demo-apps --add-host=host.docker.internal:host-gateway \
                     --network ${{ job.container.network }} \
                     -e PUBLIC_HOST=${{ env.ILC_HOST || '127.0.0.1' }} \
-                    -p 8234-8240:8234-8240 namecheap/ilc-demo-apps
+                    namecheap/ilc-demo-apps
 
             - name: Run E2E tests in container
               run: |
