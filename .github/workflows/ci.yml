@@ -308,7 +308,7 @@ jobs:
                   docker rm -f ilc-demo-apps || true
                   docker pull namecheap/ilc-demo-apps
                   docker run -d --name ilc-demo-apps --add-host=host.docker.internal:host-gateway \
-                    --network ${{ job.container.network }} \
+                    --network container:ilc \
                     -e PUBLIC_HOST=${{ env.ILC_HOST || '127.0.0.1' }} \
                     namecheap/ilc-demo-apps
 
