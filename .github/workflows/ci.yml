@@ -290,6 +290,10 @@ jobs:
               run: |
                   docker run -d --name registry --add-host=host.docker.internal:host-gateway --network ${{ job.container.network }} -p 4001:4001 namecheap/ilc_tmp:reg_${{ env.SHA }}
 
+            - name: Migrate registry database
+              run: |
+                  docker exec registry npm run migrate
+
             - name: Seed registry database
               run: |
                   docker exec registry npm run seed
