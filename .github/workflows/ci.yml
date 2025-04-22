@@ -329,6 +329,10 @@ jobs:
               if: failure()
               run: docker logs ilc
 
+            - name: Print registry container logs (on failure)
+              if: failure()
+              run: docker logs registry
+
             - uses: actions/upload-artifact@v4
               if: failure()
               with:
