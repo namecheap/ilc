@@ -4,6 +4,8 @@ import { bootstrap } from './codecept.presettings';
 
 const outputDir = path.join(__dirname, '.codecept_output');
 
+const ilcHost = process.env.ILC_HOST || 'localhost';
+
 export const config: CodeceptJS.MainConfig = {
     output: outputDir,
     rerun: {
@@ -12,11 +14,10 @@ export const config: CodeceptJS.MainConfig = {
     },
     helpers: {
         Puppeteer: {
-            url: `http://localhost:8233`,
+            url: `http://${ilcHost}:8233`,
             windowSize: '1200x900',
             chrome: {
                 headless: process.env.SHOW_UI === 'true' ? false : 'new',
-                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
                 args: ['--no-sandbox', '--disable-dev-shm-usage'],
             },
         },

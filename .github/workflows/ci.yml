@@ -276,6 +276,10 @@ jobs:
             - id: sha7
               run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
+            - name: Build E2E test container
+              working-directory: e2e
+              run: docker build -t ilc-e2e-tests .
+
             - name: Docker registry auth
               run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
 
@@ -311,18 +315,15 @@ jobs:
             - name: Run E2E tests in container
               run: |
                   docker run --rm \
-                    --add-host=host.docker.internal:host-gateway \
                     -e DB_CLIENT=${{ matrix.database.client }} \
                     -e DB_HOST=localhost \
                     -e DB_PORT=${{ matrix.database.port }} \
                     -e DB_USER=root \
                     -e DB_PASSWORD=pwd \
                     -e DB_NAME=ilc \
-                    -e ILC_HOST=host.docker.internal \
-                    --network ${{ job.container.network }} \
-                    -v ${{ github.workspace }}/e2e:/tests \
-                    -w /tests \
-                    codeceptjs/codeceptjs
+                    -e ILC_HOST=localhost \
+                    --network container:ilc \
+                    ilc-e2e-tests
 
             - uses: actions/upload-artifact@v4
               if: failure()
