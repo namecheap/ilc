@@ -22,7 +22,6 @@
     "dependencies": {
         "@namecheap/error-extender": "^2.2.1",
         "@namecheap/tailorx": "^8.2.1",
-        "@nc_ui/ilc-plugin-reporting-spaceship": "^1.7.0",
         "@newrelic/native-metrics": "^11.0.0",
         "agentkeepalive": "^4.5.0",
         "axios": "^1.8.2",
