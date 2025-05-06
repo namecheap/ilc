@@ -59,16 +59,18 @@ export class RoutesService {
         });
 
         let savedAppRouteId: number;
-        await this.db.versioning(user, { type: EntityTypes.routes, trxProvider }, async (trx) => {
-            const appRouteRecord = prepareAppRouteToSave(appRoute);
-            const appRouteRecordWithOrderPos = appRouteRecord.orderPos
-                ? appRouteRecord
-                : {
-                      ...appRouteRecord,
-                      orderPos:
-                          (await this.findExistingOrderPos(appRoute, trx)) ??
-                          (await this.getNextOrderPos(appRouteRecord.domainId, trx)),
-                  };
+        const appRouteRecord = prepareAppRouteToSave(appRoute);
+        const trx = await trxProvider();
+        const appRouteRecordWithOrderPos = appRouteRecord.orderPos
+            ? appRouteRecord
+            : {
+                  ...appRouteRecord,
+                  orderPos:
+                      (await this.findExistingOrderPos(appRoute, trx)) ??
+                      (await this.getNextOrderPos(appRouteRecord.domainId, trx)),
+              };
+        const existingRouteId = await this.findExistingRouteId(appRouteRecordWithOrderPos, trx);
+        await this.db.versioning(user, { type: EntityTypes.routes, trxProvider, id: existingRouteId }, async (trx) => {
             const result = await this.db(Tables.Routes)
                 .insert(appRouteRecordWithOrderPos, 'id')
                 .onConflict(this.db.raw('("orderPos", "domainIdIdxble", namespace) WHERE namespace IS NOT NULL'))
@@ -133,6 +135,14 @@ export class RoutesService {
             .where({ route: appRoute.route, domainId: appRoute.domainId, namespace: appRoute.namespace })
             .transacting(trx);
         return existingRoute?.orderPos;
+    }
+
+    private async findExistingRouteId(appRoute: AppRoute, trx: Knex.Transaction): Promise<number | undefined> {
+        const existingRoute = await this.db(Tables.Routes)
+            .first('id')
+            .where({ orderPos: appRoute.orderPos, domainId: appRoute.domainId, namespace: appRoute.namespace })
+            .transacting(trx);
+        return existingRoute?.id;
     }
 }
 
