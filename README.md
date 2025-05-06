@@ -1,6 +1,8 @@
 ![Isomorphic Layout Composer logo](brand/cover_small.png)
 
-----
+---
+
+test
 
 [![Latest version](https://badgen.net/github/tag/namecheap/ilc?label=Latest%20version&color=green&cache=900)](https://github.com/namecheap/ilc/releases)
 [![Demo website](./docs/assets/demo-website.svg)](http://ilc-demo.namecheap.technology)
@@ -11,7 +13,7 @@
 Isomorphic Layout Composer (ILC) - a layout service that composes a web page from fragment services.
 It supports client/server-based page composition.
 
-Its competitive advantage over other solutions is an *isomorphic* page composition.
+Its competitive advantage over other solutions is an _isomorphic_ page composition.
 It means that ILC assembles a page on the server-side using apps that support Server-side rendering (SSR), and after that,
 the page is passed on the client-side, so the client-side rendering handles all further navigation.
 
@@ -37,29 +39,29 @@ This is where ILC comes into play.
 
 ## Key features
 
-* 📦 **Based on [single-spa](https://single-spa.js.org/) and [TailorX](https://github.com/StyleT/tailorx)** - battle-tested solutions inside.
-* 📱 **Technology-agnostic** - use it with React, Vue.js, Angular, etc.
-* ⚙️ **Server-side rendering (SSR) support** - key advantage over competitors.
-* 🗄 **[Built-in registry](./docs/registry.md)** - add new apps, pages, or change configs and templates in a few clicks.
-* ⚡️ **Built for speed** - server-side part of the system adds just ~17ms of latency
-* 👨‍💻 **[Develop in production](./docs/develop_in_production.md)**
-* 🌐 **[Internationalization support](./docs/i18n.md)** - serve your clients from any country. [Demo with a localized navbar](http://ilc-demo.namecheap.technology/ua/)
-* 📡 **Advanced features:**
-    * [Parcels](./docs/parcels.md)
-    * [Plugins](https://github.com/namecheap/ilc-plugins-sdk)
-    * [App Wrappers](./docs/app_wrappers.md)
-* 💲 **Backed by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with the community.
+-   📦 **Based on [single-spa](https://single-spa.js.org/) and [TailorX](https://github.com/StyleT/tailorx)** - battle-tested solutions inside.
+-   📱 **Technology-agnostic** - use it with React, Vue.js, Angular, etc.
+-   ⚙️ **Server-side rendering (SSR) support** - key advantage over competitors.
+-   🗄 **[Built-in registry](./docs/registry.md)** - add new apps, pages, or change configs and templates in a few clicks.
+-   ⚡️ **Built for speed** - server-side part of the system adds just ~17ms of latency
+-   👨‍💻 **[Develop in production](./docs/develop_in_production.md)**
+-   🌐 **[Internationalization support](./docs/i18n.md)** - serve your clients from any country. [Demo with a localized navbar](http://ilc-demo.namecheap.technology/ua/)
+-   📡 **Advanced features:**
+    -   [Parcels](./docs/parcels.md)
+    -   [Plugins](https://github.com/namecheap/ilc-plugins-sdk)
+    -   [App Wrappers](./docs/app_wrappers.md)
+-   💲 **Backed by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with the community.
 
 ## 🚀 Quick start
 
 !!! tip "Demo website"
-    For a quick preview, check out our [demo website](http://ilc-demo.namecheap.technology/)
+For a quick preview, check out our [demo website](http://ilc-demo.namecheap.technology/)
 
 To quickstart with ILC locally, follow the steps below:
 
 1. Clone the [namecheap/ilc](https://github.com/namecheap/ilc/) repository.
 1. Run `npm install`
-    1. **OPTIONAL** Switch database to PostgreSQL by changing environment variable `DB_CLIENT` to `pg` in services `registry_worker` and `registry` 
+    1. **OPTIONAL** Switch database to PostgreSQL by changing environment variable `DB_CLIENT` to `pg` in services `registry_worker` and `registry`
 1. Run `docker compose up -d`. Wait for the process to complete:
 
     ```
@@ -91,15 +93,15 @@ To quickstart with ILC locally, follow the steps below:
     ```
 
 1. Open your browser and navigate to ILC or Registry UI:
-    * `ILC`: http://localhost:8233/
-    * `Registry UI`: http://localhost:4001/ (user: `root`, password: `pwd`)
+    - `ILC`: http://localhost:8233/
+    - `Registry UI`: http://localhost:4001/ (user: `root`, password: `pwd`)
 
 !!! tip "Additional commands"
-    * View logs: `docker compose logs -f --tail=10`
-    * Shutdown local ILC: `docker compose down`
+_ View logs: `docker compose logs -f --tail=10`
+_ Shutdown local ILC: `docker compose down`
 
 !!! note ""
-    You can find more information about demo applications for this quick start [in the namecheap/ilc-demo-apps](https://github.com/namecheap/ilc-demo-apps) repository.
+You can find more information about demo applications for this quick start [in the namecheap/ilc-demo-apps](https://github.com/namecheap/ilc-demo-apps) repository.
 
 ## Architecture overview
 
@@ -109,32 +111,32 @@ To quickstart with ILC locally, follow the steps below:
 
 The `namecheap/ilc` repository consists of the following parts:
 
-* `ilc`: code of the Isomorphic Layout Composer
-* `registry`: app that contains configuration that ILC uses: a list of micro-fragments, routes, etc.
+-   `ilc`: code of the Isomorphic Layout Composer
+-   `registry`: app that contains configuration that ILC uses: a list of micro-fragments, routes, etc.
 
 ## Further reading
 
-* [Overview](./docs/overview.md)
-* [Micro-frontend Types](./docs/microfrontend-types.md)
-* [Step-By-Step lessons about apps development with ILC](./docs/how-to-guides/index.md)
-* [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html)
-* [ILC Registry](./docs/registry.md)
-* [Animation during reroute](./docs/animation_during_reroute.md)
-* [Global error handling](./docs/global_error_handling.md)
-* [Demo applications used in quick start](https://github.com/namecheap/ilc-demo-apps)
-* [SDK for ILC plugins development](https://github.com/namecheap/ilc-plugins-sdk)
-* [Compatibility with legacy UMD bundles](./docs/umd_bundles_compatibility.md)
-* [Global API](https://namecheap.github.io/ilc-sdk/pages/Pages/global_api.html)
-* [ILC transition hooks](./docs/transition_hooks.md)
-* [Multi-domains](./docs/multi-domains.md)
-* [Public Path Problem](https://namecheap.github.io/ilc-sdk/pages/Pages/public_path.html)
+-   [Overview](./docs/overview.md)
+-   [Micro-frontend Types](./docs/microfrontend-types.md)
+-   [Step-By-Step lessons about apps development with ILC](./docs/how-to-guides/index.md)
+-   [ILC to App interface](https://namecheap.github.io/ilc-sdk/pages/Pages/ilc_app_interface.html)
+-   [ILC Registry](./docs/registry.md)
+-   [Animation during reroute](./docs/animation_during_reroute.md)
+-   [Global error handling](./docs/global_error_handling.md)
+-   [Demo applications used in quick start](https://github.com/namecheap/ilc-demo-apps)
+-   [SDK for ILC plugins development](https://github.com/namecheap/ilc-plugins-sdk)
+-   [Compatibility with legacy UMD bundles](./docs/umd_bundles_compatibility.md)
+-   [Global API](https://namecheap.github.io/ilc-sdk/pages/Pages/global_api.html)
+-   [ILC transition hooks](./docs/transition_hooks.md)
+-   [Multi-domains](./docs/multi-domains.md)
+-   [Public Path Problem](https://namecheap.github.io/ilc-sdk/pages/Pages/public_path.html)
 
 ## 🔌 Adapters
 
 ILC relies on the adapters provided within the [single-spa ecosystem](https://single-spa.js.org/docs/ecosystem) to connect various frameworks. However, to ensure better integration with ILC, some of the original adapters were extended:
 
-* [React - ilc-adapter-react](https://github.com/namecheap/ilc-adapter-react)
-* [Vue.js - ilc-adapter-vue](https://github.com/namecheap/ilc-adapter-vue)
+-   [React - ilc-adapter-react](https://github.com/namecheap/ilc-adapter-react)
+-   [Vue.js - ilc-adapter-vue](https://github.com/namecheap/ilc-adapter-vue)
 
 ## Notes
 
@@ -150,7 +152,6 @@ This approach works well but to avoid adding a regex to each service ILC uses th
 
 [Code splitting](https://webpack.js.org/guides/code-splitting/) is a complicated topic. In ILC, code splitting is even more complicated. The reason is that the webpack module format expects the loading of extra modules from the website root, which will always fail until a place from where to load extra modules is configured.
 In ILC, you can see an example of this approach in the [demo people application](https://github.com/namecheap/ilc-demo-apps/blob/master/apps/people/src/people.js#L9).
-
 
 ### Sockets timeout to fragments
 
