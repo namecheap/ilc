@@ -231,7 +231,8 @@ jobs:
 
     e2e_tests:
         name: Run E2E tests
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-latest
+        needs: [build_ilc, build_registry]
         strategy:
             fail-fast: false
             matrix:
@@ -260,7 +261,7 @@ jobs:
                     POSTGRES_DB: ilc
                 ports:
                     - 5432:5432
-                options: --name=postgres --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+                options: --name=postgres --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries=5
 
         steps:
             - uses: actions/checkout@v4
@@ -272,22 +273,57 @@ jobs:
                   cache: 'npm'
                   cache-dependency-path: '**/package-lock.json'
 
-            - name: Install dependencies
-              run: npm install
+            - id: sha7
+              run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-            - name: Build ILC & Registry
-              run: npm run build
-
-            - name: Run E2E tests
+            - name: Build E2E test container
               working-directory: e2e
-              run: npm run start:verbose
-              env:
-                  DB_CLIENT: ${{ matrix.database.client }}
-                  DB_HOST: localhost
-                  DB_PORT: ${{ matrix.database.port }}
-                  DB_USER: root
-                  DB_PASSWORD: pwd
-                  DB_NAME: ilc
+              run: docker build -t ilc-e2e-tests .
+
+            - name: Docker registry auth
+              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
+
+            - name: Reset registry state
+              run: bash ./registry/scripts/reset.sh
+
+            - name: Start registry container
+              run: |
+                  docker run -d --name registry --add-host=host.docker.internal:host-gateway -e DB_SEED=true --network ${{ job.container.network }} -p 4001:4001 namecheap/ilc_tmp:reg_${{ env.SHA }}
+
+            - name: Start ilc container
+              run: |
+                  docker run -d --name ilc \
+                  --add-host=host.docker.internal:host-gateway \
+                  --network ${{ job.container.network }} \
+                  -p 80:8233 \
+                  -p 8233:8233 \
+                  -p 8234-8240:8234-8240 \
+                  -e NODE_ENV=production \
+                  -e REGISTRY_ADDR='http://host.docker.internal:4001' \
+                  -e OVERRIDE_CONFIG_TRUSTED_ORIGINS=all \
+                  namecheap/ilc_tmp:${{ env.SHA }}
+
+            - name: Start ilc-demo-apps container
+              run: |
+                  docker rm -f ilc-demo-apps || true
+                  docker pull namecheap/ilc-demo-apps
+                  docker run -d --name ilc-demo-apps \
+                    --network container:ilc \
+                    -e PUBLIC_HOST=${{ env.ILC_HOST || '127.0.0.1' }} \
+                    namecheap/ilc-demo-apps
+
+            - name: Run E2E tests in container
+              run: |
+                  docker run --rm \
+                    -e DB_CLIENT=${{ matrix.database.client }} \
+                    -e DB_HOST=localhost \
+                    -e DB_PORT=${{ matrix.database.port }} \
+                    -e DB_USER=root \
+                    -e DB_PASSWORD=pwd \
+                    -e DB_NAME=ilc \
+                    -e ILC_HOST=localhost \
+                    --network container:ilc \
+                    ilc-e2e-tests
 
             - uses: actions/upload-artifact@v4
               if: failure()

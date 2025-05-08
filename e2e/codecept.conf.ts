@@ -1,8 +1,10 @@
 import path from 'path';
 
-import { bootstrap, teardown } from './codecept.presettings';
+import { bootstrap } from './codecept.presettings';
 
 const outputDir = path.join(__dirname, '.codecept_output');
+
+const ilcHost = process.env.ILC_HOST || 'localhost';
 
 export const config: CodeceptJS.MainConfig = {
     output: outputDir,
@@ -12,10 +14,11 @@ export const config: CodeceptJS.MainConfig = {
     },
     helpers: {
         Puppeteer: {
-            url: `http://localhost:8233`,
+            url: `http://${ilcHost}:8233`,
             windowSize: '1200x900',
             chrome: {
                 headless: process.env.SHOW_UI === 'true' ? false : 'new',
+                args: ['--no-sandbox', '--disable-dev-shm-usage'],
             },
         },
         MockRequestHelper: {
@@ -58,7 +61,6 @@ export const config: CodeceptJS.MainConfig = {
         },
     },
     bootstrap,
-    teardown,
     hooks: [],
     plugins: {
         screenshotOnFail: {
