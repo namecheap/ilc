@@ -83,7 +83,7 @@ export class Router {
 
     validateResultingRoute(route: RouterMatch) {
         if (!route.template) {
-            throw new NoBaseTemplateMatchError();
+            throw new NoBaseTemplateMatchError({ data: { route: route } });
         }
     }
 
