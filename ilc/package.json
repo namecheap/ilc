@@ -24,7 +24,7 @@
         "@namecheap/tailorx": "^8.2.1",
         "@newrelic/native-metrics": "^11.0.0",
         "agentkeepalive": "^4.5.0",
-        "axios": "^1.7.7",
+        "axios": "^1.8.2",
         "cidr-matcher": "^2.1.1",
         "config": "^3.3.12",
         "cookie": "^0.6.0",
@@ -94,7 +94,7 @@
         "ts-loader": "^9.5.1",
         "ts-node": "^10.9.2",
         "typescript": "^5.6.2",
-        "webpack": "^5.94.0",
+        "webpack": "^5.99.8",
         "webpack-cli": "^5.1.4",
         "webpack-dev-middleware": "^7.4.2"
     },

@@ -1,9 +1,10 @@
 import path from 'path';
+import sinon from 'sinon';
+import { RoutesService } from '../../server/appRoutes/routes/RoutesService';
 import { VersionedKnex } from '../../server/db';
+import { Tables } from '../../server/db/structure';
 import { User } from '../../typings/User';
 import { dbFactory, expect } from '../common';
-import { RoutesService } from '../../server/appRoutes/routes/RoutesService';
-import { Tables } from '../../server/db/structure';
 
 const user: User = Object.freeze({
     identifier: 'testUser',
@@ -31,16 +32,26 @@ const appRoute = {
 
 describe('RoutesService', () => {
     let db: VersionedKnex;
+    let versioning: sinon.SinonSpy;
     let reset: () => Promise<void>;
     before(async () => {
         ({ db, reset } = dbFactory());
         await db.migrate.latest({
             directory: path.join(__dirname, '../../server/migrations'),
         });
-        await db('apps').insert({ name: '@portal/upsert', kind: 'primary' });
-        await db('templates').insert({ name: 'master', content: 'content' });
+        await db(Tables.Apps).insert({ name: '@portal/upsert', kind: 'primary' });
+        await db(Tables.Templates).insert([
+            { name: 'master', content: 'content' },
+            { name: 'masteradmin', content: 'content' },
+        ]);
+        await db(Tables.RouterDomains).insert({ id: 1, domainName: 'example.com', template500: 'master' });
+        versioning = sinon.spy(db, 'versioning');
+    });
+    beforeEach(() => {
+        versioning.resetHistory();
     });
     after(async () => {
+        versioning.restore();
         await reset();
     });
     describe('upsert', () => {
@@ -67,6 +78,14 @@ describe('RoutesService', () => {
                 props: '{"a":1}',
                 kind: 'regular',
             });
+            sinon.assert.calledWithMatch(
+                versioning,
+                sinon.match.any,
+                sinon.match({
+                    id: undefined,
+                    type: 'routes',
+                }),
+            );
         });
         it('should update item', async () => {
             await db(Tables.Routes).insert({
@@ -76,14 +95,18 @@ describe('RoutesService', () => {
             });
             const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
-            await service.upsert({ ...appRoute, route: '/upsert22', namespace: 'ns1', orderPos: 2 }, user, trxProvider);
+            await service.upsert(
+                { ...appRoute, route: '/upsert2', namespace: 'ns1', orderPos: 2, next: true },
+                user,
+                trxProvider,
+            );
             const trx = await trxProvider();
             await trx.commit();
             const route = await db(Tables.Routes).first().where({ orderPos: 2 });
             expect(route).to.deep.include({
                 orderPos: 2,
-                route: '/upsert22',
-                next: 0,
+                route: '/upsert2',
+                next: 1,
                 meta: '{"a":1}',
                 domainId: null,
             });
@@ -96,27 +119,42 @@ describe('RoutesService', () => {
                 props: '{"a":1}',
                 kind: 'regular',
             });
+            sinon.assert.calledWithMatch(
+                versioning,
+                sinon.match.any,
+                sinon.match({
+                    id: 2,
+                    type: 'routes',
+                }),
+            );
         });
-        it('should not rewrite existing properties if not specified', async () => {
+        it('should set default value if not specified', async () => {
             await db(Tables.Routes).insert({
                 route: '/upsert6',
                 namespace: 'ns1',
-                meta: '{"e":1}',
                 orderPos: 6,
+                next: true,
+                templateName: 'masteradmin',
+                meta: '{"a":1}',
+                domainId: 1,
             });
             const service = new RoutesService(db);
             const trxProvider = db.transactionProvider();
-            const { meta, ...rest } = appRoute;
-            await service.upsert({ ...rest, route: '/upsert6', namespace: 'ns1', orderPos: 6 }, user, trxProvider);
+            await service.upsert(
+                { route: '/upsert6_1', namespace: 'ns1', domainId: 1, orderPos: 6 },
+                user,
+                trxProvider,
+            );
             const trx = await trxProvider();
             await trx.commit();
-            const route = await db(Tables.Routes).first().where({ route: '/upsert6' });
+            const route = await db(Tables.Routes).first().where({ route: '/upsert6_1' });
             expect(route).to.deep.include({
                 orderPos: 6,
-                route: '/upsert6',
+                route: '/upsert6_1',
                 next: 0,
-                meta: '{"e":1}',
-                domainId: null,
+                templateName: null,
+                domainId: 1,
+                meta: '{}',
             });
         });
         it('should cancel upsert', async () => {
@@ -318,6 +356,38 @@ describe('RoutesService', () => {
                 name: 'slot0',
                 props: '{"a":1}',
                 kind: 'regular',
+            });
+        });
+        it('should delete by namespace', async () => {
+            await db(Tables.Routes).insert([
+                { id: 20, route: '/upsert9', namespace: 'ns1', orderPos: 9 },
+                { id: 21, route: '/upsert10', namespace: 'ns1', orderPos: 10 },
+                { id: 22, route: '/upsert11', namespace: 'ns2', orderPos: 11 },
+            ]);
+            await db(Tables.RouteSlots).insert([
+                { routeId: 20, name: 'slot0', appName: '@portal/upsert', props: '{"a":1}', kind: 'regular' },
+                { routeId: 21, name: 'slot1', appName: '@portal/upsert', props: '{"a":1}', kind: 'regular' },
+                { routeId: 22, name: 'slot2', appName: '@portal/upsert', props: '{"a":1}', kind: 'regular' },
+            ]);
+            const service = new RoutesService(db);
+            const trxProvider = db.transactionProvider();
+            await service.deleteByNamespace('ns1', [2], { user, trxProvider });
+            const trx = await trxProvider();
+            await trx.commit();
+            const route1 = await db(Tables.Routes).first().where({ route: '/upsert9' });
+            expect(route1).to.be.undefined;
+            const route2 = await db(Tables.Routes).first().where({ route: '/upsert10' });
+            expect(route2).to.be.undefined;
+            const route3 = await db(Tables.Routes).first().where({ route: '/upsert11' });
+            expect(route3).to.deep.include({
+                route: '/upsert11',
+            });
+            const slots = await db(Tables.RouteSlots).select().where({ routeId: 22 });
+            expect(slots).to.have.length(1);
+            expect(slots[0]).to.deep.include({
+                routeId: 22,
+                appName: '@portal/upsert',
+                name: 'slot2',
             });
         });
     });

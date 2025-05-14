@@ -38,7 +38,7 @@ const commonAppRouteSlot = {
         return value;
     }),
     props: Joi.object().default({}),
-    kind: Joi.string().valid('primary', 'essential', 'regular', null),
+    kind: Joi.string().valid('primary', 'essential', 'regular', null).default(null),
 };
 
 export const appRouteSlotSchema = Joi.object({
@@ -79,12 +79,12 @@ const commonAppRoute = {
     orderPos: Joi.number(),
     route: Joi.string().trim().max(255),
     next: Joi.bool().default(false),
-    templateName: templateNameSchema.allow(null),
+    templateName: templateNameSchema.allow(null).default(null),
     slots: Joi.object().pattern(commonAppRouteSlot.name, appRouteSlotSchema),
     domainId: Joi.number().default(null),
     meta: Joi.object().default({}),
     versionId: Joi.string().strip(),
-    namespace: Joi.string(),
+    namespace: Joi.string().default(null),
 };
 
 export const partialAppRouteSchema = Joi.object({
@@ -96,8 +96,6 @@ const conditionSpecialRole = {
     then: Joi.forbidden(),
     otherwise: Joi.required(),
 };
-
-const manualOrderPosIncrement = !isPostgres(db);
 
 export const appRouteSchema = Joi.object<AppRouteDto>({
     ...commonAppRoute,
@@ -111,22 +109,4 @@ export const appRouteSchema = Joi.object<AppRouteDto>({
         is: Joi.exist(),
         then: Joi.forbidden(),
     }),
-}).external(async (value) => {
-    if (value.orderPos === undefined && manualOrderPosIncrement) {
-        const lastRoute = await db('routes')
-            .first('orderPos')
-            .where(function () {
-                this.where({ domainId: value.domainId });
-                this.whereNotNull('orderPos');
-            })
-            .orderBy('orderPos', 'desc');
-
-        if (lastRoute) {
-            value.orderPos = lastRoute.orderPos ?? 0 + 10;
-        } else {
-            value.orderPos = 10;
-        }
-    }
-
-    return value;
 });

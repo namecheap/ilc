@@ -72,6 +72,16 @@ module.exports = class Registry {
     }
 
     /**
+     *
+     * @param {String} domainName
+     * @returns {Number} domainId
+     */
+    async resolveDomainId(domainName) {
+        const { data } = await this.getRouterDomains();
+        return data.find((item) => item.domainName === domainName)?.id;
+    }
+
+    /**
      * Fetch config from registry
      * @param {String} options.filter.domain
      * @returns {Object}

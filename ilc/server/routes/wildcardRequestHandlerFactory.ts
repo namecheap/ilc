@@ -8,7 +8,7 @@ import UrlProcessor from '../../common/UrlProcessor';
 import i18n from '../i18n';
 import CspBuilderService from '../services/CspBuilderService';
 import tailorFactory from '../tailor/factory';
-import mergeConfigs from '../tailor/merge-configs';
+import { mergeConfigs, type OverrideConfig } from '../tailor/merge-configs';
 import parseOverrideConfig from '../tailor/parse-override-config';
 import ServerRouter from '../tailor/server-router';
 import { TransitionHooksExecutor } from '../TransitionHooksExecutor';
@@ -60,14 +60,16 @@ export function wildcardRequestHandlerFactory(
             req.headers.cookie,
             registryConfig.settings.overrideConfigTrustedOrigins,
             logger,
-        );
+        ) as OverrideConfig;
         // Excluding LDE related transactions from NewRelic
         if (overrideConfigs !== null) {
             req.raw.ldeRelated = true;
             newrelic.getTransaction().ignore();
         }
 
-        const finalRegistryConfig: TransformedRegistryConfig = mergeConfigs(registryConfig, overrideConfigs);
+        const domainId = overrideConfigs ? await registryService.resolveDomainId(currentDomain) : undefined;
+
+        const finalRegistryConfig = mergeConfigs(registryConfig, overrideConfigs, domainId);
         req.raw.registryConfig = finalRegistryConfig;
 
         const unlocalizedUrl = i18n.unlocalizeUrl(finalRegistryConfig.settings.i18n, url);

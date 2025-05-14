@@ -54,7 +54,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
         );
     }
 
-    app.use('/api/v1/config', routes.config);
+    app.use('/api/v1/config', routes.config(authMw));
     app.use('/api/v1/app', authMw, routes.apps);
     app.use('/api/v1/template', routes.templates(authMw));
     app.use('/api/v1/route', authMw, routes.appRoutes);

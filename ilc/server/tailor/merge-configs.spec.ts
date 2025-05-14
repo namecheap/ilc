@@ -1,6 +1,7 @@
-const chai = require('chai');
-
-const mergeConfigs = require('./merge-configs');
+import { expect, version } from 'chai';
+import type { Route } from '../../common/types/Router';
+import { mergeConfigs } from './merge-configs';
+import { TransformedRegistryConfig } from '../types/Registry';
 
 describe('merge configs', () => {
     const apps = {
@@ -27,6 +28,7 @@ describe('merge configs', () => {
                 timeout: 1000,
                 src: '/will-change',
             },
+            versionId: 'v1.0.0', // Added versionId
         },
         '@portal/const': {
             spaBundle: 'https://somewhere.com/constSpaBundle.js',
@@ -47,26 +49,30 @@ describe('merge configs', () => {
                 timeout: 5000,
                 src: '/const',
             },
+            versionId: 'v1.0.1', // Added versionId
         },
     };
 
-    const routes = [
+    const routes: Route[] = [
         {
-            routeId: 'commonRoute',
+            routeId: 1,
             route: '*',
             next: true,
             orderPos: -99,
             template: 'commonTemplate',
             slots: {},
+            meta: {}, // Added meta
+            versionId: 'v1.0.0', // Added versionId
         },
         {
-            routeId: 'constRoute',
+            routeId: 2,
             route: '/const',
             next: false,
             orderPos: 1,
             slots: {
                 const: {
                     appName: apps['@portal/const'].name,
+                    kind: null,
                     props: {
                         constSlotFirstProp: 'constSlotFirstProp',
                         constSlotSecondProp: {
@@ -75,15 +81,18 @@ describe('merge configs', () => {
                     },
                 },
             },
+            meta: {}, // Added meta
+            versionId: 'v1.0.1', // Added versionId
         },
         {
-            routeId: 'willChangeRoute',
+            routeId: 3,
             route: '/will-change',
             next: false,
             orderPos: 99,
             slots: {
                 willChange: {
                     appName: apps['@portal/will-change'].name,
+                    kind: null,
                     props: {
                         willChangeSlotFirstProp: 'willChangeSlotFirstProp',
                         willChangeSlotSecondProp: {
@@ -92,16 +101,20 @@ describe('merge configs', () => {
                     },
                 },
             },
+            meta: {}, // Added meta
+            versionId: 'v1.0.2', // Added versionId
         },
     ];
 
     const specialRoutes = {
         404: {
-            routeId: 'errorsRoute',
+            routeId: 10,
             next: false,
             orderPos: 50,
             template: 'errorsTemplate',
             slots: {},
+            meta: {},
+            versionId: 's',
         },
     };
 
@@ -111,20 +124,22 @@ describe('merge configs', () => {
         sharedLibrary3: 'https://somewhere.com/original3.js',
     };
 
-    const registryConfig = {
+    const registryConfig: TransformedRegistryConfig = {
         apps,
         routes,
         specialRoutes,
         sharedLibs,
+        settings: {} as any,
+        dynamicLibs: {} as any,
     };
 
     describe('should return original config', () => {
         it('should not override anything when override config does not exist', () => {
-            chai.expect(mergeConfigs(registryConfig, null)).to.be.equal(registryConfig);
+            expect(mergeConfigs(registryConfig, null)).to.be.equal(registryConfig);
         });
 
         it('should not override anything when override config does not have apps and routes', () => {
-            chai.expect(mergeConfigs(registryConfig, {})).to.be.equal(registryConfig);
+            expect(mergeConfigs(registryConfig, {} as any)).to.be.equal(registryConfig);
         });
     });
 
@@ -171,7 +186,7 @@ describe('merge configs', () => {
 
         const overrideRoutes = [
             {
-                routeId: 'newRoute',
+                routeId: 4,
                 route: '/new',
                 next: false,
                 orderPos: 90,
@@ -180,9 +195,11 @@ describe('merge configs', () => {
                         appName: apps['@portal/const'].name,
                     },
                 },
+                meta: {}, // Added meta
+                versionId: 'v1.0.3', // Added versionId
             },
             {
-                routeId: 'willChangeRoute',
+                routeId: 3,
                 route: '/changed',
                 orderPos: -98,
                 slots: {
@@ -198,6 +215,8 @@ describe('merge configs', () => {
                         appName: apps['@portal/const'].name,
                     },
                 },
+                meta: {}, // Added meta
+                versionId: 'v1.0.4', // Added versionId
             },
         ];
 
@@ -211,7 +230,7 @@ describe('merge configs', () => {
         };
 
         const mergedRoute = {
-            routeId: 'willChangeRoute',
+            routeId: 3,
             route: '/changed',
             next: false,
             orderPos: -98,
@@ -224,11 +243,14 @@ describe('merge configs', () => {
                             firstPropOfWillChangeRouteSlotSecondProp: 'changedFirstPropOfWillChangeRouteSlotSecondProp',
                         },
                     },
+                    kind: null,
                 },
                 new: {
                     appName: apps['@portal/const'].name,
                 },
             },
+            meta: {}, // Added meta
+            versionId: 'v1.0.4', // Added versionId
         };
 
         const mergedApp = {
@@ -254,6 +276,7 @@ describe('merge configs', () => {
                 timeout: 1000,
                 src: '/changed',
             },
+            versionId: 'v1.0.0',
         };
 
         const mergedSharedLibs = {
@@ -276,7 +299,7 @@ describe('merge configs', () => {
                 },
             };
 
-            chai.expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
+            expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
         });
 
         it('should override only routes when they exist', () => {
@@ -292,7 +315,7 @@ describe('merge configs', () => {
                 routes: [commonRoute, mergedRoute, constRoute, newRoute],
             };
 
-            chai.expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
+            expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
         });
 
         it('should override only sharedLibs when they exist', () => {
@@ -305,7 +328,7 @@ describe('merge configs', () => {
                 sharedLibs: mergedSharedLibs,
             };
 
-            chai.expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
+            expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
         });
 
         it('should override apps, routes and sharedLibs when they exist', () => {
@@ -329,7 +352,7 @@ describe('merge configs', () => {
                 sharedLibs: mergedSharedLibs,
             };
 
-            chai.expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
+            expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(mergedConfig);
         });
 
         it('should override route by `route` property', () => {
@@ -338,13 +361,14 @@ describe('merge configs', () => {
                 routes: [
                     ...registryConfig.routes,
                     {
-                        routeId: 'shouldBeChangedByRouteProperty',
+                        routeId: 4,
                         route: '/should-be-changed-by-route-property',
                         next: false,
                         orderPos: 10,
                         slots: {
                             const: {
                                 appName: apps['@portal/const'].name,
+                                kind: null,
                                 props: {
                                     constSlotFirstProp: 'constSlotFirstProp',
                                     constSlotSecondProp: {
@@ -353,6 +377,8 @@ describe('merge configs', () => {
                                 },
                             },
                         },
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.5', // Added versionId
                     },
                 ],
             };
@@ -372,14 +398,15 @@ describe('merge configs', () => {
                 ],
             };
 
-            chai.expect(mergeConfigs(registryConfigWithRouteThatShouldBeChanged, overrideConfig)).to.be.eql({
+            expect(mergeConfigs(registryConfigWithRouteThatShouldBeChanged, overrideConfig)).to.be.eql({
                 ...registryConfig,
                 routes: [
                     ...registryConfig.routes,
                     {
-                        routeId: 'shouldBeChangedByRouteProperty',
+                        routeId: 4,
                         route: '/should-be-changed-by-route-property',
                         next: true,
+                        meta: {},
                         orderPos: 100,
                         slots: {
                             const: {
@@ -390,14 +417,220 @@ describe('merge configs', () => {
                                         firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
                                     },
                                 },
+                                kind: null,
                             },
                             new: {
                                 appName: apps['@portal/const'].name,
                             },
                         },
+                        versionId: 'v1.0.5',
                     },
                 ],
             });
+        });
+        it('should override route only with same domains (no domain)', () => {
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 5,
+                        route: '*',
+                        next: false,
+                        slots: {},
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.5', // Added versionId
+                        domainId: 7,
+                    },
+                ],
+            };
+
+            expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(registryConfig);
+        });
+        it('should override route only with same domains (no domain) (merge)', () => {
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 1,
+                        route: '*',
+                        next: false,
+                        slots: {},
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.5', // Added versionId
+                        domainId: 7,
+                    },
+                ],
+            };
+
+            expect(mergeConfigs(registryConfig, overrideConfig)).to.be.eql(registryConfig);
+        });
+        it('should override route only with same domains (domain present)', () => {
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 5,
+                        route: '/anotherdomain',
+                        next: false,
+                        orderPos: 999,
+                        slots: {},
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.5', // Added versionId
+                        domainId: 7,
+                    },
+                ],
+            };
+
+            const mergedConfig = {
+                apps,
+                specialRoutes,
+                sharedLibs,
+                settings: {} as any,
+                dynamicLibs: {} as any,
+                routes: [
+                    {
+                        routeId: 1,
+                        route: '*',
+                        next: true,
+                        orderPos: -99,
+                        template: 'commonTemplate',
+                        slots: {},
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.0', // Added versionId
+                    },
+                    {
+                        routeId: 2,
+                        route: '/const',
+                        next: false,
+                        orderPos: 1,
+                        slots: {
+                            const: {
+                                appName: apps['@portal/const'].name,
+                                kind: null,
+                                props: {
+                                    constSlotFirstProp: 'constSlotFirstProp',
+                                    constSlotSecondProp: {
+                                        firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
+                                    },
+                                },
+                            },
+                        },
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.1', // Added versionId
+                    },
+                    {
+                        routeId: 3,
+                        route: '/will-change',
+                        next: false,
+                        orderPos: 99,
+                        slots: {
+                            willChange: {
+                                appName: apps['@portal/will-change'].name,
+                                kind: null,
+                                props: {
+                                    willChangeSlotFirstProp: 'willChangeSlotFirstProp',
+                                    willChangeSlotSecondProp: {
+                                        firstPropOfWillChangeRouteSlotSecondProp:
+                                            'firstPropOfWillChangeRouteSlotSecondProp',
+                                    },
+                                },
+                            },
+                        },
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.2', // Added versionId
+                    },
+                    {
+                        routeId: 5,
+                        route: '/anotherdomain',
+                        next: false,
+                        orderPos: 999,
+                        slots: {},
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.5', // Added versionId
+                        domainId: 7,
+                    },
+                ],
+            };
+
+            expect(mergeConfigs(registryConfig, overrideConfig, 7)).to.be.eql(mergedConfig);
+        });
+        it('should override route only with same domains (domain present) (merge)', () => {
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 1,
+                        route: '/anotherdomain',
+                        template: 'anotherTemplate',
+                        next: false,
+                        orderPos: 999,
+                        slots: {},
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.5', // Added versionId
+                        domainId: 7,
+                    },
+                ],
+            };
+
+            const mergedConfig = {
+                apps,
+                specialRoutes,
+                sharedLibs,
+                settings: {} as any,
+                dynamicLibs: {} as any,
+                routes: [
+                    {
+                        routeId: 2,
+                        route: '/const',
+                        next: false,
+                        orderPos: 1,
+                        slots: {
+                            const: {
+                                appName: apps['@portal/const'].name,
+                                kind: null,
+                                props: {
+                                    constSlotFirstProp: 'constSlotFirstProp',
+                                    constSlotSecondProp: {
+                                        firstPropOfConstSlotSecondProp: 'firstPropOfConstSlotSecondProp',
+                                    },
+                                },
+                            },
+                        },
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.1', // Added versionId
+                    },
+                    {
+                        routeId: 3,
+                        route: '/will-change',
+                        next: false,
+                        orderPos: 99,
+                        slots: {
+                            willChange: {
+                                appName: apps['@portal/will-change'].name,
+                                kind: null,
+                                props: {
+                                    willChangeSlotFirstProp: 'willChangeSlotFirstProp',
+                                    willChangeSlotSecondProp: {
+                                        firstPropOfWillChangeRouteSlotSecondProp:
+                                            'firstPropOfWillChangeRouteSlotSecondProp',
+                                    },
+                                },
+                            },
+                        },
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.2', // Added versionId
+                    },
+                    {
+                        routeId: 1,
+                        route: '/anotherdomain',
+                        template: 'anotherTemplate',
+                        next: false,
+                        orderPos: 999,
+                        slots: {},
+                        meta: {}, // Added meta
+                        versionId: 'v1.0.5', // Added versionId
+                        domainId: 7,
+                    },
+                ],
+            };
+
+            expect(mergeConfigs(registryConfig, overrideConfig, 7)).to.be.eql(mergedConfig);
         });
     });
 });
