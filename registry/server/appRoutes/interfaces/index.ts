@@ -61,7 +61,7 @@ export interface AppRoute {
     namespace?: string | null;
 }
 
-type AppRouteDto = {
+export type AppRouteDto = {
     specialRole?: string;
     orderPos?: number;
     route: string;

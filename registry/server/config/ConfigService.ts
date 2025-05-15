@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
 import { User } from '../../typings/User';
-import { AppRoute } from '../appRoutes/interfaces';
+import { AppRoute, AppRouteDto } from '../appRoutes/interfaces';
 import { routesService } from '../appRoutes/routes/RoutesService';
 import { App } from '../apps/interfaces';
 import { ApplicationEntry } from '../common/services/entries/ApplicationEntry';
@@ -10,7 +10,6 @@ import db, { VersionedKnex } from '../db';
 import { SharedLib } from '../sharedLibs/interfaces';
 import { isPostgres, PG_FOREIGN_KEY_VIOLATION_CODE } from '../util/db';
 import { getJoiErr } from '../util/helpers';
-import { AppRouteDto } from './transformConfig';
 
 type UpsertPayload = {
     apps?: App[];
@@ -79,12 +78,41 @@ export class ConfigService {
         routes: AppRouteDto[],
         { user, trxProvider }: UpsertParams,
     ): Promise<(AppRoute & { id: number })[]> {
+        this.validateRoutes(routes);
         const results: (AppRoute & { id: number })[] = [];
         for (const route of routes) {
             const result = await routesService.upsert(route, user, trxProvider);
             results.push(result);
         }
         return results;
+    }
+
+    private validateRoutes(routes: AppRouteDto[]) {
+        const grouped = routes.reduce(
+            (acc, route) => {
+                const ns = route.namespace ?? '';
+                if (!acc[ns]) {
+                    acc[ns] = [];
+                }
+                acc[ns].push(route);
+                return acc;
+            },
+            {} as Record<string, AppRouteDto[]>,
+        );
+        Object.values(grouped).forEach((namespaceRoutes) => {
+            const duplicates = namespaceRoutes.filter(
+                (route, idx, arr) =>
+                    arr.findIndex((r) => r.route === route.route && r.domainId === route.domainId) !== idx,
+            );
+            const unorderedDuplicates = duplicates
+                .filter((route) => typeof route.orderPos !== 'number')
+                .map((x) => x.route);
+            if (unorderedDuplicates.length > 0) {
+                throw new Error(
+                    `Having same routes in single namespace without explicit ordering is not supported. Add "orderPos" to each ${unorderedDuplicates.join(',')} routes.`,
+                );
+            }
+        });
     }
 
     private async upsertSharedLibs(
