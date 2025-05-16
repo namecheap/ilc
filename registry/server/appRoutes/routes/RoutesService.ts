@@ -61,14 +61,15 @@ export class RoutesService {
         let savedAppRouteId: number;
         const appRouteRecord = prepareAppRouteToSave(appRoute);
         const trx = await trxProvider();
-        const appRouteRecordWithOrderPos = appRouteRecord.orderPos
-            ? appRouteRecord
-            : {
-                  ...appRouteRecord,
-                  orderPos:
-                      (await this.findExistingOrderPos(appRoute, trx)) ??
-                      (await this.getNextOrderPos(appRouteRecord.domainId, trx)),
-              };
+        const appRouteRecordWithOrderPos =
+            typeof appRouteRecord.orderPos === 'number'
+                ? appRouteRecord
+                : {
+                      ...appRouteRecord,
+                      orderPos:
+                          (await this.findExistingOrderPos(appRoute, trx)) ??
+                          (await this.getNextOrderPos(appRouteRecord.domainId, trx)),
+                  };
         const existingRouteId = await this.findExistingRouteId(appRouteRecordWithOrderPos, trx);
         await this.db.versioning(user, { type: EntityTypes.routes, trxProvider, id: existingRouteId }, async (trx) => {
             const result = await this.db(Tables.Routes)
