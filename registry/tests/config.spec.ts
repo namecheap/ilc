@@ -409,7 +409,7 @@ describe('Tests /api/v1/config', () => {
         it('same routes in single namespace without explicit ordering', async () => {
             const unordered = { ...appRoute('unordered') };
             const ordered = { ...appRoute('ordered'), orderPos: 29 };
-            await req
+            const { body: response } = await req
                 .post('/api/v1/config/validate')
                 .send({
                     ...body,
@@ -426,7 +426,7 @@ describe('Tests /api/v1/config', () => {
                 .expect(200, {
                     valid: false,
                     details:
-                        'Having same routes in single namespace without explicit ordering is not supported. Add "orderPos" to each /unordered/* routes.',
+                        'Multiple routes with the same "route" and "domainId" and without "orderPos" are present in the passed update:[\n  {\n    "route": "/unordered/*",\n    "slots": {\n      "body": {\n        "appName": "unordered",\n        "props": {\n          "c": true\n        }\n      }\n    },\n    "namespace": "ns1"\n  }\n]To update, ensure that each of these routes has a unique "orderPos" value for the given "domainId".',
                 });
         });
     });
