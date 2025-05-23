@@ -560,6 +560,25 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should successfully set namespace to null if it was set before', async () => {
+            try {
+                const { body: created } = await req
+                    .post(example.url)
+                    .send({ ...example.correct, namespace: 'ns1' })
+                    .expect(200);
+                expect(created.namespace).to.equal('ns1');
+
+                const { body: updated } = await req
+                    .put(example.url + example.encodedName)
+                    .send({ ..._.omit(example.correct, 'name'), namespace: null })
+                    .expect(200);
+
+                expect(updated.namespace).equal(undefined);
+            } finally {
+                await req.delete(example.url + example.encodedName);
+            }
+        });
+
         it('should successfully update record with enforceDomain', async () => {
             let domainId;
             const templateName = 'templateName';
