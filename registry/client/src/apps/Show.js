@@ -25,14 +25,8 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
             <TabbedShowLayout initialValues={{ dependencies: [] }} {...props} toolbar={null}>
                 <Tab label="Summary">
                     <TextField source="name" />
-                    <SelectField
-                        source="kind"
-                        choices={APP_KINDS_WITH_WRAPPER}
-                    />
-                    <ReferenceField
-                        source="enforceDomain"
-                        reference="router_domains"
-                        emptyText={EMPTY_TEXT}>
+                    <SelectField source="kind" choices={APP_KINDS_WITH_WRAPPER} />
+                    <ReferenceField source="enforceDomain" reference="router_domains" emptyText={EMPTY_TEXT}>
                         <TextField source="domainName" />
                     </ReferenceField>
                     <TextField source="wrappedWith" emptyText={EMPTY_TEXT} />
@@ -41,6 +35,7 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
                         label="Discovery metadata (can be used to retrieve apps filtered by some metadata fields)."
                     />
                     <TextField source="adminNotes" component="pre" emptyText={EMPTY_TEXT} />
+                    <TextField source="namespace" emptyText={EMPTY_TEXT} />
                 </Tab>
                 <Tab label="Assets">
                     <UrlField source="assetsDiscoveryUrl" emptyText={EMPTY_TEXT} />
@@ -64,10 +59,7 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
                             <ChipField source="name" />
                         </SingleFieldList>
                     </ReferenceArrayField>
-                    <JsonFieldShow
-                        source="props"
-                        label="Properties that will be passed to application"
-                    />
+                    <JsonFieldShow source="props" label="Properties that will be passed to application" />
                     <JsonFieldShow
                         source="ssrProps"
                         label="Properties that will be added to main props at SSR request, allow to override certain values"

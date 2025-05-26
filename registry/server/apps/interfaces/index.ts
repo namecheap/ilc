@@ -85,7 +85,7 @@ const commonApp = {
     enforceDomain: Joi.number().default(null),
     l10nManifest: Joi.string().max(255),
     versionId: Joi.string().strip(),
-    namespace: Joi.string(),
+    namespace: Joi.string().default(null),
 };
 
 export const partialAppSchema = Joi.object<App>({

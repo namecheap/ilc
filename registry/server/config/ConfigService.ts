@@ -104,12 +104,10 @@ export class ConfigService {
                 (route, idx, arr) =>
                     arr.findIndex((r) => r.route === route.route && r.domainId === route.domainId) !== idx,
             );
-            const unorderedDuplicates = duplicates
-                .filter((route) => typeof route.orderPos !== 'number')
-                .map((x) => x.route);
+            const unorderedDuplicates = duplicates.filter((route) => typeof route.orderPos !== 'number');
             if (unorderedDuplicates.length > 0) {
                 throw new Error(
-                    `Having same routes in single namespace without explicit ordering is not supported. Add "orderPos" to each ${unorderedDuplicates.join(',')} routes.`,
+                    `Multiple routes with the same "route" and "domainId" and without "orderPos" are present in the passed update:${JSON.stringify(unorderedDuplicates, null, 2)}To update, ensure that each of these routes has a unique "orderPos" value for the given "domainId".`,
                 );
             }
         });
