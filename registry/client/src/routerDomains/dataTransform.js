@@ -13,12 +13,10 @@ export function transformSet(entity, operation) {
     if (operation === setOperations.update) {
         delete entity.id;
     }
-    console.log(entity);
     if (entity.props && typeof entity.props === 'string') {
         entity.props = JSON.parse(entity.props);
     }
     if (entity.ssrProps && typeof entity.ssrProps === 'string') {
         entity.ssrProps = JSON.parse(entity.ssrProps);
     }
-    console.log(entity);
 }
