@@ -39,7 +39,7 @@ export const getConfig: RequestHandler = async (req, res) => {
         dynamicLibs: {},
     };
 
-    data.apps = transformApps(apps, routerDomains, sharedProps);
+    data.apps = transformApps(apps, routerDomains, sharedProps, domainName);
 
     data.templates = templates.map(({ name }) => name);
 

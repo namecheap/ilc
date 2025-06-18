@@ -12,6 +12,28 @@ const example = {
         domainName: 'domainNameUpdated.com',
         template500: 'testTemplate500',
     }),
+    withProps: Object.freeze({
+        domainName: 'domainWithProps.com',
+        template500: 'testTemplate500',
+        props: {
+            apiUrl: 'https://api.domain.com',
+            cdnUrl: 'https://cdn.domain.com',
+            features: { chat: true, search: false },
+        },
+        ssrProps: {
+            internalApi: 'http://internal-api:3000',
+            secretKey: 'server-only-secret',
+        },
+    }),
+    withPropsUpdated: Object.freeze({
+        domainName: 'domainWithProps.com',
+        template500: 'testTemplate500',
+        props: {
+            apiUrl: 'https://api-v2.domain.com',
+            newProp: 'newValue',
+        },
+        ssrProps: null,
+    }),
 };
 
 describe(`Tests ${example.url}`, () => {
@@ -85,6 +107,59 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }
+        });
+
+        it('should successfully create record with props and ssrProps', async () => {
+            let routerDomainsId;
+
+            try {
+                const responseCreation = await req.post(example.url).send(example.withProps).expect(200);
+
+                routerDomainsId = responseCreation.body.id;
+
+                expect(responseCreation.body).deep.equal({
+                    id: routerDomainsId,
+                    ...example.withProps,
+                });
+
+                const responseFetching = await req.get(example.url + routerDomainsId).expect(200);
+
+                expect(responseFetching.body.props).deep.equal(example.withProps.props);
+                expect(responseFetching.body.ssrProps).deep.equal(example.withProps.ssrProps);
+            } finally {
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+            }
+        });
+
+        it('should create record with empty props', async () => {
+            let routerDomainsId;
+            const withEmptyProps = {
+                ...example.correct,
+                props: {},
+                ssrProps: null,
+            };
+
+            try {
+                const responseCreation = await req.post(example.url).send(withEmptyProps).expect(200);
+                routerDomainsId = responseCreation.body.id;
+                expect(responseCreation.body.props).to.be.undefined;
+                expect(responseCreation.body.ssrProps).to.be.undefined;
+            } finally {
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+            }
+        });
+
+        it('should not create record with invalid props type', async () => {
+            const incorrectProps = {
+                ...example.correct,
+                props: 'not an object',
+                ssrProps: 123,
+            };
+
+            await req
+                .post(example.url)
+                .send(incorrectProps)
+                .expect(422, '"props" must be of type object\n"ssrProps" must be of type object');
         });
 
         describe('Authentication / Authorization', () => {
@@ -265,6 +340,77 @@ describe(`Tests ${example.url}`, () => {
                     id: routerDomainsId,
                     ...example.updated,
                 });
+            } finally {
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+            }
+        });
+
+        it('should successfully update props and ssrProps', async () => {
+            let routerDomainsId;
+
+            try {
+                const responseCreation = await req.post(example.url).send(example.withProps).expect(200);
+                routerDomainsId = responseCreation.body.id;
+
+                const responseUpdating = await req
+                    .put(example.url + routerDomainsId)
+                    .send(example.withPropsUpdated)
+                    .expect(200);
+
+                expect(responseUpdating.body.props).deep.equal(example.withPropsUpdated.props);
+                expect(responseUpdating.body.ssrProps).to.be.undefined;
+            } finally {
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+            }
+        });
+
+        it('should successfully add props to existing domain', async () => {
+            let routerDomainsId;
+
+            try {
+                const responseCreation = await req.post(example.url).send(example.correct).expect(200);
+                routerDomainsId = responseCreation.body.id;
+
+                const updateData = {
+                    ...example.correct,
+                    props: { newProp: 'newValue' },
+                };
+
+                const responseUpdating = await req
+                    .put(example.url + routerDomainsId)
+                    .send(updateData)
+                    .expect(200);
+
+                expect(responseUpdating.body.props).deep.equal({ newProp: 'newValue' });
+            } finally {
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+            }
+        });
+
+        it('should handle nested objects in props', async () => {
+            let routerDomainsId;
+            const complexProps = {
+                ...example.correct,
+                props: {
+                    api: {
+                        endpoints: {
+                            users: 'https://api.com/users',
+                            products: 'https://api.com/products',
+                        },
+                        timeout: 5000,
+                    },
+                    features: {
+                        featureA: { enabled: true, config: { option1: 'value1' } },
+                        featureB: { enabled: false },
+                    },
+                },
+            };
+
+            try {
+                const responseCreation = await req.post(example.url).send(complexProps).expect(200);
+                routerDomainsId = responseCreation.body.id;
+
+                expect(responseCreation.body.props).deep.equal(complexProps.props);
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }
