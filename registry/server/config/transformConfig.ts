@@ -39,7 +39,10 @@ export function transformApps(
     apps: VersionedRecord<App>[],
     routerDomains: RouterDomains[],
     sharedProps: any[],
+    domainName?: string,
 ): Record<string, AppDto> {
+    const currentDomain = domainName ? routerDomains.find((d) => d.domainName === domainName) : null;
+
     return apps.reduce(
         (acc, app) => {
             const getDomainName = (domainId: number) => routerDomains.find((x) => x.id === domainId)?.domainName;
@@ -53,6 +56,14 @@ export function transformApps(
                 ssrProps: parseJSON<TransformedApp['ssrProps']>(app.ssrProps),
                 enforceDomain: app.enforceDomain ? getDomainName(app.enforceDomain) : undefined,
             };
+
+            // Apply domain-specific props
+            if (currentDomain?.props) {
+                jsonParsedApp.props = merge({}, parseJSON(currentDomain.props), jsonParsedApp.props);
+            }
+            if (currentDomain?.ssrProps) {
+                jsonParsedApp.ssrProps = merge({}, parseJSON(currentDomain.ssrProps), jsonParsedApp.ssrProps);
+            }
 
             if (sharedProps.length && app.configSelector !== null) {
                 parseJSON<string[]>(app.configSelector).forEach((configSelectorName) => {

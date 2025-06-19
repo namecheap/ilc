@@ -36,7 +36,10 @@ const updateRouterDomains = async (req: Request<RequestParams>, res: Response): 
     }
 
     await db.versioning(req.user, { type: 'router_domains', id: routerDomainId }, async (trx) => {
-        await db('router_domains').where({ id: routerDomainId }).update(req.body).transacting(trx);
+        await db('router_domains')
+            .where({ id: routerDomainId })
+            .update(stringifyJSON(['props', 'ssrProps'], req.body))
+            .transacting(trx);
     });
 
     const [updatedRouterDomains] = await db.select().from<RouterDomains>('router_domains').where('id', routerDomainId);

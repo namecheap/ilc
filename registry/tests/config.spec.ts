@@ -14,6 +14,9 @@ const example = {
         spaBundle: 'http://localhost:1234/ncTestAppReactssr.js',
         cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssr.css',
         configSelector: ['ncTestSharedPropsName'],
+        props: {
+            appConfigName: 'appCorrect',
+        },
         ssr: {
             src: 'http://127.0.0.1:1234/fragment',
             timeout: 1000,
@@ -53,11 +56,24 @@ const example = {
         name: 'ncTestSharedPropsName',
         props: {
             ncTestSharedPropsPropName: 'ncTestSharedPropsPropValue',
+            apiUrl: 'https://api.defaultDomain.com',
+        },
+        ssrProps: {
+            secretKey: 'server-global-secret',
         },
     }),
     routerDomains: Object.freeze({
         domainName: 'domainNameCorrect.com',
         template500: templateName,
+        props: {
+            appConfigName: 'domainNameCorrect',
+            apiUrl: 'https://api.domainNameCorrect.com',
+            cdnUrl: 'https://cdn.domainNameCorrect.com',
+            features: { chat: true, search: false },
+        },
+        ssrProps: {
+            secretKey: 'server-domain-secret',
+        },
     }),
     sharedLibs: Object.freeze({
         name: 'testSharedLibName',
@@ -120,7 +136,10 @@ describe('Tests /api/v1/config', () => {
 
                 await req.post('/api/v1/shared_libs/').send(example.sharedLibs).expect(200);
 
-                const response = await req.get('/api/v1/config').expect(200);
+                const response = await req
+                    .get('/api/v1/config')
+                    .query({ domainName: example.routerDomains.domainName })
+                    .expect(200);
 
                 expect(response.text).to.be.a('string');
                 expect(response.body).to.be.an('object');
@@ -161,7 +180,13 @@ describe('Tests /api/v1/config', () => {
                     _.omit(
                         {
                             ...example.apps,
-                            props: example.sharedProps.props,
+                            props: _.merge(
+                                {},
+                                example.sharedProps.props,
+                                example.routerDomains.props,
+                                example.apps.props,
+                            ),
+                            ssrProps: example.routerDomains.ssrProps,
                         },
                         ['name', 'configSelector'],
                     ),
@@ -171,7 +196,13 @@ describe('Tests /api/v1/config', () => {
                     _.omit(
                         {
                             ...example.apps,
-                            props: example.sharedProps.props,
+                            props: _.merge(
+                                {},
+                                example.sharedProps.props,
+                                example.routerDomains.props,
+                                example.apps.props,
+                            ),
+                            ssrProps: example.routerDomains.ssrProps,
                             enforceDomain: example.routerDomains.domainName,
                         },
                         ['name', 'configSelector'],
@@ -208,6 +239,17 @@ describe('Tests /api/v1/config', () => {
 
                 expect(response.body.sharedLibs).include({
                     [example.sharedLibs.name]: example.sharedLibs.spaBundle,
+                });
+
+                // Prio order: 1. app.props, 2. domainProps, 3. sharedProps
+                expect(response.body.apps[example.apps.name].props).to.include({
+                    appConfigName: example.apps.props.appConfigName,
+                    apiUrl: example.routerDomains.props.apiUrl,
+                    ncTestSharedPropsPropName: example.sharedProps.props.ncTestSharedPropsPropName,
+                });
+
+                expect(response.body.apps[example.apps.name].ssrProps).to.include({
+                    secretKey: example.routerDomains.ssrProps.secretKey,
                 });
             } finally {
                 routeId && (await req.delete('/api/v1/route/' + routeId));
