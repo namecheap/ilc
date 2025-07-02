@@ -27,4 +27,5 @@ module.exports = {
         exit: asyncLocalStorage.exit.bind(asyncLocalStorage),
         enterWith: asyncLocalStorage.enterWith.bind(asyncLocalStorage),
     },
+    asyncLocalStorage,
 };
