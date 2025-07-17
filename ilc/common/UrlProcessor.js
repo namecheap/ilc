@@ -35,6 +35,10 @@ class UrlProcessor {
 
         const parsedUrl = new URL(url, this.#fakeBaseInCasesWhereUrlIsRelative);
 
+        if (parsedUrl.username || parsedUrl.password) {
+            return '/';
+        }
+
         // Ensure there are no double slashes in the pathname, excluding the start
         parsedUrl.pathname = parsedUrl.pathname.replace(/\/{2,}/g, '/');
 
