@@ -89,5 +89,11 @@ describe('App', () => {
 
             chai.expect(response.headers.location).to.be.eql('/google.com/someRoute/');
         });
+
+        it('should reply with 302 and redirect to base URL ("/") for malicious @@evil.com input', async () => {
+            const response = await server.get('//@@evil.com').expect(302);
+
+            chai.expect(response.headers.location).to.be.eql('/');
+        });
     });
 });

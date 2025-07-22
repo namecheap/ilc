@@ -54,8 +54,14 @@ const onRequestFactory =
 
             if (localizedUrl !== req.raw.url && !shouldSkipRedirectForSlashes) {
                 const urlProcessor = new UrlProcessor(registryTrailingSlashSetting);
-                // Even if the localization triggered redirect we still need to ensure it is open-redirect safe
-                return reply.redirect(urlProcessor.process(localizedUrl));
+                const safeRedirect = urlProcessor.process(localizedUrl);
+
+                // if something went wrong or it's a suspicious redirect, fall back to root
+                if (!safeRedirect || /@[^/]*$/.test(safeRedirect) || safeRedirect.startsWith('//')) {
+                    return reply.redirect('/');
+                }
+
+                return reply.redirect(safeRedirect);
             }
         }
 
