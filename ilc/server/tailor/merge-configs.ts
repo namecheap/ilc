@@ -31,7 +31,9 @@ export function mergeConfigs(
     const isSameRoute = (overrideRoute: OverrideRoute, originalRoute: TransformedRoute) =>
         overrideRoute.routeId
             ? overrideRoute.routeId === originalRoute.routeId
-            : overrideRoute.route === originalRoute.route;
+            : overrideRoute.route === '*'
+              ? overrideRoute.route === originalRoute.route && overrideRoute.orderPos === originalRoute.orderPos
+              : overrideRoute.route === originalRoute.route;
 
     const isSameDomainRoute = (route: OverrideRoute) => route.domainId === domainId;
 

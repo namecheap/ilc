@@ -632,5 +632,151 @@ describe('merge configs', () => {
 
             expect(mergeConfigs(registryConfig, overrideConfig, 7)).to.be.eql(mergedConfig);
         });
+        it('should handle routes with same pattern but different orderPos including wildcard routes', () => {
+            const registryConfigWithWildcardRoutes: TransformedRegistryConfig = {
+                ...registryConfig,
+                routes: [
+                    {
+                        routeId: 1,
+                        route: '*',
+                        next: true,
+                        orderPos: -99,
+                        template: 'commonTemplate',
+                        slots: {
+                            base: {
+                                appName: '@portal/base',
+                                kind: null,
+                                props: {},
+                            },
+                        } as Record<string, any>,
+                        meta: {},
+                        versionId: 'v1.0.0',
+                    },
+                    {
+                        routeId: 2,
+                        route: '/const',
+                        next: false,
+                        orderPos: 1,
+                        slots: {
+                            const: {
+                                appName: apps['@portal/const'].name,
+                                kind: null,
+                                props: {},
+                            },
+                        } as Record<string, any>,
+                        meta: {},
+                        versionId: 'v1.0.1',
+                    },
+                ],
+            };
+
+            const overrideConfig = {
+                routes: [
+                    {
+                        route: '*',
+                        orderPos: 1,
+                        slots: {
+                            override1: {
+                                appName: '@portal/override1',
+                                kind: null,
+                                props: {},
+                            },
+                        } as Record<string, any>,
+                    },
+                    {
+                        route: '*',
+                        orderPos: 2,
+                        slots: {
+                            override2: {
+                                appName: '@portal/override2',
+                                kind: null,
+                                props: {},
+                            },
+                        } as Record<string, any>,
+                    },
+                    {
+                        route: '/const',
+                        orderPos: 100,
+                        slots: {
+                            overrideConst: {
+                                appName: '@portal/override-const',
+                                kind: null,
+                                props: {},
+                            },
+                        } as Record<string, any>,
+                    },
+                ],
+            };
+
+            const mergedConfig = {
+                apps,
+                specialRoutes,
+                sharedLibs,
+                settings: {} as any,
+                dynamicLibs: {} as any,
+                routes: [
+                    {
+                        routeId: 1,
+                        route: '*',
+                        next: true,
+                        orderPos: -99,
+                        template: 'commonTemplate',
+                        slots: {
+                            base: {
+                                appName: '@portal/base',
+                                kind: null,
+                                props: {},
+                            },
+                        } as Record<string, any>,
+                        meta: {},
+                        versionId: 'v1.0.0',
+                    },
+                    {
+                        route: '*',
+                        orderPos: 1,
+                        slots: {
+                            override1: {
+                                appName: '@portal/override1',
+                                kind: null,
+                                props: {},
+                            },
+                        } as Record<string, any>,
+                    },
+                    {
+                        route: '*',
+                        orderPos: 2,
+                        slots: {
+                            override2: {
+                                appName: '@portal/override2',
+                                kind: null,
+                                props: {},
+                            },
+                        } as Record<string, any>,
+                    },
+                    {
+                        routeId: 2,
+                        route: '/const',
+                        next: false,
+                        orderPos: 100,
+                        slots: {
+                            const: {
+                                appName: apps['@portal/const'].name,
+                                kind: null,
+                                props: {},
+                            },
+                            overrideConst: {
+                                appName: '@portal/override-const',
+                                kind: null,
+                                props: {},
+                            },
+                        } as Record<string, any>,
+                        meta: {},
+                        versionId: 'v1.0.1',
+                    },
+                ],
+            };
+
+            expect(mergeConfigs(registryConfigWithWildcardRoutes, overrideConfig)).to.be.eql(mergedConfig);
+        });
     });
 });
