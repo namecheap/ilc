@@ -210,6 +210,24 @@ describe('UrlProcessor', () => {
 
                 chai.expect(urlProcessor.process(input)).to.be.equal(expected, `Failed for input: ${input}`);
             });
+
+            it('when url contains @ and is unsafe (double @)', () => {
+                const processor = new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash);
+                const result = processor.process('https://original.url@@evil.com');
+                chai.expect(result).to.be.equal('/');
+            });
+
+            it('when url contains @ and is unsafe (single @)', () => {
+                const processor = new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash);
+                const result = processor.process('https://original.url@evil.com');
+                chai.expect(result).to.be.equal('/');
+            });
+
+            it('when @ is in path (safe case)', () => {
+                const processor = new UrlProcessor(UrlProcessor.routerHasTo.redirectToTrailingSlash);
+                const result = processor.process('https://original.url/@evil.com');
+                chai.expect(result).to.be.equal('https://original.url/@evil.com/');
+            });
         });
     });
 });
