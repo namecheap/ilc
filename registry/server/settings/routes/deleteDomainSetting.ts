@@ -1,10 +1,9 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import Joi from 'joi';
 
-import { SettingKeys, keySchema, createSettingSchema, AllowedSettingKeysForDomains } from '../interfaces';
-import db from '../../db';
-import preProcessResponse from '../services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
+import db from '../../db';
+import * as httpErrors from '../../errorHandler/httpErrors';
 
 type RequestParams = {
     id: string;
@@ -21,7 +20,18 @@ const validateRequest = validateRequestFactory([
 
 const deleteSettingForDomain = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const id = req.params.id;
-    await db('settings_domain_value').where({ id }).delete();
+
+    const existingSetting = await db('settings_domain_value')
+        .where({ id: Number(id) })
+        .first();
+
+    if (!existingSetting) {
+        throw new httpErrors.NotFoundError();
+    }
+
+    await db('settings_domain_value')
+        .where({ id: Number(id) })
+        .delete();
     res.status(204).send();
 };
 

@@ -1,12 +1,11 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import Joi from 'joi';
 
-import { SettingKeys, keySchema, partialSettingSchema } from '../interfaces';
-import db from '../../db';
-import preProcessResponse from '../services/preProcessResponse';
-import validateRequestFactory from '../../common/services/validateRequest';
-import settingService from '../services/SettingsService';
 import { User } from '../../../typings/User';
+import validateRequestFactory from '../../common/services/validateRequest';
+import { SettingKeys, keySchema, partialSettingSchema } from '../interfaces';
+import preProcessResponse from '../services/preProcessResponse';
+import settingService from '../services/SettingsService';
 
 type RequestParams = {
     key: SettingKeys;

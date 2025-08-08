@@ -1,10 +1,18 @@
-import _ from 'lodash';
-import db from '../../db';
-import { SettingKeys, SettingTypes } from '../interfaces';
 import { User } from '../../../typings/User';
-import { AllowedSettingKeysForDomains } from '../interfaces';
-import { SettingRaw, SettingParsed, Setting, Scope } from '../interfaces';
-import { safeParseJSON, JSONValue, isNumeric } from '../../common/services/json';
+import { JSONValue, isNumeric, safeParseJSON } from '../../common/services/json';
+import db from '../../db';
+import { UnprocessableContent } from '../../errorHandler/httpErrors';
+import { extractInsertedId } from '../../util/db';
+import { set } from '../../util/set';
+import {
+    AllowedSettingKeysForDomains,
+    Scope,
+    Setting,
+    SettingKeys,
+    SettingParsed,
+    SettingRaw,
+    SettingTypes,
+} from '../interfaces';
 
 type GetOptions = {
     range?: string;
@@ -72,7 +80,7 @@ export class SettingsService {
         }
     }
 
-    async updateRootSetting(settingKey: SettingKeys, value: any, user: User) {
+    async updateRootSetting(settingKey: SettingKeys, value: unknown, user: User) {
         await db.versioning(user, { type: 'settings', id: settingKey }, async (trx) => {
             await db('settings').where('key', settingKey).update('value', JSON.stringify(value)).transacting(trx);
         });
@@ -82,11 +90,17 @@ export class SettingsService {
         return updated;
     }
 
-    async updateDomainSetting(settingKey: SettingKeys, value: any, domainId: number, user: User) {
-        const [{ id }] = await db('settings_domain_value').where({ key: settingKey, domainId: domainId });
+    async updateDomainSetting(settingKey: SettingKeys, value: unknown, domainId: number, user: User) {
+        const [setting] = await db('settings_domain_value').where({ key: settingKey, domainId: domainId });
+        if (!setting) {
+            return await this.createSettingForDomain(settingKey, value, domainId, user);
+        }
 
-        await db.versioning(user, { type: 'settings_domain_value', id }, async (trx) => {
-            await db('settings_domain_value').where({ id }).update('value', JSON.stringify(value)).transacting(trx);
+        await db.versioning(user, { type: 'settings_domain_value', id: setting.id }, async (trx) => {
+            await db('settings_domain_value')
+                .where({ id: setting.id })
+                .update('value', JSON.stringify(value))
+                .transacting(trx);
         });
 
         const [updated] = await db('settings_domain_value').where({ key: settingKey, domainId: domainId });
@@ -193,9 +207,39 @@ export class SettingsService {
             : await this.getSettingsForRootDomain({ allowedForDomains: null, ilc: true });
 
         return this.omitEmptyAndNullValues(settings.data).reduce((acc: Record<string, any>, setting) => {
-            _.set(acc, setting?.key, setting.value);
+            set(acc, setting.key, setting.value);
             return acc;
         }, {});
+    }
+
+    async createSettingForDomain(settingKey: SettingKeys, value: unknown, domainId: number, user: User) {
+        if (!AllowedSettingKeysForDomains.includes(settingKey)) {
+            throw new UnprocessableContent({ message: `Setting key ${settingKey} is not allowed for domains` });
+        }
+
+        const [{ total }] = await db
+            .from<{ total: string | number }>('router_domains')
+            .count('id as total')
+            .where('id', domainId);
+
+        if (Number(total) === 0) {
+            throw new UnprocessableContent({ message: `Domain with id ${domainId} does not exist` });
+        }
+
+        const stringified = JSON.stringify(value);
+
+        let savedSettingId: number | undefined;
+        await db.versioning(user, { type: 'settings_domain_value' }, async (trx) => {
+            const result = await db('settings_domain_value').insert(
+                { key: settingKey, value: stringified, domainId },
+                'id',
+            );
+            savedSettingId = extractInsertedId(result);
+            return savedSettingId;
+        });
+
+        const [savedSetting] = await db('settings_domain_value').select().where('id', savedSettingId);
+        return savedSetting;
     }
 
     private parseSettings(settings: SettingRaw | SettingRaw[]) {

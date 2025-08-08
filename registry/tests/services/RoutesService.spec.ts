@@ -252,7 +252,7 @@ describe('RoutesService', () => {
                 .insert({ route: '/upsert5', namespace: 'ns1', orderPos: 5 })
                 .returning('*');
             await db(Tables.RouteSlots).insert({
-                routeId: route.id!,
+                routeId: route.id,
                 name: 'slot0',
                 appName: '@portal/upsert',
                 props: '{"a":1}',
@@ -305,7 +305,7 @@ describe('RoutesService', () => {
                 .insert({ route: '/upsert8', namespace: 'ns1', orderPos: 8 })
                 .returning('*');
             await db(Tables.RouteSlots).insert({
-                routeId: route.id!,
+                routeId: route.id,
                 name: 'slot0',
                 appName: '@portal/upsert',
                 props: '{"a":1}',

@@ -5,8 +5,13 @@ import * as httpErrors from './httpErrors';
 import noticeError from './noticeError';
 
 async function errorHandler(error: Error, req: Request, res: Response, next: NextFunction): Promise<void> {
-    if (error instanceof httpErrors.HttpError) {
+    if (error instanceof httpErrors.NotFoundError) {
         res.status(404).send('Not found');
+        return;
+    }
+
+    if (error instanceof httpErrors.UnprocessableContent) {
+        res.status(422).send(error.message);
         return;
     }
 

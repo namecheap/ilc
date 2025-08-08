@@ -5,16 +5,16 @@ import { Tables } from '../../db/structure';
 import { extractInsertedId, PG_UNIQUE_VIOLATION_CODE } from '../../util/db';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes, VersionedRecord } from '../../versioning/interfaces';
-import { AppRoute, appRouteSchema, AppRouteSlot } from '../interfaces';
+import { AppRoute, AppRouteDto, appRouteSchema, AppRouteSlot } from '../interfaces';
 import { prepareAppRouteSlotsToSave, prepareAppRouteToSave } from '../services/prepareAppRoute';
 
-type AppRouteDto = VersionedRecord<Omit<AppRoute, 'id'>> & AppRouteSlot;
+type AppRouteResponseDto = VersionedRecord<Omit<AppRoute, 'id'>> & AppRouteSlot;
 
 export class RoutesService {
     constructor(private readonly db: VersionedKnex) {}
 
     public getRoutesById(appRouteId: number) {
-        type QueryResult = AppRouteDto & {
+        type QueryResult = AppRouteResponseDto & {
             _routeId?: number;
         };
         const query = this.db
@@ -41,18 +41,14 @@ export class RoutesService {
                 }
 
                 return acc;
-            }, [] as AppRouteDto[]);
+            }, [] as AppRouteResponseDto[]);
         });
     }
 
     /**
      * @returns routeId
      */
-    public async upsert(
-        params: unknown,
-        user: User,
-        trxProvider: Knex.TransactionProvider,
-    ): Promise<AppRoute & { id: number }> {
+    public async upsert(params: unknown, user: User, trxProvider: Knex.TransactionProvider): Promise<AppRoute> {
         const { slots, ...appRoute } = await appRouteSchema.validateAsync(params, {
             noDefaults: false,
             externals: false,
@@ -77,7 +73,7 @@ export class RoutesService {
                 .onConflict(this.db.raw('("orderPos", "domainIdIdxble", namespace) WHERE namespace IS NOT NULL'))
                 .merge()
                 .transacting(trx);
-            savedAppRouteId = extractInsertedId(result as { id: number }[]);
+            savedAppRouteId = extractInsertedId(result);
             await this.db(Tables.RouteSlots).where('routeId', savedAppRouteId).delete().transacting(trx);
             await this.db
                 .batchInsert(Tables.RouteSlots, prepareAppRouteSlotsToSave(slots, savedAppRouteId))
@@ -130,7 +126,10 @@ export class RoutesService {
         return max ? max + 10 : 10;
     }
 
-    private async findExistingOrderPos(appRoute: AppRoute, trx: Knex.Transaction): Promise<number | undefined | null> {
+    private async findExistingOrderPos(
+        appRoute: Omit<AppRouteDto, 'slots'>,
+        trx: Knex.Transaction,
+    ): Promise<number | undefined | null> {
         const existingRoute = await this.db(Tables.Routes)
             .first('orderPos')
             .where({ route: appRoute.route, domainId: appRoute.domainId, namespace: appRoute.namespace })
@@ -138,7 +137,10 @@ export class RoutesService {
         return existingRoute?.orderPos;
     }
 
-    private async findExistingRouteId(appRoute: AppRoute, trx: Knex.Transaction): Promise<number | undefined> {
+    private async findExistingRouteId(
+        appRoute: Omit<AppRouteDto, 'slots' | 'meta'>,
+        trx: Knex.Transaction,
+    ): Promise<number | undefined> {
         const existingRoute = await this.db(Tables.Routes)
             .first('id')
             .where({ orderPos: appRoute.orderPos, domainId: appRoute.domainId, namespace: appRoute.namespace })

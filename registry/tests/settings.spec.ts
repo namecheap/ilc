@@ -33,8 +33,8 @@ const cspValue = JSON.stringify({
 describe(url, () => {
     let req: Agent;
     let reqWithAuth: Agent;
-    let createDomain: () => Promise<{ getResponse: () => { id: any }; destory: () => Promise<void> }>;
-    let createConfigRequest: (payload: Object) => supertest.Test;
+    let createDomain: () => Promise<{ getResponse: () => { id: any }; destroy: () => Promise<void> }>;
+    let createConfigRequest: (payload: object) => supertest.Test;
     let deleteConfigRequest: (id: number) => supertest.Test;
 
     beforeEach(async () => {
@@ -65,13 +65,13 @@ describe(url, () => {
 
             return {
                 getResponse: () => ({ id: domainId }),
-                destory: async () => {
+                destroy: async () => {
                     await req.delete(`${payload.url}${domainId}`).expect(204);
                     await req.delete(template500Payload.url + template500Payload.payload.name).expect(204);
                 },
             };
         };
-        createConfigRequest = (payload: Object): supertest.Test => {
+        createConfigRequest = (payload: object): supertest.Test => {
             return req.post(url).send(payload);
         };
         deleteConfigRequest = (id: number): supertest.Test => {
@@ -231,7 +231,7 @@ describe(url, () => {
             await reqWithAuth.get(urlJoin(url, SettingKeys.AmdDefineCompatibilityMode)).expect(401);
         });
 
-        it('should return settings and exclude values from secret records filtered by domain', async () => {
+        it('should return settings filtered by domain id', async () => {
             const domainHelper = await createDomain();
             const domainId = domainHelper.getResponse().id;
             const uniqueEntityPayload = {
@@ -245,9 +245,15 @@ describe(url, () => {
             try {
                 const queryFilter = encodeURIComponent(JSON.stringify({ enforceDomain: domainId }));
                 const response = await req.get(`${url}?filter=${queryFilter}`).expect(200);
+                chai.expect(response.body.length).to.be.greaterThan(0);
+
+                const cspConfigSetting = response.body.find((setting: any) => setting.key === SettingKeys.CspConfig);
+                chai.expect(cspConfigSetting).to.exist;
+                chai.expect(cspConfigSetting.domainId).to.equal(domainId);
+                chai.expect(cspConfigSetting.value).to.deep.equal(JSON.parse(cspValue));
             } finally {
                 await deleteConfigRequest(id).expect(204);
-                await domainHelper.destory();
+                await domainHelper.destroy();
             }
         });
 
@@ -279,7 +285,7 @@ describe(url, () => {
                 });
             } finally {
                 await deleteConfigRequest(id).expect(204);
-                await domainHelper.destory();
+                await domainHelper.destroy();
             }
         });
 
@@ -302,7 +308,7 @@ describe(url, () => {
 
                 chai.expect(response.body).to.deep.include(defaultCsp);
             } finally {
-                await domainHelper.destory();
+                await domainHelper.destroy();
             }
         });
 
@@ -331,7 +337,7 @@ describe(url, () => {
                 });
             } finally {
                 await deleteConfigRequest(id).expect(204);
-                await domainHelper.destory();
+                await domainHelper.destroy();
             }
         });
     });
@@ -632,6 +638,72 @@ describe(url, () => {
                     .expect(200);
             }
         });
+        it(`should upsert ${SettingKeys.CspConfig} if the value is valid for domain`, async () => {
+            const domainHelper = await createDomain();
+            try {
+                const response = await req
+                    .put(urlJoin(url, SettingKeys.CspConfig))
+                    .send({
+                        key: SettingKeys.CspConfig,
+                        value: JSON.stringify({
+                            defaultSrc: ['https://test.com'],
+                            reportUri: 'a/b',
+                        }),
+                        domainId: domainHelper.getResponse().id,
+                    })
+                    .expect(200);
+                await deleteConfigRequest(response.body.id);
+                chai.expect(response.body).to.deep.equal({
+                    key: SettingKeys.CspConfig,
+                    value: {
+                        defaultSrc: ['https://test.com'],
+                        reportUri: 'a/b',
+                    },
+                    domainId: domainHelper.getResponse().id,
+                    id: response.body.id,
+                    secret: false,
+                });
+            } finally {
+                await domainHelper.destroy();
+            }
+        });
+        it(`should update ${SettingKeys.CspConfig} if the value is valid for domain`, async () => {
+            const domainHelper = await createDomain();
+            const domainId = domainHelper.getResponse().id;
+            const uniqueEntityPayload = {
+                domainId,
+                key: SettingKeys.CspConfig,
+                value: cspValue,
+            };
+            const configResponse = await createConfigRequest(uniqueEntityPayload);
+            const id = configResponse.body.id;
+            try {
+                const response = await req
+                    .put(urlJoin(url, SettingKeys.CspConfig))
+                    .send({
+                        key: SettingKeys.CspConfig,
+                        value: JSON.stringify({
+                            defaultSrc: ['https://test2.com'],
+                            reportUri: 'a/b',
+                        }),
+                        domainId: domainHelper.getResponse().id,
+                    })
+                    .expect(200);
+                chai.expect(response.body).to.deep.equal({
+                    key: SettingKeys.CspConfig,
+                    value: {
+                        defaultSrc: ['https://test2.com'],
+                        reportUri: 'a/b',
+                    },
+                    domainId: domainHelper.getResponse().id,
+                    id: configResponse.body.id, // id not changed
+                    secret: false,
+                });
+            } finally {
+                await deleteConfigRequest(id);
+                await domainHelper.destroy();
+            }
+        });
 
         it('should deny access when a user is not authorized', async () => {
             await reqWithAuth
@@ -666,7 +738,7 @@ describe(url, () => {
                 const id = response.body.id;
                 await deleteConfigRequest(id).expect(204);
             } finally {
-                await domainHelper.destory();
+                await domainHelper.destroy();
             }
         });
 
@@ -685,7 +757,7 @@ describe(url, () => {
                 await createConfigRequest(uniqueEntityPayload).expect(500);
                 await deleteConfigRequest(id).expect(204);
             } finally {
-                await domainHelper.destory();
+                await domainHelper.destroy();
             }
         });
         it('should not create not allowed config for domain', async () => {
@@ -703,7 +775,7 @@ describe(url, () => {
                     `Setting key ${SettingKeys.BaseUrl} is not allowed for domains`,
                 );
             } finally {
-                await domainHelper.destory();
+                await domainHelper.destroy();
             }
         });
         it('should not create not allows config for non-existant domain', async () => {
@@ -726,7 +798,7 @@ describe(url, () => {
             try {
                 await createConfigRequest(uniqueEntityPayload).expect(422);
             } finally {
-                await domainHelper.destory();
+                await domainHelper.destroy();
             }
         });
     });
@@ -752,7 +824,7 @@ describe(url, () => {
 
                 await deleteConfigRequest(id).expect(204);
             } finally {
-                await domainHelper.destory();
+                await domainHelper.destroy();
             }
         });
     });

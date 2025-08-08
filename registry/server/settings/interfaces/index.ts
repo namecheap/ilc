@@ -177,13 +177,20 @@ const valueSchema = Joi.alternatives().conditional('key', {
     otherwise: Joi.string().allow(''),
 });
 
+export type DomainSetting = {
+    id: number;
+    key: string;
+    value: string;
+    domainId: number;
+};
+
 export const partialSettingSchema = Joi.object({
     key: keySchema.required(),
     value: valueSchema,
     domainId: Joi.number().integer().allow(null).optional(),
 });
 
-export const createSettingSchema = Joi.object({
+export const createSettingSchema = Joi.object<Omit<DomainSetting, 'id'>>({
     domainId: Joi.number().integer().required(),
     key: keySchema.required(),
     value: valueSchema,

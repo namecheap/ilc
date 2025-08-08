@@ -1,11 +1,9 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import type { Request, Response } from 'express';
 
-import { SettingKeys, keySchema, createSettingSchema, AllowedSettingKeysForDomains } from '../interfaces';
-import db from '../../db';
-import preProcessResponse from '../services/preProcessResponse';
+import { User } from '../../../typings/User';
 import validateRequestFactory from '../../common/services/validateRequest';
-import { extractInsertedId } from '../../util/db';
+import { SettingKeys, createSettingSchema } from '../interfaces';
+import settingsService from '../services/SettingsService';
 
 type RequestParams = {
     key: SettingKeys;
@@ -21,28 +19,13 @@ const validateRequest = validateRequestFactory([
 const createSettingForDomain = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const settingKey = req.body.key;
     const domainId = req.body.domainId;
-    let payload = req.body;
 
-    if (!AllowedSettingKeysForDomains.includes(settingKey)) {
-        res.status(422).send(`Setting key ${settingKey} is not allowed for domains`);
-        return;
-    }
-
-    const [{ total }] = await db
-        .from<{ total: string | number }>('router_domains')
-        .count('id as total')
-        .where('id', domainId);
-
-    if (Number(total) === 0) {
-        res.status(422).send(`Domain with id ${domainId} does not exist`);
-        return;
-    }
-
-    payload.value = JSON.stringify(payload.value);
-    const result = await db('settings_domain_value').insert(payload, 'id');
-    const id = extractInsertedId(result);
-
-    const [savedSetting] = await db.select().from('settings_domain_value').where('id', id);
+    const savedSetting = await settingsService.createSettingForDomain(
+        settingKey,
+        req.body.value,
+        domainId,
+        req.user as User,
+    );
     res.status(200).send(savedSetting);
 };
 
