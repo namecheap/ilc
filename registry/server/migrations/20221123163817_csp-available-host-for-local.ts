@@ -7,7 +7,7 @@ export async function up(knex: Knex): Promise<any> {
         value: JSON.stringify(['https://localhost']),
         default: JSON.stringify(['https://localhost']),
         scope: Scope.Ilc,
-        secret: 0,
+        secret: false,
         meta: JSON.stringify({
             type: SettingTypes.StringArray,
         }),

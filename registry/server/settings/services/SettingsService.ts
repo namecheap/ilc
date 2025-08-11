@@ -1,17 +1,18 @@
 import { User } from '../../../typings/User';
 import { JSONValue, isNumeric, safeParseJSON } from '../../common/services/json';
 import db from '../../db';
-import { UnprocessableContent } from '../../errorHandler/httpErrors';
+import { NotFoundError, UnprocessableContent } from '../../errorHandler/httpErrors';
 import { extractInsertedId } from '../../util/db';
 import { set } from '../../util/set';
 import {
     AllowedSettingKeysForDomains,
+    DomainSetting,
     Scope,
-    Setting,
     SettingKeys,
     SettingParsed,
     SettingRaw,
     SettingTypes,
+    SettingValue,
 } from '../interfaces';
 
 type GetOptions = {
@@ -28,8 +29,11 @@ export class SettingsService {
 
     constructor() {}
 
-    async get<T = any>(key: SettingKeys, callerId: string | null = null): Promise<T> {
-        const value = await this.getVal(key);
+    async get<T extends SettingValue = SettingValue>(
+        key: SettingKeys,
+        callerId: string | null = null,
+    ): Promise<T | undefined> {
+        const value = await this.getValue(key);
 
         if (callerId) {
             if (this.changesTracking[callerId] === undefined) {
@@ -39,12 +43,12 @@ export class SettingsService {
             this.changesTracking[callerId][key] = value;
         }
 
-        return value;
+        return value as T | undefined;
     }
 
     async hasChanged(callerId: string, keys: SettingKeys[]): Promise<boolean> {
         for (let key of keys) {
-            const val = await this.getVal(key);
+            const val = await this.getValue(key);
 
             if (!this.changesTracking[callerId] || val !== this.changesTracking[callerId][key]) {
                 return true;
@@ -60,8 +64,8 @@ export class SettingsService {
         });
     }
 
-    private async getVal(key: SettingKeys): Promise<any> {
-        const [setting] = await db.select().from('settings').where('key', key);
+    private async getValue(key: SettingKeys): Promise<SettingValue | undefined> {
+        const [setting] = await db('settings').select().where('key', key);
 
         if (setting === undefined) {
             return;
@@ -80,17 +84,21 @@ export class SettingsService {
         }
     }
 
-    async updateRootSetting(settingKey: SettingKeys, value: unknown, user: User) {
+    async updateRootSetting(settingKey: SettingKeys, value: unknown, user: User): Promise<SettingRaw> {
         await db.versioning(user, { type: 'settings', id: settingKey }, async (trx) => {
             await db('settings').where('key', settingKey).update('value', JSON.stringify(value)).transacting(trx);
         });
 
-        const [updated] = await db.select().from('settings').where('key', settingKey);
-
+        const [updated] = await db('settings').select().where('key', settingKey);
         return updated;
     }
 
-    async updateDomainSetting(settingKey: SettingKeys, value: unknown, domainId: number, user: User) {
+    async updateDomainSetting(
+        settingKey: SettingKeys,
+        value: unknown,
+        domainId: number,
+        user: User,
+    ): Promise<DomainSetting> {
         const [setting] = await db('settings_domain_value').where({ key: settingKey, domainId: domainId });
         if (!setting) {
             return await this.createSettingForDomain(settingKey, value, domainId, user);
@@ -113,7 +121,7 @@ export class SettingsService {
 
         const whereCond = options.ilc ? { scope: Scope.Ilc } : {};
 
-        const settings = await db
+        const settings = await db('settings')
             .select()
             .from<SettingRaw, SettingRaw[]>('settings')
             .where(whereCond)
@@ -212,7 +220,12 @@ export class SettingsService {
         }, {});
     }
 
-    async createSettingForDomain(settingKey: SettingKeys, value: unknown, domainId: number, user: User) {
+    async createSettingForDomain(
+        settingKey: SettingKeys,
+        value: unknown,
+        domainId: number,
+        user: User,
+    ): Promise<DomainSetting> {
         if (!AllowedSettingKeysForDomains.includes(settingKey)) {
             throw new UnprocessableContent({ message: `Setting key ${settingKey} is not allowed for domains` });
         }
@@ -275,7 +288,7 @@ export class SettingsService {
     }
 
     private parseSetting(settings: SettingRaw): SettingParsed {
-        const parsedSetting: SettingParsed = safeParseJSON<Setting>(settings, this.isSettingTypeGuard);
+        const parsedSetting: SettingParsed = safeParseJSON<SettingParsed>(settings, this.isSettingTypeGuard);
 
         if (
             parsedSetting.value === undefined ||
@@ -316,6 +329,35 @@ export class SettingsService {
             const filtered = Object.fromEntries(filteredEntries) as SettingParsed;
             return filtered;
         });
+    }
+
+    public async deleteDomainSetting(id: string): Promise<void> {
+        const existingSetting = await db('settings_domain_value')
+            .where({ id: Number(id) })
+            .first();
+
+        if (!existingSetting) {
+            throw new NotFoundError();
+        }
+
+        await db('settings_domain_value')
+            .where({ id: Number(id) })
+            .delete();
+    }
+
+    public async getDomainMergedSetting(settingKey: string, domainId: number | null = null): Promise<SettingParsed> {
+        const [setting] = await db('settings').select().where('key', settingKey);
+
+        if (domainId) {
+            const [domainSetting] = await db('settings_domain_value')
+                .select()
+                .where('key', settingKey)
+                .andWhere('domainId', domainId);
+            setting.id = domainSetting.id;
+            setting.value = domainSetting.value;
+            setting.domainId = domainSetting.domainId;
+        }
+        return this.parseSetting(setting);
     }
 }
 

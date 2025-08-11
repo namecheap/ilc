@@ -7,7 +7,7 @@ export async function up(knex: Knex): Promise<any> {
         value: 'null',
         default: 'null',
         scope: Scope.Ilc,
-        secret: 0,
+        secret: false,
         meta: JSON.stringify({
             type: SettingTypes.JSON,
         }),

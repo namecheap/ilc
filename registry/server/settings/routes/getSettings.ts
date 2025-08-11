@@ -1,9 +1,6 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
-import db from '../../db';
-import preProcessResponse from '../services/preProcessResponse';
-import { AllowedSettingKeysForDomains } from '../interfaces';
-import settingsService from '../services/SettingsService';
+import { settingsService } from '../services/SettingsService';
 
 const parseFilters = (
     filter: unknown,

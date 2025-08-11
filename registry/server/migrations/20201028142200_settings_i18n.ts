@@ -8,7 +8,7 @@ export async function up(knex: Knex): Promise<any> {
             value: JSON.stringify(false),
             default: JSON.stringify(false),
             scope: Scope.Ilc,
-            secret: 0,
+            secret: false,
             meta: JSON.stringify({
                 type: SettingTypes.Boolean,
             }),
@@ -18,7 +18,7 @@ export async function up(knex: Knex): Promise<any> {
             value: JSON.stringify('en-US'),
             default: JSON.stringify('en-US'),
             scope: Scope.Ilc,
-            secret: 0,
+            secret: false,
             meta: JSON.stringify({
                 type: SettingTypes.String,
             }),
@@ -28,7 +28,7 @@ export async function up(knex: Knex): Promise<any> {
             value: JSON.stringify('USD'),
             default: JSON.stringify('USD'),
             scope: Scope.Ilc,
-            secret: 0,
+            secret: false as any,
             meta: JSON.stringify({
                 type: SettingTypes.String,
             }),
@@ -38,7 +38,7 @@ export async function up(knex: Knex): Promise<any> {
             value: JSON.stringify(['en-US', 'ua-UA']),
             default: JSON.stringify(['en-US', 'ua-UA']),
             scope: Scope.Ilc,
-            secret: 0,
+            secret: false as any,
             meta: JSON.stringify({
                 type: SettingTypes.StringArray,
             }),
@@ -48,7 +48,7 @@ export async function up(knex: Knex): Promise<any> {
             value: JSON.stringify(['USD', 'UAH']),
             default: JSON.stringify(['USD', 'UAH']),
             scope: Scope.Ilc,
-            secret: 0,
+            secret: false as any,
             meta: JSON.stringify({
                 type: SettingTypes.StringArray,
             }),
@@ -58,7 +58,7 @@ export async function up(knex: Knex): Promise<any> {
             value: RoutingStrategyValues.PrefixExceptDefault,
             default: RoutingStrategyValues.PrefixExceptDefault,
             scope: Scope.Ilc,
-            secret: 0,
+            secret: false as any,
             meta: JSON.stringify({
                 type: SettingTypes.Enum,
                 choices: Object.values(RoutingStrategyValues),

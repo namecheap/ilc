@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { SettingsService } from '../../server/settings/services/SettingsService';
 import db from '../../server/db';
+import { Scope, SettingKeys } from '../../server/settings/interfaces';
 
 describe('SettingsService', () => {
     let settingsService: SettingsService;
@@ -41,16 +42,20 @@ describe('SettingsService', () => {
             // Insert general settings
             await db('settings').insert([
                 {
-                    key: testSetting1,
+                    key: testSetting1 as SettingKeys,
                     value: JSON.stringify(generalValue1),
+                    default: JSON.stringify(generalValue1),
                     meta: JSON.stringify({ type: 'string' }),
-                    scope: 'ilc',
+                    scope: Scope.Ilc,
+                    secret: false,
                 },
                 {
-                    key: testSetting2,
+                    key: testSetting2 as SettingKeys,
                     value: JSON.stringify(generalValue2),
+                    default: JSON.stringify(generalValue2),
                     meta: JSON.stringify({ type: 'string' }),
-                    scope: 'ilc',
+                    scope: Scope.Ilc,
+                    secret: false,
                 },
             ]);
 

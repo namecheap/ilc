@@ -64,7 +64,7 @@ export enum OnPropsUpdateValues {
     Update = 'update',
 }
 
-type SettingValue = string | number | boolean | string[];
+export type SettingValue = string | number | boolean | string[];
 
 type SettingMeta = {
     type: SettingTypes;
@@ -81,17 +81,22 @@ export type Setting = {
 };
 
 export type SettingRaw = {
+    id?: number;
     key: SettingKeys;
-    value: SettingValue;
-    domainValue?: SettingValue;
-    default: SettingValue;
+    value: string;
+    domainId?: number;
+    domainValue?: string;
+    default: string;
     scope: Scope;
     secret: boolean;
     meta: SettingMeta | string; // stringified JSON
 };
 
-export type SettingParsed = Omit<SettingRaw, 'value' | 'default' | 'meta'> &
-    Partial<Pick<SettingRaw, 'value' | 'default'>> & { meta: SettingMeta };
+export type SettingParsed = Omit<SettingRaw, 'value' | 'default' | 'meta'> & {
+    value?: SettingValue;
+    default?: SettingValue;
+    meta: SettingMeta;
+};
 
 export const keySchema = Joi.string()
     .min(1)

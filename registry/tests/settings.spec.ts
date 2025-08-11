@@ -659,6 +659,10 @@ describe(url, () => {
                         defaultSrc: ['https://test.com'],
                         reportUri: 'a/b',
                     },
+                    meta: {
+                        type: SettingTypes.JSON,
+                    },
+                    scope: Scope.Ilc,
                     domainId: domainHelper.getResponse().id,
                     id: response.body.id,
                     secret: false,
@@ -695,6 +699,10 @@ describe(url, () => {
                         defaultSrc: ['https://test2.com'],
                         reportUri: 'a/b',
                     },
+                    meta: {
+                        type: SettingTypes.JSON,
+                    },
+                    scope: Scope.Ilc,
                     domainId: domainHelper.getResponse().id,
                     id: configResponse.body.id, // id not changed
                     secret: false,
