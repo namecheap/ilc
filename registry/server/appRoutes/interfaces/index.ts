@@ -11,7 +11,7 @@ const Joi = JoiDefault.defaults((schema) => {
 });
 
 export interface AppRouteSlot {
-    id?: number;
+    id: number;
     routeId: number;
     name: string;
     appName: string;
@@ -50,7 +50,7 @@ export const appRouteSlotSchema = Joi.object({
 export const appRouteIdSchema = Joi.number().positive().integer().required();
 
 export interface AppRoute {
-    id?: number;
+    id: number;
     orderPos?: number | null;
     route: string;
     next?: boolean;

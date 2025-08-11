@@ -54,7 +54,7 @@ const createAppRoute = async (req: Request, res: Response) => {
                 );
             }
             const result = await db('routes').insert(appRouteRecord, 'id').transacting(transaction);
-            savedAppRouteId = extractInsertedId(result as { id: number }[]);
+            savedAppRouteId = extractInsertedId(result);
 
             await db
                 .batchInsert('route_slots', prepareAppRouteSlotsToSave(appRouteSlots, savedAppRouteId))

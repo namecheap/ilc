@@ -47,21 +47,29 @@ export async function oidcStrategyFactory(
         return mostPermissiveUser;
     }
 
-    const authDiscoveryUrl = await openIdService.getConfigValue(SettingKeys.AuthOpenIdDiscoveryUrl);
-    let issuer: OIDCIssuer;
-    try {
-        issuer = await OIDCIssuer.discover(authDiscoveryUrl);
-    } catch (error) {
-        throw error;
+    const authDiscoveryUrl = await openIdService.getConfigValue<string>(SettingKeys.AuthOpenIdDiscoveryUrl);
+    if (!authDiscoveryUrl) {
+        throw new Error(`OpenID Discovery URL is not configured in settings: ${SettingKeys.AuthOpenIdDiscoveryUrl}`);
+    }
+
+    const issuer = await OIDCIssuer.discover(authDiscoveryUrl);
+
+    const baseUrl = await openIdService.getConfigValue<string>(SettingKeys.BaseUrl);
+    if (!baseUrl) {
+        throw new Error(`Base URL is not configured in settings: ${SettingKeys.BaseUrl}`);
     }
 
     const redirectUri = config.get('infra.settings.baseUrl')
         ? urljoin(config.get('infra.settings.baseUrl'), '/auth/openid/return')
-        : urljoin(await openIdService.getConfigValue(SettingKeys.BaseUrl), '/auth/openid/return');
+        : urljoin(baseUrl, '/auth/openid/return');
 
+    const clientId = await openIdService.getConfigValue<string>(SettingKeys.AuthOpenIdClientId);
+    if (!clientId) {
+        throw new Error(`OpenID Client ID is not configured in settings: ${SettingKeys.AuthOpenIdClientId}`);
+    }
     const client = new issuer.Client({
-        client_id: await openIdService.getConfigValue(SettingKeys.AuthOpenIdClientId),
-        client_secret: await openIdService.getConfigValue(SettingKeys.AuthOpenIdClientSecret),
+        client_id: clientId,
+        client_secret: await openIdService.getConfigValue<string>(SettingKeys.AuthOpenIdClientSecret),
         redirect_uris: [redirectUri],
         response_types: ['code'],
     });
@@ -87,8 +95,15 @@ export async function oidcStrategyFactory(
                 }
 
                 const claims = tokenSet.claims();
-                const idClaimName = await openIdService.getConfigValue(SettingKeys.AuthOpenIdIdentifierClaimName);
-                const uidClaimName = await openIdService.getConfigValue(
+                const idClaimName = await openIdService.getConfigValue<string>(
+                    SettingKeys.AuthOpenIdIdentifierClaimName,
+                );
+                if (!idClaimName) {
+                    throw new Error(
+                        `Identifier Claim Name is not configured in settings: ${SettingKeys.AuthOpenIdIdentifierClaimName}`,
+                    );
+                }
+                const uidClaimName = await openIdService.getConfigValue<string>(
                     SettingKeys.AuthOpenIdUniqueIdentifierClaimName,
                 );
 

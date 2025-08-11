@@ -32,7 +32,10 @@ export const validateLocalesMiddleware =
     };
 
 async function getUnsupportedLocales(locales: string[]): Promise<string[]> {
-    const supportedLocales = await settingsService.get(SettingKeys.I18nSupportedLocales);
+    const supportedLocales = await settingsService.get<string[]>(SettingKeys.I18nSupportedLocales);
+    if (supportedLocales === undefined) {
+        throw new Error(`Setting ${SettingKeys.I18nSupportedLocales} is not set`);
+    }
     return locales.filter((l) => !supportedLocales.includes(l));
 }
 

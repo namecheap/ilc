@@ -1,12 +1,10 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import Joi from 'joi';
 
-import { SettingKeys, keySchema, partialSettingSchema } from '../interfaces';
-import db from '../../db';
-import preProcessResponse from '../services/preProcessResponse';
-import validateRequestFactory from '../../common/services/validateRequest';
-import settingService from '../services/SettingsService';
 import { User } from '../../../typings/User';
+import validateRequestFactory from '../../common/services/validateRequest';
+import { SettingKeys, keySchema, partialSettingSchema } from '../interfaces';
+import { settingsService } from '../services/SettingsService';
 
 type RequestParams = {
     key: SettingKeys;
@@ -32,19 +30,13 @@ const updateSetting = async (req: Request<RequestParams>, res: Response): Promis
     const user = req.user;
 
     if (!domainId) {
-        const updatedRecord = await settingService.updateRootSetting(settingKey, req.body.value, user as User);
-        res.status(200).send(preProcessResponse(updatedRecord));
-        return;
+        await settingsService.updateRootSetting(settingKey, req.body.value, user as User);
     } else {
-        const updatedRecord = await settingService.updateDomainSetting(
-            settingKey,
-            req.body.value,
-            domainId,
-            user as User,
-        );
-        res.status(200).send(preProcessResponse(updatedRecord));
-        return;
+        await settingsService.updateDomainSetting(settingKey, req.body.value, domainId, user as User);
     }
+    const setting = await settingsService.getDomainMergedSetting(settingKey, domainId);
+    const [backwardCompatible] = settingsService.omitEmptyAndNullValues([setting]);
+    res.status(200).send(backwardCompatible);
 };
 
 export default [validateRequest, updateSetting];

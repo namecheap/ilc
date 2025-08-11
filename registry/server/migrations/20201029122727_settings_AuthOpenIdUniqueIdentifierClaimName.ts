@@ -8,7 +8,7 @@ export async function up(knex: Knex): Promise<any> {
             value: JSON.stringify(''),
             default: JSON.stringify(''),
             scope: Scope.Registry,
-            secret: 0,
+            secret: false,
             meta: JSON.stringify({
                 type: 'string',
             }),

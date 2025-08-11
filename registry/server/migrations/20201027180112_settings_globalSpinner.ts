@@ -1,5 +1,5 @@
 import { Knex } from 'knex';
-import { SettingKeys } from '../settings/interfaces';
+import { Scope, SettingKeys } from '../settings/interfaces';
 
 export async function up(knex: Knex): Promise<any> {
     await knex('settings').insert([
@@ -7,8 +7,8 @@ export async function up(knex: Knex): Promise<any> {
             key: SettingKeys.GlobalSpinnerEnabled,
             value: JSON.stringify(true),
             default: JSON.stringify(true),
-            scope: 'ilc',
-            secret: 0,
+            scope: Scope.Ilc,
+            secret: false,
             meta: JSON.stringify({
                 type: 'boolean',
             }),
@@ -17,8 +17,8 @@ export async function up(knex: Knex): Promise<any> {
             key: SettingKeys.GlobalSpinnerCustomHtml,
             value: JSON.stringify(''),
             default: JSON.stringify(''),
-            scope: 'ilc',
-            secret: 0,
+            scope: Scope.Ilc,
+            secret: false,
             meta: JSON.stringify({
                 type: 'string',
             }),

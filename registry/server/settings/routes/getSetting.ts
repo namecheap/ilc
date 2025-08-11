@@ -1,10 +1,9 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import Joi from 'joi';
 
-import { SettingKeys, keySchema } from '../interfaces';
-import db from '../../db';
-import preProcessResponse from '../services/preProcessResponse';
 import validateRequestFactory from '../../common/services/validateRequest';
+import { SettingKeys, keySchema } from '../interfaces';
+import { settingsService } from '../services/SettingsService';
 
 type RequestParams = {
     key: SettingKeys;
@@ -20,21 +19,11 @@ const validateRequest = validateRequestFactory([
 ]);
 
 const getSetting = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const [setting] = await db.select().from('settings').where('key', req.params.key);
-
     const domainId = req.query.domainId ? Number(req.query.domainId) : null;
+    const setting = await settingsService.getDomainMergedSetting(req.params.key, domainId);
+    const [backwardCompatible] = settingsService.omitEmptyAndNullValues([setting]);
 
-    if (domainId) {
-        const [domainSettings] = await db
-            .select()
-            .from('settings_domain_value')
-            .where('key', req.params.key)
-            .andWhere('domainId', domainId);
-        setting.value = domainSettings.value;
-        setting.domainId = domainSettings.domainId;
-    }
-
-    res.status(200).send(preProcessResponse(setting));
+    res.status(200).send(backwardCompatible);
 };
 
 export default [validateRequest, getSetting];
