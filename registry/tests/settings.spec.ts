@@ -12,6 +12,8 @@ const cspValue = JSON.stringify({
     connectSrc: ['https://connect.test.com'],
     scriptSrc: ['https://scripts.test.com'],
     styleSrc: ['https://styles.test.com'],
+    styleSrcElem: ['https://styles-elem.test.com'],
+    styleSrcAttr: ['https://styles-attr.test.com'],
     fontSrc: ['https://fonts.test.com'],
     imgSrc: ['https://images.test.com'],
     workerSrc: ['https://workers.test.com'],
