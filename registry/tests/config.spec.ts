@@ -65,6 +65,7 @@ const example = {
     routerDomains: Object.freeze({
         domainName: 'domainNameCorrect.com',
         template500: templateName,
+        canonicalDomain: 'canonical.example.com',
         props: {
             appConfigName: 'domainNameCorrect',
             apiUrl: 'https://api.domainNameCorrect.com',
@@ -251,6 +252,8 @@ describe('Tests /api/v1/config', () => {
                 expect(response.body.apps[example.apps.name].ssrProps).to.include({
                     secretKey: example.routerDomains.ssrProps.secretKey,
                 });
+
+                expect(response.body.canonicalDomain).to.equal(example.routerDomains.canonicalDomain);
             } finally {
                 routeId && (await req.delete('/api/v1/route/' + routeId));
                 routeIdWithDomain && (await req.delete('/api/v1/route/' + routeIdWithDomain));

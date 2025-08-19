@@ -7,14 +7,17 @@ const example = {
     correct: Object.freeze({
         domainName: 'domainNameCorrect.com',
         template500: 'testTemplate500',
+        canonicalDomain: null,
     }),
     updated: Object.freeze({
         domainName: 'domainNameUpdated.com',
         template500: 'testTemplate500',
+        canonicalDomain: 'canonical.example.com',
     }),
     withProps: Object.freeze({
         domainName: 'domainWithProps.com',
         template500: 'testTemplate500',
+        canonicalDomain: 'canonical-props.example.com',
         props: {
             apiUrl: 'https://api.domain.com',
             cdnUrl: 'https://cdn.domain.com',
@@ -28,6 +31,7 @@ const example = {
     withPropsUpdated: Object.freeze({
         domainName: 'domainWithProps.com',
         template500: 'testTemplate500',
+        canonicalDomain: null,
         props: {
             apiUrl: 'https://api-v2.domain.com',
             newProp: 'newValue',

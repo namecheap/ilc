@@ -37,6 +37,7 @@ export const getConfig: RequestHandler = async (req, res) => {
         settings: {},
         sharedLibs: {},
         dynamicLibs: {},
+        canonicalDomain: undefined as string | undefined,
     };
 
     data.apps = transformApps(apps, routerDomains, sharedProps, domainName);
@@ -55,6 +56,13 @@ export const getConfig: RequestHandler = async (req, res) => {
 
     data.sharedLibs = sharedLibsDtos;
     data.dynamicLibs = dynamicLibs;
+
+    if (domainName) {
+        const currentDomain = routerDomains.find((d) => d.domainName === domainName);
+        if (currentDomain?.canonicalDomain) {
+            data.canonicalDomain = currentDomain.canonicalDomain;
+        }
+    }
 
     return res.send(data);
 };

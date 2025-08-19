@@ -194,4 +194,32 @@ describe('CanonicalTagService', () => {
 
         chai.expect(result).to.equal(`<link rel="canonical" href="${fullCustomUrl}?locale=${locale}/" data-ilc="1" />`);
     });
+
+    it('should use canonical domain when provided', () => {
+        const canonicalDomain = 'canonical.example.com';
+        const fullUrl = `${protocol}://${canonicalDomain}${url}`;
+
+        contextStoreStub.withArgs('domain').returns('current.example.com');
+        removeQueryParamsStub.withArgs(`${protocol}://${canonicalDomain}${url}`).returns(fullUrl);
+        localizeUrlStub.withArgs(i18nConfig, fullUrl, { locale }).returns(fullUrl);
+        addTrailingSlashStub.withArgs(fullUrl).returns(`${fullUrl}/`);
+
+        const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, locale, i18nConfig, {}, canonicalDomain);
+
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullUrl}/" data-ilc="1" />`);
+    });
+
+    it('should use current domain when canonical domain is not provided', () => {
+        const currentDomain = 'current.example.com';
+        const fullUrl = `${protocol}://${currentDomain}${url}`;
+
+        contextStoreStub.withArgs('domain').returns(currentDomain);
+        removeQueryParamsStub.withArgs(`${protocol}://${currentDomain}${url}`).returns(fullUrl);
+        localizeUrlStub.withArgs(i18nConfig, fullUrl, { locale }).returns(fullUrl);
+        addTrailingSlashStub.withArgs(fullUrl).returns(`${fullUrl}/`);
+
+        const result = CanonicalTagService.getCanonicalTagForUrlAsHTML(url, locale, i18nConfig);
+
+        chai.expect(result).to.equal(`<link rel="canonical" href="${fullUrl}/" data-ilc="1" />`);
+    });
 });

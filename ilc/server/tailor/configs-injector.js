@@ -54,6 +54,7 @@ module.exports = class ConfigsInjector {
             locale,
             registryConfig.settings?.i18n,
             route.meta,
+            registryConfig.canonicalDomain,
         );
 
         const headHtmlContent = this.#wrapWithIgnoreDuringParsing(
