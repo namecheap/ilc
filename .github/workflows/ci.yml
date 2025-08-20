@@ -298,11 +298,15 @@ jobs:
     coverage_report:
         name: PR Coverage Report
         runs-on: ubuntu-latest
-        needs: [build_ilc, registry_tests]
+        needs: [build_ilc, build_registry, registry_tests]
         if: github.base_ref
         steps:
             - uses: actions/checkout@v4
             - uses: actions/download-artifact@v4
+            - name: Verify Docker images exist
+              run: |
+                  echo "Checking for image: namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}"
+                  docker pull namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7} || exit 1
             - name: Create coverage report for ilc/server
               id: ilc-server-coverage-report
               uses: namecheap/Coverage-Diff@master
