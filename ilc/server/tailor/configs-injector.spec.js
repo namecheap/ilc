@@ -219,6 +219,7 @@ describe('configs injector', () => {
                         routingStrategy: 'prefix_except_default',
                     },
                 },
+                canonicalDomain: undefined,
             });
         };
 

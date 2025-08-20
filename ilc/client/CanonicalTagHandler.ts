@@ -9,6 +9,7 @@ export class CanonicalTagHandler {
         private readonly i18n: IlcIntl,
         private readonly logger: Logger,
         private readonly router: ClientRouter,
+        private readonly canonicalDomain?: string,
     ) {}
 
     start(): void {
@@ -25,7 +26,12 @@ export class CanonicalTagHandler {
             return;
         }
 
-        const url = removeQueryParams((event.target as any)?.location?.href);
+        let url = removeQueryParams((event.target as any)?.location?.href);
+        if (this.canonicalDomain && url) {
+            const urlObj = new URL(url);
+            urlObj.host = this.canonicalDomain;
+            url = urlObj.toString();
+        }
         let canonicalUrl = this.determineCanonicalUrl(url);
         const localizedUrl = this.i18n ? this.i18n.localizeUrl(canonicalUrl) : canonicalUrl;
 
@@ -61,7 +67,7 @@ export class CanonicalTagHandler {
                 return defaultUrl;
             }
 
-            const origin = window.location.origin;
+            const origin = defaultUrl ? new URL(defaultUrl).origin : window.location.origin;
 
             return `${origin}${routeCanonicalUrl.startsWith('/') ? '' : '/'}${routeCanonicalUrl}`;
         } catch (error) {

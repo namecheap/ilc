@@ -202,6 +202,7 @@ module.exports = class ConfigsInjector {
             settings,
             sharedLibs: registryConfig.sharedLibs,
             dynamicLibs: registryConfig.dynamicLibs,
+            canonicalDomain: registryConfig.canonicalDomain,
         });
 
         return `<script type="text/ilc-config">${spaConfig}</script>`;
