@@ -159,6 +159,7 @@ describe('configs injector', () => {
                     routingStrategy: 'prefix_except_default',
                 },
             },
+            canonicalDomain: undefined,
         };
 
         registryConfig.apps['thirdApp'] = {
@@ -218,6 +219,7 @@ describe('configs injector', () => {
                         routingStrategy: 'prefix_except_default',
                     },
                 },
+                canonicalDomain: undefined,
             });
         };
 

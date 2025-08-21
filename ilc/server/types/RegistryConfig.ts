@@ -70,4 +70,5 @@ export interface RegistryConfig {
     specialRoutes: SpecialRoute[];
     sharedLibs: Record<string, string>;
     dynamicLibs: Record<string, DynamicLib>;
+    canonicalDomain?: string;
 }

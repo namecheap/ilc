@@ -54,6 +54,7 @@ module.exports = class ConfigsInjector {
             locale,
             registryConfig.settings?.i18n,
             route.meta,
+            registryConfig.canonicalDomain,
         );
 
         const headHtmlContent = this.#wrapWithIgnoreDuringParsing(
@@ -201,6 +202,7 @@ module.exports = class ConfigsInjector {
             settings,
             sharedLibs: registryConfig.sharedLibs,
             dynamicLibs: registryConfig.dynamicLibs,
+            canonicalDomain: registryConfig.canonicalDomain,
         });
 
         return `<script type="text/ilc-config">${spaConfig}</script>`;

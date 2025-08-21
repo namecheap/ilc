@@ -14,6 +14,7 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
                 <ReferenceField reference="template" source="template500" label="Template of 500 error">
                     <TextField source="name" />
                 </ReferenceField>
+                <TextField source="canonicalDomain" label="Canonical Domain" emptyText="-" />
                 <JsonFieldShow source="props" label="Properties that will be passed to applications" />
                 <JsonFieldShow
                     source="ssrProps"
