@@ -16,6 +16,7 @@ RUN cd ./client && npm ci
 
 ADD ./ /codebase
 
+ENV ILC_REGISTRY_ADMIN_PROTECTED_SETTINGS='<%PROTECTED_SETTING%>'
 RUN npm run build
 
 ENTRYPOINT ["sh", "./scripts/docker-entrypoint.sh"]
