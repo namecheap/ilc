@@ -1,3 +1,4 @@
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -6,7 +7,7 @@ module.exports = {
     devtool: 'source-map',
     output: {
         devtoolNamespace: 'ilcRegistry',
-        assetModuleFilename: 'img/[hash][ext][query]'
+        assetModuleFilename: 'img/[hash][ext][query]',
     },
     module: {
         rules: [
@@ -31,6 +32,9 @@ module.exports = {
         new MiniCssExtractPlugin(),
         new HtmlWebpackPlugin({
             template: './src/index.html',
+        }),
+        new webpack.DefinePlugin({
+            'process.env.PROTECTED_SETTINGS': JSON.stringify(process.env.ILC_REGISTRY_ADMIN_PROTECTED_SETTINGS || ''),
         }),
     ].concat(process.env.NODE_ENV === 'development' ? [new BundleAnalyzerPlugin({ openAnalyzer: false })] : []),
     resolve: {

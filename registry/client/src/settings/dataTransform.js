@@ -5,8 +5,10 @@ export const types = {
     stringArray: 'string[]',
     enum: 'enum',
     password: 'password',
-    json: 'json'
+    json: 'json',
 };
+
+const PROTECTED_SETTINGS = process.env.PROTECTED_SETTINGS?.split(',') ?? [];
 
 export function transformGet(setting) {
     setting.id = setting.key;
@@ -27,9 +29,13 @@ export function transformGet(setting) {
     }
 
     setting.domainId = setting.domainId || null;
+    setting.protected = PROTECTED_SETTINGS.includes(setting.key);
 }
 
 export function transformSet(setting) {
+    if (setting.protected) {
+        throw new Error(`The '${setting.key}' setting cannot be modified through UI`);
+    }
     if (setting.value === null) {
         setting.value = '';
     }

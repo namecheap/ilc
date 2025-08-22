@@ -10,7 +10,7 @@ export const useSettingsEditController = (props) => {
     const {
         basePath, // deduced from the location, useful for action buttons
         defaultTitle, // the translated title based on the resource, e.g. 'Post #123'
-        error,  // error returned by dataProvider when it failed to fetch the record. Useful if you want to adapt the view instead of just showing a notification using the `onFailure` side effect.
+        error, // error returned by dataProvider when it failed to fetch the record. Useful if you want to adapt the view instead of just showing a notification using the `onFailure` side effect.
         loaded, // boolean that is false until the record is available
         loading, // boolean that is true on mount, and false once the record was fetched
         record, // record fetched via dataProvider.getOne() based on the id from the location
@@ -29,26 +29,25 @@ export const useSettingsEditController = (props) => {
         dataProvider
             .getOneSettingWithDomain({
                 id: props.id,
-                domainId: domainId
+                domainId: domainId,
             })
-            .then(data => {
+            .then((data) => {
                 setSettingRecord(data);
                 setIsResourceLoading(false);
             })
-            .catch(error => setError(error));
+            .catch((error) => setError(error));
     }, []);
-
 
     return {
         basePath,
         error: error || settingError,
-        loaded: !isResourceLoading,
-        loading: isResourceLoading,
+        loaded: !isResourceLoading && 'true',
+        loading: isResourceLoading || undefined,
         record: settingRecord,
         redirect,
         resource,
         save,
         saving,
         version,
-    }
-}
+    };
+};
