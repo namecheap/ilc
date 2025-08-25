@@ -1,32 +1,58 @@
 import chai from 'chai';
-import sinon from 'sinon';
-chai.use(require('chai-as-promised'));
+import sinon, { SinonStub } from 'sinon';
+import chaiAsPromised from 'chai-as-promised';
+chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 import { getRegistryMock } from '../tests/helpers';
 
 import { BundleLoader, emptyClientApplication } from './BundleLoader';
 import { getIlcConfigRoot } from './configuration/getIlcConfigRoot';
+import { ILCAdapter } from './types/ILCAdapter';
 
-const fnCallbacks = {
+interface MockSystemJs {
+    import: SinonStub;
+    resolve: SinonStub;
+    get: SinonStub;
+    delete: SinonStub;
+}
+
+interface MockSdkFactoryBuilder {
+    getSdkFactoryByApplicationName(): () => void;
+    getSdkAdapterInstance(): void;
+}
+
+interface MockRegistry {
+    apps: {
+        [key: string]: {
+            spaBundle?: string;
+            cssBundle?: string;
+            props?: Record<string, any>;
+            wrappedWith?: string;
+            kind?: string;
+        };
+    };
+}
+
+const fnCallbacks: ILCAdapter = {
     bootstrap: async () => 'bootstrap',
     mount: async () => 'mount',
     unmount: async () => 'unmount',
 };
 
 describe('BundleLoader', () => {
-    const SystemJs = {
+    const SystemJs: MockSystemJs = {
         import: sinon.stub(),
         resolve: sinon.stub(),
         get: sinon.stub(),
         delete: sinon.stub(),
     };
-    let registry;
+    let registry: MockRegistry;
     const configRoot = getIlcConfigRoot();
 
     const mockFactoryFn = () => {};
 
-    const sdkFactoryBuilder = {
+    const sdkFactoryBuilder: MockSdkFactoryBuilder = {
         getSdkFactoryByApplicationName() {
             return mockFactoryFn;
         },
@@ -63,7 +89,7 @@ describe('BundleLoader', () => {
 
     describe('preloadApp()', () => {
         it('preloads app by spaBundle URL directly instead of name and ignores all errors', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/primary';
 
             SystemJs.import.rejects();
@@ -72,7 +98,7 @@ describe('BundleLoader', () => {
         });
 
         it('does not throw with ssr only app', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/ssrOnly';
             SystemJs.import.resolves();
 
@@ -80,7 +106,7 @@ describe('BundleLoader', () => {
         });
 
         it("preloads app and it's wrapper", async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/withWrapper';
 
             SystemJs.import.rejects();
@@ -88,13 +114,13 @@ describe('BundleLoader', () => {
             loader.preloadApp(appName);
             const appInReg = registry.apps[appName];
             sinon.assert.calledWith(SystemJs.import, appInReg.spaBundle);
-            sinon.assert.calledWith(SystemJs.import, registry.apps[appInReg.wrappedWith].spaBundle);
+            sinon.assert.calledWith(SystemJs.import, registry.apps[appInReg.wrappedWith!].spaBundle);
         });
     });
 
     describe('loadApp()', () => {
         it('loads ssr only app and returns callbacks mock from mainSpa', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/ssrOnly';
 
             const callbacks = await loader.loadApp(appName);
@@ -102,7 +128,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads app and returns callbacks from mainSpa and calls it once', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/primary';
 
             const mainSpa = sinon.stub().returns(fnCallbacks);
@@ -121,8 +147,9 @@ describe('BundleLoader', () => {
             sinon.assert.calledOnce(mainSpa);
             sinon.assert.calledWith(mainSpa, registry.apps[appName].props);
         });
+
         it('loads app and returns callbacks from mainSpa and calls without cache', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/primary';
 
             const mainSpa = sinon.stub().returns(fnCallbacks);
@@ -139,7 +166,7 @@ describe('BundleLoader', () => {
 
             loader.unloadApp(appName);
 
-            const callbacks2 = await loader.loadApp(appName, { cachedEnabled: false });
+            const callbacks2 = await loader.loadApp(appName, { cachedEnabled: false } as any);
             expect(callbacks2).to.equal(fnCallbacks);
 
             sinon.assert.calledWith(SystemJs.import, appName);
@@ -150,7 +177,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads app and returns callbacks from mainSpa exported as default and calls it once', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/primary';
 
             const mainSpa = sinon.stub().returns(fnCallbacks);
@@ -171,7 +198,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads app and returns callbacks', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/primary';
 
             SystemJs.import.resolves(fnCallbacks);
@@ -183,7 +210,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads app and returns callbacks from default export', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/primary';
 
             SystemJs.import.resolves({ default: fnCallbacks });
@@ -192,33 +219,78 @@ describe('BundleLoader', () => {
             expect(callbacks).to.equal(fnCallbacks);
             sinon.assert.calledWith(SystemJs.import, appName);
         });
+
         it('should load CssTrackedApp by default', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/appWithCss';
 
             SystemJs.import.resolves(fnCallbacks);
 
             const callbacks = await loader.loadApp(appName);
-            expect(callbacks.__CSS_TRACKED_APP__).to.equal(true);
+            expect((callbacks as any).__CSS_TRACKED_APP__).to.equal(true);
 
             sinon.assert.calledWith(SystemJs.import, appName);
         });
+
         it('should load pure app without css if flag set', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/appWithCss';
 
             SystemJs.import.resolves(fnCallbacks);
 
             const callbacks = await loader.loadApp(appName, { injectGlobalCss: false });
-            expect(callbacks.__CSS_TRACKED_APP__).to.equal(undefined);
+            expect((callbacks as any).__CSS_TRACKED_APP__).to.equal(undefined);
 
             sinon.assert.calledWith(SystemJs.import, appName);
+        });
+
+        it('retries module import with exponential backoff and succeeds within max attempts', async () => {
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
+            const appName = '@portal/primary';
+
+            const err1 = new Error('temporary');
+            const err2 = new Error('temporary-2');
+            SystemJs.import.onCall(0).rejects(err1);
+            SystemJs.import.onCall(1).rejects(err2);
+            SystemJs.import.onCall(2).resolves(fnCallbacks);
+
+            const callbacks = await loader.loadApp(appName, {
+                retryOptions: { maxAttempts: 3, initialDelayMs: 1, maxDelayMs: 2 },
+            });
+
+            expect(callbacks).to.equal(fnCallbacks);
+            sinon.assert.callCount(SystemJs.import, 3);
+            sinon.assert.alwaysCalledWith(SystemJs.import, appName);
+        });
+
+        it('retries up to max attempts and surfaces the original (first) error on failure', async () => {
+            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const appName = '@portal/primary';
+
+            const firstErr = new Error('first-error');
+            const secondErr = new Error('second-error');
+            const thirdErr = new Error('third-error');
+            SystemJs.import.onCall(0).rejects(firstErr);
+            SystemJs.import.onCall(1).rejects(secondErr);
+            SystemJs.import.onCall(2).rejects(thirdErr);
+
+            try {
+                await loader.loadApp(appName, {
+                    retryOptions: { maxAttempts: 3, initialDelayMs: 1, maxDelayMs: 2 },
+                });
+                throw new Error('Should have failed after max attempts');
+            } catch (e) {
+                expect(e).to.equal(firstErr);
+            }
+
+            sinon.assert.callCount(SystemJs.import, 3);
+            sinon.assert.alwaysCalledWith(SystemJs.import, appName);
         });
     });
 
     describe('loadCss()', () => {
         it('loads CSS', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const cssUrl = 'http://127.0.0.1/my.css';
 
             SystemJs.import.resolves('CSS');
@@ -227,7 +299,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads CSS and ignores error caused by double loading', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const cssUrl = 'http://127.0.0.1/my.css';
 
             SystemJs.import.rejects(new Error('has already been loaded using another way'));
@@ -235,7 +307,7 @@ describe('BundleLoader', () => {
         });
 
         it('loads CSS and forwards errors', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const cssUrl = 'http://127.0.0.1/my.css';
 
             SystemJs.import.rejects(new Error('other err'));
@@ -245,7 +317,7 @@ describe('BundleLoader', () => {
 
     describe('loadAppWithCss()', () => {
         it('loads app without CSS bundle', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/primary';
 
             SystemJs.import.resolves(fnCallbacks);
@@ -257,14 +329,14 @@ describe('BundleLoader', () => {
         });
 
         it('loads app with CSS bundle', async () => {
-            const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
+            const loader = new BundleLoader(configRoot as any, SystemJs as any, sdkFactoryBuilder as any);
             const appName = '@portal/appWithCss';
 
             SystemJs.import.resolves(fnCallbacks);
 
             const callbacks = await loader.loadAppWithCss(appName);
             Object.keys(fnCallbacks).forEach((key) => {
-                expect(callbacks[key]).not.to.be.undefined;
+                expect((callbacks as any)[key]).not.to.be.undefined;
             });
 
             sinon.assert.calledWith(SystemJs.import, appName);

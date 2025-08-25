@@ -294,6 +294,80 @@ describe('CanonicalTagHandler', () => {
             expect(loggerMock.error.calledWith('CanonicalTagHandler: Can not find canonical tag on the page')).to.be
                 .true;
         });
+
+        it('should replace domain with canonical domain when configured', () => {
+            if (typeof window === 'undefined') {
+                console.log('Skipping DOM-dependent test in Node environment');
+                return;
+            }
+
+            const canonicalDomain = 'www.canonical-example.com';
+            canonicalTagHandler = new CanonicalTagHandler(
+                null as unknown as IlcIntl,
+                loggerMock as unknown as Logger,
+                routerMock as unknown as ClientRouter,
+                canonicalDomain,
+            );
+
+            routerMock.getCurrentRoute.returns({ meta: {} });
+            //removeQueryParamsStub.returns(window.location.origin);
+
+            const event = new Event(singleSpaEvents.ROUTING_EVENT);
+            Object.defineProperty(event, 'target', {
+                value: {
+                    location: {
+                        href: window.location.origin + '/page',
+                    },
+                },
+            });
+
+            (canonicalTagHandler as any).handleRoutingChange(event);
+
+            const canonicalHref =
+                `${window.location.protocol}//${canonicalDomain}` +
+                `${window.location.port ? ':' + window.location.port : ''}/page`;
+            expect(canonicalTag.getAttribute('href')).to.equal(canonicalHref);
+        });
+
+        it('should use canonical domain with route meta canonical URL', () => {
+            if (typeof window === 'undefined') {
+                console.log('Skipping DOM-dependent test in Node environment');
+                return;
+            }
+
+            const canonicalDomain = 'www.canonical-example.com';
+            canonicalTagHandler = new CanonicalTagHandler(
+                null as unknown as IlcIntl,
+                loggerMock as unknown as Logger,
+                routerMock as unknown as ClientRouter,
+                canonicalDomain,
+            );
+
+            routerMock.getCurrentRoute.returns({
+                route: '/test',
+                next: false,
+                template: 'default',
+                specialRole: null,
+                meta: { canonicalUrl: '/canonical-path' },
+            });
+
+            removeQueryParamsStub.returns(window.location.origin);
+
+            const event = new Event(singleSpaEvents.ROUTING_EVENT);
+            Object.defineProperty(event, 'target', {
+                value: {
+                    location: {
+                        href: window.location.origin + '/test',
+                    },
+                },
+            });
+
+            (canonicalTagHandler as any).handleRoutingChange(event);
+            const canonicalHref =
+                `${window.location.protocol}//${canonicalDomain}` +
+                `${window.location.port ? ':' + window.location.port : ''}/canonical-path`;
+            expect(canonicalTag.getAttribute('href')).to.equal(canonicalHref);
+        });
     });
 
     describe('determineCanonicalUrl method', () => {
