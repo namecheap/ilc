@@ -1,21 +1,65 @@
 import { CssTrackedApp } from './CssTrackedApp';
-import { SdkOptions } from '../common/SdkOptions';
+import { exponentialRetry, ExponentialRetryOptions } from './utils/exponentialRetry';
+import { ILCAdapter } from './types/ILCAdapter';
+import { DecoratedApp } from './types/DecoratedApp';
 
-export const emptyClientApplication = Object.freeze({
+interface ModuleLoader {
+    import(moduleId: string): Promise<any>;
+    resolve(moduleId: string): string;
+    get(moduleId: string): any;
+    delete(moduleId: string): void;
+}
+
+type Props = Record<string, unknown>;
+
+interface AppConfig {
+    spaBundle?: string;
+    cssBundle?: string;
+    props?: Props;
+    wrappedWith?: string;
+}
+
+interface ConfigRoot {
+    getConfigForApps(): Record<string, AppConfig>;
+    getConfigForAppByName(appName: string): AppConfig | undefined;
+    isGlobalSpinnerEnabled(): boolean;
+}
+
+type SdkFactory = (applicationId: string) => any;
+
+interface SdkFactoryBuilder {
+    getSdkFactoryByApplicationName(appName: string): SdkFactory;
+}
+
+interface LoadAppOptions {
+    injectGlobalCss?: boolean;
+    retryOptions?: ExponentialRetryOptions;
+}
+
+interface AppBundle {
+    mainSpa?: (props: Props, options: { sdkFactory: SdkFactory }) => ILCAdapter;
+    default?: {
+        mainSpa?: (props: Props, options: { sdkFactory: SdkFactory }) => ILCAdapter;
+        mount?: Function;
+    };
+    mount?: Function;
+}
+
+export const emptyClientApplication: ILCAdapter = Object.freeze({
     mount: () => Promise.resolve(),
     unmount: () => Promise.resolve(),
     bootstrap: () => Promise.resolve(),
 });
 
 export class BundleLoader {
-    #cache = new WeakMap();
-    #registryApps;
-    #moduleLoader;
-    #delayCssRemoval;
-    #configRoot;
-    #sdkFactoryBuilder;
+    #cache = new WeakMap<AppBundle, ILCAdapter>();
+    #registryApps: Record<string, AppConfig>;
+    #moduleLoader: ModuleLoader;
+    #delayCssRemoval: boolean;
+    #configRoot: ConfigRoot;
+    #sdkFactoryBuilder: SdkFactoryBuilder;
 
-    constructor(configRoot, moduleLoader, sdkFactoryBuilder) {
+    constructor(configRoot: ConfigRoot, moduleLoader: ModuleLoader, sdkFactoryBuilder: SdkFactoryBuilder) {
         this.#registryApps = configRoot.getConfigForApps();
         this.#delayCssRemoval = configRoot.isGlobalSpinnerEnabled();
         this.#moduleLoader = moduleLoader;
@@ -26,11 +70,8 @@ export class BundleLoader {
     /**
      * Speculative preload of the JS bundle.
      * We don't care about result as we do it only to heat up browser HTTP cache
-     *
-     * @param {string} appName
-     * @return void
      */
-    preloadApp(appName) {
+    preloadApp(appName: string): void {
         const app = this.#getApp(appName);
 
         if (!app.spaBundle) {
@@ -45,19 +86,18 @@ export class BundleLoader {
     }
 
     /**
-     *
-     * @param {string} appName
-     * @param {boolean} options.injectGlobalCss to css with <link> element in <head>
-     * @returns Promise<object> application
+     * Load an application with optional CSS injection and retry options
      */
-    loadApp(appName, { injectGlobalCss = true } = {}) {
+    loadApp(appName: string, options: LoadAppOptions = {}): Promise<ILCAdapter | DecoratedApp> {
+        const { injectGlobalCss = true, retryOptions } = options;
         const applicationConfig = this.#getApp(appName);
+
         if (!applicationConfig.spaBundle) {
             // it is SSR only app
             return Promise.resolve(emptyClientApplication);
         }
 
-        return this.#moduleLoader.import(appName).then((appBundle) => {
+        return exponentialRetry(() => this.#moduleLoader.import(appName), retryOptions).then((appBundle: AppBundle) => {
             const sdkInstanceFactory = this.#sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
             const rawCallbacks = this.#getAppSpaCallbacks(appBundle, applicationConfig.props, {
                 sdkFactory: sdkInstanceFactory,
@@ -72,9 +112,9 @@ export class BundleLoader {
         });
     }
 
-    loadAppWithCss(appName) {
+    loadAppWithCss(appName: string): Promise<ILCAdapter | DecoratedApp> {
         const app = this.#getApp(appName);
-        const waitTill = [this.loadApp(appName)];
+        const waitTill: Promise<any>[] = [this.loadApp(appName)];
 
         if (app.cssBundle) {
             waitTill.push(this.loadCss(app.cssBundle));
@@ -83,8 +123,8 @@ export class BundleLoader {
         return Promise.all(waitTill).then((values) => values[0]);
     }
 
-    loadCss(url) {
-        return this.#moduleLoader.import(url).catch((err) => {
+    loadCss(url: string): Promise<void> {
+        return this.#moduleLoader.import(url).catch((err: Error) => {
             //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
             //TODO: error handling should be improved, need to submit PR with typed errors
             if (
@@ -96,7 +136,17 @@ export class BundleLoader {
         });
     }
 
-    #getApp = (appName) => {
+    /**
+     * Unload an application and clean up its cache
+     */
+    unloadApp(appName: string): void {
+        const moduleId = this.#moduleLoader.resolve(appName);
+        const appBundle = this.#moduleLoader.get(moduleId);
+        this.#cache.delete(appBundle);
+        this.#moduleLoader.delete(moduleId);
+    }
+
+    #getApp = (appName: string): AppConfig => {
         const app = this.#configRoot.getConfigForAppByName(appName);
         if (!app) {
             throw new Error(`Unable to find requested app "${appName}" in Registry`);
@@ -105,10 +155,14 @@ export class BundleLoader {
         return app;
     };
 
-    #getAppSpaCallbacks = (appBundle, props = {}, { sdkFactory, cacheEnabled }) => {
+    #getAppSpaCallbacks = (
+        appBundle: AppBundle,
+        props: Props = {},
+        { sdkFactory }: { sdkFactory: SdkFactory; cacheEnabled?: boolean },
+    ): ILCAdapter => {
         // We do this to make sure that mainSpa function will be called only once
         if (this.#cache.has(appBundle)) {
-            return this.#cache.get(appBundle);
+            return this.#cache.get(appBundle)!;
         }
 
         const mainSpa = appBundle.mainSpa || (appBundle.default && appBundle.default.mainSpa);
@@ -119,21 +173,10 @@ export class BundleLoader {
             return res;
         } else {
             if (appBundle.default && typeof appBundle.default.mount === 'function') {
-                return appBundle.default;
+                return appBundle.default as ILCAdapter;
             }
 
-            return appBundle;
+            return appBundle as ILCAdapter;
         }
     };
-
-    /**
-     *
-     * @param {String} appName application name
-     */
-    unloadApp(appName) {
-        const moduleId = this.#moduleLoader.resolve(appName);
-        const appBundle = this.#moduleLoader.get(moduleId);
-        this.#cache.delete(appBundle);
-        this.#moduleLoader.delete(moduleId);
-    }
 }
