@@ -8,25 +8,31 @@ export default interface RouterDomains {
     id: number;
     domainName: string;
     template500?: string;
+    canonicalDomain?: string | null;
     props?: Record<string, any> | null;
     ssrProps?: Record<string, any> | null;
 }
 
 export const routerDomainIdSchema = Joi.string().trim().required();
 
-const commonRouterDomainsSchema = {
-    domainName: Joi.string()
+const domainValidation = (fieldName: string) =>
+    Joi.string()
         .trim()
         .min(1)
-        .required()
         .external((value) => {
+            if (!value) return;
+
             if (value.match(/^(localhost|127\.0\.0\.1)(:\d{1,5})?$/) || isValidDomain(value)) {
                 return;
             }
 
-            throw getJoiErr('domainName', 'Specified "domainName" is not valid.', value);
-        }),
+            throw getJoiErr(fieldName, `Specified "${fieldName}" is not valid.`, value);
+        });
+
+const commonRouterDomainsSchema = {
+    domainName: domainValidation('domainName').required(),
     template500: templateNameSchema.required(),
+    canonicalDomain: domainValidation('canonicalDomain').allow(null).default(null),
     props: Joi.object().allow(null).default(null),
     ssrProps: Joi.object().allow(null).default(null),
     versionId: Joi.string().strip(),

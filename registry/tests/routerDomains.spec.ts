@@ -11,10 +11,12 @@ const example = {
     updated: Object.freeze({
         domainName: 'domainNameUpdated.com',
         template500: 'testTemplate500',
+        canonicalDomain: 'canonical.example.com',
     }),
     withProps: Object.freeze({
         domainName: 'domainWithProps.com',
         template500: 'testTemplate500',
+        canonicalDomain: 'canonical-props.example.com',
         props: {
             apiUrl: 'https://api.domain.com',
             cdnUrl: 'https://cdn.domain.com',
@@ -109,7 +111,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it('should successfully create record with props and ssrProps', async () => {
+        it('should successfully create record with props, ssrProps, and canonical', async () => {
             let routerDomainsId;
 
             try {
@@ -126,6 +128,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(responseFetching.body.props).deep.equal(example.withProps.props);
                 expect(responseFetching.body.ssrProps).deep.equal(example.withProps.ssrProps);
+                expect(responseFetching.body.canonicalDomain).deep.equal(example.withProps.canonicalDomain);
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }
@@ -137,6 +140,7 @@ describe(`Tests ${example.url}`, () => {
                 ...example.correct,
                 props: {},
                 ssrProps: null,
+                canonicalDomain: null,
             };
 
             try {
@@ -144,6 +148,7 @@ describe(`Tests ${example.url}`, () => {
                 routerDomainsId = responseCreation.body.id;
                 expect(responseCreation.body.props).to.be.undefined;
                 expect(responseCreation.body.ssrProps).to.be.undefined;
+                expect(responseCreation.body.canonicalDomain).to.be.undefined;
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }
@@ -345,7 +350,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it('should successfully update props and ssrProps', async () => {
+        it('should successfully update props, ssrProps, and canonical', async () => {
             let routerDomainsId;
 
             try {
@@ -359,6 +364,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(responseUpdating.body.props).deep.equal(example.withPropsUpdated.props);
                 expect(responseUpdating.body.ssrProps).to.be.undefined;
+                expect(responseUpdating.body.ssrPcanonicalDomain).to.be.undefined;
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }

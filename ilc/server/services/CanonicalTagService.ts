@@ -12,6 +12,7 @@ export class CanonicalTagService {
      * @param locale - The current locale
      * @param i18nConfig - i18n configuration
      * @param routeMeta - Optional route meta data that may contain canonicalUrl
+     * @param canonicalDomain - Optional canonical domain if exists
      * @returns HTML for canonical tag
      */
     static getCanonicalTagForUrlAsHTML(
@@ -19,6 +20,7 @@ export class CanonicalTagService {
         locale: string | undefined,
         i18nConfig: IntlAdapterConfig,
         routeMeta: RouteMeta = {},
+        canonicalDomain?: string,
     ): string {
         let targetUrl = url;
 
@@ -28,7 +30,7 @@ export class CanonicalTagService {
         }
 
         const store = context.getStore();
-        const domain = store.get('domain');
+        const domain = canonicalDomain || store.get('domain');
         const protocol = config.get<string>('client.protocol');
         const effectiveLocale = locale || i18nConfig.default?.locale;
 
