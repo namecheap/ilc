@@ -1,8 +1,8 @@
-import chai from 'chai';
-import sinon, { SinonStub } from 'sinon';
-import chaiAsPromised from 'chai-as-promised';
-chai.use(chaiAsPromised);
+import * as chai from 'chai';
+import * as sinon from 'sinon';
 const expect = chai.expect;
+
+type SinonStub = sinon.SinonStub;
 
 import { getRegistryMock } from '../tests/helpers';
 
@@ -303,7 +303,7 @@ describe('BundleLoader', () => {
             const cssUrl = 'http://127.0.0.1/my.css';
 
             SystemJs.import.rejects(new Error('has already been loaded using another way'));
-            expect(loader.loadCss(cssUrl)).to.eventually.be.fulfilled;
+            await expect(loader.loadCss(cssUrl)).to.be.fulfilled;
         });
 
         it('loads CSS and forwards errors', async () => {
@@ -311,7 +311,7 @@ describe('BundleLoader', () => {
             const cssUrl = 'http://127.0.0.1/my.css';
 
             SystemJs.import.rejects(new Error('other err'));
-            expect(loader.loadCss(cssUrl)).to.eventually.be.rejected;
+            await expect(loader.loadCss(cssUrl)).to.be.rejected;
         });
     });
 
