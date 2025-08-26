@@ -262,7 +262,7 @@ describe('BundleLoader', () => {
             sinon.assert.alwaysCalledWith(SystemJs.import, appName);
         });
 
-        it('retries up to max attempts and surfaces the original (first) error on failure', async () => {
+        it('retries up to max attempts and surfaces the last error on failure', async () => {
             const loader = new BundleLoader(configRoot, SystemJs, sdkFactoryBuilder);
             const appName = '@portal/primary';
 
@@ -279,7 +279,7 @@ describe('BundleLoader', () => {
                 });
                 throw new Error('Should have failed after max attempts');
             } catch (e) {
-                expect(e).to.equal(firstErr);
+                expect(e).to.equal(thirdErr);
             }
 
             sinon.assert.callCount(SystemJs.import, 3);
