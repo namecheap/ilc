@@ -52,19 +52,19 @@ export const emptyClientApplication: ILCAdapter = Object.freeze({
 });
 
 export class BundleLoader {
-    #cache = new WeakMap<AppBundle, ILCAdapter>();
-    #registryApps: Record<string, AppConfig>;
-    #moduleLoader: ModuleLoader;
-    #delayCssRemoval: boolean;
-    #configRoot: ConfigRoot;
-    #sdkFactoryBuilder: SdkFactoryBuilder;
+    private cache = new WeakMap<AppBundle, ILCAdapter>();
+    private registryApps: Record<string, AppConfig>;
+    private moduleLoader: ModuleLoader;
+    private delayCssRemoval: boolean;
+    private configRoot: ConfigRoot;
+    private sdkFactoryBuilder: SdkFactoryBuilder;
 
     constructor(configRoot: ConfigRoot, moduleLoader: ModuleLoader, sdkFactoryBuilder: SdkFactoryBuilder) {
-        this.#registryApps = configRoot.getConfigForApps();
-        this.#delayCssRemoval = configRoot.isGlobalSpinnerEnabled();
-        this.#moduleLoader = moduleLoader;
-        this.#configRoot = configRoot;
-        this.#sdkFactoryBuilder = sdkFactoryBuilder;
+        this.registryApps = configRoot.getConfigForApps();
+        this.delayCssRemoval = configRoot.isGlobalSpinnerEnabled();
+        this.moduleLoader = moduleLoader;
+        this.configRoot = configRoot;
+        this.sdkFactoryBuilder = sdkFactoryBuilder;
     }
 
     /**
@@ -72,13 +72,13 @@ export class BundleLoader {
      * We don't care about result as we do it only to heat up browser HTTP cache
      */
     preloadApp(appName: string): void {
-        const app = this.#getApp(appName);
+        const app = this.getApp(appName);
 
         if (!app.spaBundle) {
             return;
         }
 
-        this.#moduleLoader.import(app.spaBundle).catch(() => {});
+        this.moduleLoader.import(app.spaBundle).catch(() => {});
 
         if (app.wrappedWith) {
             this.preloadApp(app.wrappedWith);
@@ -90,22 +90,22 @@ export class BundleLoader {
      */
     loadApp(appName: string, options: LoadAppOptions = {}): Promise<ILCAdapter | DecoratedApp> {
         const { injectGlobalCss = true, retryOptions } = options;
-        const applicationConfig = this.#getApp(appName);
+        const applicationConfig = this.getApp(appName);
 
         if (!applicationConfig.spaBundle) {
             // it is SSR only app
             return Promise.resolve(emptyClientApplication);
         }
 
-        return exponentialRetry(() => this.#moduleLoader.import(appName), retryOptions).then((appBundle: AppBundle) => {
-            const sdkInstanceFactory = this.#sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
-            const rawCallbacks = this.#getAppSpaCallbacks(appBundle, applicationConfig.props, {
+        return exponentialRetry(() => this.moduleLoader.import(appName), retryOptions).then((appBundle: AppBundle) => {
+            const sdkInstanceFactory = this.sdkFactoryBuilder.getSdkFactoryByApplicationName(appName);
+            const rawCallbacks = this.getAppSpaCallbacks(appBundle, applicationConfig.props, {
                 sdkFactory: sdkInstanceFactory,
             });
             const application =
                 typeof applicationConfig.cssBundle === 'string' && injectGlobalCss !== false
                     ? new CssTrackedApp(rawCallbacks, applicationConfig.cssBundle, {
-                          delayCssRemoval: this.#delayCssRemoval,
+                          delayCssRemoval: this.delayCssRemoval,
                       }).getDecoratedApp()
                     : rawCallbacks;
             return application;
@@ -113,7 +113,7 @@ export class BundleLoader {
     }
 
     loadAppWithCss(appName: string): Promise<ILCAdapter | DecoratedApp> {
-        const app = this.#getApp(appName);
+        const app = this.getApp(appName);
         const waitTill: Promise<any>[] = [this.loadApp(appName)];
 
         if (app.cssBundle) {
@@ -124,7 +124,7 @@ export class BundleLoader {
     }
 
     loadCss(url: string): Promise<void> {
-        return this.#moduleLoader.import(url).catch((err: Error) => {
+        return this.moduleLoader.import(url).catch((err: Error) => {
             //TODO: inserted <link> tags should have "data-fragment-id" attr. Same as Tailor now does
             //TODO: error handling should be improved, need to submit PR with typed errors
             if (
@@ -140,14 +140,14 @@ export class BundleLoader {
      * Unload an application and clean up its cache
      */
     unloadApp(appName: string): void {
-        const moduleId = this.#moduleLoader.resolve(appName);
-        const appBundle = this.#moduleLoader.get(moduleId);
-        this.#cache.delete(appBundle);
-        this.#moduleLoader.delete(moduleId);
+        const moduleId = this.moduleLoader.resolve(appName);
+        const appBundle = this.moduleLoader.get(moduleId);
+        this.cache.delete(appBundle);
+        this.moduleLoader.delete(moduleId);
     }
 
-    #getApp = (appName: string): AppConfig => {
-        const app = this.#configRoot.getConfigForAppByName(appName);
+    private getApp = (appName: string): AppConfig => {
+        const app = this.configRoot.getConfigForAppByName(appName);
         if (!app) {
             throw new Error(`Unable to find requested app "${appName}" in Registry`);
         }
@@ -155,21 +155,21 @@ export class BundleLoader {
         return app;
     };
 
-    #getAppSpaCallbacks = (
+    private getAppSpaCallbacks = (
         appBundle: AppBundle,
         props: Props = {},
         { sdkFactory }: { sdkFactory: SdkFactory; cacheEnabled?: boolean },
     ): ILCAdapter => {
         // We do this to make sure that mainSpa function will be called only once
-        if (this.#cache.has(appBundle)) {
-            return this.#cache.get(appBundle)!;
+        if (this.cache.has(appBundle)) {
+            return this.cache.get(appBundle)!;
         }
 
         const mainSpa = appBundle.mainSpa || (appBundle.default && appBundle.default.mainSpa);
 
         if (mainSpa !== undefined && typeof mainSpa === 'function') {
             const res = mainSpa(props, { sdkFactory });
-            this.#cache.set(appBundle, res);
+            this.cache.set(appBundle, res);
             return res;
         } else {
             if (appBundle.default && typeof appBundle.default.mount === 'function') {
