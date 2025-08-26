@@ -1,8 +1,5 @@
-import * as chai from 'chai';
-import * as sinon from 'sinon';
-const expect = chai.expect;
-
-type SinonStub = sinon.SinonStub;
+import { expect } from 'chai';
+import sinon from 'sinon';
 
 import { getRegistryMock } from '../tests/helpers';
 
@@ -11,10 +8,10 @@ import { getIlcConfigRoot } from './configuration/getIlcConfigRoot';
 import { ILCAdapter } from './types/ILCAdapter';
 
 interface MockSystemJs {
-    import: SinonStub;
-    resolve: SinonStub;
-    get: SinonStub;
-    delete: SinonStub;
+    import: sinon.SinonStub;
+    resolve: sinon.SinonStub;
+    get: sinon.SinonStub;
+    delete: sinon.SinonStub;
 }
 
 interface MockSdkFactoryBuilder {
@@ -50,6 +47,8 @@ describe('BundleLoader', () => {
     let registry: MockRegistry;
     const configRoot = getIlcConfigRoot();
 
+    const sandbox = sinon.createSandbox();
+
     const mockFactoryFn = () => {};
 
     const sdkFactoryBuilder: MockSdkFactoryBuilder = {
@@ -84,7 +83,7 @@ describe('BundleLoader', () => {
 
     afterEach(() => {
         SystemJs.import.reset();
-        sinon.stub(configRoot, 'registryConfiguration').restore();
+        sandbox.restore();
     });
 
     describe('preloadApp()', () => {
@@ -303,7 +302,10 @@ describe('BundleLoader', () => {
             const cssUrl = 'http://127.0.0.1/my.css';
 
             SystemJs.import.rejects(new Error('has already been loaded using another way'));
-            await expect(loader.loadCss(cssUrl)).to.be.fulfilled;
+
+            // Should not throw an error - the specific error message is ignored
+            const result = await loader.loadCss(cssUrl);
+            expect(result).to.be.undefined;
         });
 
         it('loads CSS and forwards errors', async () => {
@@ -311,7 +313,16 @@ describe('BundleLoader', () => {
             const cssUrl = 'http://127.0.0.1/my.css';
 
             SystemJs.import.rejects(new Error('other err'));
-            await expect(loader.loadCss(cssUrl)).to.be.rejected;
+
+            // Should throw the error since it's not the ignored message
+            let errorThrown = false;
+            try {
+                await loader.loadCss(cssUrl);
+            } catch (error: any) {
+                errorThrown = true;
+                expect(error.message).to.equal('other err');
+            }
+            expect(errorThrown).to.be.true;
         });
     });
 
