@@ -96,6 +96,7 @@ export type SettingParsed = Omit<SettingRaw, 'value' | 'default' | 'meta'> & {
     value?: SettingValue;
     default?: SettingValue;
     meta: SettingMeta;
+    protected?: boolean;
 };
 
 export const keySchema = Joi.string()

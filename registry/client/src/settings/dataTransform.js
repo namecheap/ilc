@@ -8,8 +8,6 @@ export const types = {
     json: 'json',
 };
 
-const PROTECTED_SETTINGS = process.env.PROTECTED_SETTINGS?.split(',') ?? [];
-
 export function transformGet(setting) {
     setting.id = setting.key;
 
@@ -29,7 +27,6 @@ export function transformGet(setting) {
     }
 
     setting.domainId = setting.domainId || null;
-    setting.protected = PROTECTED_SETTINGS.includes(setting.key);
 }
 
 export function transformSet(setting) {

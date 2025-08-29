@@ -38,5 +38,6 @@ module.exports = {
             baseUrl: null,
         },
     },
+    protectedSettings: '',
     salt: 'default_test_salt',
 };

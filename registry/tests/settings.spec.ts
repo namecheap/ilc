@@ -115,6 +115,7 @@ describe(url, () => {
                 meta: {
                     type: SettingTypes.Url,
                 },
+                protected: true,
             });
             chai.expect(response.body).to.deep.include({
                 key: SettingKeys.AmdDefineCompatibilityMode,
@@ -280,6 +281,7 @@ describe(url, () => {
                     domainValue: JSON.parse(cspValue),
                     scope: Scope.Ilc,
                     secret: false,
+                    protected: true,
                     meta: {
                         type: SettingTypes.JSON,
                     },
@@ -306,6 +308,7 @@ describe(url, () => {
                     meta: {
                         type: SettingTypes.JSON,
                     },
+                    protected: true,
                 };
 
                 chai.expect(response.body).to.deep.include(defaultCsp);
@@ -336,12 +339,15 @@ describe(url, () => {
                     meta: {
                         type: SettingTypes.JSON,
                     },
+                    protected: true,
                 });
             } finally {
                 await deleteConfigRequest(id).expect(204);
                 await domainHelper.destroy();
             }
         });
+
+        it('it should mark specific settings as protected', async () => {});
     });
 
     describe('when a user tries to update information', () => {
@@ -364,6 +370,7 @@ describe(url, () => {
                     meta: {
                         type: SettingTypes.Url,
                     },
+                    protected: true,
                 });
             } finally {
                 await req
@@ -668,6 +675,7 @@ describe(url, () => {
                     domainId: domainHelper.getResponse().id,
                     id: response.body.id,
                     secret: false,
+                    protected: true,
                 });
             } finally {
                 await domainHelper.destroy();
@@ -708,6 +716,7 @@ describe(url, () => {
                     domainId: domainHelper.getResponse().id,
                     id: configResponse.body.id, // id not changed
                     secret: false,
+                    protected: true,
                 });
             } finally {
                 await deleteConfigRequest(id);
