@@ -29,7 +29,7 @@ Example:
 
 ```bash
 export ILC_REGISTRY_ADMIN_PROTECTED_SETTINGS="setting1,setting2"
-npm run build[:watch]
+npm run dev
 ```
 
 Or override it inside your custom custom Dockerfile:
