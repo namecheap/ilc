@@ -7,4 +7,5 @@ module.exports = {
         },
         useNullAsDefault: true,
     },
+    protectedSettings: 'cspConfig,baseUrl',
 };

@@ -1,3 +1,4 @@
+import config from 'config';
 import { User } from '../../../typings/User';
 import { JSONValue, isNumeric, safeParseJSON } from '../../common/services/json';
 import db from '../../db';
@@ -23,6 +24,8 @@ type GetOptions = {
 
 export class SettingsService {
     private changesTracking: any = {};
+
+    private protectedSettings = config.get<string>('protectedSettings').split(',');
 
     //TODO: implement cache
     //private cache: any = {};
@@ -287,8 +290,8 @@ export class SettingsService {
         return true;
     }
 
-    private parseSetting(settings: SettingRaw): SettingParsed {
-        const parsedSetting: SettingParsed = safeParseJSON<SettingParsed>(settings, this.isSettingTypeGuard);
+    private parseSetting(setting: SettingRaw): SettingParsed {
+        const parsedSetting: SettingParsed = safeParseJSON<SettingParsed>(setting, this.isSettingTypeGuard);
 
         if (
             parsedSetting.value === undefined ||
@@ -311,6 +314,8 @@ export class SettingsService {
             delete parsedSetting.value;
             delete parsedSetting.default;
         }
+
+        parsedSetting.protected = this.protectedSettings.includes(setting.key) ? true : undefined;
 
         return parsedSetting;
     }

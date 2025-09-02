@@ -29,4 +29,5 @@ export default {
             baseUrl: 'ILC_REGISTRY_BASE_URL',
         },
     },
+    protectedSettings: 'ILC_REGISTRY_ADMIN_PROTECTED_SETTINGS',
 };

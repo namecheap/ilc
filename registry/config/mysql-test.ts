@@ -8,4 +8,5 @@ module.exports = {
             password: 'pwd',
         },
     },
+    protectedSettings: 'cspConfig,baseUrl',
 };

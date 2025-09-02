@@ -6,7 +6,7 @@ module.exports = {
     devtool: 'source-map',
     output: {
         devtoolNamespace: 'ilcRegistry',
-        assetModuleFilename: 'img/[hash][ext][query]'
+        assetModuleFilename: 'img/[hash][ext][query]',
     },
     module: {
         rules: [

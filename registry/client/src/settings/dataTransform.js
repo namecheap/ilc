@@ -5,7 +5,7 @@ export const types = {
     stringArray: 'string[]',
     enum: 'enum',
     password: 'password',
-    json: 'json'
+    json: 'json',
 };
 
 export function transformGet(setting) {
@@ -30,6 +30,9 @@ export function transformGet(setting) {
 }
 
 export function transformSet(setting) {
+    if (setting.protected) {
+        throw new Error(`The '${setting.key}' setting cannot be modified through UI`);
+    }
     if (setting.value === null) {
         setting.value = '';
     }
