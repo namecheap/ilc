@@ -5,6 +5,7 @@ import { pingPluginFactroy } from './routes/pingPluginFactory';
 import { renderTemplateHandlerFactory } from './routes/renderTemplateHandlerFactory';
 import { wildcardRequestHandlerFactory } from './routes/wildcardRequestHandlerFactory';
 import { errorHandlerFactory } from './errorHandler/factory';
+const { Test500Error } = require('./errorHandler/ErrorHandler');
 
 const serveStatic = require('./serveStatic');
 const i18n = require('./i18n');
@@ -106,12 +107,12 @@ module.exports = (registryService, pluginManager, context) => {
 
     // Route to test 500 page appearance
     app.get('/_ilc/500', async () => {
-        throw new Error('500 page test error');
+        throw new Test500Error('500 page test error');
     });
 
     app.all('*', wildcardRequestHandlerFactory(logger, registryService, errorHandler, pluginManager));
 
-    app.setErrorHandler(errorHandler.handleError);
+    app.setErrorHandler(errorHandler.handleError.bind(errorHandler));
 
     return app;
 };

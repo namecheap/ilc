@@ -66,6 +66,7 @@
         "@types/mocha": "^10.0.8",
         "@types/newrelic": "^9.14.4",
         "@types/sinon": "^17.0.3",
+        "@types/supertest": "^6.0.3",
         "babel-loader": "^9.2.1",
         "babel-plugin-istanbul": "^6.1.1",
         "babel-plugin-transform-async-to-promises": "^0.8.18",
