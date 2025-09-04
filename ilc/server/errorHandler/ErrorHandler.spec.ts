@@ -12,7 +12,7 @@ import type { AddressInfo } from 'net';
 import type { Logger, PluginManager } from 'ilc-plugins-sdk';
 
 import { context } from '../context/context';
-import ErrorHandler from './ErrorHandler';
+import ErrorHandler, { Test500Error } from './ErrorHandler';
 import helpers = require('../../tests/helpers');
 import { Registry } from '../types/Registry';
 
@@ -206,6 +206,27 @@ describe('ErrorHandler', () => {
             sinon.assert.calledOnce(logger.warn as any);
             sinon.assert.notCalled(logger.error as any);
             sinon.assert.notCalled(errorService.noticeError);
+        });
+
+        it('should log Test500Error as warn instead of error to prevent PagerDuty alerts', () => {
+            const errorService = {
+                noticeError: sinon.stub(),
+            } as any;
+
+            const logger: Logger = {
+                error: sinon.stub() as any,
+                warn: sinon.stub() as any,
+                info: sinon.stub() as any,
+                debug: sinon.stub() as any,
+            } as any;
+
+            const errorHandler = new ErrorHandler({} as any, errorService as any, logger);
+
+            errorHandler.noticeError(new Test500Error({ message: '500 page test error' }), {});
+
+            sinon.assert.calledOnce(logger.warn as any);
+            sinon.assert.notCalled(logger.error as any);
+            sinon.assert.calledOnce(errorService.noticeError);
         });
     });
 });

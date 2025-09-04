@@ -107,7 +107,7 @@ module.exports = (registryService, pluginManager, context) => {
 
     // Route to test 500 page appearance
     app.get('/_ilc/500', async () => {
-        throw new Test500Error('500 page test error');
+        throw new Test500Error({ message: '500 page test error' });
     });
 
     app.all('*', wildcardRequestHandlerFactory(logger, registryService, errorHandler, pluginManager));
