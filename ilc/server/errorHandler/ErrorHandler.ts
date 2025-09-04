@@ -53,7 +53,7 @@ export default class ErrorHandler {
             this.errorsService.noticeError(err, { ...customAttributes });
             setErrorData(err, customAttributes);
 
-            // Log Test500Error as WARN instead of ERROR to prevent alarming potential monitoring system 
+            // Log Test500Error as WARN instead of ERROR to prevent alarming potential monitoring system
             if (err instanceof Test500Error) {
                 this.logger.warn(err);
             } else {
