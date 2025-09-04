@@ -41,7 +41,7 @@ export function wildcardRequestHandlerFactory(
     return async function wildcardRequestHandler(req, reply) {
         const currentDomain = req.hostname;
         const registryConfig = await registryService.getConfig({ filter: { domain: currentDomain } });
-        const url = req.raw.url ?? '';
+        const url = req.raw.url;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
         const processedUrl = urlProcessor.process(url);
 
