@@ -1,5 +1,5 @@
 import { ServerResponseFastifyReply, IlcResponse } from './FastifyReply';
-import { IlcRequest } from './PatchedHttpRequest';
+import { IlcRequest } from './IlcRequest';
 
 export interface ErrorHandler {
     noticeError(error: unknown, attributes?: Record<string, string>): void;
