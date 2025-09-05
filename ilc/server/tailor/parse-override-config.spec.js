@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-const LZUTF8 = require('lzutf8');
-const parseOverrideConfig = require('./parse-override-config');
+import LZUTF8 from 'lzutf8';
+import parseOverrideConfig from './parse-override-config';
 
 const assignIgnoreInvalidSsl = (ssr, protocol = 'http:') =>
     protocol === 'https:' ? Object.assign({}, ssr, { ignoreInvalidSsl: true }) : ssr;
