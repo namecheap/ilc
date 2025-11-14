@@ -133,3 +133,65 @@ There might be cases where you want to test your configuration before deploying 
 ```
 
 Note, that this API is available only if using PostgreSQL database.
+
+## Application properties
+
+ILC provides a multi-level properties system. Properties can be defined at application, domain, and shared levels.
+
+### Property levels
+
+| Level             | Scope                   | Configuration Location        |
+| ----------------- | ----------------------- | ----------------------------- |
+| Application props | Specific application    | Apps → Props                  |
+| Domain props      | Apps on specific domain | Router Domains → Domain Props |
+| Shared props      | Multiple apps           | Shared Props                  |
+
+### Property types
+
+**`props`** - Properties that will be passed to application.
+
+**`ssrProps`** - Properties that will be added to main props at SSR request, allow to override certain values. Never sent to the browser.
+
+### Merging behavior
+
+Properties are merged using deep merge with the following priority:
+
+1. Application props (highest priority)
+2. Domain props
+3. Shared props (lowest priority)
+
+**Example:**
+
+```javascript
+// Shared props
+{ "apiUrl": "https://api.shared.com", "timeout": 3000 }
+
+// Domain props
+{ "apiUrl": "https://api.domain.com" }
+
+// App props
+{ "timeout": 5000 }
+
+// Merged result
+{ "apiUrl": "https://api.domain.com", "timeout": 5000 }
+```
+
+### Shared properties
+
+Applications reference shared properties via the `configSelector` field.
+
+**Example application configuration:**
+
+```json
+{
+    "name": "myApp",
+    "configSelector": ["commonConfig"],
+    "props": {
+        "appSpecific": true
+    }
+}
+```
+
+### Domain properties
+
+See [Multi-domains documentation](multi-domains.md#domain-specific-properties) for information about configuring domain-specific properties.
