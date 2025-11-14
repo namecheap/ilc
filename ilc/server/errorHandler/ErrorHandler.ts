@@ -18,7 +18,7 @@ const Test500Error = extendError('Test500Error');
 
 const defaultErrorPage = fs.readFileSync(path.resolve(__dirname, '../assets/defaultErrorPage.html'), 'utf-8');
 
-interface ErrorsService {
+export interface ErrorsService {
     noticeError(err: Error, customAttributes?: Record<string, any>): void;
 }
 
@@ -81,7 +81,7 @@ export default class ErrorHandler {
 
         try {
             const ilcRequest = ilcRequestDecorator(req);
-            this.noticeError(err, { errorId }, { reportError: ilcRequest.isLde() });
+            this.noticeError(err, { errorId }, { reportError: !ilcRequest.isLde() });
             const currentDomain = ilcRequest.getHostName();
             const locale = ilcRequest.getLocale();
             let data = await this.registryService.getTemplate('500', { locale, forDomain: currentDomain });

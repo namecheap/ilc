@@ -1,8 +1,7 @@
-import config from 'config';
 import newrelic from 'newrelic';
 
 import type { RequestHandler } from 'fastify';
-import type { Logger, PluginManager } from 'ilc-plugins-sdk';
+import type { Logger } from 'ilc-plugins-sdk';
 import { SlotCollection } from '../../common/Slot/SlotCollection';
 import UrlProcessor from '../../common/UrlProcessor';
 import i18n from '../i18n';
@@ -14,30 +13,15 @@ import ServerRouter from '../tailor/server-router';
 import { TransitionHooksExecutor } from '../TransitionHooksExecutor';
 import { ErrorHandler } from '../types/ErrorHandler';
 import { PatchedHttpRequest } from '../types/PatchedHttpRequest';
-import { Registry, TransformedRegistryConfig } from '../types/Registry';
+import { Registry } from '../types/Registry';
 
 export function wildcardRequestHandlerFactory(
     logger: Logger,
     registryService: Registry,
     errorHandlingService: ErrorHandler,
-    pluginManager: PluginManager,
+    transitionHooksExecutor: TransitionHooksExecutor,
+    tailor: ReturnType<typeof tailorFactory>,
 ): RequestHandler<PatchedHttpRequest> {
-    const transitionHooksExecutor = new TransitionHooksExecutor(pluginManager);
-    const autoInjectNrMonitoringConfig = config.get('newrelic.automaticallyInjectBrowserMonitoring');
-    const autoInjectNrMonitoring =
-        typeof autoInjectNrMonitoringConfig === 'boolean'
-            ? autoInjectNrMonitoringConfig
-            : autoInjectNrMonitoringConfig !== 'false';
-
-    const tailor = tailorFactory(
-        registryService,
-        errorHandlingService,
-        config.get('cdnUrl'),
-        config.get('newrelic.customClientJsWrapper'),
-        autoInjectNrMonitoring,
-        logger,
-    );
-
     return async function wildcardRequestHandler(req, reply) {
         const currentDomain = req.hostname;
         const registryConfig = await registryService.getConfig({ filter: { domain: currentDomain } });

@@ -6,15 +6,17 @@ import config from 'config';
 import fs from 'fs';
 import path from 'path';
 import { StatusCodes, ReasonPhrases } from 'http-status-codes';
-import sinon from 'sinon';
+import sinon, { SinonStubbedInstance } from 'sinon';
 import type { FastifyInstance } from 'fastify';
 import type { AddressInfo } from 'net';
 import type { Logger, PluginManager } from 'ilc-plugins-sdk';
 
 import { context } from '../context/context';
-import ErrorHandler, { Test500Error } from './ErrorHandler';
-import helpers = require('../../tests/helpers');
+import ErrorHandler, { ErrorsService, Test500Error } from './ErrorHandler';
+import * as helpers from '../../tests/helpers';
 import { Registry } from '../types/Registry';
+import { IlcRequest } from '../types/IlcRequest';
+import { IlcResponse } from '../types/FastifyReply';
 
 const createApp = require('../app');
 
@@ -169,64 +171,147 @@ describe('ErrorHandler', () => {
         it('should send prod error to error tracker and log with error level', () => {
             const errorService = {
                 noticeError: sinon.stub(),
-            } as any;
+            };
 
-            const logger: Logger = {
-                error: sinon.stub() as any,
-                warn: sinon.stub() as any,
-                info: sinon.stub() as any,
-                debug: sinon.stub() as any,
-            } as any;
+            const logger = {
+                error: sinon.stub(),
+                warn: sinon.stub(),
+                info: sinon.stub(),
+                debug: sinon.stub(),
+                fatal: sinon.stub(),
+                trace: sinon.stub(),
+            };
 
-            const errorHandler = new ErrorHandler({} as any, errorService as any, logger);
+            const errorHandler = new ErrorHandler({} as Registry, errorService, logger);
 
             errorHandler.noticeError(new Error('My Error'), {});
 
-            sinon.assert.notCalled(logger.warn as any);
-            sinon.assert.calledOnce(logger.error as any);
+            sinon.assert.notCalled(logger.warn);
+            sinon.assert.calledOnce(logger.error);
             sinon.assert.calledOnce(errorService.noticeError);
         });
 
         it('should not send local error to error tracker and log with warn level', () => {
             const errorService = {
                 noticeError: sinon.stub(),
-            } as any;
+            };
 
-            const logger: Logger = {
-                error: sinon.stub() as any,
-                warn: sinon.stub() as any,
-                info: sinon.stub() as any,
-                debug: sinon.stub() as any,
-            } as any;
+            const logger = {
+                error: sinon.stub(),
+                warn: sinon.stub(),
+                info: sinon.stub(),
+                debug: sinon.stub(),
+                fatal: sinon.stub(),
+                trace: sinon.stub(),
+            };
 
-            const errorHandler = new ErrorHandler({} as any, errorService as any, logger);
+            const errorHandler = new ErrorHandler({} as Registry, errorService, logger);
 
             errorHandler.noticeError(new Error('My Error'), {}, { reportError: false });
 
-            sinon.assert.calledOnce(logger.warn as any);
-            sinon.assert.notCalled(logger.error as any);
+            sinon.assert.calledOnce(logger.warn);
+            sinon.assert.notCalled(logger.error);
             sinon.assert.notCalled(errorService.noticeError);
         });
 
         it('should log Test500Error as warn instead of error to prevent PagerDuty alerts', () => {
             const errorService = {
                 noticeError: sinon.stub(),
-            } as any;
+            };
 
-            const logger: Logger = {
-                error: sinon.stub() as any,
-                warn: sinon.stub() as any,
-                info: sinon.stub() as any,
-                debug: sinon.stub() as any,
-            } as any;
+            const logger = {
+                error: sinon.stub(),
+                warn: sinon.stub(),
+                info: sinon.stub(),
+                debug: sinon.stub(),
+                fatal: sinon.stub(),
+                trace: sinon.stub(),
+            };
 
-            const errorHandler = new ErrorHandler({} as any, errorService as any, logger);
+            const errorHandler = new ErrorHandler({} as Registry, errorService, logger);
 
             errorHandler.noticeError(new Test500Error({ message: '500 page test error' }), {});
 
-            sinon.assert.calledOnce(logger.warn as any);
-            sinon.assert.notCalled(logger.error as any);
+            sinon.assert.calledOnce(logger.warn);
+            sinon.assert.notCalled(logger.error);
             sinon.assert.calledOnce(errorService.noticeError);
+        });
+    });
+
+    describe('handleError with LDE detection', () => {
+        let errorHandler: ErrorHandler;
+        let mockRegistryService: SinonStubbedInstance<Registry>;
+        let mockErrorsService: SinonStubbedInstance<ErrorsService>;
+        let mockLogger: SinonStubbedInstance<Logger>;
+
+        beforeEach(() => {
+            mockErrorsService = {
+                noticeError: sinon.stub(),
+            };
+            mockRegistryService = {
+                getTemplate: sinon.stub().resolves({
+                    data: { content: 'Error %ERRORID%', styleRefs: [] },
+                    cachedAt: 0,
+                }),
+            } as unknown as SinonStubbedInstance<Registry>;
+
+            mockLogger = {
+                error: sinon.stub(),
+                warn: sinon.stub(),
+                info: sinon.stub(),
+                debug: sinon.stub(),
+                fatal: sinon.stub(),
+                trace: sinon.stub(),
+            };
+
+            errorHandler = new ErrorHandler(mockRegistryService, mockErrorsService, mockLogger);
+        });
+
+        it('should report errors when NOT in LDE environment', async () => {
+            const mockRequest = {
+                headers: {},
+                raw: {
+                    ldeRelated: false,
+                },
+            };
+            const mockResponse = {
+                setHeader: sinon.stub(),
+                write: sinon.stub(),
+                end: sinon.stub(),
+            };
+            const error = new Error('test error');
+
+            await errorHandler.handleError(
+                error,
+                mockRequest as unknown as IlcRequest,
+                mockResponse as unknown as IlcResponse,
+            );
+
+            sinon.assert.calledOnceWithExactly(mockErrorsService.noticeError, error, { errorId: sinon.match.string });
+            sinon.assert.calledOnceWithExactly(mockLogger.error, error);
+        });
+
+        it('should NOT report errors when in LDE environment', async () => {
+            const mockRequest = {
+                headers: {},
+                raw: {
+                    ldeRelated: true,
+                },
+            };
+            const mockResponse = {
+                setHeader: sinon.stub(),
+                write: sinon.stub(),
+                end: sinon.stub(),
+            };
+            const error = new Error('test error');
+
+            await errorHandler.handleError(
+                error,
+                mockRequest as unknown as IlcRequest,
+                mockResponse as unknown as IlcResponse,
+            );
+
+            sinon.assert.notCalled(mockErrorsService.noticeError);
         });
     });
 });
