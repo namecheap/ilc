@@ -1,10 +1,12 @@
 import config from 'config';
 import fastify from 'fastify';
 import { AsyncResource } from 'node:async_hooks';
+import { errorHandlerFactory } from './errorHandler/factory';
 import { pingPluginFactroy } from './routes/pingPluginFactory';
 import { renderTemplateHandlerFactory } from './routes/renderTemplateHandlerFactory';
 import { wildcardRequestHandlerFactory } from './routes/wildcardRequestHandlerFactory';
-import { errorHandlerFactory } from './errorHandler/factory';
+import tailorFactory from './tailor/factory';
+import { TransitionHooksExecutor } from './TransitionHooksExecutor';
 const { Test500Error } = require('./errorHandler/ErrorHandler');
 
 const serveStatic = require('./serveStatic');
@@ -110,7 +112,22 @@ module.exports = (registryService, pluginManager, context) => {
         throw new Test500Error({ message: '500 page test error' });
     });
 
-    app.all('*', wildcardRequestHandlerFactory(logger, registryService, errorHandler, pluginManager));
+    const transitionHooksExecutor = new TransitionHooksExecutor(pluginManager);
+    const autoInjectNrMonitoringConfig = config.get('newrelic.automaticallyInjectBrowserMonitoring');
+    const autoInjectNrMonitoring =
+        typeof autoInjectNrMonitoringConfig === 'boolean'
+            ? autoInjectNrMonitoringConfig
+            : autoInjectNrMonitoringConfig !== 'false';
+    const tailor = tailorFactory(
+        registryService,
+        errorHandler,
+        config.get('cdnUrl'),
+        config.get('newrelic.customClientJsWrapper'),
+        autoInjectNrMonitoring,
+        logger,
+    );
+
+    app.all('*', wildcardRequestHandlerFactory(logger, registryService, errorHandler, transitionHooksExecutor, tailor));
 
     app.setErrorHandler(errorHandler.handleError.bind(errorHandler));
 

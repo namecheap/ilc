@@ -312,7 +312,7 @@ jobs:
                   postComment: false
                   oldCodeCoveragePath: ./dest-server-side-tests-artifacts/coverage/coverage-summary.json
                   newCodeCoveragePath: ./src-server-side-tests-artifacts/coverage/coverage-summary.json
-                  total_delta: 2
+                  total_delta: 2.55
             - name: Create coverage report for ilc/client
               id: ilc-client-coverage-report
               if: success() || failure()

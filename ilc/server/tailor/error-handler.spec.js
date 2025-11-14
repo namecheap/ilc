@@ -133,4 +133,124 @@ describe('error handler', () => {
             ]);
         });
     });
+
+    describe('handling LDE detection', () => {
+        describe('general tailor errors', () => {
+            it('should not report errors in LDE environment', () => {
+                const ldeRequest = {
+                    ...request,
+                    ldeRelated: true,
+                };
+
+                eventHandlers.get('error')(ldeRequest, error);
+
+                sinon.assert.calledOnceWithExactly(
+                    errorHandlingService.noticeError,
+                    sinon.match.instanceOf(errors.TailorError),
+                    { userAgent: 'bot' },
+                    { reportError: false },
+                );
+            });
+
+            it('should report errors in production environment', () => {
+                const prodRequest = {
+                    ...request,
+                    ldeRelated: false,
+                };
+
+                eventHandlers.get('error')(prodRequest, error);
+
+                sinon.assert.calledOnceWithExactly(
+                    errorHandlingService.noticeError,
+                    sinon.match.instanceOf(errors.TailorError),
+                    { userAgent: 'bot' },
+                    { reportError: true },
+                );
+            });
+        });
+
+        describe('fragment errors', () => {
+            it('should not report fragment errors in LDE environment', () => {
+                const ldeRequest = {
+                    ...request,
+                    ldeRelated: true,
+                };
+                const fragmentAttrs = {
+                    primary: false,
+                    id: 'test-fragment',
+                };
+
+                eventHandlers.get('fragment:error')(ldeRequest, fragmentAttrs, error);
+
+                sinon.assert.calledOnceWithExactly(
+                    errorHandlingService.noticeError,
+                    sinon.match.instanceOf(errors.FragmentError),
+                    {},
+                    { reportError: false },
+                );
+            });
+
+            it('should report fragment errors in production environment', () => {
+                const prodRequest = {
+                    ...request,
+                    ldeRelated: false,
+                };
+                const fragmentAttrs = {
+                    primary: false,
+                    id: 'test-fragment',
+                };
+
+                eventHandlers.get('fragment:error')(prodRequest, fragmentAttrs, error);
+
+                sinon.assert.calledOnceWithExactly(
+                    errorHandlingService.noticeError,
+                    sinon.match.instanceOf(errors.FragmentError),
+                    {},
+                    { reportError: true },
+                );
+            });
+        });
+
+        describe('fragment warnings', () => {
+            it('should not report fragment warnings in LDE environment', () => {
+                const ldeRequest = {
+                    ...request,
+                    ldeRelated: true,
+                };
+                const fragmentAttrs = {
+                    primary: false,
+                    id: 'test-fragment',
+                };
+
+                eventHandlers.get('fragment:warn')(ldeRequest, fragmentAttrs, error);
+
+                sinon.assert.calledOnceWithExactly(
+                    errorHandlingService.noticeError,
+                    sinon.match.instanceOf(errors.FragmentWarn),
+                    {},
+                    { reportError: false },
+                );
+            });
+
+            it('should report fragment warnings in production environment', () => {
+                const prodRequest = {
+                    ...request,
+                    ldeRelated: false,
+                };
+                const fragmentAttrs = {
+                    primary: false,
+                    id: 'test-fragment',
+                };
+
+                eventHandlers.get('fragment:warn')(prodRequest, fragmentAttrs, error);
+
+                sinon.assert.calledOnceWithExactly(
+                    errorHandlingService.noticeError,
+                    sinon.match.instanceOf(errors.FragmentWarn),
+                    {},
+                    { reportError: true },
+                );
+            });
+        });
+    });
 });
