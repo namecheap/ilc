@@ -16,9 +16,12 @@ In ILC, your website can contain multiple applications and each application may 
 
 ## Demo and examples
 
+!!! note ""
+    Make sure your local ILC instance is running
+
 ### React
 
-Go to http://ilc-demo.namecheap.technology/people and click `Open` in the main window. This action will render Vue.js application inside React application.
+Go to http://localhost:8233/people and click `Open` in the main window. This action will render Vue.js application inside React application.
 
 #### Parcel export
 
@@ -77,7 +80,7 @@ Go to http://ilc-demo.namecheap.technology/people and click `Open` in the main w
 
 ### Vue.js
 
-Go to http://ilc-demo.namecheap.technology/planets and click `Open` in the main window. This action will render React.js application inside Vue.js application.
+Go to http://localhost:8233/planets and click `Open` in the main window. This action will render React.js application inside Vue.js application.
 
 #### Parcel export
 

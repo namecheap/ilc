@@ -44,7 +44,7 @@ In ILC, this error can be caught in two different routing layers:
 1. **ILC Router**: if there is no route configured in the Registry for the requested URL. This will trigger the special 404 route ([Namecheap example](https://www.namecheap.com/status/404.aspx){: target=_blank} :octicons-link-external-16:). This logic works seamlessly between SSR and CSR.
 
     !!! example "404 error example"
-        `/nosuchpath` URL was requested. Navigate to [demo-site/nosuchpath](http://ilc-demo.namecheap.technology/nosuchpath){: target=_blank} :octicons-link-external-16: to see this error.
+        `/nosuchpath` URL was requested. Navigate to [localhost:8233/nosuchpath](http://localhost:8233/nosuchpath){: target=_blank} :octicons-link-external-16: to see this error.
 
 - **App Router**: (for primary apps only) if an app that is responsible for the page fails to find the requested resource by its ID even when the route is configured in the Registry. For example, when you're trying to open a page of a non-existing product.
 

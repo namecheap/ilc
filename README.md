@@ -3,7 +3,6 @@
 ----
 
 [![Latest version](https://badgen.net/github/tag/namecheap/ilc?label=Latest%20version&color=green&cache=900)](https://github.com/namecheap/ilc/releases)
-[![Demo website](./docs/assets/demo-website.svg)](http://ilc-demo.namecheap.technology)
 [![Actions Status](https://github.com/namecheap/ilc/workflows/CI/badge.svg)](https://github.com/namecheap/ilc/actions)
 [![Docker Pulls](https://badgen.net/docker/pulls/namecheap/ilc?icon=docker&label=ILC%20pulls)](https://hub.docker.com/r/namecheap/ilc)
 [![Docker Pulls](https://badgen.net/docker/pulls/namecheap/ilc_registry?icon=docker&label=ILC%20registry%20pulls)](https://hub.docker.com/r/namecheap/ilc_registry)
@@ -42,8 +41,7 @@ This is where ILC comes into play.
 * ⚙️ **Server-side rendering (SSR) support** - key advantage over competitors.
 * 🗄 **[Built-in registry](./docs/registry.md)** - add new apps, pages, or change configs and templates in a few clicks.
 * ⚡️ **Built for speed** - server-side part of the system adds just ~17ms of latency
-* 👨‍💻 **[Develop in production](./docs/develop_in_production.md)**
-* 🌐 **[Internationalization support](./docs/i18n.md)** - serve your clients from any country. [Demo with a localized navbar](http://ilc-demo.namecheap.technology/ua/)
+* 🌐 **[Internationalization support](./docs/i18n.md)** - serve your clients from any country.
 * 📡 **Advanced features:**
     * [Parcels](./docs/parcels.md)
     * [Plugins](https://github.com/namecheap/ilc-plugins-sdk)
@@ -51,9 +49,6 @@ This is where ILC comes into play.
 * 💲 **Backed by [Namecheap](https://www.namecheap.com/about/mission-vision-values/)** - we use it internally and plan to evolve it together with the community.
 
 ## 🚀 Quick start
-
-!!! tip "Demo website"
-    For a quick preview, check out our [demo website](http://ilc-demo.namecheap.technology/)
 
 To quickstart with ILC locally, follow the steps below:
 
