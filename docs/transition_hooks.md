@@ -44,4 +44,4 @@ From ILC, every hook receives _route information_ and _navigate method_ on the c
 
 ## Demo
 
-Check the [demo website](http://ilc-demo.namecheap.technology/hooks/){: target=_blank} :octicons-link-external-16: to see how hooks work in ILC.
+Run your ILC locally and go to [localhost:8233/hooks](http://localhost:8233/hooks/){: target=_blank} :octicons-link-external-16: to see how hooks work.

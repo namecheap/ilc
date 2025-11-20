@@ -47,10 +47,8 @@ Once you're done, restart the application and navigate to the `/microfrontend` r
 
 ## Configure ILC to handle the application
 
-In this step, you will use the public demo website and the "[Develop in "production"](../../develop_in_production.md)" feature again to complete the task.
-
 !!! note ""
-    If you want more control over the process, you may want to use ILC locally
+    Make sure your local ILC instance is running
 
 To configure your micro-frontend:
 
@@ -88,10 +86,10 @@ To configure your micro-frontend:
             If you're using `ngrok`, assuming it is launched via `ngrok http 5000`
 
             * **`publicPath`**: `http://127.0.0.1:5000/public/`
-            * **`ssrPath`**: `http://14de-77-120-151-199.ngrok.io/microfrontend`
+            * **`ssrPath`**: `https://12ab34cd56e7.ngrok-free.app/microfrontend`
 
 1. Update the ILC configuration:
-    1. Navigate to the http://ilc-demo.namecheap.technology/nosuchpath
+    1. Navigate to the http://localhost:8233/nosuchpath
     1. Execute the code below in the browser console (Developer tools):
 
         ```js

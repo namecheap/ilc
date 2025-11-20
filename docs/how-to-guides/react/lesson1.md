@@ -28,10 +28,8 @@ Once you're done, restart the application and navigate to the `/microfrontend` r
 
 ## Configure ILC to handle the application
 
-In this step, you will use the public demo website and the "[Develop in "production"](../../develop_in_production.md)" feature to complete the task.
-
 !!! note ""
-    If you want more control over the process, you may want to use ILC locally
+    Make sure your local ILC instance is running
 
 To configure your micro-frontend:
 
@@ -69,11 +67,11 @@ To configure your micro-frontend:
             If you're using `ngrok`, assuming it is launched via `ngrok http 5000`
 
             * **`publicPath`**: `http://127.0.0.1:5000/public/`
-            * **`ssrPath`**: `http://14de-77-120-151-199.ngrok.io/microfrontend`
+            * **`ssrPath`**: `https://12ab34cd56e7.ngrok-free.app/microfrontend`
         
 
 1. Update the ILC configuration:
-    1. Navigate to the http://ilc-demo.namecheap.technology/nosuchpath
+    1. Navigate to the http://localhost:8233/nosuchpath
     1. Execute the code below in the browser console (Developer tools):
 
         ```js
@@ -113,16 +111,5 @@ To configure your micro-frontend:
     ![React app in ILC](../assets/react-app-in-ilc.png)
     
     If you can't - check both `publicPath` and `ssrPath`, and ensure that links to JS/CSS resources are correct.
-
-    ??? hint "CORS issues in Google Chrome"
-        If you're using Google Chrome and keep receiving 500 error with the following message:
-
-        !!! danger ""
-            Access to script at 'http://127.0.0.1:5000/public/client.js' from origin 'http://ilc-demo.namecheap.technology' has been blocked by CORS policy: The request client is not a secure context and the resource is in more-private address space `local`.
-
-        you may need to temporarily [disable checks for secure content][1] after the recent [Private Network Access update][2] made to the browser
-
-        [1]: https://programmerah.com/solved-chrome-error-the-request-client-is-not-a-secure-context-44246/
-        [2]: https://developer.chrome.com/blog/private-network-access-update/
 
 Congratulations! 🎉 Now you know how to integrate your new React application with ILC.

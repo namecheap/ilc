@@ -31,7 +31,7 @@ To use this feature, you need to configure the ILC Registry as follows:
 Essentially App Wrapper is a regular ILC application that receives extra property to allow the rendering of the target application 
 with additional properties when needed.
 
-Check the [demo wrapper for reference implementation](https://github.com/namecheap/ilc-demo-apps/tree/master/apps/wrapper){: target=_blank} :octicons-link-external-16:, or [check it in action](http://ilc-demo.namecheap.technology/wrapper/){: target=_blank} :octicons-link-external-16:
+Check the [demo wrapper for reference implementation](https://github.com/namecheap/ilc-demo-apps/tree/master/apps/wrapper){: target=_blank} :octicons-link-external-16:
 
 ### Client-side API
 
