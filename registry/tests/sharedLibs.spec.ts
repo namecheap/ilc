@@ -5,20 +5,22 @@ import { expect, request, requestWithAuth } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 
-const example = <any>{
+const assetsDiscovery = {
+    host: 'http://127.0.0.1:1234',
+    path: '/_spa/dev/assets-discovery',
+};
+const correct = Object.freeze({
+    name: 'testNameSharedLib',
+    spaBundle: 'http://localhost:1234/testSpaBundleSharedLib.js',
+    adminNotes: 'Lorem ipsum admin notes dolor sit',
+});
+const example = {
     url: '/api/v1/shared_libs/',
-    assetsDiscovery: {
-        host: 'http://127.0.0.1:1234',
-        path: '/_spa/dev/assets-discovery',
-    },
+    assetsDiscovery,
     manifest: {
         spaBundle: 'http://127.0.0.1:8239/dist/single_spa.js',
     },
-    correct: Object.freeze({
-        name: 'testNameSharedLib',
-        spaBundle: 'http://localhost:1234/testSpaBundleSharedLib.js',
-        adminNotes: 'Lorem ipsum admin notes dolor sit',
-    }),
+    correct,
     updated: Object.freeze({
         name: 'testNameSharedLib',
         spaBundle: 'http://localhost:1234/testSpaBundleSharedLibUPDATED.js',
@@ -41,12 +43,11 @@ const example = <any>{
             adminNotes: 'Lorem ipsum admin notes dolor sit',
         },
     ],
+    correctWithAssetsDiscoveryUrl: Object.freeze({
+        ...correct,
+        assetsDiscoveryUrl: assetsDiscovery.host + assetsDiscovery.path,
+    }),
 };
-
-example.correctWithAssetsDiscoveryUrl = Object.freeze({
-    ...example.correct,
-    assetsDiscoveryUrl: example.assetsDiscovery.host + example.assetsDiscovery.path,
-});
 
 describe(`Tests ${example.url}`, () => {
     let req: Agent;

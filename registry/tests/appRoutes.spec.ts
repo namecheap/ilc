@@ -4,22 +4,57 @@ import db from '../server/db';
 import { makeSpecialRoute } from '../server/appRoutes/services/transformSpecialRoutes';
 import supertest from 'supertest';
 
-let example = <any>{
-    template: {
-        url: '/api/v1/template/',
-        correct: {
-            name: 'ncTestTemplateName',
-            content: '<html><head></head><body>ncTestTemplateContent</body></html>',
+const app = {
+    url: '/api/v1/app/',
+    correct: {
+        name: '@portal/ncTestAppName',
+        spaBundle: 'http://localhost:1234/ncTestAppName.js',
+        kind: 'primary',
+    },
+};
+
+const template = {
+    url: '/api/v1/template/',
+    correct: {
+        name: 'ncTestTemplateName',
+        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
+    },
+};
+
+const correct = Object.freeze({
+    specialRole: undefined,
+    orderPos: 122,
+    route: '/ncTestRoute/*',
+    next: false,
+    templateName: template.correct.name,
+    slots: {
+        ncTestRouteSlotName: {
+            appName: app.correct.name,
+            props: { ncTestProp: 1 },
+            kind: 'regular',
         },
     },
-    app: {
-        url: '/api/v1/app/',
-        correct: {
-            name: '@portal/ncTestAppName',
-            spaBundle: 'http://localhost:1234/ncTestAppName.js',
+    meta: {},
+    domainId: null,
+});
+
+const updated = Object.freeze({
+    orderPos: 133,
+    route: '/ncTestRouteUpdated/*',
+    templateName: template.correct.name,
+    next: false,
+    slots: {
+        ncTestRouteSlotNavbar: {
+            appName: app.correct.name,
             kind: 'primary',
         },
     },
+    meta: {},
+});
+
+const example = {
+    template,
+    app,
     routerDomain: {
         url: '/api/v1/router_domains/',
         correct: Object.freeze({
@@ -35,46 +70,15 @@ let example = <any>{
             kind: 'wrapper',
         },
     },
-};
-
-example = {
-    ...example,
     url: '/api/v1/route/',
-    correct: Object.freeze({
-        specialRole: undefined,
-        orderPos: 122,
-        route: '/ncTestRoute/*',
-        next: false,
-        templateName: example.template.correct.name,
-        slots: {
-            ncTestRouteSlotName: {
-                appName: example.app.correct.name,
-                props: { ncTestProp: 1 },
-                kind: 'regular',
-            },
-        },
-        meta: {},
-        domainId: null,
-    }),
-    updated: Object.freeze({
-        orderPos: 133,
-        route: '/ncTestRouteUpdated/*',
-        templateName: example.template.correct.name,
-        next: false,
-        slots: {
-            ncTestRouteSlotNavbar: {
-                appName: example.app.correct.name,
-                kind: 'primary',
-            },
-        },
-        meta: {},
-    }),
+    correct,
+    updated,
     correct404: Object.freeze({
         specialRole: '404',
-        templateName: example.template.correct.name,
+        templateName: template.correct.name,
         slots: {
             ncTestRouteSlotName: {
-                appName: example.app.correct.name,
+                appName: app.correct.name,
                 props: { ncTestProp: 1 },
                 kind: 'regular',
             },
@@ -82,12 +86,8 @@ example = {
         meta: {},
         domainId: null,
     }),
-};
-
-example = {
-    ...example,
     correctWithMetadata: Object.freeze({
-        ...example.correct,
+        ...correct,
         meta: {
             first: 'value',
             second: null,
@@ -96,7 +96,7 @@ example = {
         },
     }),
     updatedWithMetadata: Object.freeze({
-        ...example.updated,
+        ...updated,
         meta: {
             second: 'value',
             forth: 5000,

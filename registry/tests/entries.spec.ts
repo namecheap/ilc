@@ -2,7 +2,7 @@ import * as querystring from 'querystring';
 import { type Agent } from 'supertest';
 import { expect, request, requestWithAuth } from './common';
 
-const example = <any>{
+const example = {
     url: `/api/v1/entries/${querystring.escape('@sharedLibrary/testNameSharedLibEntry')}`,
     appUrl: `/api/v1/entries/${querystring.escape('@portal/TestAppReactssrEntry')}`,
     incorrectUrl: '/api/v1/entries/123',
@@ -63,8 +63,8 @@ const example = <any>{
     }),
 };
 
-example.encodedAppName = encodeURIComponent(example.correctApp.name);
-example.encodedWrapperAppName = encodeURIComponent(example.correctWrapperApp.name);
+const encodedAppName = encodeURIComponent(example.correctApp.name);
+const encodedWrapperAppName = encodeURIComponent(example.correctWrapperApp.name);
 
 describe(`Entries`, () => {
     let req: Agent;
@@ -195,8 +195,8 @@ describe(`Entries`, () => {
                 ...patch3,
             });
         } finally {
-            const response2 = await req.delete(`${example.urlApp}${example.encodedAppName}`).expect(204);
-            const response1 = await req.delete(`${example.urlApp}${example.encodedWrapperAppName}`).expect(204);
+            const response2 = await req.delete(`${example.urlApp}${encodedAppName}`).expect(204);
+            const response1 = await req.delete(`${example.urlApp}${encodedWrapperAppName}`).expect(204);
         }
     });
 

@@ -349,30 +349,32 @@ describe(`Tests ${example.url}`, () => {
             let domainId: string;
             let routeId: string;
 
-            let example = <any>{
-                app: {
-                    url: '/api/v1/app/',
-                    correct: {
-                        name: '@portal/ncTestAppName1',
-                        spaBundle: 'http://localhost:1234/ncTestAppName.js',
-                        kind: 'primary',
-                    },
+            const app = {
+                url: '/api/v1/app/',
+                correct: {
+                    name: '@portal/ncTestAppName1',
+                    spaBundle: 'http://localhost:1234/ncTestAppName.js',
+                    kind: 'primary',
                 },
-                template: {
-                    url: '/api/v1/template/',
-                    correct: {
-                        name: 'ncTestTemplateDomainName',
-                        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
-                    },
-                    noRoute: {
-                        name: 'ncTestNoRouteTemplateName',
-                        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
-                    },
-                    template500: {
-                        name: 'ncTest500TemplateName',
-                        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
-                    },
+            };
+            const template = {
+                url: '/api/v1/template/',
+                correct: {
+                    name: 'ncTestTemplateDomainName',
+                    content: '<html><head></head><body>ncTestTemplateContent</body></html>',
                 },
+                noRoute: {
+                    name: 'ncTestNoRouteTemplateName',
+                    content: '<html><head></head><body>ncTestTemplateContent</body></html>',
+                },
+                template500: {
+                    name: 'ncTest500TemplateName',
+                    content: '<html><head></head><body>ncTestTemplateContent</body></html>',
+                },
+            };
+            const example = {
+                app,
+                template,
                 routerDomain: {
                     url: '/api/v1/router_domains/',
                     correct: {
@@ -380,10 +382,6 @@ describe(`Tests ${example.url}`, () => {
                         template500: '<html><head></head><body>ncTest500TemplateName</body></html>',
                     },
                 },
-            };
-
-            example = {
-                ...example,
                 route: {
                     url: '/api/v1/route/',
                     correct: Object.freeze({
@@ -391,10 +389,10 @@ describe(`Tests ${example.url}`, () => {
                         orderPos: 122,
                         route: '/ncTestRoute/*',
                         next: false,
-                        templateName: example.template.correct.name,
+                        templateName: template.correct.name,
                         slots: {
                             ncTestRouteSlotName: {
-                                appName: example.app.correct.name,
+                                appName: app.correct.name,
                                 props: { ncTestProp: 1 },
                                 kind: 'regular',
                             },
