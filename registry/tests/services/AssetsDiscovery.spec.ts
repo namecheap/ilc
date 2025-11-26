@@ -15,7 +15,7 @@ describe('AssetsDiscovery', () => {
 
     afterEach(async () => {
         sinon.restore();
-        await db('apps').whereIn('name', ['TestApp', 'App1', 'App2', 'App3']).del();
+        await db('apps').whereIn('name', ['TestApp', 'App1', 'App2', 'App3', 'AppWithProps']).del();
         assetsDiscovery.stop();
     });
 
@@ -116,5 +116,74 @@ describe('AssetsDiscovery', () => {
                 expect(app.assetsDiscoveryUpdatedAt).not.to.be.null;
             }
         }
+    });
+
+    it('should include base64-encoded props in the assets discovery URL when props are present', async () => {
+        const appProps = { config: { apiKey: 'test123', enabled: true } };
+        const propsJson = JSON.stringify(appProps);
+        const propsBase64 = Buffer.from(propsJson).toString('base64');
+        const expectedUrl = `http://example.com/assets?appProps=${propsBase64}`;
+
+        let capturedUrl: string | undefined;
+        (axios.get as any).callsFake((url: string) => {
+            capturedUrl = url;
+            return Promise.resolve({ data: { spaBundle: 'newBundle.js', cssBundle: 'newStyle.css' } });
+        });
+
+        await db('apps').insert({
+            name: 'AppWithProps',
+            assetsDiscoveryUrl: 'http://example.com/assets',
+            spaBundle: 'oldBundle.js',
+            cssBundle: 'oldStyle.css',
+            assetsDiscoveryUpdatedAt: null,
+            kind: 'regular',
+            props: propsJson,
+        });
+
+        assetsDiscovery.start(200);
+
+        await waitFor(async () => {
+            let app = await db('apps').where('name', 'AppWithProps').first();
+            return app?.assetsDiscoveryUpdatedAt != null;
+        });
+
+        // Verify that axios.get was called with the URL including base64-encoded props
+        expect(capturedUrl).to.equal(expectedUrl);
+
+        const updatedApp = await db('apps').where('name', 'AppWithProps').first();
+        expect(updatedApp).to.include({
+            spaBundle: 'http://example.com/newBundle.js',
+            cssBundle: 'http://example.com/newStyle.css',
+        });
+    });
+
+    it('should not append props to URL when props are empty object', async () => {
+        const expectedUrl = 'http://example.com/assets';
+
+        let capturedUrl: string | undefined;
+        (axios.get as any).callsFake((url: string) => {
+            capturedUrl = url;
+            return Promise.resolve({ data: { spaBundle: 'newBundle.js', cssBundle: 'newStyle.css' } });
+        });
+
+        await db('apps').insert({
+            name: 'AppWithProps',
+            assetsDiscoveryUrl: 'http://example.com/assets',
+            spaBundle: 'oldBundle.js',
+            cssBundle: 'oldStyle.css',
+            assetsDiscoveryUpdatedAt: null,
+            kind: 'regular',
+            props: JSON.stringify({}), // Empty props object
+        });
+
+        assetsDiscovery.start(200);
+
+        await waitFor(async () => {
+            let app = await db('apps').where('name', 'AppWithProps').first();
+            return app?.assetsDiscoveryUpdatedAt != null;
+        });
+
+        // Verify that axios.get was called WITHOUT appProps query param
+        expect(capturedUrl).to.equal(expectedUrl);
     });
 });

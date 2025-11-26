@@ -81,6 +81,10 @@ describe(`Tests ${example.url}`, () => {
         await req.delete(example.url + example.correct.name);
     });
 
+    after(() => {
+        nock.cleanAll();
+    });
+
     describe('Create', () => {
         it('should not create record without a required field: name', async () => {
             const response = await req
@@ -680,11 +684,11 @@ describe(`Tests ${example.url}`, () => {
 
     describe('Rendered', () => {
         it('should return HTTP 500 in case of inability to render template', async () => {
+            const includeInterceptor = nock('https://complete-random-ilc-include-test-domain.org.ote')
+                .persist()
+                .get('/include.html');
             const setupIncludeResults = (delay: number) =>
-                nock('https://complete-random-ilc-include-test-domain.org.ote')
-                    .get('/include.html')
-                    .delay(delay)
-                    .reply(200, '<div>test content</div>');
+                includeInterceptor.delay(delay).reply(200, '<div>test content</div>');
             setupIncludeResults(10);
             const creationResponse = await req.post(example.url).send(example.withInclude);
             try {

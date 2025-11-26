@@ -103,9 +103,18 @@ function expectAppsListEqual(actual: readonly any[], expected: readonly any[]) {
 
 describe(`Tests ${example.url}`, () => {
     let req: Agent;
+    let scope: nock.Interceptor;
+
+    before(() => {
+        scope = nock(example.assetsDiscovery.host).persist().get(example.assetsDiscovery.path);
+    });
 
     beforeEach(async () => {
         req = await request();
+    });
+
+    after(() => {
+        nock.cleanAll();
     });
 
     describe('Create', () => {
@@ -210,12 +219,12 @@ describe(`Tests ${example.url}`, () => {
 
         it('should not create record with non-existed enforceDomain', async () => {
             try {
-                let response = await req
+                await req
                     .post(example.url)
                     .send({ ...example.correct, enforceDomain: 9999999 })
                     .expect(500);
 
-                response = await req.get(example.url + example.encodedName).expect(404);
+                await req.get(example.url + example.encodedName).expect(404);
             } finally {
                 await req.delete(example.url + example.encodedName);
             }
@@ -225,8 +234,7 @@ describe(`Tests ${example.url}`, () => {
             muteConsole();
 
             try {
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(404);
+                scope.reply(404);
 
                 const response = await req
                     .post(example.url)
@@ -245,8 +253,7 @@ describe(`Tests ${example.url}`, () => {
 
         it('should not create a record when a SPA bundle URL was not specified in a manifest file', async () => {
             try {
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify({}));
+                scope.reply(200, JSON.stringify({}));
 
                 const response = await req
                     .post(example.url)
@@ -261,8 +268,7 @@ describe(`Tests ${example.url}`, () => {
 
         it('should create a record when a SPA bundle URL was specified in a manifest file', async () => {
             try {
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
+                scope.reply(200, JSON.stringify(example.manifest));
 
                 const response = await req.post(example.url).send(example.correctWithAssetsDiscoveryUrl).expect(200);
                 expect(response.body).deep.equal({
@@ -467,6 +473,185 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should successfully return records filtered by domainId="null" (apps not used in domain-specific routes)', async () => {
+            const teardownFns: (() => Promise<void>)[] = [];
+            try {
+                // create apps
+                for (const app of example.appsList) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+                teardownFns.unshift(async () => {
+                    for (const app of example.appsList) {
+                        await req.delete(example.url + app.name).expect(204);
+                    }
+                });
+
+                //create template
+                const template = {
+                    name: 'hello500',
+                    content: '<html><head></head><body class="custom">hello500</body></html>',
+                };
+                await req.post('/api/v1/template').send(template).expect(200);
+                teardownFns.unshift(async () => {
+                    await req.delete('/api/v1/template/' + template.name).expect(204);
+                });
+
+                //create domain with this template
+                const domain = { domainName: 'example.com', template500: template.name };
+                const {
+                    body: { id: routerDomainId },
+                } = await req.post('/api/v1/router_domains').send(domain).expect(200);
+                teardownFns.unshift(async () => {
+                    await req.delete('/api/v1/router_domains/' + routerDomainId).expect(204);
+                });
+
+                //create route with this domain, where one of the apps will be rendered as a slot
+                const route = {
+                    next: false,
+                    slots: { myslot: { appName: example.appsList[1].name, kind: 'primary' } },
+                    route: 'myroute',
+                    domainId: routerDomainId,
+                };
+                const {
+                    body: { id: routeId },
+                } = await req.post('/api/v1/route').send(route).expect(200);
+                teardownFns.unshift(async () => {
+                    await req.delete('/api/v1/route/' + routeId).expect(204);
+                });
+
+                // Filter by domainId="null" should return apps NOT used in any domain-specific routes
+                // In this case, app0 and app2 are not used in domain-specific routes
+                const query = makeFilterQuery({ domainId: 'null' });
+                const response = await req.get(`${example.url}?${query}`).expect(200);
+
+                expectAppsListEqual(response.body, [example.appsList[0], example.appsList[2]]);
+            } finally {
+                for (const fn of teardownFns) {
+                    await fn();
+                }
+            }
+        });
+
+        it('should successfully return records with multiple filters (kind + name)', async () => {
+            try {
+                for (const app of example.appsList) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+
+                // Filter by kind='regular' and name search for 'app1'
+                const query = makeFilterQuery({ kind: 'regular', q: 'app1' });
+                const response = await req.get(`${example.url}?${query}`).expect(200);
+
+                expectAppsListEqual(response.body, [example.appsList[1]]);
+            } finally {
+                for (const app of example.appsList) {
+                    await req.delete(example.url + app.name);
+                }
+            }
+        });
+
+        it('should successfully filter by name array (single name)', async () => {
+            try {
+                for (const app of example.appsList) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+
+                const query = makeFilterQuery({ name: [example.appsList[1].name] });
+                const response = await req.get(`${example.url}?${query}`).expect(200);
+
+                expectAppsListEqual(response.body, [example.appsList[1]]);
+            } finally {
+                for (const app of example.appsList) {
+                    await req.delete(example.url + app.name);
+                }
+            }
+        });
+
+        it('should successfully filter by name array (multiple names)', async () => {
+            try {
+                for (const app of example.appsList) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+
+                const query = makeFilterQuery({ name: [example.appsList[0].name, example.appsList[2].name] });
+                const response = await req.get(`${example.url}?${query}`).expect(200);
+
+                expectAppsListEqual(response.body, [example.appsList[0], example.appsList[2]]);
+            } finally {
+                for (const app of example.appsList) {
+                    await req.delete(example.url + app.name);
+                }
+            }
+        });
+
+        it('should successfully filter by id array (single id)', async () => {
+            try {
+                for (const app of example.appsList) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+
+                // id is actually the app name in this API
+                const query = makeFilterQuery({ id: [example.appsList[0].name] });
+                const response = await req.get(`${example.url}?${query}`).expect(200);
+
+                expectAppsListEqual(response.body, [example.appsList[0]]);
+            } finally {
+                for (const app of example.appsList) {
+                    await req.delete(example.url + app.name);
+                }
+            }
+        });
+
+        it('should successfully filter by id array (multiple ids)', async () => {
+            try {
+                for (const app of example.appsList) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+
+                // id is actually the app name in this API
+                const query = makeFilterQuery({ id: [example.appsList[1].name, example.appsList[2].name] });
+                const response = await req.get(`${example.url}?${query}`).expect(200);
+
+                expectAppsListEqual(response.body, [example.appsList[1], example.appsList[2]]);
+            } finally {
+                for (const app of example.appsList) {
+                    await req.delete(example.url + app.name);
+                }
+            }
+        });
+
+        it('should prioritize id filter over name filter when both are provided', async () => {
+            try {
+                for (const app of example.appsList) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+
+                // When both id and name are provided, id should take precedence
+                const query = makeFilterQuery({
+                    id: [example.appsList[0].name],
+                    name: [example.appsList[1].name],
+                });
+                const response = await req.get(`${example.url}?${query}`).expect(200);
+
+                // Should return app0, not app1, because id takes precedence
+                expectAppsListEqual(response.body, [example.appsList[0]]);
+            } finally {
+                for (const app of example.appsList) {
+                    await req.delete(example.url + app.name);
+                }
+            }
+        });
+
+        it('should return 400 for invalid filter format', async () => {
+            // Test invalid domainId (should be number or "null", not a random string)
+            const invalidQuery = makeFilterQuery({ domainId: 'invalid-value' });
+            const response = await req.get(`${example.url}?${invalidQuery}`).expect(400);
+
+            expect(response.body).to.have.property('error');
+            expect(response.body.error).to.be.a('string');
+            expect(response.body.error).to.equal('"domainId" must be one of [number, null]');
+        });
+
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
                 await requestWithAuth().then((r) => r.get(example.url).expect(401));
@@ -595,8 +780,6 @@ describe(`Tests ${example.url}`, () => {
                     .expect(200);
                 domainId = responseRouterDomains.body.id;
 
-                const appConfig = { ...example.correct };
-
                 await req.post(example.url).send(example.correct).expect(200);
 
                 const response = await req
@@ -668,7 +851,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const response = await req
+                await req
                     .put(example.url + example.encodedName)
                     .send({
                         ..._.omit(example.updated, 'name'),
@@ -686,8 +869,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(404);
+                scope.reply(404);
 
                 const response = await req
                     .put(example.url + example.encodedName)
@@ -708,8 +890,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify({}));
+                scope.reply(200, JSON.stringify({}));
 
                 const response = await req
                     .put(example.url + example.encodedName)
@@ -726,8 +907,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
+                scope.reply(200, JSON.stringify(example.manifest));
 
                 const response = await req
                     .put(example.url + example.encodedName)

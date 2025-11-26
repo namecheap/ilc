@@ -633,6 +633,62 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should successfully return records filtered by domainId="null" string', async () => {
+            let routeId;
+            try {
+                let response = await req.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
+                // Test that domainId='null' string is converted to null
+                const queryFilter = encodeURIComponent(JSON.stringify({ domainId: 'null' }));
+                response = await req.get(`${example.url}?filter=${queryFilter}`).expect(200);
+
+                expect(response.body).to.be.an('array').that.is.not.empty;
+                expect(response.body).to.have.lengthOf(1);
+                expect(response.body[0].versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
+
+                const expectedRoute = {
+                    id: routeId,
+                    ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
+                    meta: example.correct.meta,
+                    versionId: response.body[0].versionId,
+                };
+                expect(response.body).to.deep.include(expectedRoute);
+            } finally {
+                routeId && (await req.delete(example.url + routeId));
+            }
+        });
+
+        it('should successfully return records filtered by routePrefix', async () => {
+            const routeIds: number[] = [];
+            try {
+                // Create multiple routes with different prefixes
+                const route1 = { ...example.correct, route: '/api/test/*' };
+                const route2 = { ...example.correct, route: '/admin/test/*', orderPos: 123 };
+                const route3 = { ...example.correct, route: '/public/test/*', orderPos: 124 };
+
+                let response = await req.post(example.url).send(route1).expect(200);
+                routeIds.push(response.body.id);
+
+                response = await req.post(example.url).send(route2).expect(200);
+                routeIds.push(response.body.id);
+
+                response = await req.post(example.url).send(route3).expect(200);
+                routeIds.push(response.body.id);
+
+                // Filter by routePrefix='/api'
+                const queryFilter = encodeURIComponent(JSON.stringify({ routePrefix: '/api' }));
+                response = await req.get(`${example.url}?filter=${queryFilter}`).expect(200);
+
+                expect(response.body).to.be.an('array').with.lengthOf(1);
+                expect(response.body[0].route).to.equal('/api/test/*');
+            } finally {
+                for (const id of routeIds) {
+                    await req.delete(example.url + id);
+                }
+            }
+        });
+
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
                 const reqAuth = await requestWithAuth();

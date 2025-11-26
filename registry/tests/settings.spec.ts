@@ -846,5 +846,28 @@ describe(url, () => {
                 await domainHelper.destroy();
             }
         });
+
+        it('should return 404 when deleting non-existent domain setting', async () => {
+            const nonExistentId = 999999;
+            await deleteConfigRequest(nonExistentId).expect(404);
+        });
+    });
+
+    describe('when a user tries to get settings with filters', () => {
+        it('should return only domain-allowed settings when allowedForDomains=true', async () => {
+            const response = await req
+                .get('/api/v1/settings?filter=' + encodeURIComponent(JSON.stringify({ allowedForDomains: true })))
+                .expect(200);
+
+            // AllowedSettingKeysForDomains only includes CspConfig
+            // So the response should only contain CspConfig setting
+            const keys = response.body.map((setting: any) => setting.key);
+            chai.expect(keys).to.deep.equal([SettingKeys.CspConfig]);
+
+            // Verify all returned settings are in the allowed list
+            response.body.forEach((setting: any) => {
+                chai.expect([SettingKeys.CspConfig]).to.include(setting.key);
+            });
+        });
     });
 });

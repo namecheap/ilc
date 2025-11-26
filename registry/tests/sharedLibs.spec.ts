@@ -52,10 +52,19 @@ const example = {
 describe(`Tests ${example.url}`, () => {
     let req: Agent;
     let reqWithAuth: Agent;
+    let scope: nock.Interceptor;
+
+    before(() => {
+        scope = nock(example.assetsDiscovery.host).persist().get(example.assetsDiscovery.path);
+    });
 
     beforeEach(async () => {
         req = await request();
         reqWithAuth = await requestWithAuth();
+    });
+
+    after(() => {
+        nock.cleanAll();
     });
 
     describe('Create', () => {
@@ -115,8 +124,7 @@ describe(`Tests ${example.url}`, () => {
             muteConsole();
 
             try {
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(404);
+                scope.reply(404);
 
                 const response = await req
                     .post(example.url)
@@ -135,8 +143,7 @@ describe(`Tests ${example.url}`, () => {
 
         it('should not create a record when a SPA bundle URL was not specified in a manifest file', async () => {
             try {
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify({}));
+                scope.reply(200, JSON.stringify({}));
 
                 const response = await req
                     .post(example.url)
@@ -151,8 +158,7 @@ describe(`Tests ${example.url}`, () => {
 
         it('should create a record when a SPA bundle URL was specified in a manifest file', async () => {
             try {
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
+                scope.reply(200, JSON.stringify(example.manifest));
 
                 const response = await req.post(example.url).send(example.correctWithAssetsDiscoveryUrl);
 
@@ -313,8 +319,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(404);
+                scope.reply(404);
 
                 const response = await req
                     .put(example.url + example.correct.name)
@@ -335,8 +340,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify({}));
+                scope.reply(200, JSON.stringify({}));
 
                 const response = await req
                     .put(example.url + example.correct.name)
@@ -353,8 +357,7 @@ describe(`Tests ${example.url}`, () => {
             try {
                 await req.post(example.url).send(example.correct).expect(200);
 
-                const scope = nock(example.assetsDiscovery.host);
-                scope.get(example.assetsDiscovery.path).delay(0).reply(200, JSON.stringify(example.manifest));
+                scope.reply(200, JSON.stringify(example.manifest));
 
                 const response = await req
                     .put(example.url + example.correct.name)
