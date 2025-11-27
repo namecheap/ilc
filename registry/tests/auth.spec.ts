@@ -198,7 +198,7 @@ describe('Authentication / Authorization', () => {
                 identifier: 'root',
                 role: 'admin',
             });
-            const cookieRegex = new RegExp(`ilc:userInfo=${encodeURIComponent(expectedCookie)}; Path=/`);
+            const cookieRegex = new RegExp(`ilcUserInfo=${encodeURIComponent(expectedCookie)}; Path=/`);
 
             await agent
                 .post('/auth/local')
@@ -495,7 +495,7 @@ describe('Authentication / Authorization', () => {
                             assert.ok(setCookie[0]);
 
                             const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
-                            const userInfo = JSON.parse(parts['ilc:userInfo']);
+                            const userInfo = JSON.parse(parts['ilcUserInfo']);
 
                             assert.strictEqual(userInfo.identifier, userIdentifier);
                             assert.strictEqual(userInfo.role, 'admin');
@@ -534,7 +534,7 @@ describe('Authentication / Authorization', () => {
                             assert.ok(setCookie[0]);
 
                             const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
-                            const userInfo = JSON.parse(parts['ilc:userInfo']);
+                            const userInfo = JSON.parse(parts['ilcUserInfo']);
 
                             assert.strictEqual(userInfo.identifier, userIdentifier);
                             assert.strictEqual(userInfo.role, 'admin');
@@ -571,7 +571,7 @@ describe('Authentication / Authorization', () => {
                             assert.ok(setCookie[0]);
 
                             const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
-                            const userInfo = JSON.parse(parts['ilc:userInfo']);
+                            const userInfo = JSON.parse(parts['ilcUserInfo']);
 
                             assert.strictEqual(userInfo.identifier, userIdentifier);
                             assert.strictEqual(userInfo.role, 'admin');

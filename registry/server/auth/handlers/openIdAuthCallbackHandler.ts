@@ -24,7 +24,7 @@ export function openIdAuthCallbackHandlerFactory(logger: Logger): RequestHandler
                         return next(err);
                     }
 
-                    res.cookie('ilc:userInfo', JSON.stringify(user));
+                    res.cookie('ilcUserInfo', JSON.stringify(user));
                     return res.redirect('/');
                 });
             },
