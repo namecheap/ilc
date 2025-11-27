@@ -42,7 +42,7 @@
         "@types/lodash": "^4.17.21",
         "@types/mocha": "^10.0.10",
         "@types/newrelic": "^9.14.8",
-        "@types/node": "^20.19.25",
+        "@types/node": "^22.19.1",
         "@types/passport": "^1.0.17",
         "@types/passport-http-bearer": "^1.0.42",
         "@types/passport-local": "^1.0.38",
@@ -64,7 +64,7 @@
         "sinon": "^21.0.0",
         "supertest": "^7.1.4",
         "ts-node": "^10.9.2",
-        "typescript": "^5.6.2"
+        "typescript": "^5.9.3"
     },
     "dependencies": {
         "@namecheap/error-extender": "^2.2.1",

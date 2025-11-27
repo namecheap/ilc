@@ -414,7 +414,7 @@ describe(`Tests ${example.url}`, () => {
                     domainName: reqAddress,
                 });
 
-                const { id: domainId } = routerDomainResponse.body;
+                ({ id: domainId } = routerDomainResponse.body);
 
                 await req.post(example.template.url).send(example.template.correct);
                 await req.post(example.template.url).send(example.template.noRoute);
