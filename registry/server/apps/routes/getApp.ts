@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
-import _ from 'lodash/fp';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';

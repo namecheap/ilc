@@ -8,13 +8,13 @@ import { EntityTypes, VersionedRecord } from '../../versioning/interfaces';
 import { AppRoute, AppRouteDto, appRouteSchema, AppRouteSlot } from '../interfaces';
 import { prepareAppRouteSlotsToSave, prepareAppRouteToSave } from '../services/prepareAppRoute';
 
-type AppRouteResponseDto = VersionedRecord<Omit<AppRoute, 'id'>> & AppRouteSlot;
+export type AppRouteWithSlot = VersionedRecord<AppRoute & AppRouteSlot>;
 
 export class RoutesService {
     constructor(private readonly db: VersionedKnex) {}
 
     public getRoutesById(appRouteId: number) {
-        type QueryResult = AppRouteResponseDto & {
+        type QueryResult = AppRouteWithSlot & {
             _routeId?: number;
         };
         const query = this.db
@@ -41,7 +41,7 @@ export class RoutesService {
                 }
 
                 return acc;
-            }, [] as AppRouteResponseDto[]);
+            }, [] as AppRouteWithSlot[]);
         });
     }
 

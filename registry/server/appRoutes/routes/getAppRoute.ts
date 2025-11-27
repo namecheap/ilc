@@ -27,13 +27,13 @@ export const retrieveAppRouteFromDB = async (appRouteId: number) => {
         return;
     }
 
-    let data = prepareAppRouteToRespond(appRoutes);
-    data = transformSpecialRoutesForConsumer(data);
-    if (data.templateName) {
-        data.templateName = data.templateName.toString();
+    const preparedRoutes = prepareAppRouteToRespond(appRoutes);
+    const transformedRoutes = transformSpecialRoutesForConsumer(preparedRoutes as any);
+    if (transformedRoutes.templateName) {
+        transformedRoutes.templateName = transformedRoutes.templateName.toString();
     }
 
-    return data;
+    return transformedRoutes;
 };
 
 const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response) => {
