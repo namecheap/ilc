@@ -116,9 +116,15 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Update', () => {
+        it('should respond with 400 on missing body', async () => {
+            await req.put(example.url + example.correct.name).expect(400, 'Missing body in request');
+        });
         it("should not update any record if record doesn't exist", async () => {
             const incorrect = { name: 123 };
-            await req.put(example.url + incorrect.name).expect(404, 'Not found');
+            await req
+                .put(example.url + incorrect.name)
+                .send(_.omit(example.updated, 'name'))
+                .expect(404, 'Not found');
         });
 
         it('should not update record if forbidden "name" is passed', async () => {

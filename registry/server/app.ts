@@ -1,6 +1,3 @@
-require('./util/express-promise');
-
-import bodyParser from 'body-parser';
 import config from 'config';
 import express, { Application, RequestHandler } from 'express';
 import serveStatic from 'serve-static';
@@ -28,11 +25,11 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     const healthCheckUrl = config.get<string>('healthCheck.url');
 
     app.use(
-        bodyParser.json({
+        express.json({
             limit: config.get<string>('http.requestLimit'),
         }),
     );
-    app.use(bodyParser.urlencoded({ extended: true }));
+    app.use(express.urlencoded({ extended: true }));
 
     app.get(healthCheckUrl, pong);
 

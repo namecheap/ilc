@@ -1,6 +1,5 @@
 import assert from 'assert';
 import * as bcrypt from 'bcrypt';
-import bodyParser from 'body-parser';
 import { expect } from 'chai';
 import express, { NextFunction, Request, Response, type Express } from 'express';
 import fs from 'fs';
@@ -29,7 +28,7 @@ const getApp = async () => {
     loadPlugins();
     const app = express();
 
-    app.use(bodyParser.json());
+    app.use(express.json());
 
     app.use(
         await useAuth(

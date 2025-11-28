@@ -474,9 +474,15 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Update', () => {
+        it('should respond with 400 on missing body', async () => {
+            await req.put(example.url + example.correct.name).expect(400, 'Missing body in request');
+        });
         it("should not update any record if record doesn't exist", async () => {
             const incorrect = { name: 123 };
-            const response = await req.put(example.url + incorrect.name).expect(404, 'Not found');
+            const response = await req
+                .put(example.url + incorrect.name)
+                .send(_.omit(example.correct, 'name'))
+                .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
