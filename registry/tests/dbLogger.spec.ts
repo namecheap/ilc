@@ -1,5 +1,6 @@
 import sinon from 'sinon';
 import { knexLoggerAdapter } from '../server/db/logger';
+import * as loggerModule from '../server/util/logger';
 
 describe('Database Logger', () => {
     let loggerMock: {
@@ -23,7 +24,6 @@ describe('Database Logger', () => {
         };
 
         // Stub the module's getLogger function
-        const loggerModule = await import('../server/util/logger');
         sinon.stub(loggerModule, 'getLogger').returns(loggerMock);
     });
 

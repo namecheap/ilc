@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { expect } from 'chai';
 import express, { NextFunction, Request, Response, type Express } from 'express';
 import fs from 'fs';
+import { setTimeout } from 'timers/promises';
 import { sign } from 'jsonwebtoken';
 import nock from 'nock';
 import querystring from 'querystring';
@@ -380,6 +381,7 @@ describe('Authentication / Authorization', () => {
                     .returns(Promise.resolve('ba05c345-e144-4688-b0be-3e1097ddd32d'));
                 getStub.withArgs(SettingKeys.AuthOpenIdClientSecret).returns(Promise.resolve('secret'));
                 getStub.withArgs(SettingKeys.AuthOpenIdIdentifierClaimName).returns(Promise.resolve('email'));
+                getStub.withArgs(SettingKeys.AuthOpenIdResponseMode).resolves('query');
             });
 
             afterEach(async () => {
@@ -393,7 +395,7 @@ describe('Authentication / Authorization', () => {
                     .expect(
                         'Location',
                         new RegExp(
-                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                         ),
                     );
 
@@ -416,7 +418,7 @@ describe('Authentication / Authorization', () => {
                     .expect(
                         'Location',
                         new RegExp(
-                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                         ),
                     );
 
@@ -437,7 +439,7 @@ describe('Authentication / Authorization', () => {
                     .expect(
                         'Location',
                         new RegExp(
-                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                         ),
                     );
 
@@ -446,7 +448,9 @@ describe('Authentication / Authorization', () => {
                 await agent
                     .get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
                     .expect(401)
-                    .expect('Unauthorized');
+                    .expect(
+                        '<pre>Unable to verify authorization request state</pre><br><a href="/">Go to main page</a>',
+                    );
 
                 await agent.get('/protected').expect(401);
             });
@@ -480,7 +484,7 @@ describe('Authentication / Authorization', () => {
                         .expect(
                             'Location',
                             new RegExp(
-                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                             ),
                         );
 
@@ -519,7 +523,7 @@ describe('Authentication / Authorization', () => {
                         .expect(
                             'Location',
                             new RegExp(
-                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                             ),
                         );
 
@@ -556,7 +560,7 @@ describe('Authentication / Authorization', () => {
                         .expect(
                             'Location',
                             new RegExp(
-                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                             ),
                         );
 
@@ -650,7 +654,7 @@ describe('Authentication / Authorization', () => {
                             scp: 'email openid',
                         },
                         privateKey,
-                        { algorithm: 'RS256', expiresIn: -3600 }, // Expired 1 hour ago
+                        { algorithm: 'RS256', expiresIn: 1 },
                     );
 
                     tokenEndpoint.reply(
@@ -661,15 +665,17 @@ describe('Authentication / Authorization', () => {
                         }),
                     );
 
+                    await setTimeout(2000); // Wait for token to expire
+
                     const res = await agent.get('/auth/openid');
 
                     await agent
                         .get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
                         .expect(401)
                         .expect((res) => {
-                            // JWT library returns detailed expiration message
-                            expect(res.text).to.include('JWT expired');
-                            expect(res.text).to.include('Go to main page');
+                            expect(res.text).to.equal(
+                                '<pre>Expired OpenID token</pre><br><a href="/">Go to main page</a>',
+                            );
                         });
 
                     await agent.get('/protected').expect(401);
