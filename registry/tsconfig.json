@@ -64,5 +64,5 @@
     "ts-node": {
         "files": true
     },
-    "include": ["server/**/*.ts", "config/**/*.ts", "typings/**/*.ts"]
+    "include": ["server/**/*.ts", "config/**/*.ts", "typings/**/*.ts", "tests/**/*.ts"]
 }

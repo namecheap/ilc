@@ -1,15 +1,12 @@
-FROM node:20.8.0-alpine
+FROM node:22-alpine
 
 RUN apk --no-cache add --virtual builds-deps build-base python3 && \
     ln -sf python3 /usr/bin/python
 
-# Legacy infrastructure support
-RUN npm install -g stdout-mq@^2.4.0
-
 WORKDIR /codebase
 
 COPY package-lock.json package.json /codebase/
-RUN npm ci
+RUN npm ci --prefer-offline --no-fund
 
 COPY client/package-lock.json client/package.json /codebase/client/
 RUN cd ./client && npm ci

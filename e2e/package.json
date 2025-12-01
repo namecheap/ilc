@@ -32,9 +32,8 @@
         "wait-on": "^8.0.1"
     },
     "engines": {
-        "node": "^20.8.0"
+        "node": ">=22"
     },
-    "engineStrict": true,
     "devDependencies": {
         "@types/wait-on": "^5.3.4"
     }

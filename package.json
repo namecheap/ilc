@@ -22,7 +22,7 @@
     "author": "",
     "license": "Apache-2.0",
     "engines": {
-        "node": "^20.8.0",
+        "node": ">= 22",
         "npm": ">= 6.0.0"
     },
     "devDependencies": {

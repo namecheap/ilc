@@ -6,7 +6,7 @@ import knex from '../../../db';
 import manifestProcessor, { ManifestData } from './assetsManifestProcessor';
 import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 import { getLogger } from '../../../util/logger';
-import { parseJSON } from '../json';
+import { parseJSON, safeParseJSON } from '../json';
 import { axiosErrorTransformer } from '../../../util/axiosErrorTransformer';
 import { exponentialRetry } from '../../../util/axiosExponentialRetry';
 import newrelic from 'newrelic';
@@ -113,8 +113,20 @@ export default class AssetsDiscovery {
 
         // This implementation of communication between ILC & apps duplicates code in ILC ServerRouter
         // and so should be refactored in the future.
-        const entityPropsJSON =
-            typeof entity.props === 'object' && entity.props !== null ? JSON.stringify(entity.props) : entity.props;
+        let entityPropsJSON: string | null | undefined;
+
+        if (typeof entity.props === 'object' && entity.props !== null) {
+            // Props is already an object (PostgreSQL behavior)
+            entityPropsJSON = JSON.stringify(entity.props);
+        } else if (typeof entity.props === 'string') {
+            // Props is a string (MySQL and SQLite behavior) - normalize by parsing and converting back
+            // to ensure consistent JSON formatting (MySQL adds spaces, SQLite doesn't)
+            const parsed = parseJSON(entity.props);
+            entityPropsJSON = parsed ? JSON.stringify(parsed) : entity.props;
+        } else {
+            entityPropsJSON = entity.props;
+        }
+
         if (entityPropsJSON && entityPropsJSON !== '{}') {
             const entityPropsBase64 = Buffer.from(entityPropsJSON).toString('base64');
             reqUrl = urljoin(reqUrl, `?appProps=${entityPropsBase64}`);
