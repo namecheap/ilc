@@ -1,11 +1,11 @@
 const presets = [
     [
-        '@babel/env',
+        '@babel/preset-env',
         {
             targets: {
-                firefox: '74',
-                chrome: '80',
-                safari: '13.0',
+                firefox: '101',
+                chrome: '100',
+                safari: '16.0',
             },
             useBuiltIns: 'usage',
             corejs: 3,
@@ -15,10 +15,6 @@ const presets = [
     '@babel/preset-typescript',
 ];
 
-const plugins = [
-    '@babel/plugin-proposal-class-properties',
-    '@babel/plugin-proposal-object-rest-spread',
-    '@babel/plugin-syntax-dynamic-import',
-];
+const plugins = [];
 
 module.exports = { presets, plugins };
