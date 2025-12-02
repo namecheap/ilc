@@ -81,6 +81,10 @@ describe(`Tests ${example.url}`, () => {
         await req.delete(example.url + example.correct.name);
     });
 
+    after(() => {
+        nock.cleanAll();
+    });
+
     describe('Create', () => {
         it('should not create record without a required field: name', async () => {
             const response = await req
@@ -349,30 +353,32 @@ describe(`Tests ${example.url}`, () => {
             let domainId: string;
             let routeId: string;
 
-            let example = <any>{
-                app: {
-                    url: '/api/v1/app/',
-                    correct: {
-                        name: '@portal/ncTestAppName1',
-                        spaBundle: 'http://localhost:1234/ncTestAppName.js',
-                        kind: 'primary',
-                    },
+            const app = {
+                url: '/api/v1/app/',
+                correct: {
+                    name: '@portal/ncTestAppName1',
+                    spaBundle: 'http://localhost:1234/ncTestAppName.js',
+                    kind: 'primary',
                 },
-                template: {
-                    url: '/api/v1/template/',
-                    correct: {
-                        name: 'ncTestTemplateDomainName',
-                        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
-                    },
-                    noRoute: {
-                        name: 'ncTestNoRouteTemplateName',
-                        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
-                    },
-                    template500: {
-                        name: 'ncTest500TemplateName',
-                        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
-                    },
+            };
+            const template = {
+                url: '/api/v1/template/',
+                correct: {
+                    name: 'ncTestTemplateDomainName',
+                    content: '<html><head></head><body>ncTestTemplateContent</body></html>',
                 },
+                noRoute: {
+                    name: 'ncTestNoRouteTemplateName',
+                    content: '<html><head></head><body>ncTestTemplateContent</body></html>',
+                },
+                template500: {
+                    name: 'ncTest500TemplateName',
+                    content: '<html><head></head><body>ncTestTemplateContent</body></html>',
+                },
+            };
+            const example = {
+                app,
+                template,
                 routerDomain: {
                     url: '/api/v1/router_domains/',
                     correct: {
@@ -380,10 +386,6 @@ describe(`Tests ${example.url}`, () => {
                         template500: '<html><head></head><body>ncTest500TemplateName</body></html>',
                     },
                 },
-            };
-
-            example = {
-                ...example,
                 route: {
                     url: '/api/v1/route/',
                     correct: Object.freeze({
@@ -391,10 +393,10 @@ describe(`Tests ${example.url}`, () => {
                         orderPos: 122,
                         route: '/ncTestRoute/*',
                         next: false,
-                        templateName: example.template.correct.name,
+                        templateName: template.correct.name,
                         slots: {
                             ncTestRouteSlotName: {
-                                appName: example.app.correct.name,
+                                appName: app.correct.name,
                                 props: { ncTestProp: 1 },
                                 kind: 'regular',
                             },
@@ -412,7 +414,7 @@ describe(`Tests ${example.url}`, () => {
                     domainName: reqAddress,
                 });
 
-                const { id: domainId } = routerDomainResponse.body;
+                ({ id: domainId } = routerDomainResponse.body);
 
                 await req.post(example.template.url).send(example.template.correct);
                 await req.post(example.template.url).send(example.template.noRoute);
@@ -472,9 +474,15 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Update', () => {
+        it('should respond with 400 on missing body', async () => {
+            await req.put(example.url + example.correct.name).expect(400, 'Missing body in request');
+        });
         it("should not update any record if record doesn't exist", async () => {
             const incorrect = { name: 123 };
-            const response = await req.put(example.url + incorrect.name).expect(404, 'Not found');
+            const response = await req
+                .put(example.url + incorrect.name)
+                .send(_.omit(example.correct, 'name'))
+                .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
         });
@@ -682,11 +690,11 @@ describe(`Tests ${example.url}`, () => {
 
     describe('Rendered', () => {
         it('should return HTTP 500 in case of inability to render template', async () => {
+            const includeInterceptor = nock('https://complete-random-ilc-include-test-domain.org.ote')
+                .persist()
+                .get('/include.html');
             const setupIncludeResults = (delay: number) =>
-                nock('https://complete-random-ilc-include-test-domain.org.ote')
-                    .get('/include.html')
-                    .delay(delay)
-                    .reply(200, '<div>test content</div>');
+                includeInterceptor.delay(delay).reply(200, '<div>test content</div>');
             setupIncludeResults(10);
             const creationResponse = await req.post(example.url).send(example.withInclude);
             try {

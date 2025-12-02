@@ -14,7 +14,6 @@ import { openIdAuthCallbackHandlerFactory } from './handlers/openIdAuthCallbackH
 import { bearerAuthenticationMiddlewareFactory } from './middleware/bearerAuthenticationMiddleware';
 import { initializeOpenIdMiddlewareFactory } from './middleware/initializeOpenIdMiddleware';
 import { rolesMiddlewareFactory } from './middleware/rolesMiddleware';
-import { validateSessionMiddlewareFactory } from './middleware/validateSessionMiddleware';
 import { authService } from './services/AuthService';
 import { OpenIdService } from './services/OpenIdService';
 import { bearerStrategyFactory } from './strategies/bearer';
@@ -77,7 +76,6 @@ export async function useAuth(
 
     const openidReturnHandlers: RequestHandler[] = [
         initializeOpenIdMiddleware,
-        validateSessionMiddlewareFactory(),
         openIdAuthCallbackHandlerFactory(logger),
     ];
     // The OpenID provider has redirected the user back to the application.

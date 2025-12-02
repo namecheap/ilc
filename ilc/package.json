@@ -103,7 +103,6 @@
         "webpack-dev-middleware": "^7.4.2"
     },
     "engines": {
-        "node": "^20.8.0"
-    },
-    "engineStrict": true
+        "node": ">= 22"
+    }
 }

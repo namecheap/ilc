@@ -1,34 +1,38 @@
-import _ from 'lodash/fp';
-
-import preProcessResponse from '../../common/services/preProcessResponse';
 import { parseJSON, stringifyJSON } from '../../common/services/json';
+import preProcessResponse from '../../common/services/preProcessResponse';
 import { AppRouteSlot, AppRouteSlotDto } from '../interfaces';
+import { AppRouteWithSlot } from '../routes/RoutesService';
+import { ConsumerRoute } from './transformSpecialRoutes';
 
-const prepareRouteToRespond = (appRoute: any) => {
-    return Object.assign(
-        preProcessResponse({
-            id: appRoute.routeId,
-            route: appRoute.route,
-            next: Boolean(appRoute.next),
-            specialRole: appRoute.specialRole,
-            templateName: appRoute.templateName,
-            orderPos: appRoute.orderPos,
-            domainId: appRoute.domainId,
-            versionId: appRoute.versionId,
-            namespace: appRoute.namespace,
-        }),
-        {
-            meta: appRoute.meta ? parseJSON(appRoute.meta) : {},
-        },
-    );
+const prepareRouteToRespond = (appRoute: ConsumerRoute | AppRouteWithSlot): ConsumerRoute => {
+    const base = {
+        id: appRoute.routeId,
+        route: appRoute.route,
+        next: Boolean(appRoute.next),
+        templateName: appRoute.templateName,
+        orderPos: appRoute.orderPos,
+        domainId: appRoute.domainId,
+        versionId: appRoute.versionId,
+        namespace: appRoute.namespace,
+        ...('specialRole' in appRoute && appRoute.specialRole !== undefined
+            ? { specialRole: appRoute.specialRole }
+            : {}),
+    };
+
+    return Object.assign(preProcessResponse(base), {
+        meta: appRoute.meta ? parseJSON(appRoute.meta) : {},
+    });
 };
 
-const prepareRoutesWithSlotsToRespond = _.compose(
-    _.toArray,
-    _.reduce((appRoutes: any, appRoute: any) => {
+type AppRouteWithSlots = ConsumerRoute & {
+    slots: Record<string, AppRouteSlotDto>;
+};
+
+const prepareRoutesWithSlotsToRespond = (appRoutes: AppRouteWithSlot[]): AppRouteWithSlots[] => {
+    const reduced = appRoutes.reduce<Record<number, AppRouteWithSlots>>((acc, appRoute) => {
         const { routeId, name, appName, props, kind } = appRoute;
 
-        const prevSavedAppRouteSlots = (_.has(routeId, appRoutes) && appRoutes[routeId].slots) || {};
+        const prevSavedAppRouteSlots = (routeId in acc && acc[routeId].slots) || {};
         const nextAppRouteSlot = {
             appName,
             props,
@@ -41,35 +45,36 @@ const prepareRoutesWithSlotsToRespond = _.compose(
         }
 
         return {
-            ...appRoutes,
+            ...acc,
             [routeId]: {
                 ...prepareRouteToRespond(appRoute),
                 slots,
             },
         };
-    }, {}),
-);
+    }, {});
+
+    return Object.values(reduced);
+};
 
 export const prepareAppRouteToSave = stringifyJSON(['meta']);
-export const prepareAppRouteToRespond = _.compose(_.first, prepareRoutesWithSlotsToRespond);
 
-export const prepareAppRoutesToRespond = (v: any[]) => v.map((row) => prepareRouteToRespond(row));
+export const prepareAppRouteToRespond = (appRoutes: AppRouteWithSlot[]): AppRouteWithSlots =>
+    prepareRoutesWithSlotsToRespond(appRoutes)[0];
+
+export const prepareAppRoutesToRespond = (v: ConsumerRoute[]): ConsumerRoute[] =>
+    v.map((row) => prepareRouteToRespond(row));
 
 export function prepareAppRouteSlotsToSave(
     appRouteSlots: Record<string, AppRouteSlotDto>,
     routeId: number,
-): AppRouteSlot[] {
-    return _.compose(
-        _.map((appRouteSlotName) =>
-            _.compose(
-                stringifyJSON(['props']),
-                _.assign({
-                    name: appRouteSlotName,
-                    routeId,
-                }),
-                _.get(appRouteSlotName),
-            )(appRouteSlots),
-        ),
-        _.keys,
-    )(appRouteSlots);
+): Omit<AppRouteSlot, 'id'>[] {
+    return Object.keys(appRouteSlots).map((appRouteSlotName) => {
+        const slotData = appRouteSlots[appRouteSlotName];
+        const withMetadata = {
+            ...slotData,
+            name: appRouteSlotName,
+            routeId,
+        };
+        return stringifyJSON(['props'])(withMetadata);
+    });
 }

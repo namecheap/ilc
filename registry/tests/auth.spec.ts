@@ -1,8 +1,10 @@
 import assert from 'assert';
 import * as bcrypt from 'bcrypt';
-import bodyParser from 'body-parser';
+import { expect } from 'chai';
 import express, { NextFunction, Request, Response, type Express } from 'express';
 import fs from 'fs';
+import { setTimeout } from 'timers/promises';
+import { sign } from 'jsonwebtoken';
 import nock from 'nock';
 import querystring from 'querystring';
 import sinon from 'sinon';
@@ -15,6 +17,7 @@ import settingsService from '../server/settings/services/SettingsService';
 import { getLogger } from '../server/util/logger';
 import { loadPlugins } from '../server/util/pluginManager';
 import keys from './data/auth/keys';
+import { privateKey } from './data/auth/rsa';
 import token, { generateIdToken } from './data/auth/token-response';
 import { muteConsole, unmuteConsole } from './utils/console';
 
@@ -26,7 +29,7 @@ const getApp = async () => {
     loadPlugins();
     const app = express();
 
-    app.use(bodyParser.json());
+    app.use(express.json());
 
     app.use(
         await useAuth(
@@ -51,8 +54,6 @@ const getApp = async () => {
 describe('Authentication / Authorization', () => {
     afterEach(() => {
         sinon.restore();
-        nock.cleanAll();
-        nock.enableNetConnect();
     });
 
     describe('Common', async () => {
@@ -84,6 +85,29 @@ describe('Authentication / Authorization', () => {
 
         it('should authenticate with correct credentails', async () => {
             await request.get('/protected').set('Authorization', `Bearer ${authToken}`).expect(200, 'ok');
+        });
+
+        it('should not authenticate with valid token format but non-existent user', async () => {
+            const nonExistentToken =
+                Buffer.from('non_existent_user', 'utf8').toString('base64') +
+                ':' +
+                Buffer.from('some_secret', 'utf8').toString('base64');
+
+            await request.get('/protected').set('Authorization', `Bearer ${nonExistentToken}`).expect(401);
+        });
+
+        it('should handle errors during authentication', async () => {
+            const authServiceStub = sinon.stub(
+                require('../server/auth/services/AuthService').AuthService.prototype,
+                'getAuthEntity',
+            );
+            authServiceStub.throws(new Error('Database connection error'));
+
+            const requestNew = supertest(await getApp());
+
+            await requestNew.get('/protected').set('Authorization', `Bearer ${authToken}`).expect(500);
+
+            authServiceStub.restore();
         });
 
         describe('Roles', () => {
@@ -128,6 +152,35 @@ describe('Authentication / Authorization', () => {
         });
     });
 
+    describe('Available methods', () => {
+        it('should return only local when OpenID is disabled', async () => {
+            const request = supertest(await getApp());
+            const response = await request.get('/auth/available-methods').expect(200);
+            assert.deepStrictEqual(response.body, ['local']);
+        });
+
+        it('should return local and openid when OpenID is enabled', async () => {
+            sinon.stub(settingsService, 'get').withArgs(SettingKeys.AuthOpenIdEnabled).returns(Promise.resolve(true));
+            const request = supertest(await getApp());
+            const response = await request.get('/auth/available-methods').expect(200);
+            assert.deepStrictEqual(response.body, ['local', 'openid']);
+        });
+    });
+
+    describe('Logout', () => {
+        it('should handle logout successfully', async () => {
+            const agent = supertestAgent(await getApp());
+
+            await agent.post('/auth/local').set('Content-Type', 'application/json').send({
+                username: 'root',
+                password: 'pwd',
+            });
+
+            await agent.get('/auth/logout').expect(302).expect('Location', '/');
+            await agent.get('/protected').expect(401);
+        });
+    });
+
     describe('Local login/password', () => {
         let agent: ReturnType<typeof supertestAgent>;
 
@@ -145,7 +198,7 @@ describe('Authentication / Authorization', () => {
                 identifier: 'root',
                 role: 'admin',
             });
-            const cookieRegex = new RegExp(`ilc:userInfo=${encodeURIComponent(expectedCookie)}; Path=/`);
+            const cookieRegex = new RegExp(`ilcUserInfo=${encodeURIComponent(expectedCookie)}; Path=/`);
 
             await agent
                 .post('/auth/local')
@@ -165,6 +218,40 @@ describe('Authentication / Authorization', () => {
             // correctly logout
             await agent.get('/auth/logout').expect(302);
             await agent.get('/protected').expect(401);
+        });
+
+        it('should not authenticate with incorrect credentials', async () => {
+            await agent
+                .post('/auth/local')
+                .set('Content-Type', 'application/json')
+                .send({
+                    username: 'root',
+                    password: 'wrong_password',
+                })
+                .expect(401);
+
+            await agent.get('/protected').expect(401);
+        });
+
+        it('should handle errors during local authentication', async () => {
+            const authServiceStub = sinon.stub(
+                require('../server/auth/services/AuthService').AuthService.prototype,
+                'getAuthEntity',
+            );
+            authServiceStub.throws(new Error('Database connection error'));
+
+            const agentNew = supertestAgent(await getApp());
+
+            await agentNew
+                .post('/auth/local')
+                .set('Content-Type', 'application/json')
+                .send({
+                    username: 'root',
+                    password: 'pwd',
+                })
+                .expect(500);
+
+            authServiceStub.restore();
         });
 
         describe('Roles', () => {
@@ -225,21 +312,26 @@ describe('Authentication / Authorization', () => {
         let app: Express;
         let agent: Agent;
         let oidcServer: nock.Scope;
-        let tokenEndpoint: nock.Scope;
+        let tokenEndpoint: nock.Interceptor;
 
-        beforeEach(async () => {
-            app = await getApp();
-            agent = supertestAgent(app);
-        });
-
-        beforeEach(() => {
-            oidcServer = nock('https://ad.example.doesnotmatter.com/').persist();
+        before(() => {
+            oidcServer = nock('https://ad.example.doesnotmatter.com').persist();
 
             oidcServer
                 .get('/adfs/.well-known/openid-configuration')
                 .reply(200, fs.readFileSync(__dirname + '/data/auth/openid-configuration.json'));
-            tokenEndpoint = oidcServer.post('/adfs/oauth2/token/').reply(200, JSON.stringify(token));
+            tokenEndpoint = oidcServer.post('/adfs/oauth2/token/');
             oidcServer.get('/adfs/discovery/keys').reply(200, JSON.stringify(keys));
+        });
+
+        after(() => {
+            nock.cleanAll();
+        });
+
+        beforeEach(async () => {
+            app = await getApp();
+            agent = supertestAgent(app);
+            tokenEndpoint.reply(200, JSON.stringify(token));
         });
 
         it('should be possible to turn it off/on in settings', async () => {
@@ -289,6 +381,7 @@ describe('Authentication / Authorization', () => {
                     .returns(Promise.resolve('ba05c345-e144-4688-b0be-3e1097ddd32d'));
                 getStub.withArgs(SettingKeys.AuthOpenIdClientSecret).returns(Promise.resolve('secret'));
                 getStub.withArgs(SettingKeys.AuthOpenIdIdentifierClaimName).returns(Promise.resolve('email'));
+                getStub.withArgs(SettingKeys.AuthOpenIdResponseMode).resolves('query');
             });
 
             afterEach(async () => {
@@ -302,7 +395,7 @@ describe('Authentication / Authorization', () => {
                     .expect(
                         'Location',
                         new RegExp(
-                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                         ),
                     );
 
@@ -325,7 +418,7 @@ describe('Authentication / Authorization', () => {
                     .expect(
                         'Location',
                         new RegExp(
-                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                         ),
                     );
 
@@ -346,7 +439,7 @@ describe('Authentication / Authorization', () => {
                     .expect(
                         'Location',
                         new RegExp(
-                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                            'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                         ),
                     );
 
@@ -355,7 +448,9 @@ describe('Authentication / Authorization', () => {
                 await agent
                     .get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
                     .expect(401)
-                    .expect('Unauthorized');
+                    .expect(
+                        '<pre>Unable to verify authorization request state</pre><br><a href="/">Go to main page</a>',
+                    );
 
                 await agent.get('/protected').expect(401);
             });
@@ -389,7 +484,7 @@ describe('Authentication / Authorization', () => {
                         .expect(
                             'Location',
                             new RegExp(
-                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                             ),
                         );
 
@@ -403,7 +498,7 @@ describe('Authentication / Authorization', () => {
                             assert.ok(setCookie[0]);
 
                             const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
-                            const userInfo = JSON.parse(parts['ilc:userInfo']);
+                            const userInfo = JSON.parse(parts['ilcUserInfo']);
 
                             assert.strictEqual(userInfo.identifier, userIdentifier);
                             assert.strictEqual(userInfo.role, 'admin');
@@ -417,19 +512,10 @@ describe('Authentication / Authorization', () => {
                     await agent.get('/protected').expect(401);
                 });
                 it('should authenticate against OpenID server (case-insensitive identifier)', async () => {
-                    nock.cleanAll();
-                    oidcServer = nock('https://ad.example.doesnotmatter.com/').persist();
-
-                    oidcServer
-                        .get('/adfs/.well-known/openid-configuration')
-                        .reply(200, fs.readFileSync(__dirname + '/data/auth/openid-configuration.json'));
-                    tokenEndpoint = oidcServer
-                        .post('/adfs/oauth2/token/')
-                        .reply(
-                            200,
-                            JSON.stringify({ ...token, id_token: generateIdToken(userIdentifier.toUpperCase()) }),
-                        );
-                    oidcServer.get('/adfs/discovery/keys').reply(200, JSON.stringify(keys));
+                    tokenEndpoint.reply(
+                        200,
+                        JSON.stringify({ ...token, id_token: generateIdToken(userIdentifier.toUpperCase()) }),
+                    );
 
                     const res = await agent
                         .get('/auth/openid')
@@ -437,7 +523,7 @@ describe('Authentication / Authorization', () => {
                         .expect(
                             'Location',
                             new RegExp(
-                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                             ),
                         );
 
@@ -451,7 +537,7 @@ describe('Authentication / Authorization', () => {
                             assert.ok(setCookie[0]);
 
                             const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
-                            const userInfo = JSON.parse(parts['ilc:userInfo']);
+                            const userInfo = JSON.parse(parts['ilcUserInfo']);
 
                             assert.strictEqual(userInfo.identifier, userIdentifier);
                             assert.strictEqual(userInfo.role, 'admin');
@@ -474,7 +560,7 @@ describe('Authentication / Authorization', () => {
                         .expect(
                             'Location',
                             new RegExp(
-                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&scope=openid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&state=.+?$',
+                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=query&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
                             ),
                         );
 
@@ -488,7 +574,7 @@ describe('Authentication / Authorization', () => {
                             assert.ok(setCookie[0]);
 
                             const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
-                            const userInfo = JSON.parse(parts['ilc:userInfo']);
+                            const userInfo = JSON.parse(parts['ilcUserInfo']);
 
                             assert.strictEqual(userInfo.identifier, userIdentifier);
                             assert.strictEqual(userInfo.role, 'admin');
@@ -534,20 +620,13 @@ describe('Authentication / Authorization', () => {
                     });
 
                     it('in case multiple auth entities provide one with highest privileges', async () => {
-                        nock.cleanAll();
-                        oidcServer = nock('https://ad.example.doesnotmatter.com/').persist();
-
-                        oidcServer
-                            .get('/adfs/.well-known/openid-configuration')
-                            .reply(200, fs.readFileSync(__dirname + '/data/auth/openid-configuration.json'));
-                        tokenEndpoint = oidcServer.post('/adfs/oauth2/token/').reply(
+                        tokenEndpoint.reply(
                             200,
                             JSON.stringify({
                                 ...token,
                                 id_token: generateIdToken([readonlyIdentifier, userIdentifier, readonlyIdentifier]),
                             }),
                         );
-                        oidcServer.get('/adfs/discovery/keys').reply(200, JSON.stringify(keys));
 
                         const res = await agent.get('/auth/openid');
                         await agent.get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`);
@@ -557,6 +636,62 @@ describe('Authentication / Authorization', () => {
                         await agent.put('/protected').expect(200, 'ok');
                         await agent.delete('/protected').expect(200, 'ok');
                     });
+                });
+
+                it('should fail with expired token', async () => {
+                    // Generate an expired token (with negative expiresIn)
+                    const expiredIdToken = sign(
+                        {
+                            aud: 'ba05c345-e144-4688-b0be-3e1097ddd32d',
+                            iss: 'https://ad.example.doesnotmatter.com/adfs',
+                            auth_time: Math.floor(Date.now() / 1000) - 7200, // 2 hours ago
+                            sub: userIdentifier,
+                            email: userIdentifier,
+                            apptype: 'Confidential',
+                            appid: 'ba05c345-e144-4688-b0be-3e1097ddd32d',
+                            authmethod: 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport',
+                            ver: '1.0',
+                            scp: 'email openid',
+                        },
+                        privateKey,
+                        { algorithm: 'RS256', expiresIn: 1 },
+                    );
+
+                    tokenEndpoint.reply(
+                        200,
+                        JSON.stringify({
+                            ...token,
+                            id_token: expiredIdToken,
+                        }),
+                    );
+
+                    await setTimeout(2000); // Wait for token to expire
+
+                    const res = await agent.get('/auth/openid');
+
+                    await agent
+                        .get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
+                        .expect(401)
+                        .expect((res) => {
+                            expect(res.text).to.equal(
+                                '<pre>Expired OpenID token</pre><br><a href="/">Go to main page</a>',
+                            );
+                        });
+
+                    await agent.get('/protected').expect(401);
+                });
+
+                it('should fail when idClaimName is not configured', async () => {
+                    // Temporarily override the stub to return null for idClaimName
+                    getStub.withArgs(SettingKeys.AuthOpenIdIdentifierClaimName).returns(Promise.resolve(null));
+
+                    const res = await agent.get('/auth/openid');
+
+                    await agent
+                        .get(`/auth/openid/return?${getQueryOfCodeAndSessionState(res.header['location'])}`)
+                        .expect(500);
+
+                    await agent.get('/protected').expect(401);
                 });
             });
         });

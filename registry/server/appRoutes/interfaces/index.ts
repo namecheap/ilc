@@ -2,9 +2,8 @@ import JoiDefault from 'joi';
 
 import { appNameSchema } from '../../apps/interfaces';
 import db from '../../db';
-import { getJoiErr } from '../../util/helpers';
 import { templateNameSchema } from '../../templates/routes/validation';
-import { isPostgres } from '../../util/db';
+import { getJoiErr } from '../../util/helpers';
 
 const Joi = JoiDefault.defaults((schema) => {
     return schema.empty(null);
@@ -63,7 +62,7 @@ export interface AppRoute {
 
 export type AppRouteDto = {
     specialRole?: string;
-    orderPos?: number;
+    orderPos?: number | null;
     route: string;
     next: boolean;
     templateName: string | null;
@@ -80,7 +79,7 @@ const commonAppRoute = {
     route: Joi.string().trim().max(255),
     next: Joi.bool().default(false),
     templateName: templateNameSchema.allow(null).default(null),
-    slots: Joi.object().pattern(commonAppRouteSlot.name, appRouteSlotSchema),
+    slots: Joi.object().pattern(commonAppRouteSlot.name, appRouteSlotSchema).default({}),
     domainId: Joi.number().default(null),
     meta: Joi.object().default({}),
     versionId: Joi.string().strip(),

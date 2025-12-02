@@ -4,7 +4,7 @@ export function logoutHandlerFactory(): RequestHandler {
     return function logoutHandler(req, res, next) {
         req.logout((err) => {
             if (err) return next(err);
-            res.clearCookie('ilc:userInfo');
+            res.clearCookie('ilcUserInfo');
 
             if (req.session) {
                 req.session.regenerate((err) => {

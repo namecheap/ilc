@@ -20,12 +20,12 @@ jobs:
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 20.8.0
+                  node-version: 22
                   cache: 'npm'
                   cache-dependency-path: '**/package-lock.json'
 
             - name: Install dependencies
-              run: npm ci
+              run: npm ci --prefer-offline --no-fund --ignore-scripts
 
             - name: Check formatting
               run: npm run format:check
@@ -268,12 +268,12 @@ jobs:
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 20.8.0
+                  node-version: 22
                   cache: 'npm'
                   cache-dependency-path: '**/package-lock.json'
 
             - name: Install dependencies
-              run: npm install
+              run: npm ci --prefer-offline --no-fund
 
             - name: Build ILC & Registry
               run: npm run build

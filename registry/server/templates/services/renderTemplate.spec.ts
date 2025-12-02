@@ -4,10 +4,17 @@ import renderTemplate from './renderTemplate';
 
 describe('renderTemplate', () => {
     const includesHost = 'https://api.include.com';
+    let scope: nock.Scope;
+
+    before(() => {
+        scope = nock(includesHost);
+    });
+
+    afterEach(() => {
+        nock.cleanAll();
+    });
 
     it('should return a rendered template with replaced includes', async () => {
-        const scope = nock(includesHost);
-
         const includes = [
             {
                 api: {
@@ -211,8 +218,6 @@ describe('renderTemplate', () => {
     });
 
     it('should throw an error when fails to fetch include', async () => {
-        const scope = nock(includesHost);
-
         const includes = [
             {
                 api: {
@@ -268,7 +273,6 @@ describe('renderTemplate', () => {
     });
 
     it('should return a rendered template with has all necessary attributes but without link header ', async () => {
-        const scope = nock(includesHost);
         const include = {
             api: {
                 route: '/get/include/9',

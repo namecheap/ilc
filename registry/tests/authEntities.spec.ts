@@ -133,8 +133,14 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Update', () => {
+        it('should respond with 400 on missing body', async () => {
+            await req.put(example.url + 123).expect(400, 'Missing body in request');
+        });
         it("should not update any record if record doesn't exist", async () => {
-            await req.put(example.url + 123).expect(404, 'Not found');
+            await req
+                .put(example.url + 123)
+                .send(_.omit(example.updated, 'name'))
+                .expect(404, 'Not found');
         });
 
         it('should successfully update record', async () => {

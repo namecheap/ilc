@@ -4,22 +4,57 @@ import db from '../server/db';
 import { makeSpecialRoute } from '../server/appRoutes/services/transformSpecialRoutes';
 import supertest from 'supertest';
 
-let example = <any>{
-    template: {
-        url: '/api/v1/template/',
-        correct: {
-            name: 'ncTestTemplateName',
-            content: '<html><head></head><body>ncTestTemplateContent</body></html>',
+const app = {
+    url: '/api/v1/app/',
+    correct: {
+        name: '@portal/ncTestAppName',
+        spaBundle: 'http://localhost:1234/ncTestAppName.js',
+        kind: 'primary',
+    },
+};
+
+const template = {
+    url: '/api/v1/template/',
+    correct: {
+        name: 'ncTestTemplateName',
+        content: '<html><head></head><body>ncTestTemplateContent</body></html>',
+    },
+};
+
+const correct = Object.freeze({
+    specialRole: undefined,
+    orderPos: 122,
+    route: '/ncTestRoute/*',
+    next: false,
+    templateName: template.correct.name,
+    slots: {
+        ncTestRouteSlotName: {
+            appName: app.correct.name,
+            props: { ncTestProp: 1 },
+            kind: 'regular',
         },
     },
-    app: {
-        url: '/api/v1/app/',
-        correct: {
-            name: '@portal/ncTestAppName',
-            spaBundle: 'http://localhost:1234/ncTestAppName.js',
+    meta: {},
+    domainId: null,
+});
+
+const updated = Object.freeze({
+    orderPos: 133,
+    route: '/ncTestRouteUpdated/*',
+    templateName: template.correct.name,
+    next: false,
+    slots: {
+        ncTestRouteSlotNavbar: {
+            appName: app.correct.name,
             kind: 'primary',
         },
     },
+    meta: {},
+});
+
+const example = {
+    template,
+    app,
     routerDomain: {
         url: '/api/v1/router_domains/',
         correct: Object.freeze({
@@ -35,46 +70,15 @@ let example = <any>{
             kind: 'wrapper',
         },
     },
-};
-
-example = {
-    ...example,
     url: '/api/v1/route/',
-    correct: Object.freeze({
-        specialRole: undefined,
-        orderPos: 122,
-        route: '/ncTestRoute/*',
-        next: false,
-        templateName: example.template.correct.name,
-        slots: {
-            ncTestRouteSlotName: {
-                appName: example.app.correct.name,
-                props: { ncTestProp: 1 },
-                kind: 'regular',
-            },
-        },
-        meta: {},
-        domainId: null,
-    }),
-    updated: Object.freeze({
-        orderPos: 133,
-        route: '/ncTestRouteUpdated/*',
-        templateName: example.template.correct.name,
-        next: false,
-        slots: {
-            ncTestRouteSlotNavbar: {
-                appName: example.app.correct.name,
-                kind: 'primary',
-            },
-        },
-        meta: {},
-    }),
+    correct,
+    updated,
     correct404: Object.freeze({
         specialRole: '404',
-        templateName: example.template.correct.name,
+        templateName: template.correct.name,
         slots: {
             ncTestRouteSlotName: {
-                appName: example.app.correct.name,
+                appName: app.correct.name,
                 props: { ncTestProp: 1 },
                 kind: 'regular',
             },
@@ -82,12 +86,8 @@ example = {
         meta: {},
         domainId: null,
     }),
-};
-
-example = {
-    ...example,
     correctWithMetadata: Object.freeze({
-        ...example.correct,
+        ...correct,
         meta: {
             first: 'value',
             second: null,
@@ -96,7 +96,7 @@ example = {
         },
     }),
     updatedWithMetadata: Object.freeze({
-        ...example.updated,
+        ...updated,
         meta: {
             second: 'value',
             forth: 5000,
@@ -630,6 +630,62 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 routeId && (await req.delete(example.url + routeId));
                 domainId && (await req.delete(example.routerDomain.url + domainId));
+            }
+        });
+
+        it('should successfully return records filtered by domainId="null" string', async () => {
+            let routeId;
+            try {
+                let response = await req.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
+                // Test that domainId='null' string is converted to null
+                const queryFilter = encodeURIComponent(JSON.stringify({ domainId: 'null' }));
+                response = await req.get(`${example.url}?filter=${queryFilter}`).expect(200);
+
+                expect(response.body).to.be.an('array').that.is.not.empty;
+                expect(response.body).to.have.lengthOf(1);
+                expect(response.body[0].versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
+
+                const expectedRoute = {
+                    id: routeId,
+                    ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
+                    meta: example.correct.meta,
+                    versionId: response.body[0].versionId,
+                };
+                expect(response.body).to.deep.include(expectedRoute);
+            } finally {
+                routeId && (await req.delete(example.url + routeId));
+            }
+        });
+
+        it('should successfully return records filtered by routePrefix', async () => {
+            const routeIds: number[] = [];
+            try {
+                // Create multiple routes with different prefixes
+                const route1 = { ...example.correct, route: '/api/test/*' };
+                const route2 = { ...example.correct, route: '/admin/test/*', orderPos: 123 };
+                const route3 = { ...example.correct, route: '/public/test/*', orderPos: 124 };
+
+                let response = await req.post(example.url).send(route1).expect(200);
+                routeIds.push(response.body.id);
+
+                response = await req.post(example.url).send(route2).expect(200);
+                routeIds.push(response.body.id);
+
+                response = await req.post(example.url).send(route3).expect(200);
+                routeIds.push(response.body.id);
+
+                // Filter by routePrefix='/api'
+                const queryFilter = encodeURIComponent(JSON.stringify({ routePrefix: '/api' }));
+                response = await req.get(`${example.url}?filter=${queryFilter}`).expect(200);
+
+                expect(response.body).to.be.an('array').with.lengthOf(1);
+                expect(response.body[0].route).to.equal('/api/test/*');
+            } finally {
+                for (const id of routeIds) {
+                    await req.delete(example.url + id);
+                }
             }
         });
 
