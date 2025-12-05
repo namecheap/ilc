@@ -58,6 +58,6 @@ export class SpaSlotCollection {
      * @return Array<{slotName: string, appName: string, appId: string}>
      */
     getSlotCollectionRaw() {
-        return this.#slotCollection.map((item) => item.toJson());
+        return this.#slotCollection.map((item) => item.toJSON());
     }
 }
