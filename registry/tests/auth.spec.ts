@@ -1,15 +1,15 @@
-import assert from 'assert';
 import * as bcrypt from 'bcrypt';
 import { expect } from 'chai';
 import express, { NextFunction, Request, Response, type Express } from 'express';
-import fs from 'fs';
-import { setTimeout } from 'timers/promises';
 import { sign } from 'jsonwebtoken';
 import nock from 'nock';
+import assert from 'node:assert';
+import fs from 'node:fs';
+import { setTimeout } from 'node:timers/promises';
 import querystring from 'querystring';
 import sinon from 'sinon';
 import supertest, { agent as supertestAgent, type Agent } from 'supertest';
-import { useAuth } from '../server/auth';
+import { OPENID_CALLBACK_URL, useAuth } from '../server/auth';
 import { OpenIdService } from '../server/auth/services/OpenIdService';
 import db from '../server/db';
 import { SettingKeys } from '../server/settings/interfaces';
@@ -20,6 +20,7 @@ import keys from './data/auth/keys';
 import { privateKey } from './data/auth/rsa';
 import token, { generateIdToken } from './data/auth/token-response';
 import { muteConsole, unmuteConsole } from './utils/console';
+import { unless } from '../server/middleware/unless';
 
 const generateResp403 = (username: string) => ({
     message: `Access denied. "${username}" has "readonly" access.`,
@@ -28,9 +29,8 @@ const generateResp403 = (username: string) => ({
 const getApp = async () => {
     loadPlugins();
     const app = express();
-
-    app.use(express.json());
-
+    app.use(unless(OPENID_CALLBACK_URL, express.json()));
+    express.urlencoded({ extended: true });
     app.use(
         await useAuth(
             app,
@@ -499,6 +499,51 @@ describe('Authentication / Authorization', () => {
 
                             const parts: any = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
                             const userInfo = JSON.parse(parts['ilcUserInfo']);
+
+                            assert.strictEqual(userInfo.identifier, userIdentifier);
+                            assert.strictEqual(userInfo.role, 'admin');
+                        });
+
+                    // respect session cookie
+                    await agent.get('/protected').expect(200, 'ok');
+
+                    // correctly logout
+                    await agent.get('/auth/logout').expect(302);
+                    await agent.get('/protected').expect(401);
+                });
+
+                it('should authenticate against OpenID server using form_post response mode', async () => {
+                    getStub.withArgs(SettingKeys.AuthOpenIdResponseMode).resolves('form_post');
+
+                    const res = await agent
+                        .get('/auth/openid')
+                        .expect(302)
+                        .expect(
+                            'Location',
+                            new RegExp(
+                                'https://ad\\.example\\.doesnotmatter\\.com/adfs/oauth2/authorize/\\?response_mode=form_post&client_id=ba05c345-e144-4688-b0be-3e1097ddd32d&response_type=code&code_challenge=[^&]+&code_challenge_method=S256&state=[^&]+&redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fauth%2Fopenid%2Freturn&scope=openid$',
+                            ),
+                        );
+
+                    const sessionState = res.header['location'].match(/&state=([^&]+)/)![1];
+                    const formData = {
+                        code: 'AAAAAAAAAAAAAAAAAAAAAA.7UjvqJE02Ag0ALN4QpjqgYZze6I.cStoX13h4k_jZPkfxNvFYEK8Vh4Vr1bAomKpI72xC457l5qyppB4pVq9YNyx-DFx6n9c7eWL4S36g-pa1dXd-KvwI32CjaadHDwfBogpGnBXX12_ytUsU8XIG0oRJrAix7MEDtHf1B_0W2DTO6cAJz8FUOTAh_VQ4QOETxnm458tHFu6iZvN5InmIVr5WILzFBhDnpaJEZzLgmKeYW5voCaoGa2gacPb7J5PJ0RBqP01JCi-K6XtIuO3JZNDikE9RlW2u5nKeaaojn6eRZKGu88NLywvjBXSzoMw5VfR9bH-RyaKe01QVtefeiY6ROGXNtdxw0i2K2a-YoG6SH49xA',
+                        state: sessionState,
+                    };
+
+                    await agent
+                        .post('/auth/openid/return')
+                        .type('form')
+                        .send(formData)
+                        .expect(302)
+                        .expect('Location', '/')
+                        .expect((res) => {
+                            let setCookie = res.header['set-cookie'];
+                            assert.ok(Array.isArray(setCookie));
+                            assert.ok(setCookie[0]);
+
+                            const parts = querystring.parse(setCookie[0].replace(/\s?;\s?/, '&'));
+                            const userInfo = JSON.parse(parts['ilcUserInfo'] as string);
 
                             assert.strictEqual(userInfo.identifier, userIdentifier);
                             assert.strictEqual(userInfo.role, 'admin');

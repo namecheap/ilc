@@ -2,7 +2,7 @@ import config from 'config';
 import express, { Application, RequestHandler } from 'express';
 import serveStatic from 'serve-static';
 
-import { useAuth } from './auth';
+import { OPENID_CALLBACK_URL, useAuth } from './auth';
 import errorHandler from './errorHandler';
 import { loadPlugins } from './util/pluginManager';
 import * as routes from './routes/routes';
@@ -12,6 +12,7 @@ import { contextMiddleware } from './middleware/context';
 import { logConnectionString } from './util/db';
 import { getLogger } from './util/logger';
 import { OpenIdService } from './auth/services/OpenIdService';
+import { unless } from './middleware/unless';
 
 export default async (withAuth: boolean = true): Promise<Application> => {
     loadPlugins();
@@ -25,9 +26,12 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     const healthCheckUrl = config.get<string>('healthCheck.url');
 
     app.use(
-        express.json({
-            limit: config.get<string>('http.requestLimit'),
-        }),
+        unless(
+            OPENID_CALLBACK_URL,
+            express.json({
+                limit: config.get<string>('http.requestLimit'),
+            }),
+        ),
     );
     app.use(express.urlencoded({ extended: true }));
 
