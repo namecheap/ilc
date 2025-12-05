@@ -20,5 +20,5 @@ module.exports = {
         statements: [80, 95],
     },
     include: ['common/**', 'server/**'],
-    exclude: ['**/*.spec.js', '**/*.spec.ts', '**/*.conf.js', '**/*.config.js', '**/*.d.ts'],
+    exclude: ['**/*.spec.js', '**/*.spec.ts', '**/*.conf.js', '**/*.config.js', '**/*.d.ts', 'common/**/*.js'],
 };
