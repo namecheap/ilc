@@ -165,6 +165,60 @@ describe('ErrorHandler', () => {
 
             expect(response.text).to.be.eql('<html><head><title>content from file</title></head></html>\n');
         });
+
+        it('should cache static error page content and reuse it on subsequent calls', async () => {
+            mockConfigValue('staticError.disasterFileContentPath', './tests/fixtures/static-error.html');
+            nock(getRegistryAddress()).get('/api/v1/router_domains').reply(200, []);
+            nock(getRegistryAddress()).get(`/api/v1/template/500/rendered`).times(2).replyWithError('Error');
+
+            // First call - reads from file
+            const response1 = await server.get('/_ilc/500').expect(500);
+            expect(response1.text).to.be.eql('<html><head><title>content from file</title></head></html>\n');
+
+            // Second call - uses cached content
+            const response2 = await server.get('/_ilc/500').expect(500);
+            expect(response2.text).to.be.eql('<html><head><title>content from file</title></head></html>\n');
+        });
+
+        it('should log error and use default page when static file path is invalid', async () => {
+            const errorService = {
+                noticeError: sinon.stub(),
+            };
+            const logger = {
+                error: sinon.stub(),
+                warn: sinon.stub(),
+                info: sinon.stub(),
+                debug: sinon.stub(),
+                fatal: sinon.stub(),
+                trace: sinon.stub(),
+            };
+            mockConfigValue('staticError.disasterFileContentPath', '/non/existent/path/error.html');
+
+            const errorHandler = new ErrorHandler({} as any, errorService as any, logger);
+
+            const appLocal = fastify();
+            appLocal.get('/error', (req, reply) => {
+                errorHandler.handleClientError(reply, new Error('Test'), StatusCodes.INTERNAL_SERVER_ERROR);
+            });
+            await appLocal.ready();
+
+            const serverLocal = request(appLocal.server);
+            const { text } = await serverLocal.get(`/error`).expect(StatusCodes.INTERNAL_SERVER_ERROR);
+
+            // Should fall back to default error page
+            expect(text).equal(
+                defaultErrorPage
+                    .replaceAll('%STATUS_CODE%', String(StatusCodes.INTERNAL_SERVER_ERROR))
+                    .replaceAll('%STATUS_MESSAGE%', ReasonPhrases.INTERNAL_SERVER_ERROR),
+            );
+
+            // Should log error about unable to read file
+            sinon.assert.calledWith(
+                logger.error as any,
+                sinon.match.instanceOf(Error),
+                'Unable to read static file content',
+            );
+        });
     });
 
     describe('when local error occurs', () => {
@@ -185,6 +239,30 @@ describe('ErrorHandler', () => {
             const errorHandler = new ErrorHandler({} as Registry, errorService, logger);
 
             errorHandler.noticeError(new Error('My Error'), {});
+
+            sinon.assert.notCalled(logger.warn);
+            sinon.assert.calledOnce(logger.error);
+            sinon.assert.calledOnce(errorService.noticeError);
+        });
+
+        it('should use default empty object for customAttributes when not provided', () => {
+            const errorService = {
+                noticeError: sinon.stub(),
+            };
+
+            const logger = {
+                error: sinon.stub(),
+                warn: sinon.stub(),
+                info: sinon.stub(),
+                debug: sinon.stub(),
+                fatal: sinon.stub(),
+                trace: sinon.stub(),
+            };
+
+            const errorHandler = new ErrorHandler({} as Registry, errorService, logger);
+
+            // Call without customAttributes parameter to test default parameter
+            errorHandler.noticeError(new Error('My Error'));
 
             sinon.assert.notCalled(logger.warn);
             sinon.assert.calledOnce(logger.error);
@@ -312,6 +390,73 @@ describe('ErrorHandler', () => {
             );
 
             sinon.assert.notCalled(mockErrorsService.noticeError);
+        });
+
+        it('should handle non-Fastify request with LDE detection', async () => {
+            const mockRequest = {
+                headers: { host: 'example.com' },
+                ldeRelated: true,
+                ilcState: { locale: 'en-US' },
+            };
+            const mockResponse = {
+                setHeader: sinon.stub(),
+                write: sinon.stub(),
+                end: sinon.stub(),
+            };
+            const error = new Error('test error');
+
+            await errorHandler.handleError(
+                error,
+                mockRequest as unknown as IlcRequest,
+                mockResponse as unknown as IlcResponse,
+            );
+
+            sinon.assert.notCalled(mockErrorsService.noticeError);
+        });
+
+        it('should handle non-Fastify request without LDE', async () => {
+            const mockRequest = {
+                headers: { host: 'test.example.com' },
+                ldeRelated: false,
+                ilcState: { locale: 'fr-FR' },
+            };
+            const mockResponse = {
+                setHeader: sinon.stub(),
+                write: sinon.stub(),
+                end: sinon.stub(),
+            };
+            const error = new Error('test error');
+
+            await errorHandler.handleError(
+                error,
+                mockRequest as unknown as IlcRequest,
+                mockResponse as unknown as IlcResponse,
+            );
+
+            sinon.assert.calledOnceWithExactly(mockErrorsService.noticeError, error, { errorId: sinon.match.string });
+            sinon.assert.calledOnceWithExactly(mockLogger.error, error);
+        });
+
+        it('should handle non-Fastify request with missing ilcState', async () => {
+            const mockRequest = {
+                headers: { host: 'another.example.com' },
+                ldeRelated: false,
+            };
+            const mockResponse = {
+                setHeader: sinon.stub(),
+                write: sinon.stub(),
+                end: sinon.stub(),
+            };
+            const error = new Error('test error');
+
+            await errorHandler.handleError(
+                error,
+                mockRequest as unknown as IlcRequest,
+                mockResponse as unknown as IlcResponse,
+            );
+
+            sinon.assert.calledOnceWithExactly(mockErrorsService.noticeError, error, { errorId: sinon.match.string });
+            sinon.assert.calledOnceWithExactly(mockLogger.error, error);
         });
     });
 });

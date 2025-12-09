@@ -189,6 +189,79 @@ describe('TransitionHooksExecutor', () => {
             });
         });
 
+        describe('error handling', () => {
+            it('should throw error when router is not initialized', async () => {
+                const reqWithoutRouter = {
+                    raw: {},
+                    log,
+                    hostname: 'test.com',
+                };
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns([]);
+
+                await chai
+                    .expect(new TransitionHooksExecutor(pluginManager).redirectTo(reqWithoutRouter))
+                    .to.eventually.be.rejectedWith('Router not initialized');
+            });
+
+            it('should throw error when redirect code is less than 300', async () => {
+                const newLocation = '/should/be/this/location';
+                const hooks = [sinon.stub().resolves({ type: ActionType.redirect, newLocation, code: 299 })];
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns(hooks);
+
+                await chai
+                    .expect(new TransitionHooksExecutor(pluginManager).redirectTo(req))
+                    .to.eventually.be.rejected.then((rejectedError) => {
+                        chai.expect(rejectedError).to.be.instanceOf(TransitionHookError);
+                        chai.expect(rejectedError.message).to.include('An error has occurred while executing');
+                        chai.expect(rejectedError.cause).to.be.instanceOf(TransitionHookError);
+                        chai.expect(rejectedError.cause.message).to.equal('Invalid redirect code');
+                    });
+            });
+
+            it('should throw error when redirect code is greater than 308', async () => {
+                const newLocation = '/should/be/this/location';
+                const hooks = [sinon.stub().resolves({ type: ActionType.redirect, newLocation, code: 309 })];
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns(hooks);
+
+                await chai
+                    .expect(new TransitionHooksExecutor(pluginManager).redirectTo(req))
+                    .to.eventually.be.rejected.then((rejectedError) => {
+                        chai.expect(rejectedError).to.be.instanceOf(TransitionHookError);
+                        chai.expect(rejectedError.message).to.include('An error has occurred while executing');
+                        chai.expect(rejectedError.cause).to.be.instanceOf(TransitionHookError);
+                        chai.expect(rejectedError.cause.message).to.equal('Invalid redirect code');
+                    });
+            });
+
+            it('should throw error when redirect code is exactly 300 (boundary case)', async () => {
+                const newLocation = '/should/be/this/location';
+                const hooks = [sinon.stub().resolves({ type: ActionType.redirect, newLocation, code: 300 })];
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns(hooks);
+
+                const redirectTo = await new TransitionHooksExecutor(pluginManager).redirectTo(req);
+                chai.expect(redirectTo).to.eql({ code: 300, location: newLocation });
+            });
+
+            it('should throw error when redirect code is exactly 308 (boundary case)', async () => {
+                const newLocation = '/should/be/this/location';
+                const hooks = [sinon.stub().resolves({ type: ActionType.redirect, newLocation, code: 308 })];
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns(hooks);
+
+                const redirectTo = await new TransitionHooksExecutor(pluginManager).redirectTo(req);
+                chai.expect(redirectTo).to.eql({ code: 308, location: newLocation });
+            });
+        });
+
         describe('should not have access to a provided URL', () => {
             it(`if some of hooks rejects with an error`, async () => {
                 const error = new Error('Hi there! I am an error. So server should redirect to 500 error page.');

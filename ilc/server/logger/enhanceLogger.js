@@ -15,7 +15,7 @@ module.exports = (logger, { requestIdLogLabel }) => {
                         path: store.get('path'),
                     };
 
-                    if (arg1 === 'string') {
+                    if (typeof arg1 === 'string') {
                         return origMethod.call(target, logContext, ...args);
                     }
 

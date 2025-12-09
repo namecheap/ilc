@@ -42,6 +42,35 @@ describe('error handler', () => {
     });
 
     describe('handling general Tailor and primary fragment errors', () => {
+        it('should force 404 route when Fragment404Response error occurs', async () => {
+            const fragment404Error = new errors.Fragment404Response({ message: 'Fragment returned 404' });
+            const errorWithFragment404 = new Error('Wrapper error');
+            errorWithFragment404.cause = fragment404Error;
+
+            const requestWithIlcState = {
+                ...request,
+                ilcState: {},
+            };
+            const response = {};
+
+            tailorInstance.requestHandler = sinon.stub();
+
+            eventHandlers.get('error')(requestWithIlcState, errorWithFragment404, response);
+
+            await clock.runAllAsync();
+
+            // Should set forceSpecialRoute to 404
+            chai.expect(requestWithIlcState.ilcState.forceSpecialRoute).to.equal('404');
+
+            // Should call tailor.requestHandler with request and response
+            chai.expect(tailorInstance.requestHandler.calledOnce).to.be.true;
+            chai.expect(tailorInstance.requestHandler.getCall(0).args).to.be.eql([requestWithIlcState, response]);
+
+            // Should not call error handling services (early return)
+            chai.expect(errorHandlingService.handleError.called).to.be.false;
+            chai.expect(errorHandlingService.noticeError.called).to.be.false;
+        });
+
         it('should notice Tailor Error when headers already sent', async () => {
             eventHandlers.get('error')(request, error);
 
