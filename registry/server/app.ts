@@ -33,7 +33,6 @@ export default async (withAuth: boolean = true): Promise<Application> => {
             }),
         ),
     );
-    app.use(express.urlencoded({ extended: true }));
 
     app.get(healthCheckUrl, pong);
 
