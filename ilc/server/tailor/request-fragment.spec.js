@@ -65,10 +65,12 @@ describe('request-fragment', () => {
 
         const expectedRouterProps = { basePath: '/primary', reqUrl: '/primary', fragmentName: 'primary__at__primary' };
         const expectedAppProps = { publicPath: 'http://apps.test/primary' };
+        const expectedSdkOptions = { i18n: { manifestPath: '/l10n/primary/manifest.json' } };
 
         const expectedDomain = request.hostname;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
+        const expectedSdkEncoded = Buffer.from(JSON.stringify(expectedSdkOptions)).toString('base64');
 
         const mockRequestScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/primary')
@@ -76,6 +78,7 @@ describe('request-fragment', () => {
                 domain: expectedDomain,
                 routerProps: expectedRouterPropsEncoded,
                 appProps: expectedAppPropsEncoded,
+                sdk: expectedSdkEncoded,
             })
             .reply(200);
 
@@ -270,10 +273,12 @@ describe('request-fragment', () => {
 
         const expectedRouterProps = { basePath: '/primary', reqUrl: '/primary', fragmentName: 'primary__at__primary' };
         const expectedAppProps = { publicPath: 'http://apps.test/primary' };
+        const expectedSdkOptions = { i18n: { manifestPath: '/l10n/primary/manifest.json' } };
 
         const expectedDomain = request.hostname;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
+        const expectedSdkEncoded = Buffer.from(JSON.stringify(expectedSdkOptions)).toString('base64');
 
         const mockRequestScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/primary')
@@ -281,6 +286,7 @@ describe('request-fragment', () => {
                 domain: expectedDomain,
                 routerProps: expectedRouterPropsEncoded,
                 appProps: expectedAppPropsEncoded,
+                sdk: expectedSdkEncoded,
             })
             .delay(timeoutMs + 20)
             .reply(200);
@@ -293,5 +299,157 @@ describe('request-fragment', () => {
             chai.expect(e).to.be.an.instanceof(errors.FragmentRequestError);
             chai.expect(e.message).to.contain('timeout');
         }
+    });
+
+    it('should handle network error when requesting fragment', async () => {
+        const registryConfig = getRegistryMock().getConfig();
+
+        const attributes = getFragmentAttributes({
+            id: 'primary__at__primary',
+            appProps: { publicPath: 'http://apps.test/primary' },
+            wrapperConf: null,
+            url: 'http://apps.test/primary',
+            async: false,
+            primary: false,
+            public: false,
+            timeout: 1000,
+            returnHeaders: false,
+            forwardQuerystring: false,
+            ignoreInvalidSsl: false,
+        });
+
+        const request = {
+            registryConfig,
+            ilcState: {},
+            hostname: 'apps.test',
+        };
+        request.router = new ServerRouter(logger, request, '/primary');
+
+        const networkError = new Error('Network error');
+        networkError.code = 'ECONNREFUSED';
+
+        const mockRequestScope = nock('http://apps.test').get('/primary').query(true).replyWithError(networkError);
+
+        try {
+            await requestFragment(attributes.url, attributes, request);
+            mockRequestScope.done();
+            chai.expect.fail('This code should not be reached, because error expected to be thrown above');
+        } catch (e) {
+            chai.expect(e).to.be.an.instanceof(errors.FragmentRequestError);
+            chai.expect(e.message).to.contain('Error during SSR request to fragment');
+        }
+    });
+
+    it('should handle network error when requesting wrapper fragment', async () => {
+        const registryConfig = getRegistryMock().getConfig();
+
+        const attributes = getFragmentAttributes({
+            id: 'wrapperApp__at__primary',
+            appProps: { page: 'wrapped' },
+            wrapperConf: {
+                appId: 'wrapper__at__primary',
+                name: '@portal/wrapper',
+                src: 'http://apps.test/wrapper',
+                timeout: 2000,
+                props: { param1: 'value1' },
+            },
+            url: 'http://apps.test/wrappedApp',
+            async: false,
+            primary: true,
+            public: false,
+            timeout: 1000,
+            returnHeaders: false,
+            forwardQuerystring: false,
+            ignoreInvalidSsl: false,
+        });
+
+        const request = {
+            registryConfig,
+            ilcState: {},
+            hostname: 'apps.test',
+        };
+        request.router = new ServerRouter(logger, request, '/wrapper');
+
+        const networkError = new Error('Network error');
+        networkError.code = 'ECONNREFUSED';
+
+        const mockRequestScope = nock('http://apps.test').get('/wrapper').query(true).replyWithError(networkError);
+
+        try {
+            await requestFragment(attributes.url, attributes, request);
+            mockRequestScope.done();
+            chai.expect.fail('This code should not be reached, because error expected to be thrown above');
+        } catch (e) {
+            chai.expect(e).to.be.an.instanceof(errors.FragmentRequestError);
+            chai.expect(e.message).to.contain('Error during SSR request to fragment wrapper');
+        }
+    });
+
+    it('should handle HTTPS requests', async () => {
+        const registryConfig = getRegistryMock().getConfig();
+
+        const attributes = getFragmentAttributes({
+            id: 'primary__at__primary',
+            appProps: { publicPath: 'https://secure.test/primary' },
+            wrapperConf: null,
+            url: 'https://secure.test/primary',
+            async: false,
+            primary: false,
+            public: false,
+            timeout: 1000,
+            returnHeaders: false,
+            forwardQuerystring: false,
+            ignoreInvalidSsl: false,
+        });
+
+        const request = {
+            registryConfig,
+            ilcState: {},
+            hostname: 'secure.test',
+        };
+        request.router = new ServerRouter(logger, request, '/primary');
+
+        const mockRequestScope = nock('https://secure.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
+            .get('/primary')
+            .query(true)
+            .reply(200);
+
+        await requestFragment(attributes.url, attributes, request);
+        mockRequestScope.done();
+        chai.expect(processFragmentResponseMock.calledOnce).to.be.equal(true);
+    });
+
+    it('should ignore invalid SSL certificates when ignoreInvalidSsl is true', async () => {
+        const registryConfig = getRegistryMock().getConfig();
+
+        const attributes = getFragmentAttributes({
+            id: 'primary__at__primary',
+            appProps: { publicPath: 'https://secure.test/primary' },
+            wrapperConf: null,
+            url: 'https://secure.test/primary',
+            async: false,
+            primary: false,
+            public: false,
+            timeout: 1000,
+            returnHeaders: false,
+            forwardQuerystring: false,
+            ignoreInvalidSsl: true,
+        });
+
+        const request = {
+            registryConfig,
+            ilcState: {},
+            hostname: 'secure.test',
+        };
+        request.router = new ServerRouter(logger, request, '/primary');
+
+        const mockRequestScope = nock('https://secure.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
+            .get('/primary')
+            .query(true)
+            .reply(200);
+
+        await requestFragment(attributes.url, attributes, request);
+        mockRequestScope.done();
+        chai.expect(processFragmentResponseMock.calledOnce).to.be.equal(true);
     });
 });
