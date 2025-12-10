@@ -43,8 +43,15 @@ describe('I18n', () => {
         defaultIntl = new I18n({ ...defaultConfig }, singleSpa, appErrorHandlerFactory, transitionManager);
     });
 
-    afterEach(() => {
+    afterEach(async () => {
         defaultIntl.destroy();
+        Cookies.remove(i18nCookie.name, i18nCookie.getOpts());
+        history.replaceState({}, undefined, '/');
+        intlChangeEvent.resetHistory();
+        singleSpa.navigateToUrl.resetHistory();
+        singleSpa.triggerAppChange.resetHistory();
+        // Allow any pending async events to settle
+        await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
     describe('Without cookie', () => {

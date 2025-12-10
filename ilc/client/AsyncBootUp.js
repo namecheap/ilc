@@ -10,6 +10,7 @@ export default class AsyncBootUp {
     #appsWaitingForSlot = {};
     #readySlots = [];
     #pageLoadingIsDone = false;
+    #routingEventHandler;
 
     constructor(logger = window.console, performance = window.performance) {
         this.#logger = logger;
@@ -21,7 +22,8 @@ export default class AsyncBootUp {
         }
 
         window.ilcApps = { push: (id) => this.#markSlotAsReady(id) };
-        window.addEventListener(singleSpaEvents.ROUTING_EVENT, () => (this.#afterRoutingEvent = true));
+        this.#routingEventHandler = () => (this.#afterRoutingEvent = true);
+        window.addEventListener(singleSpaEvents.ROUTING_EVENT, this.#routingEventHandler);
     }
 
     async waitForSlot(slotName) {
@@ -85,6 +87,12 @@ export default class AsyncBootUp {
         }
 
         return res;
+    }
+
+    destroy() {
+        if (this.#routingEventHandler) {
+            window.removeEventListener(singleSpaEvents.ROUTING_EVENT, this.#routingEventHandler);
+        }
     }
 
     #markSlotAsReady = (id) => {

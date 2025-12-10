@@ -41,9 +41,9 @@ module.exports = function (config) {
             },
         },
         customContextFile: './tests/karma.index.html',
-        frameworks: ['parallel', 'mocha', 'chai', 'sinon', 'webpack'],
+        frameworks: ['mocha', 'chai', 'sinon', 'webpack'],
         plugins: [
-            'karma-parallel',
+            'karma-bail-fast',
             'karma-chrome-launcher',
 
             'karma-mocha',
@@ -62,7 +62,7 @@ module.exports = function (config) {
             'common/**/*.spec.+(js|ts)': ['webpack', 'sourcemap'],
             'systemjs/**/*.spec.+(js|ts)': ['webpack', 'sourcemap'],
         },
-        reporters: ['mocha', 'coverage-istanbul'],
+        reporters: ['bail-fast', 'mocha', 'coverage-istanbul'],
         mochaReporter: {
             showDiff: true,
         },
@@ -129,9 +129,6 @@ module.exports = function (config) {
         },
         webpackMiddleware: {
             noInfo: true,
-        },
-        parallelOptions: {
-            executors: 2,
         },
     });
 };

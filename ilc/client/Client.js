@@ -74,6 +74,19 @@ export class Client {
     #bundleLoader;
 
     #sdkFactoryBuilder;
+
+    #transitionHook;
+
+    #boundOnRuntimeError;
+
+    #boundOnLifecycleError;
+
+    #hrefLangHandler;
+
+    #canonicalTagHandler;
+
+    #asyncBootUp;
+
     #navigationHooks = [
         (url) => (this.#transitionHooksExecutor.shouldNavigate(url) ? url : null),
         (url) => this.#urlProcessor.process(url),
@@ -134,12 +147,12 @@ export class Client {
         this.#sdkFactoryBuilder = new SdkFactoryBuilder(this.#configRoot, this.#i18n, this.#router);
         this.#bundleLoader = new BundleLoader(this.#configRoot, this.#moduleLoader, this.#sdkFactoryBuilder);
 
-        const hrefLangHandler = new HrefLangHandler(this.#configRoot.getSettingsByKey('i18n'), this.#logger);
-        hrefLangHandler.start();
+        this.#hrefLangHandler = new HrefLangHandler(this.#configRoot.getSettingsByKey('i18n'), this.#logger);
+        this.#hrefLangHandler.start();
 
         const canonicalDomain = this.#configRoot.getConfig().canonicalDomain;
-        const canonicalTagHandler = new CanonicalTagHandler(this.#i18n, this.#logger, this.#router, canonicalDomain);
-        canonicalTagHandler.start();
+        this.#canonicalTagHandler = new CanonicalTagHandler(this.#i18n, this.#logger, this.#router, canonicalDomain);
+        this.#canonicalTagHandler.start();
 
         this.#preheat();
         this.#expose();
@@ -282,7 +295,7 @@ export class Client {
 
         // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
         // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
-        registerApplications(
+        this.#asyncBootUp = registerApplications(
             this.#configRoot,
             this.#router,
             this.#errorHandlerFor.bind(this),
@@ -293,17 +306,20 @@ export class Client {
         );
 
         setNavigationErrorHandler(this.#onNavigationError.bind(this));
-        window.addEventListener('error', this.#onRuntimeError.bind(this));
 
-        const transitionHook = new TransitionHooks(this.#logger);
+        this.#boundOnRuntimeError = this.#onRuntimeError.bind(this);
+        window.addEventListener('error', this.#boundOnRuntimeError);
+
+        this.#transitionHook = new TransitionHooks(this.#logger);
         const performanceHook = new PerformanceTransitionHook(this.#router.getCurrentRoute, this.#logger);
         const titleHook = new TitleCheckerTransitionHook(this.#router.getCurrentRoute, this.#logger);
 
-        transitionHook.addHook(performanceHook);
-        transitionHook.addHook(titleHook);
-        transitionHook.subscribe();
+        this.#transitionHook.addHook(performanceHook);
+        this.#transitionHook.addHook(titleHook);
+        this.#transitionHook.subscribe();
 
-        singleSpa.addErrorHandler(this.#onLifecycleError.bind(this));
+        this.#boundOnLifecycleError = this.#onLifecycleError.bind(this);
+        singleSpa.addErrorHandler(this.#boundOnLifecycleError);
         singleSpa.setBootstrapMaxTime(5000, false);
         singleSpa.setMountMaxTime(5000, false);
         singleSpa.setUnmountMaxTime(3000, false);
@@ -417,10 +433,54 @@ export class Client {
 
     /**
      * Unit tests method
+     * @internal
      */
     destroy() {
+        // Remove transition manager event listeners
         this.#transitionManager.removeEventListeners();
+
+        // Remove navigation error handler
         unsetNavigationErrorHandler();
+
+        // Remove navigation hooks
         this.#navigationHooks.forEach(removeNavigationHook);
+
+        // Remove router event listeners (including click listener)
+        this.#router.removeEventListeners();
+
+        // Remove window error listener
+        if (this.#boundOnRuntimeError) {
+            window.removeEventListener('error', this.#boundOnRuntimeError);
+        }
+
+        // Unsubscribe transition hooks
+        if (this.#transitionHook) {
+            this.#transitionHook.unsubscribe();
+        }
+
+        // Remove singleSpa error handler
+        if (this.#boundOnLifecycleError) {
+            singleSpa.removeErrorHandler(this.#boundOnLifecycleError);
+        }
+
+        // Stop HrefLangHandler
+        if (this.#hrefLangHandler) {
+            this.#hrefLangHandler.stop();
+        }
+
+        // Stop CanonicalTagHandler
+        if (this.#canonicalTagHandler) {
+            this.#canonicalTagHandler.stop();
+        }
+
+        // Destroy i18n
+        if (this.#i18n) {
+            this.#i18n.destroy();
+        }
+
+        // Destroy AsyncBootUp
+        if (this.#asyncBootUp) {
+            this.#asyncBootUp.destroy();
+        }
     }
 }
