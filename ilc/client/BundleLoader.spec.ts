@@ -30,6 +30,7 @@ interface MockRegistry {
             ssr?: {
                 src: string;
             };
+            l10nManifest?: string;
         };
     };
 }

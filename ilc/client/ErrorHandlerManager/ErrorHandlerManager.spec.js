@@ -38,16 +38,25 @@ describe('ErrorHandlerManager', () => {
     });
 
     afterEach(() => {
+        logger.info.resetHistory();
+        logger.error.resetHistory();
+        logger.fatal.resetHistory();
+        registryService.getTemplate.resetHistory();
         sinon.resetHistory();
         clock.restore();
     });
 
     describe('handleError', () => {
         let errorHandlerManager;
-        let alertStub = sinon.stub(window, 'alert');
+        let alertStub;
 
         beforeEach(() => {
+            alertStub = sinon.stub(window, 'alert');
             errorHandlerManager = new ErrorHandlerManager(logger, registryService);
+        });
+
+        afterEach(() => {
+            alertStub.restore();
         });
 
         it('should log error if error is instance of BaseError', async () => {
