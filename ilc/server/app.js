@@ -14,7 +14,7 @@ const i18n = require('./i18n');
 const Application = require('./application/application');
 const reportingPluginManager = require('./plugins/reportingPlugin');
 const AccessLogger = require('./logger/accessLogger');
-const { isStaticFile, isHealthCheck } = require('./utils/utils');
+const { isStaticFile, isHealthCheck, isDataUri } = require('./utils/utils');
 
 /**
  * @param {Registry} registryService
@@ -42,6 +42,11 @@ module.exports = (registryService, pluginManager, context) => {
                 if (!['GET', 'OPTIONS', 'HEAD'].includes(method)) {
                     logger.warn(`Request method ${method} is not allowed for url ${url}`);
                     reply.code(405).send({ message: 'Method Not Allowed' });
+                    return;
+                }
+
+                if (isDataUri(url)) {
+                    reply.code(400).send({ message: 'Bad Request: Data URIs are not valid HTTP paths' });
                     return;
                 }
 
