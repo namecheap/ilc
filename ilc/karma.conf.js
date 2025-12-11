@@ -66,25 +66,6 @@ module.exports = function (config) {
         mochaReporter: {
             showDiff: true,
         },
-        coverageReporter: {
-            dir: path.join(__dirname, '.karma_output', 'coverage'),
-            subdir: (browser) => browser.toLowerCase().split(/[\s/-]/)[0],
-            reporters: nycConfig.reporter.map((type) => ({
-                type,
-            })),
-            instrumenterOptions: {
-                istanbul: {
-                    noCompact: true,
-                },
-            },
-            check: {
-                global: getThresholds(),
-                each: getThresholds(),
-            },
-            watermarks: {
-                ...nycConfig.watermarks,
-            },
-        },
         coverageIstanbulReporter: {
             // reports can be any that are listed here: https://github.com/istanbuljs/istanbuljs/tree/73c25ce79f91010d1ff073aa6ff3fd01114f90db/packages/istanbul-reports/lib
             reports: nycConfig.reporter,

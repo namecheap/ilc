@@ -177,4 +177,41 @@ describe('setupEvents', () => {
         shouldProvideUrlAsStringToHooksWhenLocationWasProvidedAsUrlArgument('pushState');
         shouldProvideUrlAsStringToHooksWhenLocationWasProvidedAsUrlArgument('replaceState');
     });
+
+    describe('while handling popstate events', () => {
+        it('should restore previous URL via replaceState when navigation is blocked on popstate', async () => {
+            const hook = sinon.stub().returns(null);
+
+            // Get reference to original pushState before it was patched
+            const replaceStateSpy = sinon.spy(window.history, 'replaceState');
+
+            try {
+                addNavigationHook(hook);
+
+                // Navigate to newUrl using patched pushState (this updates currUrl internally)
+                window.location.href = window.location.href + '#new';
+                await clock.runAllAsync();
+
+                // Reset history since we only care about the popstate behavior
+                // Dispatch popstate event
+                // Now prevUrl = newUrl (from currUrl), nextUrl = originalHref (from window.location.href)
+                const popstateEvent = new PopStateEvent('popstate', { state: null });
+                window.dispatchEvent(popstateEvent);
+                await clock.runAllAsync();
+
+                // Hook should be called
+                chai.expect(hook.called).to.be.true;
+                chai.expect(
+                    replaceStateSpy.calledWith(
+                        sinon.match.any,
+                        undefined,
+                        'http://localhost:9876/should/change/location/url',
+                    ),
+                ).to.be.true;
+            } finally {
+                removeNavigationHook(hook);
+                replaceStateSpy.restore();
+            }
+        });
+    });
 });

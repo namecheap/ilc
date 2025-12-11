@@ -23,12 +23,17 @@ module.exports = {
         rules: [
             {
                 test: /\.(js|ts)$/,
-                use: {
-                    loader: 'ts-loader',
-                    options: {
-                        configFile: 'tsconfig.client.json',
+                use: [
+                    {
+                        loader: 'babel-loader',
                     },
-                },
+                    {
+                        loader: 'ts-loader',
+                        options: {
+                            configFile: 'tsconfig.client.json',
+                        },
+                    },
+                ],
                 exclude: /node_modules/,
             },
             { parser: { System: false } },
