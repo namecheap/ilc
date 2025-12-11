@@ -50,6 +50,52 @@ describe('App', () => {
         await server.head('/').expect(200);
     });
 
+    it('should return 400 for data URI requests', async () => {
+        const responseSvg = await server
+            .get('/data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4=')
+            .expect(400);
+        chai.expect(responseSvg.body.message).to.include('Bad Request');
+        chai.expect(responseSvg.body.message).to.include('Data URIs');
+
+        const responsePng = await server
+            .get(
+                '/data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+            )
+            .expect(400);
+        chai.expect(responsePng.body.message).to.include('Bad Request');
+        chai.expect(responsePng.body.message).to.include('Data URIs');
+
+        const responseText = await server.get('/data:text/html,<h1>Test</h1>').expect(400);
+        chai.expect(responseText.body.message).to.include('Bad Request');
+        chai.expect(responseText.body.message).to.include('Data URIs');
+    });
+
+    it('should return 400 for data URI bypass attempts (security)', async () => {
+        const responseUpperCase = await server.get('/DATA:image/png;base64,xxx').expect(400);
+        chai.expect(responseUpperCase.body.message).to.include('Data URIs');
+
+        const responseMixedCase = await server.get('/DaTa:text/html,test').expect(400);
+        chai.expect(responseMixedCase.body.message).to.include('Data URIs');
+
+        const responseEncoded1 = await server.get('/data%3Aimage/png;base64,xxx').expect(400);
+        chai.expect(responseEncoded1.body.message).to.include('Data URIs');
+
+        const responseEncoded2 = await server.get('/%64ata:image/png;base64,xxx').expect(400);
+        chai.expect(responseEncoded2.body.message).to.include('Data URIs');
+
+        const responseDoubleSlash = await server.get('//data:image/png;base64,xxx').expect(400);
+        chai.expect(responseDoubleSlash.body.message).to.include('Data URIs');
+
+        const responseTripleSlash = await server.get('///data:text/html,test').expect(400);
+        chai.expect(responseTripleSlash.body.message).to.include('Data URIs');
+
+        const responseCombined1 = await server.get('//DATA:image/png;base64,xxx').expect(400);
+        chai.expect(responseCombined1.body.message).to.include('Data URIs');
+
+        const responseCombined2 = await server.get('//data%3Aimage/png').expect(400);
+        chai.expect(responseCombined2.body.message).to.include('Data URIs');
+    });
+
     it('should parse "invalid" urls', async () => {
         await server.get('///').expect(200);
     });

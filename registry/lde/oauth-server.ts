@@ -7,7 +7,7 @@ import { OAuth2Server } from 'oauth2-mock-server';
         await server.issuer.keys.generate('RS256');
 
         // Start the server
-        await server.start(8080, 'localhost');
+        await server.start(8080);
         console.log('Issuer URL:', server.issuer.url); // -> http://localhost:8080
 
         server.service.on('beforeTokenSigning', (token, req) => {

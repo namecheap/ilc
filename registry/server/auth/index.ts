@@ -1,5 +1,5 @@
 import { ConnectSessionKnexStore } from 'connect-session-knex';
-import { Express, RequestHandler } from 'express';
+import { Express, RequestHandler, urlencoded } from 'express';
 import session from 'express-session';
 import { Logger } from 'ilc-plugins-sdk';
 import passport from 'passport';
@@ -22,6 +22,8 @@ import { localStrategyFactory } from './strategies/local';
 type SetupAuthOptions = {
     session?: session.SessionOptions;
 };
+
+export const OPENID_CALLBACK_URL = '/auth/openid/return';
 
 export async function useAuth(
     app: Express,
@@ -81,8 +83,8 @@ export async function useAuth(
     // The OpenID provider has redirected the user back to the application.
     // Finish the authentication process by verifying the assertion.  If valid,
     // the user will be logged in.  Otherwise, authentication has failed.
-    app.get('/auth/openid/return', openidReturnHandlers); //Regular flow
-    app.post('/auth/openid/return', openidReturnHandlers); //response_mode: 'form_post' flow
+    app.get(OPENID_CALLBACK_URL, openidReturnHandlers); //Regular flow
+    app.post(OPENID_CALLBACK_URL, openidReturnHandlers); //response_mode: 'form_post' flow
 
     // Accept passed username/password pair & perform an attempt to authenticate against local DB
     app.post('/auth/local', passport.authenticate(AuthProviders.Local), localLoginHandlerFactory());

@@ -65,6 +65,7 @@
     },
     "dependencies": {
         "@namecheap/error-extender": "^2.2.1",
+        "@newrelic/native-metrics": "^12.0.0",
         "axios": "^1.13.2",
         "bcrypt": "^6.0.0",
         "config": "^4.1.1",
