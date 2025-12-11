@@ -238,6 +238,7 @@ export class Client {
         });
 
         this.#errorHandlerManager.handleError(criticalError);
+        this.destroy();
     }
 
     #isCorsError(event) {
