@@ -1,9 +1,26 @@
+/**
+ * NOTE: We override `modules` to "commonjs" for Karma tests only.
+ *
+ * Our production build outputs ES modules (ESM). In ESM, named exports are
+ * live, read-only bindings and the module namespace object is non-writable
+ * and non-configurable by specification.
+ *
+ * Sinon stubs work by redefining properties on imported modules. When code
+ * is compiled as ESM, attempting to stub a named export throws errors like:
+ *
+ *   "Descriptor for property <fn> is non-configurable and non-writable"
+ *
+ * Forcing CommonJS here makes exports mutable again (matching the old
+ * ts-loader behavior) so Sinon can safely stub exported functions in tests.
+ *
+ * This override is intentionally limited to Karma/test builds.
+ * Production bundles remain ESM.
+ */
+const modules = process.env.NODE_ENV === 'test' ? 'commonjs' : 'auto';
+
 module.exports = {
-    presets: ['@babel/preset-env'],
+    presets: [['@babel/preset-env', { modules }], '@babel/preset-typescript'],
     plugins: [
-        '@babel/plugin-syntax-dynamic-import',
-        '@babel/plugin-proposal-class-properties',
-        '@babel/plugin-proposal-private-methods',
         'babel-plugin-transform-async-to-promises',
         [
             '@babel/plugin-transform-for-of',

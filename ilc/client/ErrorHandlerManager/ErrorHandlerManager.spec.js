@@ -1,8 +1,9 @@
-import chai from 'chai';
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
 import IlcEvents from '../constants/ilcEvents';
 
-chai.use(require('chai-as-promised'));
+chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 import ErrorHandlerManager from './ErrorHandlerManager';

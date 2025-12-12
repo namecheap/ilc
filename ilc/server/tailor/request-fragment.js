@@ -1,8 +1,8 @@
 'use strict';
 
-const http = require('http');
-const https = require('https');
-const url = require('url');
+const http = require('node:http');
+const https = require('node:https');
+const { URL } = require('node:url');
 const Agent = require('agentkeepalive');
 const HttpsAgent = require('agentkeepalive').HttpsAgent;
 const deepmerge = require('deepmerge');
@@ -278,22 +278,27 @@ function makeFragmentUrl({
 }
 
 function makeRequest(reqUrl, headers, timeout, ignoreInvalidSsl = false) {
+    const url = new URL(reqUrl);
+    const { hostname, port, pathname, search, username, password, protocol } = url;
     const options = {
         headers,
         timeout,
-        ...url.parse(reqUrl),
+        auth: username && password ? `${username}:${password}` : undefined,
+        host: hostname, // the difference between "host" and "hostname" is that "host" includes port
+        port,
+        path: pathname + search,
+        protocol,
     };
 
-    const { protocol: reqProtocol } = options;
-    const hasHttpsProtocol = reqProtocol === 'https:';
-    const protocol = hasHttpsProtocol ? https : http;
+    const hasHttpsProtocol = protocol === 'https:';
+    const httpLib = hasHttpsProtocol ? https : http;
     options.agent = hasHttpsProtocol ? kaAgentHttps : kaAgent;
 
     if (hasHttpsProtocol && ignoreInvalidSsl) {
         options.rejectUnauthorized = false;
     }
 
-    const fragmentRequest = protocol.request(options);
+    const fragmentRequest = httpLib.request(options);
 
     if (timeout) {
         fragmentRequest.setTimeout(timeout, fragmentRequest.abort);

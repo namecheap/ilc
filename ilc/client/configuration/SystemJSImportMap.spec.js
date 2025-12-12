@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 import { SystemJSImportMap } from './SystemJSImportMap';
 import { getIlcConfigRoot } from './getIlcConfigRoot';
 
