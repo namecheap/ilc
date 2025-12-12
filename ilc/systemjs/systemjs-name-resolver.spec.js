@@ -1,4 +1,4 @@
-import chai from 'chai';
+import * as chai from 'chai';
 
 describe('systemjs name resolver', () => {
     it('should return null while trying to get module info of nonexistent module', () => {

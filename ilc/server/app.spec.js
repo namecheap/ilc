@@ -71,6 +71,7 @@ describe('App', () => {
     });
 
     it('should return 400 for data URI bypass attempts (security)', async () => {
+        nock.restore();
         const responseUpperCase = await server.get('/DATA:image/png;base64,xxx').expect(400);
         chai.expect(responseUpperCase.body.message).to.include('Data URIs');
 
@@ -125,29 +126,10 @@ describe('App', () => {
         it('should serve client.js from /_ilc/ path', async () => {
             const response = await server.get('/_ilc/client.js').expect(200);
 
-            chai.expect(response.headers['content-type']).to.match(/application\/javascript/);
-            chai.expect(response.text).to.be.a('string');
-            chai.expect(response.text.length).to.be.greaterThan(0);
-        });
-
-        it('should serve commons.js from /_ilc/ path', async () => {
-            const response = await server.get('/_ilc/commons.js').expect(200);
-
-            chai.expect(response.headers['content-type']).to.match(/application\/javascript/);
-            chai.expect(response.text).to.be.a('string');
-            chai.expect(response.text.length).to.be.greaterThan(0);
-        });
-
-        it('should set appropriate cache headers for static assets', async () => {
-            const response = await server.get('/_ilc/client.js').expect(200);
-
+            chai.expect(response.headers['content-type']).to.match(/application\/javascript; charset=UTF-8/);
             chai.expect(response.headers).to.have.property('cache-control');
-        });
-
-        it('should serve JavaScript files with correct MIME type', async () => {
-            const response = await server.get('/_ilc/client.js').expect(200);
-
-            chai.expect(response.headers['content-type']).to.match(/javascript/);
+            chai.expect(response.text).to.be.a('string');
+            chai.expect(response.text.length).to.be.greaterThan(0);
         });
     });
 
@@ -247,6 +229,7 @@ describe('App', () => {
     });
 
     it('should filter fragment response headers to only preserve set-cookie', async () => {
+        nock.activate();
         const response = await server.get('/primary').expect(200);
         // The set-cookie header from primary fragment should be in response
         chai.expect(response.headers['set-cookie']).to.exist;

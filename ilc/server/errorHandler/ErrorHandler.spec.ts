@@ -31,6 +31,12 @@ describe('ErrorHandler', () => {
     let server: request.Agent;
     let address: string;
 
+    before(() => {
+        if (!nock.isActive()) {
+            nock.activate();
+        }
+    });
+
     beforeEach(async () => {
         app = createApp(
             helpers.getRegistryMock() as unknown as Registry,

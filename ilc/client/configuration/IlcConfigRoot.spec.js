@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { getIlcConfigRoot } from './getIlcConfigRoot';
 import { IlcConfigRoot } from './IlcConfigRoot';
 

@@ -1,6 +1,8 @@
-import chai from 'chai';
+import * as chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import sinon from 'sinon';
-chai.use(require('chai-as-promised'));
+
+chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 import { getRegistryMock } from '../tests/helpers';

@@ -41,14 +41,12 @@ module.exports = function (config) {
             },
         },
         customContextFile: './tests/karma.index.html',
-        frameworks: ['mocha', 'chai', 'sinon', 'webpack'],
+        frameworks: ['mocha', 'webpack'],
         plugins: [
             'karma-bail-fast',
             'karma-chrome-launcher',
 
             'karma-mocha',
-            'karma-chai',
-            'karma-sinon',
 
             'karma-coverage-istanbul-reporter',
             'karma-mocha-reporter',
