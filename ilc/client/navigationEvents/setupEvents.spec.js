@@ -2,6 +2,7 @@ import * as chai from 'chai';
 import sinon from 'sinon';
 import ilcEvents from '../constants/ilcEvents';
 
+import * as singleSpa from 'single-spa';
 import {
     addNavigationHook,
     removeNavigationHook,
@@ -17,6 +18,7 @@ describe('setupEvents', () => {
     before(() => {
         window.addEventListener(ilcEvents.BEFORE_ROUTING, beforeRoutingEventHandler);
         window.addEventListener('popstate', popstateEventHandler);
+        singleSpa.start();
     });
 
     beforeEach(() => {

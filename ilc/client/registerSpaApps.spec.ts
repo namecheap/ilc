@@ -104,13 +104,7 @@ describe('registerSpaApps', () => {
     afterEach(async () => {
         // Unload all registered apps from single-spa to avoid conflicts with other tests
         const registeredApps = singleSpa.getAppNames();
-        await Promise.all(
-            registeredApps.map((appName) =>
-                (singleSpa as any).unloadApplication(appName).catch(() => {
-                    // Ignore errors if app is not loaded
-                }),
-            ),
-        );
+        await Promise.all(registeredApps.map((appName) => singleSpa.unregisterApplication(appName)));
 
         // Restore stubs
         composeAppSlotPairsStub.restore();
