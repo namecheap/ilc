@@ -1,15 +1,13 @@
-FROM node:20.8.0-alpine
+FROM node:22-alpine
 
 RUN apk update && apk add --no-cache bash git openssh python3 make g++ findutils
-
-# Legacy infrastructure support
-RUN npm install -g stdout-mq@^2.4.0
 
 WORKDIR /codebase
 
 COPY package-lock.json package.json /codebase/
-RUN npm ci --no-package-lock --ignore-scripts
-RUN npm rebuild @newrelic/native-metrics
+RUN npm ci --prefer-offline --no-fund
+# Integrity check. Package @newrelic/native-metrics is an optional dependency and may be not installed on alpine
+RUN npm ls @newrelic/native-metrics
 
 COPY ./ /codebase
 
