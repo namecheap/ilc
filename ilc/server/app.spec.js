@@ -126,7 +126,7 @@ describe('App', () => {
         it('should serve client.js from /_ilc/ path', async () => {
             const response = await server.get('/_ilc/client.js').expect(200);
 
-            chai.expect(response.headers['content-type']).to.match(/application\/javascript; charset=UTF-8/);
+            chai.expect(response.headers['content-type']).to.match(/text\/javascript; charset=utf-8/);
             chai.expect(response.headers).to.have.property('cache-control');
             chai.expect(response.text).to.be.a('string');
             chai.expect(response.text.length).to.be.greaterThan(0);

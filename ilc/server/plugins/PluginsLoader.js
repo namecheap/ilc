@@ -1,5 +1,5 @@
-const path = require('path');
-const fg = require('fast-glob');
+const path = require('node:path');
+const { globSync } = require('node:fs');
 
 const { Environment } = require('../../common/Environment');
 const { manifest: serverPluginsManifest } = require('../../server.plugins.manifest');
@@ -12,10 +12,9 @@ class PluginsLoader {
         }
 
         if (environment.isLegacyPluginsDiscoveryEnabled()) {
-            const pluginPaths = fg.sync(['ilc-plugin-*/package.json', '@*/ilc-plugin-*/package.json'], {
-                cwd: path.resolve(__dirname, '../../../node_modules'), // dist dir
-                absolute: true,
-            });
+            const cwd = path.resolve(__dirname, '../../../node_modules'); // dist dir
+            const patterns = ['ilc-plugin-*/package.json', '@*/ilc-plugin-*/package.json'];
+            const pluginPaths = patterns.flatMap((pattern) => globSync(pattern, { cwd }).map((p) => path.join(cwd, p)));
 
             return pluginPaths.map((pluginPath) => {
                 const relativePluginPath = path.resolve(pluginPath, '..', require(pluginPath).main);

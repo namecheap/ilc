@@ -2,6 +2,7 @@ import * as chai from 'chai';
 import sinon from 'sinon';
 import ilcEvents from '../constants/ilcEvents';
 
+import * as singleSpa from 'single-spa';
 import {
     addNavigationHook,
     removeNavigationHook,

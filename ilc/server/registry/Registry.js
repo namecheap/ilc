@@ -1,5 +1,5 @@
 const axios = require('axios');
-const urljoin = require('url-join');
+const urljoin = require('url-join').default;
 const { isTemplateValid } = require('./isTemplateValid');
 const { RegistryError, ValidationRegistryError, NotFoundRegistryError } = require('./errors');
 

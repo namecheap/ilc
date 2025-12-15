@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const urljoin = require('url-join');
+const urljoin = require('url-join').default;
 const { uniqueArray, encodeHtmlEntities } = require('../../common/utils');
 const { HrefLangService } = require('../services/HrefLangService');
 const { CanonicalTagService } = require('../services/CanonicalTagService');
