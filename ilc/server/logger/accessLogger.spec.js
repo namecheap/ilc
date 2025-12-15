@@ -18,7 +18,7 @@ describe('accessLogger', () => {
             request: {
                 raw: {
                     url: '/test/1',
-                    connection: {
+                    socket: {
                         encrypted: true,
                     },
                 },
@@ -40,7 +40,7 @@ describe('accessLogger', () => {
             request: {
                 raw: {
                     url: '/test/1',
-                    connection: {
+                    socket: {
                         encrypted: true,
                     },
                 },
@@ -61,7 +61,7 @@ describe('accessLogger', () => {
             request: {
                 raw: {
                     url: '/test/ignored/',
-                    connection: {
+                    socket: {
                         encrypted: true,
                     },
                 },
@@ -88,7 +88,7 @@ describe('accessLogger', () => {
             request: {
                 raw: {
                     url: '/test/ignored/?param=param',
-                    connection: {
+                    socket: {
                         encrypted: true,
                     },
                 },
@@ -113,7 +113,7 @@ describe('accessLogger', () => {
                 request: {
                     raw: {
                         url: '/test/1',
-                        connection: {
+                        socket: {
                             encrypted: true,
                         },
                     },
@@ -138,7 +138,7 @@ describe('accessLogger', () => {
                 request: {
                     raw: {
                         url: '/test/1',
-                        connection: {
+                        socket: {
                             encrypted: true,
                         },
                     },
@@ -163,7 +163,7 @@ describe('accessLogger', () => {
                 request: {
                     raw: {
                         url: '/test/1',
-                        connection: {
+                        socket: {
                             encrypted: true,
                         },
                     },
@@ -188,7 +188,7 @@ describe('accessLogger', () => {
                 request: {
                     raw: {
                         url: '/test/1',
-                        connection: {
+                        socket: {
                             encrypted: true,
                         },
                     },
@@ -215,7 +215,7 @@ describe('accessLogger', () => {
                 request: {
                     raw: {
                         url: '/test/1',
-                        connection: {
+                        socket: {
                             encrypted: true,
                         },
                     },
@@ -237,7 +237,7 @@ describe('accessLogger', () => {
                 request: {
                     raw: {
                         url: '/test/1',
-                        connection: {
+                        socket: {
                             encrypted: true,
                         },
                     },

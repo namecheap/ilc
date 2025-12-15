@@ -2,6 +2,7 @@ const chai = require('chai');
 const sinon = require('sinon');
 const nock = require('nock');
 const _ = require('lodash');
+const request = require('supertest');
 
 const { intlSchema } = require('ilc-sdk/dist/server/IlcProtocol'); // "Private" import
 const { IlcIntl } = require('ilc-sdk/app');
@@ -57,8 +58,12 @@ describe('i18n', () => {
     });
 
     describe('E2E tests', () => {
+        let app;
         beforeEach(() => {
             pluginManager.getI18nParamsDetectionPlugin.withArgs().onFirstCall().returns(i18nParamsDetectionPlugin);
+        });
+        afterEach(() => {
+            app?.close();
         });
 
         it('default locale: should correctly render & pass to the fragments locale info', async () => {
@@ -69,14 +74,15 @@ describe('i18n', () => {
 
             i18nParamsDetectionPlugin.detectI18nConfig.onFirstCall().returns(detectedI18nConfig);
 
-            const app = getApp();
+            const app = await getApp();
+            await app.ready();
 
-            const response = await app.inject({ method: 'GET', url: '/all' });
+            const response = await request(app.server).get('/all');
 
-            chai.expect(response.statusCode).to.eq(200);
-            chai.expect(response.body).to.contain('<html lang="en-US">');
+            chai.expect(response.status).to.eq(200);
+            chai.expect(response.text).to.contain('<html lang="en-US">');
 
-            const fragmentResps = helpers.getFragmentResponses(response.body);
+            const fragmentResps = helpers.getFragmentResponses(response.text);
             _.each(fragmentResps, (v) => {
                 chai.expect(decodeIntlHeader(v.headers['x-request-intl'])).to.eql(expectedHeader(detectedI18nConfig));
                 chai.expect(helpers.getRouterProps(v.url).reqUrl).to.eq('/all');
@@ -91,14 +97,15 @@ describe('i18n', () => {
 
             i18nParamsDetectionPlugin.detectI18nConfig.onFirstCall().returns(detectedI18nConfig);
 
-            const app = getApp();
+            const app = await getApp();
+            await app.ready();
 
-            const response = await app.inject({ method: 'GET', url: '/ua/all' });
+            const response = await request(app.server).get('/ua/all');
 
             chai.expect(response.statusCode).to.eq(200);
-            chai.expect(response.body).to.contain('<html lang="ua-UA">');
+            chai.expect(response.text).to.contain('<html lang="ua-UA">');
 
-            const fragmentResps = helpers.getFragmentResponses(response.body);
+            const fragmentResps = helpers.getFragmentResponses(response.text);
             _.each(fragmentResps, (v) => {
                 chai.expect(decodeIntlHeader(v.headers['x-request-intl'])).to.eql(expectedHeader(detectedI18nConfig));
                 chai.expect(helpers.getRouterProps(v.url).reqUrl).to.eq('/all');
@@ -246,7 +253,7 @@ describe('i18n', () => {
                 chai.expect(providedI18nConfig).to.be.eql(i18nConfig.default);
 
                 sinon.assert.calledWith(
-                    reply.res.setHeader,
+                    reply.raw.setHeader,
                     'Set-Cookie',
                     sinon.match(`ilc-i18n=${detectedI18nConfig.locale}%3A${detectedI18nConfig.currency}; Path=/;`),
                 );
@@ -439,6 +446,6 @@ function getReqMock(url = '/test', cookieString = '') {
 function getReplyMock() {
     return {
         redirect: sinon.stub(),
-        res: { setHeader: sinon.stub() },
+        raw: { setHeader: sinon.stub() },
     };
 }

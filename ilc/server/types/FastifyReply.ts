@@ -1,10 +1,11 @@
 import { FastifyReply } from 'fastify';
-import { ServerResponse } from 'http';
+import type { ServerResponse, Server } from 'http';
+import { PatchedHttpRequest } from './PatchedHttpRequest';
 
-export type ServerResponseFastifyReply = FastifyReply<ServerResponse>;
+export type ServerResponseFastifyReply = FastifyReply<Server, PatchedHttpRequest, ServerResponse>;
 
 export type IlcResponse = ServerResponseFastifyReply | ServerResponse;
 
-export const isFastifyReply = (response: any): response is ServerResponseFastifyReply => {
-    return response && typeof response === 'object' && 'res' in response;
+export const isFastifyReply = (response: unknown): response is ServerResponseFastifyReply => {
+    return !!response && typeof response === 'object' && 'raw' in response;
 };

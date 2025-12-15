@@ -15,7 +15,7 @@ module.exports = {
             const store = new Map();
 
             store.set('url', request.raw.url);
-            store.set('protocol', request.raw.connection.encrypted ? 'https' : 'http');
+            store.set('protocol', request.raw.socket.encrypted ? 'https' : 'http');
             store.set('path', parsedUrl.pathname);
             store.set('domain', request.hostname);
             store.set('requestId', requestId);

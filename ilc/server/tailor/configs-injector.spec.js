@@ -229,7 +229,7 @@ describe('configs injector', () => {
                     request: {
                         raw: {
                             url: 'test/a?test=15',
-                            connection: {
+                            socket: {
                                 encrypted: true,
                             },
                         },
@@ -320,7 +320,7 @@ describe('configs injector', () => {
                     request: {
                         raw: {
                             url: '/test/a?test=15',
-                            connection: {
+                            socket: {
                                 encrypted: true,
                             },
                         },
@@ -400,7 +400,7 @@ describe('configs injector', () => {
                     request: {
                         raw: {
                             url: 'test/a?test=15',
-                            connection: {
+                            socket: {
                                 encrypted: true,
                             },
                         },
@@ -429,7 +429,7 @@ describe('configs injector', () => {
                     request: {
                         raw: {
                             url: 'test/a?test=15',
-                            connection: {
+                            socket: {
                                 encrypted: true,
                             },
                         },

@@ -1,5 +1,6 @@
 import config from 'config';
 import fastify from 'fastify';
+import { fastifyExpress } from '@fastify/express';
 import { AsyncResource } from 'node:async_hooks';
 import { errorHandlerFactory } from './errorHandler/factory';
 import { pingPluginFactroy } from './routes/pingPluginFactory';
@@ -19,13 +20,14 @@ const { isStaticFile, isHealthCheck, isDataUri } = require('./utils/utils');
 /**
  * @param {Registry} registryService
  */
-module.exports = (registryService, pluginManager, context) => {
+module.exports = async function createApplication(registryService, pluginManager, context) {
     const reportingPlugin = reportingPluginManager.getInstance();
     const errorHandler = errorHandlerFactory();
     const appConfig = Application.getConfig(reportingPlugin);
     const logger = reportingPluginManager.getLogger();
     const accessLogger = new AccessLogger(config, logger);
     const app = fastify(appConfig);
+    await app.register(fastifyExpress);
 
     const asyncResourceSymbol = Symbol('asyncResource');
 

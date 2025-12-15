@@ -127,6 +127,7 @@ function getPluginManagerMock() {
     return {
         getReportingPlugin: () => ({
             type: 'reporting',
+            logger: console,
         }),
         getI18nParamsDetectionPlugin: () => ({
             type: 'i18nParamsDetection',

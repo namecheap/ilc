@@ -6,7 +6,7 @@ const { context } = require('./context/context');
 const createApp = require('./app');
 
 async function createTestServer(mockRegistryOptions = {}, mockPluginOptions = {}) {
-    const app = createApp(
+    const app = await createApp(
         helpers.getRegistryMock(mockRegistryOptions),
         helpers.getPluginManagerMock(mockPluginOptions),
         context,

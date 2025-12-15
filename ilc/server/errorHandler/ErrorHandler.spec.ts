@@ -38,7 +38,7 @@ describe('ErrorHandler', () => {
     });
 
     beforeEach(async () => {
-        app = createApp(
+        app = await createApp(
             helpers.getRegistryMock() as unknown as Registry,
             helpers.getPluginManagerMock() as unknown as PluginManager,
             context,
