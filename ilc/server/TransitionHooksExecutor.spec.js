@@ -48,7 +48,7 @@ describe('TransitionHooksExecutor', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-            const app = createApp(helpers.getRegistryMock(), pluginManager, context);
+            const app = await createApp(helpers.getRegistryMock(), pluginManager, context);
 
             try {
                 res = await app.inject({ method: 'GET', url: '/all' });
@@ -73,7 +73,7 @@ describe('TransitionHooksExecutor', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-            const app = createApp(helpers.getRegistryMock(), pluginManager, context);
+            const app = await createApp(helpers.getRegistryMock(), pluginManager, context);
 
             try {
                 res = await app.inject({ method: 'GET', url: '/all' });
@@ -96,7 +96,7 @@ describe('TransitionHooksExecutor', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-            const app = createApp(helpers.getRegistryMock(), pluginManager, context);
+            const app = await createApp(helpers.getRegistryMock(), pluginManager, context);
 
             try {
                 res = await app.inject({ method: 'GET', url: '/all' });

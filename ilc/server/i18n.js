@@ -73,7 +73,7 @@ const onRequestFactory =
         const encodedNextI18nCookie = i18nCookie.encode(pluginProcessedI18nConfig);
 
         if (encodedI18nCookie !== encodedNextI18nCookie) {
-            reply.res.setHeader(
+            reply.raw.setHeader(
                 'Set-Cookie',
                 Cookie.serialize(i18nCookie.name, encodedNextI18nCookie, i18nCookie.getOpts()),
             );

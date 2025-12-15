@@ -12,4 +12,6 @@ const pluginManager = require('./plugins/pluginManager');
 const runServer = require('./server');
 const createApp = require('./app');
 
-runServer(createApp(registryFactory(), pluginManager, context));
+(async () => {
+    runServer(await createApp(registryFactory(), pluginManager, context));
+})();

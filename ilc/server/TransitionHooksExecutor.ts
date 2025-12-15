@@ -1,7 +1,6 @@
 import { PluginManager, TransitionHooksPlugin } from 'ilc-plugins-sdk';
 import { TransitionHookError } from '../common/transition-hooks/errors';
-import { FastifyRequest } from 'fastify';
-import { PatchedHttpRequest } from './types/PatchedHttpRequest';
+import { PatchedFastifyRequest } from './types/PatchedHttpRequest';
 
 type TransitionResult = {
     location: string;
@@ -15,7 +14,7 @@ export class TransitionHooksExecutor {
         this.transitionHooksPlugin = pluginManager.getTransitionHooksPlugin();
     }
 
-    async redirectTo(req: FastifyRequest<PatchedHttpRequest>): Promise<TransitionResult | null> {
+    async redirectTo(req: PatchedFastifyRequest): Promise<TransitionResult | null> {
         if (!req.raw.router) {
             throw new Error('Router not initialized');
         }

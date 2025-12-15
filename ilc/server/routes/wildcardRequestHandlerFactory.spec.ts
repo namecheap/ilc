@@ -3,10 +3,10 @@ import newrelic from 'newrelic';
 import sinon from 'sinon';
 
 import { expect } from 'chai';
-import fastify, { RequestHandler } from 'fastify';
 import { TransitionHooksExecutor } from '../TransitionHooksExecutor';
 import { ErrorHandler } from '../types/ErrorHandler';
-import { PatchedHttpRequest } from '../types/PatchedHttpRequest';
+import { IlcRouteHandlerMethod } from '../types/IlcRouteHandlerMethod';
+import { PatchedFastifyRequest, PatchedHttpRequest } from '../types/PatchedHttpRequest';
 import { Registry } from '../types/Registry';
 import { wildcardRequestHandlerFactory } from './wildcardRequestHandlerFactory';
 
@@ -16,7 +16,7 @@ describe('wildcardRequestHandlerFactory', () => {
     let mockErrorHandlingService: sinon.SinonStubbedInstance<ErrorHandler>;
     let mockTransitionHooksExecutor: sinon.SinonStubbedInstance<TransitionHooksExecutor>;
     let mockTailor: any;
-    let wildcardRequestHandler: RequestHandler<PatchedHttpRequest>;
+    let wildcardRequestHandler: IlcRouteHandlerMethod;
     let newrelicGetTransactionStub: sinon.SinonStub;
     let newrelicIgnoreStub: sinon.SinonStub;
 
@@ -405,8 +405,9 @@ describe('wildcardRequestHandlerFactory', () => {
 
             const mockReply = {
                 redirect: sinon.stub(),
+                hijack: sinon.stub(),
                 sent: false,
-                res: {
+                raw: {
                     setHeader: sinon.stub(),
                 },
             };
@@ -414,7 +415,7 @@ describe('wildcardRequestHandlerFactory', () => {
             await wildcardRequestHandler.call({} as any, mockRequest as any, mockReply as any);
 
             // CSP header should be set on reply.res
-            expect(mockReply.res).to.exist;
+            expect(mockReply.raw).to.exist;
             sinon.assert.notCalled(mockErrorHandlingService.noticeError);
         });
 
@@ -466,6 +467,7 @@ describe('wildcardRequestHandlerFactory', () => {
 
             const mockReply = {
                 redirect: sinon.stub(),
+                hijack: sinon.stub(),
                 sent: false,
                 res: {
                     setHeader: sinon.stub().throws(cspError),
@@ -591,15 +593,15 @@ describe('wildcardRequestHandlerFactory', () => {
 
             const mockReply = {
                 redirect: sinon.stub(),
-                sent: false,
-                res: {},
+                hijack: sinon.stub(),
+                raw: {},
             };
 
             await wildcardRequestHandler.call({} as any, mockRequest as any, mockReply as any);
 
             sinon.assert.calledOnce(mockTailor.requestHandler);
-            sinon.assert.calledWith(mockTailor.requestHandler, mockRequest.raw, mockReply.res);
-            expect(mockReply.sent).to.be.true;
+            sinon.assert.calledOnce(mockReply.hijack);
+            sinon.assert.calledWith(mockTailor.requestHandler, mockRequest.raw, mockReply.raw);
         });
 
         it('should validate slot collection for routes with slots', async () => {
@@ -641,6 +643,7 @@ describe('wildcardRequestHandlerFactory', () => {
 
             const mockReply = {
                 redirect: sinon.stub(),
+                hijack: sinon.stub(),
                 sent: false,
                 res: {},
             };
@@ -732,9 +735,7 @@ describe('wildcardRequestHandlerFactory', () => {
             await wildcardRequestHandler.call({} as any, mockRequest as any, mockReply as any);
             // ServerRouter should be created and assigned
             expect(mockRequest.raw.router).to.exist;
-            expect((mockRequest as unknown as fastify.FastifyRequest<PatchedHttpRequest>).raw.router?.getRoute).to.be.a(
-                'function',
-            );
+            expect((mockRequest as unknown as PatchedFastifyRequest).raw.router?.getRoute).to.be.a('function');
         });
     });
 });
