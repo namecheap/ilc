@@ -1,8 +1,9 @@
-import { FastifyReply } from 'fastify';
+import { FastifyReply, RouteGenericInterface } from 'fastify';
 import type { ServerResponse, Server } from 'http';
 import { PatchedHttpRequest } from './PatchedHttpRequest';
 
-export type ServerResponseFastifyReply = FastifyReply<Server, PatchedHttpRequest, ServerResponse>;
+export type ServerResponseFastifyReply<RouteGeneric extends RouteGenericInterface = RouteGenericInterface> =
+    FastifyReply<RouteGeneric, Server, PatchedHttpRequest, ServerResponse>;
 
 export type IlcResponse = ServerResponseFastifyReply | ServerResponse;
 

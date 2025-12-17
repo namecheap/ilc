@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import sinon, { SinonStub } from 'sinon';
+import sinon, { SinonSandbox, SinonStub } from 'sinon';
 import { context } from '../context/context';
 
 const enhanceLogger = require('./enhanceLogger');
@@ -30,7 +30,7 @@ interface ErrorWithAdditionalInfo extends Error {
 describe('enhanceLogger', () => {
     let mockLogger: MockLogger;
     let enhancedLogger: EnhancedLogger;
-    let store: Map<string, any>;
+    let sandbox: SinonSandbox;
 
     beforeEach(() => {
         mockLogger = {
@@ -42,18 +42,23 @@ describe('enhanceLogger', () => {
             trace: sinon.stub(),
         };
 
-        store = new Map<string, any>();
-        store.set('requestId', 'test-request-id-123');
-        store.set('domain', 'test.example.com');
-        store.set('path', '/test/path');
+        sandbox = sinon.createSandbox();
 
-        sinon.stub(context, 'getStore').returns(store);
+        sandbox
+            .stub(context, 'get')
+            .withArgs('requestId')
+            .returns('test-request-id-123')
+            .withArgs('domain')
+            .returns('test.example.com')
+            .withArgs('path')
+            .returns('/test/path');
 
         enhancedLogger = enhanceLogger(mockLogger, { requestIdLogLabel: 'operationId' });
     });
 
     afterEach(() => {
         sinon.restore();
+        sandbox.restore();
     });
 
     describe('logging with string message', () => {
@@ -282,7 +287,7 @@ describe('enhanceLogger', () => {
         });
 
         it('should handle missing store values gracefully', () => {
-            store.clear();
+            sandbox.reset();
 
             enhancedLogger.info('test');
 

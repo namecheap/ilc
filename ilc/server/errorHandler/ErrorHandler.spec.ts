@@ -11,7 +11,6 @@ import type { FastifyInstance } from 'fastify';
 import type { AddressInfo } from 'net';
 import type { Logger, PluginManager } from 'ilc-plugins-sdk';
 
-import { context } from '../context/context';
 import ErrorHandler, { ErrorsService, Test500Error } from './ErrorHandler';
 import * as helpers from '../../tests/helpers';
 import { Registry } from '../types/Registry';
@@ -41,7 +40,6 @@ describe('ErrorHandler', () => {
         app = await createApp(
             helpers.getRegistryMock() as unknown as Registry,
             helpers.getPluginManagerMock() as unknown as PluginManager,
-            context,
         );
         await app.ready();
         app.server.listen(0);

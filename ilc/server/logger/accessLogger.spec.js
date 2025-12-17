@@ -14,18 +14,15 @@ describe('accessLogger', () => {
         const localConfig = { get: sinon.stub().withArgs('logger.accessLog.ignoreUrls').returns('/test/ignored/') };
 
         const accessLogger = new AccessLogger(localConfig, logger);
-        const request = {
-            request: {
-                raw: {
-                    url: '/test/1',
-                    socket: {
-                        encrypted: true,
-                    },
-                },
-            },
+        const store = {
+            url: 'http://example.org/test/1/',
+            path: '/test/1',
+            requestId: 'test1',
+            domain: 'example.org',
+            protocol: 'http',
         };
 
-        context.run(request, () => {
+        context.run(store, () => {
             accessLogger.logRequest({ additional: true });
         });
 
@@ -36,18 +33,15 @@ describe('accessLogger', () => {
         const localConfig = { get: sinon.stub().withArgs('logger.accessLog.ignoreUrls').returns('/test/ignored/') };
 
         const accessLogger = new AccessLogger(localConfig, logger);
-        const request = {
-            request: {
-                raw: {
-                    url: '/test/1',
-                    socket: {
-                        encrypted: true,
-                    },
-                },
-            },
+        const store = {
+            url: 'http://example.org/test/1/?param=param',
+            path: '/test/1',
+            requestId: 'test1',
+            domain: 'example.org',
+            protocol: 'http',
         };
 
-        context.run(request, () => {
+        context.run(store, () => {
             accessLogger.logResponse({ additional: true });
         });
 
@@ -57,20 +51,15 @@ describe('accessLogger', () => {
     it('should ignore access logs based on path', function () {
         const localConfig = { get: sinon.stub().withArgs('logger.accessLog.ignoreUrls').returns('/test/ignored/') };
         const accessLogger = new AccessLogger(localConfig, logger);
-        const request = {
-            request: {
-                raw: {
-                    url: '/test/ignored/',
-                    socket: {
-                        encrypted: true,
-                    },
-                },
-                hostname: 'test-machine',
-                id: 'test1',
-            },
+        const store = {
+            url: 'http://example.org/test/ignored/',
+            path: '/test/ignored/',
+            requestId: 'test1',
+            domain: 'example.org',
+            protocol: 'http',
         };
 
-        context.run(request, () => {
+        context.run(store, () => {
             accessLogger.logRequest();
         });
 
@@ -84,20 +73,15 @@ describe('accessLogger', () => {
         };
         const accessLogger = new AccessLogger(localConfig, logger);
 
-        const request = {
-            request: {
-                raw: {
-                    url: '/test/ignored/?param=param',
-                    socket: {
-                        encrypted: true,
-                    },
-                },
-                hostname: 'test-machine',
-                id: 'test1',
-            },
+        const store = {
+            url: 'http://example.org/test/ignored/?param=param',
+            path: '/test/ignored/',
+            requestId: 'test1',
+            domain: 'example.org',
+            protocol: 'http',
         };
 
-        context.run(request, () => {
+        context.run(store, () => {
             accessLogger.logRequest();
         });
 

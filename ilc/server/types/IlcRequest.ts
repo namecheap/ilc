@@ -14,7 +14,7 @@ export function ilcRequestDecorator(req: PatchedFastifyRequest | PatchedHttpRequ
             return isFastifyRequest(req) ? req.raw.ilcState?.locale : req.ilcState?.locale;
         },
         getHostName() {
-            return isFastifyRequest(req) ? req.hostname : req.headers.host;
+            return isFastifyRequest(req) ? req.host : req.headers.host;
         },
         isLde() {
             return Boolean(isFastifyRequest(req) ? req.raw.ldeRelated : req.ldeRelated);

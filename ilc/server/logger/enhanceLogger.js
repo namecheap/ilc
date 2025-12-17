@@ -7,12 +7,11 @@ module.exports = (logger, { requestIdLogLabel }) => {
             const origMethod = target[prop];
             if (typeof origMethod == 'function') {
                 return function (...args) {
-                    const store = context.getStore();
                     const [arg1] = args;
                     const logContext = {
-                        [requestIdLogLabel]: store.get('requestId'),
-                        domain: store.get('domain'),
-                        path: store.get('path'),
+                        [requestIdLogLabel]: context.get('requestId'),
+                        domain: context.get('domain'),
+                        path: context.get('path'),
                     };
 
                     if (typeof arg1 === 'string') {

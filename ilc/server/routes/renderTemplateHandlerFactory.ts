@@ -9,7 +9,7 @@ export function renderTemplateHandlerFactory(
     errorHandlingService: ErrorHandler,
 ): IlcRouteHandlerMethod<{ Params: { templateName: string } }> {
     return async (req, reply) => {
-        const currentDomain = req.hostname;
+        const currentDomain = req.host;
         const locale = req.raw.ilcState?.locale;
         try {
             const data = await registryService.getTemplate(req.params.templateName, {

@@ -134,7 +134,7 @@ describe('TransitionHooksExecutor', () => {
         const req = {
             raw: rawReq,
             log,
-            hostname: 'test.com',
+            host: 'test.com',
         };
 
         describe('should have access to a provided URL', () => {
@@ -178,7 +178,7 @@ describe('TransitionHooksExecutor', () => {
                 for (const hook of hooks) {
                     chai.expect(
                         hook.calledOnceWith({
-                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname, route: route.route },
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.host, route: route.route },
                             req: rawReq,
                             log,
                         }),
@@ -194,7 +194,7 @@ describe('TransitionHooksExecutor', () => {
                 const reqWithoutRouter = {
                     raw: {},
                     log,
-                    hostname: 'test.com',
+                    host: 'test.com',
                 };
 
                 pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
@@ -288,7 +288,7 @@ describe('TransitionHooksExecutor', () => {
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(
                         hook.calledOnceWith({
-                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname, route: route.route },
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.host, route: route.route },
                             req: rawReq,
                             log,
                         }),
@@ -317,7 +317,7 @@ describe('TransitionHooksExecutor', () => {
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(
                         hook.calledOnceWith({
-                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname, route: route.route },
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.host, route: route.route },
                             req: rawReq,
                             log,
                         }),
@@ -347,7 +347,7 @@ describe('TransitionHooksExecutor', () => {
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(
                         hook.calledOnceWith({
-                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname, route: route.route },
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.host, route: route.route },
                             req: rawReq,
                             log,
                         }),

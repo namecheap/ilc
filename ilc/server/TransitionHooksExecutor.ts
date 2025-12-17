@@ -36,7 +36,7 @@ export class TransitionHooksExecutor {
                     route: {
                         meta: route.meta,
                         url: route.reqUrl,
-                        hostname: req.hostname,
+                        hostname: req.host,
                         route: route.route,
                     },
                     log: req.log,

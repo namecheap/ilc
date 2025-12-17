@@ -8,6 +8,9 @@
         "sourceMap": true,
         "esModuleInterop": true
     },
+    "ts-node": {
+        "files": true
+    },
     "exclude": ["node_modules", "public", "dist"],
     "include": ["**/*.ts", "**/*.js"]
 }

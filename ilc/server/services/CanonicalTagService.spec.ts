@@ -34,9 +34,7 @@ describe('CanonicalTagService', () => {
     beforeEach(() => {
         sandbox = sinon.createSandbox();
 
-        contextStoreStub = sandbox.stub();
-        contextStoreStub.withArgs('domain').returns(domain);
-        sandbox.stub(context, 'getStore').returns({ get: contextStoreStub });
+        contextStoreStub = sandbox.stub(context, 'get').withArgs('domain').returns(domain);
 
         configStub = sandbox.stub(config, 'get');
         configStub.withArgs('client.protocol').returns(protocol);
