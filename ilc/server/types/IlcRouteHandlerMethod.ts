@@ -1,5 +1,4 @@
-import type { RouteHandlerMethod } from 'fastify';
-import type { RouteGenericInterface } from 'fastify/types/route';
+import type { RouteGenericInterface, RouteHandlerMethod } from 'fastify';
 import type http from 'http';
 import type { PatchedHttpRequest } from './PatchedHttpRequest';
 

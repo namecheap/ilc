@@ -1,8 +1,7 @@
 import type { IncomingMessage, Server } from 'http';
 import ServerRouter from '../tailor/server-router';
 import { TransformedRegistryConfig } from './Registry';
-import { FastifyRequest } from 'fastify';
-import { RouteGenericInterface } from 'fastify/types/route';
+import { FastifyRequest, RouteGenericInterface } from 'fastify';
 
 export interface IlcState {
     locale?: string;

@@ -29,8 +29,7 @@ export class CanonicalTagService {
             targetUrl = routeMeta.canonicalUrl;
         }
 
-        const store = context.getStore();
-        const domain = canonicalDomain || store.get('domain');
+        const domain = canonicalDomain || context.get('domain');
         const protocol = config.get<string>('client.protocol');
         const effectiveLocale = locale || i18nConfig.default?.locale;
 

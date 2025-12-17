@@ -185,6 +185,6 @@ ILC automatically updates canonical tags during client-side navigation.
 
 ## Additional information
 
--   ILC detects a domain from the [**request.hostname** of Fastify](https://www.fastify.io/docs/latest/Reference/Request/) and checks whether this hostname is listed in the **Router domains**.
+-   ILC detects a domain from the [**request.host** of Fastify](https://www.fastify.io/docs/latest/Reference/Request/) and checks whether this hostname is listed in the **Router domains**.
 -   Each registered domain in the **Router domains** has its own set of routes that do not overlap.
 -   For routes, the domain is optional. If the request goes from the domain that is not listed in the **Router domains**, the routes for the request will stay unassigned.

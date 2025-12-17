@@ -22,7 +22,7 @@ export function wildcardRequestHandlerFactory(
     tailor: ReturnType<typeof tailorFactory>,
 ): IlcRouteHandlerMethod {
     return async function wildcardRequestHandler(req, reply) {
-        const currentDomain = req.hostname;
+        const currentDomain = req.host;
         const registryConfig = await registryService.getConfig({ filter: { domain: currentDomain } });
         const url = req.raw.url as string;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
@@ -30,13 +30,13 @@ export function wildcardRequestHandlerFactory(
 
         if (processedUrl !== url) {
             reply.redirect(
-                registryConfig.settings.trailingSlash === UrlProcessor.routerHasTo.redirectToTrailingSlash ? 301 : 302,
                 processedUrl,
+                registryConfig.settings.trailingSlash === UrlProcessor.routerHasTo.redirectToTrailingSlash ? 301 : 302,
             );
             return;
         }
 
-        req.headers['x-request-host'] = req.hostname;
+        req.headers['x-request-host'] = req.host;
         req.headers['x-request-uri'] = url;
 
         const overrideConfigs = parseOverrideConfig(
@@ -62,12 +62,12 @@ export function wildcardRequestHandlerFactory(
 
         if (redirectTo) {
             reply.redirect(
-                redirectTo.code,
                 urlProcessor.process(
                     i18n.localizeUrl(finalRegistryConfig.settings.i18n, redirectTo.location, {
                         locale: req.raw.ilcState?.locale,
                     }),
                 ),
+                redirectTo.code,
             );
             return;
         }
