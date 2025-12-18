@@ -15,10 +15,10 @@ jobs:
         name: Common checks
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 22
                   cache: 'npm'
@@ -44,7 +44,7 @@ jobs:
                           ref: ''
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ matrix.branch.ref }}
 
@@ -82,7 +82,7 @@ jobs:
             - name: Run server-side tests coverage
               run: docker run --volume $(pwd)/artifacts/ilc/coverage/server:/.coverage namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage && mv .nyc_output/* /.coverage"
 
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v6
               with:
                   name: ${{ matrix.branch.name }}-server-side-tests-artifacts
                   path: artifacts/ilc/coverage/server
@@ -98,7 +98,7 @@ jobs:
                   sudo sysctl -p
                   docker run --volume $(pwd)/artifacts/ilc/coverage/client:/.coverage ilc:tmp-test-client bash -c "npm run test:client -- --browsers ChromeHeadlessWithoutSecurity && mv .karma_output/* /.coverage"
 
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v6
               with:
                   name: ${{ matrix.branch.name }}-client-side-tests-artifacts
                   path: artifacts/ilc/coverage/client
@@ -118,7 +118,7 @@ jobs:
                           ref: ''
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ matrix.branch.ref }}
 
@@ -199,7 +199,7 @@ jobs:
                 options: --name=postgres --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v64
               with:
                   ref: ${{ matrix.branch.ref }}
 
@@ -224,7 +224,7 @@ jobs:
                   namecheap/ilc_tmp:reg_$SHA
                   sh -c "npm run test:ci && mv .nyc_output/* /.coverage"
 
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v6
               with:
                   name: ${{ matrix.branch.name }}-${{ matrix.database.client }}-registry-tests-artifacts
                   path: ./artifacts/registry/coverage
@@ -263,10 +263,10 @@ jobs:
                 options: --name=postgres --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 22
                   cache: 'npm'
@@ -289,7 +289,7 @@ jobs:
                   DB_PASSWORD: pwd
                   DB_NAME: ilc
 
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v6
               if: failure()
               with:
                   name: e2e-tests-artifacts
@@ -301,8 +301,8 @@ jobs:
         needs: [build_ilc, build_registry, registry_tests]
         if: github.base_ref
         steps:
-            - uses: actions/checkout@v4
-            - uses: actions/download-artifact@v4
+            - uses: actions/checkout@v6
+            - uses: actions/download-artifact@v6
             - name: Create coverage report for ilc/server
               id: ilc-server-coverage-report
               uses: namecheap/Coverage-Diff@master
@@ -395,7 +395,7 @@ jobs:
         runs-on: ubuntu-latest
         if: github.ref == 'refs/heads/master'
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Build the Docker image
               run: |
