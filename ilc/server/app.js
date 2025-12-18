@@ -31,10 +31,12 @@ module.exports = (registryService, pluginManager, context) => {
 
     app.addHook('onRequest', (req, reply, done) => {
         context.run({ request: req, requestId: reportingPluginManager.getRequestId() ?? request.id }, async () => {
+            let doneWithContext;
+
             try {
                 const asyncResource = new AsyncResource('fastify-request-context');
                 req[asyncResourceSymbol] = asyncResource;
-                const doneWithContext = () => asyncResource.runInAsyncScope(done, req.raw);
+                doneWithContext = () => asyncResource.runInAsyncScope(done, req.raw);
 
                 const { url, method } = req.raw;
                 accessLogger.logRequest();
@@ -42,12 +44,12 @@ module.exports = (registryService, pluginManager, context) => {
                 if (!['GET', 'OPTIONS', 'HEAD'].includes(method)) {
                     logger.warn(`Request method ${method} is not allowed for url ${url}`);
                     reply.code(405).send({ message: 'Method Not Allowed' });
-                    return;
+                    return doneWithContext();
                 }
 
                 if (isDataUri(url)) {
                     reply.code(400).send({ message: 'Bad Request: Data URIs are not valid HTTP paths' });
-                    return;
+                    return doneWithContext();
                 }
 
                 req.raw.ilcState = {};
@@ -67,9 +69,15 @@ module.exports = (registryService, pluginManager, context) => {
 
                 await i18nOnRequest(req, reply);
 
-                doneWithContext();
+                return doneWithContext();
             } catch (error) {
                 errorHandler.handleError(error, req, reply);
+
+                if (typeof doneWithContext === 'function') {
+                    doneWithContext();
+                } else {
+                    done();
+                }
             }
         });
     });
