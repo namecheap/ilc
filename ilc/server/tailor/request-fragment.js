@@ -43,7 +43,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
             if (attributes.wrapperConf) {
                 const wrapperConf = attributes.wrapperConf;
                 const reqUrl = makeFragmentUrl({
-                    domain: request.hostname,
+                    domain: request.host,
                     route: currRoute,
                     baseUrl: wrapperConf.src,
                     appId: wrapperConf.appId,
@@ -56,7 +56,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                     {
                         url: currRoute.route,
                         id: request.id,
-                        domain: request.hostname,
+                        domain: request.host,
                         detailsJSON: JSON.stringify({
                             attributes,
                         }),
@@ -77,7 +77,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                             {
                                 url: currRoute.route,
                                 id: request.id,
-                                domain: request.hostname,
+                                domain: request.host,
                                 detailsJSON: JSON.stringify({
                                     statusCode: response.statusCode,
                                     'x-props-override': response.headers['x-props-override'],
@@ -105,7 +105,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                                 {
                                     url: currRoute.route,
                                     id: request.id,
-                                    domain: request.hostname,
+                                    domain: request.host,
                                     detailsJSON: JSON.stringify({
                                         attributes,
                                     }),
@@ -136,7 +136,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                             {
                                 url: currRoute.route,
                                 id: request.id,
-                                domain: request.hostname,
+                                domain: request.host,
                             },
                             'Request Fragment. Wrapper Fragment Processing. Fragment Response Processing Error',
                         );
@@ -148,7 +148,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                         {
                             url: currRoute.route,
                             id: request.id,
-                            domain: request.hostname,
+                            domain: request.host,
                         },
                         'Request Fragment. Wrapper Fragment Processing. Fragment Request Error',
                     );
@@ -170,7 +170,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                 });
 
                 const reqUrl = makeFragmentUrl({
-                    domain: request.hostname,
+                    domain: request.host,
                     route: currRoute,
                     baseUrl: fragmentUrl,
                     appId: attributes.id,
@@ -182,7 +182,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                     {
                         url: currRoute.route,
                         id: request.id,
-                        domain: request.hostname,
+                        domain: request.host,
                         detailsJSON: JSON.stringify({
                             route: currRoute,
                             baseUrl: fragmentUrl,
@@ -211,7 +211,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                             }),
                         );
                         logger.debug(
-                            { url: currRoute.route, id: request.id, domain: request.hostname },
+                            { url: currRoute.route, id: request.id, domain: request.host },
                             'Fragment Processing. Finished',
                         );
                     } catch (e) {

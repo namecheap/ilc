@@ -85,7 +85,7 @@ export class Client {
 
     #canonicalTagHandler;
 
-    #asyncBootUp;
+    #registeredApps;
 
     #navigationHooks = [
         (url) => (this.#transitionHooksExecutor.shouldNavigate(url) ? url : null),
@@ -296,7 +296,7 @@ export class Client {
 
         // TODO: window.ILC.importLibrary - calls bootstrap function with props (if supported), and returns exposed API
         // TODO: window.ILC.importParcelFromLibrary - same as importParcelFromApp, but for libs
-        this.#asyncBootUp = registerApplications(
+        this.#registeredApps = registerApplications(
             this.#configRoot,
             this.#router,
             this.#errorHandlerFor.bind(this),
@@ -479,9 +479,9 @@ export class Client {
             this.#i18n.destroy();
         }
 
-        // Destroy AsyncBootUp
-        if (this.#asyncBootUp) {
-            this.#asyncBootUp.destroy();
+        // Unregister all single-spa applications
+        if (this.#registeredApps) {
+            this.#registeredApps.destroy();
         }
     }
 }
