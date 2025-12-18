@@ -57,7 +57,7 @@ describe('request-fragment', () => {
         const request = {
             registryConfig,
             ilcState: {},
-            hostname: 'apps.test',
+            host: 'apps.test',
         };
         request.router = new ServerRouter(logger, request, '/primary');
 
@@ -67,7 +67,7 @@ describe('request-fragment', () => {
         const expectedAppProps = { publicPath: 'http://apps.test/primary' };
         const expectedSdkOptions = { i18n: { manifestPath: '/l10n/primary/manifest.json' } };
 
-        const expectedDomain = request.hostname;
+        const expectedDomain = request.host;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
         const expectedSdkEncoded = Buffer.from(JSON.stringify(expectedSdkOptions)).toString('base64');
@@ -118,7 +118,7 @@ describe('request-fragment', () => {
         const request = {
             registryConfig,
             ilcState: {},
-            hostname: 'apps.test',
+            host: 'apps.test',
         };
         request.router = new ServerRouter(logger, request, '/wrapper');
 
@@ -128,7 +128,7 @@ describe('request-fragment', () => {
         const expectedAppProps = { param1: 'value1' };
         const wrappedAppProps = { page: 'wrapped' };
 
-        const expectedDomain = request.hostname;
+        const expectedDomain = request.host;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
         const expectedWrappedAppPropsEncoded = Buffer.from(JSON.stringify(wrappedAppProps)).toString('base64');
@@ -179,7 +179,7 @@ describe('request-fragment', () => {
         const request = {
             registryConfig,
             ilcState: {},
-            hostname: 'apps.test',
+            host: 'apps.test',
         };
         request.router = new ServerRouter(logger, request, '/wrapper');
 
@@ -190,7 +190,7 @@ describe('request-fragment', () => {
         const wrapperPropsOverride = { param2: 'value2' };
         const wrappedAppProps = { page: 'wrapped' };
 
-        const expectedDomain = request.hostname;
+        const expectedDomain = request.host;
         const expectedWrapperRouterPropsEncoded = Buffer.from(JSON.stringify(expectedWrapperRouterProps)).toString(
             'base64',
         );
@@ -265,7 +265,7 @@ describe('request-fragment', () => {
         const request = {
             registryConfig,
             ilcState: {},
-            hostname: 'apps.test',
+            host: 'apps.test',
         };
         request.router = new ServerRouter(logger, request, '/primary');
 
@@ -275,7 +275,7 @@ describe('request-fragment', () => {
         const expectedAppProps = { publicPath: 'http://apps.test/primary' };
         const expectedSdkOptions = { i18n: { manifestPath: '/l10n/primary/manifest.json' } };
 
-        const expectedDomain = request.hostname;
+        const expectedDomain = request.host;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
         const expectedSdkEncoded = Buffer.from(JSON.stringify(expectedSdkOptions)).toString('base64');
@@ -321,7 +321,7 @@ describe('request-fragment', () => {
         const request = {
             registryConfig,
             ilcState: {},
-            hostname: 'apps.test',
+            host: 'apps.test',
         };
         request.router = new ServerRouter(logger, request, '/primary');
 
@@ -366,7 +366,7 @@ describe('request-fragment', () => {
         const request = {
             registryConfig,
             ilcState: {},
-            hostname: 'apps.test',
+            host: 'apps.test',
         };
         request.router = new ServerRouter(logger, request, '/wrapper');
 
@@ -405,7 +405,7 @@ describe('request-fragment', () => {
         const request = {
             registryConfig,
             ilcState: {},
-            hostname: 'secure.test',
+            host: 'secure.test',
         };
         request.router = new ServerRouter(logger, request, '/primary');
 
@@ -439,7 +439,7 @@ describe('request-fragment', () => {
         const request = {
             registryConfig,
             ilcState: {},
-            hostname: 'secure.test',
+            host: 'secure.test',
         };
         request.router = new ServerRouter(logger, request, '/primary');
 

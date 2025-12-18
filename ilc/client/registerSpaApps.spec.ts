@@ -16,6 +16,7 @@ describe('registerSpaApps', () => {
     let composeAppSlotPairsStub: SinonStub;
     let mockSlot: any;
     let asyncBootUpWaitForSlotStub: SinonStub;
+    let registeredAppsResult: { destroy: () => Promise<void[]> } | null = null;
     let testCounter = 0;
 
     beforeEach(() => {
@@ -103,8 +104,10 @@ describe('registerSpaApps', () => {
 
     afterEach(async () => {
         // Unload all registered apps from single-spa to avoid conflicts with other tests
-        const registeredApps = singleSpa.getAppNames();
-        await Promise.all(registeredApps.map((appName) => singleSpa.unloadApplication(appName)));
+        if (registeredAppsResult) {
+            await registeredAppsResult.destroy();
+            registeredAppsResult = null;
+        }
 
         // Restore stubs
         composeAppSlotPairsStub.restore();
@@ -122,7 +125,7 @@ describe('registerSpaApps', () => {
 
     describe('registerApplications', () => {
         it('should register applications with single-spa', () => {
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -139,7 +142,7 @@ describe('registerSpaApps', () => {
         });
 
         it('should create custom props for each application', () => {
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -177,7 +180,7 @@ describe('registerSpaApps', () => {
             slotElement2.id = `ilc-slot-${secondSlotName}`;
             document.body.appendChild(slotElement2);
 
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -193,7 +196,7 @@ describe('registerSpaApps', () => {
         });
 
         it('should call composeAppSlotPairsToRegister with ilcConfigRoot', () => {
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -211,7 +214,7 @@ describe('registerSpaApps', () => {
             // Make getSdkFactoryByApplicationName throw an error
             mockSdkFactoryBuilder.getSdkFactoryByApplicationName.throws(new Error('SDK factory error'));
 
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -233,7 +236,7 @@ describe('registerSpaApps', () => {
         it('should register app with correct activity function', async () => {
             mockRouter.isAppWithinSlotActive.returns(false);
 
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -254,7 +257,7 @@ describe('registerSpaApps', () => {
         });
 
         it('should preload app bundle', () => {
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -278,7 +281,7 @@ describe('registerSpaApps', () => {
                 wrappedWith: 'wrapperApp',
             });
 
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -294,7 +297,7 @@ describe('registerSpaApps', () => {
         });
 
         it('should register with custom props containing appId', () => {
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -315,7 +318,7 @@ describe('registerSpaApps', () => {
         });
 
         it('should register with custom props containing domElementGetter', () => {
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -342,7 +345,7 @@ describe('registerSpaApps', () => {
                 },
             });
 
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -361,7 +364,7 @@ describe('registerSpaApps', () => {
             const mockPathProps = { testProp: 'testValue' };
             mockRouter.getCurrentRouteProps.returns(mockPathProps);
 
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
@@ -379,7 +382,7 @@ describe('registerSpaApps', () => {
         it('should register apps with getCurrentBasePath function', () => {
             mockRouter.getCurrentRoute.returns({ basePath: '/test-base' });
 
-            registerApplications(
+            registeredAppsResult = registerApplications(
                 mockIlcConfigRoot,
                 mockRouter,
                 mockAppErrorHandlerFactory,
