@@ -95,6 +95,25 @@ describe('App', () => {
         chai.expect(responseCombined2.body.message).to.include('Data URIs');
     });
 
+    it('should block data URI in onRequest hook before wildcardRequestHandler (prevents FragmentError)', async () => {
+        // Production NewRelic alert scenario: data URI reached wildcardRequestHandler -> special:404 -> FragmentError
+        // This test verifies the fix: data URI blocked in onRequest with 400, never reaches wildcardRequestHandler
+        const productionDataUri =
+            '/data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJiIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMTQ0IiBoZWlnaHQ9IjY1NSI';
+
+        const response = await server.get(productionDataUri).expect(400);
+
+        // Verify: Blocked with 400 (not 404 which would indicate wildcardRequestHandler was reached)
+        chai.expect(response.status).to.equal(400);
+        chai.expect(response.body.message).to.include('Bad Request');
+        chai.expect(response.body.message).to.include('Data URIs');
+
+        // Key assertion: Status is 400, not 404
+        // If this were 404, it would mean wildcardRequestHandler processed it as special:404
+        // which would trigger Tailor fragment fetching -> FragmentError in NewRelic
+        chai.expect(response.status).to.not.equal(404);
+    });
+
     it('should parse "invalid" urls', async () => {
         await server.get('///').expect(200);
     });
