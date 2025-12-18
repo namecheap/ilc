@@ -71,7 +71,7 @@ describe(`Tests ${example.url}`, () => {
             await req
                 .post(example.url)
                 .send(incorrect)
-                .expect(422, '"domainName" must be a string\n' + '"template500" must be a string');
+                .expect(422, '"domainName" must be one of [string]\n' + '"template500" must be a string');
         });
 
         it('should not create record with non-existed template500', async () => {
@@ -323,7 +323,7 @@ describe(`Tests ${example.url}`, () => {
                 await req
                     .put(example.url + routerDomainsId)
                     .send(incorrect)
-                    .expect(422, '"domainName" must be a string\n' + '"template500" must be a string');
+                    .expect(422, '"domainName" must be one of [string]\n' + '"template500" must be a string');
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }
