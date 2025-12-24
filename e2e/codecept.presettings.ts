@@ -1,4 +1,4 @@
-import { command as execa, ExecaChildProcess } from 'execa';
+import { execaCommand, ResultPromise } from 'execa';
 import path from 'path';
 import terminate from 'terminate';
 import waitOn from 'wait-on';
@@ -27,7 +27,7 @@ const resources = [
     `http-get://127.0.0.1:${appPorts.wrapper}/client-entry.js`,
 ];
 
-let childProcess: ExecaChildProcess<string>;
+let childProcess: ResultPromise;
 
 async function shutdown() {
     if (!childProcess || childProcess.exitCode !== null) {
@@ -47,7 +47,7 @@ export async function bootstrap() {
             const stdio = isVerbose ? 'inherit' : 'ignore';
 
             console.log('Launching ILC with demo apps for E2E tests...');
-            childProcess = execa(`npm run start -- --no-watch`, { cwd: path.join(__dirname, '..'), stdio });
+            childProcess = execaCommand(`npm run start -- --no-watch`, { cwd: path.join(__dirname, '..'), stdio });
             childProcess.once('error', (error) => {
                 reject(error);
             });

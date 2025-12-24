@@ -1,7 +1,5 @@
 import Joi from 'joi';
-import isValidDomain from 'is-valid-domain';
 
-import { getJoiErr } from '../../util/helpers';
 import { templateNameSchema } from '../../templates/routes/validation';
 
 export default interface RouterDomains {
@@ -15,24 +13,18 @@ export default interface RouterDomains {
 
 export const routerDomainIdSchema = Joi.string().trim().required();
 
-const domainValidation = (fieldName: string) =>
-    Joi.string()
-        .trim()
-        .min(1)
-        .external((value) => {
-            if (!value) return;
-
-            if (value.match(/^(localhost|127\.0\.0\.1)(:\d{1,5})?$/) || isValidDomain(value)) {
-                return;
-            }
-
-            throw getJoiErr(fieldName, `Specified "${fieldName}" is not valid.`, value);
-        });
+const domainValidation = () =>
+    Joi.alternatives().try(
+        Joi.string()
+            .trim()
+            .pattern(/^(localhost|127\.0\.0\.1)(:\d{1,5})?$/),
+        Joi.string().trim().min(1).domain({ allowFullyQualified: true, tlds: false }),
+    );
 
 const commonRouterDomainsSchema = {
-    domainName: domainValidation('domainName').required(),
+    domainName: domainValidation().required(),
     template500: templateNameSchema.required(),
-    canonicalDomain: domainValidation('canonicalDomain').allow(null).default(null),
+    canonicalDomain: domainValidation().allow(null).default(null),
     props: Joi.object().allow(null).default(null),
     ssrProps: Joi.object().allow(null).default(null),
     versionId: Joi.string().strip(),

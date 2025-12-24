@@ -22,8 +22,10 @@ interface SelectVersioned<TRecord extends {} = any, TResult = unknown[]> extends
     ): Knex.QueryBuilder<TRecord, VersionedRecord<TResult2>>;
 }
 
-interface SelectVersionedRows<TRecord extends {} = any, TResult = unknown[]>
-    extends Knex.QueryInterface<TRecord, TResult> {
+interface SelectVersionedRows<TRecord extends {} = any, TResult = unknown[]> extends Knex.QueryInterface<
+    TRecord,
+    TResult
+> {
     <TTable extends Knex.TableNames>(
         table: TTable,
         key: string,
