@@ -23,8 +23,7 @@ class AccessLogger {
             );
         }
 
-        const store = context.getStore();
-        const path = store.get('path');
+        const path = context.get('path');
 
         if (!this.#logger) {
             throw new Error('Logger is not available');

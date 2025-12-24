@@ -1,4 +1,4 @@
-import chai from 'chai';
+import * as chai from 'chai';
 
 import { TransitionBlocker } from './TransitionBlocker';
 import TransitionBlockerList from './TransitionBlockerList';

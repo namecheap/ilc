@@ -3,6 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const { DefinePlugin, BannerPlugin, Compilation } = require('webpack');
 const { DuplicateIlcPluginsWebpackPlugin, ResolveIlcDefaultPluginsWebpackPlugin } = require('ilc-plugins-sdk/webpack');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const { Environment } = require('../common/Environment');
 const ilcPluginsPath = path.resolve(__dirname, '../../node_modules/');
@@ -23,12 +25,11 @@ module.exports = {
         rules: [
             {
                 test: /\.(js|ts)$/,
-                use: {
-                    loader: 'ts-loader',
-                    options: {
-                        configFile: 'tsconfig.client.json',
+                use: [
+                    {
+                        loader: 'babel-loader',
                     },
-                },
+                ],
                 exclude: /node_modules/,
             },
             { parser: { System: false } },
@@ -57,6 +58,15 @@ module.exports = {
         }),
         new DefinePlugin({
             LEGACY_PLUGINS_DISCOVERY_ENABLED: JSON.stringify(environment.isLegacyPluginsDiscoveryEnabled()),
+        }),
+        new ForkTsCheckerWebpackPlugin({
+            typescript: {
+                configFile: 'tsconfig.client.json',
+            },
+        }),
+        new BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            openAnalyzer: false,
         }),
     ],
     devtool: 'source-map',

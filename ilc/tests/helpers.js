@@ -3,11 +3,15 @@ const nock = require('nock');
 
 function getRegistryMock(overrideConfig = {}) {
     return {
-        getTemplate: () => ({
-            data: {
-                content: `<!DOCTYPE html><html lang="en-US"><head></head><body><ilc-slot id="primary"/>\n<ilc-slot id="regular"/></body></html>`,
-            },
-        }),
+        getTemplate:
+            overrideConfig.getTemplate ||
+            (() => ({
+                data: {
+                    content:
+                        '<!DOCTYPE html><html lang="en-US"><head></head><body>\n<!-- Region "primary" START -->\n<div id="primary"><slot name="primary"></slot></div>\n<script>window.ilcApps.push(\'primary\');window.ilcApps.push(Infinity);</script>\n<!-- Region "primary" END -->\n</body></html>',
+                },
+            })),
+        preheat: overrideConfig.preheat || (() => Promise.resolve()),
         getConfig: () =>
             deepmerge(
                 {
@@ -16,6 +20,7 @@ function getRegistryMock(overrideConfig = {}) {
                             spaBundle: 'http://localhost/index.js',
                             kind: 'primary',
                             ssr: { src: 'http://apps.test/primary' },
+                            l10nManifest: '/l10n/primary/manifest.json',
                         },
                         '@portal/regular': {
                             spaBundle: 'http://localhost/index.js',
@@ -122,6 +127,7 @@ function getPluginManagerMock() {
     return {
         getReportingPlugin: () => ({
             type: 'reporting',
+            logger: console,
         }),
         getI18nParamsDetectionPlugin: () => ({
             type: 'i18nParamsDetection',
@@ -138,12 +144,19 @@ function setupMockServersForApps() {
     nock('http://apps.test')
         .persist(true)
         .get(/.?/)
-        .reply(200, function (uri) {
-            return JSON.stringify({
-                url: uri,
-                headers: this.req.headers,
-            });
-        });
+        .reply(
+            200,
+            function (uri) {
+                return JSON.stringify({
+                    url: uri,
+                    headers: this.req.headers,
+                });
+            },
+            {
+                'set-cookie': 'asd=asd',
+                'x-custom-header': 'asd',
+            },
+        );
 }
 
 /**

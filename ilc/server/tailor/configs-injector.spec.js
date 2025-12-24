@@ -226,15 +226,11 @@ describe('configs injector', () => {
         it('should inject ILC config & state, polyfills, client js and new relic <script>, route assets style sheets links into the end of <head> tag', () => {
             context.run(
                 {
-                    request: {
-                        raw: {
-                            url: 'test/a?test=15',
-                            connection: {
-                                encrypted: true,
-                            },
-                        },
-                        hostname: 'test.com',
-                    },
+                    url: 'http://test/a?test=15',
+                    domain: 'test.com',
+                    requestId: 'requestId123',
+                    path: '/a',
+                    protocol: 'https',
                 },
                 () => {
                     const browserTimingHeader = `window.browserTimingHeader = 'Hi there! I should add a timing header.';`;
@@ -317,15 +313,11 @@ describe('configs injector', () => {
         it('should inject ILC config, omit ILC state, client js and new relic <script>, route assets style sheets links into a placeholder when a document has one', () => {
             context.run(
                 {
-                    request: {
-                        raw: {
-                            url: '/test/a?test=15',
-                            connection: {
-                                encrypted: true,
-                            },
-                        },
-                        hostname: 'test.com',
-                    },
+                    url: 'http://test/a?test=15',
+                    domain: 'test.com',
+                    requestId: 'requestId123',
+                    path: '/a',
+                    protocol: 'https',
                 },
                 () => {
                     const browserTimingHeader = `<script defer type="text/javascript">window.browserTimingHeader = 'Hi there! I should add a timing header.';</script>`;
@@ -397,15 +389,11 @@ describe('configs injector', () => {
         it('should allow setting attributes on html, head and body tags', () => {
             context.run(
                 {
-                    request: {
-                        raw: {
-                            url: 'test/a?test=15',
-                            connection: {
-                                encrypted: true,
-                            },
-                        },
-                        hostname: 'test.com',
-                    },
+                    url: 'http://test/a?test=15',
+                    domain: 'test.com',
+                    requestId: 'requestId123',
+                    path: '/a',
+                    protocol: 'https',
                 },
                 () => {
                     const configsInjector = new ConfigsInjector(newrelic);
@@ -421,23 +409,13 @@ describe('configs injector', () => {
             );
         });
         it('should remove marked tags for LDE if cookie is present', () => {
-            const overrideConfig = JSON.stringify({ someKey: 'someValue' });
-            const encodedOverrideConfig = 'LZUTF8:' + LZUTF8.encodeBase64(LZUTF8.compress(overrideConfig));
-
             context.run(
                 {
-                    request: {
-                        raw: {
-                            url: 'test/a?test=15',
-                            connection: {
-                                encrypted: true,
-                            },
-                        },
-                        hostname: 'test.com',
-                        headers: {
-                            cookie: `ILC-overrideConfig=${encodedOverrideConfig}`,
-                        },
-                    },
+                    url: 'http://test/a?test=15',
+                    domain: 'test.com',
+                    requestId: 'requestId123',
+                    path: '/a',
+                    protocol: 'https',
                 },
                 () => {
                     const nrHeader = `<!-- Prod only start --><script type="text/javascript">

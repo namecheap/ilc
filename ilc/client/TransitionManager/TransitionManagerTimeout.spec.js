@@ -1,10 +1,8 @@
-import chai from 'chai';
+import * as chai from 'chai';
 import sinon from 'sinon';
 import html from 'nanohtml';
-import ilcEvents from '../constants/ilcEvents';
 
 import { slotWillBe, TransitionManager } from './TransitionManager';
-import { CssTrackedApp } from '../CssTrackedApp';
 
 describe('TransitionManager Timeout', () => {
     const locationHash = 'i-am-location-hash';

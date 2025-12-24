@@ -1,4 +1,6 @@
+import { expect } from 'chai';
 import { getIlcConfigRoot } from './getIlcConfigRoot';
+import { IlcConfigRoot } from './IlcConfigRoot';
 
 describe('IlcConfigRoot', () => {
     it('IlcConfigRoot should init', () => {
@@ -64,5 +66,83 @@ describe('IlcConfigRoot', () => {
         const configRoot = getIlcConfigRoot();
         expect(configRoot.isApplicationClientlessByAppName('@portal/navbar')).to.be.false;
         expect(configRoot.isApplicationClientlessByAppName('@portal/clientless')).to.be.true;
+    });
+
+    describe('with custom config', () => {
+        let originalConfigNode;
+
+        beforeEach(() => {
+            originalConfigNode = document.querySelector('script[type="text/ilc-config"]');
+        });
+
+        afterEach(() => {
+            const currentNode = document.querySelector('script[type="text/ilc-config"]');
+            if (currentNode && currentNode !== originalConfigNode) {
+                currentNode.remove();
+            }
+            if (originalConfigNode && !document.contains(originalConfigNode)) {
+                document.head.appendChild(originalConfigNode);
+            }
+        });
+
+        it('should decode HTML entities in globalSpinner customHTML', () => {
+            const config = {
+                apps: {},
+                routes: [],
+                specialRoutes: {},
+                settings: {
+                    globalSpinner: {
+                        enabled: true,
+                        customHTML: '&lt;div&gt;Loading...&lt;/div&gt;',
+                    },
+                },
+                sharedLibs: {},
+            };
+
+            const existingNode = document.querySelector('script[type="text/ilc-config"]');
+            if (existingNode) {
+                existingNode.remove();
+            }
+
+            const scriptEl = document.createElement('script');
+            scriptEl.setAttribute('type', 'text/ilc-config');
+            scriptEl.innerHTML = JSON.stringify(config);
+            document.head.appendChild(scriptEl);
+
+            const configRoot = new IlcConfigRoot();
+
+            const settings = configRoot.getSettings();
+            expect(settings.globalSpinner.customHTML).to.equal('<div>Loading...</div>');
+        });
+
+        it('should return config for shared libs by name from dynamicLibs', () => {
+            const config = {
+                apps: {},
+                routes: [],
+                specialRoutes: {},
+                settings: {},
+                sharedLibs: {},
+                dynamicLibs: {
+                    testLib: {
+                        spaBundle: 'http://example.com/test.js',
+                    },
+                },
+            };
+
+            const existingNode = document.querySelector('script[type="text/ilc-config"]');
+            if (existingNode) {
+                existingNode.remove();
+            }
+
+            const scriptEl = document.createElement('script');
+            scriptEl.setAttribute('type', 'text/ilc-config');
+            scriptEl.innerHTML = JSON.stringify(config);
+            document.head.appendChild(scriptEl);
+
+            const configRoot = new IlcConfigRoot();
+
+            const testLib = configRoot.getConfigForSharedLibsByName('testLib');
+            expect(testLib).to.deep.equal({ spaBundle: 'http://example.com/test.js' });
+        });
     });
 });

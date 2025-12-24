@@ -1,6 +1,5 @@
 import newrelic from 'newrelic';
 
-import type { RequestHandler } from 'fastify';
 import type { Logger } from 'ilc-plugins-sdk';
 import { SlotCollection } from '../../common/Slot/SlotCollection';
 import UrlProcessor from '../../common/UrlProcessor';
@@ -12,7 +11,7 @@ import parseOverrideConfig from '../tailor/parse-override-config';
 import ServerRouter from '../tailor/server-router';
 import { TransitionHooksExecutor } from '../TransitionHooksExecutor';
 import { ErrorHandler } from '../types/ErrorHandler';
-import { PatchedHttpRequest } from '../types/PatchedHttpRequest';
+import { IlcRouteHandlerMethod } from '../types/IlcRouteHandlerMethod';
 import { Registry } from '../types/Registry';
 
 export function wildcardRequestHandlerFactory(
@@ -21,23 +20,23 @@ export function wildcardRequestHandlerFactory(
     errorHandlingService: ErrorHandler,
     transitionHooksExecutor: TransitionHooksExecutor,
     tailor: ReturnType<typeof tailorFactory>,
-): RequestHandler<PatchedHttpRequest> {
+): IlcRouteHandlerMethod {
     return async function wildcardRequestHandler(req, reply) {
-        const currentDomain = req.hostname;
+        const currentDomain = req.host;
         const registryConfig = await registryService.getConfig({ filter: { domain: currentDomain } });
-        const url = req.raw.url;
+        const url = req.raw.url as string;
         const urlProcessor = new UrlProcessor(registryConfig.settings.trailingSlash);
         const processedUrl = urlProcessor.process(url);
 
         if (processedUrl !== url) {
             reply.redirect(
-                registryConfig.settings.trailingSlash === UrlProcessor.routerHasTo.redirectToTrailingSlash ? 301 : 302,
                 processedUrl,
+                registryConfig.settings.trailingSlash === UrlProcessor.routerHasTo.redirectToTrailingSlash ? 301 : 302,
             );
             return;
         }
 
-        req.headers['x-request-host'] = req.hostname;
+        req.headers['x-request-host'] = req.host;
         req.headers['x-request-uri'] = url;
 
         const overrideConfigs = parseOverrideConfig(
@@ -63,12 +62,12 @@ export function wildcardRequestHandlerFactory(
 
         if (redirectTo) {
             reply.redirect(
-                redirectTo.code,
                 urlProcessor.process(
                     i18n.localizeUrl(finalRegistryConfig.settings.i18n, redirectTo.location, {
                         locale: req.raw.ilcState?.locale,
                     }),
                 ),
+                redirectTo.code,
             );
             return;
         }
@@ -83,7 +82,7 @@ export function wildcardRequestHandlerFactory(
         );
 
         try {
-            reply.res = csp.setHeader(reply.res);
+            reply.raw = csp.setHeader(reply.raw);
         } catch (error) {
             errorHandlingService.noticeError(error, {
                 message: 'CSP object processing error',
@@ -103,7 +102,7 @@ export function wildcardRequestHandlerFactory(
         const slotCollection = new SlotCollection(route.slots, finalRegistryConfig);
         slotCollection.isValid();
 
-        reply.sent = true; // claim full responsibility of the low-level request and response, see https://www.fastify.io/docs/v2.12.x/Reply/#sent
-        tailor.requestHandler(req.raw, reply.res);
+        reply.hijack(); // claim full responsibility of the low-level request and response
+        tailor.requestHandler(req.raw, reply.raw);
     };
 }

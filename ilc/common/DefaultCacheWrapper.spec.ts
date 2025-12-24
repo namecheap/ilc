@@ -1,5 +1,5 @@
 import { type ExtendedError } from '@namecheap/error-extender';
-import chai from 'chai';
+import * as chai from 'chai';
 import { type Logger } from 'ilc-plugins-sdk';
 import sinon from 'sinon';
 import { DefaultCacheWrapper } from './DefaultCacheWrapper';

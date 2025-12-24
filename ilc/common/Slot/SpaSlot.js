@@ -18,15 +18,15 @@ export class SpaSlot {
         const { applicationId, applicationName, slotName } = rawSlot;
 
         assert(
-            applicationId !== 'string',
+            typeof applicationId === 'string',
             `SpaSlot instance can not be initiated without applicationId where rawSlot = ${JSON.stringify(rawSlot)}`,
         );
         assert(
-            applicationName !== 'string',
+            typeof applicationName === 'string',
             `SpaSlot instance can not be initiated without applicationName where rawSlot = ${JSON.stringify(rawSlot)}`,
         );
         assert(
-            slotName !== 'string',
+            typeof slotName === 'string',
             `SpaSlot instance can not be initiated without slotName where rawSlot = ${JSON.stringify(rawSlot)}`,
         );
 

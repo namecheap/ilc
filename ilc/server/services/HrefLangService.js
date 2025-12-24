@@ -47,8 +47,7 @@ class HrefLangService {
      * @returns {string}
      */
     #wrapUrlWithHrefLinkHTML(url, langCulture, isDefault = false) {
-        const store = context.getStore();
-        const fullUrl = removeQueryParams(`${config.get('client.protocol')}://${store.get('domain')}${url}`);
+        const fullUrl = removeQueryParams(`${config.get('client.protocol')}://${context.get('domain')}${url}`);
         const defaultHrefLangValue = this.#defaultHrefLangValue;
 
         let hrefLangValue = isDefault ? defaultHrefLangValue : langCulture;
