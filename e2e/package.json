@@ -16,20 +16,18 @@
     "license": "UNLICENSED",
     "dependencies": {
         "@codeceptjs/mock-request": "^0.3.1",
-        "@codeceptjs/ui": "^1.2.0",
-        "@pollyjs/adapter-puppeteer": "^6.0.6",
-        "@pollyjs/core": "^6.0.6",
-        "codeceptjs": "^3.6.7",
+        "@codeceptjs/ui": "^1.3.8",
+        "codeceptjs": "^3.7.5",
         "codeceptjs-chai": "^2.3.5",
-        "cross-env": "^7.0.3",
-        "execa": "^5.1.1",
+        "cross-env": "^10.1.0",
+        "execa": "^9.6.1",
         "mocha-multi": "^1.1.7",
-        "mochawesome": "^7.1.3",
-        "puppeteer": "^23.4.1",
+        "mochawesome": "^7.1.4",
+        "puppeteer": "^24.33.1",
         "terminate": "^2.8.0",
         "ts-node": "^10.9.2",
-        "typescript": "^5.6.2",
-        "wait-on": "^8.0.1"
+        "typescript": "^5.9.3",
+        "wait-on": "^9.0.3"
     },
     "engines": {
         "node": ">=22"
