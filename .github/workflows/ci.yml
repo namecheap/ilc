@@ -396,10 +396,15 @@ jobs:
         if: github.ref == 'refs/heads/master'
         steps:
             - uses: actions/checkout@v6
-
-            - name: Build the Docker image
-              run: |
-                  docker build -t ilc-mkdocs - < ./.mkdocs/Dockerfile
-
-            - name: Generate docs and publish to GitHub Pages
-              run: docker run --rm -v ${PWD}:/docs ilc-mkdocs gh-deploy --force
+            - uses: actions/setup-python@v6
+              with:
+                  python-version: 3.x
+            - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+            - uses: actions/cache@v5
+              with:
+                  key: mkdocs-material-${{ env.cache_id }}
+                  path: ~/.cache
+                  restore-keys: |
+                      mkdocs-material-
+            - run: pip3 install mkdocs-material mkdocs-macros-plugin
+            - run: mkdocs gh-deploy --force
