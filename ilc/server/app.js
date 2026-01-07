@@ -1,4 +1,3 @@
-import { fastifyExpress } from '@fastify/express';
 import { fastifyRequestContext } from '@fastify/request-context';
 import config from 'config';
 import fastify from 'fastify';
@@ -8,11 +7,11 @@ import { errorHandlerFactory } from './errorHandler/factory';
 import { pingPluginFactroy } from './routes/pingPluginFactory';
 import { renderTemplateHandlerFactory } from './routes/renderTemplateHandlerFactory';
 import { wildcardRequestHandlerFactory } from './routes/wildcardRequestHandlerFactory';
+import { registerStatic } from './serveStatic';
 import tailorFactory from './tailor/factory';
 import { TransitionHooksExecutor } from './TransitionHooksExecutor';
 const { Test500Error } = require('./errorHandler/ErrorHandler');
 
-const serveStatic = require('./serveStatic');
 const i18n = require('./i18n');
 const reportingPluginManager = require('./plugins/reportingPlugin');
 const AccessLogger = require('./logger/accessLogger');
@@ -28,7 +27,6 @@ module.exports = async function createApplication(registryService, pluginManager
     const logger = reportingPluginManager.getLogger();
     const accessLogger = new AccessLogger(config, logger);
     const app = fastify(appConfig);
-    await app.register(fastifyExpress);
     await app.register(fastifyRequestContext, {
         defaultStoreValues: (req) => context.createFromRequest(req, reportingPluginManager.getRequestId() ?? req.id),
     });
@@ -79,7 +77,7 @@ module.exports = async function createApplication(registryService, pluginManager
     });
 
     if (config.get('cdnUrl') === null) {
-        app.use(config.get('static.internalUrl'), serveStatic(config.get('productionMode')));
+        await registerStatic(app, config.get('static.internalUrl'), config.get('productionMode'));
     }
 
     const pingPlugin = pingPluginFactroy(registryService);
