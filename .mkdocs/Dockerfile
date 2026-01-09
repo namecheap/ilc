@@ -1,3 +1,3 @@
-FROM squidfunk/mkdocs-material:9.5.38
+FROM squidfunk/mkdocs-material:latest
 
-RUN pip3 install mkdocs-macros-plugin==1.0.4
+RUN pip3 install mkdocs-macros-plugin
