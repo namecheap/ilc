@@ -1,6 +1,7 @@
 process.env.TZ = 'UTC';
 
 import supertest, { type Agent } from 'supertest';
+import * as bcrypt from 'bcrypt';
 import db from '../server/db';
 import { formatDate } from '../server/util/db';
 import { expect, request, requestWithAuth } from './common';
@@ -318,6 +319,138 @@ describe(`Tests ${basePath}`, () => {
             it('should deny access w/o authentication', async () => {
                 await reqWithAuth.post(`${basePath}/${dataStub[0].id}/revert`).expect(401);
             });
+        });
+    });
+
+    describe('Secret sanitization', () => {
+        const authEntitiesPath = '/api/v1/auth_entities';
+
+        function findVersionRecord(
+            versions: any[],
+            entityId: number | undefined,
+            filter: { hasData?: boolean; hasDataAfter?: boolean } = {},
+        ): any {
+            return versions.find((v: any) => {
+                if (v.entity_type !== 'auth_entities') return false;
+                if (String(v.entity_id) !== String(entityId)) return false;
+                if (filter.hasData !== undefined && (v.data !== null) !== filter.hasData) return false;
+                if (filter.hasDataAfter !== undefined && (v.data_after !== null) !== filter.hasDataAfter) return false;
+                return true;
+            });
+        }
+
+        it('should mask auth_entities secret in versioning API response', async () => {
+            let authEntityId: number | undefined;
+
+            try {
+                const createResp = await req
+                    .post(`${authEntitiesPath}/`)
+                    .send({
+                        identifier: 'test-api-auth-entity',
+                        secret: 'super-secret-password-hash',
+                        provider: 'local',
+                        role: 'admin',
+                    })
+                    .expect(200);
+
+                authEntityId = createResp.body.id;
+
+                const response = await req.get(basePath).expect(200);
+                const authVersion = findVersionRecord(response.body, authEntityId);
+
+                expect(authVersion).to.exist;
+                const dataAfter = JSON.parse(authVersion.data_after);
+
+                expect(dataAfter.data.secret).to.equal('[SECRET]');
+                expect(dataAfter.data.identifier).to.equal('test-api-auth-entity');
+                expect(dataAfter.data.provider).to.equal('local');
+            } finally {
+                if (authEntityId) {
+                    await req.delete(`${authEntitiesPath}/${authEntityId}`);
+                }
+            }
+        });
+
+        it('should detect auth_entities secret changes and log them with masked values', async () => {
+            let authEntityId: number | undefined;
+
+            try {
+                const createResp = await req
+                    .post(`${authEntitiesPath}/`)
+                    .send({
+                        identifier: 'test-api-auth-change',
+                        secret: 'initial-secret-hash',
+                        provider: 'local',
+                        role: 'admin',
+                    })
+                    .expect(200);
+
+                authEntityId = createResp.body.id;
+
+                await req.put(`${authEntitiesPath}/${authEntityId}`).send({ secret: 'new-secret-hash' }).expect(200);
+
+                const response = await req.get(basePath).expect(200);
+                const updateVersion = findVersionRecord(response.body, authEntityId, {
+                    hasData: true,
+                    hasDataAfter: true,
+                });
+
+                expect(updateVersion).to.exist;
+                const data = JSON.parse(updateVersion.data);
+                const dataAfter = JSON.parse(updateVersion.data_after);
+
+                expect(data.data.secret).to.equal('[SECRET]');
+                expect(dataAfter.data.secret).to.equal('[SECRET]');
+                expect(data.data.identifier).to.equal('test-api-auth-change');
+            } finally {
+                if (authEntityId) {
+                    await req.delete(`${authEntitiesPath}/${authEntityId}`);
+                }
+            }
+        });
+
+        it('should revert non-secret fields while preserving current auth secret', async () => {
+            let authEntityId: number | undefined;
+
+            try {
+                const createResp = await req
+                    .post(`${authEntitiesPath}/`)
+                    .send({
+                        identifier: 'test-api-auth-revert',
+                        secret: 'initial-secret-hash',
+                        provider: 'local',
+                        role: 'admin',
+                    })
+                    .expect(200);
+
+                authEntityId = createResp.body.id;
+
+                await req
+                    .put(`${authEntitiesPath}/${authEntityId}`)
+                    .send({ secret: 'new-secret-hash', role: 'readonly' })
+                    .expect(200);
+
+                const versionsResp = await req.get(basePath).expect(200);
+                const updateVersion = findVersionRecord(versionsResp.body, authEntityId, {
+                    hasData: true,
+                    hasDataAfter: true,
+                });
+
+                expect(updateVersion).to.exist;
+
+                await req.post(`${basePath}/${updateVersion.id}/revert`).expect(200);
+
+                const authResp = await req.get(`${authEntitiesPath}/${authEntityId}`).expect(200);
+                expect(authResp.body.role).to.equal('admin');
+
+                const [dbEntity] = await db('auth_entities').where('id', authEntityId);
+                expect(await bcrypt.compare('new-secret-hash', dbEntity.secret)).to.be.true;
+                expect(await bcrypt.compare('initial-secret-hash', dbEntity.secret)).to.be.false;
+            } finally {
+                if (authEntityId) {
+                    await req.delete(`${authEntitiesPath}/${authEntityId}`);
+                }
+            }
         });
     });
 });

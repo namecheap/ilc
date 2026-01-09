@@ -5,6 +5,7 @@ import versioningConfig from '../config';
 import { extractInsertedId, formatDate } from '../../util/db';
 import * as errors from '../errors';
 import { EntityTypes, OperationConfig, VersionRow, VersionRowData, VersionRowParsed } from '../interfaces';
+import { sanitizeSnapshot, stripSecretFields } from '../utils/secretSanitizer';
 import Transaction = Knex.Transaction;
 
 export * from '../interfaces';
@@ -66,13 +67,20 @@ export class Versioning {
                 });
             }
 
-            const data = currentData === null ? null : JSON.stringify(currentData);
-            const data_after = newData === null ? null : JSON.stringify(newData);
+            const rawData = currentData === null ? null : JSON.stringify(currentData);
+            const rawDataAfter = newData === null ? null : JSON.stringify(newData);
 
-            if (data === data_after) {
+            if (rawData === rawDataAfter) {
                 await commit();
                 return null;
             }
+
+            const secretKeys = await this.getSecretSettingKeys(trx);
+            const sanitize = (snapshot: typeof currentData) =>
+                snapshot ? JSON.stringify(sanitizeSnapshot(updatedConfig.type, snapshot, secretKeys)) : null;
+
+            const data = sanitize(currentData);
+            const data_after = sanitize(newData);
 
             const logRecord: VersionRowData = {
                 entity_type: updatedConfig.type,
@@ -127,25 +135,29 @@ export class Versioning {
                         .delete()
                         .transacting(trx);
                 } else if (versionRow.data_after === null) {
-                    // Deletion operation, so we need to create everything the was deleted
+                    // Deletion operation, so we need to create everything that was deleted
+                    // Strip secret marker fields to avoid inserting placeholders - secrets remain lost
                     const dataToRestore = versionRow.data;
+                    const strippedData = stripSecretFields(dataToRestore.data);
                     await this.db(versionRow.entity_type)
                         .insert({
-                            ...dataToRestore.data,
+                            ...strippedData,
                             [entityConfig.idColumn]: versionRow.entity_id,
                         })
                         .transacting(trx);
 
                     for (const relation of entityConfig.related) {
                         const relatedItems = dataToRestore.related[relation.type].map((v: any) => ({
-                            ...v,
+                            ...stripSecretFields(v),
                             [relation.key]: versionRow.entity_id,
                         }));
                         await this.db.batchInsert(relation.type, relatedItems).transacting(trx);
                     }
                 } else {
                     // We have an update operation
+                    // Strip secret marker fields to preserve current DB values for secrets
                     const dataToRestore = versionRow.data;
+                    const strippedData = stripSecretFields(dataToRestore.data);
                     for (const relation of entityConfig.related) {
                         await this.db(relation.type)
                             .where(relation.key, versionRow.entity_id)
@@ -153,18 +165,23 @@ export class Versioning {
                             .transacting(trx);
 
                         const relatedItems = dataToRestore.related[relation.type].map((v: any) => ({
-                            ...v,
+                            ...stripSecretFields(v),
                             [relation.key]: versionRow.entity_id,
                         }));
                         await this.db.batchInsert(relation.type, relatedItems).transacting(trx);
                     }
                     await this.db(versionRow.entity_type)
                         .where(entityConfig.idColumn, versionRow.entity_id)
-                        .update(dataToRestore.data)
+                        .update(strippedData)
                         .transacting(trx);
                 }
             },
         );
+    }
+
+    private async getSecretSettingKeys(trx: Transaction): Promise<Set<string>> {
+        const secretSettings = await this.db('settings').select('key').where('secret', true).transacting(trx);
+        return new Set(secretSettings.map((s: { key: string }) => s.key));
     }
 
     private async getDataSnapshot(trx: Transaction, config: OperationConfig) {
