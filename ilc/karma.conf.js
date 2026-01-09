@@ -41,14 +41,12 @@ module.exports = function (config) {
             },
         },
         customContextFile: './tests/karma.index.html',
-        frameworks: ['parallel', 'mocha', 'chai', 'sinon', 'webpack'],
+        frameworks: ['mocha', 'webpack'],
         plugins: [
-            'karma-parallel',
+            'karma-bail-fast',
             'karma-chrome-launcher',
 
             'karma-mocha',
-            'karma-chai',
-            'karma-sinon',
 
             'karma-coverage-istanbul-reporter',
             'karma-mocha-reporter',
@@ -62,28 +60,9 @@ module.exports = function (config) {
             'common/**/*.spec.+(js|ts)': ['webpack', 'sourcemap'],
             'systemjs/**/*.spec.+(js|ts)': ['webpack', 'sourcemap'],
         },
-        reporters: ['mocha', 'coverage-istanbul'],
+        reporters: ['bail-fast', 'mocha', 'coverage-istanbul'],
         mochaReporter: {
             showDiff: true,
-        },
-        coverageReporter: {
-            dir: path.join(__dirname, '.karma_output', 'coverage'),
-            subdir: (browser) => browser.toLowerCase().split(/[\s/-]/)[0],
-            reporters: nycConfig.reporter.map((type) => ({
-                type,
-            })),
-            instrumenterOptions: {
-                istanbul: {
-                    noCompact: true,
-                },
-            },
-            check: {
-                global: getThresholds(),
-                each: getThresholds(),
-            },
-            watermarks: {
-                ...nycConfig.watermarks,
-            },
         },
         coverageIstanbulReporter: {
             // reports can be any that are listed here: https://github.com/istanbuljs/istanbuljs/tree/73c25ce79f91010d1ff073aa6ff3fd01114f90db/packages/istanbul-reports/lib
@@ -129,9 +108,6 @@ module.exports = function (config) {
         },
         webpackMiddleware: {
             noInfo: true,
-        },
-        parallelOptions: {
-            executors: 2,
         },
     });
 };

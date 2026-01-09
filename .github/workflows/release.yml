@@ -9,7 +9,7 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v1
+            - uses: actions/checkout@v6
 
             - name: Docker registry auth
               run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin

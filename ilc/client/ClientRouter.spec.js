@@ -1,4 +1,4 @@
-import chai from 'chai';
+import * as chai from 'chai';
 import sinon from 'sinon';
 import html from 'nanohtml';
 
@@ -160,9 +160,19 @@ describe('client router', () => {
         sinon.stub(configRoot, 'registryConfiguration').restore();
     });
 
-    afterEach(() => {
+    afterEach(async () => {
         document.body.innerHTML = '';
-        router.removeEventListeners();
+        if (router) {
+            router.removeEventListeners();
+        }
+        /**
+         * Allow pending events to be emitted to not break other tests
+         * single-spa patches window to emit popstate event on history and location actions from other tests like ClientRouter
+         * https://single-spa.js.org/docs/api#popstateevent
+         * This could not be easily cleared and karma runs all test suites in single context
+         * TODO switch to jest or another test framework with proper test isolation
+         */
+        await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
     describe('should set initial routes while client router is initializing', () => {
@@ -655,9 +665,15 @@ describe('client router', () => {
             getMountedApps: () => ['mounted_app__at__some_place', 'hero__at__some_place'],
         };
 
+        let beforeRoutingHandler;
+
         afterEach(() => {
             logger.info.resetHistory();
             logger.warn.resetHistory();
+            if (beforeRoutingHandler) {
+                window.removeEventListener(ilcEvents.BEFORE_ROUTING, beforeRoutingHandler);
+                beforeRoutingHandler = null;
+            }
         });
 
         it('should ignore not mounted fragments', () => {
@@ -709,10 +725,10 @@ describe('client router', () => {
         });
 
         it(`should handle ${ilcEvents.NOT_FOUND} successfully`, () => {
-            const beforeRoutingHandler = sinon.spy();
+            beforeRoutingHandler = sinon.spy();
             window.addEventListener(ilcEvents.BEFORE_ROUTING, beforeRoutingHandler);
 
-            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+            router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, {}, logger);
 
             const appId = 'hero__at__some_place';
 

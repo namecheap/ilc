@@ -148,4 +148,13 @@ export function registerApplications(
 
         singleSpa.registerApplication(appId, loadingFn, activityFn, customProps);
     });
+
+    return {
+        destroy() {
+            asyncBootUp.destroy();
+            // TODO: change to unregisterApplication when single-spa is updated to 5.8+
+            const registeredApps = singleSpa.getAppNames();
+            return Promise.all(registeredApps.map((appName) => singleSpa.unloadApplication(appName)));
+        },
+    };
 }

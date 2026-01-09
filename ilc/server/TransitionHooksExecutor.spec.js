@@ -1,5 +1,5 @@
 const chai = require('chai');
-const chaiAsPromised = require('chai-as-promised');
+const chaiAsPromised = require('chai-as-promised').default;
 const sinon = require('sinon');
 
 chai.use(chaiAsPromised);
@@ -48,7 +48,7 @@ describe('TransitionHooksExecutor', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-            const app = createApp(helpers.getRegistryMock(), pluginManager, context);
+            const app = await createApp(helpers.getRegistryMock(), pluginManager, context);
 
             try {
                 res = await app.inject({ method: 'GET', url: '/all' });
@@ -73,7 +73,7 @@ describe('TransitionHooksExecutor', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-            const app = createApp(helpers.getRegistryMock(), pluginManager, context);
+            const app = await createApp(helpers.getRegistryMock(), pluginManager, context);
 
             try {
                 res = await app.inject({ method: 'GET', url: '/all' });
@@ -96,7 +96,7 @@ describe('TransitionHooksExecutor', () => {
             pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
             transitionHooksPlugin.getTransitionHooks.returns(hooks);
 
-            const app = createApp(helpers.getRegistryMock(), pluginManager, context);
+            const app = await createApp(helpers.getRegistryMock(), pluginManager, context);
 
             try {
                 res = await app.inject({ method: 'GET', url: '/all' });
@@ -134,7 +134,7 @@ describe('TransitionHooksExecutor', () => {
         const req = {
             raw: rawReq,
             log,
-            hostname: 'test.com',
+            host: 'test.com',
         };
 
         describe('should have access to a provided URL', () => {
@@ -178,7 +178,7 @@ describe('TransitionHooksExecutor', () => {
                 for (const hook of hooks) {
                     chai.expect(
                         hook.calledOnceWith({
-                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname, route: route.route },
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.host, route: route.route },
                             req: rawReq,
                             log,
                         }),
@@ -186,6 +186,79 @@ describe('TransitionHooksExecutor', () => {
                 }
 
                 chai.expect(redirectTo).to.be.null;
+            });
+        });
+
+        describe('error handling', () => {
+            it('should throw error when router is not initialized', async () => {
+                const reqWithoutRouter = {
+                    raw: {},
+                    log,
+                    host: 'test.com',
+                };
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns([]);
+
+                await chai
+                    .expect(new TransitionHooksExecutor(pluginManager).redirectTo(reqWithoutRouter))
+                    .to.eventually.be.rejectedWith('Router not initialized');
+            });
+
+            it('should throw error when redirect code is less than 300', async () => {
+                const newLocation = '/should/be/this/location';
+                const hooks = [sinon.stub().resolves({ type: ActionType.redirect, newLocation, code: 299 })];
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns(hooks);
+
+                await chai
+                    .expect(new TransitionHooksExecutor(pluginManager).redirectTo(req))
+                    .to.eventually.be.rejected.then((rejectedError) => {
+                        chai.expect(rejectedError).to.be.instanceOf(TransitionHookError);
+                        chai.expect(rejectedError.message).to.include('An error has occurred while executing');
+                        chai.expect(rejectedError.cause).to.be.instanceOf(TransitionHookError);
+                        chai.expect(rejectedError.cause.message).to.equal('Invalid redirect code');
+                    });
+            });
+
+            it('should throw error when redirect code is greater than 308', async () => {
+                const newLocation = '/should/be/this/location';
+                const hooks = [sinon.stub().resolves({ type: ActionType.redirect, newLocation, code: 309 })];
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns(hooks);
+
+                await chai
+                    .expect(new TransitionHooksExecutor(pluginManager).redirectTo(req))
+                    .to.eventually.be.rejected.then((rejectedError) => {
+                        chai.expect(rejectedError).to.be.instanceOf(TransitionHookError);
+                        chai.expect(rejectedError.message).to.include('An error has occurred while executing');
+                        chai.expect(rejectedError.cause).to.be.instanceOf(TransitionHookError);
+                        chai.expect(rejectedError.cause.message).to.equal('Invalid redirect code');
+                    });
+            });
+
+            it('should throw error when redirect code is exactly 300 (boundary case)', async () => {
+                const newLocation = '/should/be/this/location';
+                const hooks = [sinon.stub().resolves({ type: ActionType.redirect, newLocation, code: 300 })];
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns(hooks);
+
+                const redirectTo = await new TransitionHooksExecutor(pluginManager).redirectTo(req);
+                chai.expect(redirectTo).to.eql({ code: 300, location: newLocation });
+            });
+
+            it('should throw error when redirect code is exactly 308 (boundary case)', async () => {
+                const newLocation = '/should/be/this/location';
+                const hooks = [sinon.stub().resolves({ type: ActionType.redirect, newLocation, code: 308 })];
+
+                pluginManager.getTransitionHooksPlugin.returns(transitionHooksPlugin);
+                transitionHooksPlugin.getTransitionHooks.returns(hooks);
+
+                const redirectTo = await new TransitionHooksExecutor(pluginManager).redirectTo(req);
+                chai.expect(redirectTo).to.eql({ code: 308, location: newLocation });
             });
         });
 
@@ -215,7 +288,7 @@ describe('TransitionHooksExecutor', () => {
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(
                         hook.calledOnceWith({
-                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname, route: route.route },
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.host, route: route.route },
                             req: rawReq,
                             log,
                         }),
@@ -244,7 +317,7 @@ describe('TransitionHooksExecutor', () => {
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(
                         hook.calledOnceWith({
-                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname, route: route.route },
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.host, route: route.route },
                             req: rawReq,
                             log,
                         }),
@@ -274,7 +347,7 @@ describe('TransitionHooksExecutor', () => {
                 for (const hook of [hooks[0], hooks[1]]) {
                     chai.expect(
                         hook.calledOnceWith({
-                            route: { meta: route.meta, url: route.reqUrl, hostname: req.hostname, route: route.route },
+                            route: { meta: route.meta, url: route.reqUrl, hostname: req.host, route: route.route },
                             req: rawReq,
                             log,
                         }),

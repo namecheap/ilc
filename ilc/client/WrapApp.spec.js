@@ -1,5 +1,5 @@
 import WrapApp from './WrapApp';
-import chai from 'chai';
+import * as chai from 'chai';
 import sinon from 'sinon';
 import { getIlcConfigRoot } from './configuration/getIlcConfigRoot';
 import { TransitionManager } from './TransitionManager/TransitionManager';

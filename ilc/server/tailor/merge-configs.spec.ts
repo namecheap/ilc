@@ -1,4 +1,4 @@
-import { expect, version } from 'chai';
+import { expect } from 'chai';
 import type { Route } from '../../common/types/Router';
 import { mergeConfigs } from './merge-configs';
 import { TransformedRegistryConfig } from '../types/Registry';

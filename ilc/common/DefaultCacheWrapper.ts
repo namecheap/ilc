@@ -1,6 +1,6 @@
 import { Logger } from 'ilc-plugins-sdk';
 import { CacheHashFn, CacheParams, CacheResult, CacheStorage, CacheWrapper } from './types/CacheWrapper';
-import { Context } from './types/Context';
+import { type Context } from '../server/context/context';
 import { extendError, withTimeout } from './utils';
 
 const CacheWrapperError = extendError('CacheWrapperError', { defaultData: {} });
@@ -42,8 +42,7 @@ export class DefaultCacheWrapper implements CacheWrapper {
 
     private getRequestId(): string | undefined {
         if (this.context) {
-            const contextStore = this.context.getStore();
-            return contextStore?.get('requestId');
+            return this.context.get('requestId');
         }
 
         return undefined;

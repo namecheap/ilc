@@ -27,7 +27,7 @@ module.exports = (app) => {
     process.on('SIGTERM', exitHandler(app, 'SIGTERM'));
     process.on('SIGINT', exitHandler(app, 'SIGINT'));
 
-    app.listen(config.get('port'), '0.0.0.0', (err) => {
+    app.listen({ port: config.get('port'), host: '0.0.0.0' }, (err) => {
         if (err) {
             app.log.error(err);
             return process.exit(1);

@@ -27,6 +27,10 @@ interface MockRegistry {
             props?: Record<string, any>;
             wrappedWith?: string;
             kind?: string;
+            ssr?: {
+                src: string;
+            };
+            l10nManifest?: string;
         };
     };
 }

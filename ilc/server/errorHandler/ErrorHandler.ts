@@ -70,13 +70,13 @@ export default class ErrorHandler {
         // This handler serves as Fastify & Tailor handler.
         // While Fastify will pass it's own Reply object
         // Tailor passes http.ServerResponse from Node core
-        let nres: ServerResponse;
+        let rawResponse: ServerResponse;
         if (isFastifyReply(res)) {
-            nres = res.res;
+            rawResponse = res.raw;
             // Claim full responsibility of the low-level response from Fastify
-            res.sent = true;
+            res.hijack();
         } else {
-            nres = res as ServerResponse;
+            rawResponse = res as ServerResponse;
         }
 
         try {
@@ -87,9 +87,9 @@ export default class ErrorHandler {
             let data = await this.registryService.getTemplate('500', { locale, forDomain: currentDomain });
             const content = data.data.content.replace('%ERRORID%', `Error ID: ${errorId}`);
 
-            this.ensureInternalErrorHeaders(nres, StatusCodes.INTERNAL_SERVER_ERROR);
-            nres.write(content);
-            nres.end();
+            this.ensureInternalErrorHeaders(rawResponse, StatusCodes.INTERNAL_SERVER_ERROR);
+            rawResponse.write(content);
+            rawResponse.end();
         } catch (causeErr) {
             const handlingError = new ErrorHandlingError({
                 message: 'Additional error in error handling',
@@ -97,14 +97,14 @@ export default class ErrorHandler {
                 data: { errorId, originalError: safeJsonStringify(err) },
             });
             this.logger.error(handlingError);
-            this.writeStaticError(nres);
+            this.writeStaticError(rawResponse);
         }
     }
 
     async handleClientError(reply: ServerResponseFastifyReply, error: Error, statusCode?: number): Promise<void> {
         this.logger.warn(error);
-        reply.sent = true;
-        this.writeStaticError(reply.res!, statusCode);
+        reply.hijack();
+        this.writeStaticError(reply.raw, statusCode);
     }
 
     private ensureInternalErrorHeaders(nres: ServerResponse, statusCode: number): void {

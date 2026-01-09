@@ -1,16 +1,15 @@
-import type { RequestHandler } from 'fastify';
 import { StatusCodes } from 'http-status-codes';
 import { NotFoundRegistryError, ValidationRegistryError } from '../registry/errors';
 import { ErrorHandler } from '../types/ErrorHandler';
-import { PatchedHttpRequest } from '../types/PatchedHttpRequest';
+import { IlcRouteHandlerMethod } from '../types/IlcRouteHandlerMethod';
 import { Registry } from '../types/Registry';
 
 export function renderTemplateHandlerFactory(
     registryService: Registry,
     errorHandlingService: ErrorHandler,
-): RequestHandler<PatchedHttpRequest> {
+): IlcRouteHandlerMethod<{ Params: { templateName: string } }> {
     return async (req, reply) => {
-        const currentDomain = req.hostname;
+        const currentDomain = req.host;
         const locale = req.raw.ilcState?.locale;
         try {
             const data = await registryService.getTemplate(req.params.templateName, {

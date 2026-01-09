@@ -1,4 +1,4 @@
-import chai from 'chai';
+import * as chai from 'chai';
 import sinon from 'sinon';
 import html from 'nanohtml';
 import ilcEvents from '../constants/ilcEvents';
@@ -797,9 +797,9 @@ describe('TransitionManager', () => {
         handlePageTransition(slots.body.id, slotWillBe.rerendered);
         await clock.runAllAsync();
         const spinnerEl = document.querySelector('dialog.ilcSpinnerWrapper');
-        expect(spinnerEl).to.be.not.null;
-        expect(spinnerEl.open).equals(true);
-        expect(spinnerEl.innerHTML).equals('loading....');
+        chai.expect(spinnerEl).to.be.not.null;
+        chai.expect(spinnerEl.open).equals(true);
+        chai.expect(spinnerEl.innerHTML).equals('loading....');
     });
 
     describe(`should trigger "${ilcEvents.ALL_SLOTS_LOADED}" only once`, () => {
