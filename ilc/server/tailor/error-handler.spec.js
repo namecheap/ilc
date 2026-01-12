@@ -6,7 +6,7 @@ const errors = require('./errors');
 
 describe('error handler', () => {
     const request = {
-        originalUrl: 'originalUrl',
+        url: 'url',
         headers: {
             'user-agent': 'bot',
         },
@@ -79,7 +79,7 @@ describe('error handler', () => {
             chai.expect(errorHandlingService.noticeError.calledOnce).to.be.true;
             chai.expect(errorHandlingService.noticeError.getCall(0).args).to.be.eql([
                 new errors.TailorError({
-                    message: `Tailor error while headers already sent while processing request "${request.originalUrl}"`,
+                    message: `Tailor error while headers already sent while processing request "${request.url}"`,
                     cause: error,
                 }),
                 { userAgent: 'bot' },
@@ -98,7 +98,7 @@ describe('error handler', () => {
             chai.expect(errorHandlingService.noticeError.called).to.be.false;
             chai.expect(errorHandlingService.handleError.getCall(0).args).to.be.eql([
                 new errors.TailorError({
-                    message: `Tailor error while processing request "${request.originalUrl}"`,
+                    message: `Tailor error while processing request "${request.url}"`,
                     cause: error,
                 }),
                 request,
@@ -119,7 +119,7 @@ describe('error handler', () => {
             chai.expect(errorHandlingService.noticeError.calledOnce).to.be.true;
             chai.expect(errorHandlingService.noticeError.getCall(0).args).to.be.eql([
                 new errors.FragmentError({
-                    message: `Non-primary "${fragmentAttrs.id}" fragment error while processing "${request.originalUrl}"`,
+                    message: `Non-primary "${fragmentAttrs.id}" fragment error while processing "${request.url}"`,
                     cause: error,
                     data: {
                         fragmentAttrs,
@@ -151,7 +151,7 @@ describe('error handler', () => {
 
             chai.expect(errorHandlingService.noticeError.getCall(0).args).to.be.eql([
                 new errors.FragmentWarn({
-                    message: `Non-primary "${fragmentAttrs.id}" fragment warning while processing "${request.originalUrl}"`,
+                    message: `Non-primary "${fragmentAttrs.id}" fragment warning while processing "${request.url}"`,
                     cause: error,
                     data: {
                         fragmentAttrs,
