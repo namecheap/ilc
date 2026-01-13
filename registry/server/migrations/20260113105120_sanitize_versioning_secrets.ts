@@ -18,12 +18,11 @@ export async function up(knex: Knex): Promise<void> {
     const secretKeys = new Set(secretSettings.map((s) => s.key));
 
     let count = 0;
-    const stream = knex('versioning')
+    const rows = await knex('versioning')
         .select('id', 'entity_type', 'data', 'data_after')
-        .whereIn('entity_type', ENTITY_TYPES)
-        .stream();
+        .whereIn('entity_type', ENTITY_TYPES);
 
-    for await (const row of stream) {
+    for (const row of rows) {
         const data = sanitizeIfChanged(row.data, row.entity_type, secretKeys);
         const dataAfter = sanitizeIfChanged(row.data_after, row.entity_type, secretKeys);
 
