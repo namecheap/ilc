@@ -10,7 +10,7 @@ const IGNORED_ERRORS = ['SeobotsGuardStreamError'];
 
 module.exports = function setup(tailor, errorHandlingService) {
     function handleError(req, error, res) {
-        const urlPart = `while processing request "${req.originalUrl}"`;
+        const urlPart = `while processing request "${req.url}"`;
         // If fragment respond with 404 - force special 404 route
         // See "process-fragment-response.js", there we throw this error
         if (error.cause instanceof errors.Fragment404Response) {
@@ -39,7 +39,7 @@ module.exports = function setup(tailor, errorHandlingService) {
         }
 
         const errOpts = {
-            message: `Non-primary "${fragmentAttrs.id}" fragment error while processing "${req.originalUrl}"`,
+            message: `Non-primary "${fragmentAttrs.id}" fragment error while processing "${req.url}"`,
             cause: err,
             data: { fragmentAttrs },
         };
@@ -48,7 +48,7 @@ module.exports = function setup(tailor, errorHandlingService) {
 
     function handleFragmentWarn(req, fragmentAttrs, err) {
         const errOpts = {
-            message: `Non-primary "${fragmentAttrs.id}" fragment warning while processing "${req.originalUrl}"`,
+            message: `Non-primary "${fragmentAttrs.id}" fragment warning while processing "${req.url}"`,
             cause: err,
             data: { fragmentAttrs },
         };

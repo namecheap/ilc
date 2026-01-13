@@ -143,7 +143,7 @@ describe('App', () => {
         it('should serve client.js from /_ilc/ path', async () => {
             const response = await server.get('/_ilc/client.js').expect(200);
 
-            chai.expect(response.headers['content-type']).to.match(/text\/javascript; charset=utf-8/);
+            chai.expect(response.headers['content-type']).to.match(/application\/javascript; charset=utf-8/);
             chai.expect(response.headers).to.have.property('cache-control');
             chai.expect(response.text).to.be.a('string');
             chai.expect(response.text.length).to.be.greaterThan(0);
@@ -255,5 +255,18 @@ describe('App', () => {
 
         // Custom headers from fragment should NOT leak through (filtered by filterResponseHeaders)
         chai.expect(response.headers['x-custom-header']).to.be.undefined;
+    });
+
+    it('should pass query parameters to fragment via routerProps', async () => {
+        const response = await server.get('/primary?foo=bar&test=123').expect(200);
+
+        const fragmentResponses = helpers.getFragmentResponses(response.text);
+        const primaryFragment = Object.values(fragmentResponses)[0];
+
+        chai.expect(primaryFragment).to.exist;
+
+        const routerProps = helpers.getRouterProps(primaryFragment.url);
+
+        chai.expect(routerProps.reqUrl).to.include('?foo=bar&test=123');
     });
 });
