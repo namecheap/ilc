@@ -1,12 +1,7 @@
 import { AxiosError, AxiosHeaders } from 'axios';
 import { expect } from 'chai';
-import {
-    axiosErrorTransformer,
-    isAxiosError,
-    sanitizeHeaders,
-    truncateBody,
-    safeStringify,
-} from '../../server/util/axiosErrorTransformer';
+import { axiosErrorTransformer, isAxiosError } from '../../server/util/axiosErrorTransformer';
+import { sanitizeHeaders, truncateBody } from '../../server/util/helpers';
 
 describe('axiosErrorTransformer', () => {
     describe('isAxiosError', () => {
@@ -28,7 +23,7 @@ describe('axiosErrorTransformer', () => {
     });
 
     describe('sanitizeHeaders', () => {
-        it('should redact sensitive headers', () => {
+        it('should exclude sensitive headers', () => {
             const headers = {
                 'Content-Type': 'application/json',
                 Authorization: 'Bearer token123',
@@ -41,10 +36,6 @@ describe('axiosErrorTransformer', () => {
 
             expect(sanitized).to.deep.equal({
                 'Content-Type': 'application/json',
-                Authorization: '[REDACTED]',
-                Cookie: '[REDACTED]',
-                'X-API-Key': '[REDACTED]',
-                'x-auth-token': '[REDACTED]',
             });
         });
 
@@ -57,11 +48,7 @@ describe('axiosErrorTransformer', () => {
 
             const sanitized = sanitizeHeaders(headers);
 
-            expect(sanitized).to.deep.equal({
-                AUTHORIZATION: '[REDACTED]',
-                'set-cookie': '[REDACTED]',
-                'PROXY-AUTHORIZATION': '[REDACTED]',
-            });
+            expect(sanitized).to.deep.equal({});
         });
 
         it('should return undefined for null/undefined headers', () => {
@@ -127,26 +114,6 @@ describe('axiosErrorTransformer', () => {
         });
     });
 
-    describe('safeStringify', () => {
-        it('should stringify simple objects', () => {
-            const result = safeStringify({ a: 1 });
-            expect(result).to.equal('{"a":1}');
-        });
-
-        it('should handle circular references', () => {
-            const circular: Record<string, unknown> = { a: 1 };
-            circular.self = circular;
-
-            const result = safeStringify(circular);
-            expect(result).to.equal('[Circular or non-serializable]');
-        });
-
-        it('should return undefined for null/undefined', () => {
-            expect(safeStringify(null)).to.be.undefined;
-            expect(safeStringify(undefined)).to.be.undefined;
-        });
-    });
-
     describe('axiosErrorTransformer', () => {
         it('should pass through non-Axios errors unchanged', () => {
             const error = new Error('regular error');
@@ -190,9 +157,9 @@ describe('axiosErrorTransformer', () => {
             expect(result.data.method).to.equal('get');
             expect(result.data.timeout).to.equal(5000);
 
-            // Check header sanitization
-            expect(result.data.headers.Authorization).to.equal('[REDACTED]');
-            expect(result.data.response.headers['set-cookie']).to.equal('[REDACTED]');
+            // Check header sanitization - sensitive headers should be excluded
+            expect(result.data.headers.Authorization).to.be.undefined;
+            expect(result.data.response.headers['set-cookie']).to.be.undefined;
         });
 
         it('should transform network error (ECONNREFUSED)', () => {
