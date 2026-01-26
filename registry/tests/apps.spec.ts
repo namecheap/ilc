@@ -550,6 +550,60 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should successfully return records filtered by name search (q) and domainId combined', async () => {
+            const teardownFns: (() => Promise<void>)[] = [];
+
+            try {
+                for (const app of example.appsList) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+                teardownFns.unshift(async () => {
+                    for (const app of example.appsList) {
+                        await req.delete(example.url + app.name).expect(204);
+                    }
+                });
+
+                const template = {
+                    name: 'hello500',
+                    content: '<html><head></head><body class="custom">hello500</body></html>',
+                };
+                await req.post('/api/v1/template').send(template).expect(200);
+                teardownFns.unshift(async () => {
+                    await req.delete('/api/v1/template/' + template.name).expect(204);
+                });
+
+                const domain = { domainName: 'example.com', template500: template.name };
+                const {
+                    body: { id: routerDomainId },
+                } = await req.post('/api/v1/router_domains').send(domain).expect(200);
+                teardownFns.unshift(async () => {
+                    await req.delete('/api/v1/router_domains/' + routerDomainId).expect(204);
+                });
+
+                const route = {
+                    next: false,
+                    slots: { myslot: { appName: example.appsList[1].name, kind: 'primary' } },
+                    route: 'myroute',
+                    domainId: routerDomainId,
+                };
+                const {
+                    body: { id: routeId },
+                } = await req.post('/api/v1/route').send(route).expect(200);
+                teardownFns.unshift(async () => {
+                    await req.delete('/api/v1/route/' + routeId).expect(204);
+                });
+
+                const query = makeFilterQuery({ q: 'app1', domainId: routerDomainId });
+                const response = await req.get(`${example.url}?${query}`).expect(200);
+
+                expectAppsListEqual(response.body, [example.appsList[1]]);
+            } finally {
+                for (const fn of teardownFns) {
+                    await fn();
+                }
+            }
+        });
+
         it('should successfully filter by name array (single name)', async () => {
             try {
                 for (const app of example.appsList) {

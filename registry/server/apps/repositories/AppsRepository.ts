@@ -50,7 +50,7 @@ export class AppsRepository {
             return;
         }
         if (filters.id || filters.name) {
-            query.whereIn('name', [...(filters.id ?? filters.name ?? [])]);
+            query.whereIn(`${Tables.Apps}.name`, [...(filters.id ?? filters.name ?? [])]);
         }
     }
 
@@ -62,14 +62,14 @@ export class AppsRepository {
         if (kind.length === 0) {
             return;
         }
-        query.whereIn('kind', kind);
+        query.whereIn(`${Tables.Apps}.kind`, kind);
     }
 
     private addFilterByQuery(query: Knex.QueryBuilder, filters: AppsGetListFilters) {
         if (!filters.q) {
             return;
         }
-        query.where('name', 'like', `%${filters.q}%`);
+        query.where(`${Tables.Apps}.name`, 'like', `%${filters.q}%`);
     }
 
     private addFilterByDomainId(query: Knex.QueryBuilder, filters: AppsGetListFilters) {
@@ -92,8 +92,12 @@ export class AppsRepository {
             query
                 .leftJoin(Tables.RouteSlots, `${Tables.RouteSlots}.appName`, `${Tables.Apps}.name`)
                 .leftJoin(Tables.Routes, `${Tables.Routes}.id`, `${Tables.RouteSlots}.routeId`)
-                .where(`${Tables.Routes}.domainId`, filters.domainId)
-                .orWhere(`${Tables.Apps}.enforceDomain`, filters.domainId)
+                .where(function () {
+                    this.where(`${Tables.Routes}.domainId`, filters.domainId).orWhere(
+                        `${Tables.Apps}.enforceDomain`,
+                        filters.domainId,
+                    );
+                })
                 .groupBy(`${Tables.Apps}.name`)
                 .groupBy('v.versionId');
         }
