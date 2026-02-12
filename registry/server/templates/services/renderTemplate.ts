@@ -24,12 +24,16 @@ type FetchedIncludes = {
     styleRefs: string[];
 }[];
 
+interface RenderTemplateContext {
+    brandId?: string;
+}
+
 type RenderTemplateResult = {
     content: string;
     styleRefs: string[];
 };
 
-async function renderTemplate(templateContent: string): Promise<RenderTemplateResult> {
+async function renderTemplate(templateContent: string, context?: RenderTemplateContext): Promise<RenderTemplateResult> {
     if (!isTemplateValid(templateContent)) {
         throw new Error('HTML template has invalid structure');
     }
@@ -55,7 +59,7 @@ async function renderTemplate(templateContent: string): Promise<RenderTemplateRe
         );
     }
 
-    const fetchedIncludes = await fetchIncludes(includesAttributes);
+    const fetchedIncludes = await fetchIncludes(includesAttributes, context);
 
     fetchedIncludes.forEach(({ includeHtmlTag, includeResult, styleRefs }) => {
         result.styleRefs = result.styleRefs.concat(styleRefs);
@@ -104,7 +108,10 @@ function selectDuplicateIncludesAttributes(includesAttributes: IncludesAttribute
     );
 }
 
-async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<FetchedIncludes> {
+async function fetchIncludes(
+    includesAttributes: IncludesAttributes,
+    context?: RenderTemplateContext,
+): Promise<FetchedIncludes> {
     const includeHtmlTags = Object.keys(includesAttributes);
 
     if (!includeHtmlTags.length) {
@@ -126,6 +133,7 @@ async function fetchIncludes(includesAttributes: IncludesAttributes): Promise<Fe
                     headers: { link },
                 } = await axios.get(src, {
                     timeout: +timeout,
+                    headers: context?.brandId ? { 'x-request-brand': context.brandId } : undefined,
                 });
 
                 let styleRefs: Array<string> = [];

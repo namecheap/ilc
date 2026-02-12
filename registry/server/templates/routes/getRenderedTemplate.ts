@@ -27,9 +27,12 @@ const validateRequestBeforeGetTemplateRendered = validateRequestFactory([
     },
 ]);
 
-async function getTemplateByDomain(domain: string, templateName: string): Promise<Template | null> {
+async function getTemplateByDomain(
+    domain: string,
+    templateName: string,
+): Promise<{ template: Template; brandId?: string } | null> {
     const [domainItem] = await db
-        .select('id')
+        .select('id', 'brandId')
         .from<RouterDomains>('router_domains')
         .where('domainName', String(domain));
 
@@ -45,11 +48,13 @@ async function getTemplateByDomain(domain: string, templateName: string): Promis
             name: templateName,
         });
 
-    if (template) {
-        template.versionId = appendDigest(template.versionId, 'template');
+    if (!template) {
+        return null;
     }
 
-    return template;
+    template.versionId = appendDigest(template.versionId, 'template');
+
+    return { template, brandId: domainItem.brandId ?? undefined };
 }
 
 async function getTemplateByName(templateName: string): Promise<Template | undefined> {
@@ -65,14 +70,19 @@ async function getTemplateByName(templateName: string): Promise<Template | undef
 }
 
 async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams>, res: Response): Promise<void> {
-    let template;
+    let template: Template | undefined;
+    let brandId: string | undefined;
 
     const { name: templateName } = req.params;
 
     const { locale, domain } = req.query;
 
     if (domain) {
-        template = await getTemplateByDomain(String(domain), templateName);
+        const result = await getTemplateByDomain(String(domain), templateName);
+        if (result) {
+            template = result.template;
+            brandId = result.brandId;
+        }
     }
 
     if (!template) {
@@ -99,7 +109,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     }
 
     try {
-        const renderedTemplate = await renderTemplate(content);
+        const renderedTemplate = await renderTemplate(content, brandId ? { brandId } : undefined);
         res.status(200).send({ ...template, ...renderedTemplate });
     } catch (e) {
         if (e instanceof errors.FetchIncludeError) {

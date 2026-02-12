@@ -5,6 +5,7 @@ import { FastifyRequest, RouteGenericInterface } from 'fastify';
 
 export interface IlcState {
     locale?: string;
+    brandId?: string;
     forceSpecialRoute?: string;
 }
 

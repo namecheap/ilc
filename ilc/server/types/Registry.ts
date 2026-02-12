@@ -22,6 +22,7 @@ interface RegistryOptions {
 interface TemplateOptions {
     locale?: string;
     forDomain?: string;
+    routeKey?: string;
 }
 
 interface Template {

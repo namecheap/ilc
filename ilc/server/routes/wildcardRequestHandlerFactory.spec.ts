@@ -279,28 +279,78 @@ describe('wildcardRequestHandlerFactory', () => {
     });
 
     describe('Request headers', () => {
-        it('should set x-request-host and x-request-uri headers', async () => {
-            const mockRequest = {
+        function createMockRequest(url: string) {
+            return {
                 host: 'test.com',
                 headers: {} as any,
                 log: mockLogger,
                 raw: {
-                    url: '/test-path',
+                    url,
                     ilcState: {},
                 },
             };
+        }
 
-            const mockReply = {
+        function createMockReply() {
+            return {
                 redirect: sinon.stub(),
                 header: sinon.stub(),
                 status: sinon.stub().returns({ send: sinon.stub() }),
                 res: {},
             };
+        }
+
+        it('should set x-request-host and x-request-uri headers', async () => {
+            const mockRequest = createMockRequest('/test-path');
+            const mockReply = createMockReply();
 
             await wildcardRequestHandler.call({} as any, mockRequest as any, mockReply as any);
 
             expect(mockRequest.headers['x-request-host']).to.equal('test.com');
             expect(mockRequest.headers['x-request-uri']).to.equal('/test-path');
+        });
+
+        it('should set x-request-brand header and ilcState.brandId when brandId is present in config', async () => {
+            mockRegistryService.getConfig.resolves({
+                settings: {
+                    trailingSlash: 'disabled',
+                    overrideConfigTrustedOrigins: ['localhost'],
+                    i18n: {
+                        enabled: false,
+                        supported: { locale: {}, currency: {} },
+                        default: { locale: 'en-US', currency: 'USD' },
+                    },
+                },
+                routes: [
+                    {
+                        routeId: 'test-route',
+                        route: '/test',
+                        next: false,
+                        slots: {},
+                        template: 'test-template',
+                    },
+                ],
+                apps: {},
+                brandId: 'spaceship',
+            } as any);
+
+            const mockRequest = createMockRequest('/test');
+            const mockReply = createMockReply();
+
+            await wildcardRequestHandler.call({} as any, mockRequest as any, mockReply as any);
+
+            expect(mockRequest.headers['x-request-brand']).to.equal('spaceship');
+            expect(mockRequest.raw.ilcState).to.deep.include({ brandId: 'spaceship' });
+        });
+
+        it('should NOT set x-request-brand header or ilcState.brandId when brandId is absent', async () => {
+            const mockRequest = createMockRequest('/test');
+            const mockReply = createMockReply();
+
+            await wildcardRequestHandler.call({} as any, mockRequest as any, mockReply as any);
+
+            expect(mockRequest.headers['x-request-brand']).to.be.undefined;
+            expect(mockRequest.raw.ilcState).to.not.have.property('brandId');
         });
     });
 
@@ -518,7 +568,11 @@ describe('wildcardRequestHandlerFactory', () => {
             sinon.assert.calledWith(mockReply.status, 200);
             sinon.assert.calledOnce(sendStub);
             sinon.assert.calledWith(sendStub, templateContent);
-            sinon.assert.calledWith(mockRegistryService.getTemplate, 'test-template', { locale: 'en-US' });
+            sinon.assert.calledWith(mockRegistryService.getTemplate, 'test-template', {
+                locale: 'en-US',
+                forDomain: 'test.com',
+                routeKey: '/test',
+            });
         });
 
         it('should pass locale to getTemplate when available', async () => {
@@ -541,7 +595,11 @@ describe('wildcardRequestHandlerFactory', () => {
 
             await wildcardRequestHandler.call({} as any, mockRequest as any, mockReply as any);
 
-            sinon.assert.calledWith(mockRegistryService.getTemplate, 'test-template', { locale: 'fr-FR' });
+            sinon.assert.calledWith(mockRegistryService.getTemplate, 'test-template', {
+                locale: 'fr-FR',
+                forDomain: 'test.com',
+                routeKey: '/test',
+            });
         });
     });
 

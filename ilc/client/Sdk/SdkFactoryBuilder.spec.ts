@@ -6,6 +6,7 @@ import IlcAppSdk from 'ilc-sdk/app';
 
 interface MockConfigRoot {
     getConfigForAppByName: SinonStub;
+    getConfig: SinonStub;
 }
 
 interface MockI18n {
@@ -26,6 +27,7 @@ describe('SdkFactoryBuilder', () => {
     beforeEach(() => {
         mockConfigRoot = {
             getConfigForAppByName: sinon.stub(),
+            getConfig: sinon.stub().returns({}),
         };
 
         mockI18n = {
@@ -167,6 +169,21 @@ describe('SdkFactoryBuilder', () => {
 
         it('should handle undefined app config', () => {
             mockConfigRoot.getConfigForAppByName.returns(undefined);
+
+            const builder = new SdkFactoryBuilder(mockConfigRoot, mockI18n, mockRouter);
+            const factory = builder.getSdkFactoryByApplicationName('testApp');
+            const sdk = factory('testApp__at__testSlot');
+
+            expect(sdk).to.be.instanceOf(IlcAppSdk);
+        });
+
+        it('should create SDK instance when brandId is provided in config', () => {
+            mockConfigRoot.getConfig.returns({
+                brandId: 'testBrand',
+            });
+            mockConfigRoot.getConfigForAppByName.returns({
+                l10nManifest: '/manifest.json',
+            });
 
             const builder = new SdkFactoryBuilder(mockConfigRoot, mockI18n, mockRouter);
             const factory = builder.getSdkFactoryByApplicationName('testApp');

@@ -16,12 +16,14 @@ module.exports = (configsInjector, newrelic, registryService) => async (request,
     const childTemplate = router.getFragmentsTpl(request.ilcState);
     const currRoute = router.getRoute();
 
-    const template = await registryService.getTemplate(currRoute.template);
+    const forDomain = request.headers['x-request-host'];
+    const routeKey = currRoute.route || `special:${currRoute.specialRole}`;
+    const template = await registryService.getTemplate(currRoute.template, { forDomain, routeKey });
     if (template === undefined) {
         throw new Error("Can't match route base template to config map");
     }
 
-    const routeName = currRoute.route?.replace(/^\/(.+)/, '$1') || `special:${currRoute.specialRole}`;
+    const routeName = routeKey.replace(/^\//, '');
     if (routeName) {
         newrelic.setTransactionName(routeName);
     }

@@ -1,6 +1,7 @@
 class SdkOptions {
     #i18n;
     #cssBundle;
+    #brandId;
 
     constructor(params) {
         if (params?.i18n?.manifestPath) {
@@ -9,10 +10,14 @@ class SdkOptions {
         if (params?.cssBundle) {
             this.#cssBundle = params.cssBundle;
         }
+        if (params?.brandId) {
+            this.#brandId = params.brandId;
+        }
     }
 
     toJSON() {
         const json = {
+            brandId: this.#brandId,
             i18n: this.#i18n,
             cssBundle: this.#cssBundle,
         };

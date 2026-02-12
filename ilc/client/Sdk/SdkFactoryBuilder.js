@@ -17,6 +17,7 @@ export class SdkFactoryBuilder {
         const manifestPath = appConfig?.l10nManifest;
 
         const sdkOptions = new SdkOptions({
+            brandId: this.#configRoot.getConfig().brandId,
             i18n: {
                 manifestPath,
             },

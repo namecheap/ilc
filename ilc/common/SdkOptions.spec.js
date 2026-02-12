@@ -11,6 +11,7 @@ describe('SdkOptions Class', () => {
 
         const result = sdkOptions.toJSON();
         expect(result).to.deep.equal({
+            brandId: undefined,
             i18n: params.i18n,
             cssBundle: params.cssBundle,
         });
@@ -24,6 +25,7 @@ describe('SdkOptions Class', () => {
 
         const result = sdkOptions.toJSON();
         expect(result).to.deep.equal({
+            brandId: undefined,
             i18n: params.i18n,
             cssBundle: undefined,
         });
@@ -37,8 +39,24 @@ describe('SdkOptions Class', () => {
 
         const result = sdkOptions.toJSON();
         expect(result).to.deep.equal({
+            brandId: undefined,
             i18n: undefined,
             cssBundle: params.cssBundle,
+        });
+    });
+
+    it('should return brandId when provided', () => {
+        const params = {
+            brandId: 'nc',
+            i18n: { manifestPath: '/path/to/manifest' },
+        };
+        const sdkOptions = new SdkOptions(params);
+
+        const result = sdkOptions.toJSON();
+        expect(result).to.deep.equal({
+            brandId: 'nc',
+            i18n: params.i18n,
+            cssBundle: undefined,
         });
     });
 

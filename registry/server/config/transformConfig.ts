@@ -65,6 +65,10 @@ export function transformApps(
                 jsonParsedApp.ssrProps = merge({}, parseJSON(currentDomain.ssrProps), jsonParsedApp.ssrProps);
             }
 
+            if (currentDomain?.brandId) {
+                jsonParsedApp.props = merge({}, { brandId: currentDomain.brandId }, jsonParsedApp.props);
+            }
+
             if (sharedProps.length && app.configSelector !== null) {
                 parseJSON<string[]>(app.configSelector).forEach((configSelectorName) => {
                     const commonConfig = sharedProps.find((n) => n.name === configSelectorName);

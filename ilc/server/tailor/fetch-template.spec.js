@@ -12,17 +12,21 @@ describe('fetch templates', () => {
         setTransactionName: sinon.spy(),
     };
 
-    const registryService = {
-        getTemplate: async (arg) => {
-            const result = await arg;
+    const defaultGetTemplate = async (arg) => {
+        const result = await arg;
+        return result;
+    };
 
-            return result;
-        },
+    const registryService = {
+        getTemplate: defaultGetTemplate,
     };
 
     let currentRoute = {};
 
     const request = {
+        headers: {
+            'x-request-host': 'test.com',
+        },
         router: {
             getRoute: () => currentRoute,
         },
@@ -43,6 +47,7 @@ describe('fetch templates', () => {
         newrelic.setTransactionName.resetHistory();
         parseTemplate.reset();
         currentRoute = {};
+        registryService.getTemplate = defaultGetTemplate;
     });
 
     it('should throw Error if template is undefined', async () => {
@@ -57,8 +62,13 @@ describe('fetch templates', () => {
         currentRoute.template = 'exist';
         currentRoute.route = '/exist';
 
+        registryService.getTemplate = sinon.stub().resolves({ data: 'exist' });
         await fetchTemplateSetup(request, parseTemplate);
 
+        sinon.assert.calledOnceWithExactly(registryService.getTemplate, 'exist', {
+            forDomain: 'test.com',
+            routeKey: '/exist',
+        });
         sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'exist');
     });
 
@@ -66,8 +76,13 @@ describe('fetch templates', () => {
         currentRoute.template = 'exist';
         currentRoute.specialRole = 'exist';
 
+        registryService.getTemplate = sinon.stub().resolves({ data: 'exist' });
         await fetchTemplateSetup(request, parseTemplate);
 
+        sinon.assert.calledOnceWithExactly(registryService.getTemplate, 'exist', {
+            forDomain: 'test.com',
+            routeKey: 'special:exist',
+        });
         sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'special:exist');
     });
 

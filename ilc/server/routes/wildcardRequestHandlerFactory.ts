@@ -39,6 +39,14 @@ export function wildcardRequestHandlerFactory(
         req.headers['x-request-host'] = req.host;
         req.headers['x-request-uri'] = url;
 
+        if (registryConfig.brandId) {
+            req.headers['x-request-brand'] = registryConfig.brandId;
+            req.raw.ilcState = {
+                ...req.raw.ilcState,
+                brandId: registryConfig.brandId,
+            };
+        }
+
         const overrideConfigs = parseOverrideConfig(
             req.headers.cookie,
             registryConfig.settings.overrideConfigTrustedOrigins,
@@ -92,7 +100,12 @@ export function wildcardRequestHandlerFactory(
         const isRouteWithoutSlots = !Object.keys(route.slots).length;
         if (isRouteWithoutSlots) {
             const locale = req.raw.ilcState?.locale;
-            const { data } = await registryService.getTemplate(route.template, { locale });
+            const routeKey = route.route || `special:${route.specialRole}`;
+            const { data } = await registryService.getTemplate(route.template, {
+                locale,
+                forDomain: currentDomain,
+                routeKey,
+            });
 
             reply.header('Content-Type', 'text/html');
             reply.status(200).send(data.content);
