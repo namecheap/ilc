@@ -67,7 +67,7 @@ describe('renderTemplate', () => {
                 attributes: {
                     id: 'include-id-2',
                     src: `${includesHost}/get/include/2`,
-                    timeout: 100,
+                    timeout: 300,
                 },
             },
             {

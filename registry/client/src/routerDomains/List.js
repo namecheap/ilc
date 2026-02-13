@@ -33,6 +33,7 @@ const PostList = (props) => {
                         <TextField source="name" />
                     </ReferenceField>
                     <TextField source="canonicalDomain" sortable={false} emptyText="-" label="Canonical Domain" />
+                    <TextField source="brandId" sortable={false} emptyText="-" label="Brand ID" />
                     <ListActionsToolbar>
                         <EditButton />
                     </ListActionsToolbar>
