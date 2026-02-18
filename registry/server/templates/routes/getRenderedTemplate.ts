@@ -13,20 +13,11 @@ import { templateNameSchema } from './validation';
 import RouterDomains from '../../routerDomains/interfaces';
 import { getLogger } from '../../util/logger';
 import { appendDigest } from '../../util/hmac';
+import { parseJSON } from '../../common/services/json';
 
 type GetTemplateRenderedRequestParams = {
     name: string;
 };
-
-interface DomainTemplateResult {
-    template: Template | null;
-    brandId?: string;
-}
-
-interface DomainProps {
-    brandId?: string;
-    [key: string]: unknown;
-}
 
 const validateRequestBeforeGetTemplateRendered = validateRequestFactory([
     {
@@ -37,43 +28,29 @@ const validateRequestBeforeGetTemplateRendered = validateRequestFactory([
     },
 ]);
 
-function parseDomainProps(props: RouterDomains['props']): DomainProps {
-    if (!props) {
-        return {};
-    }
-    if (typeof props === 'string') {
-        return JSON.parse(props) as DomainProps;
-    }
-    return props;
-}
-
-async function getTemplateByDomain(domain: string, templateName: string): Promise<DomainTemplateResult | null> {
+async function getDomainByName(domain: string): Promise<RouterDomains | undefined> {
     const [domainItem] = await db
         .select('id', 'props')
         .from<RouterDomains>('router_domains')
         .where('domainName', String(domain));
 
-    if (!domainItem) {
-        return null;
-    }
+    return domainItem;
+}
 
+async function getTemplateByDomainId(domainId: number, templateName: string): Promise<Template | undefined> {
     const [template] = await db
         .selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.*`])
         .join('routes', 'templates.name', 'routes.templateName')
         .where({
-            domainId: domainItem.id,
+            domainId,
             name: templateName,
         });
 
-    const props = parseDomainProps(domainItem.props);
-
-    if (!template) {
-        return { template: null, brandId: props.brandId };
+    if (template) {
+        template.versionId = appendDigest(template.versionId, 'template');
     }
 
-    template.versionId = appendDigest(template.versionId, 'template');
-
-    return { template, brandId: props.brandId };
+    return template;
 }
 
 async function getTemplateByName(templateName: string): Promise<Template | undefined> {
@@ -97,10 +74,11 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     const domain = req.query.domain as string;
 
     if (domain) {
-        const result = await getTemplateByDomain(domain, templateName);
-        if (result) {
-            template = result.template ?? undefined;
-            brandId = result.brandId;
+        const domainItem = await getDomainByName(domain);
+        if (domainItem) {
+            const domainProps = domainItem.props ? (parseJSON(domainItem.props) as Record<string, any>) : null;
+            brandId = domainProps?.brandId;
+            template = await getTemplateByDomainId(domainItem.id, templateName);
         }
     }
 
