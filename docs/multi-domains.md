@@ -34,7 +34,6 @@ ILC can handle requests from multiple domains so that you don't need to roll out
 1.  In the top right corner, click **+ Create special route**.
 
     **In the general tab:**
-
     1. In the **Special role** dropdown, select **404**.
     1. In the **Domain** dropdown, select your domain.
 
@@ -172,10 +171,10 @@ When canonical domain is set, ILC generates canonical tags using the canonical d
 
 When both route `canonicalUrl` (in route metadata) and domain `canonicalDomain` are set, they combine:
 
--   Request: `https://mirror.example.com/products/variant-123`
--   Route metadata: `{ "canonicalUrl": "/products/main" }`
--   Canonical domain: `www.example.com`
--   Result: `https://www.example.com/products/main`
+- Request: `https://mirror.example.com/products/variant-123`
+- Route metadata: `{ "canonicalUrl": "/products/main" }`
+- Canonical domain: `www.example.com`
+- Result: `https://www.example.com/products/main`
 
 See [Route metadata canonicalUrl](routing/route_configuration.md#canonicalurl) for more information.
 
@@ -183,8 +182,42 @@ See [Route metadata canonicalUrl](routing/route_configuration.md#canonicalurl) f
 
 ILC automatically updates canonical tags during client-side navigation.
 
+## Domain alias
+
+The **alias** field provides a stable, human-readable identifier for a router domain. Unlike the auto-incremented numeric `id` or the `domainName` (which may differ between environments), the alias is a short slug that stays consistent across multiple ILC instances.
+
+### Why it's needed
+
+In setups with multiple ILC instances (e.g., staging and production, or multiple brands sharing route configuration), routes are often managed programmatically via the Registry API. Using the numeric `id` to reference a domain is fragile because IDs differ between instances. Using `domainName` is also fragile because the actual hostname may differ (e.g., `shop.example.com` in production vs. `shop.staging.example.com`).
+
+An alias like `main-shop` can be identical across all instances, so a route payload referencing `domainAlias: "main-shop"` will bind correctly regardless of the instance it is applied to.
+
+### Configure an alias
+
+1. Open the ILC Registry and navigate to **Router domains**.
+2. Select an existing domain or click **+ Create** to add a new one.
+3. In the **Alias** field, enter a short identifier using only lowercase letters, digits, and hyphens (e.g., `main-shop`). Maximum 64 characters.
+4. Click **Save**.
+
+### Using `domainAlias` in routes
+
+When creating or updating a route via the API, you can supply `domainAlias` instead of `domainId`. The two fields are mutually exclusive — provide exactly one or neither.
+
+```json
+{
+    "route": "/checkout",
+    "domainAlias": "main-shop",
+    "slots": { ... }
+}
+```
+
+The Registry resolves the alias to the corresponding `domainId` at write time. If no router domain with that alias exists, the request is rejected with a validation error.
+
+!!! note ""
+The alias must be unique across all router domains within an ILC instance.
+
 ## Additional information
 
--   ILC detects a domain from the [**request.host** of Fastify](https://www.fastify.io/docs/latest/Reference/Request/) and checks whether this hostname is listed in the **Router domains**.
--   Each registered domain in the **Router domains** has its own set of routes that do not overlap.
--   For routes, the domain is optional. If the request goes from the domain that is not listed in the **Router domains**, the routes for the request will stay unassigned.
+- ILC detects a domain from the [**request.host** of Fastify](https://www.fastify.io/docs/latest/Reference/Request/) and checks whether this hostname is listed in the **Router domains**.
+- Each registered domain in the **Router domains** has its own set of routes that do not overlap.
+- For routes, the domain is optional. If the request goes from the domain that is not listed in the **Router domains**, the routes for the request will stay unassigned.

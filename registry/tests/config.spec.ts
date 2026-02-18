@@ -1063,5 +1063,63 @@ describe('Tests /api/v1/config', () => {
                 await req.delete('/api/v1/template/' + example.templates.name);
             }
         });
+        it('should upsert route with domainAlias', async () => {
+            let domainId: number | undefined;
+            try {
+                await req.post('/api/v1/template/').send(example.templates).expect(200);
+                const domainResponse = await req
+                    .post('/api/v1/router_domains/')
+                    .send({ ...example.routerDomains, alias: 'config-domain' })
+                    .expect(200);
+                domainId = domainResponse.body.id;
+
+                await req
+                    .put('/api/v1/config')
+                    .send({
+                        apps: [{ ...app, name: 'app-alias' }],
+                        routes: [
+                            {
+                                ...appRoute('app-alias'),
+                                domainAlias: 'config-domain',
+                            },
+                        ],
+                    })
+                    .expect(204);
+
+                const { body: config } = await req
+                    .get('/api/v1/config')
+                    .query({ domainName: example.routerDomains.domainName })
+                    .expect(200);
+
+                expect(config.routes).to.have.lengthOf(1);
+                expect(config.routes[0]).to.deep.include({
+                    route: '/app-alias/*',
+                    domain: example.routerDomains.domainName,
+                });
+            } finally {
+                const { body: routesWithId } = await req.get('/api/v1/route');
+                await Promise.all(routesWithId.map((x: any) => req.delete(`/api/v1/route/${x.id}`)));
+                await req.delete('/api/v1/app/app-alias');
+                domainId && (await req.delete(`/api/v1/router_domains/${domainId}`));
+                await req.delete('/api/v1/template/' + example.templates.name);
+            }
+        });
+        it('should not upsert route with non-existing domainAlias', async () => {
+            await req
+                .put('/api/v1/config')
+                .send({
+                    apps: [{ ...app, name: 'app-alias-fail' }],
+                    routes: [
+                        {
+                            ...appRoute('app-alias-fail'),
+                            domainAlias: 'non-existing',
+                        },
+                    ],
+                })
+                .expect(422);
+
+            const { body: config } = await req.get('/api/v1/config').expect(200);
+            expect(config.apps['app-alias-fail']).to.be.undefined;
+        });
     });
 });

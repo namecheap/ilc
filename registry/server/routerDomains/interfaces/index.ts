@@ -7,8 +7,9 @@ export default interface RouterDomains {
     domainName: string;
     template500?: string;
     canonicalDomain?: string | null;
-    props?: Record<string, any> | null;
-    ssrProps?: Record<string, any> | null;
+    alias?: string | null;
+    props?: Record<string, unknown> | string | null;
+    ssrProps?: Record<string, unknown> | string | null;
 }
 
 export const routerDomainIdSchema = Joi.string().trim().required();
@@ -25,6 +26,13 @@ const commonRouterDomainsSchema = {
     domainName: domainValidation().required(),
     template500: templateNameSchema.required(),
     canonicalDomain: domainValidation().allow(null).default(null),
+    alias: Joi.string()
+        .lowercase()
+        .pattern(/^[a-z0-9-]+$/)
+        .max(64)
+        .trim()
+        .allow(null)
+        .default(null),
     props: Joi.object().allow(null).default(null),
     ssrProps: Joi.object().allow(null).default(null),
     versionId: Joi.string().strip(),

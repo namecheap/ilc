@@ -7,7 +7,7 @@ $ npm install
 $ npm start
 ```
 
-And then browse to [http://localhost:8080/](http://localhost:8080/).
+And then browse to [http://localhost:4001/](http://localhost:4001/).
 
 The default credentials are:
 **root / pwd** - for admin access.
@@ -44,4 +44,15 @@ Or provide it to the docker container itself.
 
 # Parts of UI
 
--   [Router domains](./docs/multi-domains.md)
+- [Router domains](./docs/multi-domains.md)
+
+## Router domain fields
+
+| Field                | Description                                                                                                                                                                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domainName`         | Hostname of the domain (e.g. `example.com`). Used by ILC at runtime to match incoming requests.                                                                                                                                  |
+| `template500`        | Default 500 error template for this domain.                                                                                                                                                                                      |
+| `canonicalDomain`    | Alternative domain used for canonical `<link>` tags.                                                                                                                                                                             |
+| `brandId`            | Brand identifier for multi-brand setups.                                                                                                                                                                                         |
+| `alias`              | Stable human-readable slug (e.g. `main-shop`). Allows routes to reference this domain by alias instead of numeric ID, which is useful when synchronizing route configuration across multiple ILC instances where IDs may differ. |
+| `props` / `ssrProps` | Domain-level properties merged into all applications running on this domain.                                                                                                                                                     |

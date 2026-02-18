@@ -8,7 +8,8 @@ import {
     prepareAppRouteToRespond,
     prepareAppRouteToSave,
 } from '../services/prepareAppRoute';
-import { partialAppRouteSchema } from '../interfaces';
+import { resolveDomainAlias } from '../services/resolveDomainAlias';
+import { AppRouteDto, partialAppRouteSchema } from '../interfaces';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
 import { routesService, RoutesService } from './RoutesService';
@@ -30,11 +31,12 @@ const validateRequestBeforeUpdateAppRoute = validateRequestFactory([
     },
 ]);
 
-const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams>, res: Response) => {
+const updateAppRoute = async (req: Request<UpdateAppRouteRequestParams, unknown, AppRouteDto>, res: Response) => {
     const { slots: appRouteSlots, ...appRouteData } = req.body;
 
     const appRouteId = +req.params.id;
-    const appRoute = transformSpecialRoutesForDB(appRouteData);
+    const domainResolved = await resolveDomainAlias(appRouteData);
+    const appRoute = transformSpecialRoutesForDB(domainResolved);
 
     const countToUpdate = await db('routes').where('id', appRouteId);
     if (!countToUpdate.length) {

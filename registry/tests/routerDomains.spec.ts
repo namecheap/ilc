@@ -36,6 +36,26 @@ const example = {
         },
         ssrProps: null,
     }),
+    withBrandId: Object.freeze({
+        domainName: 'domainWithBrand.com',
+        template500: 'testTemplate500',
+        brandId: 'testbrand',
+    }),
+    withBrandIdUpdated: Object.freeze({
+        domainName: 'domainWithBrand.com',
+        template500: 'testTemplate500',
+        brandId: 'updatedbrand',
+    }),
+    withAlias: Object.freeze({
+        domainName: 'domainWithAlias.com',
+        template500: 'testTemplate500',
+        alias: 'mydomain',
+    }),
+    withAliasUpdated: Object.freeze({
+        domainName: 'domainWithAlias.com',
+        template500: 'testTemplate500',
+        alias: 'updated-alias',
+    }),
 };
 
 describe(`Tests ${example.url}`, () => {
@@ -131,6 +151,74 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseFetching.body.canonicalDomain).deep.equal(example.withProps.canonicalDomain);
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
+            }
+        });
+
+        it('should successfully create record with alias', async () => {
+            let routerDomainsId;
+
+            try {
+                const responseCreation = await req.post(example.url).send(example.withAlias).expect(200);
+
+                routerDomainsId = responseCreation.body.id;
+
+                expect(responseCreation.body).deep.equal({
+                    id: routerDomainsId,
+                    ...example.withAlias,
+                });
+
+                const responseFetching = await req.get(example.url + routerDomainsId).expect(200);
+
+                expect(responseFetching.body.alias).to.equal('mydomain');
+            } finally {
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+            }
+        });
+
+        it('should lowercase alias on create', async () => {
+            let routerDomainsId;
+
+            try {
+                const responseCreation = await req
+                    .post(example.url)
+                    .send({ ...example.correct, alias: 'MyDomain' })
+                    .expect(200);
+
+                routerDomainsId = responseCreation.body.id;
+
+                expect(responseCreation.body.alias).to.equal('mydomain');
+            } finally {
+                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+            }
+        });
+
+        it('should not create record with invalid alias characters', async () => {
+            await req
+                .post(example.url)
+                .send({ ...example.correct, alias: 'invalid_alias!' })
+                .expect(422);
+        });
+
+        it('should not create record with alias exceeding max length', async () => {
+            await req
+                .post(example.url)
+                .send({ ...example.correct, alias: 'a'.repeat(65) })
+                .expect(422);
+        });
+
+        it('should not create record with a duplicate alias', async () => {
+            let firstId: number | undefined;
+
+            try {
+                const first = await req.post(example.url).send(example.withAlias).expect(200);
+                firstId = first.body.id;
+
+                await req
+                    .post(example.url)
+                    .send({ ...example.correct, domainName: 'another-domain.com', alias: example.withAlias.alias })
+                    .expect(422, `Router domain with alias "${example.withAlias.alias}" already exists.`);
+            } finally {
+                firstId && (await req.delete(example.url + firstId));
             }
         });
 
@@ -390,6 +478,27 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseUpdating.body.props).deep.equal({ newProp: 'newValue' });
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
+            }
+        });
+
+        it('should not update record with an alias already used by another domain', async () => {
+            let firstId: number | undefined;
+            let secondId: number | undefined;
+
+            try {
+                const first = await req.post(example.url).send(example.withAlias).expect(200);
+                firstId = first.body.id;
+
+                const second = await req.post(example.url).send(example.updated).expect(200);
+                secondId = second.body.id;
+
+                await req
+                    .put(example.url + secondId)
+                    .send({ ...example.updated, alias: example.withAlias.alias })
+                    .expect(422, `Router domain with alias "${example.withAlias.alias}" already exists.`);
+            } finally {
+                firstId && (await req.delete(example.url + firstId));
+                secondId && (await req.delete(example.url + secondId));
             }
         });
 
