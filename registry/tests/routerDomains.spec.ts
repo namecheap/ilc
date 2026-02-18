@@ -36,16 +36,6 @@ const example = {
         },
         ssrProps: null,
     }),
-    withBrandId: Object.freeze({
-        domainName: 'domainWithBrand.com',
-        template500: 'testTemplate500',
-        brandId: 'testbrand',
-    }),
-    withBrandIdUpdated: Object.freeze({
-        domainName: 'domainWithBrand.com',
-        template500: 'testTemplate500',
-        brandId: 'updatedbrand',
-    }),
 };
 
 describe(`Tests ${example.url}`, () => {
@@ -142,75 +132,6 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }
-        });
-
-        it('should successfully create record with brandId', async () => {
-            let routerDomainsId;
-
-            try {
-                const responseCreation = await req.post(example.url).send(example.withBrandId).expect(200);
-
-                routerDomainsId = responseCreation.body.id;
-
-                expect(responseCreation.body).deep.equal({
-                    id: routerDomainsId,
-                    ...example.withBrandId,
-                });
-
-                const responseFetching = await req.get(example.url + routerDomainsId).expect(200);
-
-                expect(responseFetching.body.brandId).to.equal('testbrand');
-            } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
-            }
-        });
-
-        it('should lowercase brandId on create', async () => {
-            let routerDomainsId;
-
-            try {
-                const responseCreation = await req
-                    .post(example.url)
-                    .send({ ...example.correct, brandId: 'TestBRAND' })
-                    .expect(200);
-
-                routerDomainsId = responseCreation.body.id;
-
-                expect(responseCreation.body.brandId).to.equal('testbrand');
-            } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
-            }
-        });
-
-        it('should allow dashes in brandId', async () => {
-            let routerDomainsId;
-
-            try {
-                const responseCreation = await req
-                    .post(example.url)
-                    .send({ ...example.correct, brandId: 'spaceship-us' })
-                    .expect(200);
-
-                routerDomainsId = responseCreation.body.id;
-
-                expect(responseCreation.body.brandId).to.equal('spaceship-us');
-            } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
-            }
-        });
-
-        it('should not create record with invalid brandId characters', async () => {
-            await req
-                .post(example.url)
-                .send({ ...example.correct, brandId: 'invalid_brand!' })
-                .expect(422);
-        });
-
-        it('should not create record with brandId exceeding max length', async () => {
-            await req
-                .post(example.url)
-                .send({ ...example.correct, brandId: 'a'.repeat(65) })
-                .expect(422);
         });
 
         it('should create record with empty props', async () => {
@@ -444,42 +365,6 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseUpdating.body.props).deep.equal(example.withPropsUpdated.props);
                 expect(responseUpdating.body.ssrProps).to.be.undefined;
                 expect(responseUpdating.body.ssrPcanonicalDomain).to.be.undefined;
-            } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
-            }
-        });
-
-        it('should successfully update brandId', async () => {
-            let routerDomainsId;
-
-            try {
-                const responseCreation = await req.post(example.url).send(example.withBrandId).expect(200);
-                routerDomainsId = responseCreation.body.id;
-
-                const responseUpdating = await req
-                    .put(example.url + routerDomainsId)
-                    .send(example.withBrandIdUpdated)
-                    .expect(200);
-
-                expect(responseUpdating.body.brandId).to.equal('updatedbrand');
-            } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
-            }
-        });
-
-        it('should successfully remove brandId by setting null', async () => {
-            let routerDomainsId;
-
-            try {
-                const responseCreation = await req.post(example.url).send(example.withBrandId).expect(200);
-                routerDomainsId = responseCreation.body.id;
-
-                const responseUpdating = await req
-                    .put(example.url + routerDomainsId)
-                    .send({ ...example.withBrandId, brandId: null })
-                    .expect(200);
-
-                expect(responseUpdating.body.brandId).to.be.undefined;
             } finally {
                 routerDomainsId && (await req.delete(example.url + routerDomainsId));
             }

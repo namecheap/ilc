@@ -164,7 +164,6 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                 const { appName } = appIdToNameAndSlot(attributes.id);
 
                 const sdkOptions = new SdkOptions({
-                    brandId: request.registryConfig.brandId,
                     i18n: {
                         manifestPath: request.registryConfig['apps'][appName].l10nManifest,
                     },

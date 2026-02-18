@@ -71,5 +71,4 @@ export interface RegistryConfig {
     sharedLibs: Record<string, string>;
     dynamicLibs: Record<string, DynamicLib>;
     canonicalDomain?: string;
-    brandId?: string;
 }

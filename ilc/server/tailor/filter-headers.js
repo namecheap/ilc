@@ -7,9 +7,6 @@ const ACCEPT_HEADERS = [
     'x-request-uri',
     'x-request-host',
     'x-request-intl',
-    'x-request-brand',
-    'x-request-geo',
-    'z-is-audience',
     'cookie',
 ];
 

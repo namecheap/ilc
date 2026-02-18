@@ -18,6 +18,16 @@ type GetTemplateRenderedRequestParams = {
     name: string;
 };
 
+interface DomainTemplateResult {
+    template: Template | null;
+    brandId?: string;
+}
+
+interface DomainProps {
+    brandId?: string;
+    [key: string]: unknown;
+}
+
 const validateRequestBeforeGetTemplateRendered = validateRequestFactory([
     {
         schema: Joi.object({
@@ -27,12 +37,19 @@ const validateRequestBeforeGetTemplateRendered = validateRequestFactory([
     },
 ]);
 
-async function getTemplateByDomain(
-    domain: string,
-    templateName: string,
-): Promise<{ template: Template; brandId?: string } | null> {
+function parseDomainProps(props: RouterDomains['props']): DomainProps {
+    if (!props) {
+        return {};
+    }
+    if (typeof props === 'string') {
+        return JSON.parse(props) as DomainProps;
+    }
+    return props;
+}
+
+async function getTemplateByDomain(domain: string, templateName: string): Promise<DomainTemplateResult | null> {
     const [domainItem] = await db
-        .select('id', 'brandId')
+        .select('id', 'props')
         .from<RouterDomains>('router_domains')
         .where('domainName', String(domain));
 
@@ -48,13 +65,15 @@ async function getTemplateByDomain(
             name: templateName,
         });
 
+    const props = parseDomainProps(domainItem.props);
+
     if (!template) {
-        return null;
+        return { template: null, brandId: props.brandId };
     }
 
     template.versionId = appendDigest(template.versionId, 'template');
 
-    return { template, brandId: domainItem.brandId ?? undefined };
+    return { template, brandId: props.brandId };
 }
 
 async function getTemplateByName(templateName: string): Promise<Template | undefined> {
@@ -74,20 +93,22 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     let brandId: string | undefined;
 
     const { name: templateName } = req.params;
-
-    const { locale, domain } = req.query;
+    const locale = req.query.locale as string;
+    const domain = req.query.domain as string;
 
     if (domain) {
-        const result = await getTemplateByDomain(String(domain), templateName);
+        const result = await getTemplateByDomain(domain, templateName);
         if (result) {
-            template = result.template;
+            template = result.template ?? undefined;
             brandId = result.brandId;
         }
     }
 
     if (!template) {
         template = await getTemplateByName(templateName);
-        template && getLogger().info(`Template ${templateName} is not attached to the domain, found by template name.`);
+        if (template) {
+            getLogger().info(`Template ${templateName} is not attached to the domain, found by template name.`);
+        }
     }
 
     if (!template) {
@@ -101,7 +122,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
             .select()
             .from<LocalizedTemplateRow>(Tables.TemplatesLocalized)
             .where('templateName', templateName)
-            .andWhere('locale', locale as string);
+            .andWhere('locale', locale);
 
         if (localizedTemplate) {
             content = localizedTemplate.content;

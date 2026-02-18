@@ -29,7 +29,6 @@ const InputForm = ({ mode = 'edit', ...props }) => {
                     <SelectInput resettable optionText="name" />
                 </ReferenceInput>
                 <TextInput source="canonicalDomain" label="Canonical Domain" fullWidth />
-                <TextInput source="brandId" label="Brand ID" fullWidth />
             </FormTab>
 
             <FormTab label="Domain Props">

@@ -159,7 +159,6 @@ describe('configs injector', () => {
                     routingStrategy: 'prefix_except_default',
                 },
             },
-            brandId: 'nc',
             canonicalDomain: undefined,
         };
 
@@ -192,7 +191,6 @@ describe('configs injector', () => {
                     [registryConfig.apps.ssrOnlyApp.name]: pickApp(registryConfig.apps.ssrOnlyApp),
                     thirdApp: pickApp(registryConfig.apps.thirdApp),
                 },
-                brandId: 'nc',
                 routes: [],
                 specialRoutes: {},
                 settings: {

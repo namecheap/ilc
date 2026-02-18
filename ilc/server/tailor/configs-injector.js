@@ -197,7 +197,6 @@ module.exports = class ConfigsInjector {
 
         let spaConfig = JSON.stringify({
             apps,
-            brandId: registryConfig.brandId,
             routes,
             specialRoutes: _.mapValues(registryConfig.specialRoutes, (v) => _.omit(v, ['routeId'])),
             settings,

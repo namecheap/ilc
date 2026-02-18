@@ -39,14 +39,6 @@ export function wildcardRequestHandlerFactory(
         req.headers['x-request-host'] = req.host;
         req.headers['x-request-uri'] = url;
 
-        if (registryConfig.brandId) {
-            req.headers['x-request-brand'] = registryConfig.brandId;
-            req.raw.ilcState = {
-                ...req.raw.ilcState,
-                brandId: registryConfig.brandId,
-            };
-        }
-
         const overrideConfigs = parseOverrideConfig(
             req.headers.cookie,
             registryConfig.settings.overrideConfigTrustedOrigins,

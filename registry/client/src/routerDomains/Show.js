@@ -15,7 +15,6 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
                     <TextField source="name" />
                 </ReferenceField>
                 <TextField source="canonicalDomain" label="Canonical Domain" emptyText="-" />
-                <TextField source="brandId" label="Brand ID" emptyText="-" />
                 <JsonFieldShow source="props" label="Properties that will be passed to applications" />
                 <JsonFieldShow
                     source="ssrProps"
