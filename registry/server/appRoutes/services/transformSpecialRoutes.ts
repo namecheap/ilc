@@ -1,9 +1,11 @@
-import { AppRouteDto } from '../interfaces';
 import { AppRouteWithSlot } from '../routes/RoutesService';
 
 export const SPECIAL_PREFIX = 'special:';
+
 export const isSpecialRoute = (route: string) => route.startsWith(SPECIAL_PREFIX);
+
 export const makeSpecialRoute = (specialRole: string) => `${SPECIAL_PREFIX}${specialRole}`;
+
 const getSpecialRole = (route: string) => route.replace(SPECIAL_PREFIX, '');
 
 export type ConsumerRoute = Omit<AppRouteWithSlot, 'route' | 'next'> & {
@@ -32,14 +34,18 @@ export function transformSpecialRoutesForConsumer(
     return Array.isArray(appRoutes) ? appRoutes.map(handleRoute) : handleRoute(appRoutes);
 }
 
-export function transformSpecialRoutesForDB({ specialRole, ...appRouteData }: AppRouteDto): AppRouteDto {
+export function transformSpecialRoutesForDB<
+    T extends { specialRole?: string; orderPos?: number | null; route?: string },
+>(appRoute: T): T {
+    const { specialRole, ...rest } = appRoute;
+
     if (!specialRole) {
-        return appRouteData;
+        return rest as T;
     }
 
     return {
-        ...appRouteData,
+        ...rest,
         orderPos: null,
         route: makeSpecialRoute(specialRole),
-    };
+    } as T;
 }

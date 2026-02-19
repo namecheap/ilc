@@ -4,8 +4,9 @@ import validateRequestFactory from '../../common/services/validateRequest';
 import db from '../../db';
 import { extractInsertedId, handleForeignConstraintError } from '../../util/db';
 import { defined, getJoiErr, joiErrorToResponse } from '../../util/helpers';
-import { appRouteSchema } from '../interfaces';
+import { AppRouteDto, appRouteSchema } from '../interfaces';
 import { prepareAppRouteSlotsToSave, prepareAppRouteToSave } from '../services/prepareAppRoute';
+import { resolveDomainAlias } from '../services/resolveDomainAlias';
 import { transformSpecialRoutesForDB } from '../services/transformSpecialRoutes';
 import { retrieveAppRouteFromDB } from './getAppRoute';
 import { routesService } from './RoutesService';
@@ -17,13 +18,14 @@ const validateRequestBeforeCreateAppRoute = validateRequestFactory([
     },
 ]);
 
-const createAppRoute = async (req: Request, res: Response) => {
+const createAppRoute = async (req: Request<unknown, unknown, AppRouteDto>, res: Response) => {
     const { slots: appRouteSlots, ...appRouteData } = req.body;
 
-    const appRoute = transformSpecialRoutesForDB(appRouteData);
+    const domainResolved = await resolveDomainAlias(appRouteData);
+    const appRoute = transformSpecialRoutesForDB(domainResolved);
 
     if (appRouteData.specialRole) {
-        const existingRoute = await db.first().from('routes').where({
+        const existingRoute = await db('routes').first().where({
             route: appRoute.route,
             domainId: appRoute.domainId,
         });

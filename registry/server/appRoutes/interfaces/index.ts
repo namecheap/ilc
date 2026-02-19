@@ -57,6 +57,7 @@ export interface AppRoute {
     meta?: object | string | null;
     domainId?: number | null;
     domainIdIdxble?: number | null;
+    domainAlias?: string | null;
     namespace?: string | null;
 }
 
@@ -68,6 +69,7 @@ export type AppRouteDto = {
     templateName: string | null;
     slots: Record<string, AppRouteSlotDto>;
     domainId: number | null;
+    domainAlias: string | null;
     meta: Record<string, any>;
     versionId: string;
     namespace: string | null;
@@ -80,7 +82,12 @@ const commonAppRoute = {
     next: Joi.bool().default(false),
     templateName: templateNameSchema.allow(null).default(null),
     slots: Joi.object().pattern(commonAppRouteSlot.name, appRouteSlotSchema).default({}),
-    domainId: Joi.number().default(null),
+    domainId: Joi.number(),
+    domainAlias: Joi.string()
+        .lowercase()
+        .pattern(/^[a-z0-9-]+$/)
+        .max(64)
+        .trim(),
     meta: Joi.object().default({}),
     versionId: Joi.string().strip(),
     namespace: Joi.string().default(null),
@@ -88,7 +95,7 @@ const commonAppRoute = {
 
 export const partialAppRouteSchema = Joi.object({
     ...commonAppRoute,
-});
+}).oxor('domainId', 'domainAlias');
 
 const conditionSpecialRole = {
     is: Joi.exist(),
@@ -108,4 +115,4 @@ export const appRouteSchema = Joi.object<AppRouteDto>({
         is: Joi.exist(),
         then: Joi.forbidden(),
     }),
-});
+}).oxor('domainId', 'domainAlias');

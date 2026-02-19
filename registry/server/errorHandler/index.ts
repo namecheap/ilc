@@ -1,12 +1,19 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response, NextFunction } from 'express';
+import Joi from 'joi';
 import * as httpErrors from './httpErrors';
 
 import noticeError from './noticeError';
+import { joiErrorToResponse } from '../util/helpers';
 
 async function errorHandler(error: Error, req: Request, res: Response, next: NextFunction): Promise<void> {
     if (error instanceof httpErrors.NotFoundError) {
         res.status(404).send('Not found');
+        return;
+    }
+
+    if (error instanceof Joi.ValidationError) {
+        res.status(422).send(joiErrorToResponse(error));
         return;
     }
 
