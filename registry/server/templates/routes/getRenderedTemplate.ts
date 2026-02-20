@@ -13,7 +13,7 @@ import { templateNameSchema } from './validation';
 import RouterDomains from '../../routerDomains/interfaces';
 import { getLogger } from '../../util/logger';
 import { appendDigest } from '../../util/hmac';
-import { parseJSON } from '../../common/services/json';
+import { JSONValue, parseJSON } from '../../common/services/json';
 
 type GetTemplateRenderedRequestParams = {
     name: string;
@@ -76,8 +76,8 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     if (domain) {
         const domainItem = await getDomainByName(domain);
         if (domainItem) {
-            const domainProps = domainItem.props ? (parseJSON(domainItem.props) as Record<string, any>) : null;
-            brandId = domainProps?.brandId;
+            const domainProps = domainItem.props ? parseJSON<Record<string, JSONValue>>(domainItem.props) : null;
+            brandId = typeof domainProps?.brandId === 'string' ? domainProps.brandId : undefined;
             template = await getTemplateByDomainId(domainItem.id, templateName);
         }
     }
