@@ -50,7 +50,7 @@ export async function up(knex: Knex): Promise<any> {
         },
         {
             key: SettingKeys.AuthOpenIdDiscoveryUrl,
-            value: 'http://localhost:8080',
+            value: 'http://localhost:8085',
             default: '',
             scope: Scope.Registry,
             secret: false,

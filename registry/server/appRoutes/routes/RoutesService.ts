@@ -2,11 +2,12 @@ import { Knex } from 'knex';
 import { User } from '../../../typings/User';
 import db, { type VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
-import { extractInsertedId, PG_UNIQUE_VIOLATION_CODE } from '../../util/db';
+import { extractInsertedId, isUniqueConstraintError } from '../../util/db';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes, VersionedRecord } from '../../versioning/interfaces';
 import { AppRoute, AppRouteDto, appRouteSchema, AppRouteSlot } from '../interfaces';
 import { prepareAppRouteSlotsToSave, prepareAppRouteToSave } from '../services/prepareAppRoute';
+import { resolveDomainAlias } from '../services/resolveDomainAlias';
 
 export type AppRouteWithSlot = VersionedRecord<AppRoute & AppRouteSlot>;
 
@@ -49,10 +50,11 @@ export class RoutesService {
      * @returns routeId
      */
     public async upsert(params: unknown, user: User, trxProvider: Knex.TransactionProvider): Promise<AppRoute> {
-        const { slots, ...appRoute } = await appRouteSchema.validateAsync(params, {
+        const { slots, ...validated } = await appRouteSchema.validateAsync(params, {
             noDefaults: false,
             externals: false,
         });
+        const appRoute = await resolveDomainAlias(validated);
 
         let savedAppRouteId: number;
         const appRouteRecord = prepareAppRouteToSave(appRoute);
@@ -104,13 +106,11 @@ export class RoutesService {
         );
     }
 
-    public isOrderPosError(error: any) {
-        const sqliteErrorOrderPos = 'UNIQUE constraint failed: routes.orderPos, routes.domainIdIdxble';
-        const constraint = 'routes_orderpos_and_domainIdIdxble_unique';
-        return (
-            (error.code === PG_UNIQUE_VIOLATION_CODE && error.constraint === constraint) ||
-            error?.message.includes(sqliteErrorOrderPos) ||
-            error?.message.includes(constraint)
+    public isOrderPosError(error: unknown) {
+        return isUniqueConstraintError(
+            error,
+            'routes_orderpos_and_domainIdIdxble_unique',
+            'routes.orderPos, routes.domainIdIdxble',
         );
     }
 

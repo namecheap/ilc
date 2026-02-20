@@ -459,6 +459,71 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should create record with domainAlias', async () => {
+            let domainId, routeId;
+
+            try {
+                const domainResponse = await req
+                    .post(example.routerDomain.url)
+                    .send({ ...example.routerDomain.correct, alias: 'my-test-domain' });
+                domainId = domainResponse.body.id;
+
+                let response = await req
+                    .post(example.url)
+                    .send({ ...example.correct, domainAlias: 'my-test-domain' })
+                    .expect(200);
+
+                routeId = response.body.id;
+
+                expect(response.body.domainId).to.equal(domainId);
+
+                response = await req.get(example.url + routeId).expect(200);
+
+                expect(response.body.domainId).to.equal(domainId);
+            } finally {
+                routeId && (await req.delete(example.url + routeId));
+                domainId && (await req.delete(example.routerDomain.url + domainId));
+            }
+        });
+
+        it('should not create record with non-existing domainAlias', async () => {
+            let routeId;
+
+            try {
+                const response = await req.post(example.url).send({ ...example.correct, domainAlias: 'non-existing' });
+
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(422);
+                expect(response.text).to.include('Router domain with alias "non-existing" does not exist');
+            } finally {
+                routeId && (await req.delete(example.url + routeId));
+            }
+        });
+
+        it('should not create record with both domainId and domainAlias', async () => {
+            let routeId;
+
+            try {
+                const response = await req.post(example.url).send({
+                    ...example.correct,
+                    domainId: 1,
+                    domainAlias: 'some-alias',
+                });
+
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(422);
+                expect(response.text).to.include('contains a conflict');
+            } finally {
+                routeId && (await req.delete(example.url + routeId));
+            }
+        });
+
         it('should create special record with existing domainId', async () => {
             let domainId, routeId;
 
@@ -926,6 +991,77 @@ describe(`Tests ${example.url}`, () => {
                 routeId && (await req.delete(example.url + routeId));
                 domainId1 && (await req.delete(example.routerDomain.url + domainId1));
                 domainId2 && (await req.delete(example.routerDomain.url + domainId2));
+            }
+        });
+
+        it('should update record with domainAlias', async () => {
+            let domainId1, domainId2, routeId;
+
+            try {
+                const domainResponse1 = await req
+                    .post(example.routerDomain.url)
+                    .send({ ...example.routerDomain.correct, alias: 'update-domain-1' });
+                domainId1 = domainResponse1.body.id;
+
+                const domainResponse2 = await req
+                    .post(example.routerDomain.url)
+                    .send({ ...example.routerDomain.correct, alias: 'update-domain-2' });
+                domainId2 = domainResponse2.body.id;
+
+                let response = await req
+                    .post(example.url)
+                    .send({ ...example.correct, domainId: domainId1 })
+                    .expect(200);
+                routeId = response.body.id;
+
+                response = await req
+                    .put(example.url + routeId)
+                    .send({ ...example.updated, domainAlias: 'update-domain-2' })
+                    .expect(200);
+
+                expect(response.body.domainId).to.equal(domainId2);
+            } finally {
+                routeId && (await req.delete(example.url + routeId));
+                domainId1 && (await req.delete(example.routerDomain.url + domainId1));
+                domainId2 && (await req.delete(example.routerDomain.url + domainId2));
+            }
+        });
+
+        it('should not update record with non-existing domainAlias', async () => {
+            let routeId;
+
+            try {
+                let response = await req.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
+                response = await req
+                    .put(example.url + routeId)
+                    .send({ ...example.updated, domainAlias: 'non-existing' });
+
+                expect(response.status).equal(422);
+                expect(response.text).to.include('Router domain with alias "non-existing" does not exist');
+            } finally {
+                routeId && (await req.delete(example.url + routeId));
+            }
+        });
+
+        it('should not update record with both domainId and domainAlias', async () => {
+            let routeId;
+
+            try {
+                let response = await req.post(example.url).send(example.correct).expect(200);
+                routeId = response.body.id;
+
+                response = await req.put(example.url + routeId).send({
+                    ...example.updated,
+                    domainId: 1,
+                    domainAlias: 'some-alias',
+                });
+
+                expect(response.status).equal(422);
+                expect(response.text).to.include('contains a conflict');
+            } finally {
+                routeId && (await req.delete(example.url + routeId));
             }
         });
 
