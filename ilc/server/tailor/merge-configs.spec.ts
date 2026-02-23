@@ -632,6 +632,88 @@ describe('merge configs', () => {
 
             expect(mergeConfigs(registryConfig, overrideConfig, 7)).to.be.eql(mergedConfig);
         });
+        it('should add global override route (no domainId) when a domain is resolved from the request', () => {
+            // Regression: before the fix, override routes without domainId were silently
+            // dropped when resolveDomainId returned a numeric id for the current domain.
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 99,
+                        route: '/new-global',
+                        next: false,
+                        orderPos: 50,
+                        slots: {},
+                        meta: {},
+                        versionId: 'v1.0.99',
+                        // no domainId — global LDE override
+                    },
+                ],
+            };
+
+            const result = mergeConfigs(registryConfig, overrideConfig, 5);
+
+            const [commonRoute, constRoute, willChangeRoute] = registryConfig.routes;
+            expect(result.routes).to.eql([
+                commonRoute, // orderPos: -99
+                constRoute, // orderPos: 1
+                {
+                    routeId: 99,
+                    route: '/new-global',
+                    next: false,
+                    orderPos: 50,
+                    slots: {},
+                    meta: {},
+                    versionId: 'v1.0.99',
+                },
+                willChangeRoute, // orderPos: 99
+            ]);
+        });
+
+        it('should merge global override route (no domainId) into existing route when a domain is resolved from the request', () => {
+            // Regression: before the fix, an override targeting an existing route by routeId
+            // was ignored when domainId was resolved, so slot/prop changes were lost.
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 2,
+                        route: '/const',
+                        next: true,
+                        // no domainId — global LDE override
+                    },
+                ],
+            };
+
+            const result = mergeConfigs(registryConfig, overrideConfig, 5);
+
+            const constRoute = result.routes.find((r) => r.routeId === 2);
+            expect(constRoute?.next).to.be.true;
+            expect(result.routes).to.have.lengthOf(registryConfig.routes.length);
+        });
+
+        it('should not apply a domain-specific override route to a different domain', () => {
+            // The original intent of isSameDomainRoute: an override tagged domainId:7
+            // must not bleed into a request resolved to domainId:5.
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 99,
+                        route: '/other-domain-only',
+                        next: false,
+                        orderPos: 50,
+                        slots: {},
+                        meta: {},
+                        versionId: 'v1.0.99',
+                        domainId: 7,
+                    },
+                ],
+            };
+
+            const result = mergeConfigs(registryConfig, overrideConfig, 5);
+
+            expect(result.routes).to.have.lengthOf(registryConfig.routes.length);
+            expect(result.routes.find((r) => r.route === '/other-domain-only')).to.be.undefined;
+        });
+
         it('should handle routes with same pattern but different orderPos including wildcard routes', () => {
             const registryConfigWithWildcardRoutes: TransformedRegistryConfig = {
                 ...registryConfig,
