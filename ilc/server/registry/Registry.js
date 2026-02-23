@@ -245,7 +245,6 @@ module.exports = class Registry {
                 routesForCurrentDomain.push(routeData);
             }
         });
-
         return routesForCurrentDomain.length ? routesForCurrentDomain : routesWithoutDomain;
     };
 
