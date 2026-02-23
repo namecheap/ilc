@@ -847,7 +847,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it('should pass brandId from domain props as x-request-brand header to include fetches', async () => {
+        it('should pass brandId from domain props as x-ilc-request-brand header to include fetches', async () => {
             const includesHost = 'https://brand-include-test.example.com';
             const domain = 'brand-test-domain.com.ote';
             const brandId = 'spaceship';
@@ -872,12 +872,12 @@ describe(`Tests ${example.url}`, () => {
 
                 nock.cleanAll();
 
-                // Strict interceptor that requires x-request-brand header
+                // Strict interceptor that requires x-ilc-request-brand header
                 let receivedBrandHeader: string | undefined;
                 nock(includesHost)
                     .get('/brand-include')
                     .reply(function () {
-                        receivedBrandHeader = this.req.headers['x-request-brand'] as string | undefined;
+                        receivedBrandHeader = this.req.headers['x-ilc-request-brand'] as string | undefined;
                         return [200, includeContent];
                     });
 
@@ -909,7 +909,7 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it('should not send x-request-brand header when domain has no brandId in props', async () => {
+        it('should not send x-ilc-request-brand header when domain has no brandId in props', async () => {
             const includesHost = 'https://nobrand-include-test.example.com';
             const domain = 'nobrand-test-domain.com.ote';
             const includeContent = '<div>No brand content</div>';
@@ -938,7 +938,7 @@ describe(`Tests ${example.url}`, () => {
                 nock(includesHost)
                     .get('/nobrand-include')
                     .reply(function () {
-                        receivedBrandHeader = this.req.headers['x-request-brand'] as string | undefined;
+                        receivedBrandHeader = this.req.headers['x-ilc-request-brand'] as string | undefined;
                         return [200, includeContent];
                     });
 
@@ -1001,12 +1001,12 @@ describe(`Tests ${example.url}`, () => {
 
                 nock.cleanAll();
 
-                // Interceptor that captures the x-request-brand header
+                // Interceptor that captures the x-ilc-request-brand header
                 let receivedBrandHeader: string | undefined;
                 nock(includesHost)
                     .get('/fallback-include')
                     .reply(function () {
-                        receivedBrandHeader = this.req.headers['x-request-brand'] as string | undefined;
+                        receivedBrandHeader = this.req.headers['x-ilc-request-brand'] as string | undefined;
                         return [200, includeContent];
                     });
 

@@ -318,7 +318,7 @@ describe('renderTemplate', () => {
         );
     });
 
-    it('should send x-request-brand header in include fetch when brandId context is provided', async () => {
+    it('should send x-ilc-request-brand header in include fetch when brandId context is provided', async () => {
         const include = {
             api: {
                 route: '/get/include/brand',
@@ -338,7 +338,7 @@ describe('renderTemplate', () => {
 
         scope
             .get(include.api.route)
-            .matchHeader('x-request-brand', 'spaceship')
+            .matchHeader('x-ilc-request-brand', 'spaceship')
             .reply(include.api.response.status, include.api.response.data, include.api.response.headers);
 
         const template = `<html><head></head><body><include id="${include.attributes.id}" src="${include.attributes.src}" timeout="${include.attributes.timeout}" /></body></html>`;
@@ -348,7 +348,7 @@ describe('renderTemplate', () => {
         chai.expect(renderedTemplate.content).to.contain('Brand include');
     });
 
-    it('should not send x-request-brand header when no brandId context is provided', async () => {
+    it('should not send x-ilc-request-brand header when no brandId context is provided', async () => {
         const include = {
             api: {
                 route: '/get/include/nobrand',
@@ -367,7 +367,7 @@ describe('renderTemplate', () => {
         };
 
         scope.get(include.api.route).reply(function (_uri, _body) {
-            chai.expect(this.req.headers['x-request-brand']).to.be.undefined;
+            chai.expect(this.req.headers['x-ilc-request-brand']).to.be.undefined;
             return [include.api.response.status, include.api.response.data, include.api.response.headers];
         });
 

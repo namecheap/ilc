@@ -133,7 +133,7 @@ async function fetchIncludes(
                     headers: { link },
                 } = await axios.get(src, {
                     timeout: +timeout,
-                    headers: context?.brandId ? { 'x-request-brand': context.brandId } : undefined,
+                    headers: context?.brandId ? { 'x-ilc-request-brand': context.brandId } : undefined,
                 });
 
                 let styleRefs: Array<string> = [];
