@@ -78,6 +78,7 @@ describe('wildcardRequestHandlerFactory', () => {
                 apps: {},
             }),
             resolveDomainId: sinon.stub().resolves(1),
+            resolveDomainAlias: sinon.stub().resolves('test-alias'),
             getTemplate: sinon.stub().resolves({ data: { content: 'template', styleRefs: [] }, cachedAt: Date.now() }),
         } as any;
 
