@@ -38,4 +38,5 @@ export interface Registry {
 
     getTemplate(templateName: string, options?: TemplateOptions): Promise<CacheResult<Template>>;
     resolveDomainId(domainName: string): Promise<number>;
+    resolveDomainAlias(domainName: string): Promise<string | undefined>;
 }

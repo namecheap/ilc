@@ -7,7 +7,7 @@ type DeepPartial<T> = T extends object
       }
     : T;
 
-type OverrideRoute = DeepPartial<TransformedRoute> & { domainId?: number };
+type OverrideRoute = DeepPartial<TransformedRoute> & { domainId?: number; domainAlias?: string };
 export type OverrideConfig = DeepPartial<Pick<TransformedRegistryConfig, 'apps'>> & {
     routes?: OverrideRoute[];
     sharedLibs?: {
@@ -21,6 +21,7 @@ export function mergeConfigs(
     original: TransformedRegistryConfig,
     override: OverrideConfig | null | undefined,
     domainId?: number,
+    domainAlias?: string,
 ): TransformedRegistryConfig {
     if (!override || (!override.apps && !override.routes && !override.sharedLibs)) {
         return original;
@@ -35,7 +36,12 @@ export function mergeConfigs(
               ? overrideRoute.route === originalRoute.route && overrideRoute.orderPos === originalRoute.orderPos
               : overrideRoute.route === originalRoute.route;
 
-    const isSameDomainRoute = (route: OverrideRoute) => route.domainId === undefined || route.domainId === domainId;
+    const isSameDomainRoute = (route: OverrideRoute) => {
+        if (route.domainAlias !== undefined) {
+            return route.domainAlias === domainAlias;
+        }
+        return route.domainId === undefined || route.domainId === domainId;
+    };
 
     const routes = override.routes
         ? [
