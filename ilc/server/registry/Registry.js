@@ -47,14 +47,14 @@ module.exports = class Registry {
             return filteredData;
         };
 
-        this.getTemplate = async (templateName, { locale, forDomain } = {}) => {
+        this.getTemplate = async (templateName, { locale, forDomain, routeKey } = {}) => {
             if (templateName === '500' && forDomain) {
                 const routerDomains = await this.getRouterDomains();
                 const redefined500 = routerDomains.data.find((item) => item.domainName === forDomain)?.template500;
                 templateName = redefined500 || templateName;
             }
 
-            return await getTemplateMemoized(templateName, { locale, domain: forDomain });
+            return await getTemplateMemoized(templateName, { locale, domain: forDomain, routeKey });
         };
     }
 
@@ -113,7 +113,9 @@ module.exports = class Registry {
         }
     }
 
-    #getTemplate = async (templateName, { locale, domain }) => {
+    // Note: `routeKey` is intentionally unused here — it serves as a cache key differentiator
+    // in the memoization layer (via JSON.stringify of args) to prevent cache collisions across routes.
+    #getTemplate = async (templateName, { locale, domain, routeKey: _routeKey }) => {
         if (!VALID_TEMPLATE_NAME.test(templateName)) {
             throw new ValidationRegistryError({
                 message: `Invalid template name ${templateName}`,

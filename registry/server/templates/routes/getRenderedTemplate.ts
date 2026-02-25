@@ -13,6 +13,7 @@ import { templateNameSchema } from './validation';
 import RouterDomains from '../../routerDomains/interfaces';
 import { getLogger } from '../../util/logger';
 import { appendDigest } from '../../util/hmac';
+import { JSONValue, parseJSON } from '../../common/services/json';
 
 type GetTemplateRenderedRequestParams = {
     name: string;
@@ -27,21 +28,21 @@ const validateRequestBeforeGetTemplateRendered = validateRequestFactory([
     },
 ]);
 
-async function getTemplateByDomain(domain: string, templateName: string): Promise<Template | null> {
+async function getDomainByName(domain: string): Promise<RouterDomains | undefined> {
     const [domainItem] = await db
-        .select('id')
+        .select('id', 'props')
         .from<RouterDomains>('router_domains')
         .where('domainName', String(domain));
 
-    if (!domainItem) {
-        return null;
-    }
+    return domainItem;
+}
 
+async function getTemplateByDomainId(domainId: number, templateName: string): Promise<Template | undefined> {
     const [template] = await db
         .selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.*`])
         .join('routes', 'templates.name', 'routes.templateName')
         .where({
-            domainId: domainItem.id,
+            domainId,
             name: templateName,
         });
 
@@ -65,19 +66,27 @@ async function getTemplateByName(templateName: string): Promise<Template | undef
 }
 
 async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams>, res: Response): Promise<void> {
-    let template;
+    let template: Template | undefined;
+    let brandId: string | undefined;
 
     const { name: templateName } = req.params;
-
-    const { locale, domain } = req.query;
+    const locale = req.query.locale as string;
+    const domain = req.query.domain as string;
 
     if (domain) {
-        template = await getTemplateByDomain(String(domain), templateName);
+        const domainItem = await getDomainByName(domain);
+        if (domainItem) {
+            const domainProps = domainItem.props ? parseJSON<Record<string, JSONValue>>(domainItem.props) : null;
+            brandId = typeof domainProps?.brandId === 'string' ? domainProps.brandId : undefined;
+            template = await getTemplateByDomainId(domainItem.id, templateName);
+        }
     }
 
     if (!template) {
         template = await getTemplateByName(templateName);
-        template && getLogger().info(`Template ${templateName} is not attached to the domain, found by template name.`);
+        if (template) {
+            getLogger().info(`Template ${templateName} is not attached to the domain, found by template name.`);
+        }
     }
 
     if (!template) {
@@ -91,7 +100,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
             .select()
             .from<LocalizedTemplateRow>(Tables.TemplatesLocalized)
             .where('templateName', templateName)
-            .andWhere('locale', locale as string);
+            .andWhere('locale', locale);
 
         if (localizedTemplate) {
             content = localizedTemplate.content;
@@ -99,7 +108,7 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     }
 
     try {
-        const renderedTemplate = await renderTemplate(content);
+        const renderedTemplate = await renderTemplate(content, brandId ? { brandId } : undefined);
         res.status(200).send({ ...template, ...renderedTemplate });
     } catch (e) {
         if (e instanceof errors.FetchIncludeError) {

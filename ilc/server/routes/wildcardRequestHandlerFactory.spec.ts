@@ -280,23 +280,30 @@ describe('wildcardRequestHandlerFactory', () => {
     });
 
     describe('Request headers', () => {
-        it('should set x-request-host and x-request-uri headers', async () => {
-            const mockRequest = {
+        function createMockRequest(url: string) {
+            return {
                 host: 'test.com',
                 headers: {} as any,
                 log: mockLogger,
                 raw: {
-                    url: '/test-path',
+                    url,
                     ilcState: {},
                 },
             };
+        }
 
-            const mockReply = {
+        function createMockReply() {
+            return {
                 redirect: sinon.stub(),
                 header: sinon.stub(),
                 status: sinon.stub().returns({ send: sinon.stub() }),
                 res: {},
             };
+        }
+
+        it('should set x-request-host and x-request-uri headers', async () => {
+            const mockRequest = createMockRequest('/test-path');
+            const mockReply = createMockReply();
 
             await wildcardRequestHandler.call({} as any, mockRequest as any, mockReply as any);
 
@@ -519,7 +526,11 @@ describe('wildcardRequestHandlerFactory', () => {
             sinon.assert.calledWith(mockReply.status, 200);
             sinon.assert.calledOnce(sendStub);
             sinon.assert.calledWith(sendStub, templateContent);
-            sinon.assert.calledWith(mockRegistryService.getTemplate, 'test-template', { locale: 'en-US' });
+            sinon.assert.calledWith(mockRegistryService.getTemplate, 'test-template', {
+                locale: 'en-US',
+                forDomain: 'test.com',
+                routeKey: '/test',
+            });
         });
 
         it('should pass locale to getTemplate when available', async () => {
@@ -542,7 +553,11 @@ describe('wildcardRequestHandlerFactory', () => {
 
             await wildcardRequestHandler.call({} as any, mockRequest as any, mockReply as any);
 
-            sinon.assert.calledWith(mockRegistryService.getTemplate, 'test-template', { locale: 'fr-FR' });
+            sinon.assert.calledWith(mockRegistryService.getTemplate, 'test-template', {
+                locale: 'fr-FR',
+                forDomain: 'test.com',
+                routeKey: '/test',
+            });
         });
     });
 

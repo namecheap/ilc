@@ -97,7 +97,12 @@ export function wildcardRequestHandlerFactory(
         const isRouteWithoutSlots = !Object.keys(route.slots).length;
         if (isRouteWithoutSlots) {
             const locale = req.raw.ilcState?.locale;
-            const { data } = await registryService.getTemplate(route.template, { locale });
+            const routeKey = route.route || `special:${route.specialRole}`;
+            const { data } = await registryService.getTemplate(route.template, {
+                locale,
+                forDomain: currentDomain,
+                routeKey,
+            });
 
             reply.header('Content-Type', 'text/html');
             reply.status(200).send(data.content);

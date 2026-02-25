@@ -67,7 +67,7 @@ describe('renderTemplate', () => {
                 attributes: {
                     id: 'include-id-2',
                     src: `${includesHost}/get/include/2`,
-                    timeout: 100,
+                    timeout: 300,
                 },
             },
             {
@@ -316,6 +316,66 @@ describe('renderTemplate', () => {
                 `\n<!-- Template include "${include.attributes.id}" END --></body></html>`
             }`,
         );
+    });
+
+    it('should send x-ilc-request-brand header in include fetch when brandId context is provided', async () => {
+        const include = {
+            api: {
+                route: '/get/include/brand',
+                delay: 0,
+                response: {
+                    status: 200,
+                    data: '<div>Brand include</div>',
+                    headers: {},
+                },
+            },
+            attributes: {
+                id: 'brand-include',
+                src: `${includesHost}/get/include/brand`,
+                timeout: 100,
+            },
+        };
+
+        scope
+            .get(include.api.route)
+            .matchHeader('x-ilc-request-brand', 'spaceship')
+            .reply(include.api.response.status, include.api.response.data, include.api.response.headers);
+
+        const template = `<html><head></head><body><include id="${include.attributes.id}" src="${include.attributes.src}" timeout="${include.attributes.timeout}" /></body></html>`;
+
+        const renderedTemplate = await renderTemplate(template, { brandId: 'spaceship' });
+
+        chai.expect(renderedTemplate.content).to.contain('Brand include');
+    });
+
+    it('should not send x-ilc-request-brand header when no brandId context is provided', async () => {
+        const include = {
+            api: {
+                route: '/get/include/nobrand',
+                delay: 0,
+                response: {
+                    status: 200,
+                    data: '<div>No brand include</div>',
+                    headers: {},
+                },
+            },
+            attributes: {
+                id: 'nobrand-include',
+                src: `${includesHost}/get/include/nobrand`,
+                timeout: 100,
+            },
+        };
+
+        scope.get(include.api.route).reply(function (_uri, _body) {
+            chai.expect(this.req.headers['x-ilc-request-brand']).to.be.undefined;
+            return [include.api.response.status, include.api.response.data, include.api.response.headers];
+        });
+
+        const template = `<html><head></head><body><include id="${include.attributes.id}" src="${include.attributes.src}" timeout="${include.attributes.timeout}" /></body></html>`;
+
+        const renderedTemplate = await renderTemplate(template);
+
+        chai.expect(renderedTemplate.content).to.contain('No brand include');
     });
 
     it('should throw an error when a template has duplicate includes sources or ids', async () => {

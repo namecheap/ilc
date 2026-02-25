@@ -846,6 +846,194 @@ describe(`Tests ${example.url}`, () => {
                 await req.delete(example.url + template.name);
             }
         });
+
+        it('should pass brandId from domain props as x-ilc-request-brand header to include fetches', async () => {
+            const includesHost = 'https://brand-include-test.example.com';
+            const domain = 'brand-test-domain.com.ote';
+            const brandId = 'spaceship';
+            const includeContent = '<div>Brand-specific content</div>';
+
+            // Permissive interceptor for template creation validation (renderTemplate called by Joi)
+            nock(includesHost).persist().get('/brand-include').reply(200, includeContent);
+
+            const template = {
+                name: 'template-brand-include-test',
+                content:
+                    '<html><head></head><body>' +
+                    `<include id="brand-inc" src="${includesHost}/brand-include" timeout="1000" />` +
+                    '</body></html>',
+            };
+
+            let routerDomainId = 0;
+            let routeId = 0;
+
+            try {
+                await req.post(example.url).send(template).expect(200);
+
+                nock.cleanAll();
+
+                // Strict interceptor that requires x-ilc-request-brand header
+                let receivedBrandHeader: string | undefined;
+                nock(includesHost)
+                    .get('/brand-include')
+                    .reply(function () {
+                        receivedBrandHeader = this.req.headers['x-ilc-request-brand'] as string | undefined;
+                        return [200, includeContent];
+                    });
+
+                const postRouterDomainsResponse = await req
+                    .post('/api/v1/router_domains')
+                    .send({
+                        domainName: domain,
+                        template500: template.name,
+                        props: { brandId },
+                    })
+                    .expect(200);
+                routerDomainId = postRouterDomainsResponse.body.id;
+
+                const postRouteResponse = await req
+                    .post('/api/v1/route')
+                    .send({ specialRole: '404', templateName: template.name, domainId: routerDomainId })
+                    .expect(200);
+                routeId = postRouteResponse.body.id;
+
+                const response = await req.get(example.url + template.name + '/rendered?domain=' + domain).expect(200);
+
+                expect(response.body.content).to.contain(includeContent);
+                expect(receivedBrandHeader).to.equal(brandId);
+            } finally {
+                nock.cleanAll();
+                await req.delete('/api/v1/route/' + routeId);
+                await req.delete('/api/v1/router_domains/' + routerDomainId);
+                await req.delete(example.url + template.name);
+            }
+        });
+
+        it('should not send x-ilc-request-brand header when domain has no brandId in props', async () => {
+            const includesHost = 'https://nobrand-include-test.example.com';
+            const domain = 'nobrand-test-domain.com.ote';
+            const includeContent = '<div>No brand content</div>';
+
+            // Permissive interceptor for template creation validation
+            nock(includesHost).persist().get('/nobrand-include').reply(200, includeContent);
+
+            const template = {
+                name: 'template-nobrand-include-test',
+                content:
+                    '<html><head></head><body>' +
+                    `<include id="nobrand-inc" src="${includesHost}/nobrand-include" timeout="1000" />` +
+                    '</body></html>',
+            };
+
+            let routerDomainId = 0;
+            let routeId = 0;
+
+            try {
+                await req.post(example.url).send(template).expect(200);
+
+                nock.cleanAll();
+
+                // Interceptor that captures headers for verification
+                let receivedBrandHeader: string | undefined;
+                nock(includesHost)
+                    .get('/nobrand-include')
+                    .reply(function () {
+                        receivedBrandHeader = this.req.headers['x-ilc-request-brand'] as string | undefined;
+                        return [200, includeContent];
+                    });
+
+                const postRouterDomainsResponse = await req
+                    .post('/api/v1/router_domains')
+                    .send({
+                        domainName: domain,
+                        template500: template.name,
+                        props: { someOtherProp: 'value' },
+                    })
+                    .expect(200);
+                routerDomainId = postRouterDomainsResponse.body.id;
+
+                const postRouteResponse = await req
+                    .post('/api/v1/route')
+                    .send({ specialRole: '404', templateName: template.name, domainId: routerDomainId })
+                    .expect(200);
+                routeId = postRouteResponse.body.id;
+
+                const response = await req.get(example.url + template.name + '/rendered?domain=' + domain).expect(200);
+
+                expect(response.body.content).to.contain(includeContent);
+                expect(receivedBrandHeader).to.be.undefined;
+            } finally {
+                nock.cleanAll();
+                await req.delete('/api/v1/route/' + routeId);
+                await req.delete('/api/v1/router_domains/' + routerDomainId);
+                await req.delete(example.url + template.name);
+            }
+        });
+
+        it('should pass brandId from domain props even when template is found by name fallback (not attached to domain route)', async () => {
+            const includesHost = 'https://fallback-brand-test.example.com';
+            const domain = 'fallback-brand-domain.com.ote';
+            const brandId = 'spaceship';
+            const includeContent = '<div>Fallback brand content</div>';
+
+            // Permissive interceptor for template creation validation
+            nock(includesHost).persist().get('/fallback-include').reply(200, includeContent);
+
+            const template = {
+                name: 'template-fallback-brand-test',
+                content:
+                    '<html><head></head><body>' +
+                    `<include id="fallback-inc" src="${includesHost}/fallback-include" timeout="1000" />` +
+                    '</body></html>',
+            };
+
+            // A separate template for the domain's template500
+            const template500 = {
+                name: 'template500-for-fallback-brand-test',
+                content: '<html><head></head><body>500 error page</body></html>',
+            };
+
+            let routerDomainId = 0;
+
+            try {
+                await req.post(example.url).send(template).expect(200);
+                await req.post(example.url).send(template500).expect(200);
+
+                nock.cleanAll();
+
+                // Interceptor that captures the x-ilc-request-brand header
+                let receivedBrandHeader: string | undefined;
+                nock(includesHost)
+                    .get('/fallback-include')
+                    .reply(function () {
+                        receivedBrandHeader = this.req.headers['x-ilc-request-brand'] as string | undefined;
+                        return [200, includeContent];
+                    });
+
+                const postRouterDomainsResponse = await req
+                    .post('/api/v1/router_domains')
+                    .send({
+                        domainName: domain,
+                        template500: template500.name,
+                        props: { brandId },
+                    })
+                    .expect(200);
+                routerDomainId = postRouterDomainsResponse.body.id;
+
+                // NOTE: No route is created linking `template` to this domain.
+                // The template should be found via name fallback, but brandId should still be passed.
+
+                const response = await req.get(example.url + template.name + '/rendered?domain=' + domain).expect(200);
+
+                expect(response.body.content).to.contain(includeContent);
+                expect(receivedBrandHeader).to.equal(brandId);
+            } finally {
+                nock.cleanAll();
+                await req.delete('/api/v1/router_domains/' + routerDomainId);
+                await req.delete(example.url + template.name);
+                await req.delete(example.url + template500.name);
+            }
+        });
     });
 
     describe('Localized', () => {
