@@ -82,6 +82,16 @@ module.exports = class Registry {
     }
 
     /**
+     *
+     * @param {String} domainName
+     * @returns {String | undefined} alias
+     */
+    async resolveDomainAlias(domainName) {
+        const { data } = await this.getRouterDomains();
+        return data.find((item) => item.domainName === domainName)?.alias ?? undefined;
+    }
+
+    /**
      * Fetch config from registry
      * @param {String} options.filter.domain
      * @returns {Object}

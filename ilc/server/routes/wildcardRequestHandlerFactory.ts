@@ -50,9 +50,14 @@ export function wildcardRequestHandlerFactory(
             newrelic.getTransaction().ignore();
         }
 
-        const domainId = overrideConfigs ? await registryService.resolveDomainId(currentDomain) : undefined;
+        const [domainId, domainAlias] = overrideConfigs
+            ? await Promise.all([
+                  registryService.resolveDomainId(currentDomain),
+                  registryService.resolveDomainAlias(currentDomain),
+              ])
+            : [undefined, undefined];
 
-        const finalRegistryConfig = mergeConfigs(registryConfig, overrideConfigs, domainId);
+        const finalRegistryConfig = mergeConfigs(registryConfig, overrideConfigs, domainId, domainAlias);
         req.raw.registryConfig = finalRegistryConfig;
 
         const unlocalizedUrl = i18n.unlocalizeUrl(finalRegistryConfig.settings.i18n, url);

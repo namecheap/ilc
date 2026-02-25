@@ -714,6 +714,106 @@ describe('merge configs', () => {
             expect(result.routes.find((r) => r.route === '/other-domain-only')).to.be.undefined;
         });
 
+        it('should add override route matched by domainAlias', () => {
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 99,
+                        route: '/alias-only',
+                        next: false,
+                        orderPos: 50,
+                        slots: {},
+                        meta: {},
+                        versionId: 'v1.0.99',
+                        domainAlias: 'my-shop',
+                    },
+                ],
+            };
+
+            const result = mergeConfigs(registryConfig, overrideConfig, 5, 'my-shop');
+
+            const [commonRoute, constRoute, willChangeRoute] = registryConfig.routes;
+            expect(result.routes).to.eql([
+                commonRoute,
+                constRoute,
+                {
+                    routeId: 99,
+                    route: '/alias-only',
+                    next: false,
+                    orderPos: 50,
+                    slots: {},
+                    meta: {},
+                    versionId: 'v1.0.99',
+                    domainAlias: 'my-shop',
+                },
+                willChangeRoute,
+            ]);
+        });
+
+        it('should merge override route into existing route when matched by domainAlias', () => {
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 2,
+                        route: '/const',
+                        next: true,
+                        domainAlias: 'my-shop',
+                    },
+                ],
+            };
+
+            const result = mergeConfigs(registryConfig, overrideConfig, 5, 'my-shop');
+
+            const constRoute = result.routes.find((r) => r.routeId === 2);
+            expect(constRoute?.next).to.be.true;
+            expect(result.routes).to.have.lengthOf(registryConfig.routes.length);
+        });
+
+        it('should not apply domainAlias override route when alias does not match', () => {
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 99,
+                        route: '/alias-only',
+                        next: false,
+                        orderPos: 50,
+                        slots: {},
+                        meta: {},
+                        versionId: 'v1.0.99',
+                        domainAlias: 'other-shop',
+                    },
+                ],
+            };
+
+            const result = mergeConfigs(registryConfig, overrideConfig, 5, 'my-shop');
+
+            expect(result.routes).to.have.lengthOf(registryConfig.routes.length);
+            expect(result.routes.find((r) => r.route === '/alias-only')).to.be.undefined;
+        });
+
+        it('should match by domainAlias when both domainAlias and domainId are on the override route', () => {
+            // domainAlias takes precedence — domainId is ignored when alias is present
+            const overrideConfig = {
+                routes: [
+                    {
+                        routeId: 99,
+                        route: '/alias-wins',
+                        next: false,
+                        orderPos: 50,
+                        slots: {},
+                        meta: {},
+                        versionId: 'v1.0.99',
+                        domainAlias: 'my-shop',
+                        domainId: 999, // wrong id — should be ignored
+                    },
+                ],
+            };
+
+            const result = mergeConfigs(registryConfig, overrideConfig, 5, 'my-shop');
+
+            expect(result.routes.find((r) => r.route === '/alias-wins')).to.exist;
+        });
+
         it('should handle routes with same pattern but different orderPos including wildcard routes', () => {
             const registryConfigWithWildcardRoutes: TransformedRegistryConfig = {
                 ...registryConfig,
