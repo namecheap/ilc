@@ -1,6 +1,6 @@
 const chai = require('chai');
 
-const filterHeaders = require('./filter-headers');
+const { filterHeaders } = require('./filter-headers');
 
 describe('filter headers', () => {
     it('should not return any headers due to security reasons when a fragment is public', () => {
@@ -29,6 +29,35 @@ describe('filter headers', () => {
         };
 
         chai.expect(filterHeaders(attributes, request)).to.be.eql({});
+    });
+
+    it('should also forward headers listed in extraHeaders', () => {
+        const attributes = { public: false };
+        const request = {
+            headers: {
+                authorization: 'Bearer 12345',
+                'x-custom-header': 'custom-value',
+                'x-real-ip': '1.2.3.4',
+                'content-type': 'text/html',
+            },
+        };
+
+        chai.expect(filterHeaders(attributes, request, ['x-custom-header', 'X-Real-IP'])).to.be.eql({
+            authorization: 'Bearer 12345',
+            'x-custom-header': 'custom-value',
+            'x-real-ip': '1.2.3.4',
+        });
+    });
+
+    it('should not forward extraHeaders to public fragments', () => {
+        const attributes = { public: true };
+        const request = {
+            headers: {
+                'x-custom-header': 'custom-value',
+            },
+        };
+
+        chai.expect(filterHeaders(attributes, request, ['x-custom-header'])).to.be.eql({});
     });
 
     it('should return only accepted and x-forwarded headers', () => {

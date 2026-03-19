@@ -48,6 +48,27 @@ describe('EvictingCacheStorage', () => {
         expect(cache.getItem('d')).to.deep.equal({ data: 4, cachedAt: 1 });
     });
 
+    it('should call onEvict with the evicted key when maxSize is exceeded', () => {
+        const evicted: string[] = [];
+        const c = new EvictingCacheStorage({ maxSize: 2, onEvict: (key) => evicted.push(key) });
+
+        c.setItem('a', { data: 1, cachedAt: 1 });
+        c.setItem('b', { data: 2, cachedAt: 1 });
+        c.setItem('c', { data: 3, cachedAt: 1 }); // evicts 'a'
+
+        expect(evicted).to.deep.equal(['a']);
+    });
+
+    it('should not call onEvict when maxSize is not exceeded', () => {
+        const evicted: string[] = [];
+        const c = new EvictingCacheStorage({ maxSize: 3, onEvict: (key) => evicted.push(key) });
+
+        c.setItem('a', { data: 1, cachedAt: 1 });
+        c.setItem('b', { data: 2, cachedAt: 1 });
+
+        expect(evicted).to.deep.equal([]);
+    });
+
     it('should overwrite an existing key and reorder it', () => {
         cache.setItem('a', { data: 1, cachedAt: 1 });
         cache.setItem('b', { data: 2, cachedAt: 1 });

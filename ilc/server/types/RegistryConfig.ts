@@ -65,6 +65,8 @@ export interface RegistryConfig {
         };
         cspEnableStrict?: boolean;
         cspTrustedLocalHosts?: string[];
+        fragmentProxyHeaders?: string[];
+        templateProxyHeaders?: string[];
     };
     routes: Route[];
     specialRoutes: SpecialRoute[];

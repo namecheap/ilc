@@ -3,6 +3,7 @@ import nock from 'nock';
 import supertest, { type Agent } from 'supertest';
 import app from '../server/app';
 import { SettingKeys } from '../server/settings/interfaces';
+import settingsService from '../server/settings/services/SettingsService';
 import { expect, getServerAddress } from './common';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 import { withSetting } from './utils/withSetting';
@@ -847,191 +848,141 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
-        it('should pass brandId from domain props as x-ilc-request-brand header to include fetches', async () => {
-            const includesHost = 'https://brand-include-test.example.com';
-            const domain = 'brand-test-domain.com.ote';
-            const brandId = 'spaceship';
-            const includeContent = '<div>Brand-specific content</div>';
+        it('should forward headers listed in proxyHeaders setting to include fetches', async () => {
+            const includesHost = 'https://proxy-headers-include-test.example.com';
+            const includeContent = '<div>Include content</div>';
+            const testUser = { identifier: 'test', role: 'test', authEntityId: 1 };
 
-            // Permissive interceptor for template creation validation (renderTemplate called by Joi)
-            nock(includesHost).persist().get('/brand-include').reply(200, includeContent);
+            nock(includesHost).persist().get('/include').reply(200, includeContent);
 
             const template = {
-                name: 'template-brand-include-test',
+                name: 'template-proxy-headers-test',
                 content:
                     '<html><head></head><body>' +
-                    `<include id="brand-inc" src="${includesHost}/brand-include" timeout="1000" />` +
+                    `<include id="inc" src="${includesHost}/include" timeout="1000" />` +
                     '</body></html>',
             };
 
-            let routerDomainId = 0;
-            let routeId = 0;
+            const previousProxyHeaders = await settingsService.get(SettingKeys.TemplateProxyHeaders);
 
             try {
                 await req.post(example.url).send(template).expect(200);
+                await settingsService.set(SettingKeys.TemplateProxyHeaders, ['x-forwarded-for'], testUser);
 
                 nock.cleanAll();
 
-                // Strict interceptor that requires x-ilc-request-brand header
-                let receivedBrandHeader: string | undefined;
+                let receivedHeader: string | undefined;
                 nock(includesHost)
-                    .get('/brand-include')
+                    .get('/include')
                     .reply(function () {
-                        receivedBrandHeader = this.req.headers['x-ilc-request-brand'] as string | undefined;
+                        receivedHeader = this.req.headers['x-forwarded-for'] as string | undefined;
                         return [200, includeContent];
                     });
 
-                const postRouterDomainsResponse = await req
-                    .post('/api/v1/router_domains')
-                    .send({
-                        domainName: domain,
-                        template500: template.name,
-                        props: { brandId },
-                    })
+                const response = await req
+                    .get(example.url + template.name + '/rendered')
+                    .set('x-forwarded-for', '1.2.3.4')
                     .expect(200);
-                routerDomainId = postRouterDomainsResponse.body.id;
-
-                const postRouteResponse = await req
-                    .post('/api/v1/route')
-                    .send({ specialRole: '404', templateName: template.name, domainId: routerDomainId })
-                    .expect(200);
-                routeId = postRouteResponse.body.id;
-
-                const response = await req.get(example.url + template.name + '/rendered?domain=' + domain).expect(200);
 
                 expect(response.body.content).to.contain(includeContent);
-                expect(receivedBrandHeader).to.equal(brandId);
+                expect(receivedHeader).to.equal('1.2.3.4');
             } finally {
                 nock.cleanAll();
-                await req.delete('/api/v1/route/' + routeId);
-                await req.delete('/api/v1/router_domains/' + routerDomainId);
+                await settingsService.set(SettingKeys.TemplateProxyHeaders, previousProxyHeaders, testUser);
                 await req.delete(example.url + template.name);
             }
         });
 
-        it('should not send x-ilc-request-brand header when domain has no brandId in props', async () => {
-            const includesHost = 'https://nobrand-include-test.example.com';
-            const domain = 'nobrand-test-domain.com.ote';
-            const includeContent = '<div>No brand content</div>';
+        it('should not forward headers not listed in proxyHeaders to include fetches', async () => {
+            const includesHost = 'https://proxy-headers-filter-test.example.com';
+            const includeContent = '<div>Include content</div>';
+            const testUser = { identifier: 'test', role: 'test', authEntityId: 1 };
 
-            // Permissive interceptor for template creation validation
-            nock(includesHost).persist().get('/nobrand-include').reply(200, includeContent);
+            nock(includesHost).persist().get('/include').reply(200, includeContent);
 
             const template = {
-                name: 'template-nobrand-include-test',
+                name: 'template-proxy-headers-filter-test',
                 content:
                     '<html><head></head><body>' +
-                    `<include id="nobrand-inc" src="${includesHost}/nobrand-include" timeout="1000" />` +
+                    `<include id="inc" src="${includesHost}/include" timeout="1000" />` +
                     '</body></html>',
             };
 
-            let routerDomainId = 0;
-            let routeId = 0;
+            const previousProxyHeaders = await settingsService.get(SettingKeys.TemplateProxyHeaders);
 
             try {
                 await req.post(example.url).send(template).expect(200);
+                await settingsService.set(SettingKeys.TemplateProxyHeaders, ['x-allowed'], testUser);
 
                 nock.cleanAll();
 
-                // Interceptor that captures headers for verification
-                let receivedBrandHeader: string | undefined;
+                let receivedAllowed: string | undefined;
+                let receivedBlocked: string | undefined;
                 nock(includesHost)
-                    .get('/nobrand-include')
+                    .get('/include')
                     .reply(function () {
-                        receivedBrandHeader = this.req.headers['x-ilc-request-brand'] as string | undefined;
+                        receivedAllowed = this.req.headers['x-allowed'] as string | undefined;
+                        receivedBlocked = this.req.headers['x-blocked'] as string | undefined;
                         return [200, includeContent];
                     });
 
-                const postRouterDomainsResponse = await req
-                    .post('/api/v1/router_domains')
-                    .send({
-                        domainName: domain,
-                        template500: template.name,
-                        props: { someOtherProp: 'value' },
-                    })
+                await req
+                    .get(example.url + template.name + '/rendered')
+                    .set('x-allowed', 'yes')
+                    .set('x-blocked', 'secret')
                     .expect(200);
-                routerDomainId = postRouterDomainsResponse.body.id;
 
-                const postRouteResponse = await req
-                    .post('/api/v1/route')
-                    .send({ specialRole: '404', templateName: template.name, domainId: routerDomainId })
-                    .expect(200);
-                routeId = postRouteResponse.body.id;
-
-                const response = await req.get(example.url + template.name + '/rendered?domain=' + domain).expect(200);
-
-                expect(response.body.content).to.contain(includeContent);
-                expect(receivedBrandHeader).to.be.undefined;
+                expect(receivedAllowed).to.equal('yes');
+                expect(receivedBlocked).to.be.undefined;
             } finally {
                 nock.cleanAll();
-                await req.delete('/api/v1/route/' + routeId);
-                await req.delete('/api/v1/router_domains/' + routerDomainId);
+                await settingsService.set(SettingKeys.TemplateProxyHeaders, previousProxyHeaders, testUser);
                 await req.delete(example.url + template.name);
             }
         });
 
-        it('should pass brandId from domain props even when template is found by name fallback (not attached to domain route)', async () => {
-            const includesHost = 'https://fallback-brand-test.example.com';
-            const domain = 'fallback-brand-domain.com.ote';
-            const brandId = 'spaceship';
-            const includeContent = '<div>Fallback brand content</div>';
+        it('should not forward any extra headers to include fetches when proxyHeaders is null', async () => {
+            const includesHost = 'https://proxy-headers-null-test.example.com';
+            const includeContent = '<div>Include content</div>';
+            const testUser = { identifier: 'test', role: 'test', authEntityId: 1 };
 
-            // Permissive interceptor for template creation validation
-            nock(includesHost).persist().get('/fallback-include').reply(200, includeContent);
+            nock(includesHost).persist().get('/include').reply(200, includeContent);
 
             const template = {
-                name: 'template-fallback-brand-test',
+                name: 'template-proxy-headers-null-test',
                 content:
                     '<html><head></head><body>' +
-                    `<include id="fallback-inc" src="${includesHost}/fallback-include" timeout="1000" />` +
+                    `<include id="inc" src="${includesHost}/include" timeout="1000" />` +
                     '</body></html>',
             };
 
-            // A separate template for the domain's template500
-            const template500 = {
-                name: 'template500-for-fallback-brand-test',
-                content: '<html><head></head><body>500 error page</body></html>',
-            };
-
-            let routerDomainId = 0;
+            const previousProxyHeaders = await settingsService.get(SettingKeys.TemplateProxyHeaders);
 
             try {
                 await req.post(example.url).send(template).expect(200);
-                await req.post(example.url).send(template500).expect(200);
+                await settingsService.set(SettingKeys.TemplateProxyHeaders, null, testUser);
 
                 nock.cleanAll();
 
-                // Interceptor that captures the x-ilc-request-brand header
-                let receivedBrandHeader: string | undefined;
+                let receivedCustomHeader: string | undefined;
                 nock(includesHost)
-                    .get('/fallback-include')
+                    .get('/include')
                     .reply(function () {
-                        receivedBrandHeader = this.req.headers['x-ilc-request-brand'] as string | undefined;
+                        receivedCustomHeader = this.req.headers['x-custom'] as string | undefined;
                         return [200, includeContent];
                     });
 
-                const postRouterDomainsResponse = await req
-                    .post('/api/v1/router_domains')
-                    .send({
-                        domainName: domain,
-                        template500: template500.name,
-                        props: { brandId },
-                    })
+                const response = await req
+                    .get(example.url + template.name + '/rendered')
+                    .set('x-custom', 'should-not-forward')
                     .expect(200);
-                routerDomainId = postRouterDomainsResponse.body.id;
-
-                // NOTE: No route is created linking `template` to this domain.
-                // The template should be found via name fallback, but brandId should still be passed.
-
-                const response = await req.get(example.url + template.name + '/rendered?domain=' + domain).expect(200);
 
                 expect(response.body.content).to.contain(includeContent);
-                expect(receivedBrandHeader).to.equal(brandId);
+                expect(receivedCustomHeader).to.be.undefined;
             } finally {
                 nock.cleanAll();
-                await req.delete('/api/v1/router_domains/' + routerDomainId);
+                await settingsService.set(SettingKeys.TemplateProxyHeaders, previousProxyHeaders, testUser);
                 await req.delete(example.url + template.name);
-                await req.delete(example.url + template500.name);
             }
         });
     });

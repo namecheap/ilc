@@ -2,6 +2,7 @@ import { CacheResult, CacheStorage } from './types/CacheWrapper';
 
 type EvictingCacheStorageOptions = {
     maxSize: number;
+    onEvict?: (evictedKey: string) => void;
 };
 
 export class EvictingCacheStorage implements CacheStorage {
@@ -34,6 +35,7 @@ export class EvictingCacheStorage implements CacheStorage {
         if (this.cache.size > this.options.maxSize) {
             const oldestKey = this.cache.keys().next().value!; // Get the first key (LRU)
             this.cache.delete(oldestKey);
+            this.options.onEvict?.(oldestKey);
         }
     }
 }

@@ -10,9 +10,9 @@ Currently, Registry supports authentication only. All authenticated entities wil
 
 The following authentication providers are supported:
 
--   **OpenID Connect**. Turned **off** by default.
--   **Locally configured login/password**. Default credentials: `root` / `pwd`.
--   **Locally configured Bearer token** for API machine-to-machine access. Default credentials: `Bearer cm9vdF9hcGlfdG9rZW4=:dG9rZW5fc2VjcmV0` or `Bearer root_api_token:token_secret` after base64 decoding.
+- **OpenID Connect**. Turned **off** by default.
+- **Locally configured login/password**. Default credentials: `root` / `pwd`.
+- **Locally configured Bearer token** for API machine-to-machine access. Default credentials: `Bearer cm9vdF9hcGlfdG9rZW4=:dG9rZW5fc2VjcmV0` or `Bearer root_api_token:token_secret` after base64 decoding.
 
 You can change default credentials via Registry UI, in the `Auth entities` page, or via API.
 
@@ -56,9 +56,9 @@ links to the JS/CSS bundles in the Registry after each deployment.
 
 To do this, there are the following options (at least):
 
--   Manually via UI (_not recommended_)
--   Using Registry API (see [API](#api) section above)
--   **Using App Assets discovery mechanism**
+- Manually via UI (_not recommended_)
+- Using Registry API (see [API](#api) section above)
+- **Using App Assets discovery mechanism**
 
 When registering micro frontend in the ILC Registry, it is possible to set a file for the "Assets discovery url" that will be periodically fetched
 by the Registry. The idea is that this file will contain actual references to JS/CSS bundles and be updated on CDN **right after** every deployment.
@@ -195,3 +195,45 @@ Applications reference shared properties via the `configSelector` field.
 ### Domain properties
 
 See [Multi-domains documentation](multi-domains.md#domain-specific-properties) for information about configuring domain-specific properties.
+
+## Settings reference
+
+ILC behavior can be tuned via the Settings page in Registry UI (`/settings`) or through the `PUT /api/v1/settings/:key` API.
+
+### `fragmentProxyHeaders`
+
+| Key                    | Type       | Default | Scope |
+| ---------------------- | ---------- | ------- | ----- |
+| `fragmentProxyHeaders` | `string[]` | `null`  | `ilc` |
+
+A list of HTTP header names that ILC will forward from the incoming end-user request to **fragment SSR requests**. When ILC renders a micro-frontend server-side, the listed headers are copied from the browser request into the outgoing HTTP call to the fragment's SSR endpoint.
+
+Headers are matched case-insensitively. Headers present in the list but absent from the incoming request are silently skipped.
+
+**`null` (default)** — no extra headers are forwarded beyond the built-in set (see below).
+
+**Built-in headers always forwarded to fragments** (regardless of `fragmentProxyHeaders`):
+
+- `authorization`, `accept-language`, `referer`, `user-agent`, `cookie`
+- `x-request-uri`, `x-request-host`, `x-request-intl`
+- Any header whose name starts with `x-forwarded-`
+
+### `templateProxyHeaders`
+
+| Key                    | Type       | Default | Scope |
+| ---------------------- | ---------- | ------- | ----- |
+| `templateProxyHeaders` | `string[]` | `null`  | `ilc` |
+
+A list of HTTP header names that ILC will forward from the incoming end-user request to **template `<include>` fetches**. When the registry renders a template containing `<include src="…" />` tags, the listed headers are copied from the ILC→Registry request into the outgoing HTTP calls to each include source.
+
+Headers are matched case-insensitively. Headers present in the list but absent from the incoming request are silently skipped.
+
+**`null` (default)** — no extra headers are forwarded to include sources.
+
+**Example — forward tracing and routing headers to both targets:**
+
+```json
+["x-forwarded-for", "x-real-ip", "x-request-id"]
+```
+
+**Caching note:** template rendering results (including fetched `<include>` content) are cached by ILC keyed on the template name, domain, and the forwarded header values. Forwarded headers are therefore expected to be **static per deployment context** (e.g. set by a reverse proxy, not by individual users). Using headers with many unique values (e.g. per-user auth tokens) will create a large number of cache entries and trigger LRU eviction — a warning is logged when this occurs.

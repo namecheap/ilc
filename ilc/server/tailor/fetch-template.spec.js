@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
 
-const fetchTemplate = require('./fetch-template');
+const { fetchTemplate } = require('./fetch-template');
 
 describe('fetch templates', () => {
     const configsInjector = {
@@ -27,6 +27,9 @@ describe('fetch templates', () => {
         headers: {
             'x-request-host': 'test.com',
         },
+        registryConfig: {
+            settings: {},
+        },
         router: {
             getRoute: () => currentRoute,
         },
@@ -37,7 +40,7 @@ describe('fetch templates', () => {
 
     let fetchTemplateSetup;
 
-    request.router.getFragmentsTpl = (arg) => arg;
+    request.router.getFragmentsTpl = () => 'ilcState text';
 
     beforeEach(() => {
         fetchTemplateSetup = fetchTemplate(configsInjector, newrelic, registryService);
@@ -68,6 +71,7 @@ describe('fetch templates', () => {
         sinon.assert.calledOnceWithExactly(registryService.getTemplate, 'exist', {
             forDomain: 'test.com',
             routeKey: '/exist',
+            forwardedHeaders: undefined,
         });
         sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'exist');
     });
@@ -82,8 +86,61 @@ describe('fetch templates', () => {
         sinon.assert.calledOnceWithExactly(registryService.getTemplate, 'exist', {
             forDomain: 'test.com',
             routeKey: 'special:exist',
+            forwardedHeaders: undefined,
         });
         sinon.assert.calledOnceWithExactly(newrelic.setTransactionName, 'special:exist');
+    });
+
+    it('should forward headers listed in templateProxyHeaders setting when present in request', async () => {
+        currentRoute.template = 'exist';
+        currentRoute.route = '/exist';
+
+        const requestWithProxyHeaders = {
+            ...request,
+            headers: {
+                'x-request-host': 'test.com',
+                'x-forwarded-for': '1.2.3.4',
+                'x-real-ip': '5.6.7.8',
+                'x-secret': 'should-not-forward',
+            },
+            registryConfig: {
+                settings: {
+                    templateProxyHeaders: ['X-Forwarded-For', 'X-Real-IP'],
+                },
+            },
+        };
+
+        registryService.getTemplate = sinon.stub().resolves({ data: 'exist' });
+        await fetchTemplateSetup(requestWithProxyHeaders, parseTemplate);
+
+        sinon.assert.calledOnceWithExactly(registryService.getTemplate, 'exist', {
+            forDomain: 'test.com',
+            routeKey: '/exist',
+            forwardedHeaders: {
+                'x-forwarded-for': '1.2.3.4',
+                'x-real-ip': '5.6.7.8',
+            },
+        });
+    });
+
+    it('should pass forwardedHeaders as undefined when templateProxyHeaders is null', async () => {
+        currentRoute.template = 'exist';
+        currentRoute.route = '/exist';
+
+        const requestWithNullProxyHeaders = {
+            ...request,
+            headers: { 'x-request-host': 'test.com', 'x-forwarded-for': '1.2.3.4' },
+            registryConfig: { settings: { templateProxyHeaders: null } },
+        };
+
+        registryService.getTemplate = sinon.stub().resolves({ data: 'exist' });
+        await fetchTemplateSetup(requestWithNullProxyHeaders, parseTemplate);
+
+        sinon.assert.calledOnceWithExactly(registryService.getTemplate, 'exist', {
+            forDomain: 'test.com',
+            routeKey: '/exist',
+            forwardedHeaders: undefined,
+        });
     });
 
     it('should return parseTemplate function with right arguments', async () => {

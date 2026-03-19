@@ -195,7 +195,15 @@ describe(url, () => {
                 },
             });
             chai.expect(response.body).to.deep.include({
-                key: SettingKeys.ProxyHeaders,
+                key: SettingKeys.FragmentProxyHeaders,
+                scope: Scope.Ilc,
+                secret: false,
+                meta: {
+                    type: SettingTypes.StringArray,
+                },
+            });
+            chai.expect(response.body).to.deep.include({
+                key: SettingKeys.TemplateProxyHeaders,
                 scope: Scope.Ilc,
                 secret: false,
                 meta: {
@@ -732,49 +740,39 @@ describe(url, () => {
             }
         });
 
-        it(`should update ${SettingKeys.ProxyHeaders} with an array of strings`, async () => {
-            try {
-                const response = await req
-                    .put(urlJoin(url, SettingKeys.ProxyHeaders))
-                    .send({
-                        key: SettingKeys.ProxyHeaders,
+        for (const key of [SettingKeys.FragmentProxyHeaders, SettingKeys.TemplateProxyHeaders]) {
+            it(`should update ${key} with an array of strings`, async () => {
+                try {
+                    const response = await req
+                        .put(urlJoin(url, key))
+                        .send({ key, value: ['X-Forwarded-For', 'X-Real-IP'] })
+                        .expect(200);
+
+                    chai.expect(response.body).to.deep.equal({
+                        key,
                         value: ['X-Forwarded-For', 'X-Real-IP'],
-                    })
-                    .expect(200);
+                        scope: Scope.Ilc,
+                        secret: false,
+                        meta: {
+                            type: SettingTypes.StringArray,
+                        },
+                    });
+                } finally {
+                    await req.put(urlJoin(url, key)).send({ key, value: null }).expect(200);
+                }
+            });
 
-                chai.expect(response.body).to.deep.equal({
-                    key: SettingKeys.ProxyHeaders,
-                    value: ['X-Forwarded-For', 'X-Real-IP'],
-                    scope: Scope.Ilc,
-                    secret: false,
-                    meta: {
-                        type: SettingTypes.StringArray,
-                    },
-                });
-            } finally {
-                await req
-                    .put(urlJoin(url, SettingKeys.ProxyHeaders))
-                    .send({ key: SettingKeys.ProxyHeaders, value: null })
-                    .expect(200);
-            }
-        });
+            it(`should update ${key} with null`, async () => {
+                try {
+                    const response = await req.put(urlJoin(url, key)).send({ key, value: null }).expect(200);
 
-        it(`should update ${SettingKeys.ProxyHeaders} with null`, async () => {
-            try {
-                const response = await req
-                    .put(urlJoin(url, SettingKeys.ProxyHeaders))
-                    .send({ key: SettingKeys.ProxyHeaders, value: null })
-                    .expect(200);
-
-                chai.expect(response.body).to.have.property('key', SettingKeys.ProxyHeaders);
-                chai.expect(response.body).to.not.have.property('value');
-            } finally {
-                await req
-                    .put(urlJoin(url, SettingKeys.ProxyHeaders))
-                    .send({ key: SettingKeys.ProxyHeaders, value: null })
-                    .expect(200);
-            }
-        });
+                    chai.expect(response.body).to.have.property('key', key);
+                    chai.expect(response.body).to.not.have.property('value');
+                } finally {
+                    await req.put(urlJoin(url, key)).send({ key, value: null }).expect(200);
+                }
+            });
+        }
 
         it('should deny access when a user is not authorized', async () => {
             await reqWithAuth

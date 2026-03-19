@@ -47,14 +47,14 @@ module.exports = class Registry {
             return filteredData;
         };
 
-        this.getTemplate = async (templateName, { locale, forDomain, routeKey } = {}) => {
+        this.getTemplate = async (templateName, { locale, forDomain, routeKey, forwardedHeaders } = {}) => {
             if (templateName === '500' && forDomain) {
                 const routerDomains = await this.getRouterDomains();
                 const redefined500 = routerDomains.data.find((item) => item.domainName === forDomain)?.template500;
                 templateName = redefined500 || templateName;
             }
 
-            return await getTemplateMemoized(templateName, { locale, domain: forDomain, routeKey });
+            return await getTemplateMemoized(templateName, { locale, domain: forDomain, routeKey, forwardedHeaders });
         };
     }
 
@@ -115,7 +115,7 @@ module.exports = class Registry {
 
     // Note: `routeKey` is intentionally unused here — it serves as a cache key differentiator
     // in the memoization layer (via JSON.stringify of args) to prevent cache collisions across routes.
-    #getTemplate = async (templateName, { locale, domain, routeKey: _routeKey }) => {
+    #getTemplate = async (templateName, { locale, domain, routeKey: _routeKey, forwardedHeaders = undefined }) => {
         if (!VALID_TEMPLATE_NAME.test(templateName)) {
             throw new ValidationRegistryError({
                 message: `Invalid template name ${templateName}`,
@@ -143,7 +143,10 @@ module.exports = class Registry {
 
         let res;
         try {
-            res = await axios.get(tplUrl, { responseType: 'json' });
+            res = await axios.get(tplUrl, {
+                responseType: 'json',
+                headers: forwardedHeaders,
+            });
         } catch (error) {
             if (axios.isAxiosError(error) && error.response?.status === 404) {
                 throw new NotFoundRegistryError({

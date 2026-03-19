@@ -530,6 +530,7 @@ describe('wildcardRequestHandlerFactory', () => {
                 locale: 'en-US',
                 forDomain: 'test.com',
                 routeKey: '/test',
+                forwardedHeaders: undefined,
             });
         });
 
@@ -557,6 +558,65 @@ describe('wildcardRequestHandlerFactory', () => {
                 locale: 'fr-FR',
                 forDomain: 'test.com',
                 routeKey: '/test',
+                forwardedHeaders: undefined,
+            });
+        });
+
+        it('should forward templateProxyHeaders to getTemplate when configured', async () => {
+            mockRegistryService.getConfig.resolves({
+                settings: {
+                    trailingSlash: 'disabled',
+                    overrideConfigTrustedOrigins: ['localhost'],
+                    i18n: {
+                        enabled: false,
+                        supported: { locale: {}, currency: {} },
+                        default: { locale: 'en-US', currency: 'USD' },
+                    },
+                    templateProxyHeaders: ['X-Forwarded-For', 'X-Real-IP'],
+                },
+                routes: [
+                    {
+                        routeId: 'test-route',
+                        route: '/test',
+                        next: false,
+                        slots: {},
+                        template: 'test-template',
+                    },
+                ],
+                apps: {},
+            } as any);
+
+            const mockRequest = {
+                host: 'test.com',
+                headers: {
+                    'x-forwarded-for': '1.2.3.4',
+                    'x-real-ip': '5.6.7.8',
+                    'x-secret': 'should-not-forward',
+                },
+                log: mockLogger,
+                raw: {
+                    url: '/test',
+                    ilcState: { locale: 'en-US' },
+                },
+            };
+
+            const mockReply = {
+                redirect: sinon.stub(),
+                header: sinon.stub(),
+                status: sinon.stub().returns({ send: sinon.stub() }),
+                res: {},
+            };
+
+            await wildcardRequestHandler.call({} as any, mockRequest as any, mockReply as any);
+
+            sinon.assert.calledWith(mockRegistryService.getTemplate, 'test-template', {
+                locale: 'en-US',
+                forDomain: 'test.com',
+                routeKey: '/test',
+                forwardedHeaders: {
+                    'x-forwarded-for': '1.2.3.4',
+                    'x-real-ip': '5.6.7.8',
+                },
             });
         });
     });
