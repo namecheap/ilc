@@ -194,6 +194,14 @@ describe(url, () => {
                     type: SettingTypes.String,
                 },
             });
+            chai.expect(response.body).to.deep.include({
+                key: SettingKeys.ProxyHeaders,
+                scope: Scope.Ilc,
+                secret: false,
+                meta: {
+                    type: SettingTypes.StringArray,
+                },
+            });
         });
 
         it('should return a setting and exclude a value from a secret record', async () => {
@@ -721,6 +729,50 @@ describe(url, () => {
             } finally {
                 await deleteConfigRequest(id);
                 await domainHelper.destroy();
+            }
+        });
+
+        it(`should update ${SettingKeys.ProxyHeaders} with an array of strings`, async () => {
+            try {
+                const response = await req
+                    .put(urlJoin(url, SettingKeys.ProxyHeaders))
+                    .send({
+                        key: SettingKeys.ProxyHeaders,
+                        value: ['X-Forwarded-For', 'X-Real-IP'],
+                    })
+                    .expect(200);
+
+                chai.expect(response.body).to.deep.equal({
+                    key: SettingKeys.ProxyHeaders,
+                    value: ['X-Forwarded-For', 'X-Real-IP'],
+                    scope: Scope.Ilc,
+                    secret: false,
+                    meta: {
+                        type: SettingTypes.StringArray,
+                    },
+                });
+            } finally {
+                await req
+                    .put(urlJoin(url, SettingKeys.ProxyHeaders))
+                    .send({ key: SettingKeys.ProxyHeaders, value: null })
+                    .expect(200);
+            }
+        });
+
+        it(`should update ${SettingKeys.ProxyHeaders} with null`, async () => {
+            try {
+                const response = await req
+                    .put(urlJoin(url, SettingKeys.ProxyHeaders))
+                    .send({ key: SettingKeys.ProxyHeaders, value: null })
+                    .expect(200);
+
+                chai.expect(response.body).to.have.property('key', SettingKeys.ProxyHeaders);
+                chai.expect(response.body).to.not.have.property('value');
+            } finally {
+                await req
+                    .put(urlJoin(url, SettingKeys.ProxyHeaders))
+                    .send({ key: SettingKeys.ProxyHeaders, value: null })
+                    .expect(200);
             }
         });
 

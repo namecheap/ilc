@@ -27,6 +27,7 @@ export enum SettingKeys {
     CspConfig = 'cspConfig',
     CspTrustedLocalHosts = 'cspTrustedLocalHosts',
     CspEnableStrict = 'cspEnableStrict',
+    ProxyHeaders = 'proxyHeaders',
 }
 
 export const AllowedSettingKeysForDomains = [SettingKeys.CspConfig];
@@ -139,6 +140,10 @@ const valueSchema = Joi.alternatives().conditional('key', {
                 SettingKeys.CspTrustedLocalHosts,
             ),
             then: Joi.array().items(Joi.string()),
+        },
+        {
+            is: Joi.valid(SettingKeys.ProxyHeaders),
+            then: Joi.array().items(Joi.string()).allow(null),
         },
         {
             is: Joi.valid(SettingKeys.BaseUrl, SettingKeys.AuthOpenIdDiscoveryUrl),
