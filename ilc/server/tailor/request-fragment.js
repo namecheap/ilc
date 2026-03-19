@@ -169,6 +169,11 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                     },
                 });
 
+                console.trace(
+                    '[DEBUG domain props] request-fragment attributes.appProps',
+                    attributes.id,
+                    JSON.stringify(attributes.appProps),
+                );
                 const reqUrl = makeFragmentUrl({
                     domain: request.host,
                     route: currRoute,
@@ -177,6 +182,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                     props: attributes.appProps,
                     sdkOptions: sdkOptions.toJSON(),
                 });
+                console.trace('[DEBUG domain props] request-fragment final URL', reqUrl);
 
                 logger.debug(
                     {

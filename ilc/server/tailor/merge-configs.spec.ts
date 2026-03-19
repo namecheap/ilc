@@ -961,4 +961,82 @@ describe('merge configs', () => {
             expect(mergeConfigs(registryConfigWithWildcardRoutes, overrideConfig)).to.be.eql(mergedConfig);
         });
     });
+
+    describe('should apply domain props to LDE-only apps', () => {
+        const domainProps = { appProps: { brandId: 'namecheap' }, cdnUrl: 'https://cdn.namecheap.com' };
+        const domainSsrProps = { secretKey: 'server-secret' };
+
+        const registryConfigWithDomainProps: TransformedRegistryConfig = {
+            ...registryConfig,
+            domainProps,
+            domainSsrProps,
+        };
+
+        it('should merge domain props into a new LDE-only app', () => {
+            const overrideConfig = {
+                apps: {
+                    '@portal/new-lde-app': {
+                        spaBundle: 'https://localhost:3000/app.js',
+                        ssr: { src: 'https://localhost:3000/ssr' },
+                        props: { appConfig: { lde: true } },
+                    },
+                },
+            };
+
+            const result = mergeConfigs(registryConfigWithDomainProps, overrideConfig);
+
+            expect(result.apps['@portal/new-lde-app'].props).to.deep.equal({
+                ...domainProps,
+                appConfig: { lde: true },
+            });
+            expect(result.apps['@portal/new-lde-app'].ssrProps).to.deep.equal(domainSsrProps);
+        });
+
+        it('should let LDE app props override domain props for the same key', () => {
+            const overrideConfig = {
+                apps: {
+                    '@portal/new-lde-app': {
+                        spaBundle: 'https://localhost:3000/app.js',
+                        props: { appProps: { brandId: 'override-brand' } },
+                    },
+                },
+            };
+
+            const result = mergeConfigs(registryConfigWithDomainProps, overrideConfig);
+
+            expect(result.apps['@portal/new-lde-app'].props).to.deep.equal({
+                ...domainProps,
+                appProps: { brandId: 'override-brand' },
+            });
+        });
+
+        it('should not apply domain props to apps already in the registry', () => {
+            const overrideConfig = {
+                apps: {
+                    '@portal/will-change': {
+                        spaBundle: 'https://localhost:3000/will-change.js',
+                    },
+                },
+            };
+
+            const result = mergeConfigs(registryConfigWithDomainProps, overrideConfig);
+
+            expect(result.apps['@portal/will-change'].props).to.deep.equal(apps['@portal/will-change'].props);
+        });
+
+        it('should not apply domain props when registry config has no domainProps', () => {
+            const overrideConfig = {
+                apps: {
+                    '@portal/new-lde-app': {
+                        spaBundle: 'https://localhost:3000/app.js',
+                        props: { foo: 'bar' },
+                    },
+                },
+            };
+
+            const result = mergeConfigs(registryConfig, overrideConfig);
+
+            expect(result.apps['@portal/new-lde-app'].props).to.deep.equal({ foo: 'bar' });
+        });
+    });
 });

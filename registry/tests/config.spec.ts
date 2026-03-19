@@ -254,6 +254,9 @@ describe('Tests /api/v1/config', () => {
                 });
 
                 expect(response.body.canonicalDomain).to.equal(example.routerDomains.canonicalDomain);
+
+                expect(response.body.domainProps).to.deep.equal(example.routerDomains.props);
+                expect(response.body.domainSsrProps).to.deep.equal(example.routerDomains.ssrProps);
             } finally {
                 routeId && (await req.delete('/api/v1/route/' + routeId));
                 routeIdWithDomain && (await req.delete('/api/v1/route/' + routeIdWithDomain));
@@ -265,6 +268,37 @@ describe('Tests /api/v1/config', () => {
                 routerDomainsId && (await req.delete('/api/v1/router_domains/' + routerDomainsId));
                 await req.delete('/api/v1/template/' + example.templates.name).expect(204);
             }
+        });
+
+        it('should expose domainProps and domainSsrProps in config response for matching domain', async () => {
+            let routerDomainsId: number | undefined;
+            try {
+                await req.post('/api/v1/template/').send(example.templates).expect(200);
+
+                const domain = {
+                    domainName: 'domainprops-test.example.com',
+                    template500: example.templates.name,
+                    props: { appProps: { brandId: 'namecheap' } },
+                    ssrProps: { secretKey: 'server-secret' },
+                };
+
+                const res = await req.post('/api/v1/router_domains/').send(domain).expect(200);
+                routerDomainsId = res.body.id;
+
+                const response = await req.get('/api/v1/config').query({ domainName: domain.domainName }).expect(200);
+
+                expect(response.body.domainProps).to.deep.equal(domain.props);
+                expect(response.body.domainSsrProps).to.deep.equal(domain.ssrProps);
+            } finally {
+                routerDomainsId && (await req.delete('/api/v1/router_domains/' + routerDomainsId));
+                await req.delete('/api/v1/template/' + example.templates.name);
+            }
+        });
+
+        it('should not expose domainProps and domainSsrProps when no domainName is provided', async () => {
+            const response = await req.get('/api/v1/config').expect(200);
+            expect(response.body.domainProps).to.be.undefined;
+            expect(response.body.domainSsrProps).to.be.undefined;
         });
     });
 
