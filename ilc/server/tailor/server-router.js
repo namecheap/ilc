@@ -85,11 +85,6 @@ module.exports = class ServerRouter {
                 }
 
                 ssrOpts.appProps = deepmerge.all([appInfo.props || {}, appInfo.ssrProps || {}, row.props || {}]);
-                console.trace(
-                    '[DEBUG domain props] server-router getFragmentsContext',
-                    appId,
-                    JSON.stringify({ appProps: ssrOpts.appProps }),
-                );
                 ssrOpts.wrapperConf = row.wrapperConf;
                 ssrOpts.spaBundleUrl = appInfo.spaBundle;
 
