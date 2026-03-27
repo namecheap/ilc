@@ -217,6 +217,64 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should create record with domainAlias', async () => {
+            let domainId;
+            const templateName = 'templateName';
+
+            try {
+                await req
+                    .post('/api/v1/template/')
+                    .send({ name: templateName, content: '<html><head></head><body>foo bar</body></html>' })
+                    .expect(200);
+
+                const responseRouterDomains = await req
+                    .post('/api/v1/router_domains/')
+                    .send({ domainName: 'foo.com', template500: templateName, alias: 'app-domain' })
+                    .expect(200);
+                domainId = responseRouterDomains.body.id;
+
+                const response = await req
+                    .post(example.url)
+                    .send({ ...example.correct, domainAlias: 'app-domain' })
+                    .expect(200);
+
+                expect(response.body).to.deep.equal({
+                    ...example.correct,
+                    enforceDomain: domainId,
+                });
+            } finally {
+                await req.delete(example.url + example.encodedName);
+                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
+                await req.delete('/api/v1/template/' + templateName);
+            }
+        });
+
+        it('should not create record with non-existing domainAlias', async () => {
+            try {
+                await req
+                    .post(example.url)
+                    .send({ ...example.correct, domainAlias: 'non-existing' })
+                    .expect(422);
+
+                await req.get(example.url + example.encodedName).expect(404);
+            } finally {
+                await req.delete(example.url + example.encodedName);
+            }
+        });
+
+        it('should not create record with both enforceDomain and domainAlias', async () => {
+            try {
+                await req
+                    .post(example.url)
+                    .send({ ...example.correct, enforceDomain: 1, domainAlias: 'some-alias' })
+                    .expect(422);
+
+                await req.get(example.url + example.encodedName).expect(404);
+            } finally {
+                await req.delete(example.url + example.encodedName);
+            }
+        });
+
         it('should not create record with non-existed enforceDomain', async () => {
             try {
                 await req
@@ -856,6 +914,113 @@ describe(`Tests ${example.url}`, () => {
                 await req.delete(example.url + example.encodedName);
                 domainId && (await req.delete('/api/v1/router_domains/' + domainId));
                 await req.delete('/api/v1/template/' + templateName);
+            }
+        });
+
+        it('should successfully update record with domainAlias', async () => {
+            let domainId;
+            const templateName = 'templateName';
+
+            try {
+                await req
+                    .post('/api/v1/template/')
+                    .send({ name: templateName, content: '<html><head></head><body>foo bar</body></html>' })
+                    .expect(200);
+
+                const responseRouterDomains = await req
+                    .post('/api/v1/router_domains/')
+                    .send({ domainName: 'foo.com', template500: templateName, alias: 'app-domain-update' })
+                    .expect(200);
+                domainId = responseRouterDomains.body.id;
+
+                await req.post(example.url).send(example.correct).expect(200);
+
+                const response = await req
+                    .put(example.url + example.encodedName)
+                    .send({
+                        ..._.omit(example.updated, 'name'),
+                        domainAlias: 'app-domain-update',
+                    })
+                    .expect(200);
+
+                expect(response.body).to.deep.equal({
+                    ...example.updated,
+                    enforceDomain: domainId,
+                });
+            } finally {
+                await req.delete(example.url + example.encodedName);
+                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
+                await req.delete('/api/v1/template/' + templateName);
+            }
+        });
+
+        it('should preserve enforceDomain on unrelated partial updates', async () => {
+            let domainId;
+            const templateName = 'templateName';
+
+            try {
+                await req
+                    .post('/api/v1/template/')
+                    .send({ name: templateName, content: '<html><head></head><body>foo bar</body></html>' })
+                    .expect(200);
+
+                const responseRouterDomains = await req
+                    .post('/api/v1/router_domains/')
+                    .send({ domainName: 'foo.com', template500: templateName, alias: 'partial-update-domain' })
+                    .expect(200);
+                domainId = responseRouterDomains.body.id;
+
+                await req
+                    .post(example.url)
+                    .send({ ...example.correct, domainAlias: 'partial-update-domain' })
+                    .expect(200);
+
+                const response = await req
+                    .put(example.url + example.encodedName)
+                    .send({ adminNotes: 'Updated notes only' })
+                    .expect(200);
+
+                expect(response.body).to.deep.include({
+                    adminNotes: 'Updated notes only',
+                    enforceDomain: domainId,
+                });
+            } finally {
+                await req.delete(example.url + example.encodedName);
+                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
+                await req.delete('/api/v1/template/' + templateName);
+            }
+        });
+
+        it('should not update record with non-existing domainAlias', async () => {
+            try {
+                await req.post(example.url).send(example.correct).expect(200);
+
+                await req
+                    .put(example.url + example.encodedName)
+                    .send({
+                        ..._.omit(example.updated, 'name'),
+                        domainAlias: 'non-existing',
+                    })
+                    .expect(422);
+            } finally {
+                await req.delete(example.url + example.encodedName);
+            }
+        });
+
+        it('should not update record with both enforceDomain and domainAlias', async () => {
+            try {
+                await req.post(example.url).send(example.correct).expect(200);
+
+                await req
+                    .put(example.url + example.encodedName)
+                    .send({
+                        ..._.omit(example.updated, 'name'),
+                        enforceDomain: 1,
+                        domainAlias: 'some-alias',
+                    })
+                    .expect(422);
+            } finally {
+                await req.delete(example.url + example.encodedName);
             }
         });
 

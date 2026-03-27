@@ -5,11 +5,23 @@ import { Tables } from '../../db/structure';
 import { extractInsertedId, isUniqueConstraintError } from '../../util/db';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes, VersionedRecord } from '../../versioning/interfaces';
-import { AppRoute, AppRouteDto, appRouteSchema, AppRouteSlot } from '../interfaces';
+import { AppRoute, appRouteSchema, AppRouteSlot } from '../interfaces';
 import { prepareAppRouteSlotsToSave, prepareAppRouteToSave } from '../services/prepareAppRoute';
 import { resolveDomainAlias } from '../services/resolveDomainAlias';
 
 export type AppRouteWithSlot = VersionedRecord<AppRoute & AppRouteSlot>;
+
+type ExistingRouteLookup = {
+    route: string;
+    domainId: number | null;
+    namespace: string | null;
+};
+
+type ExistingRouteByOrderPosLookup = {
+    orderPos?: number | null;
+    domainId: number | null;
+    namespace: string | null;
+};
 
 export class RoutesService {
     constructor(private readonly db: VersionedKnex) {}
@@ -127,7 +139,7 @@ export class RoutesService {
     }
 
     private async findExistingOrderPos(
-        appRoute: Omit<AppRouteDto, 'slots'>,
+        appRoute: ExistingRouteLookup,
         trx: Knex.Transaction,
     ): Promise<number | undefined | null> {
         const existingRoute = await this.db(Tables.Routes)
@@ -138,7 +150,7 @@ export class RoutesService {
     }
 
     private async findExistingRouteId(
-        appRoute: Omit<AppRouteDto, 'slots' | 'meta'>,
+        appRoute: ExistingRouteByOrderPosLookup,
         trx: Knex.Transaction,
     ): Promise<number | undefined> {
         const existingRoute = await this.db(Tables.Routes)
