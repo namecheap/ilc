@@ -6,13 +6,22 @@ import { getJoiErr } from '../../util/helpers';
  * Returns the route data with `domainId` set and `domainAlias` removed.
  * Throws a Joi-style error if the alias doesn't match any router domain.
  */
-export async function resolveDomainAlias<T extends { domainId?: number | null; domainAlias?: string | null }>(
+type AppRouteWithDomainAlias = {
+    domainId?: number | null;
+    domainAlias?: string | null;
+};
+
+type ResolvedRouteDomainAlias<T extends AppRouteWithDomainAlias> = Omit<T, 'domainAlias' | 'domainId'> & {
+    domainId: number | null;
+};
+
+export async function resolveDomainAlias<T extends AppRouteWithDomainAlias>(
     appRoute: T,
-): Promise<T> {
+): Promise<ResolvedRouteDomainAlias<T>> {
     const { domainAlias, domainId, ...rest } = appRoute;
 
     if (!domainAlias) {
-        return { ...rest, domainId: domainId ?? null } as T;
+        return { ...rest, domainId: domainId ?? null } as ResolvedRouteDomainAlias<T>;
     }
 
     const domain = await db('router_domains').first('id').where({ alias: domainAlias });
@@ -20,5 +29,5 @@ export async function resolveDomainAlias<T extends { domainId?: number | null; d
         throw getJoiErr('domainAlias', `Router domain with alias "${domainAlias}" does not exist`);
     }
 
-    return { ...rest, domainId: domain.id } as T;
+    return { ...rest, domainId: domain.id } as ResolvedRouteDomainAlias<T>;
 }

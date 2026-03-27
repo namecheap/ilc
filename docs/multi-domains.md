@@ -213,6 +213,20 @@ When creating or updating a route via the API, you can supply `domainAlias` inst
 
 The Registry resolves the alias to the corresponding `domainId` at write time. If no router domain with that alias exists, the request is rejected with a validation error.
 
+### Using `domainAlias` in apps
+
+When creating or updating an app via the API, or when upserting config via `/api/v1/config`, you can supply `domainAlias` instead of `enforceDomain`. The two fields are mutually exclusive — provide exactly one or neither.
+
+```json
+{
+    "name": "@portal/checkout-embedded",
+    "domainAlias": "main-shop",
+    "spaBundle": "https://cdn.example.com/checkout.js"
+}
+```
+
+The Registry resolves the alias to the corresponding router domain at write time and stores it in the existing `enforceDomain` relation. This is especially useful for embedded applications that do not have their own route: the app is included only in the matching domain config, so it cannot be loaded from another domain through the ILC client APIs.
+
 !!! note ""
 The alias must be unique across all router domains within an ILC instance.
 

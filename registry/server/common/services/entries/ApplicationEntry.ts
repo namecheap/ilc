@@ -1,6 +1,7 @@
 import { Knex } from 'knex';
 import { User } from '../../../../typings/User';
 import { App, appSchema, partialAppSchema } from '../../../apps/interfaces';
+import { resolveDomainAlias } from '../../../apps/services/resolveDomainAlias';
 import { VersionedKnex } from '../../../db';
 import { Tables } from '../../../db/structure';
 import { EntityTypes } from '../../../versioning/interfaces';
@@ -39,10 +40,11 @@ export class ApplicationEntry implements Entry {
             throw new ValidationFqrnError('Patch does not contain any items to update');
         }
 
-        const appManifest = await this.getManifest(partialAppDTO.assetsDiscoveryUrl);
+        const resolvedAppDTO = await resolveDomainAlias(partialAppDTO);
+        const appManifest = await this.getManifest(resolvedAppDTO.assetsDiscoveryUrl);
 
         const appEntity = {
-            ...partialAppDTO,
+            ...resolvedAppDTO,
             ...appManifest,
         };
 
@@ -66,10 +68,11 @@ export class ApplicationEntry implements Entry {
     }
 
     public async create(appDTO: App, { user }: CommonOptions) {
-        const appManifest = await this.getManifest(appDTO.assetsDiscoveryUrl);
+        const resolvedAppDTO = await resolveDomainAlias(appDTO);
+        const appManifest = await this.getManifest(resolvedAppDTO.assetsDiscoveryUrl);
 
         const appEntity = {
-            ...appDTO,
+            ...resolvedAppDTO,
             ...appManifest,
         };
 
@@ -84,11 +87,12 @@ export class ApplicationEntry implements Entry {
 
     public async upsert(params: unknown, { user, trxProvider, fetchManifest = true }: UpsertOptions): Promise<App> {
         const appDto = await appSchema.validateAsync(params, { noDefaults: false, externals: true });
+        const resolvedAppDTO = await resolveDomainAlias(appDto);
 
-        const appManifest = fetchManifest ? await this.getManifest(appDto.assetsDiscoveryUrl) : {};
+        const appManifest = fetchManifest ? await this.getManifest(resolvedAppDTO.assetsDiscoveryUrl) : {};
 
         const appEntity = {
-            ...appDto,
+            ...resolvedAppDTO,
             ...appManifest,
         };
 

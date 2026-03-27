@@ -22,6 +22,7 @@ export interface App {
     discoveryMetadata?: string | null; // JSON({ [propName: string]: any })
     adminNotes?: string | null;
     enforceDomain?: number | null;
+    domainAlias?: string | null;
     l10nManifest?: string | null;
     namespace?: string | null;
 }
@@ -83,17 +84,30 @@ const commonApp = {
     discoveryMetadata: Joi.object().default({}),
     adminNotes: Joi.string().trim(),
     enforceDomain: Joi.number().default(null),
+    domainAlias: Joi.string()
+        .lowercase()
+        .pattern(/^[a-z0-9-]+$/)
+        .max(64)
+        .trim(),
     l10nManifest: Joi.string().max(255),
     versionId: Joi.string().strip(),
     namespace: Joi.string().default(null),
 };
 
+const validateDomainReference = (value: App, helpers: JoiDefault.CustomHelpers<App>) => {
+    if (value.enforceDomain != null && value.domainAlias != null) {
+        return helpers.error('object.oxor', { peers: ['enforceDomain', 'domainAlias'] });
+    }
+
+    return value;
+};
+
 export const partialAppSchema = Joi.object<App>({
     ...commonApp,
     name: appNameSchema.forbidden(),
-});
+}).custom(validateDomainReference);
 
 export const appSchema = Joi.object<App>({
     ...commonApp,
     name: appNameSchema.required(),
-});
+}).custom(validateDomainReference);
