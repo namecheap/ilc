@@ -36,8 +36,8 @@ module.exports = function (config) {
         browsers: ['ChromeHeadless'],
         customLaunchers: {
             ChromeHeadlessWithoutSecurity: {
-                base: 'ChromeHeadless',
-                flags: ['--no-sandbox'],
+                base: 'ChromiumHeadless',
+                flags: ['--no-sandbox', '--headless=new'],
             },
         },
         customContextFile: './tests/karma.index.html',

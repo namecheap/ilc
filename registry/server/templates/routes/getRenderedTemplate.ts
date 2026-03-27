@@ -13,7 +13,8 @@ import { templateNameSchema } from './validation';
 import RouterDomains from '../../routerDomains/interfaces';
 import { getLogger } from '../../util/logger';
 import { appendDigest } from '../../util/hmac';
-import { JSONValue, parseJSON } from '../../common/services/json';
+import settingsService from '../../settings/services/SettingsService';
+import { SettingKeys } from '../../settings/interfaces';
 
 type GetTemplateRenderedRequestParams = {
     name: string;
@@ -67,7 +68,6 @@ async function getTemplateByName(templateName: string): Promise<Template | undef
 
 async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams>, res: Response): Promise<void> {
     let template: Template | undefined;
-    let brandId: string | undefined;
 
     const { name: templateName } = req.params;
     const locale = req.query.locale as string;
@@ -76,8 +76,6 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     if (domain) {
         const domainItem = await getDomainByName(domain);
         if (domainItem) {
-            const domainProps = domainItem.props ? parseJSON<Record<string, JSONValue>>(domainItem.props) : null;
-            brandId = typeof domainProps?.brandId === 'string' ? domainProps.brandId : undefined;
             template = await getTemplateByDomainId(domainItem.id, templateName);
         }
     }
@@ -108,7 +106,20 @@ async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams
     }
 
     try {
-        const renderedTemplate = await renderTemplate(content, brandId ? { brandId } : undefined);
+        const proxyHeaderNames = (await settingsService.get(SettingKeys.TemplateProxyHeaders)) as string[] | null;
+        const forwardedHeaders =
+            proxyHeaderNames && proxyHeaderNames.length > 0
+                ? Object.fromEntries(
+                      proxyHeaderNames
+                          .map((h) => h.toLowerCase())
+                          .filter((h): h is string => typeof req.headers[h] === 'string')
+                          .map((h) => [h, req.headers[h] as string]),
+                  )
+                : undefined;
+        const renderedTemplate = await renderTemplate(
+            content,
+            forwardedHeaders && Object.keys(forwardedHeaders).length > 0 ? { forwardedHeaders } : undefined,
+        );
         res.status(200).send({ ...template, ...renderedTemplate });
     } catch (e) {
         if (e instanceof errors.FetchIncludeError) {

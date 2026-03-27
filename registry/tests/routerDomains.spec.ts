@@ -36,16 +36,6 @@ const example = {
         },
         ssrProps: null,
     }),
-    withBrandId: Object.freeze({
-        domainName: 'domainWithBrand.com',
-        template500: 'testTemplate500',
-        brandId: 'testbrand',
-    }),
-    withBrandIdUpdated: Object.freeze({
-        domainName: 'domainWithBrand.com',
-        template500: 'testTemplate500',
-        brandId: 'updatedbrand',
-    }),
     withAlias: Object.freeze({
         domainName: 'domainWithAlias.com',
         template500: 'testTemplate500',

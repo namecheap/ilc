@@ -318,56 +318,56 @@ describe('renderTemplate', () => {
         );
     });
 
-    it('should send x-ilc-request-brand header in include fetch when brandId context is provided', async () => {
+    it('should forward headers from forwardedHeaders context to include fetches', async () => {
         const include = {
             api: {
-                route: '/get/include/brand',
+                route: '/get/include/forwarded',
                 delay: 0,
                 response: {
                     status: 200,
-                    data: '<div>Brand include</div>',
+                    data: '<div>Forwarded header include</div>',
                     headers: {},
                 },
             },
             attributes: {
-                id: 'brand-include',
-                src: `${includesHost}/get/include/brand`,
+                id: 'forwarded-include',
+                src: `${includesHost}/get/include/forwarded`,
                 timeout: 100,
             },
         };
 
         scope
             .get(include.api.route)
-            .matchHeader('x-ilc-request-brand', 'spaceship')
+            .matchHeader('x-forwarded-for', '1.2.3.4')
             .reply(include.api.response.status, include.api.response.data, include.api.response.headers);
 
         const template = `<html><head></head><body><include id="${include.attributes.id}" src="${include.attributes.src}" timeout="${include.attributes.timeout}" /></body></html>`;
 
-        const renderedTemplate = await renderTemplate(template, { brandId: 'spaceship' });
+        const renderedTemplate = await renderTemplate(template, { forwardedHeaders: { 'x-forwarded-for': '1.2.3.4' } });
 
-        chai.expect(renderedTemplate.content).to.contain('Brand include');
+        chai.expect(renderedTemplate.content).to.contain('Forwarded header include');
     });
 
-    it('should not send x-ilc-request-brand header when no brandId context is provided', async () => {
+    it('should not forward any extra headers when no forwardedHeaders context is provided', async () => {
         const include = {
             api: {
-                route: '/get/include/nobrand',
+                route: '/get/include/noforward',
                 delay: 0,
                 response: {
                     status: 200,
-                    data: '<div>No brand include</div>',
+                    data: '<div>No forward include</div>',
                     headers: {},
                 },
             },
             attributes: {
-                id: 'nobrand-include',
-                src: `${includesHost}/get/include/nobrand`,
+                id: 'noforward-include',
+                src: `${includesHost}/get/include/noforward`,
                 timeout: 100,
             },
         };
 
         scope.get(include.api.route).reply(function (_uri, _body) {
-            chai.expect(this.req.headers['x-ilc-request-brand']).to.be.undefined;
+            chai.expect(this.req.headers['x-forwarded-for']).to.be.undefined;
             return [include.api.response.status, include.api.response.data, include.api.response.headers];
         });
 
@@ -375,7 +375,7 @@ describe('renderTemplate', () => {
 
         const renderedTemplate = await renderTemplate(template);
 
-        chai.expect(renderedTemplate.content).to.contain('No brand include');
+        chai.expect(renderedTemplate.content).to.contain('No forward include');
     });
 
     it('should throw an error when a template has duplicate includes sources or ids', async () => {

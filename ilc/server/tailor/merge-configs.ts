@@ -69,10 +69,31 @@ export function mergeConfigs(
           )
         : original.sharedLibs;
 
-    return {
-        ...original,
-        apps,
-        routes,
-        sharedLibs,
-    };
+    return applyDomainPropsToLdeApps({ ...original, apps, routes, sharedLibs }, override, original);
+}
+
+function applyDomainPropsToLdeApps(
+    result: TransformedRegistryConfig,
+    override: OverrideConfig,
+    original: TransformedRegistryConfig,
+): TransformedRegistryConfig {
+    if (!override.apps || (!result.domainProps && !result.domainSsrProps)) {
+        return result;
+    }
+
+    const apps = { ...result.apps };
+    for (const appName of Object.keys(override.apps)) {
+        if (!original.apps[appName] && apps[appName]) {
+            const app = { ...apps[appName] };
+            if (result.domainProps) {
+                app.props = deepmerge(result.domainProps, app.props ?? {});
+            }
+            if (result.domainSsrProps) {
+                app.ssrProps = deepmerge(result.domainSsrProps, app.ssrProps ?? {});
+            }
+            apps[appName] = app;
+        }
+    }
+
+    return { ...result, apps };
 }

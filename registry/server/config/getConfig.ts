@@ -6,6 +6,7 @@ import { Tables } from '../db/structure';
 import settingsService from '../settings/services/SettingsService';
 import { appendDigest } from '../util/hmac';
 import { EntityTypes } from '../versioning/interfaces';
+import { parseJSON } from '../common/services/json';
 import { AppRouteDto, transformApps, transformRoutes, transformSharedLibs } from './transformConfig';
 
 export const getConfig: RequestHandler = async (req, res) => {
@@ -38,6 +39,8 @@ export const getConfig: RequestHandler = async (req, res) => {
         sharedLibs: {},
         dynamicLibs: {},
         canonicalDomain: undefined as string | undefined,
+        domainProps: undefined as Record<string, unknown> | undefined,
+        domainSsrProps: undefined as Record<string, unknown> | undefined,
     };
 
     data.apps = transformApps(apps, routerDomains, sharedProps, domainName);
@@ -61,6 +64,12 @@ export const getConfig: RequestHandler = async (req, res) => {
         const currentDomain = routerDomains.find((d) => d.domainName === domainName);
         if (currentDomain?.canonicalDomain) {
             data.canonicalDomain = currentDomain.canonicalDomain;
+        }
+        if (currentDomain?.props) {
+            data.domainProps = parseJSON(currentDomain.props) as Record<string, unknown>;
+        }
+        if (currentDomain?.ssrProps) {
+            data.domainSsrProps = parseJSON(currentDomain.ssrProps) as Record<string, unknown>;
         }
     }
 

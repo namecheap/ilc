@@ -4,8 +4,8 @@ const _ = require('lodash');
 const newrelic = require('newrelic');
 
 const Tailor = require('@namecheap/tailorx');
-const fetchTemplate = require('./fetch-template');
-const filterHeaders = require('./filter-headers');
+const { fetchTemplate } = require('./fetch-template');
+const { filterHeaders } = require('./filter-headers');
 const errorHandlerSetup = require('./error-handler');
 const fragmentHooks = require('./fragment-hooks');
 const ConfigsInjector = require('./configs-injector');

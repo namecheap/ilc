@@ -23,9 +23,10 @@ interface TemplateOptions {
     locale?: string;
     forDomain?: string;
     routeKey?: string;
+    forwardedHeaders?: Record<string, string>;
 }
 
-interface Template {
+export interface Template {
     content: string;
     styleRefs: string[];
 }

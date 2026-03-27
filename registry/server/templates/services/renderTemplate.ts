@@ -25,7 +25,7 @@ type FetchedIncludes = {
 }[];
 
 interface RenderTemplateContext {
-    brandId?: string;
+    forwardedHeaders?: Record<string, string>;
 }
 
 type RenderTemplateResult = {
@@ -133,7 +133,7 @@ async function fetchIncludes(
                     headers: { link },
                 } = await axios.get(src, {
                     timeout: +timeout,
-                    headers: context?.brandId ? { 'x-ilc-request-brand': context.brandId } : undefined,
+                    headers: context?.forwardedHeaders,
                 });
 
                 let styleRefs: Array<string> = [];

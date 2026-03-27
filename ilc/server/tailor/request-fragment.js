@@ -66,7 +66,10 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
 
                 const fragmentRequest = makeRequest(
                     reqUrl,
-                    { ...filterHeaders(attributes, request), ...requiredHeaders },
+                    {
+                        ...filterHeaders(attributes, request, request.registryConfig?.settings?.fragmentProxyHeaders),
+                        ...requiredHeaders,
+                    },
                     wrapperConf.timeout,
                     attributes.ignoreInvalidSsl || wrapperConf.ignoreInvalidSsl,
                 );
@@ -196,7 +199,10 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                 const startTime = process.hrtime();
                 const fragmentRequest = makeRequest(
                     reqUrl,
-                    { ...filterHeaders(attributes, request), ...requiredHeaders },
+                    {
+                        ...filterHeaders(attributes, request, request.registryConfig?.settings?.fragmentProxyHeaders),
+                        ...requiredHeaders,
+                    },
                     attributes.timeout,
                     attributes.ignoreInvalidSsl,
                 );

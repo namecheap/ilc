@@ -7,6 +7,7 @@ import i18n from '../i18n';
 import CspBuilderService from '../services/CspBuilderService';
 import tailorFactory from '../tailor/factory';
 import { mergeConfigs, type OverrideConfig } from '../tailor/merge-configs';
+import { buildForwardedHeaders } from '../utils/helpers';
 import parseOverrideConfig from '../tailor/parse-override-config';
 import ServerRouter from '../tailor/server-router';
 import { TransitionHooksExecutor } from '../TransitionHooksExecutor';
@@ -98,10 +99,15 @@ export function wildcardRequestHandlerFactory(
         if (isRouteWithoutSlots) {
             const locale = req.raw.ilcState?.locale;
             const routeKey = route.route || `special:${route.specialRole}`;
+            const forwardedHeaders = buildForwardedHeaders(
+                finalRegistryConfig.settings.templateProxyHeaders,
+                req.headers,
+            );
             const { data } = await registryService.getTemplate(route.template, {
                 locale,
                 forDomain: currentDomain,
                 routeKey,
+                forwardedHeaders,
             });
 
             reply.header('Content-Type', 'text/html');
