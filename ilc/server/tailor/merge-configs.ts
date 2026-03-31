@@ -47,14 +47,26 @@ export function mergeConfigs(
         ? [
               ...(original.routes ?? []).map((originalRoute) => {
                   const overrideRoute = override.routes?.find(
-                      (x) => isSameRoute(x, originalRoute) && isSameDomainRoute(x),
+                      (x) =>
+                          isSameRoute(x, originalRoute) &&
+                          isSameDomainRoute(x) &&
+                          // Domain-specific overrides matched by path (not routeId) should be
+                          // added as new routes, not merged into domain-agnostic originals
+                          (x.routeId !== undefined || (x.domainId === undefined && x.domainAlias === undefined)),
                   );
                   return overrideRoute ? deepmerge(originalRoute, overrideRoute) : originalRoute;
               }),
               ...(override.routes.filter(
                   (overrideRoute) =>
-                      !(original.routes || []).some((originalRoute) => isSameRoute(overrideRoute, originalRoute)) &&
-                      isSameDomainRoute(overrideRoute),
+                      !(original.routes || []).some(
+                          (originalRoute) =>
+                              isSameRoute(overrideRoute, originalRoute) &&
+                              // Domain-specific override routes matched by path (not routeId) should
+                              // be added as new routes even when an original with the same path exists,
+                              // since original routes are domain-filtered and don't carry domainId
+                              (overrideRoute.routeId !== undefined ||
+                                  (overrideRoute.domainId === undefined && overrideRoute.domainAlias === undefined)),
+                      ) && isSameDomainRoute(overrideRoute),
               ) as TransformedRoute[]),
           ].sort((a, b) => a.orderPos - b.orderPos)
         : original.routes;
