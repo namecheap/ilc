@@ -318,8 +318,8 @@ jobs:
                   fullCoverageDiff: true
                   autorun: false
                   postComment: false
-                  oldCodeCoveragePath: ./dest-client-side-tests-artifacts/coverage/coverage-summary.json
-                  newCodeCoveragePath: ./src-client-side-tests-artifacts/coverage/coverage-summary.json
+                  oldCodeCoveragePath: ./dest-client-side-tests-artifacts/coverage-summary.json
+                  newCodeCoveragePath: ./src-client-side-tests-artifacts/coverage-summary.json
                   total_delta: 10
             - name: Merge coverage report for registry
               run: |
