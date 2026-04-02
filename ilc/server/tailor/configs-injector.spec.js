@@ -18,7 +18,9 @@ describe('configs injector', () => {
 
     it('should return assets to preload', async () => {
         const styleRefs = ['firstStyleRef', 'secondStyleRef'];
+        const scriptRefs = ['firstScriptRef', 'secondScriptRef'];
         const request = {
+            scriptRefs,
             styleRefs,
         };
 
@@ -27,10 +29,11 @@ describe('configs injector', () => {
         const assetsToPreload = await configsInjector.getAssetsToPreload(request);
 
         chai.expect(assetsToPreload).to.be.eql({
-            scriptRefs: [],
+            scriptRefs,
             styleRefs,
         });
         chai.expect(request).to.be.eql({
+            scriptRefs,
             styleRefs,
         });
     });
@@ -381,6 +384,53 @@ describe('configs injector', () => {
                     chai.expect(request.styleRefs).to.be.eql([
                         registryConfig.apps.firstApp.cssBundle,
                         registryConfig.apps.secondApp.cssBundle,
+                    ]);
+                },
+            );
+        });
+
+        it('should store SSR fragment entry bundles for response-level script preloads', () => {
+            context.run(
+                {
+                    url: 'http://test/a?test=15',
+                    domain: 'test.com',
+                    requestId: 'requestId123',
+                    path: '/a',
+                    protocol: 'https',
+                },
+                () => {
+                    const configsInjector = new ConfigsInjector(newrelic);
+                    const request = {
+                        registryConfig,
+                        router: {
+                            getFragmentsContext: () => ({
+                                firstApp__at__firstSlot: {
+                                    spaBundleUrl: registryConfig.apps.firstApp.spaBundle,
+                                    wrapperConf: null,
+                                },
+                                secondApp__at__secondSlot: {
+                                    spaBundleUrl: registryConfig.apps.secondApp.spaBundle,
+                                    wrapperConf: {
+                                        name: registryConfig.apps.secondApp.wrappedWith,
+                                    },
+                                },
+                                ssrOnlyApp__at__fifthSlot: {
+                                    spaBundleUrl: undefined,
+                                    wrapperConf: null,
+                                },
+                            }),
+                        },
+                    };
+                    const template = {
+                        styleRefs: [],
+                        content: '<html><head></head><body></body></html>',
+                    };
+
+                    configsInjector.inject(request, template, { slots, reqUrl: '/test/route?a=15' });
+
+                    chai.expect(request.scriptRefs).to.be.eql([
+                        registryConfig.apps.firstApp.spaBundle,
+                        registryConfig.apps.secondApp.spaBundle,
                     ]);
                 },
             );

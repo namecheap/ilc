@@ -75,6 +75,8 @@ module.exports = class ConfigsInjector {
         }
 
         request.styleRefs = this.#getRouteStyleRefsToPreload(registryConfig.apps, slots, template.styleRefs);
+        const fragmentsContext = request.router ? request.router.getFragmentsContext() : {};
+        request.scriptRefs = this.#getSsrFragmentScriptRefsToPreload(fragmentsContext, registryConfig.apps);
 
         if (request.ldeRelated) {
             document = this.#removeProdTags(document);
@@ -85,9 +87,32 @@ module.exports = class ConfigsInjector {
 
     getAssetsToPreload = async (request) => {
         return {
-            scriptRefs: [],
+            scriptRefs: request.scriptRefs || [],
             styleRefs: request.styleRefs,
         };
+    };
+
+    #getSsrFragmentScriptRefsToPreload = (fragmentsContext, apps) => {
+        const scriptRefs = _.reduce(
+            _.values(fragmentsContext),
+            (result, fragmentContext) => {
+                if (fragmentContext.spaBundleUrl) {
+                    result.push(fragmentContext.spaBundleUrl);
+                }
+
+                const wrapperBundle = fragmentContext.wrapperConf?.name
+                    ? apps[fragmentContext.wrapperConf.name]?.spaBundle
+                    : undefined;
+                if (wrapperBundle) {
+                    result.push(wrapperBundle);
+                }
+
+                return result;
+            },
+            [],
+        );
+
+        return uniqueArray(scriptRefs);
     };
 
     #getRouteStyleRefsToPreload = (apps, slots, templateStyleRefs) => {
