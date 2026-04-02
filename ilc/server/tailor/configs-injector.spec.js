@@ -5,7 +5,7 @@ const _fp = require('lodash/fp');
 const LZUTF8 = require('lzutf8');
 const { context } = require('../context/context');
 
-const ConfigsInjector = require('./configs-injector');
+const { ConfigsInjector } = require('./configs-injector');
 
 describe('configs injector', () => {
     const newrelic = {

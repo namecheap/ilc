@@ -8,7 +8,7 @@ const { fetchTemplate } = require('./fetch-template');
 const { filterHeaders } = require('./filter-headers');
 const errorHandlerSetup = require('./error-handler');
 const fragmentHooks = require('./fragment-hooks');
-const ConfigsInjector = require('./configs-injector');
+const { ConfigsInjector } = require('./configs-injector');
 const processFragmentResponse = require('./process-fragment-response');
 const requestFragment = require('./request-fragment');
 

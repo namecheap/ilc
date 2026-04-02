@@ -40,7 +40,7 @@ type RouteAssets = {
     stylesheetLinks: string[];
 };
 
-class ConfigsInjector {
+export class ConfigsInjector {
     private readonly cdnUrl: string | null;
     private readonly cssInjectionPlaceholder = '<!-- ILC_CSS -->';
     private readonly jsInjectionPlaceholder = '<!-- ILC_JS -->';
@@ -370,5 +370,3 @@ class ConfigsInjector {
         };
     }
 }
-
-export = ConfigsInjector;
