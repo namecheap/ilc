@@ -1022,6 +1022,68 @@ describe('merge configs', () => {
         expect(defaultRoute).to.exist;
     });
 
+    it('should not merge non-domain override into domain-filtered original when a domain-specific override exists', () => {
+        const registryConfigWithDomainRoute: TransformedRegistryConfig = {
+            ...registryConfig,
+            routes: [
+                ...registryConfig.routes,
+                {
+                    routeId: 10,
+                    route: '/page/*',
+                    next: false,
+                    template: 'domain-specific-template',
+                    orderPos: 900,
+                    slots: {
+                        body: {
+                            appName: '@portal/domain-specific-app',
+                            kind: 'primary',
+                            props: {},
+                        },
+                    },
+                    meta: {},
+                    versionId: 'v1.0.10',
+                },
+            ],
+        };
+
+        const overrideConfig = {
+            routes: [
+                {
+                    route: '/page/*',
+                    slots: {
+                        body: {
+                            appName: '@portal/default-app',
+                            props: {},
+                        },
+                    },
+                },
+                {
+                    route: '/page/*',
+                    template: 'domain-specific-template',
+                    orderPos: 900,
+                    domainId: 9,
+                    slots: {
+                        body: {
+                            appName: '@portal/domain-specific-app',
+                            props: {},
+                        },
+                    },
+                },
+            ],
+        };
+
+        const result = mergeConfigs(registryConfigWithDomainRoute, overrideConfig, 9);
+
+        const domainRoute = result.routes.find((r) => r.slots?.body?.appName === '@portal/domain-specific-app');
+        expect(domainRoute).to.exist;
+        expect(domainRoute!.template).to.equal('domain-specific-template');
+
+        const corruptedRoute = result.routes.find(
+            (r) => r.template === 'domain-specific-template' && r.slots?.body?.appName === '@portal/default-app',
+        );
+        expect(corruptedRoute).to.not.exist;
+    });
+
     describe('should apply domain props to LDE-only apps', () => {
         const domainProps = { appProps: { brandId: 'namecheap' }, cdnUrl: 'https://cdn.namecheap.com' };
         const domainSsrProps = { secretKey: 'server-secret' };
