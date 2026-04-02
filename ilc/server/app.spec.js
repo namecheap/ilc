@@ -257,6 +257,69 @@ describe('App', () => {
         chai.expect(response.headers['x-custom-header']).to.be.undefined;
     });
 
+    it('should emit JS preload Link headers for all SSR-rendered fragment entry bundles', async () => {
+        const { app: testApp, server: testServer } = await createTestServer({
+            apps: {
+                '@portal/primary': {
+                    spaBundle: 'http://localhost/primary.js',
+                    kind: 'primary',
+                    ssr: { src: 'http://apps.test/primary' },
+                },
+                '@portal/regular': {
+                    spaBundle: 'http://localhost/regular.js',
+                    kind: 'regular',
+                    ssr: { src: 'http://apps.test/regular' },
+                },
+            },
+        });
+
+        try {
+            const response = await testServer.get('/all').expect(200);
+
+            chai.expect(response.headers.link).to.include(
+                '<http://localhost/primary.js>; rel="preload"; as="script"; nopush;',
+            );
+            chai.expect(response.headers.link).to.include(
+                '<http://localhost/regular.js>; rel="preload"; as="script"; nopush;',
+            );
+            chai.expect(response.headers.link).to.not.include('/_ilc/client.js');
+        } finally {
+            testApp.server.close();
+        }
+    });
+
+    it('should include wrapper entry bundle in JS preload Link headers', async () => {
+        const { app: testApp, server: testServer } = await createTestServer({
+            apps: {
+                '@portal/wrappedApp': {
+                    spaBundle: 'http://localhost/wrapped.js',
+                    kind: 'primary',
+                    ssr: { src: 'http://apps.test/wrappedApp' },
+                    wrappedWith: '@portal/wrapper',
+                },
+                '@portal/wrapper': {
+                    spaBundle: 'http://localhost/wrapper.js',
+                    kind: 'wrapper',
+                    ssr: { src: 'http://apps.test/wrapper' },
+                    props: { param1: 'value1' },
+                },
+            },
+        });
+
+        try {
+            const response = await testServer.get('/wrapper').expect(200);
+
+            chai.expect(response.headers.link).to.include(
+                '<http://localhost/wrapped.js>; rel="preload"; as="script"; nopush;',
+            );
+            chai.expect(response.headers.link).to.include(
+                '<http://localhost/wrapper.js>; rel="preload"; as="script"; nopush;',
+            );
+        } finally {
+            testApp.server.close();
+        }
+    });
+
     it('should pass query parameters to fragment via routerProps', async () => {
         const response = await server.get('/primary?foo=bar&test=123').expect(200);
 
