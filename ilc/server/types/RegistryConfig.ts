@@ -1,6 +1,7 @@
 import type { Route, SpecialRoute } from '../../common/types/Router';
 
 export type App = {
+    dependencies?: Record<string, string | undefined>;
     kind?: string;
     ssr?: {
         timeout?: number;
@@ -27,6 +28,9 @@ export interface RegistryConfig {
     settings: {
         trailingSlash?: string;
         overrideConfigTrustedOrigins?: string;
+        globalSpinner?: {
+            customHTML?: string;
+        };
         i18n?: {
             enabled?: boolean;
             default?: {
