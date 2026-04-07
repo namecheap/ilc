@@ -13,6 +13,10 @@ const example = {
         name: '@portal/ncTestAppName',
         spaBundle: 'http://localhost:1234/ncTestAppReactssr.js',
         cssBundle: 'http://127.0.0.1:1234/ncTestAppReactssr.css',
+        discoveryMetadata: {
+            preloadSpaBundle: true,
+            preloadCssBundle: true,
+        },
         configSelector: ['ncTestSharedPropsName'],
         props: {
             appConfigName: 'appCorrect',

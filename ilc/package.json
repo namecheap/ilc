@@ -100,8 +100,5 @@
     },
     "engines": {
         "node": ">= 22"
-    },
-    "overrides": {
-        "@sinonjs/fake-timers": "15.1.0"
     }
 }

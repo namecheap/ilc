@@ -12,6 +12,7 @@ type Dict = Record<string, any>;
 type TransformedApp = VersionedRecord<Omit<App, 'enforceDomain'>> & {
     ssr: Dict | null;
     dependencies: Dict | null;
+    discoveryMetadata: Dict | null;
     props: Dict | null;
     ssrProps: Dict | null;
     enforceDomain?: string;
@@ -21,6 +22,7 @@ export type AppDto = Pick<
     | 'kind'
     | 'ssr'
     | 'dependencies'
+    | 'discoveryMetadata'
     | 'props'
     | 'ssrProps'
     | 'spaBundle'
@@ -52,6 +54,7 @@ export function transformApps(
                 versionId: appendDigest(app.versionId, 'app'),
                 ssr: parseJSON<TransformedApp['ssr']>(app.ssr),
                 dependencies: parseJSON<TransformedApp['dependencies']>(app.dependencies),
+                discoveryMetadata: parseJSON<TransformedApp['discoveryMetadata']>(app.discoveryMetadata),
                 props: parseJSON<TransformedApp['props']>(app.props),
                 ssrProps: parseJSON<TransformedApp['ssrProps']>(app.ssrProps),
                 enforceDomain: app.enforceDomain ? getDomainName(app.enforceDomain) : undefined,
@@ -84,6 +87,7 @@ export function transformApps(
                 'kind',
                 'ssr',
                 'dependencies',
+                'discoveryMetadata',
                 'props',
                 'ssrProps',
                 'spaBundle',

@@ -2,6 +2,10 @@ import type { Route, SpecialRoute } from '../../common/types/Router';
 
 export type App = {
     dependencies?: Record<string, string | undefined>;
+    discoveryMetadata?: {
+        preloadSpaBundle?: boolean;
+        preloadCssBundle?: boolean;
+    };
     kind?: string;
     ssr?: {
         timeout?: number;

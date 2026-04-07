@@ -87,6 +87,10 @@ describe('configs injector', () => {
                 firstApp: {
                     spaBundle: 'https://somewhere.com/firstAppSpaBundle.js',
                     cssBundle: 'https://somewhere.com/firstAppCssBundle.css',
+                    discoveryMetadata: {
+                        preloadSpaBundle: true,
+                        preloadCssBundle: true,
+                    },
                     dependencies: {
                         firstAppFirstDependency: 'https://somewhere.com/firstAppFirstDependency.js',
                         firstAppSecondDependency: 'https://somewhere.com/firstAppSecondDependency.js',
@@ -105,6 +109,10 @@ describe('configs injector', () => {
                 secondApp: {
                     spaBundle: 'https://somewhere.com/secondAppSpaBundle.js',
                     cssBundle: 'https://somewhere.com/secondAppCssBundle.css',
+                    discoveryMetadata: {
+                        preloadSpaBundle: true,
+                        preloadCssBundle: true,
+                    },
                     dependencies: {
                         secondAppFirstDependency: 'https://somewhere.com/secondAppFirstDependency.js',
                         secondAppSecondDependency: 'https://somewhere.com/secondAppSecondDependency.js',
@@ -431,6 +439,60 @@ describe('configs injector', () => {
                     chai.expect(request.scriptRefs).to.be.eql([
                         registryConfig.apps.firstApp.spaBundle,
                         registryConfig.apps.secondApp.spaBundle,
+                    ]);
+                },
+            );
+        });
+
+        it('should skip fragment assets that explicitly opt out of response-level preloads', () => {
+            context.run(
+                {
+                    url: 'http://test/a?test=15',
+                    domain: 'test.com',
+                    requestId: 'requestId123',
+                    path: '/a',
+                    protocol: 'https',
+                },
+                () => {
+                    const configsInjector = new ConfigsInjector(newrelic);
+                    const nonPreloadedRegistryConfig = _.cloneDeep(registryConfig);
+                    nonPreloadedRegistryConfig.apps.firstApp.discoveryMetadata = {
+                        preloadSpaBundle: false,
+                        preloadCssBundle: false,
+                    };
+                    nonPreloadedRegistryConfig.apps.secondApp.discoveryMetadata = {
+                        preloadSpaBundle: false,
+                        preloadCssBundle: true,
+                    };
+
+                    const request = {
+                        registryConfig: nonPreloadedRegistryConfig,
+                        router: {
+                            getFragmentsContext: () => ({
+                                firstApp__at__firstSlot: {
+                                    spaBundleUrl: nonPreloadedRegistryConfig.apps.firstApp.spaBundle,
+                                    wrapperConf: null,
+                                },
+                                secondApp__at__secondSlot: {
+                                    spaBundleUrl: nonPreloadedRegistryConfig.apps.secondApp.spaBundle,
+                                    wrapperConf: {
+                                        name: nonPreloadedRegistryConfig.apps.secondApp.wrappedWith,
+                                    },
+                                },
+                            }),
+                        },
+                    };
+                    const template = {
+                        styleRefs: ['https://somewhere.com/template-only.css'],
+                        content: '<html><head></head><body></body></html>',
+                    };
+
+                    configsInjector.inject(request, template, { slots, reqUrl: '/test/route?a=15' });
+
+                    chai.expect(request.scriptRefs).to.be.eql([]);
+                    chai.expect(request.styleRefs).to.be.eql([
+                        nonPreloadedRegistryConfig.apps.secondApp.cssBundle,
+                        'https://somewhere.com/template-only.css',
                     ]);
                 },
             );
