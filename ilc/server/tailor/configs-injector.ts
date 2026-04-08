@@ -1,7 +1,7 @@
 import urlJoin from 'url-join';
 import { RoutingStrategy, type IntlAdapterConfig } from 'ilc-sdk/app';
 import type { RouterMatch } from '../../common/types/Router';
-import { encodeHtmlEntities, uniqueArray } from '../../common/utils';
+import { appIdToNameAndSlot, encodeHtmlEntities, uniqueArray } from '../../common/utils';
 import { HrefLangService } from '../services/HrefLangService';
 import { CanonicalTagService } from '../services/CanonicalTagService';
 import type { PatchedHttpRequest } from '../types/PatchedHttpRequest';
@@ -18,9 +18,9 @@ type BrowserTimingHeaderProvider = {
     getBrowserTimingHeader(): string;
 };
 
-type FragmentPreloadContext = Record<string, PartialFragmentContextEntry>;
+type FragmentPreloadContext = Record<string, FragmentContextEntry>;
 
-type PartialFragmentContextEntry = {
+type FragmentContextEntry = {
     spaBundleUrl?: string;
     wrapperConf?: {
         name?: string;
@@ -35,8 +35,6 @@ type PreloadAssets = {
 };
 
 type RouteAssets = {
-    dependencies: Record<string, string>;
-    spaBundles: string[];
     stylesheetLinks: string[];
 };
 
@@ -140,14 +138,18 @@ export class ConfigsInjector {
     ): string[] {
         const scriptRefs: string[] = [];
 
-        for (const fragmentContext of Object.values(fragmentsContext)) {
-            if (fragmentContext.spaBundleUrl) {
+        for (const [appId, fragmentContext] of Object.entries(fragmentsContext)) {
+            const appInfo = this.getAppByFragmentId(apps, appId);
+
+            if (fragmentContext.spaBundleUrl && this.shouldPreloadSpaBundle(appInfo)) {
                 scriptRefs.push(fragmentContext.spaBundleUrl);
             }
 
-            const wrapperBundle = fragmentContext.wrapperConf?.name
-                ? apps[fragmentContext.wrapperConf.name]?.spaBundle
-                : undefined;
+            const wrapperAppName = fragmentContext.wrapperConf?.name;
+            const wrapperBundle =
+                wrapperAppName && this.shouldPreloadSpaBundle(apps[wrapperAppName])
+                    ? apps[wrapperAppName]?.spaBundle
+                    : undefined;
 
             if (wrapperBundle) {
                 scriptRefs.push(wrapperBundle);
@@ -166,7 +168,7 @@ export class ConfigsInjector {
 
         for (const slotData of Object.values(slots)) {
             const appInfo = apps[slotData.appName];
-            const cssBundle = appInfo?.cssBundle;
+            const cssBundle = this.shouldPreloadCssBundle(appInfo) ? appInfo?.cssBundle : undefined;
 
             if (cssBundle && !routeStyleRefs.includes(cssBundle)) {
                 routeStyleRefs.push(cssBundle);
@@ -177,15 +179,7 @@ export class ConfigsInjector {
     }
 
     private getRouteAssets(apps: Record<string, RegistryApp>, slots: InjectRoute['slots']) {
-        const appsDependencies: Record<string, string> = {};
-
-        for (const appInfo of Object.values(apps)) {
-            Object.assign(appsDependencies, appInfo.dependencies);
-        }
-
         const routeAssets: RouteAssets = {
-            dependencies: {},
-            spaBundles: [],
             stylesheetLinks: [],
         };
 
@@ -194,17 +188,6 @@ export class ConfigsInjector {
 
             if (!appInfo) {
                 continue;
-            }
-
-            for (const dependencyName of Object.keys(appInfo.dependencies ?? {})) {
-                const dependencyUrl = appsDependencies[dependencyName];
-                if (dependencyUrl) {
-                    routeAssets.dependencies[dependencyName] = dependencyUrl;
-                }
-            }
-
-            if (appInfo.spaBundle && !routeAssets.spaBundles.includes(appInfo.spaBundle)) {
-                routeAssets.spaBundles.push(appInfo.spaBundle);
             }
 
             if (
@@ -217,14 +200,7 @@ export class ConfigsInjector {
             }
         }
 
-        const scriptRefs = uniqueArray([
-            this.getClientjsUrl(),
-            ...routeAssets.spaBundles,
-            ...Object.values(routeAssets.dependencies),
-        ]).filter(Boolean);
-
         return {
-            scriptLinks: scriptRefs.map((scriptRef) => this.wrapWithLinkToPreloadScript(scriptRef)),
             stylesheetLinks: routeAssets.stylesheetLinks,
         };
     }
@@ -301,10 +277,6 @@ export class ConfigsInjector {
         return `<script src="${url}" type="text/javascript" ${this.getCrossoriginAttribute(url)} async></script>`;
     }
 
-    private wrapWithLinkToPreloadScript(url: string): string {
-        return `<link rel="preload" href="${url}" as="script" ${this.getCrossoriginAttribute(url)}>`;
-    }
-
     private wrapWithFragmentStylesheetLink(url: string, fragmentId: string): string {
         return `<link rel="stylesheet" href="${url}" data-fragment-id="${fragmentId}">`;
     }
@@ -368,5 +340,19 @@ export class ConfigsInjector {
                 locale: i18nConfig.supported.locale,
             },
         };
+    }
+
+    private shouldPreloadSpaBundle(appInfo?: RegistryApp): boolean {
+        return appInfo?.discoveryMetadata?.preloadSpaBundle === true;
+    }
+
+    private shouldPreloadCssBundle(appInfo?: RegistryApp): boolean {
+        return appInfo?.discoveryMetadata?.preloadCssBundle !== false;
+    }
+
+    private getAppByFragmentId(apps: Record<string, RegistryApp>, appId: string): RegistryApp | undefined {
+        const { appName } = appIdToNameAndSlot(appId);
+
+        return apps[appName] ?? apps[appName.replace(/^@portal\//, '')];
     }
 }

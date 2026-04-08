@@ -257,13 +257,16 @@ describe('App', () => {
         chai.expect(response.headers['x-custom-header']).to.be.undefined;
     });
 
-    it('should emit JS preload Link headers for all SSR-rendered fragment entry bundles', async () => {
+    it('should only emit JS preload Link headers for apps that explicitly opt in via discoveryMetadata', async () => {
         const { app: testApp, server: testServer } = await createTestServer({
             apps: {
                 '@portal/primary': {
                     spaBundle: 'http://localhost/primary.js',
                     kind: 'primary',
                     ssr: { src: 'http://apps.test/primary' },
+                    discoveryMetadata: {
+                        preloadSpaBundle: true,
+                    },
                 },
                 '@portal/regular': {
                     spaBundle: 'http://localhost/regular.js',
@@ -279,7 +282,7 @@ describe('App', () => {
             chai.expect(response.headers.link).to.include(
                 '<http://localhost/primary.js>; rel="preload"; as="script"; nopush;',
             );
-            chai.expect(response.headers.link).to.include(
+            chai.expect(response.headers.link).to.not.include(
                 '<http://localhost/regular.js>; rel="preload"; as="script"; nopush;',
             );
             chai.expect(response.headers.link).to.not.include('/_ilc/client.js');
@@ -288,7 +291,7 @@ describe('App', () => {
         }
     });
 
-    it('should include wrapper entry bundle in JS preload Link headers', async () => {
+    it('should include wrapper entry bundle in JS preload Link headers when both opt in', async () => {
         const { app: testApp, server: testServer } = await createTestServer({
             apps: {
                 '@portal/wrappedApp': {
@@ -296,12 +299,18 @@ describe('App', () => {
                     kind: 'primary',
                     ssr: { src: 'http://apps.test/wrappedApp' },
                     wrappedWith: '@portal/wrapper',
+                    discoveryMetadata: {
+                        preloadSpaBundle: true,
+                    },
                 },
                 '@portal/wrapper': {
                     spaBundle: 'http://localhost/wrapper.js',
                     kind: 'wrapper',
                     ssr: { src: 'http://apps.test/wrapper' },
                     props: { param1: 'value1' },
+                    discoveryMetadata: {
+                        preloadSpaBundle: true,
+                    },
                 },
             },
         });
