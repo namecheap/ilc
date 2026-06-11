@@ -1,0 +1,17 @@
+{
+    // Deterministic experiment ruleset for the integration test in server/app.spec.js.
+    //
+    // It is loaded and injected explicitly by that spec (through createApp's ruleset
+    // seam) instead of by node-config, so it no longer leaks into the config baseline of
+    // every NODE_ENV=test file. One ungated, evenly split experiment is enough to assert
+    // the real onRequest assignment path (cookie mint + sticky reuse) end-to-end.
+    ruleset: {
+        'example-experiment': {
+            status: 'active',
+            variants: [
+                { name: 'variant-a', weight: 50 },
+                { name: 'variant-b', weight: 50 },
+            ],
+        },
+    },
+}

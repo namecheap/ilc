@@ -605,6 +605,53 @@ describe('client router', () => {
                 'Can not find info about the slot',
             );
         });
+
+        it('does not add an appProps.experiments field when ilcState carries no experiments', () => {
+            // router from beforeEach is built with empty ilcState ({}), so props are untouched
+            chai.expect(router.getCurrentRouteProps('@portal/hero', 'hero').appProps).to.equal(undefined);
+        });
+
+        it('merges ilcState.experiments into appProps so client-side navigation carries the assignment', () => {
+            const experiments = { 'homepage-hero': 'variant-b', 'example-experiment': 'variant-a' };
+            // Rebuild the beforeEach router with experiments in ilcState. Reassign the
+            // module-level `router` (after cleaning the empty one) so afterEach tears down
+            // its window listeners — a local instance would leak handlers into later
+            // navigation specs and trigger a full-page reload.
+            router.removeEventListeners();
+            router = new ClientRouter(configRoot, { experiments }, undefined, singleSpa, handlePageTransaction);
+
+            // nested under `appProps` to match the server (server-router.js), so a client
+            // consumer can read it via getCurrentPathProps().appProps on mount
+            chai.expect(router.getCurrentRouteProps('@portal/hero', 'hero').appProps).to.be.eql({ experiments });
+            chai.expect(router.getPrevRouteProps('@portal/hero', 'hero').appProps).to.be.eql({ experiments });
+        });
+
+        it('preserves the app/route own props alongside the injected experiments', () => {
+            const experiments = { 'homepage-hero': 'variant-b' };
+            router.removeEventListeners();
+            router = new ClientRouter(configRoot, { experiments }, undefined, singleSpa, handlePageTransaction);
+
+            const props = router.getCurrentRouteProps('@portal/hero', 'hero');
+            // the app's own props must survive the merge — experiments are purely additive
+            chai.expect(props.heroSecondProp).to.equal('heroSecondProp');
+            chai.expect(props.heroFirstProp).to.be.an('object');
+            chai.expect(props.appProps).to.be.eql({ experiments });
+        });
+
+        it('reuses the resolved assignment without re-bucketing (stable across current/prev and repeated calls)', () => {
+            const experiments = { 'homepage-hero': 'variant-b' };
+            router.removeEventListeners();
+            router = new ClientRouter(configRoot, { experiments }, undefined, singleSpa, handlePageTransaction);
+
+            // same resolved value every time — the client never re-evaluates the assignment
+            chai.expect(router.getCurrentRouteProps('@portal/hero', 'hero').appProps.experiments).to.be.eql(
+                experiments,
+            );
+            chai.expect(router.getCurrentRouteProps('@portal/hero', 'hero').appProps.experiments).to.be.eql(
+                experiments,
+            );
+            chai.expect(router.getPrevRouteProps('@portal/hero', 'hero').appProps.experiments).to.be.eql(experiments);
+        });
     });
 
     describe('when i18n was provided', () => {

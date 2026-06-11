@@ -1,0 +1,134 @@
+import { randomUUID } from 'node:crypto';
+import { parse as parseCookieHeader } from 'cookie';
+import { bucketVariant } from './bucket';
+import {
+    AB_COOKIE_PREFIX,
+    SESSION_COOKIE,
+    abCookieName,
+    abCookieOptions,
+    expireCookieOptions,
+    sessionCookieOptions,
+} from './cookies';
+import type { AssignmentResult, AssignOptions, CookieDirective, ExperimentAssignments, Ruleset } from './interfaces';
+
+// Cookie names/options live in ./cookies; re-exported here as the layer's public surface.
+export { SESSION_COOKIE, AB_COOKIE_PREFIX, abCookieName } from './cookies';
+
+interface MinimalRequest {
+    readonly headers: { readonly cookie?: string };
+}
+
+type ParsedCookies = Record<string, string | undefined>;
+
+function readCookies(request: MinimalRequest): ParsedCookies {
+    const header = request.headers.cookie;
+    return header ? parseCookieHeader(header) : {};
+}
+
+/**
+ * Resolve experiment variants for a single request.
+ *
+ * Pure and side-effect-free: it reads the per-experiment `x-ab-*` cookies off the
+ * request, resolves a variant for every `active` experiment (reusing the stored
+ * variant when it is still valid so returning visitors are stable), and returns
+ * the assignments plus the cookie directives the caller must write. Assignment
+ * never throws on bad input and never depends on a network call, satisfying the
+ * "site functions normally when the experiment layer misbehaves" requirement.
+ *
+ * A stored variant is reused only when it is still a declared variant of that
+ * experiment, so every value that leaves this function is ruleset-controlled — a
+ * tampered cookie can never inject an arbitrary string into the assignments
+ * (which are later inlined into the page), and a variant removed from the ruleset
+ * is re-resolved rather than trusted.
+ *
+ * Any `x-ab-*` cookie that no longer maps to a live assignment (experiment paused
+ * or removed from the ruleset) is expired, so stale assignments don't linger for
+ * up to 90 days or resurrect if an id is reused.
+ *
+ * @param options.secure emit cookies with `Secure` (set when the site is https).
+ */
+export function assignExperiments(
+    request: MinimalRequest,
+    ruleset: Ruleset,
+    { secure = false, resolveConsent }: AssignOptions = {},
+): AssignmentResult {
+    const cookies = readCookies(request);
+
+    const incomingSessionId = cookies[SESSION_COOKIE];
+    const sessionId = incomingSessionId || randomUUID();
+
+    // Null-prototype map: experiment ids come from the ruleset and cookie names, so a
+    // key like `toString`/`constructor` must not collide with Object.prototype —
+    // otherwise the `in` check in the cleanup sweep below would wrongly treat it as
+    // an existing assignment.
+    const assignments: ExperimentAssignments = Object.create(null);
+    const cookieDirectives: CookieDirective[] = [];
+
+    for (const [experimentId, experiment] of Object.entries(ruleset)) {
+        // Defensive: the ruleset comes from an untyped source, so tolerate a malformed
+        // entry (missing/empty variants, wrong status) by skipping it rather than
+        // throwing — assignment must never break the request (the docstring contract).
+        if (
+            !experiment ||
+            experiment.status !== 'active' ||
+            !Array.isArray(experiment.variants) ||
+            experiment.variants.length === 0
+        ) {
+            continue;
+        }
+
+        // Vendor-neutral consent gate. With a declared category, the experiment runs
+        // only when the deployment's resolver returns `granted`; `denied`/`unknown`
+        // (incl. no resolver) skip assignment, and the orphan sweep below expires any
+        // previously-stored cookie so a withdrawn-consent visitor reverts to baseline.
+        if (experiment.consentCategory) {
+            const state = resolveConsent ? resolveConsent(experiment.consentCategory) : 'unknown';
+            if (state !== 'granted') {
+                continue;
+            }
+        }
+
+        const stored = cookies[abCookieName(experimentId)];
+        const isStoredVariantValid = stored !== undefined && experiment.variants.some((v) => v.name === stored);
+
+        if (isStoredVariantValid) {
+            assignments[experimentId] = stored as string;
+            continue;
+        }
+
+        const variant = bucketVariant(sessionId, experimentId, experiment.variants);
+        if (variant !== undefined) {
+            assignments[experimentId] = variant;
+            cookieDirectives.push({
+                name: abCookieName(experimentId),
+                value: variant,
+                options: abCookieOptions(secure),
+            });
+        }
+    }
+
+    // Expire any `x-ab-*` cookie that didn't resolve to a live assignment this
+    // request: experiment paused or removed from the ruleset.
+    // Cookies backing a current assignment are in `assignments` and left untouched.
+    for (const cookieName of Object.keys(cookies)) {
+        if (!cookieName.startsWith(AB_COOKIE_PREFIX)) {
+            continue;
+        }
+        const experimentId = cookieName.slice(AB_COOKIE_PREFIX.length);
+        if (experimentId in assignments) {
+            continue;
+        }
+        cookieDirectives.push({ name: cookieName, value: '', options: expireCookieOptions(secure) });
+    }
+
+    // Only persist a freshly-minted session id when it actually seeded an assignment.
+    // A deployment with no active experiments (the OSS default ships an empty ruleset)
+    // must stay fully inert — minting `ilc-sid` here would otherwise add a cookie and
+    // force `Cache-Control: private, no-store` on every response, breaking shared/CDN
+    // caching for installs that don't use experiments at all.
+    if (!incomingSessionId && Object.keys(assignments).length > 0) {
+        cookieDirectives.push({ name: SESSION_COOKIE, value: sessionId, options: sessionCookieOptions(secure) });
+    }
+
+    return { sessionId, assignments, cookieDirectives };
+}

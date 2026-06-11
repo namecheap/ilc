@@ -6,6 +6,8 @@ import { FastifyRequest, RouteGenericInterface } from 'fastify';
 export interface IlcState {
     locale?: string;
     forceSpecialRoute?: string;
+    /** Resolved experiment variants for this session, keyed by experiment id. */
+    experiments?: Record<string, string>;
 }
 
 export interface PatchedHttpRequest extends IncomingMessage {

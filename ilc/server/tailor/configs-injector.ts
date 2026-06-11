@@ -7,6 +7,7 @@ import { CanonicalTagService } from '../services/CanonicalTagService';
 import type { PatchedHttpRequest } from '../types/PatchedHttpRequest';
 import type { Template, TransformedRegistryConfig, TransformedSpecialRoute } from '../types/Registry';
 import type { App as RegistryApp } from '../types/RegistryConfig';
+import { escapeJsonForScriptTag } from '../utils/helpers';
 
 type ConfigsInjectorRequest = PatchedHttpRequest & {
     registryConfig: TransformedRegistryConfig;
@@ -270,7 +271,7 @@ export class ConfigsInjector {
             return '';
         }
 
-        return `<script type="ilc-state">${JSON.stringify(state)}</script>`;
+        return `<script type="ilc-state">${escapeJsonForScriptTag(JSON.stringify(state))}</script>`;
     }
 
     private wrapWithAsyncScriptTag(url: string): string {

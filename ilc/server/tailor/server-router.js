@@ -84,7 +84,19 @@ module.exports = class ServerRouter {
                     }
                 }
 
-                ssrOpts.appProps = deepmerge.all([appInfo.props || {}, appInfo.ssrProps || {}, row.props || {}]);
+                const ilcState = this.#getIlcState();
+                // Nest experiments inside an `appProps` sub-field — that's where a client
+                // consumer reads user-app props from `requestData.getCurrentPathProps().appProps`.
+                // The outer object also carries `appConfig` (registry-defined infra config) as a sibling.
+                const experimentsProps = ilcState.experiments
+                    ? { appProps: { experiments: ilcState.experiments } }
+                    : {};
+                ssrOpts.appProps = deepmerge.all([
+                    appInfo.props || {},
+                    appInfo.ssrProps || {},
+                    row.props || {},
+                    experimentsProps,
+                ]);
                 ssrOpts.wrapperConf = row.wrapperConf;
                 ssrOpts.spaBundleUrl = appInfo.spaBundle;
 
