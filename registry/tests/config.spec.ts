@@ -512,6 +512,28 @@ describe('Tests /api/v1/config', () => {
                         'Multiple routes with the same "route" and "domainId" and without "orderPos" are present in the passed update:[\n  {\n    "route": "/unordered/*",\n    "slots": {\n      "body": {\n        "appName": "unordered",\n        "props": {\n          "c": true\n        }\n      }\n    },\n    "namespace": "ns1"\n  }\n]To update, ensure that each of these routes has a unique "orderPos" value for the given "domainId".',
                 });
         });
+        it('should validate same "route" on default and domain-specific (via domainAlias) without orderPos', async () => {
+            let domainId: number | undefined;
+            try {
+                await req.post('/api/v1/template/').send(example.templates).expect(200);
+                const domainResponse = await req
+                    .post('/api/v1/router_domains/')
+                    .send({ ...example.routerDomains, alias: 'validate-dup-domain' })
+                    .expect(200);
+                domainId = domainResponse.body.id;
+
+                await req
+                    .post('/api/v1/config/validate')
+                    .send({
+                        ...body,
+                        routes: [appRoute('app1'), { ...appRoute('app1'), domainAlias: 'validate-dup-domain' }],
+                    })
+                    .expect(200, { valid: true });
+            } finally {
+                domainId && (await req.delete(`/api/v1/router_domains/${domainId}`));
+                await req.delete('/api/v1/template/' + example.templates.name);
+            }
+        });
     });
     describe('Update', () => {
         const app = {
@@ -1212,6 +1234,41 @@ describe('Tests /api/v1/config', () => {
 
             const { body: config } = await req.get('/api/v1/config').expect(200);
             expect(config.apps['app-alias-fail']).to.be.undefined;
+        });
+        it('should upsert same "route" on default and domain-specific (via domainAlias) without orderPos', async () => {
+            let domainId: number | undefined;
+            try {
+                await req.post('/api/v1/template/').send(example.templates).expect(200);
+                const domainResponse = await req
+                    .post('/api/v1/router_domains/')
+                    .send({ ...example.routerDomains, alias: 'update-dup-domain' })
+                    .expect(200);
+                domainId = domainResponse.body.id;
+
+                await req
+                    .put('/api/v1/config')
+                    .send({
+                        apps: [{ ...app, name: 'app-dup' }],
+                        routes: [appRoute('app-dup'), { ...appRoute('app-dup'), domainAlias: 'update-dup-domain' }],
+                    })
+                    .expect(204);
+
+                const { body: config } = await req
+                    .get('/api/v1/config')
+                    .query({ domainName: example.routerDomains.domainName })
+                    .expect(200);
+
+                const dupRoutes = config.routes.filter((r: any) => r.route === '/app-dup/*');
+                expect(dupRoutes).to.have.lengthOf(2);
+                expect(dupRoutes.some((r: any) => r.domain === example.routerDomains.domainName)).to.be.true;
+                expect(dupRoutes.some((r: any) => r.domain === undefined)).to.be.true;
+            } finally {
+                const { body: routesWithId } = await req.get('/api/v1/route');
+                await Promise.all(routesWithId.map((x: any) => req.delete(`/api/v1/route/${x.id}`)));
+                await req.delete('/api/v1/app/app-dup');
+                domainId && (await req.delete(`/api/v1/router_domains/${domainId}`));
+                await req.delete('/api/v1/template/' + example.templates.name);
+            }
         });
     });
 });
