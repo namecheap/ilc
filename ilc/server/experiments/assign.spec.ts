@@ -119,6 +119,18 @@ describe('experiments/assign', () => {
             const result = assignExperiments(request(), ruleset);
             expect(findDirective(result, SESSION_COOKIE)).to.not.equal(undefined);
         });
+
+        it('expires a stale x-ab-* cookie against an empty ruleset (kill-switch cleanup)', () => {
+            // How applyExperiments handles the disabled kill-switch: resolve against {}.
+            // A mid-experiment visitor's cookie is expired (→ reverts to control), and no
+            // fresh session is minted.
+            const result = assignExperiments(request({ [SESSION_COOKIE]: 'sid-1', [AB_COOKIE]: 'variant-b' }), {});
+            const expire = findDirective(result, AB_COOKIE);
+            expect(expire).to.not.equal(undefined);
+            expect(expire?.options.maxAge).to.equal(0);
+            expect(result.assignments).to.deep.equal({});
+            expect(findDirective(result, SESSION_COOKIE)).to.equal(undefined);
+        });
     });
 
     describe('consent gating (vendor-neutral seam)', () => {

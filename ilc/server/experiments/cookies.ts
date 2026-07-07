@@ -1,5 +1,9 @@
 import type { CookieOptions } from './interfaces';
 
+// This module only DEFINES the cookie names + options. Nothing here writes a cookie:
+// `assignExperiments` (assign.ts) produces the cookie *directives*, and the request hook
+// `applyExperiments` (index.ts) is what actually emits them via `Set-Cookie`.
+
 // ILC mints its own session id (gateway-agnostic, ILC-public like `ilc-i18n`), so the
 // feature works in OSS ILC without depending on any deployment's identity headers.
 /** Stable per-visitor session id minted by ILC; seeds deterministic bucketing. */

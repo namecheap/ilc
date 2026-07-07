@@ -45,9 +45,11 @@ function appendSetCookie(reply: ServerResponseFastifyReply, serialized: string):
  * Designed to be called from the ILC `onRequest` hook. It must run *after* i18n
  * so it appends to, rather than overwrites, any cookie i18n already set.
  *
- * Honours the global kill-switch: when experiments are disabled the layer is fully
- * inert — no assignment, no session mint, no cookies, and `ilcState.experiments` is
- * left unset so no empty `experiments` object is merged into fragments or inlined.
+ * Honours the global kill-switch: when experiments are disabled nothing is assigned,
+ * no session is minted, and `ilcState.experiments` is left unset — but any stale
+ * `x-ab-*` cookie is still expired, so a visitor who was mid-experiment reverts to
+ * control instead of keeping a readable variant cookie for up to 90 days. A visitor
+ * with no such cookies stays fully inert (nothing written, response cacheable).
  *
  * Cookies get the `Secure` attribute when the site is served over https — per
  * `client.protocol`, OR when the edge reports https via `x-forwarded-proto` (a
@@ -76,15 +78,14 @@ export function applyExperiments(
 
     request.raw.ilcState = request.raw.ilcState ?? {};
 
-    // Fully inert when disabled: leave `experiments` unset (rather than an empty object)
-    // so neither server-router nor ClientRouter merges an empty `experiments` into every
-    // app's appProps, and nothing extra is inlined into the page.
-    if (!experimentsEnabled()) {
-        return;
-    }
-
     const secure = config.get('client.protocol') === 'https' || forwardedProtoIsHttps(request);
-    const { assignments, cookieDirectives } = assignExperiments(request.raw, rulesetOverride, {
+
+    // Kill-switch: when disabled, resolve against an EMPTY ruleset. That assigns nothing
+    // and mints no session, but still runs the orphan-cookie sweep in assignExperiments —
+    // so a visitor who was mid-experiment gets their stale `x-ab-*` cookies expired and
+    // reverts to control, rather than keeping a variant cookie alive for up to 90 days.
+    const ruleset = experimentsEnabled() ? rulesetOverride : {};
+    const { assignments, cookieDirectives } = assignExperiments(request.raw, ruleset, {
         secure,
         resolveConsent: (category) => resolveConsent(request.raw, category),
     });
