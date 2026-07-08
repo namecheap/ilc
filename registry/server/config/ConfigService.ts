@@ -102,7 +102,12 @@ export class ConfigService {
         Object.values(grouped).forEach((namespaceRoutes) => {
             const duplicates = namespaceRoutes.filter(
                 (route, idx, arr) =>
-                    arr.findIndex((r) => r.route === route.route && r.domainId === route.domainId) !== idx,
+                    arr.findIndex(
+                        (r) =>
+                            r.route === route.route &&
+                            r.domainId === route.domainId &&
+                            r.domainAlias === route.domainAlias,
+                    ) !== idx,
             );
             const unorderedDuplicates = duplicates.filter((route) => typeof route.orderPos !== 'number');
             if (unorderedDuplicates.length > 0) {
