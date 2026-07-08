@@ -32,5 +32,22 @@
     },
     client: {
         protocol: 'https',
-    }
+    },
+    experiments: {
+        // Global kill-switch. Set to false (e.g. via env in an incident) to send every
+        // visitor to control with no assignment. Toggling this is a config change, not a deploy.
+        enabled: true,
+        // Experiment definitions, keyed by id. Empty in the OSS baseline: a deployment
+        // declares its own experiments in an environment/local config layer (see
+        // config/local.json5 for the local demo; the integration test injects its own
+        // ruleset from tests/fixtures/experiments.json5), so a fresh install assigns no
+        // one and writes no x-ab-* cookies until it opts in.
+        //
+        // This static-JSON ruleset is the current source, read by
+        // server/experiments/StaticConfigRulesetProvider. See docs/ab-testing.md for a
+        // later direction where a remote experiment-management service (management UI +
+        // SSE/polling delivery) becomes the source of truth; until then, experiments are
+        // configured here.
+        ruleset: {},
+    },
 }

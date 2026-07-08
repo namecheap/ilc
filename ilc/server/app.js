@@ -13,14 +13,20 @@ import { TransitionHooksExecutor } from './TransitionHooksExecutor';
 const { Test500Error } = require('./errorHandler/ErrorHandler');
 
 const i18n = require('./i18n');
+const { applyExperiments } = require('./experiments');
 const reportingPluginManager = require('./plugins/reportingPlugin');
 const AccessLogger = require('./logger/accessLogger');
 const { isStaticFile, isHealthCheck, isDataUri } = require('./utils/utils');
 
 /**
  * @param {Registry} registryService
+ * @param {*} pluginManager
+ * @param {import('./experiments').Ruleset} [experimentsRuleset] Optional ruleset override
+ *   for the experiment layer. Left undefined in production so `applyExperiments` reads the
+ *   config-loaded ruleset; the integration test passes a fixture here to drive the real
+ *   onRequest path deterministically, without a node-config test layer.
  */
-module.exports = async function createApplication(registryService, pluginManager) {
+module.exports = async function createApplication(registryService, pluginManager, experimentsRuleset) {
     const reportingPlugin = reportingPluginManager.getInstance();
     const errorHandler = errorHandlerFactory();
     const appConfig = Application.getConfig(reportingPlugin);
@@ -62,6 +68,12 @@ module.exports = async function createApplication(registryService, pluginManager
         );
 
         await i18nOnRequest(req, reply);
+
+        try {
+            applyExperiments(req, reply, experimentsRuleset);
+        } catch (error) {
+            logger.warn({ error }, 'Failed to apply experiment assignments; continuing with control');
+        }
     });
 
     app.addHook('onResponse', (req, reply, done) => {

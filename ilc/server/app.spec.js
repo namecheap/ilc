@@ -1,13 +1,24 @@
+const fs = require('fs');
+const path = require('path');
 const chai = require('chai');
+const JSON5 = require('json5');
 const nock = require('nock');
 const supertest = require('supertest');
 const helpers = require('../tests/helpers');
 const createApp = require('./app');
 
-async function createTestServer(mockRegistryOptions = {}, mockPluginOptions = {}) {
+// Experiment ruleset for the integration test. Loaded explicitly here and injected via
+// createApp's seam, rather than through a node-config test layer, so it stays scoped to
+// this spec instead of leaking into every NODE_ENV=test file's config.
+const experimentsRuleset = JSON5.parse(
+    fs.readFileSync(path.join(__dirname, '../tests/fixtures/experiments.json5'), 'utf8'),
+).ruleset;
+
+async function createTestServer(mockRegistryOptions = {}, mockPluginOptions = {}, rulesetOverride) {
     const app = await createApp(
         helpers.getRegistryMock(mockRegistryOptions),
         helpers.getPluginManagerMock(mockPluginOptions),
+        rulesetOverride,
     );
 
     await app.ready();
@@ -26,7 +37,7 @@ describe('App', () => {
 
     before(async () => {
         helpers.setupMockServersForApps();
-        const serverInstance = await createTestServer();
+        const serverInstance = await createTestServer({}, {}, experimentsRuleset);
         app = serverInstance.app;
         server = serverInstance.server;
     });
@@ -340,5 +351,39 @@ describe('App', () => {
         const routerProps = helpers.getRouterProps(primaryFragment.url);
 
         chai.expect(routerProps.reqUrl).to.include('?foo=bar&test=123');
+    });
+
+    // Integration coverage for the experiment onRequest hook through the real Fastify
+    // stack (the ungated `example-experiment` ruleset is injected from
+    // tests/fixtures/experiments.json5 via createApp — see the top of this file).
+    describe('experiment assignment', () => {
+        const setCookies = (response) => response.headers['set-cookie'] ?? [];
+
+        it('mints a session cookie and assigns the ungated experiment over a real request', async () => {
+            const response = await server.get('/').expect(200);
+            const cookies = setCookies(response);
+
+            chai.expect(cookies.some((c) => c.startsWith('ilc-sid='))).to.equal(true);
+            const ab = cookies.map((c) => c.split(';')[0]).find((c) => c.startsWith('x-ab-example-experiment='));
+            chai.expect(ab, 'x-ab-example-experiment cookie set by the onRequest hook').to.exist;
+            // the resolved value is a real declared variant of the experiment
+            const variant = ab.split('=')[1];
+            chai.expect(['variant-a', 'variant-b']).to.include(variant);
+            // a personalized (variant-bearing) response must not be shared-cached
+            chai.expect(response.headers['cache-control']).to.equal('private, no-store');
+        });
+
+        it('reuses an existing assignment and does not re-issue its cookie', async () => {
+            const first = await server.get('/').expect(200);
+            const firstNames = setCookies(first).map((c) => c.split(';')[0]);
+            const sid = firstNames.find((c) => c.startsWith('ilc-sid='));
+            const abCookie = firstNames.find((c) => c.startsWith('x-ab-example-experiment='));
+            chai.expect(sid, 'session cookie issued on first visit').to.exist;
+            chai.expect(abCookie, 'assignment cookie issued on first visit').to.exist;
+
+            const second = await server.get('/').set('Cookie', `${sid}; ${abCookie}`).expect(200);
+            const reissued = setCookies(second).some((c) => c.startsWith('x-ab-example-experiment='));
+            chai.expect(reissued).to.equal(false);
+        });
     });
 });

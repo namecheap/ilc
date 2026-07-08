@@ -2,7 +2,7 @@
     port: 'ILC_PORT',
     cdnUrl: 'CDN_URL',
     staticError: {
-        disasterFileContentPath: 'ILC_DISASTER_FILE_CONTENT_PATH'
+        disasterFileContentPath: 'ILC_DISASTER_FILE_CONTENT_PATH',
     },
     registry: {
         address: 'REGISTRY_ADDR',
@@ -12,21 +12,24 @@
         standardLicenseKey: 'NEW_RELIC_LICENSE_KEY',
         customClientJsWrapper: 'NR_CUSTOM_CLIENT_JS_WRAPPER',
         automaticallyInjectBrowserMonitoring: 'NR_CUSTOM_CLIENT_AUTO_INJECT',
-        appName: 'NEW_RELIC_APP_NAME'
+        appName: 'NEW_RELIC_APP_NAME',
     },
     overrideConfigTrustedOrigins: 'OVERRIDE_CONFIG_TRUSTED_ORIGINS',
     logger: {
         accessLog: {
-            ignoreUrls: 'LOGGER_ACCESSLOG_IGNOREURLS'
-        }
+            ignoreUrls: 'LOGGER_ACCESSLOG_IGNOREURLS',
+        },
     },
     static: {
-        internalUrl: 'ILC_STATIC_INTERNAL_URL'
+        internalUrl: 'ILC_STATIC_INTERNAL_URL',
     },
     healthCheck: {
-        url: 'ILC_HEALTH_CHECK_URL'
+        url: 'ILC_HEALTH_CHECK_URL',
     },
     client: {
         protocol: 'ILC_CLIENT_PROTOCOL',
-    }
+    },
+    experiments: {
+        enabled: 'ILC_EXPERIMENTS_ENABLED',
+    },
 }

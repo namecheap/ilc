@@ -1,3 +1,19 @@
+/**
+ * Make a JSON string safe to inline inside a `<script>...</script>` block.
+ * `JSON.stringify` does not escape `<`, `>`, `&`, or the JS line terminators
+ * U+2028/U+2029, so a value containing `</script>` could break out of the tag.
+ * Escaping them as `\uXXXX` keeps the JSON valid (it parses back identically) while
+ * making tag breakout impossible — defense-in-depth for any user-influenced value.
+ */
+export function escapeJsonForScriptTag(json: string): string {
+    return json
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e')
+        .replace(/&/g, '\\u0026')
+        .replace(/\u2028/g, '\\u2028')
+        .replace(/\u2029/g, '\\u2029');
+}
+
 export function buildForwardedHeaders(
     proxyHeaderNames: string[] | null | undefined,
     requestHeaders: Record<string, string | string[] | undefined>,

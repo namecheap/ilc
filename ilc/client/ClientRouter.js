@@ -20,6 +20,7 @@ export default class ClientRouter extends EventEmitter {
     #logger;
     #registryConf;
     #ilcConfigRoot;
+    #ilcState;
     /** @type Object<Router> */
     #router;
     #prevRoute;
@@ -54,6 +55,7 @@ export default class ClientRouter extends EventEmitter {
         this.#location = location;
         this.#logger = logger;
         this.#i18n = i18n;
+        this.#ilcState = state ?? {};
         this.#ilcConfigRoot = ilcConfigRoot;
         this.#registryConf = this.#ilcConfigRoot.getConfig();
         this.#router = new Router(this.#registryConf);
@@ -142,12 +144,27 @@ export default class ClientRouter extends EventEmitter {
         if (routeConfig === undefined) {
             throw new this.errors.RouterError({ message: 'Can not find info about the slot.', data: { slotName } });
         }
-        const appProps = appConfig.props || {};
+        // ILC-level props for the app/slot. `appConfig.props` is the app's registry
+        // config; the user-app props live under a nested `appProps` key (below).
+        const appConfigProps = appConfig.props || {};
         const routeProps = routeConfig.props || {};
 
-        const finalRouteProps = deepmerge(appProps, routeProps);
+        // Carry the experiment assignments (resolved once at SSR and inlined into
+        // ilcState) into every app's props on client-side navigation. They go under the
+        // nested `appProps` key — the same place the server uses (server-router.js) and
+        // the field a client consumer reads via getCurrentPathProps().appProps —
+        // so a freshly client-mounted app still receives the already-resolved assignment.
+        // This reuses the existing value (never re-buckets), keeping the assignment stable
+        // across all apps in a long-lived SPA session.
+        //
+        // Note: SSR-rendered (primary) apps already get experiments via the server SSR
+        // appProps, so this client-side merge is the forward-looking half of that same
+        // contract — it is what delivers the assignment to apps mounted purely on the
+        // client (no SSR). It is a no-op when ilcState carries no experiments.
+        const { experiments } = this.#ilcState;
+        const experimentsProps = experiments ? { appProps: { experiments } } : {};
 
-        return finalRouteProps;
+        return deepmerge.all([appConfigProps, routeProps, experimentsProps]);
     }
 
     #setInitialRoutes = (state) => {
