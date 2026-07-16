@@ -53,7 +53,7 @@ describe('experiments/assign', () => {
     });
 
     describe('returning visit (cookies present)', () => {
-        it('reuses the existing session id and variant, emitting no new cookies', () => {
+        it('reuses the existing session id and variant, refreshing the assignment cookie (sliding TTL)', () => {
             const first = assignExperiments(request(), ruleset);
             const sessionId = first.sessionId;
             const variant = first.assignments['homepage-hero'];
@@ -62,7 +62,10 @@ describe('experiments/assign', () => {
 
             expect(second.sessionId).to.equal(sessionId);
             expect(second.assignments).to.deep.equal(first.assignments);
-            expect(second.cookieDirectives).to.have.length(0);
+            const refreshed = findDirective(second, AB_COOKIE);
+            expect(refreshed?.value).to.equal(variant);
+            expect(refreshed?.options.maxAge).to.be.greaterThan(0);
+            expect(findDirective(second, SESSION_COOKIE)).to.equal(undefined);
         });
 
         it('is stable across many re-evaluations of the same session', () => {
@@ -246,14 +249,16 @@ describe('experiments/assign', () => {
             expect(expire?.options.maxAge).to.equal(0);
         });
 
-        it('leaves the cookie of a live assignment untouched (no spurious expiry)', () => {
+        it('refreshes (never expires) the cookie of a live assignment', () => {
             const seed = assignExperiments(request(), ruleset);
             const variant = seed.assignments['homepage-hero'];
             const result = assignExperiments(
                 request({ [SESSION_COOKIE]: seed.sessionId, [AB_COOKIE]: variant }),
                 ruleset,
             );
-            expect(findDirective(result, AB_COOKIE)).to.equal(undefined);
+            const directive = findDirective(result, AB_COOKIE);
+            expect(directive?.value).to.equal(variant);
+            expect(directive?.options.maxAge).to.be.greaterThan(0);
         });
     });
 
@@ -292,7 +297,10 @@ describe('experiments/assign', () => {
             );
 
             expect(elsewhere.assignments['homepage-hero']).to.equal(variant);
-            expect(elsewhere.cookieDirectives).to.have.length(0);
+            const refreshed = findDirective(elsewhere, AB_COOKIE);
+            expect(refreshed?.value).to.equal(variant);
+            expect(refreshed?.options.maxAge).to.be.greaterThan(0);
+            expect(findDirective(elsewhere, SESSION_COOKIE)).to.equal(undefined);
         });
 
         it('fails closed (no enrollment, no throw) on a null enrollment value from untyped config', () => {
@@ -321,9 +329,26 @@ describe('experiments/assign', () => {
 
             const home = assignExperiments(request(), rootGated, { requestPath: '/' });
             const elsewhere = assignExperiments(request(), rootGated, { requestPath: '/domains' });
+            const doubleSlash = assignExperiments(request(), rootGated, { requestPath: '//domains' });
 
             expect(home.assignments).to.have.property('homepage-hero');
             expect(elsewhere.assignments).to.deep.equal({});
+            expect(doubleSlash.assignments).to.deep.equal({});
+        });
+
+        it('fails closed on an empty-string enrollment prefix (validation only warns)', () => {
+            const emptyPrefix: Ruleset = {
+                'homepage-hero': {
+                    status: 'active',
+                    variants: ruleset['homepage-hero'].variants,
+                    enrollment: { paths: [''] },
+                },
+            };
+
+            const result = assignExperiments(request(), emptyPrefix, { requestPath: '/anywhere' });
+
+            expect(result.assignments).to.deep.equal({});
+            expect(result.cookieDirectives).to.have.length(0);
         });
 
         it('matches path prefixes on segment boundaries only', () => {

@@ -36,9 +36,14 @@ function readCookies(request: MinimalRequest): ParsedCookies {
 // `/shopping`. A configured prefix may carry a trailing slash; it is normalised away.
 // `/` is deliberately root-exact (matches only the homepage): "enroll everywhere" is
 // expressed by omitting `enrollment`, so `/` covering all paths would be redundant
-// while making a homepage-only gate inexpressible.
+// while making a homepage-only gate inexpressible. Root-exact means STRICT equality —
+// this runs before any URL normalisation, so a raw `//domains` must not match `/`
+// via the `startsWith('//')` shape of the generic prefix check below.
 function pathMatchesPrefix(path: string, prefix: string): boolean {
     const normalised = prefix.endsWith('/') && prefix !== '/' ? prefix.slice(0, -1) : prefix;
+    if (normalised === '/') {
+        return path === '/';
+    }
     return path === normalised || path.startsWith(`${normalised}/`);
 }
 
@@ -58,7 +63,13 @@ function isEnrollable(experiment: Experiment, requestPath: string | undefined): 
     if (!enrollment || !Array.isArray(enrollment.paths) || requestPath === undefined) {
         return false;
     }
-    return enrollment.paths.some((prefix) => typeof prefix === 'string' && pathMatchesPrefix(requestPath, prefix));
+    // Mirror the validator's rule at runtime: only non-empty, `/`-prefixed strings can
+    // match. Validation merely WARNS about a malformed ruleset (the provider still loads
+    // it), and without this check an empty-string prefix would match every path via
+    // `startsWith('/')` — enrolling the whole site, the opposite of fail-closed.
+    return enrollment.paths.some(
+        (prefix) => typeof prefix === 'string' && prefix.startsWith('/') && pathMatchesPrefix(requestPath, prefix),
+    );
 }
 
 /**
@@ -129,6 +140,16 @@ export function assignExperiments(
 
         if (isStoredVariantValid) {
             assignments[experimentId] = stored as string;
+            // Sliding refresh: re-issue the cookie so its Max-Age counts from the LAST
+            // visit, not first touch. Without this, participation silently lapses after
+            // 90 days — the visitor gets re-bucketed (a reweight could then flip their
+            // variant), and an enrollment-gated visitor drops out of the experiment
+            // entirely until they happen to revisit an enrollment path.
+            cookieDirectives.push({
+                name: abCookieName(experimentId),
+                value: stored as string,
+                options: abCookieOptions(secure),
+            });
             continue;
         }
 

@@ -106,21 +106,58 @@ describe('experiments/index applyExperiments', () => {
             expect(cacheControl(reply)).to.equal('private, no-store');
         });
 
-        it('marks the response uncacheable even for a returning visitor with no new cookies', () => {
-            // sticky cookie already present -> no Set-Cookie, but the page still varies by variant
+        it('marks the response uncacheable for a returning visitor and refreshes their sticky cookie', () => {
             const reply = makeReply();
             applyExperiments(
                 makeRequest(`${SESSION_COOKIE}=sid-1; ${abCookieName('homepage-hero')}=variant-b`),
                 reply,
                 ruleset,
             );
-            expect(setCookies(reply)).to.have.length(0);
+            const cookies = setCookies(reply);
+            expect(cookies).to.have.length(1);
+            expect(cookies[0].startsWith(`${abCookieName('homepage-hero')}=variant-b`)).to.equal(true);
             expect(cacheControl(reply)).to.equal('private, no-store');
         });
 
         it('does NOT touch Cache-Control when nothing was assigned or set (page stays cacheable)', () => {
             const reply = makeReply();
             applyExperiments(makeRequest(`${SESSION_COOKIE}=sid-1`), reply, {});
+            expect(cacheControl(reply)).to.equal(undefined);
+        });
+
+        it('marks even an unassigned baseline no-store while an enrollment-gated experiment is active', () => {
+            const gated: Ruleset = {
+                'homepage-hero': { ...ruleset['homepage-hero'], enrollment: { paths: ['/promo'] } },
+            };
+            const reply = makeReply();
+            applyExperiments(makeRequest(), reply, gated);
+
+            expect(setCookies(reply)).to.have.length(0);
+            expect(cacheControl(reply)).to.equal('private, no-store');
+        });
+
+        it('marks even an unassigned baseline no-store while a consent-gated experiment is active', () => {
+            const gated: Ruleset = {
+                'homepage-hero': { ...ruleset['homepage-hero'], consentCategory: 'performance' },
+            };
+            const reply = makeReply();
+            applyExperiments(makeRequest(), reply, gated);
+
+            expect(setCookies(reply)).to.have.length(0);
+            expect(cacheControl(reply)).to.equal('private, no-store');
+        });
+
+        it('leaves the response cacheable when the only gated experiment is paused', () => {
+            const paused: Ruleset = {
+                'homepage-hero': {
+                    ...ruleset['homepage-hero'],
+                    status: 'paused',
+                    enrollment: { paths: ['/promo'] },
+                },
+            };
+            const reply = makeReply();
+            applyExperiments(makeRequest(), reply, paused);
+
             expect(cacheControl(reply)).to.equal(undefined);
         });
     });

@@ -156,7 +156,12 @@ slice boundary rather than reshuffling existing ones.
 
 Assignment is therefore **first-touch sticky**: once a visitor has an `x-ab-<id>` cookie
 they keep their variant, so changing weights mid-experiment only affects not-yet-assigned
-visitors. Read results as a first-touch split, not the current weights.
+visitors. Read results as a first-touch split, not the current weights. The `x-ab-<id>`
+cookie is **re-issued on every request that honours it**, so its 90-day TTL is a sliding
+inactivity window — participation persists as long as visits are less than 90 days apart
+and never lapses mid-experiment for a returning visitor (which matters doubly for
+enrollment-gated experiments, where a lapsed cookie would otherwise drop the visitor out
+until they revisit an enrollment path).
 
 ---
 
@@ -189,10 +194,10 @@ expired. Experiments without a `consentCategory` run unconditionally.
 
 ## Cookies
 
-| Cookie                 | TTL     | Purpose                                                     |
-| ---------------------- | ------- | ----------------------------------------------------------- |
-| `ilc-sid`              | 1 year  | Stable per-visitor id ILC mints itself; the bucketing seed. |
-| `x-ab-<experiment-id>` | 90 days | The resolved variant for one experiment.                    |
+| Cookie                 | TTL                                          | Purpose                                                     |
+| ---------------------- | -------------------------------------------- | ----------------------------------------------------------- |
+| `ilc-sid`              | 1 year                                       | Stable per-visitor id ILC mints itself; the bucketing seed. |
+| `x-ab-<experiment-id>` | 90 days (sliding — refreshed on every visit) | The resolved variant for one experiment.                    |
 
 `ilc-sid` is **HttpOnly** (the client never needs the raw seed). The `x-ab-*` variant
 cookies are readable by the client so it can stay consistent with the server-resolved
@@ -201,7 +206,12 @@ value. Both are `SameSite=Lax` and carry `Secure` when the site is served over h
 cache — the server re-derives assignments from the ruleset every request, and a stored
 value is honoured only when it is still a declared variant, so a tampered cookie can't
 inject an arbitrary value into the page. A response is marked `Cache-Control: private,
-no-store` whenever it carries an assignment or sets a cookie.
+no-store` whenever it carries an assignment or sets a cookie — and, while any
+enrollment- or consent-gated experiment is **active**, on _every_ response: gated
+experiments make personalized and baseline visitors share the same URLs, and a
+shared-cached baseline would otherwise be served to enrolled visitors, silently masking
+their variant. Deployments relying on shared/CDN caching of pages should budget for
+that while a gated experiment runs.
 
 ---
 
