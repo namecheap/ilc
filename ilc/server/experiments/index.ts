@@ -88,6 +88,8 @@ export function applyExperiments(
     const { assignments, cookieDirectives } = assignExperiments(request.raw, ruleset, {
         secure,
         resolveConsent: (category) => resolveConsent(request.raw, category),
+        // Raw request path (query stripped) for the first-touch `enrollment` gate.
+        requestPath: request.raw.url?.split('?')[0],
     });
 
     // Only attach `experiments` when something was actually assigned — keeps the
