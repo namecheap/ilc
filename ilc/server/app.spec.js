@@ -373,7 +373,7 @@ describe('App', () => {
             chai.expect(response.headers['cache-control']).to.equal('private, no-store');
         });
 
-        it('reuses an existing assignment and does not re-issue its cookie', async () => {
+        it('reuses an existing assignment, re-issuing its cookie with the same variant (sliding TTL)', async () => {
             const first = await server.get('/').expect(200);
             const firstNames = setCookies(first).map((c) => c.split(';')[0]);
             const sid = firstNames.find((c) => c.startsWith('ilc-sid='));
@@ -382,8 +382,9 @@ describe('App', () => {
             chai.expect(abCookie, 'assignment cookie issued on first visit').to.exist;
 
             const second = await server.get('/').set('Cookie', `${sid}; ${abCookie}`).expect(200);
-            const reissued = setCookies(second).some((c) => c.startsWith('x-ab-example-experiment='));
-            chai.expect(reissued).to.equal(false);
+            const secondNames = setCookies(second).map((c) => c.split(';')[0]);
+            chai.expect(secondNames).to.include(abCookie);
+            chai.expect(secondNames.some((c) => c.startsWith('ilc-sid='))).to.equal(false);
         });
     });
 });

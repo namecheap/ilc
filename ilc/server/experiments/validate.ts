@@ -42,6 +42,21 @@ function checkVariant(experimentId: string, variant: ExperimentVariant): string[
     return [];
 }
 
+function checkEnrollment(experimentId: string, experiment: Experiment): string[] {
+    const { enrollment } = experiment;
+    if (enrollment === undefined) {
+        return [];
+    }
+    if (!enrollment || !Array.isArray(enrollment.paths) || enrollment.paths.length === 0) {
+        return [
+            `"${experimentId}": enrollment.paths must be a non-empty array of path prefixes — new visitors will never enroll`,
+        ];
+    }
+    return enrollment.paths
+        .filter((path) => typeof path !== 'string' || !path.startsWith('/'))
+        .map((path) => `"${experimentId}": enrollment path "${String(path)}" must be a string starting with "/"`);
+}
+
 function checkVariants(experimentId: string, variants: readonly ExperimentVariant[]): string[] {
     const problems: string[] = [];
     const names = new Set<string>();
@@ -86,6 +101,7 @@ export function validateRuleset(ruleset: Ruleset): string[] {
         }
 
         problems.push(...checkStatus(experimentId, experiment));
+        problems.push(...checkEnrollment(experimentId, experiment));
 
         const { variants } = experiment;
         if (!Array.isArray(variants) || variants.length === 0) {
