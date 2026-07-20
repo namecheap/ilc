@@ -32,6 +32,27 @@ export type ExperimentStatus = 'active' | 'paused';
  */
 export type ConsentState = 'granted' | 'denied' | 'unknown';
 
+/**
+ * Optional gate on *first-time enrollment only*. When set, a visitor is bucketed into
+ * the experiment (and gets the sticky `x-ab-<id>` cookie) only while requesting one of
+ * the listed path prefixes. Visitors who never hit an enrollment path stay fully out of
+ * the experiment — no assignment, no cookies.
+ *
+ * This is NOT a route-scoped experiment: once a visitor is enrolled, the stored
+ * assignment is honoured on every route (the stored-cookie path is deliberately not
+ * gated), so participation never toggles with navigation. The gate narrows *who joins
+ * the population*, not *where the experiment applies*.
+ *
+ * Paths are matched as segment-aligned prefixes against the raw request path (query
+ * string excluded, before any i18n un-localisation): `/shop` matches `/shop` and
+ * `/shop/cart`, but not `/shopping`. Localised URL prefixes must be listed explicitly.
+ * `/` is root-exact — it gates enrollment to the homepage only; to enroll everywhere,
+ * omit `enrollment` entirely.
+ */
+export interface ExperimentEnrollment {
+    readonly paths: readonly string[];
+}
+
 export interface Experiment {
     readonly status: ExperimentStatus;
     readonly variants: readonly ExperimentVariant[];
@@ -43,6 +64,11 @@ export interface Experiment {
      * fail-closed (not assigned). Experiments without a category run unconditionally.
      */
     readonly consentCategory?: string;
+    /**
+     * Optional first-touch enrollment gate (see {@link ExperimentEnrollment}). Absent —
+     * visitors enroll on any route, exactly as before this field existed.
+     */
+    readonly enrollment?: ExperimentEnrollment;
 }
 
 /** The complete set of experiments ILC knows about, keyed by experiment id. */
@@ -91,6 +117,12 @@ export interface AssignOptions {
      * Experiments without a `consentCategory` ignore this entirely.
      */
     readonly resolveConsent?: (category: string) => ConsentState;
+    /**
+     * Path of the current request (no query string), used by the `enrollment` gate.
+     * When omitted, enrollment-gated experiments are fail-closed for *new* visitors
+     * (no first-time bucketing), while stored assignments are still honoured.
+     */
+    readonly requestPath?: string;
 }
 
 /** A cookie the caller must write to the response to persist assignment state. */

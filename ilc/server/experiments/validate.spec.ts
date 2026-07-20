@@ -75,4 +75,60 @@ describe('experiments/validate', () => {
         const ruleset: Ruleset = { exp: { status: 'active', variants: [] } };
         expect(validateRuleset(ruleset).some((p) => p.includes('no variants'))).to.equal(true);
     });
+
+    it('accepts a well-formed enrollment gate', () => {
+        const ruleset: Ruleset = {
+            exp: {
+                status: 'active',
+                variants: [
+                    { name: 'a', weight: 50 },
+                    { name: 'b', weight: 50 },
+                ],
+                enrollment: { paths: ['/sample-nodejs'] },
+            },
+        };
+        expect(validateRuleset(ruleset)).to.deep.equal([]);
+    });
+
+    it('flags an empty enrollment.paths (would never enroll anyone)', () => {
+        const ruleset: Ruleset = {
+            exp: {
+                status: 'active',
+                variants: [
+                    { name: 'a', weight: 50 },
+                    { name: 'b', weight: 50 },
+                ],
+                enrollment: { paths: [] },
+            },
+        };
+        expect(validateRuleset(ruleset).some((p) => p.includes('enrollment.paths'))).to.equal(true);
+    });
+
+    it('flags a null enrollment value without throwing', () => {
+        const ruleset = {
+            exp: {
+                status: 'active',
+                variants: [
+                    { name: 'a', weight: 50 },
+                    { name: 'b', weight: 50 },
+                ],
+                enrollment: null,
+            },
+        } as unknown as Ruleset;
+        expect(validateRuleset(ruleset).some((p) => p.includes('enrollment.paths'))).to.equal(true);
+    });
+
+    it('flags an enrollment path without a leading slash', () => {
+        const ruleset: Ruleset = {
+            exp: {
+                status: 'active',
+                variants: [
+                    { name: 'a', weight: 50 },
+                    { name: 'b', weight: 50 },
+                ],
+                enrollment: { paths: ['sample-nodejs'] },
+            },
+        };
+        expect(validateRuleset(ruleset).some((p) => p.includes('starting with "/"'))).to.equal(true);
+    });
 });

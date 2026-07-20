@@ -9,7 +9,14 @@ import {
     expireCookieOptions,
     sessionCookieOptions,
 } from './cookies';
-import type { AssignmentResult, AssignOptions, CookieDirective, ExperimentAssignments, Ruleset } from './interfaces';
+import type {
+    AssignmentResult,
+    AssignOptions,
+    CookieDirective,
+    Experiment,
+    ExperimentAssignments,
+    Ruleset,
+} from './interfaces';
 
 // Cookie names/options live in ./cookies; re-exported here as the layer's public surface.
 export { SESSION_COOKIE, AB_COOKIE_PREFIX, abCookieName } from './cookies';
@@ -23,6 +30,46 @@ type ParsedCookies = Record<string, string | undefined>;
 function readCookies(request: MinimalRequest): ParsedCookies {
     const header = request.headers.cookie;
     return header ? parseCookieHeader(header) : {};
+}
+
+// Segment-aligned prefix match: `/shop` covers `/shop` and `/shop/cart` but not
+// `/shopping`. A configured prefix may carry a trailing slash; it is normalised away.
+// `/` is deliberately root-exact (matches only the homepage): "enroll everywhere" is
+// expressed by omitting `enrollment`, so `/` covering all paths would be redundant
+// while making a homepage-only gate inexpressible. Root-exact means STRICT equality —
+// this runs before any URL normalisation, so a raw `//domains` must not match `/`
+// via the `startsWith('//')` shape of the generic prefix check below.
+function pathMatchesPrefix(path: string, prefix: string): boolean {
+    const normalised = prefix.endsWith('/') && prefix !== '/' ? prefix.slice(0, -1) : prefix;
+    if (normalised === '/') {
+        return path === '/';
+    }
+    return path === normalised || path.startsWith(`${normalised}/`);
+}
+
+/**
+ * First-touch enrollment gate. Applies ONLY to visitors without a valid stored
+ * assignment — the stored-cookie path above it is deliberately not gated, so an
+ * enrolled visitor keeps their variant on every route (this is what makes the field an
+ * enrollment gate and not a route-scoped experiment). Defensive like the rest of the
+ * layer: a malformed `enrollment` value fails closed (no new enrollment) rather than
+ * throwing, and an absent field enrolls everywhere (pre-existing behaviour).
+ */
+function isEnrollable(experiment: Experiment, requestPath: string | undefined): boolean {
+    const enrollment = experiment.enrollment;
+    if (enrollment === undefined) {
+        return true;
+    }
+    if (!enrollment || !Array.isArray(enrollment.paths) || requestPath === undefined) {
+        return false;
+    }
+    // Mirror the validator's rule at runtime: only non-empty, `/`-prefixed strings can
+    // match. Validation merely WARNS about a malformed ruleset (the provider still loads
+    // it), and without this check an empty-string prefix would match every path via
+    // `startsWith('/')` — enrolling the whole site, the opposite of fail-closed.
+    return enrollment.paths.some(
+        (prefix) => typeof prefix === 'string' && prefix.startsWith('/') && pathMatchesPrefix(requestPath, prefix),
+    );
 }
 
 /**
@@ -50,7 +97,7 @@ function readCookies(request: MinimalRequest): ParsedCookies {
 export function assignExperiments(
     request: MinimalRequest,
     ruleset: Ruleset,
-    { secure = false, resolveConsent }: AssignOptions = {},
+    { secure = false, resolveConsent, requestPath }: AssignOptions = {},
 ): AssignmentResult {
     const cookies = readCookies(request);
 
@@ -93,6 +140,24 @@ export function assignExperiments(
 
         if (isStoredVariantValid) {
             assignments[experimentId] = stored as string;
+            // Sliding refresh: re-issue the cookie so its Max-Age counts from the LAST
+            // visit, not first touch. Without this, participation silently lapses after
+            // 90 days — the visitor gets re-bucketed (a reweight could then flip their
+            // variant), and an enrollment-gated visitor drops out of the experiment
+            // entirely until they happen to revisit an enrollment path.
+            cookieDirectives.push({
+                name: abCookieName(experimentId),
+                value: stored as string,
+                options: abCookieOptions(secure),
+            });
+            continue;
+        }
+
+        // First-touch enrollment gate: below this line we are about to bucket a NEW
+        // participant. Gated experiments recruit only on their enrollment paths; the
+        // stored-assignment path above stays ungated so participation never toggles
+        // with navigation (not a per-route experiment).
+        if (!isEnrollable(experiment, requestPath)) {
             continue;
         }
 

@@ -25,6 +25,26 @@ function forwardedProtoIsHttps(request: PatchedFastifyRequest): boolean {
     return typeof value === 'string' && value.split(',')[0].trim().toLowerCase() === 'https';
 }
 
+/**
+ * True when any active experiment can split visitors into personalized and baseline
+ * populations on the SAME URL — an `enrollment` gate (unenrolled visitors get baseline)
+ * or a `consentCategory` (denied/unknown visitors get baseline). While such an
+ * experiment is live, even a fully inert baseline response must be uncacheable:
+ * a shared cache/CDN would otherwise store the baseline under the bare URL and serve it
+ * to an *enrolled* visitor, whose request then never reaches the origin — masking their
+ * stored assignment and breaking the "enrolled on every route" guarantee. Ungated,
+ * unconditioned experiments personalize every response, so they are already `no-store`
+ * per response and don't need this; an empty ruleset stays fully inert (cacheable).
+ */
+function rulesetSplitsPopulation(ruleset: Ruleset): boolean {
+    return Object.values(ruleset).some(
+        (experiment) =>
+            !!experiment &&
+            experiment.status === 'active' &&
+            (experiment.enrollment !== undefined || experiment.consentCategory !== undefined),
+    );
+}
+
 /** Append one `Set-Cookie` header without clobbering cookies set earlier in the request. */
 function appendSetCookie(reply: ServerResponseFastifyReply, serialized: string): void {
     const existing = reply.raw.getHeader('Set-Cookie');
@@ -60,7 +80,11 @@ function appendSetCookie(reply: ServerResponseFastifyReply, serialized: string):
  * When the response is personalized (a variant is assigned or a cookie is minted)
  * it is marked `Cache-Control: private, no-store` so a shared cache/CDN can't serve
  * one visitor's variant — or a single minted session id — to everyone. Without this
- * an upstream cache keyed on the URL would collapse the whole experiment.
+ * an upstream cache keyed on the URL would collapse the whole experiment. The same
+ * header is applied to *baseline* responses while any enrollment- or consent-gated
+ * experiment is active (see {@link rulesetSplitsPopulation}): those experiments make
+ * personalized and baseline visitors share URLs, and a cached baseline would be served
+ * to enrolled visitors, masking their stored assignment.
  *
  * @param rulesetOverride test seam — defaults to the active {@link defaultRulesetProvider}.
  *   Read per call so a future provider with a live (background-synced) cache is picked up.
@@ -88,6 +112,8 @@ export function applyExperiments(
     const { assignments, cookieDirectives } = assignExperiments(request.raw, ruleset, {
         secure,
         resolveConsent: (category) => resolveConsent(request.raw, category),
+        // Raw request path (query stripped) for the first-touch `enrollment` gate.
+        requestPath: request.raw.url?.split('?')[0],
     });
 
     // Only attach `experiments` when something was actually assigned — keeps the
@@ -102,7 +128,7 @@ export function applyExperiments(
 
     // The response now varies per visitor (a resolved variant) or carries a freshly
     // minted session id — either way it must not be shared-cached.
-    if (Object.keys(assignments).length > 0 || cookieDirectives.length > 0) {
+    if (Object.keys(assignments).length > 0 || cookieDirectives.length > 0 || rulesetSplitsPopulation(ruleset)) {
         reply.raw.setHeader('Cache-Control', 'private, no-store');
     }
 }

@@ -53,7 +53,7 @@ describe('experiments/assign', () => {
     });
 
     describe('returning visit (cookies present)', () => {
-        it('reuses the existing session id and variant, emitting no new cookies', () => {
+        it('reuses the existing session id and variant, refreshing the assignment cookie (sliding TTL)', () => {
             const first = assignExperiments(request(), ruleset);
             const sessionId = first.sessionId;
             const variant = first.assignments['homepage-hero'];
@@ -62,7 +62,10 @@ describe('experiments/assign', () => {
 
             expect(second.sessionId).to.equal(sessionId);
             expect(second.assignments).to.deep.equal(first.assignments);
-            expect(second.cookieDirectives).to.have.length(0);
+            const refreshed = findDirective(second, AB_COOKIE);
+            expect(refreshed?.value).to.equal(variant);
+            expect(refreshed?.options.maxAge).to.be.greaterThan(0);
+            expect(findDirective(second, SESSION_COOKIE)).to.equal(undefined);
         });
 
         it('is stable across many re-evaluations of the same session', () => {
@@ -246,14 +249,152 @@ describe('experiments/assign', () => {
             expect(expire?.options.maxAge).to.equal(0);
         });
 
-        it('leaves the cookie of a live assignment untouched (no spurious expiry)', () => {
+        it('refreshes (never expires) the cookie of a live assignment', () => {
             const seed = assignExperiments(request(), ruleset);
             const variant = seed.assignments['homepage-hero'];
             const result = assignExperiments(
                 request({ [SESSION_COOKIE]: seed.sessionId, [AB_COOKIE]: variant }),
                 ruleset,
             );
-            expect(findDirective(result, AB_COOKIE)).to.equal(undefined);
+            const directive = findDirective(result, AB_COOKIE);
+            expect(directive?.value).to.equal(variant);
+            expect(directive?.options.maxAge).to.be.greaterThan(0);
+        });
+    });
+
+    describe('first-touch enrollment gate', () => {
+        const gatedRuleset: Ruleset = {
+            'homepage-hero': {
+                status: 'active',
+                variants: ruleset['homepage-hero'].variants,
+                enrollment: { paths: ['/sample-nodejs'] },
+            },
+        };
+
+        it('does not enroll a new visitor outside the enrollment paths — no assignment, no cookies at all', () => {
+            const result = assignExperiments(request(), gatedRuleset, { requestPath: '/hosting/plans' });
+
+            expect(result.assignments).to.deep.equal({});
+            expect(result.cookieDirectives).to.have.length(0);
+        });
+
+        it('enrolls a new visitor on an enrollment path and mints both cookies', () => {
+            const result = assignExperiments(request(), gatedRuleset, { requestPath: '/sample-nodejs/experiments' });
+
+            expect(result.assignments).to.have.property('homepage-hero');
+            expect(findDirective(result, AB_COOKIE)).to.not.equal(undefined);
+            expect(findDirective(result, SESSION_COOKIE)).to.not.equal(undefined);
+        });
+
+        it('honours an existing assignment on every route — participation never toggles with navigation', () => {
+            const seed = assignExperiments(request(), gatedRuleset, { requestPath: '/sample-nodejs' });
+            const variant = seed.assignments['homepage-hero'];
+
+            const elsewhere = assignExperiments(
+                request({ [SESSION_COOKIE]: seed.sessionId, [AB_COOKIE]: variant }),
+                gatedRuleset,
+                { requestPath: '/domains/search' },
+            );
+
+            expect(elsewhere.assignments['homepage-hero']).to.equal(variant);
+            const refreshed = findDirective(elsewhere, AB_COOKIE);
+            expect(refreshed?.value).to.equal(variant);
+            expect(refreshed?.options.maxAge).to.be.greaterThan(0);
+            expect(findDirective(elsewhere, SESSION_COOKIE)).to.equal(undefined);
+        });
+
+        it('fails closed (no enrollment, no throw) on a null enrollment value from untyped config', () => {
+            const broken = {
+                'homepage-hero': {
+                    status: 'active',
+                    variants: ruleset['homepage-hero'].variants,
+                    enrollment: null,
+                },
+            } as unknown as Ruleset;
+
+            const result = assignExperiments(request(), broken, { requestPath: '/sample-nodejs' });
+
+            expect(result.assignments).to.deep.equal({});
+            expect(result.cookieDirectives).to.have.length(0);
+        });
+
+        it('treats the "/" prefix as root-exact — homepage only, not everywhere', () => {
+            const rootGated: Ruleset = {
+                'homepage-hero': {
+                    status: 'active',
+                    variants: ruleset['homepage-hero'].variants,
+                    enrollment: { paths: ['/'] },
+                },
+            };
+
+            const home = assignExperiments(request(), rootGated, { requestPath: '/' });
+            const elsewhere = assignExperiments(request(), rootGated, { requestPath: '/domains' });
+            const doubleSlash = assignExperiments(request(), rootGated, { requestPath: '//domains' });
+
+            expect(home.assignments).to.have.property('homepage-hero');
+            expect(elsewhere.assignments).to.deep.equal({});
+            expect(doubleSlash.assignments).to.deep.equal({});
+        });
+
+        it('fails closed on an empty-string enrollment prefix (validation only warns)', () => {
+            const emptyPrefix: Ruleset = {
+                'homepage-hero': {
+                    status: 'active',
+                    variants: ruleset['homepage-hero'].variants,
+                    enrollment: { paths: [''] },
+                },
+            };
+
+            const result = assignExperiments(request(), emptyPrefix, { requestPath: '/anywhere' });
+
+            expect(result.assignments).to.deep.equal({});
+            expect(result.cookieDirectives).to.have.length(0);
+        });
+
+        it('matches path prefixes on segment boundaries only', () => {
+            const inside = assignExperiments(request(), gatedRuleset, { requestPath: '/sample-nodejs' });
+            const lookalike = assignExperiments(request(), gatedRuleset, { requestPath: '/sample-nodejs-evil' });
+
+            expect(inside.assignments).to.have.property('homepage-hero');
+            expect(lookalike.assignments).to.deep.equal({});
+        });
+
+        it('enrolls anywhere when the enrollment field is absent (back-compat)', () => {
+            const result = assignExperiments(request(), ruleset, { requestPath: '/anywhere' });
+
+            expect(result.assignments).to.have.property('homepage-hero');
+        });
+
+        it('fails closed for new visitors when requestPath is not provided', () => {
+            const result = assignExperiments(request(), gatedRuleset);
+
+            expect(result.assignments).to.deep.equal({});
+            expect(result.cookieDirectives).to.have.length(0);
+        });
+
+        it('sweeps a tampered cookie outside enrollment paths without re-enrolling', () => {
+            const result = assignExperiments(
+                request({ [SESSION_COOKIE]: 'sid-1', [AB_COOKIE]: 'not-a-variant' }),
+                gatedRuleset,
+                { requestPath: '/domains' },
+            );
+
+            expect(result.assignments).to.deep.equal({});
+            const expire = findDirective(result, AB_COOKIE);
+            expect(expire?.options.maxAge).to.equal(0);
+        });
+
+        it('gates experiments independently in a mixed ruleset', () => {
+            const mixed: Ruleset = {
+                ...gatedRuleset,
+                'global-exp': { status: 'active', variants: ruleset['homepage-hero'].variants },
+            };
+
+            const result = assignExperiments(request(), mixed, { requestPath: '/domains' });
+
+            expect(result.assignments).to.not.have.property('homepage-hero');
+            expect(result.assignments).to.have.property('global-exp');
+            expect(findDirective(result, SESSION_COOKIE)).to.not.equal(undefined);
         });
     });
 });
