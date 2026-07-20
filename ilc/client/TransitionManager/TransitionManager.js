@@ -172,7 +172,6 @@ export class TransitionManager {
         const clonedNode = targetNode.cloneNode(true);
 
         clonedNode.removeAttribute('id');
-        clonedNode.removeAttribute('class');
         clonedNode.style.display = ''; // reset "display" in case if renderFakeSlot is run after addContentListener (slotWillBe.rendered and then slotWillBe.removed). Since we hide (set display: none) original DOM-node inside addContentListener.
 
         this.#fakeSlots.push(clonedNode);
