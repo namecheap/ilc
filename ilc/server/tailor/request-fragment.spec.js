@@ -67,7 +67,6 @@ describe('request-fragment', () => {
         const expectedAppProps = { publicPath: 'http://apps.test/primary' };
         const expectedSdkOptions = { i18n: { manifestPath: '/l10n/primary/manifest.json' } };
 
-        const expectedDomain = request.host;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
         const expectedSdkEncoded = Buffer.from(JSON.stringify(expectedSdkOptions)).toString('base64');
@@ -75,7 +74,6 @@ describe('request-fragment', () => {
         const mockRequestScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/primary')
             .query({
-                domain: expectedDomain,
                 routerProps: expectedRouterPropsEncoded,
                 appProps: expectedAppPropsEncoded,
                 sdk: expectedSdkEncoded,
@@ -128,7 +126,6 @@ describe('request-fragment', () => {
         const expectedAppProps = { param1: 'value1' };
         const wrappedAppProps = { page: 'wrapped' };
 
-        const expectedDomain = request.host;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
         const expectedWrappedAppPropsEncoded = Buffer.from(JSON.stringify(wrappedAppProps)).toString('base64');
@@ -136,7 +133,6 @@ describe('request-fragment', () => {
         const mockRequestScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/wrapper')
             .query({
-                domain: expectedDomain,
                 routerProps: expectedRouterPropsEncoded,
                 appProps: expectedAppPropsEncoded,
                 wrappedProps: expectedWrappedAppPropsEncoded,
@@ -190,7 +186,6 @@ describe('request-fragment', () => {
         const wrapperPropsOverride = { param2: 'value2' };
         const wrappedAppProps = { page: 'wrapped' };
 
-        const expectedDomain = request.host;
         const expectedWrapperRouterPropsEncoded = Buffer.from(JSON.stringify(expectedWrapperRouterProps)).toString(
             'base64',
         );
@@ -201,7 +196,6 @@ describe('request-fragment', () => {
         const mockRequestWrapperScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/wrapper')
             .query({
-                domain: expectedDomain,
                 routerProps: expectedWrapperRouterPropsEncoded,
                 appProps: expectedWrapperAppPropsEncoded,
                 wrappedProps: expectedWrappedAppPropsEncoded,
@@ -228,7 +222,6 @@ describe('request-fragment', () => {
         })
             .get('/wrappedApp')
             .query({
-                domain: expectedDomain,
                 routerProps: expectedWrappedAppRouterPropsEncoded,
                 appProps: expectedWrappedAppAppPropsEncoded,
             })
@@ -275,7 +268,6 @@ describe('request-fragment', () => {
         const expectedAppProps = { publicPath: 'http://apps.test/primary' };
         const expectedSdkOptions = { i18n: { manifestPath: '/l10n/primary/manifest.json' } };
 
-        const expectedDomain = request.host;
         const expectedRouterPropsEncoded = Buffer.from(JSON.stringify(expectedRouterProps)).toString('base64');
         const expectedAppPropsEncoded = Buffer.from(JSON.stringify(expectedAppProps)).toString('base64');
         const expectedSdkEncoded = Buffer.from(JSON.stringify(expectedSdkOptions)).toString('base64');
@@ -283,7 +275,6 @@ describe('request-fragment', () => {
         const mockRequestScope = nock('http://apps.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/primary')
             .query({
-                domain: expectedDomain,
                 routerProps: expectedRouterPropsEncoded,
                 appProps: expectedAppPropsEncoded,
                 sdk: expectedSdkEncoded,
