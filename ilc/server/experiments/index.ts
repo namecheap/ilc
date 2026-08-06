@@ -12,8 +12,8 @@ export { setConsentResolver } from './consent';
 export type { ConsentResolver, ConsentRequest } from './consent';
 
 // Public surface: the onRequest hook calls `applyExperiments`. The ruleset comes from a
-// swappable source ({@link RulesetProvider}) — currently a static-JSON config layer, with
-// a remote experiment-management service as a later direction; the kill-switch stays config-driven
+// swappable source ({@link RulesetProvider}) — an `experimentsRuleset` plugin when the deployment
+// installs one, otherwise the static-JSON config layer; the kill-switch stays config-driven
 // (see `ruleset.ts`). Lower-level helpers (assign/bucket) stay module-private, imported by their specs.
 export { ruleset, experimentsEnabled, defaultRulesetProvider } from './ruleset';
 export type { Experiment, ExperimentAssignments, Ruleset, RulesetProvider } from './interfaces';

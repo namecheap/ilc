@@ -122,8 +122,35 @@ Per-experiment knobs:
 `validateRuleset()` reports authoring mistakes (weights ≠ 100, a zero-weight/unreachable
 variant, duplicate names, non-numeric/negative weights, an unknown `status`, a
 cookie-unsafe id, or a malformed `enrollment` gate) without ever blocking startup. The ruleset source sits behind a small
-`RulesetProvider` seam (`ruleset.ts`) — today a static config layer, so it can later move
-to a managed experiment service without touching the assignment code.
+`RulesetProvider` seam (`ruleset.ts`), so where the definitions come from is independent
+of how they are evaluated.
+
+### Supplying the ruleset from a plugin
+
+Configuration is not the only source. A deployment that manages experiments elsewhere — a
+management UI, a service, anything with a lifecycle of its own — can install an
+`experimentsRuleset` plugin built with the
+[ILC plugins SDK](https://github.com/namecheap/ilc-plugins-sdk){: target=\_blank} :octicons-link-external-16:
+and have ILC evaluate the ruleset that plugin supplies instead:
+
+```typescript
+import { ExperimentsRulesetPlugin } from 'ilc-plugins-sdk';
+
+const plugin: ExperimentsRulesetPlugin = {
+    type: 'experimentsRuleset',
+    getRuleset: () => cachedRuleset,
+};
+```
+
+`getRuleset()` is called while a request is being resolved and is synchronous, so a plugin
+must answer from memory and never perform I/O: keep the in-memory copy fresh out-of-band
+(polling or SSE) and serve every call from it.
+
+The plugin takes over only while it actually supplies experiments. An empty ruleset means
+"nothing supplied", and ILC then reads `experiments.ruleset` from configuration — which is
+what happens with no plugin installed, and also what keeps a plugin that has not filled its
+copy yet from switching every experiment off at once. A plugin that throws is treated the
+same way, so a page always renders.
 
 ---
 
@@ -238,7 +265,7 @@ that while a gated experiment runs.
 | `consent.ts`            | Vendor-neutral consent-resolver seam.                                                    |
 | `cookies.ts`            | Cookie names + options (does not write cookies).                                         |
 | `validate.ts`           | Ruleset sanity checks (advisory, never throws).                                          |
-| `ruleset.ts` / provider | Loads the ruleset behind a swappable `RulesetProvider` + the kill-switch.                |
+| `ruleset.ts` / provider | Resolves the ruleset source (plugin, else config) + the kill-switch.                     |
 | `index.ts`              | `applyExperiments(request, reply)` — writes `ilcState.experiments` and `Set-Cookie`.     |
 | `interfaces.ts`         | Shared types.                                                                            |
 
