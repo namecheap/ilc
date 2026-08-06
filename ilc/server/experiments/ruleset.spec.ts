@@ -74,10 +74,25 @@ describe('experiments/ruleset', () => {
             expect(provider.getRuleset()).to.be.equals(configRuleset);
         });
 
-        it('reads the config layer when the plugin supplies an empty ruleset', () => {
-            // What the SDK's default plugin returns when nothing is installed — and also how a
-            // plugin that has not filled its copy yet looks. Neither should switch experiments off.
-            const provider = createRulesetProvider(() => ({ getRuleset: () => ({}) }), configLayer);
+        it('honours a deliberately empty ruleset instead of falling back', () => {
+            // The distinction the plugin contract exists to preserve, and the one place where the
+            // conservative reading would be wrong. A remote source may publish an empty ruleset in
+            // order to switch every experiment off at once; reading that as "the plugin has no
+            // answer" would fall back to the configuration layer and turn them all back on.
+            const emptyOnPurpose = {};
+            const provider = createRulesetProvider(() => ({ getRuleset: () => emptyOnPurpose }), configLayer);
+
+            expect(provider.getRuleset()).to.be.equals(emptyOnPurpose);
+            expect(provider.getRuleset()).to.not.be.equals(configRuleset);
+        });
+
+        it('reads the config layer when the plugin offers nothing', () => {
+            // `undefined` is how the SDK's default plugin answers when nothing is installed, and how a
+            // plugin that has not filled its copy yet — or that lost its source — reports it.
+            const provider = createRulesetProvider(
+                () => ({ getRuleset: () => undefined as unknown as Ruleset }),
+                configLayer,
+            );
 
             expect(provider.getRuleset()).to.be.equals(configRuleset);
         });

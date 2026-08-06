@@ -51,12 +51,16 @@ function pluginRulesetProvider(): RulesetProvider | undefined {
 /**
  * Chain a plugin-supplied ruleset source in front of a fallback one.
  *
- * The plugin wins only while it actually supplies experiments. An empty result means "nothing
- * supplied" — which is precisely what the SDK's default returns when no plugin of that type is
- * installed — so the fallback stays in charge and installing the plugin type changes nothing on
- * its own. The same rule protects a live deployment: a plugin that has not filled its copy yet,
- * or lost its source, hands back an empty ruleset rather than a populated one, and turning every
- * experiment off at once is never the safer reading of that.
+ * The plugin wins whenever it has an answer. `undefined` means "nothing to offer" — it has not filled
+ * its copy yet, or it has lost its source — and that is what the SDK's default returns when no plugin
+ * of that type is installed, so the fallback stays in charge and installing the plugin type changes
+ * nothing on its own.
+ *
+ * An EMPTY ruleset is NOT "nothing to offer" and is honoured as given. That distinction is deliberate
+ * and load-bearing: a remote source may publish an empty ruleset precisely in order to switch every
+ * experiment off at once, and treating that as "the plugin has no answer" would fall back to the
+ * configuration layer and turn them all back on — the exact opposite of what the operator asked for.
+ * A plugin that cannot serve says `undefined`; a plugin saying "no experiments" says `{}`.
  *
  * Both failure modes are contained here rather than left to the caller, because `getRuleset()` is
  * on the request path: whatever a plugin does, a page still renders with the fallback ruleset.
@@ -77,7 +81,7 @@ export function createRulesetProvider(
                 try {
                     const supplied = plugin.getRuleset();
 
-                    if (isNonEmptyRuleset(supplied)) {
+                    if (isRuleset(supplied)) {
                         return supplied;
                     }
                 } catch (error) {
@@ -96,13 +100,15 @@ export function createRulesetProvider(
 }
 
 /**
- * A ruleset with something in it. Guards the shape as well as the size: a plugin is ordinary
- * deployment code, so it may hand back `undefined` or a non-object, and neither is a ruleset.
- * A well-shaped ruleset carrying malformed *experiments* deliberately passes through — the
- * assignment layer already tolerates those, and `validateRuleset` reports them.
+ * Whether a plugin gave us a ruleset at all. Guards the SHAPE, not the size: an empty ruleset is a
+ * legitimate answer (see `createRulesetProvider`), while `undefined` and a non-object are not rulesets.
+ * A plugin is ordinary deployment code and may hand back either.
+ *
+ * A well-shaped ruleset carrying malformed *experiments* deliberately passes through — the assignment
+ * layer already tolerates those, and `validateRuleset` reports them.
  */
-function isNonEmptyRuleset(value: Ruleset | undefined): value is Ruleset {
-    return typeof value === 'object' && value !== null && Object.keys(value).length > 0;
+function isRuleset(value: Ruleset | undefined): value is Ruleset {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
