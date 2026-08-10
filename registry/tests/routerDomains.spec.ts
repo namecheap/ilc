@@ -573,8 +573,10 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(200);
 
-                const response = await req.delete(example.url + domainId).expect(500);
-                expect(response.text).to.include('FOREIGN KEY constraint failed');
+                const response = await req.delete(example.url + domainId).expect(409);
+                expect(response.text).to.equal(
+                    'Unable to delete router domain: it is referenced by 1 route(s). Remove or reassign them first.',
+                );
 
                 await req.delete('/api/v1/route/' + responseRoute.body.id);
 
@@ -584,6 +586,52 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 await req.delete('/api/v1/app/' + encodeURIComponent(appName));
             }
+        });
+
+        it('should not delete record if an app enforces the domain', async () => {
+            const appName = '@portal/ncTestAppEnforceDomain';
+            let domainId;
+
+            try {
+                const responseRouterDomains = await req.post(example.url).send(example.correct).expect(200);
+                domainId = responseRouterDomains.body.id;
+
+                await req
+                    .post('/api/v1/app/')
+                    .send({
+                        name: appName,
+                        spaBundle: 'http://localhost:1234/ncTestAppEnforceDomain.js',
+                        kind: 'primary',
+                        enforceDomain: domainId,
+                    })
+                    .expect(200);
+
+                const response = await req.delete(example.url + domainId).expect(409);
+                expect(response.text).to.equal(
+                    'Unable to delete router domain: it is referenced by 1 app(s) via "enforceDomain". Remove or reassign them first.',
+                );
+            } finally {
+                await req.delete('/api/v1/app/' + encodeURIComponent(appName));
+                domainId && (await req.delete(example.url + domainId).expect(204, ''));
+            }
+        });
+
+        it('should delete record along with its domain-scoped setting values', async () => {
+            const responseRouterDomains = await req.post(example.url).send(example.correct).expect(200);
+            const domainId = responseRouterDomains.body.id;
+
+            await req
+                .post('/api/v1/settings/')
+                .send({
+                    key: 'cspConfig',
+                    domainId,
+                    value: JSON.stringify({ defaultSrc: ['https://test.com'], reportUri: 'a/b' }),
+                })
+                .expect(200);
+
+            await req.delete(example.url + domainId).expect(204, '');
+
+            await req.get(example.url + domainId).expect(404, 'Not found');
         });
 
         it('should successfully delete record', async () => {

@@ -246,10 +246,9 @@ export class SettingsService {
 
         let savedSettingId: number | undefined;
         await db.versioning(user, { type: 'settings_domain_value' }, async (trx) => {
-            const result = await db('settings_domain_value').insert(
-                { key: settingKey, value: stringified, domainId },
-                'id',
-            );
+            const result = await db('settings_domain_value')
+                .insert({ key: settingKey, value: stringified, domainId }, 'id')
+                .transacting(trx);
             savedSettingId = extractInsertedId(result);
             return savedSettingId;
         });

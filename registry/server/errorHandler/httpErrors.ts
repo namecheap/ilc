@@ -10,6 +10,10 @@ export const NotFoundError = extendError('NotFoundError', {
     parent: HttpError,
     defaultData: {},
 });
+export const ConflictError = extendError('ConflictError', {
+    parent: HttpError,
+    defaultData: {},
+});
 export const DBError = extendError('DBError', { defaultData: {} });
 export const ForeignConstraintError = extendError('ForeignConstraintError', {
     defaultMessage: 'FOREIGN KEY constraint failed',

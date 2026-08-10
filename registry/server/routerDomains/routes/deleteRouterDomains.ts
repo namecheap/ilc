@@ -21,10 +21,43 @@ const validateRequest = validateRequestFactory([
 ]);
 
 const deleteRouterDomains = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    await db.versioning(req.user, { type: 'router_domains', id: req.params.id }, async (trx) => {
+    const domainId = req.params.id;
+
+    await db.versioning(req.user, { type: 'router_domains', id: domainId }, async (trx) => {
+        const [[routes], [apps]] = await Promise.all([
+            db
+                .from<{ count: string | number }>('routes')
+                .where('domainId', domainId)
+                .count('id as count')
+                .transacting(trx),
+            db
+                .from<{ count: string | number }>('apps')
+                .where('enforceDomain', domainId)
+                .count('name as count')
+                .transacting(trx),
+        ]);
+
+        const routesCount = Number(routes.count);
+        const appsCount = Number(apps.count);
+
+        if (routesCount || appsCount) {
+            const usedBy = [
+                routesCount && `${routesCount} route(s)`,
+                appsCount && `${appsCount} app(s) via "enforceDomain"`,
+            ]
+                .filter(Boolean)
+                .join(' and ');
+
+            throw new httpErrors.ConflictError({
+                message: `Unable to delete router domain: it is referenced by ${usedBy}. Remove or reassign them first.`,
+            });
+        }
+
         let count;
         try {
-            count = await db('router_domains').where('id', req.params.id).delete().transacting(trx);
+            // Domain-scoped setting values are meaningless without the domain, so they are removed along with it
+            await db('settings_domain_value').where('domainId', domainId).delete().transacting(trx);
+            count = await db('router_domains').where('id', domainId).delete().transacting(trx);
         } catch (e: any) {
             handleForeignConstraintError(e);
             throw new httpErrors.DBError({ message: e.message });
