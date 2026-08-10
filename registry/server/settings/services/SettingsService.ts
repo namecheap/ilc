@@ -128,6 +128,7 @@ export class SettingsService {
             .select()
             .from<SettingRaw, SettingRaw[]>('settings')
             .where(whereCond)
+            .orderBy('settings.key', 'asc')
             .range(options.range);
 
         settings.data = options.allowedForDomains
@@ -150,6 +151,7 @@ export class SettingsService {
             .select<
                 SettingRaw[]
             >('settings.key', 'settings.default', 'settings.scope', 'settings.secret', 'settings.meta', 'settings_domain_value.value as value', 'settings_domain_value.domainId as domainId')
+            .orderBy('settings.key', 'asc')
             .range(options.range);
 
         const parsedSettings = this.parseSettings(settings.data);
@@ -185,6 +187,7 @@ export class SettingsService {
                 'domainId',
             )
             .andWhere(whereCond)
+            .orderBy('settings.key', 'asc')
             .range(options.range);
 
         const settingsData = settings.data.map((item) => {
@@ -246,10 +249,9 @@ export class SettingsService {
 
         let savedSettingId: number | undefined;
         await db.versioning(user, { type: 'settings_domain_value' }, async (trx) => {
-            const result = await db('settings_domain_value').insert(
-                { key: settingKey, value: stringified, domainId },
-                'id',
-            );
+            const result = await db('settings_domain_value')
+                .insert({ key: settingKey, value: stringified, domainId }, 'id')
+                .transacting(trx);
             savedSettingId = extractInsertedId(result);
             return savedSettingId;
         });

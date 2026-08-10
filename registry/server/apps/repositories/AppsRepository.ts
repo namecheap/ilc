@@ -31,6 +31,8 @@ export class AppsRepository {
         this.addFilterByQuery(query, filters);
         this.addFilterByDomainId(query, filters);
 
+        query.orderBy(`${Tables.Apps}.name`, 'asc');
+
         const apps = await query.range(options.range as string | undefined);
         const itemsWithId = apps.data.map((item: any) => {
             return {

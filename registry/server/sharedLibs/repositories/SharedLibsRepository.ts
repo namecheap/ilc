@@ -24,7 +24,8 @@ export class SharedLibsRepository {
 
         const query = db
             .selectVersionedRows(Tables.SharedLibs, 'name', EntityTypes.shared_libs, [`${Tables.SharedLibs}.*`])
-            .from(Tables.SharedLibs);
+            .from(Tables.SharedLibs)
+            .orderBy(`${Tables.SharedLibs}.name`, 'asc');
 
         if (filters?.name) {
             query.whereLike(`${Tables.SharedLibs}.name`, `%${filters.name}%`);

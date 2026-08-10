@@ -17,6 +17,11 @@ async function errorHandler(error: Error, req: Request, res: Response, next: Nex
         return;
     }
 
+    if (error instanceof httpErrors.ConflictError) {
+        res.status(409).send(error.message);
+        return;
+    }
+
     if (error instanceof httpErrors.UnprocessableContent) {
         res.status(422).send(error.message);
         return;

@@ -9,7 +9,8 @@ import { EntityTypes } from '../../versioning/interfaces';
 const getSharedProps = async (req: Request, res: Response): Promise<void> => {
     let sharedProps = await db
         .selectVersionedRows(Tables.AuthEntities, 'id', EntityTypes.auth_entities, [`${Tables.AuthEntities}.*`])
-        .from(Tables.AuthEntities);
+        .from(Tables.AuthEntities)
+        .orderBy(`${Tables.AuthEntities}.id`, 'asc');
     sharedProps = sharedProps.map((v) => {
         v.versionId = appendDigest(v.versionId, 'authEntities');
         delete v.secret;

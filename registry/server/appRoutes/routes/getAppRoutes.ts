@@ -16,7 +16,8 @@ const getAppRoutes = async (req: Request, res: Response) => {
             'routes.id as routeId',
             'routes.*',
         ])
-        .orderBy('orderPos', 'ASC');
+        .orderBy('orderPos', 'ASC')
+        .orderBy('routes.id', 'ASC');
 
     if (filters.showSpecial === true) {
         query.where('routes.route', 'like', `${SPECIAL_PREFIX}%`);
