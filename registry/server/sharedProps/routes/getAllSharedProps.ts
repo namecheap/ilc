@@ -8,12 +8,11 @@ import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 
 const getSharedProps = async (req: Request, res: Response): Promise<void> => {
-    const sharedProps = await db.selectVersionedRowsFrom<SharedProps>(
-        Tables.SharedProps,
-        'name',
-        EntityTypes.shared_props,
-        [`${Tables.SharedProps}.*`],
-    );
+    const sharedProps = await db
+        .selectVersionedRowsFrom<SharedProps>(Tables.SharedProps, 'name', EntityTypes.shared_props, [
+            `${Tables.SharedProps}.*`,
+        ])
+        .orderBy(`${Tables.SharedProps}.name`, 'asc');
     const sharedPropsWithId = sharedProps.map((item) => {
         return { ...item, versionId: appendDigest(item.versionId, 'sharedProp') };
     });

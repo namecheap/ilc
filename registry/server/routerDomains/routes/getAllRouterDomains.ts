@@ -9,7 +9,8 @@ import { EntityTypes } from '../../versioning/interfaces';
 const getAllRouterDomains = async (req: Request, res: Response): Promise<void> => {
     const query = db
         .selectVersionedRows(Tables.RouterDomains, 'id', EntityTypes.router_domains, [`${Tables.RouterDomains}.*`])
-        .from(Tables.RouterDomains);
+        .from(Tables.RouterDomains)
+        .orderBy(`${Tables.RouterDomains}.id`, 'asc');
     const routerDomains = await query.range(req.query.range as string | undefined);
     const itemsWithId = routerDomains.data.map((item: any) => {
         return { ...item, versionId: appendDigest(item.versionId, 'routerDomains') };
