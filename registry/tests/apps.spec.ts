@@ -392,6 +392,36 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should return records in a stable order regardless of modifications', async () => {
+            try {
+                for (const app of [...example.appsList].reverse()) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+
+                // on PostgreSQL an update relocates the row within the table,
+                // which changes the natural scan order
+                await req
+                    .put(example.url + example.appsList[0].name)
+                    .send(
+                        _.omit(
+                            { ...example.appsList[0], spaBundle: 'https://app-0.com/spa-bundle-updated.js' },
+                            'name',
+                        ),
+                    )
+                    .expect(200);
+
+                const response = await req.get(example.url).expect(200);
+
+                expect(response.body.map((app: any) => app.name)).to.deep.equal(
+                    example.appsList.map((app) => app.name),
+                );
+            } finally {
+                for (const app of example.appsList) {
+                    await req.delete(example.url + app.name);
+                }
+            }
+        });
+
         it('should successfully return records filtered by name', async () => {
             try {
                 for (const app of example.appsList) {
