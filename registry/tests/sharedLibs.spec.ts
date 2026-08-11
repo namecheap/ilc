@@ -235,6 +235,29 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should return records in a stable order regardless of modifications', async () => {
+            try {
+                for (const lib of [...example.libsList].reverse()) {
+                    await req.post(example.url).send(lib).expect(200);
+                }
+
+                // on PostgreSQL an update relocates the row within the table,
+                // which changes the natural scan order
+                await req
+                    .put(example.url + example.libsList[0].name)
+                    .send(_.omit({ ...example.libsList[0], spaBundle: 'https://example.com/lib0-updated.js' }, 'name'))
+                    .expect(200);
+
+                const { body: records } = await req.get(example.url).expect(200);
+
+                expect(records.map((lib: any) => lib.name)).to.deep.equal(example.libsList.map((lib) => lib.name));
+            } finally {
+                for (const lib of example.libsList) {
+                    await req.delete(example.url + lib.name).expect(204, '');
+                }
+            }
+        });
+
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
                 await reqWithAuth.get(example.url).expect(401);

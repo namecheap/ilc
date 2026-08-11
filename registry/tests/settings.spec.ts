@@ -212,6 +212,36 @@ describe(url, () => {
             });
         });
 
+        it('should return settings in a stable order regardless of modifications', async () => {
+            const responseBefore = await req.get(url).expect(200);
+            const keysBefore = (responseBefore.body as any[]).map((setting) => setting.key);
+
+            try {
+                // on PostgreSQL an update relocates the row within the table,
+                // which changes the natural scan order
+                await req
+                    .put(urlJoin(url, SettingKeys.BaseUrl))
+                    .send({
+                        key: SettingKeys.BaseUrl,
+                        value: 'http://stable-order.com',
+                    })
+                    .expect(200);
+
+                const responseAfter = await req.get(url).expect(200);
+                const keysAfter = (responseAfter.body as any[]).map((setting) => setting.key);
+
+                chai.expect(keysAfter).to.deep.equal(keysBefore);
+            } finally {
+                await req
+                    .put(urlJoin(url, SettingKeys.BaseUrl))
+                    .send({
+                        key: SettingKeys.BaseUrl,
+                        value: 'http://localhost:4001/',
+                    })
+                    .expect(200);
+            }
+        });
+
         it('should return a setting and exclude a value from a secret record', async () => {
             const response = await req.get(urlJoin('/api/v1/settings', SettingKeys.AuthOpenIdClientSecret)).expect(200);
 
