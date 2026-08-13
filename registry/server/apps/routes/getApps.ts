@@ -2,7 +2,9 @@ import { Response } from 'express';
 import Joi from 'joi';
 
 import preProcessResponse from '../../common/services/preProcessResponse';
+import { markProtected } from '../../common/services/protectedEntities';
 import { filtersMiddleware, RequestWithFilters } from '../../middleware/filters';
+import { EntityTypes } from '../../versioning/interfaces';
 import { AppsGetListFilters, appsRepository } from '../repositories/AppsRepository';
 
 const filtersSchema = Joi.object<AppsGetListFilters>({
@@ -22,7 +24,7 @@ const getApps = async (req: RequestWithFilters<AppsGetListFilters>, res: Respons
     });
 
     res.setHeader('Content-Range', pagination.total); //Stub for future pagination capabilities
-    res.status(200).send(preProcessResponse(data));
+    res.status(200).send(preProcessResponse(markProtected(EntityTypes.apps, data)));
 };
 
 export default [filtersMiddleware(filtersSchema), getApps];

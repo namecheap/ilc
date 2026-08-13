@@ -3,6 +3,7 @@ import Joi from 'joi';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
+import { markProtected } from '../../common/services/protectedEntities';
 import validateRequestFactory from '../../common/services/validateRequest';
 import SharedProps from '../interfaces';
 import { Tables } from '../../db/structure';
@@ -34,7 +35,7 @@ const getSharedProps = async (req: Request<RequestParams>, res: Response): Promi
     } else {
         delete record.secret;
         record.versionId = appendDigest(record.versionId, 'authEntities');
-        res.status(200).send(preProcessResponse(record));
+        res.status(200).send(preProcessResponse(markProtected(EntityTypes.auth_entities, record)));
     }
 };
 

@@ -1,23 +1,12 @@
 import React from 'react';
 import { useMediaQuery } from '@material-ui/core';
-import {
-    Datagrid,
-    List,
-    SimpleList,
-    TextField,
-    EditButton,
-} from 'react-admin'; // eslint-disable-line import/no-unresolved
-import {
-    Empty,
-    ListActionsToolbar,
-    ListBulkActions,
-    RemovePagination,
-} from '../components';
+import { Datagrid, List, SimpleList, TextField } from 'react-admin'; // eslint-disable-line import/no-unresolved
+import { Empty, ListActionsToolbar, ListBulkActions, ProtectedEditButton, RemovePagination } from '../components';
 
-const PostList = props => {
+const PostList = (props) => {
     const { permissions } = props;
 
-    const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
+    const isSmall = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     return (
         <List
@@ -29,14 +18,12 @@ const PostList = props => {
             empty={<Empty />}
         >
             {isSmall ? (
-                <SimpleList
-                    primaryText={record => record.name}
-                />
+                <SimpleList primaryText={(record) => record.name} />
             ) : (
                 <Datagrid rowClick="show" optimized>
                     <TextField source="name" />
                     <ListActionsToolbar>
-                        <EditButton />
+                        <ProtectedEditButton />
                     </ListActionsToolbar>
                 </Datagrid>
             )}

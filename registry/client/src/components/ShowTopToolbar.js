@@ -10,7 +10,7 @@ export default ({ basePath, data }) => {
 
     return (
         <TopToolbar>
-            <EditButton basePath={basePath} record={data} />
+            <EditButton basePath={basePath} record={data} disabled={!!(data && data.protected)} />
         </TopToolbar>
     );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useMediaQuery } from '@material-ui/core';
-import { Datagrid, List, SimpleList, TextField, EditButton, FunctionField } from 'react-admin';
-import { Empty, ListBulkActions, ListActionsToolbar } from '../components';
+import { Datagrid, List, SimpleList, TextField, FunctionField } from 'react-admin';
+import { Empty, ListBulkActions, ListActionsToolbar, ProtectedEditButton } from '../components';
 import { ListFilter } from './ListFilter';
 import { getPrefixedSharedLibName } from './getPrefixedSharedLibName';
 
@@ -30,7 +30,7 @@ const PostList = (props) => {
                     <FunctionField label="Name" render={(record) => getPrefixedSharedLibName(record.name)} />
                     <TextField source="spaBundle" />
                     <ListActionsToolbar>
-                        <EditButton />
+                        <ProtectedEditButton />
                     </ListActionsToolbar>
                 </Datagrid>
             )}
