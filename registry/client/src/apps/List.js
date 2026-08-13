@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useMediaQuery } from '@material-ui/core';
-import { Datagrid, List, SimpleList, TextField, ChipField, ReferenceField, EditButton } from 'react-admin';
-import { Empty, ListBulkActions, ListActionsToolbar } from '../components';
+import { Datagrid, List, SimpleList, TextField, ChipField, ReferenceField } from 'react-admin';
+import { Empty, ListBulkActions, ListActionsToolbar, ProtectedEditButton } from '../components';
 import { ListFilter } from './ListFilter';
 import dataProvider from '../dataProvider';
 
@@ -51,7 +51,7 @@ const PostList = (props) => {
                         <TextField source="domainName" />
                     </ReferenceField>
                     <ListActionsToolbar>
-                        <EditButton />
+                        <ProtectedEditButton />
                     </ListActionsToolbar>
                 </Datagrid>
             )}

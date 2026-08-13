@@ -3,6 +3,7 @@ import Joi from 'joi';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
+import { markProtected } from '../../common/services/protectedEntities';
 import validateRequestFactory from '../../common/services/validateRequest';
 import { appNameSchema } from '../interfaces';
 import { Tables } from '../../db/structure';
@@ -32,7 +33,7 @@ const getApp = async (req: Request<GetAppRequestParams>, res: Response): Promise
         res.status(404).send('Not found');
     } else {
         app.versionId = appendDigest(app.versionId, 'app');
-        res.status(200).send(preProcessResponse(app));
+        res.status(200).send(preProcessResponse(markProtected(EntityTypes.apps, app)));
     }
 };
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useMediaQuery } from '@material-ui/core';
-import { Datagrid, List, SimpleList, TextField, ReferenceField, EditButton } from 'react-admin';
-import { Empty, ListBulkActions, ListActionsToolbar } from '../components';
+import { Datagrid, List, SimpleList, TextField, ReferenceField } from 'react-admin';
+import { Empty, ListBulkActions, ListActionsToolbar, ProtectedEditButton } from '../components';
 
 const PostList = (props) => {
     const { permissions } = props;
@@ -35,7 +35,7 @@ const PostList = (props) => {
                     <TextField source="canonicalDomain" sortable={false} emptyText="-" label="Canonical Domain" />
                     <TextField source="alias" sortable={false} emptyText="-" label="Alias" />
                     <ListActionsToolbar>
-                        <EditButton />
+                        <ProtectedEditButton />
                     </ListActionsToolbar>
                 </Datagrid>
             )}

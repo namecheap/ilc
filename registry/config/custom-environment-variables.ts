@@ -30,4 +30,5 @@ export default {
         },
     },
     protectedSettings: 'ILC_REGISTRY_ADMIN_PROTECTED_SETTINGS',
+    protectedEntities: 'ILC_REGISTRY_ADMIN_PROTECTED_ENTITIES',
 };
