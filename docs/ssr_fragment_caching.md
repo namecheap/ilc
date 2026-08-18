@@ -56,6 +56,12 @@ compliance risk. There is deliberately no automated way to detect "this fragment
 so the guarantee is layered:
 
 1. Caching is opt-in per app — **do not enable it for price-bearing fragments**.
+   Enabling it for a fragment that always refuses is not merely useless — it is **worse than leaving
+   it off**. A cold request then costs two renders instead of one: a shared probe that gets refused,
+   followed by the private render the user actually receives, because the probe was rendered without
+   the user's headers and cannot be served to them. The negative entry keeps it to one render per
+   request afterwards, but it expires after 60s, so the double render recurs roughly once a minute
+   per cache key for as long as the fragment stays opted in.
 2. A fragment team can protect itself regardless of Registry config by responding with
    `Cache-Control: no-store` — ILC honours it even when caching is enabled. A response that turns
    out non-cacheable (`no-store`/`private`/`set-cookie`) is never shared between users: every
@@ -172,6 +178,26 @@ A negative entry remembers the reason that produced it, so refusals replayed fro
 are not refusals: they surface as `error` and are rethrown.
 
 ## Operational validation
+
+### How many entries a deployment needs
+
+An entry exists per distinct cache key, and the key covers the fragment URL, the app id, the route
+(`basePath` plus the query-stripped `reqUrl`), `appProps`, the l10n manifest and the vary headers.
+Vary headers carry the host and `x-request-intl`, which encodes both locale and currency. So entry
+count grows as:
+
+```
+routes x cacheable fragments per route x hosts x locales x currencies
+```
+
+A shared layout fragment therefore occupies one entry **per route**, not one overall: it receives
+the route in `routerProps` and may legitimately render differently for each. Twenty routes with two
+cacheable fragments, five locales and three currencies already needs ~600 entries against the
+default `maxEntries` of 500.
+
+Exceeding either bound is visible rather than silent — every eviction logs at `warn` level with the
+key and the limits. Treat a stream of those as the signal to re-size the budget for the deployment,
+and measure entry count alongside hit ratio when validating the rollout below.
 
 The automated integration suite verifies that repeated page requests render a cacheable fragment
 once, but it is not a production-like load benchmark. Validation of SSR load reduction and response
