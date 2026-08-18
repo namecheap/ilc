@@ -15,15 +15,10 @@ import {
     TopToolbar,
     Button,
     sanitizeListRestProps,
-    EditButton,
 } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import IconAdd from '@material-ui/icons/Add';
 import dataProvider from '../dataProvider';
-import {
-    Empty,
-    ListBulkActions,
-    ListActionsToolbar,
-} from '../components';
+import { Empty, ListBulkActions, ListActionsToolbar, ProtectedEditButton } from '../components';
 
 const useStyles = makeStyles({
     filters: {
@@ -41,23 +36,19 @@ const ListFilter = ({ routerDomain, ...props }) => {
     return (
         <Filter {...props} className={classes.filters}>
             <BooleanInput label="Show special" source="showSpecial" alwaysOn className={classes.filtersSpecial} />
-            {
-                routerDomain.length
-                ? <SelectInput
+            {routerDomain.length ? (
+                <SelectInput
                     alwaysOn
                     source="domainId"
                     label="Domain"
                     optionText="domainName"
                     resettable
                     choices={routerDomain}
-                    />
-                : null
-            }
-            {
-                !props.filterValues.showSpecial
-                ? <TextInput label="Route prefix" source="routePrefix" alwaysOn resettable/>
-                : null
-            }
+                />
+            ) : null}
+            {!props.filterValues.showSpecial ? (
+                <TextInput label="Route prefix" source="routePrefix" alwaysOn resettable />
+            ) : null}
         </Filter>
     );
 };
@@ -65,42 +56,47 @@ const ListFilter = ({ routerDomain, ...props }) => {
 const ListGrid = ({ routerDomain, ...props }) => {
     return (
         <Datagrid {...props} rowClick="show" optimized>
-            {!props.filterValues.showSpecial ? <TextField source="id" sortable={false} /> : null }
-            {!props.filterValues.showSpecial ? <TextField source="orderPos" sortable={false} /> : null }
-            {!props.filterValues.showSpecial ? <TextField source="route" sortable={false} /> : null }
-            {!props.filterValues.showSpecial ? <BooleanField source="next" sortable={false} /> : null }
-            {props.filterValues.showSpecial ? <TextField source="specialRole" sortable={false} /> : null }
-            <ReferenceField label="Template Name" source="templateName" reference="template" emptyText="-" sortable={false}>
+            {!props.filterValues.showSpecial ? <TextField source="id" sortable={false} /> : null}
+            {!props.filterValues.showSpecial ? <TextField source="orderPos" sortable={false} /> : null}
+            {!props.filterValues.showSpecial ? <TextField source="route" sortable={false} /> : null}
+            {!props.filterValues.showSpecial ? <BooleanField source="next" sortable={false} /> : null}
+            {props.filterValues.showSpecial ? <TextField source="specialRole" sortable={false} /> : null}
+            <ReferenceField
+                label="Template Name"
+                source="templateName"
+                reference="template"
+                emptyText="-"
+                sortable={false}
+            >
                 <TextField source="name" />
             </ReferenceField>
-            <ReferenceField label="Domain Name" source="domainId" reference="router_domains" emptyText="-" sortable={false}>
+            <ReferenceField
+                label="Domain Name"
+                source="domainId"
+                reference="router_domains"
+                emptyText="-"
+                sortable={false}
+            >
                 <TextField source="domainName" />
             </ReferenceField>
 
             <ListActionsToolbar>
-                <EditButton />
+                <ProtectedEditButton />
             </ListActionsToolbar>
         </Datagrid>
     );
 };
 
-const ListActions = ({
-    className,
-    resource,
-    filters,
-    displayedFilters,
-    filterValues,
-    showFilter,
-    ...rest
-}) => (
+const ListActions = ({ className, resource, filters, displayedFilters, filterValues, showFilter, ...rest }) => (
     <TopToolbar className={className} {...sanitizeListRestProps(rest)}>
-        {filters && cloneElement(filters, {
-            resource,
-            showFilter,
-            displayedFilters,
-            filterValues,
-            context: 'button',
-        })}
+        {filters &&
+            cloneElement(filters, {
+                resource,
+                showFilter,
+                displayedFilters,
+                filterValues,
+                context: 'button',
+            })}
         <Link to={`/route/create${filterValues.showSpecial ? '?special=1' : ''}`}>
             <Button label={`create ${filterValues.showSpecial ? 'special route' : ''}`}>
                 <IconAdd />
@@ -109,28 +105,27 @@ const ListActions = ({
     </TopToolbar>
 );
 
-const PostList = props => {
+const PostList = (props) => {
     const { permissions } = props;
 
-    const isSmall = useMediaQuery(theme => theme.breakpoints.down('sm'));
+    const isSmall = useMediaQuery((theme) => theme.breakpoints.down('sm'));
 
     const [routerDomain, setRouterDomain] = useState([]);
 
     useEffect(() => {
-        dataProvider.getList('router_domains', { pagination: false, sort: false, filter: false })
-            .then(({ data }) => {
-                if (!data.length) {
-                    return;
-                }
+        dataProvider.getList('router_domains', { pagination: false, sort: false, filter: false }).then(({ data }) => {
+            if (!data.length) {
+                return;
+            }
 
-                setRouterDomain([
-                    {
-                        id: 'null',
-                        domainName: 'Non-specified',
-                    },
-                    ...data,
-                ]);
-            });
+            setRouterDomain([
+                {
+                    id: 'null',
+                    domainName: 'Non-specified',
+                },
+                ...data,
+            ]);
+        });
     }, []);
 
     return (
@@ -145,8 +140,10 @@ const PostList = props => {
         >
             {isSmall ? (
                 <SimpleList
-                    primaryText={record => record.specialRole ? record.specialRole : record.route}
-                    secondaryText={record => `next: ${record.next ? 'true' : 'false'}; template: ${record.templateName || '-'}`}
+                    primaryText={(record) => (record.specialRole ? record.specialRole : record.route)}
+                    secondaryText={(record) =>
+                        `next: ${record.next ? 'true' : 'false'}; template: ${record.templateName || '-'}`
+                    }
                 />
             ) : (
                 <ListGrid routerDomain={routerDomain} />

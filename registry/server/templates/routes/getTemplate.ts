@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
 
+import { markProtected } from '../../common/services/protectedEntities';
 import validateRequestFactory from '../../common/services/validateRequest';
+import { EntityTypes } from '../../versioning/interfaces';
 import { templatesRepository } from '../services/templatesRepository';
 import { templateNameSchema } from './validation';
 
@@ -28,7 +30,7 @@ const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response
         return;
     }
 
-    res.status(200).send(template);
+    res.status(200).send(markProtected(EntityTypes.templates, template));
 };
 
 export default [validateRequestBeforeGetTemplate, getTemplate];

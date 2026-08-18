@@ -3,6 +3,7 @@ import Joi from 'joi';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
+import { markProtected } from '../../common/services/protectedEntities';
 import validateRequestFactory from '../../common/services/validateRequest';
 import RouterDomains, { routerDomainIdSchema } from '../interfaces';
 import { Tables } from '../../db/structure';
@@ -33,7 +34,7 @@ const getRouterDomains = async (req: Request<RequestParams>, res: Response): Pro
         res.status(404).send('Not found');
     } else {
         routerDomains.versionId = appendDigest(routerDomains.versionId, 'routerDomains');
-        res.status(200).send(preProcessResponse(routerDomains));
+        res.status(200).send(preProcessResponse(markProtected(EntityTypes.router_domains, routerDomains)));
     }
 };
 

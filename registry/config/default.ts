@@ -39,5 +39,6 @@ module.exports = {
         },
     },
     protectedSettings: '',
+    protectedEntities: '',
     salt: 'default_test_salt',
 };

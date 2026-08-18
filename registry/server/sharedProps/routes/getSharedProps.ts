@@ -3,6 +3,7 @@ import Joi from 'joi';
 
 import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
+import { markProtected } from '../../common/services/protectedEntities';
 import validateRequestFactory from '../../common/services/validateRequest';
 import SharedProps, { sharedPropsNameSchema } from '../interfaces';
 import { Tables } from '../../db/structure';
@@ -33,7 +34,7 @@ const getSharedProps = async (req: Request<RequestParams>, res: Response): Promi
         res.status(404).send('Not found');
     } else {
         sharedProps.versionId = appendDigest(sharedProps.versionId, 'sharedProp');
-        res.status(200).send(preProcessResponse(sharedProps));
+        res.status(200).send(preProcessResponse(markProtected(EntityTypes.shared_props, sharedProps)));
     }
 };
 
