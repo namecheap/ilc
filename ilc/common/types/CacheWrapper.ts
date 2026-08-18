@@ -12,6 +12,7 @@ export type CacheHashFn = (value: string) => string;
 export interface CacheStorage {
     getItem<T>(key: string): CacheResult<T> | null;
     setItem(key: string, cache: CacheResult<unknown>): void;
+    deleteItem(key: string): void;
 }
 
 export interface CacheWrapper {

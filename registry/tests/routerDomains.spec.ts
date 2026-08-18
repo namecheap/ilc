@@ -370,6 +370,39 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should return records in a stable order regardless of modifications', async () => {
+            const createdIds: number[] = [];
+
+            try {
+                for (let i = 0; i < 3; i++) {
+                    const { body } = await req
+                        .post(example.url)
+                        .send({ ...example.correct, domainName: `stableOrder${i}.com` })
+                        .expect(200);
+                    createdIds.push(body.id);
+                }
+
+                // on PostgreSQL an update relocates the row within the table,
+                // which changes the natural scan order
+                await req
+                    .put(example.url + createdIds[0])
+                    .send({
+                        domainName: 'stableOrder0.com',
+                        template500: example.correct.template500,
+                        canonicalDomain: 'stable-canonical.example.com',
+                    })
+                    .expect(200);
+
+                const response = await req.get(example.url).expect(200);
+
+                const ids = response.body.map((item: any) => item.id);
+                expect(ids).to.deep.equal([...ids].sort((a: number, b: number) => a - b));
+                expect(ids).to.include.members(createdIds);
+            } finally {
+                await Promise.all(createdIds.map((id) => req.delete(example.url + id)));
+            }
+        });
+
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
                 await reqWithAuth.get(example.url + 123).expect(401);

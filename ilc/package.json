@@ -59,6 +59,7 @@
         "@babel/preset-typescript": "^7.28.5",
         "@types/chai": "^5.2.3",
         "@types/config": "^3.3.5",
+        "@types/lodash": "^4.17.25",
         "@types/mocha": "^10.0.10",
         "@types/newrelic": "^9.14.8",
         "@types/node": "^22.19.2",

@@ -106,6 +106,35 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should return records in a stable order regardless of modifications', async () => {
+            const propsList = ['ncTestOrderC', 'ncTestOrderA', 'ncTestOrderB'].map((name) => ({
+                name,
+                props: { key: 'value' },
+            }));
+            const sortedNames = ['ncTestOrderA', 'ncTestOrderB', 'ncTestOrderC'];
+
+            try {
+                for (const item of propsList) {
+                    await req.post(example.url).send(item).expect(200);
+                }
+
+                // on PostgreSQL an update relocates the row within the table,
+                // which changes the natural scan order
+                await req
+                    .put(example.url + sortedNames[0])
+                    .send({ props: { key: 'updated' } })
+                    .expect(200);
+
+                const response = await req.get(example.url).expect(200);
+
+                expect(response.body.map((item: any) => item.name)).to.deep.equal(sortedNames);
+            } finally {
+                for (const item of propsList) {
+                    await req.delete(example.url + item.name);
+                }
+            }
+        });
+
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
                 await reqWithAuth.get(example.url).expect(401);

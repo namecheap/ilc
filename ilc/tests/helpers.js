@@ -162,7 +162,7 @@ function setupMockServersForApps() {
 /**
  * Returns mock attributes for tests
  * @param overrideAttributes override default attributes
- * @returns {{async: boolean, public: boolean, ignoreInvalidSsl: boolean, appProps: {}, wrapperConf: null, id: string, returnHeaders: boolean, url: string, timeout: number, primary: boolean, forwardQuerystring: boolean}}
+ * @returns {{async: boolean, public: boolean, ignoreInvalidSsl: boolean, appProps: {}, wrapperConf: null, id: string, returnHeaders: boolean, url: string, spaBundleUrl?: string, timeout: number, primary: boolean, forwardQuerystring: boolean}}
  */
 function getFragmentAttributes(overrideAttributes = {}) {
     const defaultAttributes = {

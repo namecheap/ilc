@@ -46,6 +46,7 @@ describe('DefaultCacheWrapper', () => {
         storageMock = {
             getItem: (key) => storageMockCache[key] ?? null,
             setItem: (key, cache) => (storageMockCache[key] = cache),
+            deleteItem: (key) => delete storageMockCache[key],
         };
         const cacheWrapper = new DefaultCacheWrapper(storageMock, loggerMock, null);
         wrappedFn = cacheWrapper.wrap(fn, { name: 'testCacheName' });
@@ -266,6 +267,7 @@ describe('DefaultCacheWrapper', () => {
                 {
                     setItem,
                     getItem: () => null,
+                    deleteItem: sinon.stub(),
                 },
                 loggerMock,
                 null,

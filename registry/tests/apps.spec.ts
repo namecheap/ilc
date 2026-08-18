@@ -182,6 +182,36 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should successfully create record with ssr.cache and expose it via /api/v1/config', async () => {
+            const appWithCache = {
+                ...example.correct,
+                ssr: { ...example.correct.ssr, cache: { enabled: true, ttlSeconds: 300 } },
+            };
+
+            try {
+                const response = await req.post(example.url).send(appWithCache).expect(200);
+                expect(response.body.ssr).deep.equal(appWithCache.ssr);
+
+                const readResponse = await req.get(example.url + example.encodedName).expect(200);
+                expect(readResponse.body.ssr).deep.equal(appWithCache.ssr);
+
+                const configResponse = await req.get('/api/v1/config').expect(200);
+                expect(configResponse.body.apps[example.correct.name].ssr).deep.equal(appWithCache.ssr);
+            } finally {
+                await req.delete(example.url + example.encodedName);
+            }
+        });
+
+        it('should not create record with invalid ssr.cache', async () => {
+            const appWithInvalidCache = {
+                ...example.correct,
+                ssr: { ...example.correct.ssr, cache: { enabled: 'nope' } },
+            };
+
+            const response = await req.post(example.url).send(appWithInvalidCache).expect(422);
+            expect(response.text).to.include('cache');
+        });
+
         it('should create record with existed enforceDomain', async () => {
             let domainId;
             const templateName = 'templateName';
@@ -385,6 +415,36 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req.get(example.url).expect(200);
 
                 expectAppsListEqual(response.body, example.appsList);
+            } finally {
+                for (const app of example.appsList) {
+                    await req.delete(example.url + app.name);
+                }
+            }
+        });
+
+        it('should return records in a stable order regardless of modifications', async () => {
+            try {
+                for (const app of [...example.appsList].reverse()) {
+                    await req.post(example.url).send(app).expect(200);
+                }
+
+                // on PostgreSQL an update relocates the row within the table,
+                // which changes the natural scan order
+                await req
+                    .put(example.url + example.appsList[0].name)
+                    .send(
+                        _.omit(
+                            { ...example.appsList[0], spaBundle: 'https://app-0.com/spa-bundle-updated.js' },
+                            'name',
+                        ),
+                    )
+                    .expect(200);
+
+                const response = await req.get(example.url).expect(200);
+
+                expect(response.body.map((app: any) => app.name)).to.deep.equal(
+                    example.appsList.map((app) => app.name),
+                );
             } finally {
                 for (const app of example.appsList) {
                     await req.delete(example.url + app.name);

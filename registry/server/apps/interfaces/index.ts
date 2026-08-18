@@ -27,9 +27,15 @@ export interface App {
     namespace?: string | null;
 }
 
+export interface AppSsrCache {
+    enabled: boolean;
+    ttlSeconds?: number;
+}
+
 export interface AppSsr {
     src: string;
     timeout: number;
+    cache?: AppSsrCache;
 }
 
 export interface AppProps {
@@ -45,6 +51,9 @@ export interface AppDependencies {
 }
 
 export const appNameSchema = Joi.string().trim().min(1);
+// Keep in sync with MAX_FRAGMENT_CACHE_TTL_SECONDS in
+// ilc/server/tailor/request-fragment-cache/utils/policy.ts
+export const MAX_FRAGMENT_CACHE_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 const commonApp = {
     spaBundle: Joi.string().trim().uri(),
@@ -57,8 +66,20 @@ const commonApp = {
     ssr: Joi.object({
         src: Joi.string().trim().uri(),
         timeout: Joi.number(),
+        cache: Joi.object({
+            enabled: Joi.boolean().required(),
+            // max 30 days: a typo here would otherwise pin an entry until instance restart
+            ttlSeconds: Joi.number()
+                .integer()
+                .positive()
+                .max(MAX_FRAGMENT_CACHE_TTL_SECONDS)
+                .when('enabled', { is: true, then: Joi.required() }),
+        }),
     })
         .and('src', 'timeout')
+        // cache alone would make ssr non-empty and mark the app SSR-enabled without a src,
+        // breaking every route that renders it
+        .with('cache', ['src', 'timeout'])
         .empty({})
         .default(null),
     kind: Joi.string().valid('primary', 'essential', 'regular', 'wrapper').default('regular'),

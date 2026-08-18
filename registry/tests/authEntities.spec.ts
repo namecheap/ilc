@@ -123,6 +123,37 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should return records in a stable order regardless of modifications', async () => {
+            const createdIds: number[] = [];
+
+            try {
+                for (const identifier of ['userOrder1', 'userOrder2']) {
+                    const response = await req
+                        .post(example.url)
+                        .send({ ...example.correct, identifier })
+                        .expect(200);
+                    createdIds.push(response.body.id);
+                }
+
+                // on PostgreSQL an update relocates the row within the table,
+                // which changes the natural scan order
+                await req
+                    .put(example.url + createdIds[0])
+                    .send(example.updated)
+                    .expect(200);
+
+                const response = await req.get(example.url).expect(200);
+
+                const ids = response.body.map((item: any) => item.id);
+                expect(ids).to.deep.equal([...ids].sort((a: number, b: number) => a - b));
+                expect(ids).to.include.members(createdIds);
+            } finally {
+                for (const id of createdIds) {
+                    await req.delete(example.url + id);
+                }
+            }
+        });
+
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
                 await requestWithAuth().then((r) => r.get(example.url).expect(401));

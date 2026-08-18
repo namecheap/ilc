@@ -11,4 +11,8 @@ export class BrowserCacheStorage implements CacheStorage {
     setItem(key: string, cache: CacheResult<unknown>): void {
         this.storage.setItem(key, JSON.stringify(cache));
     }
+
+    deleteItem(key: string): void {
+        this.storage.removeItem(key);
+    }
 }

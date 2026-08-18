@@ -1,8 +1,10 @@
-const chai = require('chai');
-const sinon = require('sinon');
-const { getFragmentAttributes } = require('../../tests/helpers');
-const { insertStart, insertEnd } = require('./fragment-hooks');
-const { PassThrough } = require('stream');
+import chai from 'chai';
+import sinon from 'sinon';
+import { PassThrough } from 'stream';
+import type { Logger } from 'ilc-plugins-sdk';
+import { getFragmentAttributes } from '../../tests/helpers';
+import { insertStart, insertEnd } from './fragment-hooks';
+import { setCacheMarker } from './request-fragment-cache';
 
 describe('fragment-hooks', () => {
     describe('insertEnd', () => {
@@ -18,10 +20,59 @@ describe('fragment-hooks', () => {
     });
 
     describe('insertStart', () => {
-        const logger = {
+        const logger: Logger = {
+            fatal: () => {},
+            error: () => {},
             warn: () => {},
+            info: () => {},
             debug: () => {},
+            trace: () => {},
         };
+
+        describe('fragment cache marker (AC#5: hit/miss visibility per fragment)', () => {
+            for (const marker of ['hit', 'stale', 'miss'] as const) {
+                it(`should write an html comment when the cache decorator set marker ${marker.toUpperCase()}`, () => {
+                    const mockStream = new PassThrough();
+                    const fragmentAttrs = getFragmentAttributes();
+                    setCacheMarker(fragmentAttrs, marker);
+
+                    insertStart(logger, mockStream, fragmentAttrs, {});
+
+                    const streamData = mockStream.read();
+                    chai.expect(streamData.toString()).to.be.equal(
+                        `<!-- ilc:fragment-cache ${marker.toUpperCase()} -->`,
+                    );
+                });
+            }
+
+            it('should carry the refusal reason into the markup, so a page can be diagnosed from view-source', () => {
+                const mockStream = new PassThrough();
+                const fragmentAttrs = getFragmentAttributes();
+                setCacheMarker(fragmentAttrs, 'refuse:set-cookie');
+
+                insertStart(logger, mockStream, fragmentAttrs, {});
+
+                chai.expect(mockStream.read().toString()).to.be.equal('<!-- ilc:fragment-cache REFUSE:SET-COOKIE -->');
+            });
+
+            it('should write nothing when the decorator set no marker', () => {
+                const mockStream = new PassThrough();
+
+                insertStart(logger, mockStream, getFragmentAttributes(), {});
+
+                chai.expect(mockStream.readableLength).to.be.equal(0);
+            });
+
+            it('should ignore marker-like response headers from real fragments (status spoofing)', () => {
+                const mockStream = new PassThrough();
+                const fragmentAttrs = getFragmentAttributes({ cache: { enabled: true, ttlSeconds: 300 } });
+                const headers = { 'x-ilc-fragment-cache': 'HIT' };
+
+                insertStart(logger, mockStream, fragmentAttrs, headers);
+
+                chai.expect(mockStream.readableLength).to.be.equal(0);
+            });
+        });
 
         it('should write a script tag with wrapper overrides', () => {
             const mockStream = new PassThrough();
@@ -101,7 +152,7 @@ describe('fragment-hooks', () => {
                 link: '<../app.test.css>; rel="stylesheet"',
             };
 
-            const resultingUrl = `${fragmentAttrs.spaBundleUrl.replace(/[^\\/]+\/[^\\/]+$/, '')}app.test.css`;
+            const resultingUrl = `${fragmentAttrs.spaBundleUrl!.replace(/[^\\/]+\/[^\\/]+$/, '')}app.test.css`;
 
             insertStart(logger, mockStream, fragmentAttrs, headers);
 
@@ -153,7 +204,7 @@ describe('fragment-hooks', () => {
             const headers = {
                 link: '<single_spa.tst.js>; rel="fragment-script"; as="script"; crossorigin="anonymous"',
             };
-            const resultingUrl = `${fragmentAttrs.spaBundleUrl.replace(/[^\\/]+$/, '')}single_spa.tst.js`;
+            const resultingUrl = `${fragmentAttrs.spaBundleUrl!.replace(/[^\\/]+$/, '')}single_spa.tst.js`;
 
             insertStart(logger, mockStream, fragmentAttrs, headers);
 
@@ -244,10 +295,13 @@ describe('fragment-hooks', () => {
             const mockStream = new PassThrough();
             const fragmentAttrs = getFragmentAttributes({ id: 'test-fragment' });
             const errorSpy = sinon.spy();
-            const loggerSpy = {
-                warn: () => {},
-                debug: () => {},
+            const loggerSpy: Logger = {
+                fatal: () => {},
                 error: errorSpy,
+                warn: () => {},
+                info: () => {},
+                debug: () => {},
+                trace: () => {},
             };
             const headers = {
                 link: '<>; rel="stylesheet"',

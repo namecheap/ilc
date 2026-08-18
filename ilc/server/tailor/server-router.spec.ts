@@ -1,18 +1,24 @@
-const chai = require('chai');
-const sinon = require('sinon');
-const _ = require('lodash');
-const { getRegistryMock } = require('../../tests/helpers');
+import chai from 'chai';
+import sinon from 'sinon';
+import type { Logger } from 'ilc-plugins-sdk';
+import { getRegistryMock } from '../../tests/helpers';
+import type { PatchedHttpRequest } from '../types/PatchedHttpRequest';
 
-const ServerRouter = require('./server-router.js');
+import ServerRouter from './server-router';
 
 describe('server router', () => {
-    const logger = {
-        warn: sinon.spy(),
+    const warnSpy = sinon.spy();
+    const logger: Logger = {
+        fatal: () => {},
+        error: () => {},
+        warn: warnSpy,
+        info: () => {},
         debug: sinon.spy(),
+        trace: () => {},
     };
 
     afterEach(() => {
-        logger.warn.resetHistory();
+        warnSpy.resetHistory();
     });
 
     it('should throw an error when a router can not find information about an application', () => {
@@ -35,7 +41,7 @@ describe('server router', () => {
         }).getConfig();
         const request = { registryConfig, ilcState: {} };
 
-        const router = new ServerRouter(logger, request, '/no-app');
+        const router = new ServerRouter(logger, request as PatchedHttpRequest, '/no-app');
 
         chai.expect(() => router.getFragmentsTpl()).to.throw("Can't find info about app.");
         chai.expect(() => router.getFragmentsContext()).to.throw("Can't find info about app.");
@@ -53,7 +59,7 @@ describe('server router', () => {
 
             const request = { registryConfig, ilcState: {} };
 
-            const router = new ServerRouter(logger, request, '/all');
+            const router = new ServerRouter(logger, request as PatchedHttpRequest, '/all');
 
             chai.expect(() => router.getFragmentsContext()).to.throw('No url specified for fragment!');
         });
@@ -69,18 +75,49 @@ describe('server router', () => {
 
             const request = { registryConfig, ilcState: {} };
 
-            const router = new ServerRouter(logger, request, '/all');
+            const router = new ServerRouter(logger, request as PatchedHttpRequest, '/all');
 
             const context = router.getFragmentsContext();
 
             chai.expect(context.primary__at__primary.primary).to.be.true;
             chai.expect(context.regular__at__regular.primary).to.be.undefined;
             chai.expect(
-                logger.warn.calledOnceWithExactly(
+                warnSpy.calledOnceWithExactly(
                     `More then one primary slot "regular" found for "/all".\n` +
                         'Make it regular to avoid unexpected behaviour.',
                 ),
             ).to.be.true;
+        });
+
+        it('should pass ssr.cache config into fragment context', () => {
+            const registryConfig = getRegistryMock({
+                apps: {
+                    '@portal/regular': {
+                        ssr: { cache: { enabled: true, ttlSeconds: 300 } },
+                    },
+                },
+            }).getConfig();
+
+            const request = { registryConfig, ilcState: {} };
+
+            const router = new ServerRouter(logger, request as PatchedHttpRequest, '/all');
+
+            const context = router.getFragmentsContext();
+
+            chai.expect(context.regular__at__regular.cache).to.eql({ enabled: true, ttlSeconds: 300 });
+        });
+
+        it('should not add cache key to fragment context when app has no ssr.cache (opt-in, AC#1)', () => {
+            const registryConfig = getRegistryMock().getConfig();
+
+            const request = { registryConfig, ilcState: {} };
+
+            const router = new ServerRouter(logger, request as PatchedHttpRequest, '/all');
+
+            const context = router.getFragmentsContext();
+
+            chai.expect(context.regular__at__regular).to.not.have.property('cache');
+            chai.expect(context.primary__at__primary).to.not.have.property('cache');
         });
     });
 
@@ -180,7 +217,7 @@ describe('server router', () => {
             },
         };
 
-        const routes = [
+        const routes: any[] = [
             {
                 route: '*',
                 next: true,
@@ -260,7 +297,7 @@ describe('server router', () => {
 
         const request = { url: '/hero/apps?prop=value', registryConfig };
 
-        const router = new ServerRouter(logger, request, request.url);
+        const router = new ServerRouter(logger, request as PatchedHttpRequest, request.url);
 
         chai.expect(router.getRoute()).to.be.eql({
             route: '/hero/apps',
@@ -367,7 +404,7 @@ describe('server router', () => {
             registryConfig,
         };
 
-        const router = new ServerRouter(logger, request, request.url);
+        const router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, request.url);
 
         chai.expect(router.getRoute()).to.be.eql({
             basePath: '/',
