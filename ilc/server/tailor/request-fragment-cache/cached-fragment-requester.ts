@@ -144,13 +144,25 @@ export class CachedFragmentRequester {
         return timeoutMs + RENDER_DEADLINE_SLACK_MS;
     }
 
+    /** Outcomes a metric cannot act on alone: asked to be cached and wasn't, or failed. */
+    private static readonly NOTEWORTHY_EVENTS: ReadonlySet<FragmentCacheEvent> = new Set(['refuse', 'error'] as const);
+
     private emit(
         event: FragmentCacheEvent,
         attributes: CacheableFragmentAttributes,
         qualifier: { source?: FragmentCacheErrorSource; reason?: RefusalReason } = {},
     ): void {
         const appId = attributes.id ?? 'unknown';
-        this.deps.logger.info({ event, appId, ...qualifier }, '[ILC Cache]: Fragment cache decision');
+        const details = { event, appId, ...qualifier };
+        const message = '[ILC Cache]: Fragment cache decision';
+
+        // One info line per fragment per request would multiply log volume on the very path this
+        // feature exists to make cheap; the metric and the HTML marker carry these instead.
+        if (CachedFragmentRequester.NOTEWORTHY_EVENTS.has(event)) {
+            this.deps.logger.info(details, message);
+        } else {
+            this.deps.logger.debug(details, message);
+        }
         this.onCacheEvent(event, { appId, ...qualifier });
     }
 }

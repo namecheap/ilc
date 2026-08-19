@@ -45,6 +45,8 @@ export const REFUSAL_REASONS = [
     /* Runtime stage — decided by the cache's own capacity accounting. */
     /** Every concurrent-capture slot is taken; the render proceeds privately instead of buffering. */
     'capture-budget-exhausted',
+    /** The shared probe outlived the render deadline, so this render is served privately instead. */
+    'render-deadline',
 ] as const;
 
 export type RefusalReason = (typeof REFUSAL_REASONS)[number];

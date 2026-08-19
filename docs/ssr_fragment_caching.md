@@ -146,8 +146,10 @@ yet) still writes a negative entry, so a failing origin isn't hammered on every 
 - Each fragment served through the cache is annotated in the page markup with an HTML comment
   `<!-- ilc:fragment-cache HIT -->` (`HIT` / `STALE` / `MISS`), next to the standard
   `<!-- Fragment #N ... START -->` comment. A refused render is marked with its reason —
-  `<!-- ilc:fragment-cache REFUSE:CACHE-CONTROL -->` — which is the only per-request diagnostic
-  available in production, since `[ILC Cache]` log entries are emitted at `info` level.
+  `<!-- ilc:fragment-cache REFUSE:CACHE-CONTROL -->` — which is the per-request diagnostic to reach
+  for in production. The hot-path decisions (`hit` / `stale` / `miss`) are logged at `debug`, since
+  one line per cache-enabled fragment per request would multiply log volume at full traffic; only
+  `refuse` and `error` are logged at `info`.
 
 ### Refusal reasons
 
@@ -172,6 +174,7 @@ taxonomy; the rules stay where they are enforced, but every reason is named in o
 | capture  | `unsupported-encoding`     | `Content-Encoding` this cache cannot replay.                                                                         |
 | capture  | `decode-failed`            | Decompression failed, including the decompressed-size guard.                                                         |
 | runtime  | `capture-budget-exhausted` | Every concurrent-capture slot taken; the render proceeds privately.                                                  |
+| runtime  | `render-deadline`          | Shared probe outlived the render deadline; the render proceeds privately.                                            |
 
 A negative entry remembers the reason that produced it, so refusals replayed from the tombstone
 (up to 60s) report the original cause rather than a second, contextless `refuse`. Stream **errors**
@@ -195,9 +198,12 @@ the route in `routerProps` and may legitimately render differently for each. Twe
 cacheable fragments, five locales and three currencies already needs ~600 entries against the
 default `maxEntries` of 500.
 
-Exceeding either bound is visible rather than silent — every eviction logs at `warn` level with the
-key and the limits. Treat a stream of those as the signal to re-size the budget for the deployment,
-and measure entry count alongside hit ratio when validating the rollout below.
+Exceeding either bound is visible rather than silent — evictions log at `warn` level with the
+limits, one line per minute at most, carrying the number of keys evicted since the previous line
+(a cache whose working set exceeds the budget evicts on every insert, so a line per eviction would
+report one steady state thousands of times a minute). Treat those lines as the signal to re-size the
+budget for the deployment, and measure entry count alongside hit ratio when validating the rollout
+below.
 
 The automated integration suite verifies that repeated page requests render a cacheable fragment
 once, but it is not a production-like load benchmark. Validation of SSR load reduction and response
@@ -218,7 +224,7 @@ route, concurrency, cache hit ratio, fragment render count and latency percentil
   aborts, the response is treated as non-cacheable (negative entry + live streamed renders), so a
   misbehaving fragment degrades to "not cached" instead of exhausting the ILC heap.
 - **LRU cap** — the storage holds at most 500 entries and 64 MiB of response bodies in total; evictions are
-  logged with a warning. Negative entries have zero body weight. Watch key
+  logged with a warning, rate-limited to one line per minute with a count. Negative entries have zero body weight. Watch key
   cardinality: every locale, domain, route and `appProps` variant (including experiments) is a separate
   entry.
 - **Content encoding** — `gzip` and `deflate` responses are stored decompressed and replayed without

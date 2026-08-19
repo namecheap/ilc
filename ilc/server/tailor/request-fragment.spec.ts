@@ -617,4 +617,62 @@ describe('request-fragment', () => {
         chai.expect(warn.calledOnce).to.be.equal(true);
         chai.expect(warn.firstCall.args[1]).to.match(/fragmentProxyHeaders/);
     });
+
+    it('warns once per app about dropped fragmentProxyHeaders, not on every shared render', async () => {
+        const warn = sinon.spy();
+        const requestFragmentWithSpyLogger = requestFragmentSetup(
+            filterHeadersMock as unknown as FilterHeadersFn,
+            processFragmentResponseMock as unknown as ProcessFragmentResponseFn,
+            {
+                warn,
+                debug: () => {},
+            } as unknown as Logger,
+        );
+
+        const registryConfig = getRegistryMock({ settings: { fragmentProxyHeaders: ['x-custom-header'] } }).getConfig();
+
+        // a global setting, so it is stated once per app rather than on every shared render
+        const renderShared = async (id: string) => {
+            const attributes = getFragmentAttributes({
+                id,
+                appProps: { publicPath: 'http://apps.test/primary' },
+                wrapperConf: null,
+                url: 'http://apps.test/primary',
+                async: false,
+                primary: false,
+                public: false,
+                timeout: 1000,
+                returnHeaders: false,
+                forwardQuerystring: false,
+                ignoreInvalidSsl: false,
+            });
+
+            const request: TestRequest = {
+                registryConfig,
+                ilcState: {},
+                host: 'apps.test',
+            };
+            request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/primary');
+
+            const mockRequestScope = nock('http://apps.test').get('/primary').query(true).reply(200);
+
+            await requestFragmentWithSpyLogger(
+                attributes.url as string,
+                attributes as unknown as FragmentAttributes,
+                request as unknown as FragmentRequest,
+                { mode: 'shared', varyHeaders: pickSharedRenderHeaders({ 'x-request-host': 'apps.test' }) },
+            );
+            mockRequestScope.done();
+        };
+
+        await renderShared('primary__at__primary');
+        await renderShared('primary__at__primary');
+        await renderShared('regular__at__regular');
+
+        chai.expect(warn.callCount).to.be.equal(2);
+        chai.expect(warn.getCalls().map((call) => (call.args[0] as { appId: string }).appId)).to.deep.equal([
+            'primary__at__primary',
+            'regular__at__regular',
+        ]);
+    });
 });

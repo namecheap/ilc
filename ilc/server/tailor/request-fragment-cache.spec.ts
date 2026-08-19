@@ -13,6 +13,8 @@ import { REFUSAL_REASONS } from './request-fragment-cache';
 import type { RefusalReason } from './request-fragment-cache';
 import { EvictingCacheStorage } from '../../common/EvictingCacheStorage';
 import { pickSharedRenderHeaders } from './fragment-render';
+import { createFragmentCacheStorage } from './request-fragment-cache/storage-factory';
+import type { Logger } from 'ilc-plugins-sdk';
 
 const errors = require('./errors');
 
@@ -301,6 +303,80 @@ describe('fragment cache guarantees (through the seam)', () => {
                 dripping.stop();
             }
         });
+
+        it('reclaims the capture slot when a fragment never returns a response', async function () {
+            this.timeout(15000);
+            let attempt = 0;
+            const wrapped = makeWrapped(
+                async () => {
+                    attempt += 1;
+                    if (attempt === 1) {
+                        return new Promise(() => {});
+                    }
+                    return makeFragmentResponse({ body: 'healthy' });
+                },
+                { maxConcurrentCaptures: 1, maxBodyBytes: 1024, maxTotalBodyBytes: 8192 },
+            );
+
+            await wrapped(
+                'http://apps.test/app',
+                { ...cacheableAttributes, timeout: 30 },
+                makeRequest('/never-responds'),
+            ).catch(() => {});
+
+            const healthyAttributes = { ...cacheableAttributes, timeout: 30 };
+            const healthy = await wrapped('http://apps.test/app', healthyAttributes, makeRequest('/healthy'));
+
+            // the only injected slot must be free again, so an unrelated key still gets captured
+            expect(getCacheMarker(healthyAttributes)).to.equal('miss');
+            expect(await readBody(healthy)).to.equal('healthy');
+        });
+
+        it('drops a response that arrives after the deadline instead of caching it', async function () {
+            this.timeout(15000);
+            let answerLate: (response: any) => void = () => {};
+            const late = Object.assign(new Readable({ read() {} }), { statusCode: 200, headers: {} });
+            let attempt = 0;
+            const wrapped = makeWrapped(async () => {
+                attempt += 1;
+                if (attempt === 1) {
+                    return new Promise((resolve) => (answerLate = resolve));
+                }
+                return makeFragmentResponse({ body: 'fresh' });
+            });
+            const attributes = { ...cacheableAttributes, timeout: 30 };
+
+            await wrapped('http://apps.test/app', attributes, makeRequest()).catch(() => {});
+
+            // the fragment finally answers, long after the render it was meant to serve gave up
+            answerLate(late);
+            await flushAsync();
+
+            // nothing is waiting for that body and it holds no capture slot, so it must be dropped
+            expect(late.destroyed, 'the abandoned response must be destroyed').to.equal(true);
+
+            const after = { ...cacheableAttributes, timeout: 30 };
+            const served = await wrapped('http://apps.test/app', after, makeRequest());
+            expect(getCacheMarker(after)).to.equal('miss');
+            expect(await readBody(served)).to.equal('fresh');
+        });
+
+        it('serves a cold miss privately when the shared probe hits the deadline', async function () {
+            this.timeout(15000);
+            const wrapped = makeWrapped((_url: string, _attrs: any, _req: any, renderOptions?: { mode: string }) => {
+                // the shared probe never answers; the cache's own deadline must not fail the render
+                if (renderOptions?.mode === 'shared') {
+                    return new Promise<any>(() => {});
+                }
+                return Promise.resolve(makeFragmentResponse({ body: 'private-fallback' }));
+            });
+            const attributes = { ...cacheableAttributes, timeout: 30 };
+
+            const served = await wrapped('http://apps.test/app', attributes, makeRequest());
+
+            expect(await readBody(served)).to.equal('private-fallback');
+            expect(getCacheMarker(attributes)).to.equal('refuse:render-deadline');
+        });
     });
 
     describe('single flight', () => {
@@ -423,9 +499,67 @@ describe('fragment cache guarantees (through the seam)', () => {
             );
         });
     });
+    describe('log volume', () => {
+        it('reports the hot-path outcomes at debug rather than info', async () => {
+            logger.info.resetHistory();
+            logger.debug.resetHistory();
+            const wrapped = makeWrapped(async () => makeFragmentResponse({ body: 'body' }));
+            const attributes = { ...cacheableAttributes };
+
+            await wrapped('http://apps.test/app', attributes, makeRequest());
+            const second = await wrapped('http://apps.test/app', { ...cacheableAttributes }, makeRequest());
+            await readBody(second);
+
+            // hot-path outcomes belong at debug; the metric and marker carry them in production
+            const decisionEvents = (spy: sinon.SinonSpy) =>
+                spy
+                    .getCalls()
+                    .map((call) => (call.args[0] as { event?: string } | undefined)?.event)
+                    .filter((event) => event !== undefined);
+
+            expect(decisionEvents(logger.debug)).to.deep.equal(['miss', 'hit']);
+            expect(decisionEvents(logger.info)).to.deep.equal([]);
+        });
+    });
 });
 
 describe('request-fragment-cache helpers', () => {
+    describe('createFragmentCacheStorage', () => {
+        const budget = {
+            maxBodyBytes: 1024,
+            maxConcurrentCaptures: 2,
+            maxTotalBodyBytes: 8192,
+            maxEntries: 1,
+        };
+        const refusalEntry = () => ({ data: { kind: 'refusal' as const }, cachedAt: Date.now() });
+
+        let clock: sinon.SinonFakeTimers;
+
+        afterEach(() => clock?.restore());
+
+        it('reports a steady stream of evictions once per interval with a count', () => {
+            clock = sinon.useFakeTimers({ toFake: ['Date'], now: 1_700_000_000_000 });
+            const warn = sinon.spy();
+            const storage = createFragmentCacheStorage({ warn } as unknown as Logger, budget);
+
+            // maxEntries is 1, so every insert past the first evicts: the permanently-full state
+            storage.setItem('a', refusalEntry());
+            storage.setItem('b', refusalEntry());
+            storage.setItem('c', refusalEntry());
+            storage.setItem('d', refusalEntry());
+
+            expect(warn.callCount, 'the first eviction reports, the rest are folded into it').to.equal(1);
+            expect(warn.firstCall.args[0]).to.include({ evictedSinceLastReport: 1 });
+
+            clock.tick(60_000);
+            storage.setItem('e', refusalEntry());
+
+            expect(warn.callCount).to.equal(2);
+            // the two evictions suppressed mid-interval are still accounted for, plus this one
+            expect(warn.secondCall.args[0]).to.include({ evictedSinceLastReport: 3 });
+        });
+    });
+
     describe('composeCacheKey', () => {
         const base = {
             fragmentUrl: 'http://apps.test/primary',
@@ -1409,7 +1543,7 @@ describe('refusal taxonomy (through the seam)', () => {
     const logger = { info: sinon.spy(), warn: sinon.spy(), error: sinon.spy(), debug: sinon.spy() };
 
     /**
-     * Compile-time proof that every reason in the union has a case below. Adding a seventeenth
+     * Compile-time proof that every reason in the union has a case below. Adding an eighteenth
      * reason without a test stops compiling here rather than shipping unobserved.
      */
     const COVERED_REASONS: Record<RefusalReason, true> = {
@@ -1429,6 +1563,7 @@ describe('refusal taxonomy (through the seam)', () => {
         'unsupported-encoding': true,
         'decode-failed': true,
         'capture-budget-exhausted': true,
+        'render-deadline': true,
     };
 
     const MAX_TTL_SECONDS = 30 * 24 * 60 * 60;
@@ -1605,6 +1740,25 @@ describe('refusal taxonomy (through the seam)', () => {
 
         release.forEach((fn) => fn());
         await Promise.all(inFlight);
+    });
+
+    it("names 'render-deadline' when the shared probe outlives the render deadline", async function () {
+        this.timeout(15000);
+        const wrapped = makeWrapped((_url: string, _attrs: any, _req: any, renderOptions?: { mode: string }) => {
+            if (renderOptions?.mode === 'shared') {
+                return new Promise<any>(() => {});
+            }
+            return Promise.resolve(makeFragmentResponse({ body: 'private' }));
+        });
+
+        const served = await wrapped(
+            'http://apps.test/app',
+            { ...baseAttributes, timeout: 30 } as any,
+            baseRequest() as any,
+        );
+
+        expect(events).to.deep.equal([{ event: 'refuse', appId: 'app__at__slot', reason: 'render-deadline' }]);
+        expect(await readBody(served)).to.equal('private');
     });
 
     it('replays the original reason from the tombstone rather than a second, contextless refusal', async () => {

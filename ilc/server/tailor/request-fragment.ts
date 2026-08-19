@@ -43,8 +43,12 @@ type ProcessFragmentResponse = (
 ) => FragmentResponse;
 
 /** Requests the fragment server with filtered headers and the fragment's configured timeout. */
-export = (filterHeaders: FilterHeadersFn, processFragmentResponse: ProcessFragmentResponse, logger: Logger) =>
-    function requestFragment(
+export = (filterHeaders: FilterHeadersFn, processFragmentResponse: ProcessFragmentResponse, logger: Logger) => {
+    // A global setting, so the warning below states a fact that never changes for an app, while
+    // shared renders recur on every miss and refresh. Report it once per app, not per render.
+    const appsWarnedAboutDroppedProxyHeaders = new Set<string>();
+
+    return function requestFragment(
         fragmentUrl: string,
         attributes: FragmentAttributes,
         request: FragmentRequest,
@@ -54,7 +58,14 @@ export = (filterHeaders: FilterHeadersFn, processFragmentResponse: ProcessFragme
             const currRoute = request.router.getRoute();
 
             const proxyHeaders = request.registryConfig?.settings?.fragmentProxyHeaders;
-            if (renderOptions.mode === 'shared' && proxyHeaders && proxyHeaders.length > 0) {
+            const appId = attributes.id ?? 'unknown';
+            if (
+                renderOptions.mode === 'shared' &&
+                proxyHeaders &&
+                proxyHeaders.length > 0 &&
+                !appsWarnedAboutDroppedProxyHeaders.has(appId)
+            ) {
+                appsWarnedAboutDroppedProxyHeaders.add(appId);
                 logger.warn(
                     { appId: attributes.id, fragmentProxyHeaders: proxyHeaders },
                     '[ILC Cache]: fragmentProxyHeaders are configured but dropped on a shared (cacheable) render',
@@ -269,6 +280,7 @@ export = (filterHeaders: FilterHeadersFn, processFragmentResponse: ProcessFragme
             }
         });
     };
+};
 
 interface MakeFragmentUrlOptions {
     route: { basePath?: string; reqUrl?: string };

@@ -1,6 +1,6 @@
 import type { Logger } from 'ilc-plugins-sdk';
 import { PendingCallRegistry } from './pending-call-registry';
-import { withTimeout } from '../../../common/utils';
+import { TimeoutError, withTimeout } from '../../../common/utils';
 import { explainResponseRefusal } from './utils/policy';
 import { DEFAULT_CAPACITY_BUDGET, type CapacityBudget } from './utils/capacity-budget';
 import { FragmentResponseSnapshot } from './response-snapshot';
@@ -44,7 +44,14 @@ export class FragmentResponseCache {
             return { source: 'refuse', reason: 'capture-budget-exhausted' };
         }
 
-        const refreshed = await this.refreshOnce(key, request);
+        const refreshed = await this.refreshOnce(key, request).catch((error) => {
+            // The cache's own bound must not fail a render the uncached path would have served.
+            if (error instanceof TimeoutError) {
+                return { ok: false, reason: 'render-deadline' } as const;
+            }
+            throw error;
+        });
+
         return refreshed.ok
             ? { source: 'miss', response: refreshed.snapshot.replay() }
             : { source: 'refuse', reason: refreshed.reason };
@@ -57,28 +64,31 @@ export class FragmentResponseCache {
 
     private refreshOnce(key: string, request: FragmentCacheRequest): Promise<CaptureOutcome> {
         const timeoutMessage = `Fragment cache update timeout ${request.timeoutMs}ms`;
-        const isStarter = !this.pendingCalls.has(key);
 
-        let inFlight: FragmentResponse | null = null;
-        const work = this.pendingCalls.call(key, () => {
+        return this.pendingCalls.call(key, () => {
+            let abandoned = false;
+            let inFlight: FragmentResponse | null = null;
+
             const capture = request.load().then((response) => {
+                // Past the deadline this attempt holds no slot, so buffering would escape the budget.
+                if (abandoned) {
+                    response.destroy();
+                    throw new Error(timeoutMessage);
+                }
                 inFlight = response;
                 return this.capture(key, response).finally(() => {
                     inFlight = null;
                 });
             });
             capture.catch(() => {});
-            return capture;
-        });
 
-        const timedWork = withTimeout(work, request.timeoutMs, timeoutMessage);
-        if (!isStarter) {
-            return timedWork;
-        }
-
-        return timedWork.catch((error) => {
-            inFlight?.destroy();
-            throw error;
+            // Inside the pending call, not racing it: only settling the call frees its slot, and a
+            // load that never settles leaves no response to destroy.
+            return withTimeout(capture, request.timeoutMs, timeoutMessage).catch((error) => {
+                abandoned = true;
+                inFlight?.destroy();
+                throw error;
+            });
         });
     }
 
