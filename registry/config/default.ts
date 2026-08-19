@@ -7,7 +7,9 @@ module.exports = {
         client: 'sqlite3',
         connection: {
             database: 'registry_db',
-            filename: path.resolve(__dirname, '../server/dbfiles/db.sqlite'),
+            // Anchored to the registry root so that the source and the pre-compiled
+            // (build/config) versions of this config point to the same database file
+            filename: path.join(path.resolve(__dirname, '..').replace(/[\\/]build$/, ''), 'server/dbfiles/db.sqlite'),
         },
         searchPath: ['public'],
         useNullAsDefault: true,
