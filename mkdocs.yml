@@ -37,6 +37,7 @@ nav:
       - Compatibility with legacy UMD bundles: docs/umd_bundles_compatibility.md
       - ILC transition hooks: docs/transition_hooks.md
       - Multi-domains: docs/multi-domains.md
+      - SSR fragment caching: docs/ssr_fragment_caching.md
       - How-to Guides:
           - React app + ILC:
             - Lesson 1: docs/how-to-guides/react/lesson1.md

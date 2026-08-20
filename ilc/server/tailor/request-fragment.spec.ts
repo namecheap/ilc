@@ -1,19 +1,32 @@
-const chai = require('chai');
-const nock = require('nock');
-const sinon = require('sinon');
+import http from 'node:http';
+import chai from 'chai';
+import sinon from 'sinon';
+import nock from 'nock';
+import type { Logger } from 'ilc-plugins-sdk';
 
-const requestFragmentSetup = require('./request-fragment');
-const ServerRouter = require('./server-router');
-const { getRegistryMock } = require('../../tests/helpers');
-const { getFragmentAttributes } = require('../../tests/helpers');
-const errors = require('./errors');
+import requestFragmentSetup from './request-fragment';
+import ServerRouter from './server-router';
+import { getRegistryMock, getFragmentAttributes } from '../../tests/helpers';
+import { FragmentRequestError } from './errors';
+import type { FragmentAttributes } from './fragment-attributes';
+import { pickSharedRenderHeaders, type FragmentRequest } from './fragment-render';
+import type { PatchedHttpRequest } from '../types/PatchedHttpRequest';
+
+interface TestRequest {
+    registryConfig: unknown;
+    ilcState: Record<string, unknown>;
+    host: string;
+    router?: ServerRouter;
+}
+
+type FilterHeadersFn = Parameters<typeof requestFragmentSetup>[0];
+type ProcessFragmentResponseFn = Parameters<typeof requestFragmentSetup>[1];
 
 describe('request-fragment', () => {
     /**
      * Mock filter
      * To be observed to be sure this one has been called
      * Returns always empty headers object
-     * @returns {{}}
      */
     const filterHeadersMock = sinon.spy(() => ({}));
 
@@ -23,12 +36,20 @@ describe('request-fragment', () => {
      */
     const processFragmentResponseMock = sinon.spy();
 
-    const logger = {
+    const logger: Logger = {
+        fatal: () => {},
+        error: () => {},
         warn: () => {},
+        info: () => {},
         debug: () => {},
+        trace: () => {},
     };
 
-    const requestFragment = requestFragmentSetup(filterHeadersMock, processFragmentResponseMock, logger);
+    const requestFragment = requestFragmentSetup(
+        filterHeadersMock as unknown as FilterHeadersFn,
+        processFragmentResponseMock as unknown as ProcessFragmentResponseFn,
+        logger,
+    );
 
     afterEach(() => {
         processFragmentResponseMock.resetHistory();
@@ -54,12 +75,12 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = {
+        const request: TestRequest = {
             registryConfig,
             ilcState: {},
             host: 'apps.test',
         };
-        request.router = new ServerRouter(logger, request, '/primary');
+        request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/primary');
 
         // Expectations
 
@@ -82,7 +103,11 @@ describe('request-fragment', () => {
 
         // Processing
 
-        await requestFragment(attributes.url, attributes, request);
+        await requestFragment(
+            attributes.url as string,
+            attributes as unknown as FragmentAttributes,
+            request as unknown as FragmentRequest,
+        );
         mockRequestScope.done();
         chai.expect(processFragmentResponseMock.calledOnce).to.be.equal(true);
         chai.expect(filterHeadersMock.calledOnce).to.be.equal(true);
@@ -113,12 +138,12 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = {
+        const request: TestRequest = {
             registryConfig,
             ilcState: {},
             host: 'apps.test',
         };
-        request.router = new ServerRouter(logger, request, '/wrapper');
+        request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/wrapper');
 
         // Expectations
 
@@ -141,7 +166,11 @@ describe('request-fragment', () => {
 
         // Processing
 
-        await requestFragment(attributes.url, attributes, request);
+        await requestFragment(
+            attributes.url as string,
+            attributes as unknown as FragmentAttributes,
+            request as unknown as FragmentRequest,
+        );
         mockRequestScope.done();
         chai.expect(processFragmentResponseMock.calledOnce).to.be.equal(true);
         chai.expect(filterHeadersMock.calledOnce).to.be.equal(true);
@@ -172,12 +201,12 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = {
+        const request: TestRequest = {
             registryConfig,
             ilcState: {},
             host: 'apps.test',
         };
-        request.router = new ServerRouter(logger, request, '/wrapper');
+        request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/wrapper');
 
         // Expectations
 
@@ -229,7 +258,11 @@ describe('request-fragment', () => {
 
         // Processing
 
-        await requestFragment(attributes.url, attributes, request);
+        await requestFragment(
+            attributes.url as string,
+            attributes as unknown as FragmentAttributes,
+            request as unknown as FragmentRequest,
+        );
 
         mockRequestWrapperScope.done();
         mockRequestWrappedAppScope.done();
@@ -240,7 +273,7 @@ describe('request-fragment', () => {
     it('should return timeout if timeout is specified for fragment', async () => {
         const registryConfig = getRegistryMock().getConfig();
 
-        let timeoutMs = 200;
+        const timeoutMs = 200;
         const attributes = getFragmentAttributes({
             id: 'primary__at__primary',
             appProps: { publicPath: 'http://apps.test/primary' },
@@ -255,12 +288,12 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = {
+        const request: TestRequest = {
             registryConfig,
             ilcState: {},
             host: 'apps.test',
         };
-        request.router = new ServerRouter(logger, request, '/primary');
+        request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/primary');
 
         // Expectations
 
@@ -283,12 +316,91 @@ describe('request-fragment', () => {
             .reply(200);
 
         try {
-            await requestFragment(attributes.url, attributes, request);
+            await requestFragment(
+                attributes.url as string,
+                attributes as unknown as FragmentAttributes,
+                request as unknown as FragmentRequest,
+            );
             mockRequestScope.done();
             chai.expect.fail('This code should not be reached, because error expected to be thrown above');
         } catch (e) {
-            chai.expect(e).to.be.an.instanceof(errors.FragmentRequestError);
-            chai.expect(e.message).to.contain('timeout');
+            chai.expect(e).to.be.an.instanceof(FragmentRequestError);
+            chai.expect((e as Error).message).to.contain('timeout');
+        }
+    });
+
+    it('should still bound the socket with a default timeout when the fragment declares timeout: 0 or omits it', async () => {
+        // registry ssr.timeout has no positivity constraint, and the LDE override cookie path
+        // skips schema validation entirely — a falsy timeout must never mean "no timeout" at the
+        // transport level, or a hanging origin holds the connection open forever.
+        //
+        // A direct spy on http.ClientRequest.prototype.setTimeout doesn't reliably see calls made
+        // through nock's own socket mock, so instead the actual request instance returned by
+        // http.request() is wrapped in place, right where it's created — this observes both the
+        // options object http.request() was called with AND the explicit .setTimeout(ms, callback)
+        // call makeRequest() makes on the live instance afterward, including that an abort callback
+        // is actually wired (a duration with no callback would never abort a hung connection).
+        const registryConfig = getRegistryMock().getConfig();
+        const originalRequest = http.request;
+        let capturedSetTimeoutCall: { ms: number; hasCallback: boolean } | null = null;
+        const requestStub = sinon.stub(http, 'request').callsFake((...args: any[]) => {
+            const req = (originalRequest as any).apply(http, args);
+            const originalSetTimeout = req.setTimeout.bind(req);
+            req.setTimeout = (ms: number, fn: () => void) => {
+                capturedSetTimeoutCall = { ms, hasCallback: typeof fn === 'function' };
+                return originalSetTimeout(ms, fn);
+            };
+            return req;
+        });
+
+        try {
+            for (const timeout of [0, undefined]) {
+                const attributes = getFragmentAttributes({
+                    id: 'primary__at__primary',
+                    appProps: { publicPath: 'http://apps.test/primary' },
+                    wrapperConf: null,
+                    url: 'http://apps.test/primary',
+                    async: false,
+                    primary: false,
+                    public: false,
+                    timeout,
+                    returnHeaders: false,
+                    forwardQuerystring: false,
+                    ignoreInvalidSsl: false,
+                });
+
+                const request: TestRequest = {
+                    registryConfig,
+                    ilcState: {},
+                    host: 'apps.test',
+                };
+                request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/primary');
+
+                const mockRequestScope = nock('http://apps.test').get('/primary').query(true).reply(200);
+
+                requestStub.resetHistory();
+                capturedSetTimeoutCall = null;
+                await requestFragment(
+                    attributes.url as string,
+                    attributes as unknown as FragmentAttributes,
+                    request as unknown as FragmentRequest,
+                );
+                mockRequestScope.done();
+
+                chai.expect(requestStub.calledOnce, `timeout=${timeout}`).to.be.equal(true);
+                chai.expect(
+                    (requestStub.firstCall.args[0] as any).timeout,
+                    `timeout=${timeout} (options.timeout)`,
+                ).to.be.greaterThan(0);
+                chai.expect(capturedSetTimeoutCall, `timeout=${timeout} (setTimeout was called)`).to.not.be.null;
+                chai.expect(capturedSetTimeoutCall!.ms, `timeout=${timeout} (setTimeout ms)`).to.be.greaterThan(0);
+                chai.expect(
+                    capturedSetTimeoutCall!.hasCallback,
+                    `timeout=${timeout} (abort callback wired)`,
+                ).to.be.equal(true);
+            }
+        } finally {
+            requestStub.restore();
         }
     });
 
@@ -309,25 +421,28 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = {
+        const request: TestRequest = {
             registryConfig,
             ilcState: {},
             host: 'apps.test',
         };
-        request.router = new ServerRouter(logger, request, '/primary');
+        request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/primary');
 
-        const networkError = new Error('Network error');
-        networkError.code = 'ECONNREFUSED';
+        const networkError = Object.assign(new Error('Network error'), { code: 'ECONNREFUSED' });
 
         const mockRequestScope = nock('http://apps.test').get('/primary').query(true).replyWithError(networkError);
 
         try {
-            await requestFragment(attributes.url, attributes, request);
+            await requestFragment(
+                attributes.url as string,
+                attributes as unknown as FragmentAttributes,
+                request as unknown as FragmentRequest,
+            );
             mockRequestScope.done();
             chai.expect.fail('This code should not be reached, because error expected to be thrown above');
         } catch (e) {
-            chai.expect(e).to.be.an.instanceof(errors.FragmentRequestError);
-            chai.expect(e.message).to.contain('Error during SSR request to fragment');
+            chai.expect(e).to.be.an.instanceof(FragmentRequestError);
+            chai.expect((e as Error).message).to.contain('Error during SSR request to fragment');
         }
     });
 
@@ -354,25 +469,28 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = {
+        const request: TestRequest = {
             registryConfig,
             ilcState: {},
             host: 'apps.test',
         };
-        request.router = new ServerRouter(logger, request, '/wrapper');
+        request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/wrapper');
 
-        const networkError = new Error('Network error');
-        networkError.code = 'ECONNREFUSED';
+        const networkError = Object.assign(new Error('Network error'), { code: 'ECONNREFUSED' });
 
         const mockRequestScope = nock('http://apps.test').get('/wrapper').query(true).replyWithError(networkError);
 
         try {
-            await requestFragment(attributes.url, attributes, request);
+            await requestFragment(
+                attributes.url as string,
+                attributes as unknown as FragmentAttributes,
+                request as unknown as FragmentRequest,
+            );
             mockRequestScope.done();
             chai.expect.fail('This code should not be reached, because error expected to be thrown above');
         } catch (e) {
-            chai.expect(e).to.be.an.instanceof(errors.FragmentRequestError);
-            chai.expect(e.message).to.contain('Error during SSR request to fragment wrapper');
+            chai.expect(e).to.be.an.instanceof(FragmentRequestError);
+            chai.expect((e as Error).message).to.contain('Error during SSR request to fragment wrapper');
         }
     });
 
@@ -393,19 +511,23 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: false,
         });
 
-        const request = {
+        const request: TestRequest = {
             registryConfig,
             ilcState: {},
             host: 'secure.test',
         };
-        request.router = new ServerRouter(logger, request, '/primary');
+        request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/primary');
 
         const mockRequestScope = nock('https://secure.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/primary')
             .query(true)
             .reply(200);
 
-        await requestFragment(attributes.url, attributes, request);
+        await requestFragment(
+            attributes.url as string,
+            attributes as unknown as FragmentAttributes,
+            request as unknown as FragmentRequest,
+        );
         mockRequestScope.done();
         chai.expect(processFragmentResponseMock.calledOnce).to.be.equal(true);
     });
@@ -427,20 +549,130 @@ describe('request-fragment', () => {
             ignoreInvalidSsl: true,
         });
 
-        const request = {
+        const request: TestRequest = {
             registryConfig,
             ilcState: {},
             host: 'secure.test',
         };
-        request.router = new ServerRouter(logger, request, '/primary');
+        request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/primary');
 
         const mockRequestScope = nock('https://secure.test', { reqheaders: { 'accept-encoding': 'gzip, deflate' } })
             .get('/primary')
             .query(true)
             .reply(200);
 
-        await requestFragment(attributes.url, attributes, request);
+        await requestFragment(
+            attributes.url as string,
+            attributes as unknown as FragmentAttributes,
+            request as unknown as FragmentRequest,
+        );
         mockRequestScope.done();
         chai.expect(processFragmentResponseMock.calledOnce).to.be.equal(true);
+    });
+
+    it('should warn when fragmentProxyHeaders are configured but the render is shared (cacheable)', async () => {
+        const warn = sinon.spy();
+        const requestFragmentWithSpyLogger = requestFragmentSetup(
+            filterHeadersMock as unknown as FilterHeadersFn,
+            processFragmentResponseMock as unknown as ProcessFragmentResponseFn,
+            {
+                warn,
+                debug: () => {},
+            } as unknown as Logger,
+        );
+
+        const registryConfig = getRegistryMock({ settings: { fragmentProxyHeaders: ['x-custom-header'] } }).getConfig();
+
+        const attributes = getFragmentAttributes({
+            id: 'primary__at__primary',
+            appProps: { publicPath: 'http://apps.test/primary' },
+            wrapperConf: null,
+            url: 'http://apps.test/primary',
+            async: false,
+            primary: false,
+            public: false,
+            timeout: 1000,
+            returnHeaders: false,
+            forwardQuerystring: false,
+            ignoreInvalidSsl: false,
+        });
+
+        const request: TestRequest = {
+            registryConfig,
+            ilcState: {},
+            host: 'apps.test',
+        };
+        request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/primary');
+
+        const mockRequestScope = nock('http://apps.test').get('/primary').query(true).reply(200);
+
+        await requestFragmentWithSpyLogger(
+            attributes.url as string,
+            attributes as unknown as FragmentAttributes,
+            request as unknown as FragmentRequest,
+            { mode: 'shared', varyHeaders: pickSharedRenderHeaders({ 'x-request-host': 'apps.test' }) },
+        );
+        mockRequestScope.done();
+
+        chai.expect(warn.calledOnce).to.be.equal(true);
+        chai.expect(warn.firstCall.args[1]).to.match(/fragmentProxyHeaders/);
+    });
+
+    it('warns once per app about dropped fragmentProxyHeaders, not on every shared render', async () => {
+        const warn = sinon.spy();
+        const requestFragmentWithSpyLogger = requestFragmentSetup(
+            filterHeadersMock as unknown as FilterHeadersFn,
+            processFragmentResponseMock as unknown as ProcessFragmentResponseFn,
+            {
+                warn,
+                debug: () => {},
+            } as unknown as Logger,
+        );
+
+        const registryConfig = getRegistryMock({ settings: { fragmentProxyHeaders: ['x-custom-header'] } }).getConfig();
+
+        // a global setting, so it is stated once per app rather than on every shared render
+        const renderShared = async (id: string) => {
+            const attributes = getFragmentAttributes({
+                id,
+                appProps: { publicPath: 'http://apps.test/primary' },
+                wrapperConf: null,
+                url: 'http://apps.test/primary',
+                async: false,
+                primary: false,
+                public: false,
+                timeout: 1000,
+                returnHeaders: false,
+                forwardQuerystring: false,
+                ignoreInvalidSsl: false,
+            });
+
+            const request: TestRequest = {
+                registryConfig,
+                ilcState: {},
+                host: 'apps.test',
+            };
+            request.router = new ServerRouter(logger, request as unknown as PatchedHttpRequest, '/primary');
+
+            const mockRequestScope = nock('http://apps.test').get('/primary').query(true).reply(200);
+
+            await requestFragmentWithSpyLogger(
+                attributes.url as string,
+                attributes as unknown as FragmentAttributes,
+                request as unknown as FragmentRequest,
+                { mode: 'shared', varyHeaders: pickSharedRenderHeaders({ 'x-request-host': 'apps.test' }) },
+            );
+            mockRequestScope.done();
+        };
+
+        await renderShared('primary__at__primary');
+        await renderShared('primary__at__primary');
+        await renderShared('regular__at__regular');
+
+        chai.expect(warn.callCount).to.be.equal(2);
+        chai.expect(warn.getCalls().map((call) => (call.args[0] as { appId: string }).appId)).to.deep.equal([
+            'primary__at__primary',
+            'regular__at__regular',
+        ]);
     });
 });

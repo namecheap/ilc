@@ -182,6 +182,36 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should successfully create record with ssr.cache and expose it via /api/v1/config', async () => {
+            const appWithCache = {
+                ...example.correct,
+                ssr: { ...example.correct.ssr, cache: { enabled: true, ttlSeconds: 300 } },
+            };
+
+            try {
+                const response = await req.post(example.url).send(appWithCache).expect(200);
+                expect(response.body.ssr).deep.equal(appWithCache.ssr);
+
+                const readResponse = await req.get(example.url + example.encodedName).expect(200);
+                expect(readResponse.body.ssr).deep.equal(appWithCache.ssr);
+
+                const configResponse = await req.get('/api/v1/config').expect(200);
+                expect(configResponse.body.apps[example.correct.name].ssr).deep.equal(appWithCache.ssr);
+            } finally {
+                await req.delete(example.url + example.encodedName);
+            }
+        });
+
+        it('should not create record with invalid ssr.cache', async () => {
+            const appWithInvalidCache = {
+                ...example.correct,
+                ssr: { ...example.correct.ssr, cache: { enabled: 'nope' } },
+            };
+
+            const response = await req.post(example.url).send(appWithInvalidCache).expect(422);
+            expect(response.text).to.include('cache');
+        });
+
         it('should create record with existed enforceDomain', async () => {
             let domainId;
             const templateName = 'templateName';

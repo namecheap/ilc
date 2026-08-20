@@ -10,6 +10,11 @@ export type App = {
     ssr?: {
         timeout?: number;
         src?: string;
+        ignoreInvalidSsl?: boolean;
+        cache?: {
+            enabled?: boolean;
+            ttlSeconds?: number;
+        };
     };
     props?: Record<string, any>;
     ssrProps?: Record<string, any>;

@@ -1,19 +1,21 @@
-'use strict';
+import http, { type IncomingHttpHeaders, type IncomingMessage } from 'node:http';
+import https from 'node:https';
+import { URL } from 'node:url';
+import Agent, { HttpsAgent } from 'agentkeepalive';
+import deepmerge from 'deepmerge';
+import type { Logger } from 'ilc-plugins-sdk';
 
-const http = require('node:http');
-const https = require('node:https');
-const { URL } = require('node:url');
-const Agent = require('agentkeepalive');
-const HttpsAgent = require('agentkeepalive').HttpsAgent;
-const deepmerge = require('deepmerge');
-const { appIdToNameAndSlot } = require('../../common/utils');
-const { SdkOptions } = require('../../common/SdkOptions');
-const { objectToBase64 } = require('../objectToBase64');
-
-const errors = require('./errors');
+import { appIdToNameAndSlot, removeQueryParams } from '../../common/utils';
+import { SdkOptions } from '../../common/SdkOptions';
+import { objectToBase64 } from '../objectToBase64';
+import { FragmentRequestError } from './errors';
+import type { FragmentAttributes, FragmentWrapperConf } from './fragment-attributes';
+import type { FragmentRequest, FragmentRenderOptions, FragmentResponse } from './fragment-render';
 
 const NS_IN_SEC = 1e6;
 const MS_IN_SEC = 1000;
+
+const DEFAULT_REQUEST_TIMEOUT_MS = 3000;
 
 // By default tailor supports gzipped response from fragments
 const requiredHeaders = {
@@ -23,25 +25,56 @@ const requiredHeaders = {
 const kaAgent = new Agent();
 const kaAgentHttps = new HttpsAgent();
 
-/**
- * Simple Request Promise Function that requests the fragment server with
- *  - filtered headers
- *  - Specified timeout from fragment attributes
- *
- * @param {filterHeaders} - Function that handles the header forwarding
- * @param {processFragmentResponse} - Function that handles response processing
- * @param {string} fragmentUrl - URL of the fragment server
- * @param {Object} attributes - Attributes passed via fragment tags
- * @param {Object} request - HTTP request stream
- * @returns {Promise} Response from the fragment server
- */
-module.exports = (filterHeaders, processFragmentResponse, logger) =>
-    function requestFragment(fragmentUrl, attributes, request) {
-        return new Promise((resolve, reject) => {
+type FilterHeadersFn = (
+    attributes: FragmentAttributes,
+    request: { headers?: IncomingHttpHeaders },
+    extraHeaders: string[] | undefined,
+    renderOptions: FragmentRenderOptions,
+) => Record<string, string>;
+
+type ProcessFragmentResponse = (
+    response: IncomingMessage,
+    context: {
+        request: FragmentRequest;
+        fragmentUrl: string;
+        fragmentAttributes: FragmentAttributes;
+        isWrapper?: boolean;
+    },
+) => FragmentResponse;
+
+/** Requests the fragment server with filtered headers and the fragment's configured timeout. */
+export = (filterHeaders: FilterHeadersFn, processFragmentResponse: ProcessFragmentResponse, logger: Logger) => {
+    // A global setting, so the warning below states a fact that never changes for an app, while
+    // shared renders recur on every miss and refresh. Report it once per app, not per render.
+    const appsWarnedAboutDroppedProxyHeaders = new Set<string>();
+
+    return function requestFragment(
+        fragmentUrl: string,
+        attributes: FragmentAttributes,
+        request: FragmentRequest,
+        renderOptions: FragmentRenderOptions = { mode: 'private' },
+    ): Promise<FragmentResponse> {
+        return new Promise<FragmentResponse>((resolve, reject) => {
             const currRoute = request.router.getRoute();
 
+            const proxyHeaders = request.registryConfig?.settings?.fragmentProxyHeaders;
+            const appId = attributes.id ?? 'unknown';
+            if (
+                renderOptions.mode === 'shared' &&
+                proxyHeaders &&
+                proxyHeaders.length > 0 &&
+                !appsWarnedAboutDroppedProxyHeaders.has(appId)
+            ) {
+                appsWarnedAboutDroppedProxyHeaders.add(appId);
+                logger.warn(
+                    { appId: attributes.id, fragmentProxyHeaders: proxyHeaders },
+                    '[ILC Cache]: fragmentProxyHeaders are configured but dropped on a shared (cacheable) render',
+                );
+            }
+            const fragmentHeaders = filterHeaders(attributes, request, proxyHeaders, renderOptions);
+
             if (attributes.wrapperConf) {
-                const wrapperConf = attributes.wrapperConf;
+                const wrapperConf = attributes.wrapperConf as FragmentWrapperConf;
                 const reqUrl = makeFragmentUrl({
                     route: currRoute,
                     baseUrl: wrapperConf.src,
@@ -66,7 +99,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                 const fragmentRequest = makeRequest(
                     reqUrl,
                     {
-                        ...filterHeaders(attributes, request, request.registryConfig?.settings?.fragmentProxyHeaders),
+                        ...fragmentHeaders,
                         ...requiredHeaders,
                     },
                     wrapperConf.timeout,
@@ -97,8 +130,10 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                             const propsOverride = response.headers['x-props-override'];
                             attributes.wrapperPropsOverride = {};
                             if (propsOverride) {
-                                const props = JSON.parse(Buffer.from(propsOverride, 'base64').toString('utf8'));
-                                attributes.appProps = deepmerge(attributes.appProps, props);
+                                const props = JSON.parse(
+                                    Buffer.from(propsOverride as string, 'base64').toString('utf8'),
+                                );
+                                attributes.appProps = deepmerge(attributes.appProps ?? {}, props);
                                 attributes.wrapperPropsOverride = props;
                             }
                             attributes.wrapperConf = null;
@@ -128,7 +163,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                         resolve(
                             processFragmentResponse(response, {
                                 request,
-                                fragmentUrl: currRoute.route,
+                                fragmentUrl: currRoute.route as string,
                                 fragmentAttributes: attributes,
                                 isWrapper: true,
                             }),
@@ -155,7 +190,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                         'Request Fragment. Wrapper Fragment Processing. Fragment Request Error',
                     );
                     reject(
-                        new errors.FragmentRequestError({
+                        new FragmentRequestError({
                             message: `Error during SSR request to fragment wrapper at URL: ${fragmentUrl}`,
                             cause: error,
                         }),
@@ -163,11 +198,11 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                 });
                 fragmentRequest.end();
             } else {
-                const { appName } = appIdToNameAndSlot(attributes.id);
+                const { appName } = appIdToNameAndSlot(attributes.id as string);
 
                 const sdkOptions = new SdkOptions({
                     i18n: {
-                        manifestPath: request.registryConfig['apps'][appName].l10nManifest,
+                        manifestPath: request.registryConfig.apps[appName].l10nManifest,
                     },
                 });
 
@@ -177,6 +212,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                     appId: attributes.id,
                     props: attributes.appProps,
                     sdkOptions: sdkOptions.toJSON(),
+                    stripReqUrlQuery: renderOptions.mode === 'shared',
                 });
 
                 logger.debug(
@@ -198,7 +234,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                 const fragmentRequest = makeRequest(
                     reqUrl,
                     {
-                        ...filterHeaders(attributes, request, request.registryConfig?.settings?.fragmentProxyHeaders),
+                        ...fragmentHeaders,
                         ...requiredHeaders,
                     },
                     attributes.timeout,
@@ -225,7 +261,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                 fragmentRequest.on('timeout', () => {
                     const endTime = process.hrtime(startTime);
                     reject(
-                        new errors.FragmentRequestError({
+                        new FragmentRequestError({
                             message: `Error during SSR request to fragment at URL: ${fragmentUrl} due to timeout after ${
                                 endTime[0] * MS_IN_SEC + endTime[1] / NS_IN_SEC
                             }ms`,
@@ -234,7 +270,7 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
                 });
                 fragmentRequest.on('error', (error) => {
                     reject(
-                        new errors.FragmentRequestError({
+                        new FragmentRequestError({
                             message: `Error during SSR request to fragment at URL: ${fragmentUrl}`,
                             cause: error,
                         }),
@@ -244,13 +280,34 @@ module.exports = (filterHeaders, processFragmentResponse, logger) =>
             }
         });
     };
+};
 
-function makeFragmentUrl({ route, baseUrl, appId, props, ignoreBasePath = false, sdkOptions, wrappedAppProps }) {
+interface MakeFragmentUrlOptions {
+    route: { basePath?: string; reqUrl?: string };
+    baseUrl: string;
+    appId?: string;
+    props?: object | null;
+    ignoreBasePath?: boolean;
+    sdkOptions?: unknown;
+    wrappedAppProps?: object | null;
+    stripReqUrlQuery?: boolean;
+}
+
+function makeFragmentUrl({
+    route,
+    baseUrl,
+    appId,
+    props,
+    ignoreBasePath = false,
+    sdkOptions,
+    wrappedAppProps,
+    stripReqUrlQuery = false,
+}: MakeFragmentUrlOptions): string {
     const url = new URL(baseUrl);
 
     const reqProps = {
         basePath: ignoreBasePath ? '/' : route.basePath,
-        reqUrl: route.reqUrl,
+        reqUrl: stripReqUrlQuery ? removeQueryParams(route.reqUrl as string) : route.reqUrl,
         fragmentName: appId,
     };
 
@@ -271,12 +328,13 @@ function makeFragmentUrl({ route, baseUrl, appId, props, ignoreBasePath = false,
     return url.toString();
 }
 
-function makeRequest(reqUrl, headers, timeout, ignoreInvalidSsl = false) {
+function makeRequest(reqUrl: string, headers: Record<string, string>, timeout?: number, ignoreInvalidSsl = false) {
     const url = new URL(reqUrl);
     const { hostname, port, pathname, search, username, password, protocol } = url;
-    const options = {
+    const effectiveTimeout = typeof timeout === 'number' && timeout > 0 ? timeout : DEFAULT_REQUEST_TIMEOUT_MS;
+    const options: http.RequestOptions & { rejectUnauthorized?: boolean } = {
         headers,
-        timeout,
+        timeout: effectiveTimeout,
         auth: username && password ? `${username}:${password}` : undefined,
         host: hostname, // the difference between "host" and "hostname" is that "host" includes port
         port,
@@ -293,10 +351,7 @@ function makeRequest(reqUrl, headers, timeout, ignoreInvalidSsl = false) {
     }
 
     const fragmentRequest = httpLib.request(options);
-
-    if (timeout) {
-        fragmentRequest.setTimeout(timeout, fragmentRequest.abort);
-    }
+    fragmentRequest.setTimeout(effectiveTimeout, fragmentRequest.abort);
 
     return fragmentRequest;
 }

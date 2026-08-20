@@ -1,18 +1,14 @@
 import type { IncomingHttpHeaders } from 'http';
-
-interface FragmentAttributes {
-    public?: boolean | string;
-    [key: string]: unknown;
-}
+import { pickHeaders, SHARED_RENDER_HEADERS, type FragmentRenderOptions } from './fragment-render';
+import type { FragmentAttributes } from './fragment-attributes';
 
 const ACCEPT_HEADERS: readonly string[] = [
+    ...SHARED_RENDER_HEADERS,
     'authorization',
     'accept-language',
     'referer',
     'user-agent',
     'x-request-uri',
-    'x-request-host',
-    'x-request-intl',
     'cookie',
 ];
 
@@ -20,6 +16,7 @@ export function filterHeaders(
     attributes: FragmentAttributes,
     request: { headers?: IncomingHttpHeaders },
     extraHeaders?: string[],
+    renderOptions: FragmentRenderOptions = { mode: 'private' },
 ): Record<string, string> {
     const { public: isPublic } = attributes;
     const { headers = {} } = request;
@@ -29,17 +26,14 @@ export function filterHeaders(
         return {};
     }
 
+    if (renderOptions.mode === 'shared') {
+        return renderOptions.varyHeaders;
+    }
+
     const allowedHeaders =
         extraHeaders && extraHeaders.length > 0
             ? [...ACCEPT_HEADERS, ...extraHeaders.map((h) => h.toLowerCase())]
             : ACCEPT_HEADERS;
 
-    return Object.keys(headers).reduce<Record<string, string>>((newHeaders, key) => {
-        const value = headers[key];
-        if ((allowedHeaders.includes(key) || key.startsWith('x-forwarded')) && value) {
-            newHeaders[key] = value as string;
-        }
-
-        return newHeaders;
-    }, {});
+    return pickHeaders(headers, (key) => allowedHeaders.includes(key) || key.startsWith('x-forwarded'));
 }

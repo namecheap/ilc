@@ -3,3 +3,6 @@ ilc/public
 ilc/dist
 .nyc_output
 .karma_output
+
+# Not ours to reformat: mkdocs uses 2-space YAML, prettier rewrites the whole file
+mkdocs.yml

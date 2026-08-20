@@ -32,6 +32,8 @@ export function cloneDeep<T extends object>(source: T): T {
 
 export const uniqueArray = <T>(array: T[]): T[] => [...new Set(array)];
 
+export const nowInSec = (): number => Math.floor(Date.now() / 1000);
+
 export const encodeHtmlEntities = (value: string): string =>
     value.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 export const decodeHtmlEntities = (value: string): string =>

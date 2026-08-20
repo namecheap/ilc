@@ -84,4 +84,38 @@ describe('EvictingCacheStorage', () => {
         expect(cache.getItem('c')).to.deep.equal({ data: 3, cachedAt: 1 });
         expect(cache.getItem('d')).to.deep.equal({ data: 4, cachedAt: 1 });
     });
+
+    it('should evict least-recently-used entries until the total weight is within budget', () => {
+        const weightedCache = new EvictingCacheStorage({
+            maxSize: 10,
+            maxWeight: 10,
+            getWeight: (entry) => entry.data as number,
+        });
+
+        weightedCache.setItem('a', { data: 4, cachedAt: 1 });
+        weightedCache.setItem('b', { data: 4, cachedAt: 1 });
+        weightedCache.getItem('a');
+        weightedCache.setItem('c', { data: 5, cachedAt: 1 });
+
+        expect(weightedCache.getItem('b')).to.be.null;
+        expect(weightedCache.getItem('a')).to.deep.equal({ data: 4, cachedAt: 1 });
+        expect(weightedCache.getItem('c')).to.deep.equal({ data: 5, cachedAt: 1 });
+    });
+
+    it('should update the total weight when an existing entry is replaced or deleted', () => {
+        const weightedCache = new EvictingCacheStorage({
+            maxSize: 10,
+            maxWeight: 10,
+            getWeight: (entry) => entry.data as number,
+        });
+
+        weightedCache.setItem('a', { data: 8, cachedAt: 1 });
+        weightedCache.setItem('a', { data: 2, cachedAt: 1 });
+        weightedCache.setItem('b', { data: 8, cachedAt: 1 });
+        weightedCache.deleteItem('a');
+        weightedCache.setItem('c', { data: 2, cachedAt: 1 });
+
+        expect(weightedCache.getItem('b')).to.deep.equal({ data: 8, cachedAt: 1 });
+        expect(weightedCache.getItem('c')).to.deep.equal({ data: 2, cachedAt: 1 });
+    });
 });
