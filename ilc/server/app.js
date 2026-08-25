@@ -118,6 +118,7 @@ module.exports = async function createApplication(registryService, pluginManager
         config.get('newrelic.customClientJsWrapper'),
         autoInjectNrMonitoring,
         logger,
+        config.get('tailor.maxFragmentRequestSize'),
     );
 
     app.all('*', wildcardRequestHandlerFactory(logger, registryService, errorHandler, transitionHooksExecutor, tailor));

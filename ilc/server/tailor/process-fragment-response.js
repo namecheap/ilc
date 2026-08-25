@@ -8,7 +8,7 @@ const errors = require('./errors');
  * @param {http.IncomingMessage} context.request - incoming request from browser
  * @param {Object} context.fragmentAttributes - fragment attributes map
  * @param {String} context.fragmentUrl - URL that was requested on fragment
- * @param {String} context.isWrapper - Indicates if App Wrapper is requested
+ * @param {boolean} [context.isWrapper] - Indicates if App Wrapper is requested
  */
 module.exports = (response, context) => {
     const currRoute = context.request.router.getRoute();

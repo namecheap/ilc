@@ -29,6 +29,9 @@
     client: {
         protocol: 'ILC_CLIENT_PROTOCOL',
     },
+    tailor: {
+        maxFragmentRequestSize: 'ILC_MAX_FRAGMENT_REQUEST_SIZE',
+    },
     experiments: {
         enabled: 'ILC_EXPERIMENTS_ENABLED',
     },

@@ -1,9 +1,8 @@
-const chai = require('chai');
-const sinon = require('sinon');
-const _ = require('lodash');
-const { getRegistryMock } = require('../../tests/helpers');
+import chai from 'chai';
+import sinon from 'sinon';
 
-const ServerRouter = require('./server-router.js');
+import { getRegistryMock } from '../../tests/helpers';
+import ServerRouter from './server-router';
 
 describe('server router', () => {
     const logger = {
@@ -180,6 +179,18 @@ describe('server router', () => {
             },
         };
 
+        // Named so the fixture and the expectation share one source of truth, rather than the
+        // expectation reaching back into the fixture by index.
+        const footerSlotProps = {
+            firstFooterSlotProp: 'firstFooterSlotProp',
+            secondFooterSlotProp: 'secondFooterSlotProp',
+        };
+        const contactSlotProps = {
+            contactFirstProp: 'changedContactFirstProp',
+            firstContactSlotProp: 'firstContactSlotProp',
+            secondContactSlotProp: 'secondContactSlotProp',
+        };
+
         const routes = [
             {
                 route: '*',
@@ -192,10 +203,7 @@ describe('server router', () => {
                     },
                     footer: {
                         appName: '@portal/footer',
-                        props: {
-                            firstFooterSlotProp: 'firstFooterSlotProp',
-                            secondFooterSlotProp: 'secondFooterSlotProp',
-                        },
+                        props: footerSlotProps,
                         kind: 'primary',
                     },
                 },
@@ -214,11 +222,7 @@ describe('server router', () => {
                     },
                     contact: {
                         appName: 'contact',
-                        props: {
-                            contactFirstProp: 'changedContactFirstProp',
-                            firstContactSlotProp: 'firstContactSlotProp',
-                            secondContactSlotProp: 'secondContactSlotProp',
-                        },
+                        props: contactSlotProps,
                     },
                 },
                 meta: {
@@ -291,28 +295,21 @@ describe('server router', () => {
             navbar__at__navbar: {
                 ...apps['@portal/navbar'].ssr,
                 spaBundleUrl: apps['@portal/navbar'].spaBundle,
-                appProps: {
-                    ...apps['@portal/navbar'].props,
-                    ...routes[0].slots.navbar.props,
-                },
+                // The navbar slot declares no props of its own, so only the app's apply.
+                appProps: { ...apps['@portal/navbar'].props },
                 wrapperConf: null,
             },
             footer__at__footer: {
                 ...apps['@portal/footer'].ssr,
                 spaBundleUrl: apps['@portal/footer'].spaBundle,
                 primary: true,
-                appProps: {
-                    ...routes[0].slots.footer.props,
-                },
+                appProps: { ...footerSlotProps },
                 wrapperConf: null,
             },
             contact__at__contact: {
                 ...apps.contact.ssr,
                 spaBundleUrl: apps.contact.spaBundle,
-                appProps: {
-                    ...apps.contact.props,
-                    ...routes[1].slots.contact.props,
-                },
+                appProps: { ...apps.contact.props, ...contactSlotProps },
                 wrapperConf: null,
             },
             apps__at__apps: {
@@ -326,6 +323,7 @@ describe('server router', () => {
                     name: '@portal/news',
                     ...apps['@portal/news'].ssr,
                     props: apps['@portal/news'].props,
+                    spaBundleUrl: apps['@portal/news'].spaBundle,
                 },
             },
         });
@@ -362,7 +360,7 @@ describe('server router', () => {
         }).getConfig();
 
         const request = {
-            ilcState: { forceSpecialRoute: 404 },
+            ilcState: { forceSpecialRoute: '404' },
             url: '/all?prop=value',
             registryConfig,
         };
