@@ -1,14 +1,14 @@
 import newrelic from 'newrelic';
 
-import Tailor, { type TailorOptions } from './tailorx';
+import { Tailor, type TailorOptions } from './tailorx';
 import { fetchTemplate } from './fetch-template';
 import { filterHeaders } from './filter-headers';
 import errorHandlerSetup from './error-handler';
 import fragmentHooks from './fragment-hooks';
 import { ConfigsInjector } from './configs-injector';
 import processFragmentResponse from './process-fragment-response';
-import requestFragment from './request-fragment';
-import type ServerRouter from './server-router';
+import { requestFragmentFactory } from './request-fragment';
+import type { ServerRouter } from './server-router';
 import type { Registry } from '../types/Registry';
 
 type Logger = Pick<Console, 'debug' | 'warn'>;
@@ -17,7 +17,7 @@ type Logger = Pick<Console, 'debug' | 'warn'>;
  * The error-handling service is injected by app.js and typed where it is defined; this module
  * only passes it through, so it takes it as opaque.
  */
-export default function tailorFactory(
+export function tailorFactory(
     registryService: Registry,
     errorHandlingService: unknown,
     cdnUrl: string | null,
@@ -38,7 +38,7 @@ export default function tailorFactory(
             return request.router.getFragmentsContext();
         },
         fetchTemplate: fetchTemplate(configsInjector, newrelic, registryService),
-        requestFragment: requestFragment(filterHeaders, processFragmentResponse, logger, {
+        requestFragment: requestFragmentFactory(filterHeaders, processFragmentResponse, logger, {
             maxRequestSize: maxFragmentRequestSize,
         }),
         processFragmentResponse,

@@ -1,4 +1,4 @@
-import Tailor from '@namecheap/tailorx';
+import UntypedTailor from '@namecheap/tailorx';
 
 /**
  * The typed seam for @namecheap/tailorx@8.2.1.
@@ -68,4 +68,4 @@ export interface TailorOptions {
  * is wrong (see above), so the source-verified one is asserted here — once — and every
  * construction site gets a checked options object.
  */
-export default Tailor as unknown as new (options?: TailorOptions) => InstanceType<typeof Tailor>;
+export const Tailor = UntypedTailor as unknown as new (options?: TailorOptions) => InstanceType<typeof UntypedTailor>;

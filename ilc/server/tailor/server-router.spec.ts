@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinon from 'sinon';
 
 import { getRegistryMock } from '../../tests/helpers';
-import ServerRouter from './server-router';
+import { ServerRouter } from './server-router';
 
 describe('server router', () => {
     const logger = {

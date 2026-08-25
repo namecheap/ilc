@@ -11,8 +11,7 @@ import { SdkOptions } from '../../common/SdkOptions';
 import { objectToBase64 } from '../objectToBase64';
 import { findLargestHeader, headFor, measureHeadTotal, truncateForLog } from './header-block';
 import type { OutgoingRequest } from './header-block';
-import type ServerRouter from './server-router';
-import type { WrapperConf } from './server-router';
+import type { ServerRouter, WrapperConf } from './server-router';
 import type { TransformedRegistryConfig } from '../types/Registry';
 
 import errors from './errors';
@@ -108,12 +107,12 @@ const kaAgentHttps = new HttpsAgent();
  * @param {Object} request - HTTP request stream
  * @returns {Promise} Response from the fragment server
  */
-export default (
+export function requestFragmentFactory(
     filterHeaders: FilterHeaders,
     processFragmentResponse: ProcessFragmentResponse,
     logger: Logger,
     { maxRequestSize }: { maxRequestSize?: unknown } = {},
-) => {
+) {
     const sizeLimit = resolveSizeLimit(maxRequestSize, logger);
 
     return function requestFragment(
@@ -407,7 +406,7 @@ export default (
             }
         });
     };
-};
+}
 
 function isOverSizeLimit(
     fragmentRequest: ClientRequest,

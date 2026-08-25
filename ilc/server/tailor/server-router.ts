@@ -72,7 +72,7 @@ interface RouterRequest {
     ilcState?: IlcState;
 }
 
-export default class ServerRouter {
+export class ServerRouter {
     private logger: Logger;
     private request: RouterRequest;
     private registryConfig?: TransformedRegistryConfig;

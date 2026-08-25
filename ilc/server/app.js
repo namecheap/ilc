@@ -8,7 +8,7 @@ import { pingPluginFactroy } from './routes/pingPluginFactory';
 import { renderTemplateHandlerFactory } from './routes/renderTemplateHandlerFactory';
 import { wildcardRequestHandlerFactory } from './routes/wildcardRequestHandlerFactory';
 import { registerStatic } from './serveStatic';
-import tailorFactory from './tailor/factory';
+import { tailorFactory } from './tailor/factory';
 import { TransitionHooksExecutor } from './TransitionHooksExecutor';
 const { Test500Error } = require('./errorHandler/ErrorHandler');
 

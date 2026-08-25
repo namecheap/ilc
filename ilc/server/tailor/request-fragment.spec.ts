@@ -4,8 +4,8 @@ import sinon from 'sinon';
 import net from 'node:net';
 import http from 'node:http';
 
-import requestFragmentSetup from './request-fragment';
-import ServerRouter from './server-router';
+import { requestFragmentFactory as requestFragmentSetup } from './request-fragment';
+import { ServerRouter } from './server-router';
 import { getFragmentAttributes, getRegistryMock } from '../../tests/helpers';
 import errors from './errors';
 
