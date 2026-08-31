@@ -10,6 +10,8 @@ export type App = {
     ssr?: {
         timeout?: number;
         src?: string;
+        /** Read by server-router when building a fragment's context, and set by registry data. */
+        ignoreInvalidSsl?: boolean;
     };
     props?: Record<string, any>;
     ssrProps?: Record<string, any>;

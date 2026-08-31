@@ -3,10 +3,10 @@
     port: 8233,
     cdnUrl: null,
     staticError: {
-        disasterFileContentPath: null
+        disasterFileContentPath: null,
     },
     registry: {
-        address: 'http://127.0.0.1:4001'
+        address: 'http://127.0.0.1:4001',
     },
     newrelic: {
         licenseKey: null,
@@ -16,13 +16,13 @@
          */
         customClientJsWrapper: null,
         automaticallyInjectBrowserMonitoring: true,
-        appName: null
+        appName: null,
     },
     overrideConfigTrustedOrigins: null,
     logger: {
         accessLog: {
-            ignoreUrls: ''
-        }
+            ignoreUrls: '',
+        },
     },
     static: {
         internalUrl: '/_ilc/',
@@ -32,6 +32,14 @@
     },
     client: {
         protocol: 'https',
+    },
+    tailor: {
+        // Disabled by default: enabling it changes what renders, so a deployment opts in
+        // rather than inheriting the decision. Set it to the byte ceiling your fragment
+        // servers actually accept — below their --max-http-header-size, whose own default is
+        // 16384. For stock node fragments 15872 is a reasonable starting point. 0 keeps the
+        // guard off, and an unusable value leaves it off with a WARN at startup.
+        maxFragmentRequestSize: 0,
     },
     experiments: {
         // Global kill-switch. Set to false (e.g. via env in an incident) to send every
