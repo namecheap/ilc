@@ -146,11 +146,14 @@ const plugin: ExperimentsRulesetPlugin = {
 must answer from memory and never perform I/O: keep the in-memory copy fresh out-of-band
 (polling or SSE) and serve every call from it.
 
-The plugin takes over only while it actually supplies experiments. An empty ruleset means
-"nothing supplied", and ILC then reads `experiments.ruleset` from configuration — which is
-what happens with no plugin installed, and also what keeps a plugin that has not filled its
-copy yet from switching every experiment off at once. A plugin that throws is treated the
-same way, so a page always renders.
+The plugin takes over only while it actually offers a ruleset, and the two "no experiments"
+shapes mean different things. Returning `undefined` means "nothing supplied": ILC falls back
+to `experiments.ruleset` from configuration — which is what happens with no plugin installed,
+and what keeps a plugin that has not filled its in-memory copy yet from switching every
+experiment off at once. Returning `{}` is an **authoritative empty ruleset**: it is honoured
+as-is and turns the experiments layer off, which is what lets an operator's deliberate
+"publish empty" reach the edge instead of being masked by stale configuration. A plugin that
+throws is treated like `undefined`, so a page always renders.
 
 ---
 
