@@ -3,7 +3,8 @@ import chaiAsPromised from 'chai-as-promised';
 import http from 'http';
 import supertest from 'supertest';
 import app from '../server/app';
-import { dbFactory as dbFactoryOrig, knexConfig } from '../server/db';
+import defaultDb, { dbFactory as dbFactoryOrig } from '../server/db';
+import versioningService from '../server/versioning/services/Versioning';
 
 function isString(value: unknown): value is string {
     return typeof value === 'string';
@@ -28,7 +29,12 @@ export function dbFactory() {
         db,
         reset: async () => {
             await db.destroy();
-            dbFactoryOrig(knexConfig); // reset Knex instances singletone, otherwise test continue to use old instace
+            // `dbFactory()` above re-pointed the versioning singleton (`versioningService.setDb`) at the
+            // in-memory instance. Point it back at the app's own instance rather than creating a fresh
+            // knex over the same file: a second file-backed instance leaves the app writing through two
+            // sqlite handles (versioning transactions on one, everything else on the other), which
+            // surfaces as timing-dependent SQLITE_BUSY failures in later specs.
+            versioningService.setDb(defaultDb);
         },
     };
 }
