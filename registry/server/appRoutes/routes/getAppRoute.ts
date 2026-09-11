@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
 
-import { markProtected } from '../../common/services/protectedEntities';
+import { markProtected, routeEntity } from '../../common/services/protectedEntities';
 import validateRequestFactory from '../../common/services/validateRequest';
-import { EntityTypes } from '../../versioning/interfaces';
 import { prepareAppRouteToRespond } from '../services/prepareAppRoute';
 import { appRouteIdSchema } from '../interfaces';
 import { transformSpecialRoutesForConsumer } from '../services/transformSpecialRoutes';
@@ -42,7 +41,7 @@ const getAppRoute = async (req: Request<GetAppRouteRequestParams>, res: Response
     const data = await retrieveAppRouteFromDB(+req.params.id);
 
     if (data) {
-        res.status(200).send(markProtected(EntityTypes.routes, data));
+        res.status(200).send(markProtected(routeEntity(data), data));
     } else {
         res.status(404).send('Not found');
     }
