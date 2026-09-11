@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-import { markProtected } from '../../common/services/protectedEntities';
+import { markProtected, routeEntity } from '../../common/services/protectedEntities';
 import db from '../../db';
 import { Tables } from '../../db/structure';
 import { appendDigest } from '../../util/hmac';
@@ -42,7 +42,11 @@ const getAppRoutes = async (req: Request, res: Response) => {
     const appRoutesResponse = transformSpecialRoutesForConsumer(itemsWithId);
 
     res.setHeader('Content-Range', appRoutes.pagination.total); //Stub for future pagination capabilities
-    res.status(200).send(markProtected(EntityTypes.routes, prepareAppRoutesToRespond(appRoutesResponse)));
+    const preparedRoutes = prepareAppRoutesToRespond(appRoutesResponse).map((route) =>
+        markProtected(routeEntity(route), route),
+    );
+
+    res.status(200).send(preparedRoutes);
 };
 
 export default [getAppRoutes];

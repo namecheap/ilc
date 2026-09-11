@@ -25,7 +25,9 @@ $ npm run serve
 You can configure protected admin settings using the `ILC_REGISTRY_ADMIN_PROTECTED_SETTINGS` environment variable.  
 Set this variable before starting the application to specify which settings should be blocked from editing in the admin UI.
 
-Whole entities can be protected the same way using the `ILC_REGISTRY_ADMIN_PROTECTED_ENTITIES` environment variable (comma-separated entity types; supported: `apps`, `routes`, `router_domains`, `shared_props`, `shared_libs`, `templates`, `auth_entities`). Protection is UI-only: protected records get `protected: true` in API responses and lose their Edit button, while the REST API stays writable for external management pipelines.
+Whole entities can be protected the same way using the `ILC_REGISTRY_ADMIN_PROTECTED_ENTITIES` environment variable (comma-separated entity types; supported: `apps`, `routes`, `special_routes`, `router_domains`, `shared_props`, `shared_libs`, `templates`, `auth_entities`).
+
+`routes` covers regular routes only and `special_routes` covers the special ones (e.g. the 404 handlers), so routes registered by application deployments can stay editable while externally managed special routes are locked. Protection is UI-only: protected records get `protected: true` in API responses and lose their Edit button, while the REST API stays writable for external management pipelines.
 
 Example:
 
