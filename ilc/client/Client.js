@@ -67,6 +67,8 @@ export class Client {
 
     #router;
 
+    #ilcState;
+
     #transitionHooksExecutor;
 
     #urlProcessor;
@@ -129,6 +131,7 @@ export class Client {
         }
 
         const ilcState = initIlcState();
+        this.#ilcState = ilcState;
         this.#router = new Router(
             this.#configRoot,
             ilcState,
@@ -397,6 +400,11 @@ export class Client {
             mountRootParcel: singleSpa.mountRootParcel.bind(singleSpa),
             importParcelFromApp: parcelApi.importParcelFromApp.bind(this),
             getIntlAdapter: () => (this.#i18n ? this.#i18n.getAdapter() : null),
+            // Page assignments: the experiment map the server resolved for this document — the
+            // same object ClientRouter merges into route apps' appProps.experiments. A frozen
+            // snapshot: it never changes until the next full page load, and a fresh copy is
+            // returned on every call so a consumer cannot mutate what other apps read.
+            getExperiments: () => Object.freeze({ ...(this.#ilcState.experiments ?? {}) }),
             getAllSharedLibNames: () => Promise.resolve(Object.keys(this.#configRoot.getConfig().sharedLibs)),
             getSharedLibConfigByName: (name) => {
                 return Promise.resolve(this.#configRoot.getConfigForSharedLibsByName(name));
