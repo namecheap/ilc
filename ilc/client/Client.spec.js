@@ -5,7 +5,9 @@ import sinon from 'sinon';
 import { BundleLoader } from './BundleLoader';
 import { Client } from './Client';
 import Router from './ClientRouter';
+import { getIlcConfigRoot } from './configuration/getIlcConfigRoot';
 import ilcEvents from './constants/ilcEvents';
+import initIlcState from './initIlcState';
 import singleSpaEvents from './constants/singleSpaEvents';
 import ErrorHandlerManager from './ErrorHandlerManager/ErrorHandlerManager';
 import * as navigationEvents from './navigationEvents/setupEvents';
@@ -203,6 +205,87 @@ describe('Client', () => {
             const adapter = window.ILC.getIntlAdapter();
             expect(adapter).to.not.be.null;
             expect(adapter.get).to.be.a('function');
+        });
+    });
+
+    describe('getExperiments', () => {
+        const experiments = { 'homepage-hero': 'variant-b', 'example-experiment': 'variant-a' };
+
+        const appendIlcState = (state) => {
+            const script = document.createElement('script');
+            script.type = 'ilc-state';
+            script.innerHTML = JSON.stringify(state);
+            document.body.appendChild(script);
+        };
+
+        const rebuildClientWithIlcState = (state) => {
+            client.destroy();
+            appendIlcState(state);
+            client = new Client(mockConfigRoot);
+        };
+
+        it('should return the experiments inlined into ilc-state', () => {
+            rebuildClientWithIlcState({ experiments });
+
+            expect(window.ILC.getExperiments()).to.eql(experiments);
+        });
+
+        it('should equal the appProps.experiments ClientRouter builds from the same ilc-state', async () => {
+            rebuildClientWithIlcState({ experiments });
+
+            // A real router fed the same serialized ilc-state, parsed the way the client parses it.
+            const configRoot = getIlcConfigRoot();
+            const registryStub = sinon.stub(configRoot, 'registryConfiguration').value({
+                apps: { '@portal/hero': { spaBundle: 'https://somewhere.com/hero.js', kind: 'primary' } },
+                routes: [
+                    {
+                        routeId: 'all',
+                        route: '*',
+                        next: false,
+                        template: 'commonTemplate',
+                        slots: { hero: { appName: '@portal/hero', props: {}, kind: 'primary' } },
+                    },
+                ],
+                specialRoutes: {
+                    404: { routeId: 404, route: '/404', next: false, template: 'errorsTemplate', slots: {} },
+                },
+            });
+            appendIlcState({ experiments });
+            // Stubbed single-spa, as in ClientRouter.spec: the real one would navigate the shared karma page.
+            const singleSpaStub = { navigateToUrl: () => {}, triggerAppChange: () => {}, getMountedApps: () => [] };
+            const router = new Router(configRoot, initIlcState(), undefined, singleSpaStub, () => {});
+
+            try {
+                expect(window.ILC.getExperiments()).to.eql(
+                    router.getCurrentRouteProps('@portal/hero', 'hero').appProps.experiments,
+                );
+            } finally {
+                router.removeEventListeners();
+                registryStub.restore();
+                // Let pending single-spa events settle before the next spec, as ClientRouter.spec does.
+                await new Promise((resolve) => setTimeout(resolve, 0));
+            }
+        });
+
+        it('should return a frozen empty object when ilc-state carries no experiments', () => {
+            const result = window.ILC.getExperiments();
+
+            expect(result).to.eql({});
+            expect(Object.isFrozen(result)).to.be.true;
+        });
+
+        it('should return a frozen copy that a consumer cannot use to change what others read', () => {
+            rebuildClientWithIlcState({ experiments });
+
+            const first = window.ILC.getExperiments();
+            expect(Object.isFrozen(first)).to.be.true;
+            expect(() => {
+                first['homepage-hero'] = 'tampered';
+            }).to.throw(TypeError);
+
+            const second = window.ILC.getExperiments();
+            expect(second).to.not.equal(first);
+            expect(second).to.eql(experiments);
         });
     });
 
@@ -427,6 +510,10 @@ describe('Client', () => {
 
         it('should expose importParcelFromApp method', () => {
             expect(window.ILC.importParcelFromApp).to.be.a('function');
+        });
+
+        it('should expose getExperiments method', () => {
+            expect(window.ILC.getExperiments).to.be.a('function');
         });
 
         it('should expose getAppSdkAdapter method', () => {
