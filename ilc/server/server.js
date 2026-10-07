@@ -22,8 +22,6 @@ function exitHandler(app, type) {
 }
 
 module.exports = (app) => {
-    app.server.keepAliveTimeout = 5 * 60; //in seconds, should be higher then at load balancer
-
     process.on('SIGTERM', exitHandler(app, 'SIGTERM'));
     process.on('SIGINT', exitHandler(app, 'SIGINT'));
 
