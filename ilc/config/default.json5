@@ -1,6 +1,11 @@
 {
     productionMode: true,
     port: 8233,
+    // How long, in milliseconds, the server keeps an idle keep-alive connection open (Node's
+    // http.Server keepAliveTimeout). Set it above the load balancer's idle timeout, so the server
+    // never closes a connection the balancer is about to reuse. 300 is the value ILC has always
+    // set: it was written as "5 * 60 seconds", but Node reads it as milliseconds.
+    keepAliveTimeoutMs: 300,
     cdnUrl: null,
     staticError: {
         disasterFileContentPath: null,

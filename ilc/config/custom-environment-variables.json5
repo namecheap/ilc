@@ -1,5 +1,6 @@
 {
     port: 'ILC_PORT',
+    keepAliveTimeoutMs: 'ILC_KEEP_ALIVE_TIMEOUT_MS',
     cdnUrl: 'CDN_URL',
     staticError: {
         disasterFileContentPath: 'ILC_DISASTER_FILE_CONTENT_PATH',
