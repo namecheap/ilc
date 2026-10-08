@@ -9,6 +9,9 @@ on:
     pull_request:
         branches:
             - '**'
+    # Re-runs CI for a branch by hand, e.g. when GitHub drops the push event of a merge
+    # and master never gets its images or docs built
+    workflow_dispatch:
 
 jobs:
     common_checks:
