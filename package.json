@@ -28,7 +28,7 @@
     "devDependencies": {
         "@commitlint/cli": "^20.2.0",
         "@commitlint/config-conventional": "^20.2.0",
-        "concurrently": "^9.2.1",
+        "concurrently": "^9.2.5",
         "husky": "^9.1.7",
         "prettier": "^3.7.4"
     }
