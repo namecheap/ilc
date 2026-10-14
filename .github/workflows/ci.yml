@@ -443,7 +443,7 @@ jobs:
                   pattern: '*-artifacts'
             - name: Create coverage report for ilc/server
               id: ilc-server-coverage-report
-              uses: namecheap/Coverage-Diff@9fc70d74e1976ba07a127ced6b8a5e6294ad01f2 # master as of 2023-08-18
+              uses: namecheap/Coverage-Diff@master
               with:
                   fullCoverageDiff: true
                   autorun: false
@@ -454,7 +454,7 @@ jobs:
             - name: Create coverage report for ilc/client
               id: ilc-client-coverage-report
               if: '!cancelled()'
-              uses: namecheap/Coverage-Diff@9fc70d74e1976ba07a127ced6b8a5e6294ad01f2 # master as of 2023-08-18
+              uses: namecheap/Coverage-Diff@master
               with:
                   fullCoverageDiff: true
                   autorun: false
@@ -469,7 +469,7 @@ jobs:
             - name: Create coverage report for registry
               id: registry-coverage-report
               if: '!cancelled()'
-              uses: namecheap/Coverage-Diff@9fc70d74e1976ba07a127ced6b8a5e6294ad01f2 # master as of 2023-08-18
+              uses: namecheap/Coverage-Diff@master
               with:
                   fullCoverageDiff: true
                   autorun: false
