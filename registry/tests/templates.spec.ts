@@ -4,7 +4,7 @@ import supertest, { type Agent } from 'supertest';
 import app from '../server/app';
 import { SettingKeys } from '../server/settings/interfaces';
 import settingsService from '../server/settings/services/SettingsService';
-import { expect, getServerAddress } from './common';
+import { expect, failOnFailedCleanup, getServerAddress } from './common';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 import { withSetting } from './utils/withSetting';
 
@@ -73,8 +73,8 @@ describe(`Tests ${example.url}`, () => {
         const appWithAuthServer = appWithAuthInstance.listen(0);
 
         reqAddress = getServerAddress(appServer);
-        req = supertest(appServer);
-        reqWithAuth = supertest(appWithAuthServer);
+        req = failOnFailedCleanup(supertest(appServer));
+        reqWithAuth = failOnFailedCleanup(supertest(appWithAuthServer));
     });
 
     afterEach(async () => {

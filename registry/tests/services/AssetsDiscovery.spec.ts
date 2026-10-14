@@ -14,9 +14,39 @@ describe('AssetsDiscovery', () => {
     });
 
     afterEach(async () => {
+        assetsDiscovery.stop();
         sinon.restore();
         await db('apps').whereIn('name', ['TestApp', 'App1', 'App2', 'App3', 'AppWithProps']).del();
-        assetsDiscovery.stop();
+    });
+
+    it('should not schedule a new iteration when stopped during an iteration', async () => {
+        // a negative interval keeps the app due for a refresh, so every iteration requests its assets
+        const discovery = new AssetsDiscovery('apps', { intervalSeconds: -10 });
+        const axiosGet = axios.get as sinon.SinonStub;
+        let finishRequest: (value: unknown) => void = () => {};
+        axiosGet.onFirstCall().returns(new Promise((resolve) => (finishRequest = resolve)));
+        axiosGet.resolves({ data: { spaBundle: 'bundle.js' } });
+
+        await db('apps').insert({
+            name: 'TestApp',
+            assetsDiscoveryUrl: 'http://example.com/assets',
+            spaBundle: 'oldBundle.js',
+            assetsDiscoveryUpdatedAt: null,
+            kind: 'regular',
+        });
+
+        try {
+            discovery.start(50);
+            await waitFor(async () => axiosGet.called);
+
+            discovery.stop();
+            finishRequest({ data: { spaBundle: 'bundle.js' } });
+            await new Promise((resolve) => setTimeout(resolve, 300));
+
+            expect(axiosGet.callCount).to.equal(1);
+        } finally {
+            discovery.stop();
+        }
     });
 
     it('should update the database if assets have changed', async () => {
