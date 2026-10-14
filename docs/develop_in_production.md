@@ -13,13 +13,9 @@ To do this:
 
 1. Run the demo applications locally. Follow the [instructions from the "Development process" section](https://github.com/namecheap/ilc-demo-apps){: target=\_blank} :octicons-link-external-16:.
 1. Expose your local applications:
-
     - If you don't have a "white" IP address, use [ngrok](https://ngrok.com/){: target=\_blank} :octicons-link-external-16: or a similar tool.
 
-        ??? note "ngrok usage"
-            1. [Download & install ngrok](https://ngrok.com/download){: target=_blank} :octicons-link-external-16:.
-            1. Run `ngrok http 8239` (as the \_News application_ uses the `8239` port).
-            1. Use the exposed URL (it looks as follows: `http://c6960219.ngrok.io`).
+        ??? note "ngrok usage" 1. [Download & install ngrok](https://ngrok.com/download){: target=_blank} :octicons-link-external-16:. 1. Run `ngrok http 8239` (as the \_News application_ uses the `8239` port). 1. Use the exposed URL (it looks as follows: `http://c6960219.ngrok.io`).
 
     - If you do have a "white" IP address, use the following URL: `http://your_public_ip:8239`
 
@@ -55,7 +51,6 @@ To do this:
     1. Replace `<h1>Pick a news source</h1>` with `<h1>Hello world</h1>`.
     1. Open the production site and confirm the new heading appears.
 1. Check that SSR works correctly:
-
     1. [Turn off Javascript in your browser](https://www.enable-javascript.com){: target=\_blank} :octicons-link-external-16:
 
     After reloading the page, you should still see the correct "Hello world" heading.
@@ -68,9 +63,17 @@ To mitigate this risk, ILC restricts (by default) all domains and real IP addres
 
 To allow specific origins, in the "Settings" page of the ILC Registry, set the `overrideConfigTrustedOrigins` property:
 
--   `default`: any origin is disallowed, except for [private IPv4 addresses](https://en.wikipedia.org/wiki/Private_network){: target=\_blank} :octicons-link-external-16:
--   `all`: trust any origins
--   `foo.com, bar.com`: trust `foo.com` and `bar.com` only (recommended)
+- `default`: any origin is disallowed, except for [private IPv4 addresses](https://en.wikipedia.org/wiki/Private_network){: target=\_blank} :octicons-link-external-16:
+- `all`: trust any origins
+- `foo.com, bar.com`: trust `foo.com` and `bar.com` only (recommended)
+
+Each origin in the list is matched against the host of a link as follows:
+
+- `foo.com`: exactly `foo.com`. Hosts that only start or end with it, like `foo.com.example.org` or `evilfoo.com`, are not trusted
+- `*.foo.com`: any subdomain of `foo.com`, like `cdn.foo.com` or `a.cdn.foo.com`, but not `foo.com` itself
+- `foo.com:8080`: `foo.com` on port 8080 only. Without a port, any port is trusted
+
+Matching is case-insensitive and ignores a trailing dot in the host. `localhost` is always trusted.
 
 ## Create your MS
 
@@ -78,13 +81,13 @@ To allow specific origins, in the "Settings" page of the ILC Registry, set the `
 1. Turn off CORS for the development environment.
 
     !!! example "Webpack config to disable CORS"
-        ```js
-        devServer: {
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-            },
-        }
-        ```
+    `js
+    devServer: {
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+        },
+    }
+    `
 
 1. Wrap your MS bundle file with the following code:
 
@@ -93,7 +96,7 @@ To allow specific origins, in the "Settings" page of the ILC Registry, set the `
     ```
 
     !!! note ""
-        For Webpack, you can use [wrapper-webpack-plugin](https://www.npmjs.com/package/wrapper-webpack-plugin){: target=\_blank} :octicons-link-external-16:
+    For Webpack, you can use [wrapper-webpack-plugin](https://www.npmjs.com/package/wrapper-webpack-plugin){: target=\_blank} :octicons-link-external-16:
 
 1. Make sure your MS is publicly available - that is, hosted under 0.0.0.0 ([default for Node http, and Express](https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback){: target=\_blank} :octicons-link-external-16:) and exposed via your public IP address or with the help of specialized tools, like ngrok.
 1. Add `ILC-overrideConfig` cookie with the following configuration to production:

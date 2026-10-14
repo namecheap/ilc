@@ -8,7 +8,7 @@ import CspBuilderService from '../services/CspBuilderService';
 import { tailorFactory } from '../tailor/factory';
 import { mergeConfigs, type OverrideConfig } from '../tailor/merge-configs';
 import { buildForwardedHeaders } from '../utils/helpers';
-import parseOverrideConfig from '../tailor/parse-override-config';
+import { parseOverrideConfig } from '../tailor/parse-override-config';
 import { ServerRouter } from '../tailor/server-router';
 import { TransitionHooksExecutor } from '../TransitionHooksExecutor';
 import { ErrorHandler } from '../types/ErrorHandler';
