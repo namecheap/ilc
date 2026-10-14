@@ -3,17 +3,24 @@ name: CI
 on:
     push:
         branches:
-            - '**'
-        tags-ignore:
-            - '**'
+            - master
     pull_request:
-        branches:
-            - '**'
+
+# Read-only token by default, jobs that write ask for more
+permissions:
+    contents: read
+
+# A new commit cancels the runs of the previous commit of the same branch or pull request.
+# Every master run has its own group, so every master commit is built and published.
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/master' && github.run_id || github.head_ref || github.ref }}
+    cancel-in-progress: true
 
 jobs:
     common_checks:
         name: Common checks
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         steps:
             - uses: actions/checkout@v6
 
@@ -29,9 +36,11 @@ jobs:
 
             - name: Check formatting
               run: npm run format:check
+
     build_ilc:
         name: Build ILC
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         strategy:
             matrix:
                 branch:
@@ -48,10 +57,7 @@ jobs:
               with:
                   ref: ${{ matrix.branch.ref }}
 
-            - id: sha7
-              run: |
-                  echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-                  echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
+            - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
             # Every branch gets its own build cache, so builds of other branches do not evict it.
             # The dest build of a pull request only reads the cache of the base branch and never overwrites it.
@@ -67,11 +73,13 @@ jobs:
               uses: docker/setup-qemu-action@v3
 
             - name: Set up Docker Buildx
-              id: buildx
               uses: docker/setup-buildx-action@v3
 
             - name: Docker ILC auth
-              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
 
             - name: Build the Docker image
               uses: docker/build-push-action@v3
@@ -87,11 +95,8 @@ jobs:
                   tags: |
                       namecheap/ilc_tmp:${{ env.SHA }}
 
-            - name: Run server-side tests
-              run: docker run namecheap/ilc_tmp:$SHA npm run test:ci
-
-            - name: Run server-side tests coverage
-              run: docker run --volume $(pwd)/artifacts/ilc/coverage/server:/.coverage namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage && mv .nyc_output/* /.coverage"
+            - name: Run server-side tests with coverage
+              run: docker run --volume $(pwd)/artifacts/ilc/coverage/server:/.coverage namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage -- --forbid-only && mv .nyc_output/* /.coverage"
 
             - uses: actions/upload-artifact@v6
               with:
@@ -99,9 +104,8 @@ jobs:
                   path: artifacts/ilc/coverage/server
 
             - name: Build the Docker image to test client-side
-              run: |
-                  cd ./ilc/
-                  DOCKER_BUILDKIT=1 docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=namecheap/ilc_tmp:$SHA
+              working-directory: ilc
+              run: docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=namecheap/ilc_tmp:$SHA
 
             - name: Run client-side tests
               run: docker run --volume $(pwd)/artifacts/ilc/coverage/client:/codebase/.karma_output/coverage ilc:tmp-test-client
@@ -114,6 +118,7 @@ jobs:
     build_registry:
         name: Build Registry
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         strategy:
             matrix:
                 branch:
@@ -130,8 +135,7 @@ jobs:
               with:
                   ref: ${{ matrix.branch.ref }}
 
-            - id: sha7
-              run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+            - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
             # Same build cache and platforms rules as for the ILC image, see the Build ILC job
             - name: Calculate build cache tag
@@ -144,13 +148,13 @@ jobs:
               uses: docker/setup-qemu-action@v3
 
             - name: Set up Docker Buildx
-              id: buildx
               uses: docker/setup-buildx-action@v3
-              with:
-                  buildkitd-flags: --debug
 
             - name: Docker registry auth
-              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
 
             - name: Build the Docker image
               uses: docker/build-push-action@v3
@@ -170,6 +174,7 @@ jobs:
         name: Test Registry
         needs: [build_registry]
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         strategy:
             fail-fast: false
             matrix:
@@ -219,11 +224,13 @@ jobs:
               with:
                   ref: ${{ matrix.branch.ref }}
 
-            - id: sha7
-              run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+            - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
             - name: Docker registry auth
-              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
 
             - name: Run tests
               run: >-
@@ -231,12 +238,12 @@ jobs:
                   docker run
                   --volume $(pwd)/artifacts/registry/coverage:/.coverage
                   --network ${{ job.container.network }}
-                  -e DB_CLIENT=${{ matrix.database.client }}
+                  -e DB_CLIENT
                   -e DB_HOST=${{ matrix.database.host }}
                   -e DB_PORT=${{ matrix.database.port }}
                   -e DB_USER=root
                   -e DB_PASSWORD=pwd
-                  -e DB_NAME=$DB_NAME
+                  -e DB_NAME
                   namecheap/ilc_tmp:reg_$SHA
                   sh -c "npm run test:ci && mv .nyc_output/* /.coverage"
 
@@ -248,6 +255,7 @@ jobs:
     e2e_tests:
         name: Run E2E tests
         runs-on: ubuntu-22.04
+        timeout-minutes: 20
         strategy:
             fail-fast: false
             matrix:
@@ -314,8 +322,12 @@ jobs:
     coverage_report:
         name: PR Coverage Report
         runs-on: ubuntu-latest
-        needs: [build_ilc, build_registry, registry_tests]
+        timeout-minutes: 10
+        needs: [build_ilc, registry_tests]
         if: github.base_ref
+        permissions:
+            contents: read
+            pull-requests: write
         steps:
             - uses: actions/checkout@v6
             - uses: actions/download-artifact@v6
@@ -331,7 +343,7 @@ jobs:
                   total_delta: 2.55
             - name: Create coverage report for ilc/client
               id: ilc-client-coverage-report
-              if: success() || failure()
+              if: '!cancelled()'
               uses: namecheap/Coverage-Diff@master
               with:
                   fullCoverageDiff: true
@@ -346,7 +358,7 @@ jobs:
                   bash .github/workflows/merge-registry-coverage.sh src
             - name: Create coverage report for registry
               id: registry-coverage-report
-              if: success() || failure()
+              if: '!cancelled()'
               uses: namecheap/Coverage-Diff@master
               with:
                   fullCoverageDiff: true
@@ -356,17 +368,24 @@ jobs:
                   newCodeCoveragePath: ./src-merged-registry-tests-artifacts/coverage/coverage-summary.json
                   total_delta: 2
             - name: Compose comment
-              if: success() || failure()
+              if: '!cancelled()'
+              # Reports contain file names from the pull request, so they go through env and not into the script
+              env:
+                  ILC_SERVER_REPORT: ${{ steps.ilc-server-coverage-report.outputs.report }}
+                  ILC_CLIENT_REPORT: ${{ steps.ilc-client-coverage-report.outputs.report }}
+                  REGISTRY_REPORT: ${{ steps.registry-coverage-report.outputs.report }}
               run: |
-                  echo "# Coverage Report" > report.md
-                  echo "## Ilc/server" >> report.md
-                  echo "${{ steps.ilc-server-coverage-report.outputs.report }}" >> report.md
-                  echo "## Ilc/client" >> report.md
-                  echo "${{ steps.ilc-client-coverage-report.outputs.report }}" >> report.md
-                  echo "## Registry" >> report.md
-                  echo "${{ steps.registry-coverage-report.outputs.report }}" >> report.md
+                  {
+                      echo "# Coverage Report"
+                      echo "## Ilc/server"
+                      echo "$ILC_SERVER_REPORT"
+                      echo "## Ilc/client"
+                      echo "$ILC_CLIENT_REPORT"
+                      echo "## Registry"
+                      echo "$REGISTRY_REPORT"
+                  } > report.md
             - name: Add Coverage PR Comment
-              if: success() || failure()
+              if: '!cancelled()'
               uses: marocchino/sticky-pull-request-comment@v2
               with:
                   recreate: true
@@ -377,9 +396,15 @@ jobs:
         needs: [build_ilc, registry_tests, e2e_tests]
         name: Push images to registry
         runs-on: ubuntu-latest
+        timeout-minutes: 10
+        # Pull request runs must not publish to the public namecheap/ilc and namecheap/ilc_registry
+        if: github.event_name == 'push'
         steps:
             - name: Docker registry auth
-              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
 
             - name: Calculate tags
               id: tags
@@ -388,7 +413,7 @@ jobs:
                   LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
                   DOCKER_TAGS="$LATEST${BRANCH//\//_}"
                   echo "Tags that will be used: $DOCKER_TAGS"
-                  echo ::set-output name=docker_tags::$DOCKER_TAGS
+                  echo "docker_tags=$DOCKER_TAGS" >> $GITHUB_OUTPUT
 
             - name: Install regctl
               run: |
@@ -409,7 +434,11 @@ jobs:
         needs: [push_images]
         name: Build documentation
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         if: github.ref == 'refs/heads/master'
+        permissions:
+            # mkdocs gh-deploy pushes to the gh-pages branch
+            contents: write
         steps:
             - uses: actions/checkout@v6
             - uses: actions/setup-python@v6
