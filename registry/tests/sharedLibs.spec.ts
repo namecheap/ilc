@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import nock from 'nock';
 import { type Agent } from 'supertest';
-import { expect, request, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 
@@ -116,7 +116,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({ ...example.correct, versionId: response.body.versionId });
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -137,7 +137,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal({});
             } finally {
                 unmuteConsole();
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -152,7 +152,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -167,7 +167,7 @@ describe(`Tests ${example.url}`, () => {
                     ...example.manifest,
                 });
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -195,7 +195,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body.versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
                 expect(response.body).deep.equal({ ...example.correct, versionId: response.body.versionId });
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -210,7 +210,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body[0].versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
                 expect(response.body[0]).to.deep.equal({ ...example.correct, versionId: response.body[0].versionId });
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -289,7 +289,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -317,7 +317,7 @@ describe(`Tests ${example.url}`, () => {
                     );
                 expect(response.body).deep.equal({});
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -332,7 +332,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(example.updated);
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -355,7 +355,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal({});
             } finally {
                 unmuteConsole();
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -372,7 +372,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -393,7 +393,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(expected);
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 

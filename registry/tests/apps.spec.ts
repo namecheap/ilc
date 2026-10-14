@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import nock from 'nock';
 import { type Agent } from 'supertest';
-import { expect, request, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 
@@ -178,7 +178,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({ ...example.correct, versionId: response.body.versionId });
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -211,9 +211,9 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({ ...appConfig, versionId: response.body.versionId });
             } finally {
-                await req.delete(example.url + example.encodedName);
-                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
-                await req.delete('/api/v1/template/' + templateName);
+                await ensureDeleted(req, example.url + example.encodedName);
+                domainId && (await ensureDeleted(req, '/api/v1/router_domains/' + domainId));
+                await ensureDeleted(req, '/api/v1/template/' + templateName);
             }
         });
 
@@ -243,9 +243,9 @@ describe(`Tests ${example.url}`, () => {
                     enforceDomain: domainId,
                 });
             } finally {
-                await req.delete(example.url + example.encodedName);
-                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
-                await req.delete('/api/v1/template/' + templateName);
+                await ensureDeleted(req, example.url + example.encodedName);
+                domainId && (await ensureDeleted(req, '/api/v1/router_domains/' + domainId));
+                await ensureDeleted(req, '/api/v1/template/' + templateName);
             }
         });
 
@@ -258,7 +258,7 @@ describe(`Tests ${example.url}`, () => {
 
                 await req.get(example.url + example.encodedName).expect(404);
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -271,7 +271,7 @@ describe(`Tests ${example.url}`, () => {
 
                 await req.get(example.url + example.encodedName).expect(404);
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -284,7 +284,7 @@ describe(`Tests ${example.url}`, () => {
 
                 await req.get(example.url + example.encodedName).expect(404);
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -305,7 +305,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal({});
             } finally {
                 unmuteConsole();
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -320,7 +320,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -334,7 +334,7 @@ describe(`Tests ${example.url}`, () => {
                     ...example.manifest,
                 });
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -344,7 +344,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req.post(example.url).send(ssrOnlyApp).expect(200);
                 expect(response.body).to.deep.equal(ssrOnlyApp);
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -372,7 +372,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body.versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
                 expect(response.body).deep.equal({ ...example.correct, versionId: response.body.versionId });
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -387,7 +387,7 @@ describe(`Tests ${example.url}`, () => {
                 expectAppsListEqual(response.body, example.appsList);
             } finally {
                 for (const app of example.appsList) {
-                    await req.delete(example.url + app.name);
+                    await ensureDeleted(req, example.url + app.name);
                 }
             }
         });
@@ -417,7 +417,7 @@ describe(`Tests ${example.url}`, () => {
                 );
             } finally {
                 for (const app of example.appsList) {
-                    await req.delete(example.url + app.name);
+                    await ensureDeleted(req, example.url + app.name);
                 }
             }
         });
@@ -434,7 +434,7 @@ describe(`Tests ${example.url}`, () => {
                 expectAppsListEqual(response.body, [example.appsList[1]]);
             } finally {
                 for (const app of example.appsList) {
-                    await req.delete(example.url + app.name);
+                    await ensureDeleted(req, example.url + app.name);
                 }
             }
         });
@@ -451,7 +451,7 @@ describe(`Tests ${example.url}`, () => {
                 expectAppsListEqual(response.body, [example.appsList[0]]);
             } finally {
                 for (const app of example.appsList) {
-                    await req.delete(example.url + app.name);
+                    await ensureDeleted(req, example.url + app.name);
                 }
             }
         });
@@ -633,7 +633,7 @@ describe(`Tests ${example.url}`, () => {
                 expectAppsListEqual(response.body, [example.appsList[1]]);
             } finally {
                 for (const app of example.appsList) {
-                    await req.delete(example.url + app.name);
+                    await ensureDeleted(req, example.url + app.name);
                 }
             }
         });
@@ -704,7 +704,7 @@ describe(`Tests ${example.url}`, () => {
                 expectAppsListEqual(response.body, [example.appsList[1]]);
             } finally {
                 for (const app of example.appsList) {
-                    await req.delete(example.url + app.name);
+                    await ensureDeleted(req, example.url + app.name);
                 }
             }
         });
@@ -721,7 +721,7 @@ describe(`Tests ${example.url}`, () => {
                 expectAppsListEqual(response.body, [example.appsList[0], example.appsList[2]]);
             } finally {
                 for (const app of example.appsList) {
-                    await req.delete(example.url + app.name);
+                    await ensureDeleted(req, example.url + app.name);
                 }
             }
         });
@@ -739,7 +739,7 @@ describe(`Tests ${example.url}`, () => {
                 expectAppsListEqual(response.body, [example.appsList[0]]);
             } finally {
                 for (const app of example.appsList) {
-                    await req.delete(example.url + app.name);
+                    await ensureDeleted(req, example.url + app.name);
                 }
             }
         });
@@ -757,7 +757,7 @@ describe(`Tests ${example.url}`, () => {
                 expectAppsListEqual(response.body, [example.appsList[1], example.appsList[2]]);
             } finally {
                 for (const app of example.appsList) {
-                    await req.delete(example.url + app.name);
+                    await ensureDeleted(req, example.url + app.name);
                 }
             }
         });
@@ -779,7 +779,7 @@ describe(`Tests ${example.url}`, () => {
                 expectAppsListEqual(response.body, [example.appsList[0]]);
             } finally {
                 for (const app of example.appsList) {
-                    await req.delete(example.url + app.name);
+                    await ensureDeleted(req, example.url + app.name);
                 }
             }
         });
@@ -828,7 +828,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -872,7 +872,7 @@ describe(`Tests ${example.url}`, () => {
                     );
                 expect(response.body).deep.equal({});
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -887,7 +887,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(example.updated);
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -906,7 +906,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(updated.namespace).equal(undefined);
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -941,9 +941,9 @@ describe(`Tests ${example.url}`, () => {
                     enforceDomain: domainId,
                 });
             } finally {
-                await req.delete(example.url + example.encodedName);
-                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
-                await req.delete('/api/v1/template/' + templateName);
+                await ensureDeleted(req, example.url + example.encodedName);
+                domainId && (await ensureDeleted(req, '/api/v1/router_domains/' + domainId));
+                await ensureDeleted(req, '/api/v1/template/' + templateName);
             }
         });
 
@@ -978,9 +978,9 @@ describe(`Tests ${example.url}`, () => {
                     enforceDomain: domainId,
                 });
             } finally {
-                await req.delete(example.url + example.encodedName);
-                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
-                await req.delete('/api/v1/template/' + templateName);
+                await ensureDeleted(req, example.url + example.encodedName);
+                domainId && (await ensureDeleted(req, '/api/v1/router_domains/' + domainId));
+                await ensureDeleted(req, '/api/v1/template/' + templateName);
             }
         });
 
@@ -1015,9 +1015,9 @@ describe(`Tests ${example.url}`, () => {
                     enforceDomain: domainId,
                 });
             } finally {
-                await req.delete(example.url + example.encodedName);
-                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
-                await req.delete('/api/v1/template/' + templateName);
+                await ensureDeleted(req, example.url + example.encodedName);
+                domainId && (await ensureDeleted(req, '/api/v1/router_domains/' + domainId));
+                await ensureDeleted(req, '/api/v1/template/' + templateName);
             }
         });
 
@@ -1033,7 +1033,7 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(422);
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -1050,7 +1050,7 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(422);
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -1094,9 +1094,9 @@ describe(`Tests ${example.url}`, () => {
                     'Update should remove enforceDomain field',
                 );
             } finally {
-                await req.delete(example.url + example.encodedName);
-                domainId && (await req.delete('/api/v1/router_domains/' + domainId));
-                await req.delete('/api/v1/template/' + templateName);
+                await ensureDeleted(req, example.url + example.encodedName);
+                domainId && (await ensureDeleted(req, '/api/v1/router_domains/' + domainId));
+                await ensureDeleted(req, '/api/v1/template/' + templateName);
             }
         });
 
@@ -1112,7 +1112,7 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(500);
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -1135,7 +1135,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body).deep.equal({});
             } finally {
                 unmuteConsole();
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -1152,7 +1152,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 
@@ -1171,7 +1171,7 @@ describe(`Tests ${example.url}`, () => {
                     ...example.manifest,
                 });
             } finally {
-                await req.delete(example.url + example.encodedName);
+                await ensureDeleted(req, example.url + example.encodedName);
             }
         });
 

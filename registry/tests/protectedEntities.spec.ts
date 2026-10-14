@@ -1,7 +1,7 @@
 import config from 'config';
 import sinon from 'sinon';
 import { type Agent } from 'supertest';
-import { expect, request } from './common';
+import { ensureDeleted, expect, request } from './common';
 
 const templateName = 'ncTestProtectedEntitiesTemplate';
 const routerDomain = Object.freeze({
@@ -42,9 +42,9 @@ describe('Protected entities (protectedEntities config)', () => {
 
     after(async () => {
         disableProtection();
-        await req.delete(`/api/v1/router_domains/${domainId}`);
-        await req.delete(`/api/v1/shared_props/${sharedProps.name}`);
-        await req.delete(`/api/v1/template/${templateName}`);
+        await ensureDeleted(req, `/api/v1/router_domains/${domainId}`);
+        await ensureDeleted(req, `/api/v1/shared_props/${sharedProps.name}`);
+        await ensureDeleted(req, `/api/v1/template/${templateName}`);
     });
 
     afterEach(() => {
@@ -108,8 +108,8 @@ describe('Protected entities (protectedEntities config)', () => {
         });
 
         after(async () => {
-            await req.delete(`/api/v1/route/${specialRouteId}`);
-            await req.delete(`/api/v1/route/${regularRouteId}`);
+            await ensureDeleted(req, `/api/v1/route/${specialRouteId}`);
+            await ensureDeleted(req, `/api/v1/route/${regularRouteId}`);
         });
 
         it('should protect only special routes when "special_routes" is configured', async () => {

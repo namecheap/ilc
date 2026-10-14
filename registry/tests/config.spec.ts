@@ -5,7 +5,7 @@ import nock from 'nock';
 import db from '../server/db';
 import { OnPropsUpdateValues, SettingKeys, TrailingSlashValues } from '../server/settings/interfaces';
 import { isPostgres } from '../server/util/db';
-import { expect, request, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const templateName = 'ncTestTemplateName';
 const example = {
@@ -262,14 +262,14 @@ describe('Tests /api/v1/config', () => {
                 expect(response.body.domainProps).to.deep.equal(example.routerDomains.props);
                 expect(response.body.domainSsrProps).to.deep.equal(example.routerDomains.ssrProps);
             } finally {
-                routeId && (await req.delete('/api/v1/route/' + routeId));
-                routeIdWithDomain && (await req.delete('/api/v1/route/' + routeIdWithDomain));
-                routeIdWithoutSlots && (await req.delete('/api/v1/route/' + routeIdWithoutSlots));
-                await req.delete('/api/v1/app/' + encodeURIComponent(example.apps.name));
-                await req.delete('/api/v1/app/' + encodeURIComponent(`${example.apps.name}enforceDomain`));
-                await req.delete('/api/v1/shared_props/' + example.sharedProps.name);
-                await req.delete('/api/v1/shared_libs/' + example.sharedLibs.name);
-                routerDomainsId && (await req.delete('/api/v1/router_domains/' + routerDomainsId));
+                routeId && (await ensureDeleted(req, '/api/v1/route/' + routeId));
+                routeIdWithDomain && (await ensureDeleted(req, '/api/v1/route/' + routeIdWithDomain));
+                routeIdWithoutSlots && (await ensureDeleted(req, '/api/v1/route/' + routeIdWithoutSlots));
+                await ensureDeleted(req, '/api/v1/app/' + encodeURIComponent(example.apps.name));
+                await ensureDeleted(req, '/api/v1/app/' + encodeURIComponent(`${example.apps.name}enforceDomain`));
+                await ensureDeleted(req, '/api/v1/shared_props/' + example.sharedProps.name);
+                await ensureDeleted(req, '/api/v1/shared_libs/' + example.sharedLibs.name);
+                routerDomainsId && (await ensureDeleted(req, '/api/v1/router_domains/' + routerDomainsId));
                 await req.delete('/api/v1/template/' + example.templates.name).expect(204);
             }
         });
@@ -294,8 +294,8 @@ describe('Tests /api/v1/config', () => {
                 expect(response.body.domainProps).to.deep.equal(domain.props);
                 expect(response.body.domainSsrProps).to.deep.equal(domain.ssrProps);
             } finally {
-                routerDomainsId && (await req.delete('/api/v1/router_domains/' + routerDomainsId));
-                await req.delete('/api/v1/template/' + example.templates.name);
+                routerDomainsId && (await ensureDeleted(req, '/api/v1/router_domains/' + routerDomainsId));
+                await ensureDeleted(req, '/api/v1/template/' + example.templates.name);
             }
         });
 
@@ -530,8 +530,8 @@ describe('Tests /api/v1/config', () => {
                     })
                     .expect(200, { valid: true });
             } finally {
-                domainId && (await req.delete(`/api/v1/router_domains/${domainId}`));
-                await req.delete('/api/v1/template/' + example.templates.name);
+                domainId && (await ensureDeleted(req, `/api/v1/router_domains/${domainId}`));
+                await ensureDeleted(req, '/api/v1/template/' + example.templates.name);
             }
         });
     });
@@ -680,12 +680,12 @@ describe('Tests /api/v1/config', () => {
 
                 routeIds = config.routes.map((x: any) => x.routeId);
             } finally {
-                await req.delete(`/api/v1/route/${routeIds[0]}`);
-                await req.delete(`/api/v1/route/${routeIds[1]}`);
-                await req.delete('/api/v1/app/app1');
-                await req.delete('/api/v1/app/app2');
-                await req.delete('/api/v1/shared_libs/lib1');
-                await req.delete('/api/v1/shared_libs/lib2');
+                await ensureDeleted(req, `/api/v1/route/${routeIds[0]}`);
+                await ensureDeleted(req, `/api/v1/route/${routeIds[1]}`);
+                await ensureDeleted(req, '/api/v1/app/app1');
+                await ensureDeleted(req, '/api/v1/app/app2');
+                await ensureDeleted(req, '/api/v1/shared_libs/lib1');
+                await ensureDeleted(req, '/api/v1/shared_libs/lib2');
             }
         });
         it('should remove not included in request items', async () => {
@@ -734,11 +734,11 @@ describe('Tests /api/v1/config', () => {
 
                 routeIds = config.routes.map((x: any) => x.routeId);
             } finally {
-                await req.delete(`/api/v1/route/${routeIds[0]}`);
-                await req.delete('/api/v1/app/app1');
-                await req.delete('/api/v1/app/app2');
-                await req.delete('/api/v1/shared_libs/lib1');
-                await req.delete('/api/v1/shared_libs/lib2');
+                await ensureDeleted(req, `/api/v1/route/${routeIds[0]}`);
+                await ensureDeleted(req, '/api/v1/app/app1');
+                await ensureDeleted(req, '/api/v1/app/app2');
+                await ensureDeleted(req, '/api/v1/shared_libs/lib1');
+                await ensureDeleted(req, '/api/v1/shared_libs/lib2');
             }
         });
         it('should not update all when 1 item failed', async () => {
@@ -760,10 +760,10 @@ describe('Tests /api/v1/config', () => {
                 expect(config.routes).to.eql([]);
                 expect(config.dynamicLibs).to.eql({});
             } finally {
-                await req.delete('/api/v1/app/app1');
-                await req.delete('/api/v1/app/app2');
-                await req.delete('/api/v1/shared_libs/lib1');
-                await req.delete('/api/v1/shared_libs/lib2');
+                await ensureDeleted(req, '/api/v1/app/app1');
+                await ensureDeleted(req, '/api/v1/app/app2');
+                await ensureDeleted(req, '/api/v1/shared_libs/lib1');
+                await ensureDeleted(req, '/api/v1/shared_libs/lib2');
             }
         });
         it('should not delete anything if update failed', async () => {
@@ -789,12 +789,12 @@ describe('Tests /api/v1/config', () => {
 
                 routeIds = configBefore.routes.map((x: any) => x.routeId);
             } finally {
-                await req.delete(`/api/v1/route/${routeIds[0]}`);
-                await req.delete(`/api/v1/route/${routeIds[1]}`);
-                await req.delete('/api/v1/app/app1');
-                await req.delete('/api/v1/app/app2');
-                await req.delete('/api/v1/shared_libs/lib1');
-                await req.delete('/api/v1/shared_libs/lib2');
+                await ensureDeleted(req, `/api/v1/route/${routeIds[0]}`);
+                await ensureDeleted(req, `/api/v1/route/${routeIds[1]}`);
+                await ensureDeleted(req, '/api/v1/app/app1');
+                await ensureDeleted(req, '/api/v1/app/app2');
+                await ensureDeleted(req, '/api/v1/shared_libs/lib1');
+                await ensureDeleted(req, '/api/v1/shared_libs/lib2');
             }
         });
 
@@ -892,10 +892,10 @@ describe('Tests /api/v1/config', () => {
                 });
                 routeIds = config.routes.map((x: any) => x.routeId);
             } finally {
-                await req.delete(`/api/v1/route/${routeIds[0]}`);
-                await req.delete(`/api/v1/route/${routeIds[1]}`);
-                await req.delete('/api/v1/app/app3');
-                await req.delete('/api/v1/app/app4');
+                await ensureDeleted(req, `/api/v1/route/${routeIds[0]}`);
+                await ensureDeleted(req, `/api/v1/route/${routeIds[1]}`);
+                await ensureDeleted(req, '/api/v1/app/app3');
+                await ensureDeleted(req, '/api/v1/app/app4');
             }
         });
 
@@ -1119,8 +1119,8 @@ describe('Tests /api/v1/config', () => {
                 routeIds = config.routes.map((x: any) => x.routeId);
             } finally {
                 await Promise.all(routeIds.map((id: number) => req.delete(`/api/v1/route/${id}`).expect(204)));
-                await req.delete(`/api/v1/app/header`);
-                await req.delete('/api/v1/template/' + example.templates.name);
+                await ensureDeleted(req, `/api/v1/app/header`);
+                await ensureDeleted(req, '/api/v1/template/' + example.templates.name);
             }
         });
         it('should upsert route with domainAlias', async () => {
@@ -1158,10 +1158,10 @@ describe('Tests /api/v1/config', () => {
                 });
             } finally {
                 const { body: routesWithId } = await req.get('/api/v1/route');
-                await Promise.all(routesWithId.map((x: any) => req.delete(`/api/v1/route/${x.id}`)));
-                await req.delete('/api/v1/app/app-alias');
-                domainId && (await req.delete(`/api/v1/router_domains/${domainId}`));
-                await req.delete('/api/v1/template/' + example.templates.name);
+                await Promise.all(routesWithId.map((x: any) => ensureDeleted(req, `/api/v1/route/${x.id}`)));
+                await ensureDeleted(req, '/api/v1/app/app-alias');
+                domainId && (await ensureDeleted(req, `/api/v1/router_domains/${domainId}`));
+                await ensureDeleted(req, '/api/v1/template/' + example.templates.name);
             }
         });
         it('should upsert app with domainAlias', async () => {
@@ -1196,9 +1196,9 @@ describe('Tests /api/v1/config', () => {
                     enforceDomain: example.routerDomains.domainName,
                 });
             } finally {
-                await req.delete('/api/v1/app/app-domain-alias');
-                domainId && (await req.delete(`/api/v1/router_domains/${domainId}`));
-                await req.delete('/api/v1/template/' + example.templates.name);
+                await ensureDeleted(req, '/api/v1/app/app-domain-alias');
+                domainId && (await ensureDeleted(req, `/api/v1/router_domains/${domainId}`));
+                await ensureDeleted(req, '/api/v1/template/' + example.templates.name);
             }
         });
         it('should not upsert app with non-existing domainAlias', async () => {
@@ -1264,10 +1264,10 @@ describe('Tests /api/v1/config', () => {
                 expect(dupRoutes.some((r: any) => r.domain === undefined)).to.be.true;
             } finally {
                 const { body: routesWithId } = await req.get('/api/v1/route');
-                await Promise.all(routesWithId.map((x: any) => req.delete(`/api/v1/route/${x.id}`)));
-                await req.delete('/api/v1/app/app-dup');
-                domainId && (await req.delete(`/api/v1/router_domains/${domainId}`));
-                await req.delete('/api/v1/template/' + example.templates.name);
+                await Promise.all(routesWithId.map((x: any) => ensureDeleted(req, `/api/v1/route/${x.id}`)));
+                await ensureDeleted(req, '/api/v1/app/app-dup');
+                domainId && (await ensureDeleted(req, `/api/v1/router_domains/${domainId}`));
+                await ensureDeleted(req, '/api/v1/template/' + example.templates.name);
             }
         });
     });

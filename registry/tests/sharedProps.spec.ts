@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { type Agent } from 'supertest';
-import { expect, request, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const example = {
     url: '/api/v1/shared_props/',
@@ -62,7 +62,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({ ...example.correct, versionId: response.body.versionId });
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -87,7 +87,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body.versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
                 expect(response.body).deep.equal({ ...example.correct, versionId: response.body.versionId });
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -102,7 +102,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body[0].versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
                 expect(response.body[0]).to.eql({ ...example.correct, versionId: response.body[0].versionId });
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -130,7 +130,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body.map((item: any) => item.name)).to.deep.equal(sortedNames);
             } finally {
                 for (const item of propsList) {
-                    await req.delete(example.url + item.name);
+                    await ensureDeleted(req, example.url + item.name);
                 }
             }
         });
@@ -165,7 +165,7 @@ describe(`Tests ${example.url}`, () => {
                     .send(example.updated)
                     .expect(422, '"name" is not allowed');
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -183,7 +183,7 @@ describe(`Tests ${example.url}`, () => {
                     .send(_.omit(incorrect, 'name'))
                     .expect(422, '"props" must be of type object');
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -198,7 +198,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(example.updated);
             } finally {
-                await req.delete(example.url + example.correct.name);
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 

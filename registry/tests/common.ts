@@ -1,7 +1,7 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import http from 'http';
-import supertest from 'supertest';
+import supertest, { type Agent } from 'supertest';
 import app from '../server/app';
 import appDb, { dbFactory as dbFactoryOrig } from '../server/db';
 import versioningService from '../server/versioning/services/Versioning';
@@ -11,49 +11,21 @@ function isString(value: unknown): value is string {
 }
 
 /**
- * A DELETE request without an explicit `.expect()` is a cleanup. When it fails, the record stays in the DB
- * and breaks the following tests instead of the one that left it, so it has to delete the record
- * or find it already deleted.
+ * Deletes a record in a test cleanup. Fails when the record is neither deleted nor already absent,
+ * so a failed cleanup fails the test that left the record instead of the following tests.
  */
-export function failOnFailedCleanup<T extends object>(agent: T): T {
-    return new Proxy(agent, {
-        get(target, property, receiver) {
-            const value = Reflect.get(target, property, receiver);
-            if (property !== 'delete' || typeof value !== 'function') {
-                return value;
-            }
+export async function ensureDeleted(req: Agent, url: string): Promise<void> {
+    const { status, text } = await req.delete(url);
+    const isDeleted = status >= 200 && status < 300;
+    const isAbsent = status === 404;
 
-            return (url: string): supertest.Test => {
-                const test: supertest.Test = value.call(target, url);
-                let isAsserted = false;
-
-                test.expect = new Proxy(test.expect, {
-                    apply(expect, thisArg, args) {
-                        isAsserted = true;
-                        return Reflect.apply(expect, thisArg, args);
-                    },
-                });
-                test.then = new Proxy(test.then, {
-                    apply(then, thisArg, args) {
-                        if (!isAsserted) {
-                            test.expect(({ status, text }) => {
-                                if (status !== 404 && (status < 200 || status >= 300)) {
-                                    throw new Error(`Cleanup DELETE ${url} failed with ${status}: ${text}`);
-                                }
-                            });
-                        }
-                        return Reflect.apply(then, thisArg, args);
-                    },
-                });
-
-                return test;
-            };
-        },
-    });
+    if (!isDeleted && !isAbsent) {
+        throw new Error(`Cleanup DELETE ${url} failed with ${status}: ${text}`);
+    }
 }
 
-export const request = async () => failOnFailedCleanup(supertest(await app(false)));
-export const requestWithAuth = async () => failOnFailedCleanup(supertest(await app(true)));
+export const request = async () => supertest(await app(false));
+export const requestWithAuth = async () => supertest(await app(true));
 
 export function dbFactory() {
     const db = dbFactoryOrig({
