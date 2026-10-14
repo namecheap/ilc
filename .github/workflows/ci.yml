@@ -53,7 +53,17 @@ jobs:
                   echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
                   echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
 
+            # Every branch gets its own build cache, so builds of other branches do not evict it.
+            # The dest build of a pull request only reads the cache of the base branch and never overwrites it.
+            - name: Calculate build cache tag
+              env:
+                  CACHE_BRANCH: ${{ matrix.branch.name == 'src' && (github.head_ref || github.ref_name) || github.base_ref }}
+              run: echo "CACHE_TAG=buildcache_ilc_$(printf "%s" "$CACHE_BRANCH" | tr -c 'a-zA-Z0-9_.-' '_' | cut -c 1-100)" >> $GITHUB_ENV
+
+            # arm64 is built under QEMU emulation, where npm ci can crash with "Illegal instruction" and hang the job.
+            # Only master needs the multi-arch image; branch and pull request images are amd64 only, as all tests use it.
             - name: Set up QEMU
+              if: github.ref == 'refs/heads/master'
               uses: docker/setup-qemu-action@v3
 
             - name: Set up Docker Buildx
@@ -67,12 +77,13 @@ jobs:
               uses: docker/build-push-action@v3
               with:
                   context: ./ilc
-                  platforms: linux/amd64,linux/arm64
+                  platforms: ${{ github.ref == 'refs/heads/master' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
                   push: true
                   cache-from: |
+                      type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }}
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_ilc_master
                       type=registry,ref=namecheap/ilc_tmp:buildcache
-                  cache-to: |
-                      type=registry,ref=namecheap/ilc_tmp:buildcache,mode=max
+                  cache-to: ${{ matrix.branch.name == 'src' && format('type=registry,ref=namecheap/ilc_tmp:{0},mode=max', env.CACHE_TAG) || '' }}
                   tags: |
                       namecheap/ilc_tmp:${{ env.SHA }}
 
