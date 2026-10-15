@@ -36,10 +36,7 @@
             "@xmldom/xmldom": "^0.9.12",
             "uuid": "^11.1.1"
         },
-        "editorconfig": {
-            "minimatch": "^9.0.7"
-        },
-        "mocha": {
+        "mocha@11": {
             "serialize-javascript": "^7.0.5",
             "diff": "^8.0.3"
         }
