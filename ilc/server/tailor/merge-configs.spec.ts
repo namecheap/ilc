@@ -1085,7 +1085,7 @@ describe('merge configs', () => {
     });
 
     describe('should apply domain props to LDE-only apps', () => {
-        const domainProps = { appProps: { brandId: 'namecheap' }, cdnUrl: 'https://cdn.namecheap.com' };
+        const domainProps = { appProps: { brandId: 'brand-a' }, cdnUrl: 'https://cdn.example.com' };
         const domainSsrProps = { secretKey: 'server-secret' };
 
         const registryConfigWithDomainProps: TransformedRegistryConfig = {

@@ -157,23 +157,23 @@ const registry = {
         onPropsUpdate: 'remount',
     },
     sharedLibs: {
-        'test-shared-lib': 'https://spaceship-cdn.com/shared-library/addressBook/index.aaa9c4ab9853dce24759.module.js',
-        sampleLibrary: 'https://spaceship-cdn.com/shared-library/sample-library/index.0f26a5bd25657f484f30.module.js',
+        'test-shared-lib': 'https://example-cdn.com/shared-library/addressBook/index.aaa9c4ab9853dce24759.module.js',
+        sampleLibrary: 'https://example-cdn.com/shared-library/sample-library/index.0f26a5bd25657f484f30.module.js',
         systemMessages:
-            'https://spaceship-cdn.com/shared-library/system-messages/system-messages.a29b9edefd9e82cd0397.module.js',
+            'https://example-cdn.com/shared-library/system-messages/system-messages.a29b9edefd9e82cd0397.module.js',
     },
     dynamicLibs: {
         'test-shared-lib': {
-            spaBundle: 'https://spaceship-cdn.com/shared-library/addressBook/index.aaa9c4ab9853dce24759.module.js',
+            spaBundle: 'https://example-cdn.com/shared-library/addressBook/index.aaa9c4ab9853dce24759.module.js',
             l10nManifest: 'https://google.com/manifest.222222.json',
         },
         sampleLibrary: {
-            spaBundle: 'https://spaceship-cdn.com/shared-library/sample-library/index.0f26a5bd25657f484f30.module.js',
+            spaBundle: 'https://example-cdn.com/shared-library/sample-library/index.0f26a5bd25657f484f30.module.js',
             l10nManifest: null,
         },
         systemMessages: {
             spaBundle:
-                'https://spaceship-cdn.com/shared-library/system-messages/system-messages.a29b9edefd9e82cd0397.module.js',
+                'https://example-cdn.com/shared-library/system-messages/system-messages.a29b9edefd9e82cd0397.module.js',
             l10nManifest: null,
         },
     },

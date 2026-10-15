@@ -282,7 +282,7 @@ describe('Tests /api/v1/config', () => {
                 const domain = {
                     domainName: 'domainprops-test.example.com',
                     template500: example.templates.name,
-                    props: { appProps: { brandId: 'namecheap' } },
+                    props: { appProps: { brandId: 'brand-a' } },
                     ssrProps: { secretKey: 'server-secret' },
                 };
 
