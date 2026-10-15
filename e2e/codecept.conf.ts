@@ -38,7 +38,7 @@ export const config: CodeceptJS.MainConfig = {
     },
     mocha: {
         reporterOptions: {
-            'codeceptjs-cli-reporter': {
+            './codeceptjs-cli-reporter.cjs': {
                 stdout: '-',
                 options: {
                     verbose: true,
@@ -60,6 +60,8 @@ export const config: CodeceptJS.MainConfig = {
     plugins: {
         screenshot: {
             enabled: true,
+            // Previously taken from the Mochawesome helper's config, which CodeceptJS 4 removed.
+            uniqueScreenshotNames: true,
         },
         retryFailedStep: {
             enabled: true,
