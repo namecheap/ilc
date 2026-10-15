@@ -1,105 +1,118 @@
+import assert from 'node:assert';
 import { expect } from 'chai';
 import sinon from 'sinon';
 import LZUTF8 from 'lzutf8';
-import parseOverrideConfig from './parse-override-config';
+import type { OverrideConfig } from './merge-configs';
+import { parseOverrideConfig } from './parse-override-config';
 
-const assignIgnoreInvalidSsl = (ssr, protocol = 'http:') =>
-    protocol === 'https:' ? Object.assign({}, ssr, { ignoreInvalidSsl: true }) : ssr;
+function getApp(config: OverrideConfig | null, appName: string) {
+    const app = config?.apps?.[appName];
+    assert(app, `${appName} is missing in the override config`);
+    return app;
+}
 
-const getExampleObject = (ip = '10.1.150.223', protocol = 'http:') => ({
-    apps: {
-        '@portal/one': {
-            spaBundle: `${protocol}//${ip}:2273/api/fragment/uilandingpages/app.js`,
-            ssr: assignIgnoreInvalidSsl(
-                {
-                    src: `${protocol}//${ip}/api/fragment/uilandingpages/`,
-                },
-                protocol,
-            ),
-        },
-        '@portal/two': {
-            spaBundle: `${protocol}//${ip}:2222/example.js`,
-            ssr: assignIgnoreInvalidSsl(
-                {
-                    src: `${protocol}//${ip}/`,
+function assignIgnoreInvalidSsl(ssr: Record<string, unknown>, protocol = 'http:') {
+    return protocol === 'https:' ? Object.assign({}, ssr, { ignoreInvalidSsl: true }) : ssr;
+}
+
+function getExampleObject(ip = '10.1.150.223', protocol = 'http:') {
+    return {
+        apps: {
+            '@portal/one': {
+                spaBundle: `${protocol}//${ip}:2273/api/fragment/uilandingpages/app.js`,
+                ssr: assignIgnoreInvalidSsl(
+                    {
+                        src: `${protocol}//${ip}/api/fragment/uilandingpages/`,
+                    },
+                    protocol,
+                ),
+            },
+            '@portal/two': {
+                spaBundle: `${protocol}//${ip}:2222/example.js`,
+                ssr: assignIgnoreInvalidSsl(
+                    {
+                        src: `${protocol}//${ip}/`,
+                        timeout: 1000,
+                    },
+                    protocol,
+                ),
+                kind: 'primary',
+            },
+            '@portal/three': {
+                spaBundle: `${protocol}//${ip}:3333/example.js`,
+                ssr: {
                     timeout: 1000,
                 },
-                protocol,
-            ),
-            kind: 'primary',
-        },
-        '@portal/three': {
-            spaBundle: `${protocol}//${ip}:3333/example.js`,
-            ssr: {
-                timeout: 1000,
+                kind: 'primary',
             },
-            kind: 'primary',
+            '@portal/four': {
+                spaBundle: `${protocol}//${ip}:4444/example.js`,
+                kind: 'primary',
+            },
         },
-        '@portal/four': {
-            spaBundle: `${protocol}//${ip}:4444/example.js`,
-            kind: 'primary',
-        },
-    },
-    routes: [
-        {
-            routeId: 104,
-            route: '/domains/',
-            next: false,
-            slots: {
-                body: {
-                    appName: '@portal/two',
-                    kind: null,
+        routes: [
+            {
+                routeId: 104,
+                route: '/domains/',
+                next: false,
+                slots: {
+                    body: {
+                        appName: '@portal/two',
+                        kind: null,
+                    },
                 },
             },
+        ],
+        sharedLibs: {
+            sharedLibrary: {
+                spaBundle: `${protocol}//${ip}:5555/bundle.js`,
+            },
         },
-    ],
-    sharedLibs: {
-        sharedLibrary: {
-            spaBundle: `${protocol}//${ip}:5555/bundle.js`,
-        },
-    },
-});
+    };
+}
 
-const getSanitizedObject = () => ({
-    apps: {
-        '@portal/one': {
-            ssr: {},
-        },
-        '@portal/two': {
-            ssr: {
-                timeout: 1000,
+function getSanitizedObject() {
+    return {
+        apps: {
+            '@portal/one': {
+                ssr: {},
             },
-            kind: 'primary',
-        },
-        '@portal/three': {
-            ssr: {
-                timeout: 1000,
+            '@portal/two': {
+                ssr: {
+                    timeout: 1000,
+                },
+                kind: 'primary',
             },
-            kind: 'primary',
+            '@portal/three': {
+                ssr: {
+                    timeout: 1000,
+                },
+                kind: 'primary',
+            },
+            '@portal/four': {
+                kind: 'primary',
+            },
         },
-        '@portal/four': {
-            kind: 'primary',
-        },
-    },
-    routes: [
-        {
-            routeId: 104,
-            route: '/domains/',
-            next: false,
-            slots: {
-                body: {
-                    appName: '@portal/two',
-                    kind: null,
+        routes: [
+            {
+                routeId: 104,
+                route: '/domains/',
+                next: false,
+                slots: {
+                    body: {
+                        appName: '@portal/two',
+                        kind: null,
+                    },
                 },
             },
+        ],
+        sharedLibs: {
+            sharedLibrary: {},
         },
-    ],
-    sharedLibs: {
-        sharedLibrary: {},
-    },
-});
+    };
+}
 
-const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:', useCompression = false) => {
+function getExampleCookies(ip = '10.1.150.223', protocol = 'http:', useCompression = false) {
     const value = JSON.stringify({
         apps: {
             '@portal/one': {
@@ -156,7 +169,7 @@ const getExampleCookies = (ip = '10.1.150.223', protocol = 'http:', useCompressi
     }
 
     return `foo=bar; ILC-overrideConfig=${encodedValue}; foo2=bar2`;
-};
+}
 
 describe('overrideConfig', () => {
     describe('return null', () => {
@@ -186,30 +199,30 @@ describe('overrideConfig', () => {
             const exampleCookies = getExampleCookies('10.1.150.223', 'https:');
             const config = parseOverrideConfig(exampleCookies);
 
-            expect(config.apps['@portal/one'].ssr.ignoreInvalidSsl).to.be.true;
-            expect(config.apps['@portal/two'].ssr.ignoreInvalidSsl).to.be.true;
-            expect(config.apps['@portal/three'].ssr.ignoreInvalidSsl).to.be.undefined;
-            expect(config.apps['@portal/four'].ssr).to.be.undefined;
+            expect(getApp(config, '@portal/one').ssr?.ignoreInvalidSsl).to.be.true;
+            expect(getApp(config, '@portal/two').ssr?.ignoreInvalidSsl).to.be.true;
+            expect(getApp(config, '@portal/three').ssr?.ignoreInvalidSsl).to.be.undefined;
+            expect(getApp(config, '@portal/four').ssr).to.be.undefined;
         });
 
         it('should not add ignoring invalid SSL certificates when an app SSR source has HTTP protocol', async () => {
             const exampleCookies = getExampleCookies('10.1.150.223', 'http:');
             const config = parseOverrideConfig(exampleCookies);
 
-            expect(config.apps['@portal/one'].ssr.ignoreInvalidSsl).to.be.undefined;
-            expect(config.apps['@portal/two'].ssr.ignoreInvalidSsl).to.be.undefined;
-            expect(config.apps['@portal/three'].ssr.ignoreInvalidSsl).to.be.undefined;
-            expect(config.apps['@portal/four'].ssr).to.be.undefined;
+            expect(getApp(config, '@portal/one').ssr?.ignoreInvalidSsl).to.be.undefined;
+            expect(getApp(config, '@portal/two').ssr?.ignoreInvalidSsl).to.be.undefined;
+            expect(getApp(config, '@portal/three').ssr?.ignoreInvalidSsl).to.be.undefined;
+            expect(getApp(config, '@portal/four').ssr).to.be.undefined;
         });
 
         it('should not add ignoring invalid SSL certificates when an app SSR source has no protocol', async () => {
             const exampleCookies = getExampleCookies('10.1.150.223', '');
             const config = parseOverrideConfig(exampleCookies);
 
-            expect(config.apps['@portal/one'].ssr.ignoreInvalidSsl).to.be.undefined;
-            expect(config.apps['@portal/two'].ssr.ignoreInvalidSsl).to.be.undefined;
-            expect(config.apps['@portal/three'].ssr.ignoreInvalidSsl).to.be.undefined;
-            expect(config.apps['@portal/four'].ssr).to.be.undefined;
+            expect(getApp(config, '@portal/one').ssr?.ignoreInvalidSsl).to.be.undefined;
+            expect(getApp(config, '@portal/two').ssr?.ignoreInvalidSsl).to.be.undefined;
+            expect(getApp(config, '@portal/three').ssr?.ignoreInvalidSsl).to.be.undefined;
+            expect(getApp(config, '@portal/four').ssr).to.be.undefined;
         });
     });
 
@@ -311,7 +324,7 @@ describe('overrideConfig', () => {
                 const ip = `${i}.${i}.${i}.${i}`;
                 const exampleCookies = getExampleCookies(ip);
                 if (i !== 10 && i !== 127) {
-                    expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject(ip));
+                    expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject());
                 }
             }
         });
@@ -321,7 +334,7 @@ describe('overrideConfig', () => {
 
             incorrectIps.forEach((incorrectIp) => {
                 let exampleCookies = getExampleCookies(incorrectIp);
-                expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject(incorrectIp));
+                expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject());
             });
         });
 
@@ -330,7 +343,7 @@ describe('overrideConfig', () => {
 
             incorrectIps.forEach((incorrectIp) => {
                 let exampleCookies = getExampleCookies(incorrectIp);
-                expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject(incorrectIp));
+                expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject());
             });
         });
     });
@@ -397,7 +410,7 @@ describe('overrideConfig', () => {
 
             nonTrustedExamples.forEach((ip) => {
                 const exampleCookies = getExampleCookies(ip);
-                const expectedResult = getSanitizedObject(ip);
+                const expectedResult = getSanitizedObject();
                 expect(parseOverrideConfig(exampleCookies, trustedExamples.toString())).deep.equal(expectedResult);
             });
         });
@@ -418,6 +431,164 @@ describe('overrideConfig', () => {
             const exampleCookies = getExampleCookies(domain, '');
             const expectedResult = getExampleObject(domain, '');
             expect(parseOverrideConfig(exampleCookies, trustedExamples.toString())).deep.equal(expectedResult);
+        });
+    });
+
+    describe('trusted origin matching', () => {
+        const trustedOrigins =
+            '*.tunnel.example.io, example-cdn.com, *.example.com, *.example.org, example.net, *.example.dev';
+
+        function parseSpaBundle(spaBundle: string, origins = trustedOrigins) {
+            const cookie = `ILC-overrideConfig=${encodeURIComponent(
+                JSON.stringify({ apps: { '@portal/one': { spaBundle } } }),
+            )}`;
+
+            return getApp(parseOverrideConfig(cookie, origins), '@portal/one').spaBundle;
+        }
+
+        it('should keep links to trusted origins', () => {
+            const links = [
+                'https://example-cdn.com/x.js',
+                'https://example-cdn.com:8443/x.js',
+                'HTTPS://EXAMPLE-CDN.COM/x.js',
+                'https://Example-CDN.com/x.js',
+                'https://example-cdn.com./x.js',
+                '//example-cdn.com/x.js',
+                'https://www.example.com/x.js',
+                'https://a.b.example.com/x.js',
+                'https://www.example.com./x.js',
+                'https://foo.tunnel.example.io/x.js',
+                'http://localhost:8080/x.js',
+                '/relative/x.js',
+                'relative/x.js',
+            ];
+
+            links.forEach((link) => expect(parseSpaBundle(link), link).to.equal(link));
+        });
+
+        it('should sanitize hosts which only start with a trusted origin', () => {
+            const links = [
+                'https://example-cdn.com.attacker.example/x.js',
+                'https://example-cdn.comattacker.example/x.js',
+                'https://EXAMPLE-CDN.COM.attacker.example/x.js',
+                'https://example-cdn.com.attacker.example./x.js',
+                'https://x.example.com.attacker.example/x.js',
+                'https://example.net.attacker.example/x.js',
+                'https://localhost.attacker.example/x.js',
+            ];
+
+            links.forEach((link) => expect(parseSpaBundle(link), link).to.be.undefined);
+        });
+
+        it('should sanitize hosts which only end with a trusted origin', () => {
+            const links = [
+                'https://attacker-example-cdn.com/x.js',
+                'https://attacker.example-cdn.com/x.js',
+                'https://attackerexample.com/x.js',
+            ];
+
+            links.forEach((link) => expect(parseSpaBundle(link), link).to.be.undefined);
+        });
+
+        it('should not match the base domain of a wildcard origin', () => {
+            expect(parseSpaBundle('https://example.com/x.js')).to.be.undefined;
+        });
+
+        it('should sanitize links with a trusted origin in userinfo', () => {
+            const links = [
+                'https://example-cdn.com@attacker.example/x.js',
+                'https://example-cdn.com:443@attacker.example/x.js',
+                'https://www.example.com:x@attacker.example/x.js',
+                '//example-cdn.com@attacker.example/x.js',
+            ];
+
+            links.forEach((link) => expect(parseSpaBundle(link), link).to.be.undefined);
+        });
+
+        it('should sanitize links which the browser resolves to an untrusted host', () => {
+            const links = [
+                'https:\\\\attacker.example\\x.js',
+                'https:attacker.example/x.js',
+                'http:attacker.example/x.js',
+                '/\\attacker.example/x.js',
+                '\\\\attacker.example/x.js',
+                'ht\ttps://attacker.example/x.js',
+                '//attacker.example/x.js',
+            ];
+
+            links.forEach((link) => expect(parseSpaBundle(link), link).to.be.undefined);
+        });
+
+        it('should sanitize links which can be executed without a network host', () => {
+            const links = ['data:text/javascript,alert(1)', 'javascript:alert(1)', 'blob:https://attacker.example/1'];
+
+            links.forEach((link) => expect(parseSpaBundle(link), link).to.be.undefined);
+        });
+
+        it('should sanitize public hosts which contain a private ip', () => {
+            const links = [
+                'https://attacker.example/10.0.0.1/x.js',
+                'https://attacker.example/x.js?10.0.0.1',
+                'https://10.0.0.1.attacker.example/x.js',
+                'https://10.0.0.1@attacker.example/x.js',
+            ];
+
+            links.forEach((link) => expect(parseSpaBundle(link, ''), link).to.be.undefined);
+        });
+
+        it('should respect a port of a trusted origin', () => {
+            expect(parseSpaBundle('https://foo.com:8443/x.js', 'foo.com:8443')).to.equal('https://foo.com:8443/x.js');
+            expect(parseSpaBundle('https://foo.com/x.js', 'foo.com:443')).to.equal('https://foo.com/x.js');
+            expect(parseSpaBundle('https://foo.com/x.js', 'foo.com:8443')).to.be.undefined;
+            expect(parseSpaBundle('https://foo.com:9443/x.js', 'foo.com:8443')).to.be.undefined;
+        });
+
+        it('should match a trusted port against the default port of the link scheme', () => {
+            const trustedLinks: [string, string][] = [
+                ['http://foo.com/x.js', 'foo.com:80'],
+                ['http://foo.com:80/x.js', 'foo.com:80'],
+                ['https://foo.com:443/x.js', 'foo.com:443'],
+                ['http://foo.com:443/x.js', 'foo.com:443'],
+                ['https://foo.com/x.js', 'foo.com:0443'],
+            ];
+            const untrustedLinks: [string, string][] = [
+                ['http://foo.com/x.js', 'foo.com:443'],
+                ['https://foo.com/x.js', 'foo.com:80'],
+                ['https://foo.com:80/x.js', 'foo.com:443'],
+                ['https://foo.com/x.js', 'foo.com:99999'],
+            ];
+
+            trustedLinks.forEach(([link, origin]) => expect(parseSpaBundle(link, origin), link).to.equal(link));
+            untrustedLinks.forEach(([link, origin]) => expect(parseSpaBundle(link, origin), link).to.be.undefined);
+        });
+
+        it('should ignore malformed trusted origins', () => {
+            const origins = ['*', '*.*', 'foo.*.com', 'https://foo.com', 'foo.com/x', 'foo.com@bar.com'];
+
+            origins.forEach((origin) => expect(parseSpaBundle('https://foo.com/x.js', origin), origin).to.be.undefined);
+        });
+
+        it('should sanitize untrusted links in arrays', () => {
+            const cookie = `ILC-overrideConfig=${encodeURIComponent(
+                JSON.stringify({
+                    apps: {
+                        '@portal/one': {
+                            props: { links: ['https://attacker.example/x.js', 'https://example-cdn.com/x.js'] },
+                        },
+                    },
+                }),
+            )}`;
+
+            const links = getApp(parseOverrideConfig(cookie, trustedOrigins), '@portal/one').props?.links;
+
+            expect(links[0]).to.be.undefined;
+            expect(links[1]).to.equal('https://example-cdn.com/x.js');
+        });
+
+        it('should keep plain strings', () => {
+            ['primary', 'Note: not a link', 'mailto:support@example.com', '@portal/one'].forEach((value) =>
+                expect(parseSpaBundle(value), value).to.equal(value),
+            );
         });
     });
 });
