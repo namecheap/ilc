@@ -22,12 +22,27 @@
         "cross-env": "^10.1.0",
         "execa": "^9.6.1",
         "mocha-multi": "^1.1.7",
-        "mochawesome": "^7.1.4",
+        "mochawesome": "^8.1.1",
         "puppeteer": "^24.33.1",
         "terminate": "^2.8.0",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.3",
         "wait-on": "^9.0.3"
+    },
+    "overrides": {
+        "codeceptjs": {
+            "axios": "^1.20.0",
+            "joi": "^18.2.9",
+            "@xmldom/xmldom": "^0.9.12",
+            "uuid": "^11.1.1"
+        },
+        "editorconfig": {
+            "minimatch": "^9.0.7"
+        },
+        "mocha": {
+            "serialize-javascript": "^7.0.5",
+            "diff": "^8.0.3"
+        }
     },
     "engines": {
         "node": ">=22"

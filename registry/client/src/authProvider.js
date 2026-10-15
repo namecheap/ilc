@@ -1,5 +1,13 @@
 import Cookies from 'js-cookie';
 
+function getUserInfo() {
+    try {
+        return JSON.parse(Cookies.get('ilcUserInfo'));
+    } catch {
+        return undefined;
+    }
+}
+
 // Authenticatd by default
 export default {
     login: ({ username, password }) => {
@@ -29,12 +37,12 @@ export default {
         return Cookies.get('ilcUserInfo') ? Promise.resolve() : Promise.reject();
     },
     getPermissions: () => {
-        const userInfo = Cookies.getJSON('ilcUserInfo');
+        const userInfo = getUserInfo();
 
         return userInfo ? Promise.resolve(userInfo.role) : Promise.reject();
     },
     getIdentity: () => {
-        const userInfo = Cookies.getJSON('ilcUserInfo');
+        const userInfo = getUserInfo();
 
         return { id: userInfo.identifier, fullName: `${userInfo.identifier} ("${userInfo.role}" access)` };
     },
