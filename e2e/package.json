@@ -1,6 +1,7 @@
 {
     "name": "e2e",
     "version": "1.0.0",
+    "type": "module",
     "description": "",
     "main": "index.js",
     "private": true,
@@ -8,37 +9,35 @@
         "start": "codeceptjs run --reporter mocha-multi",
         "start:verbose": "cross-env TEST_ENV=verbose npm start -- --verbose",
         "start:flaky": "codeceptjs run-rerun --verbose",
-        "start:verbose:ui": "cross-env SHOW_UI=true npm run start:verbose -- -p pauseOnFail",
+        "start:verbose:ui": "cross-env SHOW_UI=true npm run start:verbose -- -p pause",
         "generate-typings": "codeceptjs def -o ./typings"
     },
     "author": "",
     "license": "UNLICENSED",
     "dependencies": {
         "@codeceptjs/mock-request": "^0.3.1",
-        "codeceptjs": "^3.7.5",
+        "codeceptjs": "^4.2.0",
         "codeceptjs-chai": "^2.3.5",
         "cross-env": "^10.1.0",
         "execa": "^9.6.1",
         "mocha-multi": "^1.1.7",
         "mochawesome": "^8.1.1",
-        "puppeteer": "^24.33.1",
+        "puppeteer": "^25.12.0",
         "terminate": "^2.8.0",
-        "ts-node": "^10.9.2",
+        "tsx": "^4.23.15",
         "typescript": "^5.9.3",
         "wait-on": "^9.0.3"
     },
     "overrides": {
         "codeceptjs": {
             "axios": "^1.20.0",
-            "joi": "^18.2.9",
             "@xmldom/xmldom": "^0.9.12",
             "uuid": "^11.1.1"
         },
         "mocha@11": {
             "serialize-javascript": "^7.0.5",
             "diff": "^8.0.3"
-        },
-        "basic-ftp": "^6.2.1"
+        }
     },
     "engines": {
         "node": ">=22"

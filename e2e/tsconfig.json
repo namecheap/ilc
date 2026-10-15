@@ -2,17 +2,15 @@
     "compilerOptions": {
         "target": "ES2020",
         "lib": ["ES2020", "DOM"],
-        "module": "commonjs",
+        "module": "ESNext",
         "sourceMap": true,
         "strict": true,
         "typeRoots": ["./node_modules/@types"],
         "types": ["codeceptjs", "node", "./typings/steps", "./typings/mock-request"],
         "esModuleInterop": true,
         "declaration": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "moduleResolution": "Bundler"
     },
-    "exclude": ["node_modules"],
-    "ts-node": {
-        "files": true
-    }
+    "exclude": ["node_modules"]
 }
