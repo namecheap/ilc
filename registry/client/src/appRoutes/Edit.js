@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router';
-import queryString from 'query-string';
 import {
     Create,
     Edit,
@@ -48,7 +47,7 @@ const InputForm = ({ mode = 'edit', ...props }) => {
     }, []);
 
     const location = useLocation();
-    const isCreateSpecial = !!queryString.parse(location.search).special;
+    const isCreateSpecial = !!new URLSearchParams(location.search).get('special');
     const isUpdateSpecial = !!props.record.specialRole;
     const isSpecial = isCreateSpecial || isUpdateSpecial;
 
