@@ -18,12 +18,8 @@ const validateLocale = validateLocalesMiddleware(
 );
 
 const createTemplate = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const result = await templatesRepository.createTemplate(req.body, req.user);
-        res.status(200).send(result);
-    } catch (e) {
-        res.status(500).send(JSON.stringify(e));
-    }
+    const result = await templatesRepository.createTemplate(req.body, req.user);
+    res.status(200).send(result);
 };
 
 export default [validateRequestBeforeCreateTemplate, validateLocale, createTemplate];

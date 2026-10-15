@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { request, expect, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 import db from '../server/db';
 import { makeSpecialRoute } from '../server/appRoutes/services/transformSpecialRoutes';
 import supertest from 'supertest';
@@ -135,9 +135,9 @@ describe(`Tests ${example.url}`, () => {
     });
 
     after(async () => {
-        await req.delete(example.template.url + example.template.correct.name);
-        await req.delete(example.app.url + encodeURIComponent(example.app.correct.name));
-        await req.delete(example.appWrapper.url + encodeURIComponent(example.appWrapper.correct.name));
+        await ensureDeleted(req, example.template.url + example.template.correct.name);
+        await ensureDeleted(req, example.app.url + encodeURIComponent(example.app.correct.name));
+        await ensureDeleted(req, example.appWrapper.url + encodeURIComponent(example.appWrapper.correct.name));
     });
 
     describe('Create', () => {
@@ -159,7 +159,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -177,7 +177,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.text).equal('"route" is required');
                 expect(response.body).deep.equal({});
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -202,7 +202,7 @@ describe(`Tests ${example.url}`, () => {
                 );
                 expect(response.body).deep.equal({});
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -235,7 +235,7 @@ describe(`Tests ${example.url}`, () => {
                 );
                 expect(response.body).deep.equal({});
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -264,7 +264,7 @@ describe(`Tests ${example.url}`, () => {
                 );
                 expect(response.body).deep.equal({});
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -306,7 +306,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.status).equal(500);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -326,7 +326,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(500);
                 expect(response.text).to.include('FOREIGN KEY constraint failed');
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -349,7 +349,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(422);
                 expect(response.text).to.include(`Non-existing app name "${appName}" specified.`);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -372,7 +372,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(422);
                 expect(response.text).to.include(`It's forbidden to use wrappers in routes.`);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -396,7 +396,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(422);
                 expect(response.text).to.include(`"slots.ncTestRouteSlotNavbar.appName" is required`);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -422,9 +422,9 @@ describe(`Tests ${example.url}`, () => {
                 expect(response2.status).equal(422);
                 expect(response2.text).to.include(`"specialRole" "404" for provided "domainId" already exists`);
             } finally {
-                routeId1 && (await req.delete(example.url + routeId1));
-                routeId2 && (await req.delete(example.url + routeId2));
-                domainId && (await req.delete(example.routerDomain.url + domainId));
+                routeId1 && (await ensureDeleted(req, example.url + routeId1));
+                routeId2 && (await ensureDeleted(req, example.url + routeId2));
+                domainId && (await ensureDeleted(req, example.routerDomain.url + domainId));
             }
         });
 
@@ -454,8 +454,8 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
-                domainId && (await req.delete(example.routerDomain.url + domainId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
+                domainId && (await ensureDeleted(req, example.routerDomain.url + domainId));
             }
         });
 
@@ -481,8 +481,8 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body.domainId).to.equal(domainId);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
-                domainId && (await req.delete(example.routerDomain.url + domainId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
+                domainId && (await ensureDeleted(req, example.routerDomain.url + domainId));
             }
         });
 
@@ -499,7 +499,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(422);
                 expect(response.text).to.include('Router domain with alias "non-existing" does not exist');
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -520,7 +520,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(422);
                 expect(response.text).to.include('contains a conflict');
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -551,8 +551,8 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
-                domainId && (await req.delete(example.routerDomain.url + domainId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
+                domainId && (await ensureDeleted(req, example.routerDomain.url + domainId));
             }
         });
 
@@ -577,7 +577,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -593,7 +593,7 @@ describe(`Tests ${example.url}`, () => {
 
                 await req.get(example.url + routeId).expect(200);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -636,7 +636,7 @@ describe(`Tests ${example.url}`, () => {
                 };
                 expect(response.body).deep.equal(expectedRoute);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -660,7 +660,7 @@ describe(`Tests ${example.url}`, () => {
                 };
                 expect(response.body).to.deep.include(expectedRoute);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -693,8 +693,8 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).to.deep.include(expectedRoute);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
-                domainId && (await req.delete(example.routerDomain.url + domainId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
+                domainId && (await ensureDeleted(req, example.routerDomain.url + domainId));
             }
         });
 
@@ -720,7 +720,7 @@ describe(`Tests ${example.url}`, () => {
                 };
                 expect(response.body).to.deep.include(expectedRoute);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -749,7 +749,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.body[0].route).to.equal('/api/test/*');
             } finally {
                 for (const id of routeIds) {
-                    await req.delete(example.url + id);
+                    await ensureDeleted(req, example.url + id);
                 }
             }
         });
@@ -806,7 +806,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({});
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -837,8 +837,8 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.text).to.include('Internal server error occurred.');
             } finally {
-                routeId1 && (await req.delete(example.url + routeId1));
-                routeId2 && (await req.delete(example.url + routeId2));
+                routeId1 && (await ensureDeleted(req, example.url + routeId1));
+                routeId2 && (await ensureDeleted(req, example.url + routeId2));
             }
         });
 
@@ -859,7 +859,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.text).to.include('Internal server error occurred.');
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -885,8 +885,8 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.text).to.include('Internal server error occurred.');
             } finally {
-                routeId && (await req.delete(example.url + routeId));
-                domainId && (await req.delete(example.routerDomain.url + domainId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
+                domainId && (await ensureDeleted(req, example.routerDomain.url + domainId));
             }
         });
 
@@ -911,7 +911,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.text).to.include(`Non-existing app name "${appName}" specified.`);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -934,7 +934,7 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(422, '"slots.ncTestRouteSlotNavbar.appName" is required');
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -956,7 +956,7 @@ describe(`Tests ${example.url}`, () => {
                     versionId: response.body.versionId,
                 });
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -988,9 +988,9 @@ describe(`Tests ${example.url}`, () => {
                     versionId: response.body.versionId,
                 });
             } finally {
-                routeId && (await req.delete(example.url + routeId));
-                domainId1 && (await req.delete(example.routerDomain.url + domainId1));
-                domainId2 && (await req.delete(example.routerDomain.url + domainId2));
+                routeId && (await ensureDeleted(req, example.url + routeId));
+                domainId1 && (await ensureDeleted(req, example.routerDomain.url + domainId1));
+                domainId2 && (await ensureDeleted(req, example.routerDomain.url + domainId2));
             }
         });
 
@@ -1021,9 +1021,9 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body.domainId).to.equal(domainId2);
             } finally {
-                routeId && (await req.delete(example.url + routeId));
-                domainId1 && (await req.delete(example.routerDomain.url + domainId1));
-                domainId2 && (await req.delete(example.routerDomain.url + domainId2));
+                routeId && (await ensureDeleted(req, example.url + routeId));
+                domainId1 && (await ensureDeleted(req, example.routerDomain.url + domainId1));
+                domainId2 && (await ensureDeleted(req, example.routerDomain.url + domainId2));
             }
         });
 
@@ -1041,7 +1041,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(422);
                 expect(response.text).to.include('Router domain with alias "non-existing" does not exist');
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -1061,7 +1061,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(response.status).equal(422);
                 expect(response.text).to.include('contains a conflict');
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 
@@ -1083,7 +1083,7 @@ describe(`Tests ${example.url}`, () => {
                     versionId: response.body.versionId,
                 });
             } finally {
-                routeId && (await req.delete(example.url + routeId));
+                routeId && (await ensureDeleted(req, example.url + routeId));
             }
         });
 

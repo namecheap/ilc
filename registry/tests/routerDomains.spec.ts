@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { type Agent } from 'supertest';
-import { expect, request, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const example = {
     url: '/api/v1/router_domains/',
@@ -62,7 +62,7 @@ describe(`Tests ${example.url}`, () => {
     });
 
     afterEach(async () => {
-        await req.delete('/api/v1/template/' + example.correct.template500);
+        await ensureDeleted(req, '/api/v1/template/' + example.correct.template500);
     });
     describe('Create', () => {
         it('should not create record without a required fields', async () => {
@@ -117,7 +117,7 @@ describe(`Tests ${example.url}`, () => {
                     versionId: responseFetching.body.versionId,
                 });
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -140,7 +140,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseFetching.body.ssrProps).deep.equal(example.withProps.ssrProps);
                 expect(responseFetching.body.canonicalDomain).deep.equal(example.withProps.canonicalDomain);
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -161,7 +161,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(responseFetching.body.alias).to.equal('mydomain');
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -178,7 +178,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(responseCreation.body.alias).to.equal('mydomain');
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -208,7 +208,7 @@ describe(`Tests ${example.url}`, () => {
                     .send({ ...example.correct, domainName: 'another-domain.com', alias: example.withAlias.alias })
                     .expect(422, `Router domain with alias "${example.withAlias.alias}" already exists.`);
             } finally {
-                firstId && (await req.delete(example.url + firstId));
+                firstId && (await ensureDeleted(req, example.url + firstId));
             }
         });
 
@@ -228,7 +228,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseCreation.body.ssrProps).to.be.undefined;
                 expect(responseCreation.body.canonicalDomain).to.be.undefined;
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -275,7 +275,7 @@ describe(`Tests ${example.url}`, () => {
                     versionId: responseFetching.body.versionId,
                 });
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -309,8 +309,8 @@ describe(`Tests ${example.url}`, () => {
                     ...example.updated,
                 });
             } finally {
-                routerDomainsId1 && (await req.delete(example.url + routerDomainsId1));
-                routerDomainsId2 && (await req.delete(example.url + routerDomainsId2));
+                routerDomainsId1 && (await ensureDeleted(req, example.url + routerDomainsId1));
+                routerDomainsId2 && (await ensureDeleted(req, example.url + routerDomainsId2));
             }
         });
         it('should successfully return paginated list', async () => {
@@ -366,7 +366,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseFetching24.body).to.have.deep.members(routerDomainsList.slice(2, 4 + 1));
                 expect(responseFetching13.body).to.have.deep.members(routerDomainsList.slice(1, 3 + 1));
             } finally {
-                await Promise.all(routerDomainsList.map((item) => req.delete(example.url + item.id)));
+                await Promise.all(routerDomainsList.map((item) => ensureDeleted(req, example.url + item.id)));
             }
         });
 
@@ -399,7 +399,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(ids).to.deep.equal([...ids].sort((a: number, b: number) => a - b));
                 expect(ids).to.include.members(createdIds);
             } finally {
-                await Promise.all(createdIds.map((id) => req.delete(example.url + id)));
+                await Promise.all(createdIds.map((id) => ensureDeleted(req, example.url + id)));
             }
         });
 
@@ -436,7 +436,7 @@ describe(`Tests ${example.url}`, () => {
                     .send(incorrect)
                     .expect(422, '"domainName" must be one of [string]\n' + '"template500" must be a string');
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -457,7 +457,7 @@ describe(`Tests ${example.url}`, () => {
                     ...example.updated,
                 });
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -477,7 +477,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(responseUpdating.body.ssrProps).to.be.undefined;
                 expect(responseUpdating.body.ssrPcanonicalDomain).to.be.undefined;
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -500,7 +500,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(responseUpdating.body.props).deep.equal({ newProp: 'newValue' });
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -520,8 +520,8 @@ describe(`Tests ${example.url}`, () => {
                     .send({ ...example.updated, alias: example.withAlias.alias })
                     .expect(422, `Router domain with alias "${example.withAlias.alias}" already exists.`);
             } finally {
-                firstId && (await req.delete(example.url + firstId));
-                secondId && (await req.delete(example.url + secondId));
+                firstId && (await ensureDeleted(req, example.url + firstId));
+                secondId && (await ensureDeleted(req, example.url + secondId));
             }
         });
 
@@ -550,7 +550,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(responseCreation.body.props).deep.equal(complexProps.props);
             } finally {
-                routerDomainsId && (await req.delete(example.url + routerDomainsId));
+                routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
         });
 
@@ -611,13 +611,13 @@ describe(`Tests ${example.url}`, () => {
                     'Unable to delete router domain: it is referenced by 1 route(s). Remove or reassign them first.',
                 );
 
-                await req.delete('/api/v1/route/' + responseRoute.body.id);
+                await ensureDeleted(req, '/api/v1/route/' + responseRoute.body.id);
 
                 await req.delete(example.url + domainId).expect(204, '');
 
                 await req.get(example.url + domainId).expect(404, 'Not found');
             } finally {
-                await req.delete('/api/v1/app/' + encodeURIComponent(appName));
+                await ensureDeleted(req, '/api/v1/app/' + encodeURIComponent(appName));
             }
         });
 
@@ -644,7 +644,7 @@ describe(`Tests ${example.url}`, () => {
                     'Unable to delete router domain: it is referenced by 1 app(s) via "enforceDomain". Remove or reassign them first.',
                 );
             } finally {
-                await req.delete('/api/v1/app/' + encodeURIComponent(appName));
+                await ensureDeleted(req, '/api/v1/app/' + encodeURIComponent(appName));
                 domainId && (await req.delete(example.url + domainId).expect(204, ''));
             }
         });

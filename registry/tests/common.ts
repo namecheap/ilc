@@ -1,12 +1,27 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import http from 'http';
-import supertest from 'supertest';
+import supertest, { type Agent } from 'supertest';
 import app from '../server/app';
-import { dbFactory as dbFactoryOrig, knexConfig } from '../server/db';
+import appDb, { dbFactory as dbFactoryOrig } from '../server/db';
+import versioningService from '../server/versioning/services/Versioning';
 
 function isString(value: unknown): value is string {
     return typeof value === 'string';
+}
+
+/**
+ * Deletes a record in a test cleanup. Fails when the record is neither deleted nor already absent,
+ * so a failed cleanup fails the test that left the record instead of the following tests.
+ */
+export async function ensureDeleted(req: Agent, url: string): Promise<void> {
+    const { status, text } = await req.delete(url);
+    const isDeleted = status >= 200 && status < 300;
+    const isAbsent = status === 404;
+
+    if (!isDeleted && !isAbsent) {
+        throw new Error(`Cleanup DELETE ${url} failed with ${status}: ${text}`);
+    }
 }
 
 export const request = async () => supertest(await app(false));
@@ -28,7 +43,10 @@ export function dbFactory() {
         db,
         reset: async () => {
             await db.destroy();
-            dbFactoryOrig(knexConfig); // reset Knex instances singletone, otherwise test continue to use old instace
+            // dbFactory pointed the versioning singleton to the in-memory DB, point it back to the app DB.
+            // A new Knex instance would open a second connection to the same SQLite file, and concurrent
+            // writes over the two connections fail with SQLITE_BUSY.
+            versioningService.setDb(appDb);
         },
     };
 }

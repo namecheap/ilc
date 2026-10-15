@@ -4,7 +4,7 @@ import supertest, { type Agent } from 'supertest';
 import * as bcrypt from 'bcrypt';
 import db from '../server/db';
 import { formatDate } from '../server/util/db';
-import { expect, request, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const basePath = '/api/v1/versioning';
 const dataStub = [
@@ -61,7 +61,7 @@ describe('Versioning Properties', () => {
             expect(parseInt(secondVersionId[0])).to.be.greaterThan(parseInt(initialVersionId[0]));
             expect(parseInt(secondVersionId[1])).to.not.eql(initialVersionId[1]);
         } finally {
-            await req.delete('/api/v1/shared_props/sharedprops1');
+            await ensureDeleted(req, '/api/v1/shared_props/sharedprops1');
         }
     });
 });
@@ -195,10 +195,10 @@ describe(`Tests ${basePath}`, () => {
             } finally {
                 // Cleanup
                 if (routeId) {
-                    await req.delete(`/api/v1/route/${routeId}`);
+                    await ensureDeleted(req, `/api/v1/route/${routeId}`);
                 }
-                await req.delete(`/api/v1/app/${encodeURIComponent(appName)}`);
-                await req.delete(`/api/v1/template/${templateName}`);
+                await ensureDeleted(req, `/api/v1/app/${encodeURIComponent(appName)}`);
+                await ensureDeleted(req, `/api/v1/template/${templateName}`);
             }
         });
 
@@ -307,11 +307,11 @@ describe(`Tests ${basePath}`, () => {
             } finally {
                 // Cleanup
                 if (routeId) {
-                    await req.delete(`/api/v1/route/${routeId}`);
+                    await ensureDeleted(req, `/api/v1/route/${routeId}`);
                 }
-                await req.delete(`/api/v1/app/${encodeURIComponent(appName1)}`);
-                await req.delete(`/api/v1/app/${encodeURIComponent(appName2)}`);
-                await req.delete(`/api/v1/template/${templateName}`);
+                await ensureDeleted(req, `/api/v1/app/${encodeURIComponent(appName1)}`);
+                await ensureDeleted(req, `/api/v1/app/${encodeURIComponent(appName2)}`);
+                await ensureDeleted(req, `/api/v1/template/${templateName}`);
             }
         });
 
@@ -366,7 +366,7 @@ describe(`Tests ${basePath}`, () => {
                 expect(dataAfter.data.provider).to.equal('local');
             } finally {
                 if (authEntityId) {
-                    await req.delete(`${authEntitiesPath}/${authEntityId}`);
+                    await ensureDeleted(req, `${authEntitiesPath}/${authEntityId}`);
                 }
             }
         });
@@ -404,7 +404,7 @@ describe(`Tests ${basePath}`, () => {
                 expect(data.data.identifier).to.equal('test-api-auth-change');
             } finally {
                 if (authEntityId) {
-                    await req.delete(`${authEntitiesPath}/${authEntityId}`);
+                    await ensureDeleted(req, `${authEntitiesPath}/${authEntityId}`);
                 }
             }
         });
@@ -448,7 +448,7 @@ describe(`Tests ${basePath}`, () => {
                 expect(await bcrypt.compare('initial-secret-hash', dbEntity.secret)).to.be.false;
             } finally {
                 if (authEntityId) {
-                    await req.delete(`${authEntitiesPath}/${authEntityId}`);
+                    await ensureDeleted(req, `${authEntitiesPath}/${authEntityId}`);
                 }
             }
         });

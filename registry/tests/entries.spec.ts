@@ -1,6 +1,6 @@
 import * as querystring from 'querystring';
 import { type Agent } from 'supertest';
-import { expect, request, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const example = {
     url: `/api/v1/entries/${querystring.escape('@sharedLibrary/testNameSharedLibEntry')}`,
@@ -90,7 +90,7 @@ describe(`Entries`, () => {
 
             let response = await req.patch(example.url).send(invalidPatch).expect(422, '"invalidProp" is not allowed');
         } finally {
-            await req.delete(`${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
+            await ensureDeleted(req, `${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
         }
     });
 
@@ -105,7 +105,7 @@ describe(`Entries`, () => {
                 .send(emptyPatch)
                 .expect(422, 'Patch does not contain any items to update');
         } finally {
-            await req.delete(`${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
+            await ensureDeleted(req, `${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
         }
     });
 
@@ -153,7 +153,7 @@ describe(`Entries`, () => {
                 ...patch3,
             });
         } finally {
-            await req.delete(`${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
+            await ensureDeleted(req, `${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
         }
     });
 

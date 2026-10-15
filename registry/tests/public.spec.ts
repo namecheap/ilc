@@ -1,4 +1,4 @@
-import { request, requestWithAuth, expect } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 
 describe(`Tests for public API`, () => {
     describe('appDiscovery', () => {
@@ -34,7 +34,7 @@ describe(`Tests for public API`, () => {
 
         after(async () => {
             const encodedName = encodeURIComponent(result.name);
-            await request().then((r) => r.delete('/api/v1/app/' + encodedName));
+            await request().then((r) => ensureDeleted(r, '/api/v1/app/' + encodedName));
         });
 
         it('should successfully return records', async () => {

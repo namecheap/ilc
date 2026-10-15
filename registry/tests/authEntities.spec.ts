@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { type Agent } from 'supertest';
-import { expect, request, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const example = {
     url: '/api/v1/auth_entities/',
@@ -63,7 +63,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({ ...expectedRes, versionId: response.body.versionId });
             } finally {
-                authEntityId && (await req.delete(example.url + authEntityId));
+                authEntityId && (await ensureDeleted(req, example.url + authEntityId));
             }
         });
 
@@ -94,7 +94,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).deep.equal({ ...expectedRes, versionId: response.body.versionId });
             } finally {
-                authEntityId && (await req.delete(example.url + authEntityId));
+                authEntityId && (await ensureDeleted(req, example.url + authEntityId));
             }
         });
 
@@ -119,7 +119,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body).to.deep.include({ ...expectedRes });
             } finally {
-                authEntityId && (await req.delete(example.url + authEntityId));
+                authEntityId && (await ensureDeleted(req, example.url + authEntityId));
             }
         });
 
@@ -149,7 +149,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(ids).to.include.members(createdIds);
             } finally {
                 for (const id of createdIds) {
-                    await req.delete(example.url + id);
+                    await ensureDeleted(req, example.url + id);
                 }
             }
         });
@@ -195,7 +195,7 @@ describe(`Tests ${example.url}`, () => {
                 );
                 expect(response.body).deep.equal(expectedRes);
             } finally {
-                authEntityId && (await req.delete(example.url + authEntityId));
+                authEntityId && (await ensureDeleted(req, example.url + authEntityId));
             }
         });
 

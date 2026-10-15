@@ -3,17 +3,24 @@ name: CI
 on:
     push:
         branches:
-            - '**'
-        tags-ignore:
-            - '**'
+            - master
     pull_request:
-        branches:
-            - '**'
+
+# Read-only token by default, jobs that write ask for more
+permissions:
+    contents: read
+
+# A new commit cancels the runs of the previous commit of the same branch or pull request.
+# Every master run has its own group, so every master commit is built and published.
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/master' && github.run_id || github.head_ref || github.ref }}
+    cancel-in-progress: true
 
 jobs:
     common_checks:
         name: Common checks
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         steps:
             - uses: actions/checkout@v6
 
@@ -29,9 +36,11 @@ jobs:
 
             - name: Check formatting
               run: npm run format:check
+
     build_ilc:
         name: Build ILC
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         strategy:
             matrix:
                 branch:
@@ -48,39 +57,40 @@ jobs:
               with:
                   ref: ${{ matrix.branch.ref }}
 
-            - id: sha7
-              run: |
-                  echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-                  echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
+            - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-            - name: Set up QEMU
-              uses: docker/setup-qemu-action@v3
+            # Every branch gets its own build cache, so builds of other branches do not evict it.
+            # The dest build of a pull request only reads the cache of the base branch and never overwrites it.
+            - name: Calculate build cache tag
+              env:
+                  CACHE_BRANCH: ${{ matrix.branch.name == 'src' && (github.head_ref || github.ref_name) || github.base_ref }}
+              run: echo "CACHE_TAG=buildcache_ilc_$(printf "%s" "$CACHE_BRANCH" | tr -c 'a-zA-Z0-9_.-' '_' | cut -c 1-100)" >> $GITHUB_ENV
 
             - name: Set up Docker Buildx
-              id: buildx
               uses: docker/setup-buildx-action@v3
 
             - name: Docker ILC auth
-              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
 
             - name: Build the Docker image
-              uses: docker/build-push-action@v3
+              uses: docker/build-push-action@v6
               with:
                   context: ./ilc
-                  platforms: linux/amd64,linux/arm64
+                  platforms: linux/amd64
                   push: true
                   cache-from: |
+                      type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }}
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_ilc_master
                       type=registry,ref=namecheap/ilc_tmp:buildcache
-                  cache-to: |
-                      type=registry,ref=namecheap/ilc_tmp:buildcache,mode=max
+                  cache-to: ${{ matrix.branch.name == 'src' && format('type=registry,ref=namecheap/ilc_tmp:{0},mode=max', env.CACHE_TAG) || '' }}
                   tags: |
                       namecheap/ilc_tmp:${{ env.SHA }}
 
-            - name: Run server-side tests
-              run: docker run namecheap/ilc_tmp:$SHA npm run test:ci
-
-            - name: Run server-side tests coverage
-              run: docker run --volume $(pwd)/artifacts/ilc/coverage/server:/.coverage namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage && mv .nyc_output/* /.coverage"
+            - name: Run server-side tests with coverage
+              run: docker run --volume $(pwd)/artifacts/ilc/coverage/server:/.coverage namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage -- --forbid-only && mv .nyc_output/* /.coverage"
 
             - uses: actions/upload-artifact@v6
               with:
@@ -88,9 +98,8 @@ jobs:
                   path: artifacts/ilc/coverage/server
 
             - name: Build the Docker image to test client-side
-              run: |
-                  cd ./ilc/
-                  DOCKER_BUILDKIT=1 docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=namecheap/ilc_tmp:$SHA
+              working-directory: ilc
+              run: docker build . --file ./Test.Dockerfile --tag ilc:tmp-test-client --build-arg BASE_IMAGE=namecheap/ilc_tmp:$SHA
 
             - name: Run client-side tests
               run: docker run --volume $(pwd)/artifacts/ilc/coverage/client:/codebase/.karma_output/coverage ilc:tmp-test-client
@@ -100,9 +109,71 @@ jobs:
                   name: ${{ matrix.branch.name }}-client-side-tests-artifacts
                   path: artifacts/ilc/coverage/client
 
+    # arm64 is built on a native arm64 runner: under QEMU emulation npm ci could crash with "Illegal instruction"
+    # and hang the job. The amd64 and arm64 images are joined into one multi-arch image for master only.
+    build_ilc_arm64:
+        name: Build ILC (arm64)
+        runs-on: ubuntu-24.04-arm
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v6
+
+            - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+            - name: Calculate build cache tag
+              env:
+                  CACHE_BRANCH: ${{ github.head_ref || github.ref_name }}
+              run: echo "CACHE_TAG=buildcache_ilc_arm64_$(printf "%s" "$CACHE_BRANCH" | tr -c 'a-zA-Z0-9_.-' '_' | cut -c 1-100)" >> $GITHUB_ENV
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Docker registry auth
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
+
+            - name: Build the Docker image
+              uses: docker/build-push-action@v6
+              with:
+                  context: ./ilc
+                  platforms: linux/arm64
+                  push: true
+                  cache-from: |
+                      type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }}
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_ilc_arm64_master
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_ilc_master
+                      type=registry,ref=namecheap/ilc_tmp:buildcache
+                  cache-to: type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }},mode=max
+                  tags: |
+                      namecheap/ilc_tmp:${{ env.SHA }}-arm64
+
+            - name: Run server-side tests
+              run: docker run namecheap/ilc_tmp:$SHA-arm64 npm run test:ci
+
+    create_ilc_docker_manifest:
+        name: Create ILC multi-arch Docker image manifest
+        needs: [build_ilc, build_ilc_arm64]
+        if: github.event_name == 'push'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Docker registry auth
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
+
+            - name: Join amd64 and arm64 images
+              run: |
+                  SHA=${GITHUB_SHA:0:7}
+                  docker buildx imagetools create --tag namecheap/ilc_tmp:$SHA namecheap/ilc_tmp:$SHA namecheap/ilc_tmp:$SHA-arm64
+
     build_registry:
         name: Build Registry
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         strategy:
             matrix:
                 branch:
@@ -119,38 +190,98 @@ jobs:
               with:
                   ref: ${{ matrix.branch.ref }}
 
-            - id: sha7
-              run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+            - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-            - name: Set up QEMU
-              uses: docker/setup-qemu-action@v3
+            # Same build cache rules as for the ILC image, see the Build ILC job
+            - name: Calculate build cache tag
+              env:
+                  CACHE_BRANCH: ${{ matrix.branch.name == 'src' && (github.head_ref || github.ref_name) || github.base_ref }}
+              run: echo "CACHE_TAG=buildcache_registry_$(printf "%s" "$CACHE_BRANCH" | tr -c 'a-zA-Z0-9_.-' '_' | cut -c 1-100)" >> $GITHUB_ENV
 
             - name: Set up Docker Buildx
-              id: buildx
               uses: docker/setup-buildx-action@v3
-              with:
-                  buildkitd-flags: --debug
 
             - name: Docker registry auth
-              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
 
             - name: Build the Docker image
-              uses: docker/build-push-action@v3
+              uses: docker/build-push-action@v6
               with:
                   context: ./registry
-                  platforms: linux/amd64,linux/arm64
+                  platforms: linux/amd64
                   push: true
                   cache-from: |
-                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_${{ matrix.branch.name }}
-                  cache-to: |
-                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_${{ matrix.branch.name }},mode=max
+                      type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }}
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_master
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_dest
+                  cache-to: ${{ matrix.branch.name == 'src' && format('type=registry,ref=namecheap/ilc_tmp:{0},mode=max', env.CACHE_TAG) || '' }}
                   tags: |
                       namecheap/ilc_tmp:reg_${{ env.SHA }}
+
+    build_registry_arm64:
+        name: Build Registry (arm64)
+        runs-on: ubuntu-24.04-arm
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v6
+
+            - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+            - name: Calculate build cache tag
+              env:
+                  CACHE_BRANCH: ${{ github.head_ref || github.ref_name }}
+              run: echo "CACHE_TAG=buildcache_registry_arm64_$(printf "%s" "$CACHE_BRANCH" | tr -c 'a-zA-Z0-9_.-' '_' | cut -c 1-100)" >> $GITHUB_ENV
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Docker registry auth
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
+
+            - name: Build the Docker image
+              uses: docker/build-push-action@v6
+              with:
+                  context: ./registry
+                  platforms: linux/arm64
+                  push: true
+                  cache-from: |
+                      type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }}
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_arm64_master
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_master
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_dest
+                  cache-to: type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }},mode=max
+                  tags: |
+                      namecheap/ilc_tmp:reg_${{ env.SHA }}-arm64
+
+    create_registry_docker_manifest:
+        name: Create Registry multi-arch Docker image manifest
+        needs: [build_registry, build_registry_arm64]
+        if: github.event_name == 'push'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Docker registry auth
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
+
+            - name: Join amd64 and arm64 images
+              run: |
+                  SHA=${GITHUB_SHA:0:7}
+                  docker buildx imagetools create --tag namecheap/ilc_tmp:reg_$SHA namecheap/ilc_tmp:reg_$SHA namecheap/ilc_tmp:reg_$SHA-arm64
 
     registry_tests:
         name: Test Registry
         needs: [build_registry]
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         strategy:
             fail-fast: false
             matrix:
@@ -200,11 +331,13 @@ jobs:
               with:
                   ref: ${{ matrix.branch.ref }}
 
-            - id: sha7
-              run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+            - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
             - name: Docker registry auth
-              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
 
             - name: Run tests
               run: >-
@@ -212,12 +345,12 @@ jobs:
                   docker run
                   --volume $(pwd)/artifacts/registry/coverage:/.coverage
                   --network ${{ job.container.network }}
-                  -e DB_CLIENT=${{ matrix.database.client }}
+                  -e DB_CLIENT
                   -e DB_HOST=${{ matrix.database.host }}
                   -e DB_PORT=${{ matrix.database.port }}
                   -e DB_USER=root
                   -e DB_PASSWORD=pwd
-                  -e DB_NAME=$DB_NAME
+                  -e DB_NAME
                   namecheap/ilc_tmp:reg_$SHA
                   sh -c "npm run test:ci && mv .nyc_output/* /.coverage"
 
@@ -229,6 +362,7 @@ jobs:
     e2e_tests:
         name: Run E2E tests
         runs-on: ubuntu-22.04
+        timeout-minutes: 20
         strategy:
             fail-fast: false
             matrix:
@@ -295,11 +429,18 @@ jobs:
     coverage_report:
         name: PR Coverage Report
         runs-on: ubuntu-latest
-        needs: [build_ilc, build_registry, registry_tests]
+        timeout-minutes: 10
+        needs: [build_ilc, registry_tests]
         if: github.base_ref
+        permissions:
+            contents: read
+            pull-requests: write
         steps:
             - uses: actions/checkout@v6
             - uses: actions/download-artifact@v6
+              with:
+                  # only the coverage artifacts, not the build records docker/build-push-action uploads
+                  pattern: '*-artifacts'
             - name: Create coverage report for ilc/server
               id: ilc-server-coverage-report
               uses: namecheap/Coverage-Diff@master
@@ -312,7 +453,7 @@ jobs:
                   total_delta: 2.55
             - name: Create coverage report for ilc/client
               id: ilc-client-coverage-report
-              if: success() || failure()
+              if: '!cancelled()'
               uses: namecheap/Coverage-Diff@master
               with:
                   fullCoverageDiff: true
@@ -327,7 +468,7 @@ jobs:
                   bash .github/workflows/merge-registry-coverage.sh src
             - name: Create coverage report for registry
               id: registry-coverage-report
-              if: success() || failure()
+              if: '!cancelled()'
               uses: namecheap/Coverage-Diff@master
               with:
                   fullCoverageDiff: true
@@ -337,30 +478,43 @@ jobs:
                   newCodeCoveragePath: ./src-merged-registry-tests-artifacts/coverage/coverage-summary.json
                   total_delta: 2
             - name: Compose comment
-              if: success() || failure()
+              if: '!cancelled()'
+              # Reports contain file names from the pull request, so they go through env and not into the script
+              env:
+                  ILC_SERVER_REPORT: ${{ steps.ilc-server-coverage-report.outputs.report }}
+                  ILC_CLIENT_REPORT: ${{ steps.ilc-client-coverage-report.outputs.report }}
+                  REGISTRY_REPORT: ${{ steps.registry-coverage-report.outputs.report }}
               run: |
-                  echo "# Coverage Report" > report.md
-                  echo "## Ilc/server" >> report.md
-                  echo "${{ steps.ilc-server-coverage-report.outputs.report }}" >> report.md
-                  echo "## Ilc/client" >> report.md
-                  echo "${{ steps.ilc-client-coverage-report.outputs.report }}" >> report.md
-                  echo "## Registry" >> report.md
-                  echo "${{ steps.registry-coverage-report.outputs.report }}" >> report.md
+                  {
+                      echo "# Coverage Report"
+                      echo "## Ilc/server"
+                      echo "$ILC_SERVER_REPORT"
+                      echo "## Ilc/client"
+                      echo "$ILC_CLIENT_REPORT"
+                      echo "## Registry"
+                      echo "$REGISTRY_REPORT"
+                  } > report.md
             - name: Add Coverage PR Comment
-              if: success() || failure()
-              uses: marocchino/sticky-pull-request-comment@v2
+              if: '!cancelled()'
+              uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
               with:
                   recreate: true
                   header: coverage-diff-report
                   path: report.md
 
     push_images:
-        needs: [build_ilc, registry_tests, e2e_tests]
+        needs: [build_ilc, registry_tests, e2e_tests, create_ilc_docker_manifest, create_registry_docker_manifest]
         name: Push images to registry
         runs-on: ubuntu-latest
+        timeout-minutes: 10
+        # Pull request runs must not publish to the public namecheap/ilc and namecheap/ilc_registry
+        if: github.event_name == 'push'
         steps:
             - name: Docker registry auth
-              run: echo "${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}" | docker login --username brothers --password-stdin
+              uses: docker/login-action@v3
+              with:
+                  username: brothers
+                  password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
 
             - name: Calculate tags
               id: tags
@@ -369,28 +523,27 @@ jobs:
                   LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
                   DOCKER_TAGS="$LATEST${BRANCH//\//_}"
                   echo "Tags that will be used: $DOCKER_TAGS"
-                  echo ::set-output name=docker_tags::$DOCKER_TAGS
-
-            - name: Install regctl
-              run: |
-                  curl -L https://github.com/regclient/regclient/releases/download/v0.3.10/regctl-linux-amd64 > ./regctl
-                  chmod 755 ./regctl
+                  echo "docker_tags=$DOCKER_TAGS" >> $GITHUB_OUTPUT
 
             - name: Push images
+              env:
+                  TAGS: ${{ steps.tags.outputs.docker_tags }}
               run: |
-                  TAGS="${{ steps.tags.outputs.docker_tags }}"
-
                   for i in ${TAGS//,/ }
                   do
-                      ./regctl image copy namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7} namecheap/ilc_registry:$i
-                      ./regctl image copy namecheap/ilc_tmp:${GITHUB_SHA:0:7} namecheap/ilc:$i
+                      docker buildx imagetools create --tag namecheap/ilc_registry:$i namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}
+                      docker buildx imagetools create --tag namecheap/ilc:$i namecheap/ilc_tmp:${GITHUB_SHA:0:7}
                   done
 
     build_docs:
         needs: [push_images]
         name: Build documentation
         runs-on: ubuntu-latest
+        timeout-minutes: 10
         if: github.ref == 'refs/heads/master'
+        permissions:
+            # mkdocs gh-deploy pushes to the gh-pages branch
+            contents: write
         steps:
             - uses: actions/checkout@v6
             - uses: actions/setup-python@v6

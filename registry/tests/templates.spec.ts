@@ -4,7 +4,7 @@ import supertest, { type Agent } from 'supertest';
 import app from '../server/app';
 import { SettingKeys } from '../server/settings/interfaces';
 import settingsService from '../server/settings/services/SettingsService';
-import { expect, getServerAddress } from './common';
+import { ensureDeleted, expect, getServerAddress } from './common';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 import { withSetting } from './utils/withSetting';
 
@@ -78,8 +78,8 @@ describe(`Tests ${example.url}`, () => {
     });
 
     afterEach(async () => {
-        await req.delete(example.url + example.correctLocalized.name);
-        await req.delete(example.url + example.correct.name);
+        await ensureDeleted(req, example.url + example.correctLocalized.name);
+        await ensureDeleted(req, example.url + example.correct.name);
     });
 
     after(() => {
@@ -432,13 +432,13 @@ describe(`Tests ${example.url}`, () => {
             });
 
             afterEach(async () => {
-                domainId && (await req.delete(example.routerDomain.url + domainId));
-                routeId && (await req.delete(example.route.url + routeId));
+                domainId && (await ensureDeleted(req, example.routerDomain.url + domainId));
+                routeId && (await ensureDeleted(req, example.route.url + routeId));
 
-                await req.delete(example.app.url + encodeURIComponent(example.app.correct.name));
-                await req.delete(example.template.url + example.template.correct.name);
-                await req.delete(example.template.url + example.template.noRoute.name);
-                await req.delete(example.template.url + example.template.template500.name);
+                await ensureDeleted(req, example.app.url + encodeURIComponent(example.app.correct.name));
+                await ensureDeleted(req, example.template.url + example.template.correct.name);
+                await ensureDeleted(req, example.template.url + example.template.noRoute.name);
+                await ensureDeleted(req, example.template.url + example.template.template500.name);
             });
 
             it('Should return template for given domain', async () => {
@@ -663,14 +663,14 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req.delete(example.url + example.correct.name).expect(500);
                 expect(response.text).to.include('Internal server error occurred.');
 
-                await req.delete('/api/v1/router_domains/' + routerDomainsId);
+                await ensureDeleted(req, '/api/v1/router_domains/' + routerDomainsId);
 
                 await req.delete(example.url + example.correct.name).expect(204, '');
 
                 await req.get(example.url + example.correct.name).expect(404, 'Not found');
             } finally {
-                routerDomainsId && (await req.delete('/api/v1/router_domains/' + routerDomainsId));
-                await req.delete(example.url + example.correct.name);
+                routerDomainsId && (await ensureDeleted(req, '/api/v1/router_domains/' + routerDomainsId));
+                await ensureDeleted(req, example.url + example.correct.name);
             }
         });
 
@@ -705,7 +705,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(templateResponse.statusCode).to.equal(500);
             } finally {
-                await req.delete(example.url + example.withInclude.name);
+                await ensureDeleted(req, example.url + example.withInclude.name);
             }
         });
 
@@ -807,7 +807,7 @@ describe(`Tests ${example.url}`, () => {
                 `,
                 });
             } finally {
-                await req.delete(example.url + template.name);
+                await ensureDeleted(req, example.url + template.name);
             }
         });
 
@@ -842,9 +842,9 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body.content).to.eq(contentUpdated);
             } finally {
-                await req.delete('/api/v1/route/' + routeId);
-                await req.delete('/api/v1/router_domains/' + routerDomainId);
-                await req.delete(example.url + template.name);
+                await ensureDeleted(req, '/api/v1/route/' + routeId);
+                await ensureDeleted(req, '/api/v1/router_domains/' + routerDomainId);
+                await ensureDeleted(req, example.url + template.name);
             }
         });
 
@@ -889,7 +889,7 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 nock.cleanAll();
                 await settingsService.set(SettingKeys.TemplateProxyHeaders, previousProxyHeaders, testUser);
-                await req.delete(example.url + template.name);
+                await ensureDeleted(req, example.url + template.name);
             }
         });
 
@@ -937,7 +937,7 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 nock.cleanAll();
                 await settingsService.set(SettingKeys.TemplateProxyHeaders, previousProxyHeaders, testUser);
-                await req.delete(example.url + template.name);
+                await ensureDeleted(req, example.url + template.name);
             }
         });
 
@@ -982,7 +982,7 @@ describe(`Tests ${example.url}`, () => {
             } finally {
                 nock.cleanAll();
                 await settingsService.set(SettingKeys.TemplateProxyHeaders, previousProxyHeaders, testUser);
-                await req.delete(example.url + template.name);
+                await ensureDeleted(req, example.url + template.name);
             }
         });
     });

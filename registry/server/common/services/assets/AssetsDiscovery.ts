@@ -30,6 +30,8 @@ export default class AssetsDiscovery {
 
     private timerId?: NodeJS.Timeout;
 
+    private stopped = false;
+
     private intervalSeconds: number;
 
     constructor(
@@ -42,12 +44,17 @@ export default class AssetsDiscovery {
     }
 
     start(delay: number = 1000) {
+        this.stopped = false;
+
         const runLoop = () => {
             this.timerId = setTimeout(async () => {
                 await this.iteration().catch((err) => {
                     getLogger().error(err, 'Error during refresh of the assets info:');
                 });
-                runLoop();
+                // stop() may be called while the iteration is in progress, when there is no timer to clear yet
+                if (!this.stopped) {
+                    runLoop();
+                }
             }, delay);
         };
 
@@ -55,7 +62,8 @@ export default class AssetsDiscovery {
     }
 
     stop() {
-        clearTimeout(this.timerId!);
+        this.stopped = true;
+        clearTimeout(this.timerId);
     }
 
     private async iteration() {
