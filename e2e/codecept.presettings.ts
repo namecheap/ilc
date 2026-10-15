@@ -47,7 +47,10 @@ export async function bootstrap() {
             const stdio = isVerbose ? 'inherit' : 'ignore';
 
             console.log('Launching ILC with demo apps for E2E tests...');
-            childProcess = execaCommand(`npm run start -- --no-watch`, { cwd: path.join(__dirname, '..'), stdio });
+            childProcess = execaCommand(`npm run start -- --no-watch`, {
+                cwd: path.join(import.meta.dirname, '..'),
+                stdio,
+            });
             childProcess.once('error', (error) => {
                 reject(error);
             });

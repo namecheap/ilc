@@ -2,7 +2,7 @@ import path from 'path';
 
 import { bootstrap, teardown } from './codecept.presettings';
 
-const outputDir = path.join(__dirname, '.codecept_output');
+const outputDir = path.join(import.meta.dirname, '.codecept_output');
 
 export const config: CodeceptJS.MainConfig = {
     output: outputDir,
@@ -31,9 +31,6 @@ export const config: CodeceptJS.MainConfig = {
                 },
             },
         },
-        Mochawesome: {
-            uniqueScreenshotNames: true,
-        },
         // Adds assertions to API https://www.npmjs.com/package/codeceptjs-chai
         ChaiWrapper: {
             require: 'codeceptjs-chai',
@@ -41,7 +38,7 @@ export const config: CodeceptJS.MainConfig = {
     },
     mocha: {
         reporterOptions: {
-            'codeceptjs-cli-reporter': {
+            './codeceptjs-cli-reporter.cjs': {
                 stdout: '-',
                 options: {
                     verbose: true,
@@ -61,8 +58,10 @@ export const config: CodeceptJS.MainConfig = {
     teardown,
     hooks: [],
     plugins: {
-        screenshotOnFail: {
+        screenshot: {
             enabled: true,
+            // Previously taken from the Mochawesome helper's config, which CodeceptJS 4 removed.
+            uniqueScreenshotNames: true,
         },
         retryFailedStep: {
             enabled: true,
@@ -70,16 +69,16 @@ export const config: CodeceptJS.MainConfig = {
         autoDelay: {
             enabled: true,
         },
-        pauseOnFail: {},
+        pause: {},
     },
     include: {
-        peoplePage: path.join(__dirname, 'spec', 'pages', 'people.ts'),
-        newsPage: path.join(__dirname, 'spec', 'pages', 'news.ts'),
-        planetsPage: path.join(__dirname, 'spec', 'pages', 'planets.ts'),
-        hooksPage: path.join(__dirname, 'spec', 'pages', 'hooks.ts'),
-        common: path.join(__dirname, 'spec', 'pages', 'common.ts'),
+        peoplePage: path.join(import.meta.dirname, 'spec', 'pages', 'people.ts'),
+        newsPage: path.join(import.meta.dirname, 'spec', 'pages', 'news.ts'),
+        planetsPage: path.join(import.meta.dirname, 'spec', 'pages', 'planets.ts'),
+        hooksPage: path.join(import.meta.dirname, 'spec', 'pages', 'hooks.ts'),
+        common: path.join(import.meta.dirname, 'spec', 'pages', 'common.ts'),
     },
     tests: './spec/**/*.spec.e2e.ts',
     name: 'ilc',
-    require: ['ts-node/register'],
+    require: ['tsx/esm'],
 };

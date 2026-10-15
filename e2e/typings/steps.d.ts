@@ -9,7 +9,7 @@ type ChaiWrapper = import('codeceptjs-chai');
 
 declare namespace CodeceptJS {
   interface SupportObject { I: I, current: any, peoplePage: peoplePage, newsPage: newsPage, planetsPage: planetsPage, hooksPage: hooksPage, common: common }
-  interface Methods extends Puppeteer, MockRequestHelper, Mochawesome, ChaiWrapper {}
+  interface Methods extends Puppeteer, MockRequestHelper, ChaiWrapper {}
   interface I extends WithTranslation<Methods> {}
   namespace Translation {
     interface Actions {}
