@@ -1,0 +1,12 @@
+# The images install dependencies and build the apps themselves, local ones must not be copied over them
+**/node_modules
+**/.nyc_output
+ilc/dist
+ilc/public
+ilc/.karma_output
+registry/build
+registry/client/dist
+registry/.env
+registry/server/dbfiles/db.sqlite
+**/.DS_Store
+**/.claude

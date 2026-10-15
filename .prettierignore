@@ -3,3 +3,4 @@ ilc/public
 ilc/dist
 .nyc_output
 .karma_output
+pnpm-lock.yaml

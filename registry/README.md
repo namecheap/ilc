@@ -5,10 +5,10 @@
 This will use SQLite database as default one, located in `server/dbfiles`
 
 ```bash
-$ npm install
-$ npm run migrate
-$ npm run seed
-$ npm run dev
+$ pnpm install
+$ pnpm migrate
+$ pnpm seed
+$ pnpm dev
 ```
 
 And then browse to [http://localhost:4001/](http://localhost:4001/).
@@ -25,10 +25,10 @@ The default credentials are:
 4. Start application with
 
 ```bash
-$ npm install
-$ npm run migrate
-$ npm run seed
-$ npm run dev
+$ pnpm install
+$ pnpm migrate
+$ pnpm seed
+$ pnpm dev
 ```
 
 ## Use PostgreSQL as database
@@ -39,16 +39,16 @@ $ npm run dev
 4. Start application with
 
 ```bash
-$ npm install
-$ npm run migrate
-$ npm run seed
-$ npm run dev
+$ pnpm install
+$ pnpm migrate
+$ pnpm seed
+$ pnpm dev
 ```
 
 ## Return database to a clean state
 
 ```bash
-$ npm run reset
+$ pnpm reset
 ```
 
 ## Run tests in the SQLite database
@@ -56,7 +56,7 @@ $ npm run reset
 This command ignores `.env` file
 
 ```bash
-$ npm run test
+$ pnpm test
 ```
 
 ## Run tests in the MySQL database
@@ -65,7 +65,7 @@ Assuming database is up via docker-compose
 This command ignores `.env` file
 
 ```bash
-$ npm run test:mysql
+$ pnpm test:mysql
 ```
 
 ## Run tests in the PostgreSQL database
@@ -74,7 +74,7 @@ Assuming database is up via docker-compose
 This command ignores `.env` file
 
 ```bash
-$ npm run test:postgres
+$ pnpm test:postgres
 ```
 
 ## Secure session on production

@@ -5,14 +5,14 @@
     "main": "server/index.js",
     "scripts": {
         "test": "cross-env NODE_ENV=test mocha",
-        "test:ci": "npm run test -- --forbid-only --exit",
-        "test:watch": "npm run test -- --watch",
+        "test:ci": "pnpm test --forbid-only --exit",
+        "test:watch": "pnpm test --watch",
         "test:coverage": "cross-env NODE_ENV=test nyc mocha --exit",
-        "test:client": "npm run build:systemjs && cross-env NODE_ENV=test karma start",
-        "test:client:watch": "npm run test:client -- --single-run=false --auto-watch=true",
+        "test:client": "pnpm build:systemjs && cross-env NODE_ENV=test karma start",
+        "test:client:watch": "pnpm test:client --single-run=false --auto-watch=true",
         "start": "node --max-http-header-size 30000 dist/server/index.js",
-        "dev": "cross-env NODE_ENV=development nodemon -w server -w common -e ts,js,json --exec \"npm run build:server && npm run start | pino-pretty\" ",
-        "build": "rimraf public && npm run build:server && npm run build:systemjs && npm run build:client",
+        "dev": "cross-env NODE_ENV=development nodemon -w server -w common -e ts,js,json --exec \"pnpm build:server && pnpm start | pino-pretty\" ",
+        "build": "rimraf public && pnpm build:server && pnpm build:systemjs && pnpm build:client",
         "build:server": "rimraf ./dist && tsc --project ./tsconfig.server.json && copyfiles ./config/* ./server/assets/* ./dist/",
         "build:client": "webpack --config build/webpack.js --progress",
         "build:systemjs": "node ./systemjs/build.js"
@@ -72,6 +72,7 @@
         "copyfiles": "^2.4.1",
         "cross-env": "^10.1.0",
         "fork-ts-checker-webpack-plugin": "^9.1.0",
+        "json5": "^2.2.3",
         "karma": "^6.4.4",
         "karma-bail-fast": "^1.0.4",
         "karma-chrome-launcher": "^3.2.0",
@@ -95,12 +96,6 @@
         "webpack-bundle-analyzer": "^5.1.0",
         "webpack-cli": "^6.0.1",
         "webpack-dev-middleware": "^7.4.5"
-    },
-    "overrides": {
-        "hyperid": "^4.0.0",
-        "@istanbuljs/load-nyc-config": {
-            "js-yaml": "^4.1.1"
-        }
     },
     "engines": {
         "node": ">= 22"

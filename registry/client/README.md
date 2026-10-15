@@ -3,8 +3,8 @@
 ## Quick start in dev mode
 
 ```bash
-$ npm install
-$ npm start
+$ pnpm install
+$ pnpm start
 ```
 
 And then browse to [http://localhost:4001/](http://localhost:4001/).
@@ -16,8 +16,8 @@ The default credentials are:
 ## How to build/run
 
 ```bash
-$ npm run build
-$ npm run serve
+$ pnpm build
+$ pnpm serve
 ```
 
 ## Configuration
@@ -34,7 +34,7 @@ Example:
 ```bash
 export ILC_REGISTRY_ADMIN_PROTECTED_SETTINGS="setting1,setting2"
 export ILC_REGISTRY_ADMIN_PROTECTED_ENTITIES="router_domains,shared_props"
-npm run dev
+pnpm dev
 ```
 
 Or override it inside your custom custom Dockerfile:
