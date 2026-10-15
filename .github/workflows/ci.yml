@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - master
+    workflow_dispatch:
     pull_request:
 
 # Read-only token by default, jobs that write ask for more
@@ -15,6 +16,7 @@ permissions:
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/master' && github.run_id || github.head_ref || github.ref }}
     cancel-in-progress: true
+
 
 jobs:
     common_checks:
