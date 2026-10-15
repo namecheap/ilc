@@ -97,7 +97,10 @@
         "webpack-dev-middleware": "^7.4.5"
     },
     "overrides": {
-        "hyperid": "^4.0.0"
+        "hyperid": "^4.0.0",
+        "@istanbuljs/load-nyc-config": {
+            "js-yaml": "^4.1.1"
+        }
     },
     "engines": {
         "node": ">= 22"
