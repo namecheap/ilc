@@ -39,6 +39,76 @@ Scenario(
 );
 //endregion 404 page for non-existing ILC route
 
+//region full page load on in-app navigation to a non-existing ILC route
+// A full page load replaces the document, so a mark set on it beforehand disappears.
+// In-app (SPA) navigation keeps the document and the mark.
+function markDocument() {
+    const { I } = inject();
+    I.executeScript(() => {
+        document.documentElement.dataset.e2eDocumentMark = 'true';
+    });
+}
+
+function isDocumentMarked(): Promise<boolean> {
+    const { I } = inject();
+    return I.executeScript(() => document.documentElement.dataset.e2eDocumentMark === 'true');
+}
+
+Scenario('Loads the page fully on ILC.navigate() to a non-existing ILC route', async ({ I, peoplePage, common }) => {
+    I.amOnPage(peoplePage.peopleUrl);
+    I.waitForElement(peoplePage.goToPeople, 30);
+    markDocument();
+
+    I.executeScript('window.ILC.navigate("/nonexistent-path");');
+
+    I.waitInUrl('/nonexistent-path', 10);
+    I.waitForText(common.text404NotFound, 10, common.text404NotFoundElement);
+    I.assertFalse(await isDocumentMarked(), 'Expected a full page load');
+});
+
+Scenario(
+    'Loads the page fully on history.pushState() to a non-existing ILC route',
+    async ({ I, peoplePage, common }) => {
+        I.amOnPage(peoplePage.peopleUrl);
+        I.waitForElement(peoplePage.goToPeople, 30);
+        markDocument();
+
+        I.executeScript(`window.history.pushState(null, '', '/nonexistent-path');`);
+
+        I.waitInUrl('/nonexistent-path', 10);
+        I.waitForText(common.text404NotFound, 10, common.text404NotFoundElement);
+        I.assertFalse(await isDocumentMarked(), 'Expected a full page load');
+    },
+);
+
+Scenario('Loads the page fully on history back to a non-existing ILC route', async ({ I, peoplePage, common }) => {
+    I.amOnPage('/nonexistent-path');
+    I.waitForElement(peoplePage.goToPeople, 30);
+    markDocument();
+
+    I.click(peoplePage.goToPeople);
+    I.waitInUrl(peoplePage.peopleUrl, 10);
+    I.assertTrue(await isDocumentMarked(), 'Expected in-app navigation to an existing ILC route');
+
+    I.executeScript('window.history.back();');
+
+    I.waitInUrl('/nonexistent-path', 10);
+    I.waitForText(common.text404NotFound, 10, common.text404NotFoundElement);
+    I.assertFalse(await isDocumentMarked(), 'Expected a full page load');
+});
+
+Scenario('Renders 404 in place when an app reports a non-existing resource', async ({ I, newsPage, common }) => {
+    I.amOnPage(newsPage.url.main);
+    I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingResource), 10);
+    markDocument();
+
+    I.click(newsPage.linkWithUrl(newsPage.url.nonExistingResource));
+
+    I.waitForText(common.text404NotFound, 10, common.text404NotFoundElement);
+    I.assertTrue(await isDocumentMarked(), 'Expected the 404 to be rendered without a page load');
+});
+//endregion full page load on in-app navigation to a non-existing ILC route
+
 //region 404 page for non-existing News app route
 Scenario('Renders (SSR) global 404 page for non-existing News app route', ({ I, newsPage, common }) => {
     I.amOnPage(newsPage.url.nonExistingRoute);

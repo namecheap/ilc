@@ -245,6 +245,14 @@ export default class ClientRouter extends EventEmitter {
         if (this.#currentUrl !== newUrl) {
             this.#currentRoute = this.#router.match(this.#getCurrUrl());
             this.#currentUrl = newUrl;
+
+            // ILC has no route for this URL, so something else behind the same host may serve it.
+            // Let the browser request it, as it already does on a click on such a link (see #onClickLink).
+            // A 404 triggered by an app keeps the URL and is rendered in place.
+            if (this.#currentRoute.specialRole === 404) {
+                this.#location.href = this.#getCurrUrl(true);
+                return;
+            }
         }
 
         // In case if base template was changes we expect not SPA navigation
