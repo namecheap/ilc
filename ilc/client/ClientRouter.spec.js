@@ -398,6 +398,107 @@ describe('client router', () => {
                 addEventListener.restore();
             }
         });
+
+        describe('when the 404 route uses the same template as the current route', () => {
+            const sameTemplateConfigRoot = {
+                getConfig: () => ({
+                    ...registryConfig,
+                    specialRoutes: {
+                        404: { ...registryConfig.specialRoutes[404], template: registryConfig.routes[0].template },
+                    },
+                }),
+            };
+
+            it('should load the page fully when the new URL has no route', () => {
+                const location = {
+                    pathname: registryConfig.routes[1].route,
+                    search: '',
+                };
+
+                router = new ClientRouter(
+                    sameTemplateConfigRoot,
+                    {},
+                    undefined,
+                    singleSpa,
+                    handlePageTransaction,
+                    location,
+                );
+
+                location.pathname = '/nonexistent';
+                location.search = '?from=app';
+
+                window.dispatchEvent(singleSpaBeforeRoutingEvent);
+
+                chai.expect(location.href).to.be.eql('/nonexistent?from=app');
+            });
+
+            it('should keep the locale when loading the page fully', () => {
+                const location = {
+                    pathname: '/ua' + registryConfig.routes[1].route,
+                    search: '',
+                };
+                const i18n = {
+                    unlocalizeUrl: (url) => url.replace(/^\/ua/, '') || '/',
+                    localizeUrl: (url) => '/ua' + url,
+                };
+
+                router = new ClientRouter(sameTemplateConfigRoot, {}, i18n, singleSpa, handlePageTransaction, location);
+
+                location.pathname = '/ua/nonexistent';
+
+                window.dispatchEvent(singleSpaBeforeRoutingEvent);
+
+                chai.expect(location.href).to.be.eql('/ua/nonexistent');
+            });
+
+            it('should not load the page fully when the URL did not change', () => {
+                const location = {
+                    pathname: '/nonexistent',
+                    search: '',
+                };
+
+                router = new ClientRouter(
+                    sameTemplateConfigRoot,
+                    {},
+                    undefined,
+                    singleSpa,
+                    handlePageTransaction,
+                    location,
+                );
+
+                window.dispatchEvent(singleSpaBeforeRoutingEvent);
+
+                chai.expect(location.href).to.be.undefined;
+                chai.expect(router.getCurrentRoute().specialRole).to.be.eql(404);
+            });
+
+            it('should render a 404 triggered by an app in place', () => {
+                const location = {
+                    pathname: registryConfig.routes[1].route,
+                    search: '',
+                };
+                const singleSpaWithMountedHero = {
+                    ...singleSpa,
+                    getMountedApps: () => ['hero__at__hero'],
+                };
+
+                router = new ClientRouter(
+                    sameTemplateConfigRoot,
+                    {},
+                    undefined,
+                    singleSpaWithMountedHero,
+                    handlePageTransaction,
+                    location,
+                    { info: () => {}, warn: () => {} },
+                );
+
+                window.dispatchEvent(new CustomEvent(ilcEvents.NOT_FOUND, { detail: { appId: 'hero__at__hero' } }));
+                window.dispatchEvent(singleSpaBeforeRoutingEvent);
+
+                chai.expect(location.href).to.be.undefined;
+                chai.expect(router.getCurrentRoute().specialRole).to.be.eql(404);
+            });
+        });
     });
 
     describe('should listen to anchors click events when client router was initialized', () => {
