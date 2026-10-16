@@ -17,7 +17,6 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/master' && github.run_id || github.head_ref || github.ref }}
     cancel-in-progress: true
 
-
 jobs:
     common_checks:
         name: Common checks
@@ -26,18 +25,21 @@ jobs:
         steps:
             - uses: actions/checkout@v6
 
+            - name: Setup pnpm
+              uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
             - name: Setup Node.js
               uses: actions/setup-node@v6
               with:
                   node-version: 22
-                  cache: 'npm'
-                  cache-dependency-path: '**/package-lock.json'
+                  cache: 'pnpm'
 
             - name: Install dependencies
-              run: npm ci --prefer-offline --no-fund --ignore-scripts
+              # Only the root project, it has prettier
+              run: pnpm install --frozen-lockfile --ignore-scripts --filter ilc-monorepo
 
             - name: Check formatting
-              run: npm run format:check
+              run: pnpm format:check
 
     build_ilc:
         name: Build ILC
@@ -61,6 +63,11 @@ jobs:
 
             - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
+            # TODO: remove once master uses pnpm. The dest build of a pull request checks out the base branch,
+            # which may still use npm: then the image is built from the app folder like before the pnpm migration.
+            - name: Detect the package manager of the checked out branch
+              run: echo "BUILD_CONTEXT=$([ -f pnpm-lock.yaml ] && echo . || echo ./ilc)" >> $GITHUB_ENV
+
             # Every branch gets its own build cache, so builds of other branches do not evict it.
             # The dest build of a pull request only reads the cache of the base branch and never overwrites it.
             - name: Calculate build cache tag
@@ -80,7 +87,8 @@ jobs:
             - name: Build the Docker image
               uses: docker/build-push-action@v6
               with:
-                  context: ./ilc
+                  context: ${{ env.BUILD_CONTEXT }}
+                  file: ./ilc/Dockerfile
                   platforms: linux/amd64
                   push: true
                   cache-from: |
@@ -91,6 +99,7 @@ jobs:
                   tags: |
                       namecheap/ilc_tmp:${{ env.SHA }}
 
+            # TODO: back to pnpm once master uses pnpm. npm runs the scripts in both npm and pnpm images of src and dest
             - name: Run server-side tests with coverage
               run: docker run --volume $(pwd)/artifacts/ilc/coverage/server:/.coverage namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage -- --forbid-only && mv .nyc_output/* /.coverage"
 
@@ -111,7 +120,7 @@ jobs:
                   name: ${{ matrix.branch.name }}-client-side-tests-artifacts
                   path: artifacts/ilc/coverage/client
 
-    # arm64 is built on a native arm64 runner: under QEMU emulation npm ci could crash with "Illegal instruction"
+    # arm64 is built on a native arm64 runner: under QEMU emulation the dependencies installation could crash with "Illegal instruction"
     # and hang the job. The amd64 and arm64 images are joined into one multi-arch image for master only.
     build_ilc_arm64:
         name: Build ILC (arm64)
@@ -139,7 +148,8 @@ jobs:
             - name: Build the Docker image
               uses: docker/build-push-action@v6
               with:
-                  context: ./ilc
+                  context: .
+                  file: ./ilc/Dockerfile
                   platforms: linux/arm64
                   push: true
                   cache-from: |
@@ -152,7 +162,7 @@ jobs:
                       namecheap/ilc_tmp:${{ env.SHA }}-arm64
 
             - name: Run server-side tests
-              run: docker run namecheap/ilc_tmp:$SHA-arm64 npm run test:ci
+              run: docker run namecheap/ilc_tmp:$SHA-arm64 pnpm test:ci
 
     create_ilc_docker_manifest:
         name: Create ILC multi-arch Docker image manifest
@@ -194,6 +204,11 @@ jobs:
 
             - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
+            # TODO: remove once master uses pnpm. The dest build of a pull request checks out the base branch,
+            # which may still use npm: then the image is built from the app folder like before the pnpm migration.
+            - name: Detect the package manager of the checked out branch
+              run: echo "BUILD_CONTEXT=$([ -f pnpm-lock.yaml ] && echo . || echo ./registry)" >> $GITHUB_ENV
+
             # Same build cache rules as for the ILC image, see the Build ILC job
             - name: Calculate build cache tag
               env:
@@ -212,7 +227,8 @@ jobs:
             - name: Build the Docker image
               uses: docker/build-push-action@v6
               with:
-                  context: ./registry
+                  context: ${{ env.BUILD_CONTEXT }}
+                  file: ./registry/Dockerfile
                   platforms: linux/amd64
                   push: true
                   cache-from: |
@@ -249,7 +265,8 @@ jobs:
             - name: Build the Docker image
               uses: docker/build-push-action@v6
               with:
-                  context: ./registry
+                  context: .
+                  file: ./registry/Dockerfile
                   platforms: linux/arm64
                   push: true
                   cache-from: |
@@ -341,6 +358,7 @@ jobs:
                   username: brothers
                   password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
 
+            # TODO: back to pnpm once master uses pnpm. npm runs the scripts in both npm and pnpm images of src and dest
             - name: Run tests
               run: >-
                   bash ./registry/scripts/reset.sh;
@@ -398,22 +416,24 @@ jobs:
         steps:
             - uses: actions/checkout@v6
 
+            - name: Setup pnpm
+              uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
             - name: Setup Node.js
               uses: actions/setup-node@v6
               with:
                   node-version: 22
-                  cache: 'npm'
-                  cache-dependency-path: '**/package-lock.json'
+                  cache: 'pnpm'
 
             - name: Install dependencies
-              run: npm ci --prefer-offline --no-fund
+              run: pnpm install --frozen-lockfile
 
             - name: Build ILC & Registry
-              run: npm run build
+              run: pnpm build
 
             - name: Run E2E tests
               working-directory: e2e
-              run: npm run start:verbose
+              run: pnpm start:verbose
               env:
                   DB_CLIENT: ${{ matrix.database.client }}
                   DB_HOST: localhost

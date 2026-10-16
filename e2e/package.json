@@ -7,9 +7,9 @@
     "private": true,
     "scripts": {
         "start": "codeceptjs run --reporter mocha-multi",
-        "start:verbose": "cross-env TEST_ENV=verbose npm start -- --verbose",
+        "start:verbose": "cross-env TEST_ENV=verbose pnpm start --verbose",
         "start:flaky": "codeceptjs run-rerun --verbose",
-        "start:verbose:ui": "cross-env SHOW_UI=true npm run start:verbose -- -p pause",
+        "start:verbose:ui": "cross-env SHOW_UI=true pnpm start:verbose -p pause",
         "generate-typings": "codeceptjs def -o ./typings"
     },
     "author": "",
@@ -28,21 +28,11 @@
         "typescript": "^5.9.3",
         "wait-on": "^9.0.3"
     },
-    "overrides": {
-        "codeceptjs": {
-            "axios": "^1.20.0",
-            "@xmldom/xmldom": "^0.9.12",
-            "uuid": "^11.1.1"
-        },
-        "mocha@11": {
-            "serialize-javascript": "^7.0.5",
-            "diff": "^8.0.3"
-        }
-    },
     "engines": {
         "node": ">=22"
     },
     "devDependencies": {
+        "@types/node": "^25.0.3",
         "@types/wait-on": "^5.3.4"
     }
 }

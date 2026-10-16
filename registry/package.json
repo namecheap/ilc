@@ -6,26 +6,26 @@
     "scripts": {
         "tsc": "tsc",
         "compile": "tsc --incremental && copyfiles \"server/seeds/data/**/*\" build",
-        "dev": "rimraf build && nodemon -e ts,json5 --exec \"tsc --incremental && npm run start | pino-pretty\" ",
-        "build": "npm run compile && cd ./client && npm run build",
+        "dev": "rimraf build && nodemon -e ts,json5 --exec \"tsc --incremental && pnpm start | pino-pretty\" ",
+        "build": "pnpm compile && cd ./client && pnpm build",
         "start": "dotenv -- node -r source-map-support/register ./build/server/index.js",
-        "start-docker": "npm run migrate:compiled && npm start",
+        "start-docker": "pnpm migrate:compiled && pnpm start",
         "knex": "knex",
-        "migrate": "npm run compile && dotenv -- npm run migrate:compiled",
+        "migrate": "pnpm compile && dotenv -- pnpm migrate:compiled",
         "migrate:compiled": "knex --knexfile build/config/knexfile.js migrate:latest",
         "migrate:make": "knex --knexfile config/knexfile.ts migrate:make --migrations-directory ../server/migrations",
-        "migrate:rollback": "npm run compile && dotenv -- npm run migrate:rollback:compiled",
+        "migrate:rollback": "pnpm compile && dotenv -- pnpm migrate:rollback:compiled",
         "migrate:rollback:compiled": "knex --knexfile build/config/knexfile.js migrate:rollback",
-        "seed": "npm run compile && dotenv -- npm run seed:compiled",
+        "seed": "pnpm compile && dotenv -- pnpm seed:compiled",
         "seed:compiled": "knex --knexfile build/config/knexfile.js seed:run",
         "seed:make": "knex --knexfile config/knexfile.ts seed:make -x ts",
-        "test:sqlite": "cross-env-shell DB_CLIENT=sqlite3 npm run reset && cross-env NODE_ENV=test NODE_CONFIG_ENV=sqlite-test mocha",
-        "test:mysql": "cross-env-shell NODE_ENV=test NODE_CONFIG_ENV=mysql-test DB_CLIENT=mysql \"npm run reset && mocha\" ",
-        "test": "cross-env-shell NODE_ENV=test NODE_CONFIG_ENV=postgres-test DB_CLIENT=pg \"npm run reset && mocha\" ",
-        "test:ci": "npm run migrate && cross-env NODE_ENV=test dotenv -- nyc mocha --forbid-only",
-        "reset": "dotenv bash ./scripts/reset.sh && npm run migrate",
+        "test:sqlite": "cross-env-shell DB_CLIENT=sqlite3 pnpm reset && cross-env NODE_ENV=test NODE_CONFIG_ENV=sqlite-test mocha",
+        "test:mysql": "cross-env-shell NODE_ENV=test NODE_CONFIG_ENV=mysql-test DB_CLIENT=mysql \"pnpm reset && mocha\" ",
+        "test": "cross-env-shell NODE_ENV=test NODE_CONFIG_ENV=postgres-test DB_CLIENT=pg \"pnpm reset && mocha\" ",
+        "test:ci": "pnpm migrate && cross-env NODE_ENV=test dotenv -- nyc mocha --forbid-only",
+        "reset": "dotenv bash ./scripts/reset.sh && pnpm migrate",
         "assetsdiscovery": "cross-env NODE_ENV=production INTERVAL=2000 node -r source-map-support/register ./build/server/runnerAssetsDiscovery.js",
-        "assetsdiscovery:dev": "nodemon -e ts,json5 --exec \"npx tsc --incremental && dotenv -- npm run assetsdiscovery | pino-pretty\" "
+        "assetsdiscovery:dev": "nodemon -e ts,json5 --exec \"tsc --incremental && dotenv -- pnpm assetsdiscovery | pino-pretty\" "
     },
     "author": "",
     "license": "Apache-2.0",
@@ -47,6 +47,7 @@
         "@types/passport": "^1.0.17",
         "@types/passport-http-bearer": "^1.0.42",
         "@types/passport-local": "^1.0.38",
+        "@types/serve-static": "^2.2.0",
         "@types/sinon": "^21.0.1",
         "@types/supertest": "^6.0.3",
         "chai": "6.2.1",
@@ -96,13 +97,6 @@
         "sqlite3": "^6.0.1",
         "url-join": "^5.0.0",
         "uuid": "^13.0.0"
-    },
-    "overrides": {
-        "tar": "^7.5.21",
-        "hyperid": "^4.0.0",
-        "@istanbuljs/load-nyc-config": {
-            "js-yaml": "^4.1.1"
-        }
     },
     "engines": {
         "node": ">=22"

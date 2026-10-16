@@ -1,6 +1,7 @@
 {
-    "name": "ilc",
+    "name": "ilc-monorepo",
     "version": "1.0.0",
+    "private": true,
     "description": "",
     "main": "index.js",
     "repository": {
@@ -8,28 +9,28 @@
         "url": "git://github.com/namecheap/ilc.git"
     },
     "scripts": {
-        "install-all": "node install_all.js",
         "start": "node start_all.js",
         "start:no-apps": "node start_all.js --no-apps",
-        "build": "npm run build:ilc && npm run build:registry",
-        "build:ilc": "cd ./ilc/ && npm run build",
-        "build:registry": "cd ./registry/ && npm run build",
-        "postinstall": "npm run install-all",
-        "format": "npx prettier --write \"registry/**/*.ts\" \"ilc/**/*.{js,ts}\" ",
-        "format:check": "npx prettier --check \"registry/**/*.ts\" \"ilc/**/*.{js,ts}\" ",
+        "build": "pnpm --filter ilc --filter registry build",
+        "build:ilc": "pnpm --filter ilc build",
+        "build:registry": "pnpm --filter registry build",
+        "format": "prettier --write \"registry/**/*.ts\" \"ilc/**/*.{js,ts}\"",
+        "format:check": "prettier --check \"registry/**/*.ts\" \"ilc/**/*.{js,ts}\"",
         "prepare": "husky"
     },
     "author": "",
     "license": "Apache-2.0",
     "engines": {
         "node": ">= 22",
-        "npm": ">= 6.0.0"
+        "pnpm": ">= 12"
     },
     "devDependencies": {
         "@commitlint/cli": "^20.2.0",
         "@commitlint/config-conventional": "^20.2.0",
         "concurrently": "^9.2.5",
         "husky": "^9.1.7",
+        "lint-staged": "^17.6.0",
         "prettier": "^3.7.4"
-    }
+    },
+    "packageManager": "pnpm@12.8.2"
 }
