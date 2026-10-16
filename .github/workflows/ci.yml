@@ -63,11 +63,6 @@ jobs:
 
             - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-            # TODO: remove once master uses pnpm. The dest build of a pull request checks out the base branch,
-            # which may still use npm: then the image is built from the app folder like before the pnpm migration.
-            - name: Detect the package manager of the checked out branch
-              run: echo "BUILD_CONTEXT=$([ -f pnpm-lock.yaml ] && echo . || echo ./ilc)" >> $GITHUB_ENV
-
             # Every branch gets its own build cache, so builds of other branches do not evict it.
             # The dest build of a pull request only reads the cache of the base branch and never overwrites it.
             - name: Calculate build cache tag
@@ -87,7 +82,7 @@ jobs:
             - name: Build the Docker image
               uses: docker/build-push-action@v6
               with:
-                  context: ${{ env.BUILD_CONTEXT }}
+                  context: .
                   file: ./ilc/Dockerfile
                   platforms: linux/amd64
                   push: true
@@ -99,9 +94,8 @@ jobs:
                   tags: |
                       namecheap/ilc_tmp:${{ env.SHA }}
 
-            # TODO: back to pnpm once master uses pnpm. npm runs the scripts in both npm and pnpm images of src and dest
             - name: Run server-side tests with coverage
-              run: docker run --volume $(pwd)/artifacts/ilc/coverage/server:/.coverage namecheap/ilc_tmp:$SHA bash -c "npm run test:coverage -- --forbid-only && mv .nyc_output/* /.coverage"
+              run: docker run --volume $(pwd)/artifacts/ilc/coverage/server:/.coverage namecheap/ilc_tmp:$SHA bash -c "pnpm test:coverage --forbid-only && mv .nyc_output/* /.coverage"
 
             - uses: actions/upload-artifact@v6
               with:
@@ -204,11 +198,6 @@ jobs:
 
             - run: echo "SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-            # TODO: remove once master uses pnpm. The dest build of a pull request checks out the base branch,
-            # which may still use npm: then the image is built from the app folder like before the pnpm migration.
-            - name: Detect the package manager of the checked out branch
-              run: echo "BUILD_CONTEXT=$([ -f pnpm-lock.yaml ] && echo . || echo ./registry)" >> $GITHUB_ENV
-
             # Same build cache rules as for the ILC image, see the Build ILC job
             - name: Calculate build cache tag
               env:
@@ -227,7 +216,7 @@ jobs:
             - name: Build the Docker image
               uses: docker/build-push-action@v6
               with:
-                  context: ${{ env.BUILD_CONTEXT }}
+                  context: .
                   file: ./registry/Dockerfile
                   platforms: linux/amd64
                   push: true
@@ -358,7 +347,6 @@ jobs:
                   username: brothers
                   password: ${{ secrets.DOCKER_HUB_BROTHERS_TOKEN }}
 
-            # TODO: back to pnpm once master uses pnpm. npm runs the scripts in both npm and pnpm images of src and dest
             - name: Run tests
               run: >-
                   bash ./registry/scripts/reset.sh;
@@ -372,7 +360,7 @@ jobs:
                   -e DB_PASSWORD=pwd
                   -e DB_NAME
                   namecheap/ilc_tmp:reg_$SHA
-                  sh -c "npm run test:ci && mv .nyc_output/* /.coverage"
+                  sh -c "pnpm test:ci && mv .nyc_output/* /.coverage"
 
             - uses: actions/upload-artifact@v6
               with:
