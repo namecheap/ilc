@@ -1,5 +1,3 @@
-const { I } = inject();
-
 export const url = {
     entry: '/hooks/',
     protected: '/hooks/protected/',
