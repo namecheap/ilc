@@ -1,6 +1,6 @@
 Feature('people ilc demo application');
 
-Scenario('should open a people page without any selected planet initially', async ({I, peoplePage}) => {
+Scenario('should open a people page without any selected planet initially', ({ I, peoplePage }) => {
     I.amOnPage('/');
     I.waitForElement(peoplePage.goToPeople, 30);
     I.click(peoplePage.goToPeople);
@@ -13,21 +13,19 @@ Scenario('should open a people page without any selected planet initially', asyn
     I.seeNumberOfVisibleElements(peoplePage.personsList, 10);
 });
 
-Scenario('should show more persons', async ({I, peoplePage}) => {
+Scenario('should show more persons', ({ I, peoplePage }) => {
     I.amOnPage(peoplePage.peopleUrl);
     I.waitForElement(peoplePage.fetchMorePeople, 30);
     I.waitForClickable(peoplePage.fetchMorePeople, 30);
     I.click(peoplePage.fetchMorePeople);
-    I.waitForClickable(peoplePage.fetchMorePeople, 30);
-    I.seeNumberOfVisibleElements(peoplePage.personsList, 20);
-    I.stopMocking();
+    I.waitNumberOfVisibleElements(peoplePage.personsList, 20, 30);
 });
 
-Scenario('should show person`s details', async ({I, peoplePage}) => {
+Scenario('should show person`s details', async ({ I, peoplePage }) => {
     I.amOnPage(peoplePage.peopleUrl);
     I.waitNumberOfVisibleElements(peoplePage.personsList, 10, 30);
 
-    const lastPersonName = await I.grabTextFrom(peoplePage.lastPerson) as string;
+    const lastPersonName = (await I.grabTextFrom(peoplePage.lastPerson)) as string;
     const lastPersonHref = await I.grabAttributeFrom(peoplePage.lastPerson, 'href');
 
     I.click(peoplePage.lastPerson);

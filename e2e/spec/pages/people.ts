@@ -1,5 +1,3 @@
-const { I } = inject();
-
 export const peopleUrl = '/people';
 
 export const goToPeople = `body > div#navbar a[href="${peopleUrl}"]`;

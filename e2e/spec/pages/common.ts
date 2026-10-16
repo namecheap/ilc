@@ -8,5 +8,6 @@ export const textError500ForLocalhostAsIPv4 = '<h3>500 Internal Server Error on 
 export const textErrorId = 'Error ID:';
 export const text404NotFoundElement = 'div#body > div > h1';
 export const text404NotFound = '404 not found';
-export const text404NotFoundForLocalhostAsIPv4 = '<h1>404 not found on 127.0.0.1</h1>';
+export const title404NotFoundForLocalhostAsIPv4 = '404 not found on 127.0.0.1';
+export const text404NotFoundForLocalhostAsIPv4 = `<h1>${title404NotFoundForLocalhostAsIPv4}</h1>`;
 export const text404NotFoundVue = '404 not found component';

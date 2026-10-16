@@ -1,47 +1,56 @@
-import { clickOnLink } from "./utils";
+import { clickOnLink } from './utils';
 
 Feature('404 error handling');
 
 //region 404 page for non-existing ILC route
-Scenario('Renders (SSR) global 404 page for non-existing ILC route for domain "localhost:8233" (default)', ({I, common: common}) => {
-    I.amOnPage('/nonexistent-path');
-    I.seeInSource(common.text404NotFound);
-});
-Scenario('Renders (CSR) global 404 page for non-existing ILC route for domain "localhost:8233" (default)', ({I, peoplePage, common: common}) => {
-    const notFoundPageLink = '#navbar a[href="/nosuchpath"]';
+Scenario(
+    'Renders (SSR) global 404 page for non-existing ILC route for domain "localhost:8233" (default)',
+    ({ I, common }) => {
+        I.amOnPage('/nonexistent-path');
+        I.seeInSource(common.text404NotFound);
+    },
+);
+Scenario(
+    'Renders (CSR) global 404 page for non-existing ILC route for domain "localhost:8233" (default)',
+    ({ I, peoplePage, common }) => {
+        const notFoundPageLink = '#navbar a[href="/nosuchpath"]';
 
-    I.amOnPage(peoplePage.peopleUrl);
-    I.waitForElement(notFoundPageLink, 30);
-    I.click(notFoundPageLink);
-    I.seeInSource(common.text404NotFound);
-});
+        I.amOnPage(peoplePage.peopleUrl);
+        I.waitForElement(notFoundPageLink, 30);
+        I.click(notFoundPageLink);
+        I.waitForText(common.text404NotFound, 10, common.text404NotFoundElement);
+    },
+);
 
-Scenario('Renders (SSR) global 404 page for non-existing ILC route for domain "127.0.0.1:8233"', ({I, common: common}) => {
+Scenario('Renders (SSR) global 404 page for non-existing ILC route for domain "127.0.0.1:8233"', ({ I, common }) => {
     I.amOnPage(common.url.localhostAsIPv4 + '/nonexistent-path');
     I.seeInSource(common.text404NotFoundForLocalhostAsIPv4);
 });
-Scenario('Renders (CSR) global 404 page for non-existing ILC route for domain "127.0.0.1:8233"', ({I, peoplePage, common: common}) => {
-    const notFoundPageLink = '#navbar a[href="/nosuchpath"]';
+Scenario(
+    'Renders (CSR) global 404 page for non-existing ILC route for domain "127.0.0.1:8233"',
+    ({ I, peoplePage, common }) => {
+        const notFoundPageLink = '#navbar a[href="/nosuchpath"]';
 
-    I.amOnPage(common.url.localhostAsIPv4 + peoplePage.peopleUrl);
-    I.waitForElement(notFoundPageLink, 30);
-    I.click(notFoundPageLink);
-    I.seeInSource(common.text404NotFoundForLocalhostAsIPv4);
-});
+        I.amOnPage(common.url.localhostAsIPv4 + peoplePage.peopleUrl);
+        I.waitForElement(notFoundPageLink, 30);
+        I.click(notFoundPageLink);
+        I.waitForText(common.title404NotFoundForLocalhostAsIPv4, 10, common.text404NotFoundElement);
+    },
+);
 //endregion 404 page for non-existing ILC route
 
 //region 404 page for non-existing News app route
-Scenario('Renders (SSR) global 404 page for non-existing News app route', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (SSR) global 404 page for non-existing News app route', ({ I, newsPage, common }) => {
     I.amOnPage(newsPage.url.nonExistingRoute);
     I.seeInSource(common.text404NotFound);
 });
 
-Scenario('Renders (CSR) global 404 page for non-existing News app route', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (CSR) global 404 page for non-existing News app route', ({ I, newsPage, common }) => {
     I.amOnPage(newsPage.url.main);
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingRoute), 10);
     I.click(newsPage.linkWithUrl(newsPage.url.nonExistingRoute));
-    I.seeInSource(common.text404NotFound);
+    I.waitForText(common.text404NotFound, 10, common.text404NotFoundElement);
 
     //After 404 page ILC continues normal operation
     I.click(newsPage.linkWithUrl(newsPage.url.main));
@@ -49,27 +58,27 @@ Scenario('Renders (CSR) global 404 page for non-existing News app route', ({I, n
     I.see('Pick a news source', newsPage.bannerHeadline);
 });
 
-Scenario('Renders (SSR) overridden 404 page for non-existing News app route', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (SSR) overridden 404 page for non-existing News app route', ({ I, newsPage, common }) => {
     I.amOnPage(newsPage.url.nonExistingRouteWithOverride);
     I.seeInSource(common.text404NotFoundVue);
 });
 
-Scenario('Renders (CSR) overridden 404 page for non-existing News app route', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (CSR) overridden 404 page for non-existing News app route', ({ I, newsPage, common }) => {
     I.amOnPage(newsPage.url.main);
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingRouteWithOverride), 10);
     I.click(newsPage.linkWithUrl(newsPage.url.nonExistingRouteWithOverride));
-    I.seeInSource(common.text404NotFoundVue);
+    I.waitForText(common.text404NotFoundVue, 10);
 });
 //endregion 404 page for non-existing News app route
 
 //region 404 page for non-existing News resource
-Scenario('Renders (SSR) global 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (SSR) global 404 page for non-existing News resource', ({ I, newsPage, common }) => {
     I.amOnPage(newsPage.url.nonExistingResource);
     I.seeInSource(common.text404NotFound);
 });
 
-Scenario('Renders (CSR) global 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (CSR) global 404 page for non-existing News resource', ({ I, newsPage, common }) => {
     I.amOnPage(newsPage.url.main);
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingResource), 10);
@@ -83,12 +92,12 @@ Scenario('Renders (CSR) global 404 page for non-existing News resource', ({I, ne
     I.see('Pick a news source', newsPage.bannerHeadline);
 });
 
-Scenario('Renders (SSR) overridden 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (SSR) overridden 404 page for non-existing News resource', ({ I, newsPage, common }) => {
     I.amOnPage(newsPage.url.nonExistingResourceWithOverride);
     I.seeInSource(common.text404NotFoundVue);
 });
 
-Scenario('Renders (CSR) overridden 404 page for non-existing News resource', ({I, newsPage: newsPage, common: common}) => {
+Scenario('Renders (CSR) overridden 404 page for non-existing News resource', ({ I, newsPage, common }) => {
     I.amOnPage(newsPage.url.main);
     I.waitInUrl(newsPage.url.main, 10);
     I.waitForElement(newsPage.linkWithUrl(newsPage.url.nonExistingResourceWithOverride), 10);

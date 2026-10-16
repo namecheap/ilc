@@ -1,5 +1,3 @@
-const { I } = inject();
-
 export const planetsUrl = '/planets';
 
 export const goToPlanets = `body > div#navbar a[href="${planetsUrl}"]`;
