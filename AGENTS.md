@@ -79,7 +79,7 @@ Registry tests (`registry/tests`) drive the HTTP API with supertest. Cleanups in
 ## CI and conventions
 
 - Commits follow Conventional Commits (commitlint); husky + lint-staged run Prettier on staged files. Prettier: 4 spaces, single quotes, width 120.
-- `.github/workflows/ci.yml` runs on pull requests and pushes to `master`. ILC and Registry are tested inside their Docker images (amd64; arm64 is built on native `ubuntu-24.04-arm` runners). Each PR also builds and tests the base branch (`dest` matrix entries) for the coverage-diff comment. Only `master` pushes publish to Docker Hub (`namecheap/ilc`, `namecheap/ilc_registry`, staged through `namecheap/ilc_tmp`); `release.yml` re-tags them on version tags.
+- `.github/workflows/ci.yml` runs on pull requests and pushes to `develop` (the main branch). ILC and Registry are tested inside their Docker images (amd64; arm64 is built on native `ubuntu-24.04-arm` runners). Each PR also builds and tests the base branch (`dest` matrix entries) for the coverage-diff comment. Only `develop` pushes publish to Docker Hub (`namecheap/ilc`, `namecheap/ilc_registry`, staged through `namecheap/ilc_tmp`); `release.yml` re-tags them on version tags.
 - User-facing docs live in `docs/` (MkDocs, `mkdocs.yml`).
 - Currently there is mixed codebase of typescript and javascript, but we're in progress into full migration to the typescript. Convert files to TS if reasonable
 - Don't expose any internal infra details like urls, credentials, plugins, etc
