@@ -2,8 +2,8 @@
 set -e
 
 if [ "$DB_SEED" = 'true' ] && [ ! -f .seed ]; then
-  npm run migrate:compiled
-  npm run seed:compiled
+  pnpm migrate:compiled
+  pnpm seed:compiled
   touch .seed
 fi
 

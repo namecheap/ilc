@@ -18,23 +18,23 @@ if (myCmd.includes('--no-seed')) {
 const commands = [
     {
         cwd: 'ilc',
-        command: `${noWatch ? 'npx cross-env NODE_ENV=production' : ''} npm run ${noWatch ? 'start' : 'dev'}`,
+        command: `${noWatch ? 'pnpm exec cross-env NODE_ENV=production' : ''} pnpm ${noWatch ? 'start' : 'dev'}`,
         name: 'ilc',
     },
     {
         cwd: 'registry',
-        command: `npm run migrate ${noSeed ? '' : '&& npm run seed'} && npm run ${noWatch ? 'start' : 'dev'}`,
+        command: `pnpm migrate ${noSeed ? '' : '&& pnpm seed'} && pnpm ${noWatch ? 'start' : 'dev'}`,
         name: 'registry',
     },
     {
         cwd: 'registry',
-        command: 'npx ts-node lde/oauth-server.ts',
+        command: 'pnpm exec ts-node lde/oauth-server.ts',
         name: 'oauth-server',
     },
 ];
 
 if (!noWatch) {
-    commands.push({ cwd: 'registry/client', command: 'npm run build:watch', name: 'registry:ui' });
+    commands.push({ cwd: 'registry/client', command: 'pnpm build:watch', name: 'registry:ui' });
 }
 if (runWithApps) {
     commands.push({

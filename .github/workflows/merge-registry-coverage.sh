@@ -11,4 +11,4 @@ cp -R \
   "$prefix-pg-$suffix/." \
   "$prefix-merged-$suffix"
 
-docker run --rm -v "$(pwd)/$prefix-merged-$suffix":/codebase/.nyc_output "namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}" npx nyc report
+docker run --rm -v "$(pwd)/$prefix-merged-$suffix":/codebase/.nyc_output "namecheap/ilc_tmp:reg_${GITHUB_SHA:0:7}" pnpm exec nyc report

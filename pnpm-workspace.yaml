@@ -1,0 +1,54 @@
+packages:
+    - ilc
+    - registry
+    - registry/client
+    - e2e
+
+engineStrict: true
+
+# Dependencies allowed to run their install scripts, pnpm skips the scripts of all the other ones
+allowBuilds:
+    '@newrelic/fn-inspect': true
+    '@newrelic/native-metrics': true
+    bcrypt: true
+    esbuild: true
+    puppeteer: true
+    sqlite3: true
+    # Only print messages or build parts that are not used here
+    core-js: false
+    es5-ext: false
+    protobufjs: false
+
+# Security overrides, they were npm overrides per app before the pnpm migration and apply to the whole workspace now
+overrides:
+    '@istanbuljs/load-nyc-config>js-yaml': ^4.1.1
+    'codeceptjs>@xmldom/xmldom': ^0.9.12
+    codeceptjs>axios: ^1.20.0
+    codeceptjs>uuid: ^11.1.1
+    dompurify: ^3.4.16
+    hyperid: ^4.0.0
+    lodash: ^4.18.0
+    mocha@11>diff: ^8.0.3
+    mocha@11>serialize-javascript: ^7.0.5
+    query-string: ^9.5.1
+    tar: ^7.5.21
+
+blockExoticSubdeps: true
+# Versions published less than 2 weeks ago (in minutes) are not installed
+minimumReleaseAge: 20160
+minimumReleaseAgeExclude:
+    # Our own packages
+    - '@namecheap/*'
+    - ilc-sdk
+    - ilc-plugins-sdk
+    # shell-quote 1.12.0 fixes GHSA-w7jw-789q-3m8p, concurrently 9.2.5 is the first release that brings it
+    - concurrently@9.2.5
+    - shell-quote@1.12.0
+trustPolicy: no-downgrade
+trustPolicyExclude:
+    # Older major lines released by their maintainers before the packages moved to provenance publishing
+    - chokidar@4.0.3
+    - semver@5.7.2
+    - semver@6.3.1
+    - ua-parser-js@0.7.41
+    - undici-types@6.21.0
