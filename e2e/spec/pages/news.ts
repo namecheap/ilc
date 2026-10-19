@@ -1,5 +1,3 @@
-const { I } = inject();
-
 export const url = {
     main: '/news/',
     nonExistingRoute: '/news/nonExisting',
@@ -8,7 +6,7 @@ export const url = {
     nonExistingResourceWithOverride: '/news/article/abc-news-au34?overrideErrorPage=1',
 };
 
-export const linkWithUrl = (url:string) => `a[href="${url}"]`;
+export const linkWithUrl = (url: string) => `a[href="${url}"]`;
 
 export const newsView = 'body > div#body > div.single-spa-container.news-app > div.view';
 export const newsSources = `${newsView} > div.sources > div.container > ol > li.source`;

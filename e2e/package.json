@@ -15,7 +15,6 @@
     "author": "",
     "license": "UNLICENSED",
     "dependencies": {
-        "@codeceptjs/mock-request": "^0.3.1",
         "codeceptjs": "^4.2.0",
         "codeceptjs-chai": "^2.3.5",
         "cross-env": "^10.1.0",

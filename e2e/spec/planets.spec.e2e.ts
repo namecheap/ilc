@@ -1,6 +1,6 @@
 Feature('planets ilc demo application');
 
-Scenario('should open a planets page without any selected planet initially', async ({I, planetsPage: planetsPage}) => {
+Scenario('should open a planets page without any selected planet initially', ({ I, planetsPage }) => {
     I.amOnPage('/');
     I.waitForElement(planetsPage.goToPlanets, 30);
     I.click(planetsPage.goToPlanets);
@@ -12,22 +12,20 @@ Scenario('should open a planets page without any selected planet initially', asy
     I.waitNumberOfVisibleElements(planetsPage.planetsList, 10, 30);
 });
 
-Scenario('should show more planets', async ({I, planetsPage: planetsPage}) => {
+Scenario('should show more planets', ({ I, planetsPage }) => {
     I.amOnPage(planetsPage.planetsUrl);
     I.waitForElement(planetsPage.fetchMorePlanets, 30);
     I.waitForClickable(planetsPage.fetchMorePlanets, 30);
     I.click(planetsPage.fetchMorePlanets);
-    I.waitForClickable(planetsPage.fetchMorePlanets, 30);
-    I.seeNumberOfVisibleElements(planetsPage.planetsList, 20);
-    I.stopMocking();
+    I.waitNumberOfVisibleElements(planetsPage.planetsList, 20, 30);
 });
 
-Scenario('should show planet`s details', async ({I, planetsPage: planetsPage}) => {
+Scenario('should show planet`s details', async ({ I, planetsPage }) => {
     I.amOnPage(planetsPage.planetsUrl);
     I.waitNumberOfVisibleElements(planetsPage.planetsList, 10, 30);
     I.seeElement(planetsPage.lastPlanet);
 
-    const lastPlanetName = await I.grabTextFrom(planetsPage.lastPlanet) as string;
+    const lastPlanetName = (await I.grabTextFrom(planetsPage.lastPlanet)) as string;
     const lastPlanetHref = await I.grabAttributeFrom(planetsPage.lastPlanet, 'href');
 
     I.click(planetsPage.lastPlanet);

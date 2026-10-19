@@ -18,19 +18,6 @@ export const config: CodeceptJS.MainConfig = {
                 headless: process.env.SHOW_UI === 'true' ? false : 'new',
             },
         },
-        MockRequestHelper: {
-            require: '@codeceptjs/mock-request',
-            mode: 'record',
-            recordIfMissing: true,
-            recordFailedRequests: false,
-            expiresIn: null,
-            persisterOptions: {
-                keepUnusedRequests: false,
-                fs: {
-                    recordingsDir: path.join(outputDir, 'requests'),
-                },
-            },
-        },
         // Adds assertions to API https://www.npmjs.com/package/codeceptjs-chai
         ChaiWrapper: {
             require: 'codeceptjs-chai',
@@ -81,4 +68,5 @@ export const config: CodeceptJS.MainConfig = {
     tests: './spec/**/*.spec.e2e.ts',
     name: 'ilc',
     require: ['tsx/esm'],
+    noGlobals: true,
 };

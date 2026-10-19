@@ -6,7 +6,7 @@
         "sourceMap": true,
         "strict": true,
         "typeRoots": ["./node_modules/@types"],
-        "types": ["codeceptjs", "node", "./typings/steps", "./typings/mock-request"],
+        "types": ["codeceptjs", "node", "./typings/steps"],
         "esModuleInterop": true,
         "declaration": true,
         "skipLibCheck": true,
