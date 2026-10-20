@@ -3,7 +3,7 @@ name: CI
 on:
     push:
         branches:
-            - master
+            - develop
     workflow_dispatch:
     pull_request:
 
@@ -12,9 +12,9 @@ permissions:
     contents: read
 
 # A new commit cancels the runs of the previous commit of the same branch or pull request.
-# Every master run has its own group, so every master commit is built and published.
+# Every run on the default branch has its own group, so every commit there is built and published.
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/master' && github.run_id || github.head_ref || github.ref }}
+    group: ${{ github.workflow }}-${{ github.ref_name == github.event.repository.default_branch && github.run_id || github.head_ref || github.ref }}
     cancel-in-progress: true
 
 jobs:
@@ -88,7 +88,7 @@ jobs:
                   push: true
                   cache-from: |
                       type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }}
-                      type=registry,ref=namecheap/ilc_tmp:buildcache_ilc_master
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_ilc_${{ github.event.repository.default_branch }}
                       type=registry,ref=namecheap/ilc_tmp:buildcache
                   cache-to: ${{ matrix.branch.name == 'src' && format('type=registry,ref=namecheap/ilc_tmp:{0},mode=max', env.CACHE_TAG) || '' }}
                   tags: |
@@ -115,7 +115,7 @@ jobs:
                   path: artifacts/ilc/coverage/client
 
     # arm64 is built on a native arm64 runner: under QEMU emulation the dependencies installation could crash with "Illegal instruction"
-    # and hang the job. The amd64 and arm64 images are joined into one multi-arch image for master only.
+    # and hang the job. The amd64 and arm64 images are joined into one multi-arch image for pushes only.
     build_ilc_arm64:
         name: Build ILC (arm64)
         runs-on: ubuntu-24.04-arm
@@ -148,8 +148,8 @@ jobs:
                   push: true
                   cache-from: |
                       type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }}
-                      type=registry,ref=namecheap/ilc_tmp:buildcache_ilc_arm64_master
-                      type=registry,ref=namecheap/ilc_tmp:buildcache_ilc_master
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_ilc_arm64_${{ github.event.repository.default_branch }}
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_ilc_${{ github.event.repository.default_branch }}
                       type=registry,ref=namecheap/ilc_tmp:buildcache
                   cache-to: type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }},mode=max
                   tags: |
@@ -222,7 +222,7 @@ jobs:
                   push: true
                   cache-from: |
                       type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }}
-                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_master
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_${{ github.event.repository.default_branch }}
                       type=registry,ref=namecheap/ilc_tmp:buildcache_registry_dest
                   cache-to: ${{ matrix.branch.name == 'src' && format('type=registry,ref=namecheap/ilc_tmp:{0},mode=max', env.CACHE_TAG) || '' }}
                   tags: |
@@ -260,8 +260,8 @@ jobs:
                   push: true
                   cache-from: |
                       type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }}
-                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_arm64_master
-                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_master
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_arm64_${{ github.event.repository.default_branch }}
+                      type=registry,ref=namecheap/ilc_tmp:buildcache_registry_${{ github.event.repository.default_branch }}
                       type=registry,ref=namecheap/ilc_tmp:buildcache_registry_dest
                   cache-to: type=registry,ref=namecheap/ilc_tmp:${{ env.CACHE_TAG }},mode=max
                   tags: |
@@ -528,10 +528,13 @@ jobs:
 
             - name: Calculate tags
               id: tags
+              env:
+                  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
               run: |
                   BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-99)
-                  LATEST=$([ "$BRANCH" == "master" ] && echo "latest,${GITHUB_SHA:0:7}," || echo "")
-                  DOCKER_TAGS="$LATEST${BRANCH//\//_}"
+                  # The commit SHA tag is what release.yml re-tags with the version
+                  SHA_TAG=$([ "$BRANCH" == "$DEFAULT_BRANCH" ] && echo "${GITHUB_SHA:0:7}," || echo "")
+                  DOCKER_TAGS="$SHA_TAG${BRANCH//\//_}"
                   echo "Tags that will be used: $DOCKER_TAGS"
                   echo "docker_tags=$DOCKER_TAGS" >> $GITHUB_OUTPUT
 
@@ -550,7 +553,7 @@ jobs:
         name: Build documentation
         runs-on: ubuntu-latest
         timeout-minutes: 10
-        if: github.ref == 'refs/heads/master'
+        if: github.ref_name == github.event.repository.default_branch
         permissions:
             # mkdocs gh-deploy pushes to the gh-pages branch
             contents: write

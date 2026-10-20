@@ -108,6 +108,9 @@ The `namecheap/ilc` repository consists of the following parts:
 - `ilc`: code of the Isomorphic Layout Composer
 - `registry`: app that contains configuration that ILC uses: a list of micro-fragments, routes, etc.
 
+!!! note "Main branch is `develop`"
+The main development branch is `develop`, not `master`: open pull requests against `develop`. `develop` is unstable: it may contain unreleased and breaking changes. Every push to `develop` publishes the `namecheap/ilc` and `namecheap/ilc_registry` Docker images tagged `develop`, so for production use a released version tag instead, for example `namecheap/ilc:3.0.0` and `namecheap/ilc_registry:3.0.0`.
+
 ## Further reading
 
 - [Overview](./docs/overview.md)
