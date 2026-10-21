@@ -1,10 +1,9 @@
 import _ from 'lodash';
 import nock from 'nock';
-import supertest, { type Agent } from 'supertest';
-import app from '../server/app';
+import { type Agent } from 'supertest';
 import { SettingKeys } from '../server/settings/interfaces';
 import settingsService from '../server/settings/services/SettingsService';
-import { ensureDeleted, expect, getServerAddress } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 import { withSetting } from './utils/withSetting';
 
@@ -63,18 +62,10 @@ const example = {
 describe(`Tests ${example.url}`, () => {
     let req: Agent;
     let reqWithAuth: Agent;
-    let reqAddress = '';
 
     beforeEach(async () => {
-        const appInstance = await app(false);
-        const appWithAuthInstance = await app(true);
-
-        const appServer = appInstance.listen(0);
-        const appWithAuthServer = appWithAuthInstance.listen(0);
-
-        reqAddress = getServerAddress(appServer);
-        req = supertest(appServer);
-        reqWithAuth = supertest(appWithAuthServer);
+        req = await request();
+        reqWithAuth = await requestWithAuth();
     });
 
     afterEach(async () => {
@@ -383,7 +374,7 @@ describe(`Tests ${example.url}`, () => {
                 routerDomain: {
                     url: '/api/v1/router_domains/',
                     correct: {
-                        domainName: '',
+                        domainName: 'templates-test.example.com',
                         template500: '<html><head></head><body>ncTest500TemplateName</body></html>',
                     },
                 },
@@ -410,10 +401,9 @@ describe(`Tests ${example.url}`, () => {
                 await req.post(example.app.url).send(example.app.correct).expect(200);
                 await req.post(example.template.url).send(example.template.template500);
 
-                const routerDomainResponse = await req.post(example.routerDomain.url).send({
-                    ...example.routerDomain.correct,
-                    domainName: reqAddress,
-                });
+                const routerDomainResponse = await req
+                    .post(example.routerDomain.url)
+                    .send(example.routerDomain.correct);
 
                 ({ id: domainId } = routerDomainResponse.body);
 
@@ -451,7 +441,7 @@ describe(`Tests ${example.url}`, () => {
                         '/rendered?locale=' +
                         'es-MX' +
                         '&domain=' +
-                        reqAddress,
+                        example.routerDomain.correct.domainName,
                 );
 
                 expect(templateResponse.body).to.deep.equal(templateWithDomainResponse.body);

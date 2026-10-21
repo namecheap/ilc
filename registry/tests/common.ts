@@ -1,14 +1,10 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import http from 'http';
+import type { Knex } from 'knex';
 import supertest, { type Agent } from 'supertest';
 import app from '../server/app';
-import appDb, { dbFactory as dbFactoryOrig } from '../server/db';
+import appDb, { dbFactory as dbFactoryOrig, knexConfig } from '../server/db';
 import versioningService from '../server/versioning/services/Versioning';
-
-function isString(value: unknown): value is string {
-    return typeof value === 'string';
-}
 
 /**
  * Deletes a record in a test cleanup. Fails when the record is neither deleted nor already absent,
@@ -27,43 +23,30 @@ export async function ensureDeleted(req: Agent, url: string): Promise<void> {
 export const request = async () => supertest(await app(false));
 export const requestWithAuth = async () => supertest(await app(true));
 
-export function dbFactory() {
+/**
+ * Creates an empty database next to the app one, for tests that run migrations and seeds on their own.
+ */
+export async function dbFactory() {
+    const connection = knexConfig.connection as Knex.PgConnectionConfig;
+    const database = `${connection.database}_isolated`;
+    await appDb.raw('DROP DATABASE IF EXISTS ?? WITH (FORCE)', [database]);
+    await appDb.raw('CREATE DATABASE ??', [database]);
+
+    // Knex makes "password" non-enumerable on the connection it got, so the spread does not copy it
     const db = dbFactoryOrig({
-        client: 'sqlite3',
-        connection: ':memory:',
-        useNullAsDefault: true,
-        pool: {
-            afterCreate: (conn: any, done: Function) => {
-                conn.run('PRAGMA foreign_keys = ON;', (err: Error) => done(err, conn));
-            },
-        },
+        ...knexConfig,
+        connection: { ...connection, password: connection.password, database },
     });
 
     return {
         db,
         reset: async () => {
             await db.destroy();
-            // dbFactory pointed the versioning singleton to the in-memory DB, point it back to the app DB.
-            // A new Knex instance would open a second connection to the same SQLite file, and concurrent
-            // writes over the two connections fail with SQLITE_BUSY.
+            await appDb.raw('DROP DATABASE ?? WITH (FORCE)', [database]);
+            // dbFactory pointed the versioning singleton to the isolated DB, point it back to the app DB
             versioningService.setDb(appDb);
         },
     };
-}
-
-export function getServerAddress(server: http.Server): string {
-    const addressInfo = server.address();
-
-    if (!addressInfo) {
-        return '';
-    }
-
-    if (isString(addressInfo)) {
-        return addressInfo;
-    }
-
-    const { address, port } = addressInfo;
-    return `${address == '::' ? '127.0.0.1' : address}:${port}`;
 }
 
 chai.use(chaiAsPromised);

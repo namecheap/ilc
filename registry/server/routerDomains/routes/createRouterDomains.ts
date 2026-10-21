@@ -29,7 +29,7 @@ const createRouterDomains = async (
             return routerDomainId;
         });
     } catch (e: unknown) {
-        if (isUniqueConstraintError(e, 'router_domains_alias_unique', 'router_domains.alias')) {
+        if (isUniqueConstraintError(e, 'router_domains_alias_unique')) {
             throw getJoiErr('alias', `Router domain with alias "${req.body.alias}" already exists.`);
         }
         throw e;

@@ -26,35 +26,29 @@ type ExistingRouteByOrderPosLookup = {
 export class RoutesService {
     constructor(private readonly db: VersionedKnex) {}
 
-    public getRoutesById(appRouteId: number) {
+    public async getRoutesById(appRouteId: number): Promise<AppRouteWithSlot[]> {
         type QueryResult = AppRouteWithSlot & {
             _routeId?: number;
         };
-        const query = this.db
+        const appRoutes = await this.db
             .selectVersionedRows<QueryResult>(Tables.Routes, 'id', EntityTypes.routes, [
                 'routes.id as _routeId',
                 'routes.*',
                 'route_slots.*',
             ])
             .from(Tables.Routes)
-            .leftJoin('route_slots', 'route_slots.routeId', 'routes.id');
-        return query.then((appRoutes) => {
-            return appRoutes.reduce((acc, appRoute) => {
-                appRoute.versionId = appendDigest(appRoute.versionId, 'route');
-                // "where" with alias doesn't work in MySql, and "having" without "groupBy" doesn't work in SQLite
-                // thats why filtering better to do here
-                if (appRoute._routeId === appRouteId) {
-                    // if there are no slots - then we will receive "id" and "routeId" as "null", due to result of "leftJoin".
-                    if (appRoute.routeId === null) {
-                        appRoute.routeId = appRoute._routeId;
-                    }
-                    delete appRoute._routeId;
+            .leftJoin('route_slots', 'route_slots.routeId', 'routes.id')
+            .where('routes.id', appRouteId);
 
-                    acc.push(appRoute);
-                }
+        return appRoutes.map((appRoute) => {
+            appRoute.versionId = appendDigest(appRoute.versionId, 'route');
+            // if there are no slots - then we will receive "id" and "routeId" as "null", due to result of "leftJoin".
+            if (appRoute.routeId === null) {
+                appRoute.routeId = appRouteId;
+            }
+            delete appRoute._routeId;
 
-                return acc;
-            }, [] as AppRouteWithSlot[]);
+            return appRoute;
         });
     }
 
@@ -119,11 +113,7 @@ export class RoutesService {
     }
 
     public isOrderPosError(error: unknown) {
-        return isUniqueConstraintError(
-            error,
-            'routes_orderpos_and_domainIdIdxble_unique',
-            'routes.orderPos, routes.domainIdIdxble',
-        );
+        return isUniqueConstraintError(error, 'routes_orderpos_and_domainIdIdxble_unique');
     }
 
     public async getNextOrderPos(domainId: number | null, trx: Knex.Transaction) {

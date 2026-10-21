@@ -3,6 +3,7 @@ import _ from 'lodash';
 
 import { expect, dbFactory } from './common';
 import { VersionedKnex } from '../server/db';
+import { extractInsertedId } from '../server/util/db';
 import { Versioning } from '../server/versioning/services/Versioning';
 import versioningConfig from '../server/versioning/config';
 import { User } from '../typings/User';
@@ -20,7 +21,7 @@ describe('Versioning Unit', () => {
     before(async function () {
         this.timeout(10 * 1000);
 
-        ({ db, reset } = dbFactory());
+        ({ db, reset } = await dbFactory());
         versionService = new Versioning(versioningConfig);
         versionService.setDb(db);
 
@@ -58,7 +59,7 @@ describe('Versioning Unit', () => {
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.entity_id).to.equal(entityId);
             expect(changeData.data).to.be.null;
-            expect(changeData.data_after).to.equal('{"data":{"props":"{\\"a\\":1}","ssrProps":null},"related":{}}');
+            expect(changeData.data_after).to.equal('{"data":{"props":{"a":1},"ssrProps":null},"related":{}}');
             expect(changeData.created_by).to.equal(testUser.identifier);
         });
 
@@ -73,8 +74,7 @@ describe('Versioning Unit', () => {
             };
 
             const changeId = await db.versioning(testUser, { type: entityType }, async (trx) => {
-                const [id] = await db(entityType).insert(entityData).transacting(trx);
-                return id;
+                return extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
             });
 
             const changeData = await db('versioning').first().where('id', changeId);
@@ -103,7 +103,7 @@ describe('Versioning Unit', () => {
             };
 
             const changeId = await db.versioning(testUser, { type: entityType }, async (trx) => {
-                const [id] = await db(entityType).insert(entityData).transacting(trx);
+                const id = extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
                 await db(entityRelationType)
                     .insert(Object.assign({ routeId: id }, entityRelationData))
                     .transacting(trx);
@@ -116,8 +116,8 @@ describe('Versioning Unit', () => {
             expect(changeData.data).to.be.null;
             expect(changeData.data_after).to.equal(
                 JSON.stringify({
-                    data: { ...entityData, next: 0, namespace: null }, // SQLite does not support boolean
-                    related: { [entityRelationType]: [entityRelationData] },
+                    data: { ...entityData, meta: { first: 'value' }, namespace: null },
+                    related: { [entityRelationType]: [{ ...entityRelationData, props: { tst: 1 } }] },
                 }),
             );
             expect(changeData.created_by).to.equal(testUser.identifier);
@@ -222,7 +222,7 @@ describe('Versioning Unit', () => {
                 db.versioning(testUser, { type: entityType, id: entityId, trxProvider }, async (trx) => {
                     await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
                 }),
-            ).eventually.rejectedWith('SQLITE_CONSTRAINT: CHECK constraint failed: kind');
+            ).eventually.rejectedWith('invalid input value for enum kind_enum: "invalid"');
             await (await trxProvider()).rollback();
         });
     });
@@ -252,7 +252,7 @@ describe('Versioning Unit', () => {
             expect(dataAfter.data.default).to.equal('[SECRET]');
 
             expect(dataAfter.data.scope).to.equal('registry');
-            expect(dataAfter.data.secret).to.equal(1);
+            expect(dataAfter.data.secret).to.equal(true);
 
             await db(entityType).where('key', settingKey).delete();
         });
@@ -294,8 +294,7 @@ describe('Versioning Unit', () => {
             };
 
             const changeId = await db.versioning(testUser, { type: entityType }, async (trx) => {
-                const [id] = await db(entityType).insert(entityData).transacting(trx);
-                return id;
+                return extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
             });
 
             const changeData = await db('versioning').first().where('id', changeId);
@@ -321,8 +320,7 @@ describe('Versioning Unit', () => {
             };
 
             const changeId = await db.versioning(testUser, { type: entityType }, async (trx) => {
-                const [id] = await db(entityType).insert(entityData).transacting(trx);
-                return id;
+                return extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
             });
 
             const changeData = await db('versioning').first().where('id', changeId);

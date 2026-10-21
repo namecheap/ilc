@@ -303,7 +303,7 @@ export class SettingsService {
         }
 
         if (isNumeric(parsedSetting.value)) {
-            // handle sqlite's 0/1
+            // values are stored as text
             parsedSetting.value = parseInt(parsedSetting.value as string, 10);
         }
         if (parsedSetting.meta.type === SettingTypes.Boolean) {

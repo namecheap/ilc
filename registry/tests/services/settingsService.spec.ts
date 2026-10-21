@@ -74,7 +74,7 @@ describe('SettingsService', () => {
             });
         });
 
-        it('should convert numeric string values to integers (for SQLite compatibility)', async () => {
+        it('should convert numeric string values to integers', async () => {
             // Arrange
             const testSetting3 = 'numericTestKey';
             const domainName = Math.random() + 'example.com';
@@ -86,7 +86,7 @@ describe('SettingsService', () => {
 
             await db('router_domains').insert({ id: testDomainId, domainName, template500: testTemplate });
 
-            // Insert a setting with a numeric string value (like SQLite stores booleans as "0" or "1")
+            // Insert a setting with a numeric string value
             await db('settings').insert({
                 key: testSetting3 as SettingKeys,
                 value: '1', // Stored as string "1"
@@ -107,7 +107,7 @@ describe('SettingsService', () => {
             await db('settings').where('settings.key', testSetting3).del();
         });
 
-        it('should convert numeric values to boolean when type is Boolean', async () => {
+        it('should convert stored boolean values when type is Boolean', async () => {
             // Arrange
             const testSetting4 = 'booleanTestKey';
             const domainName = Math.random() + 'example.com';
@@ -119,11 +119,11 @@ describe('SettingsService', () => {
 
             await db('router_domains').insert({ id: testDomainId, domainName, template500: testTemplate });
 
-            // Insert a setting with numeric value that should be treated as boolean
+            // Insert a boolean setting the way it is stored, as text
             await db('settings').insert({
                 key: testSetting4 as SettingKeys,
-                value: '1', // SQLite stores booleans as 0/1
-                default: '0',
+                value: 'true',
+                default: 'false',
                 meta: JSON.stringify({ type: SettingTypes.Boolean }),
                 scope: Scope.Ilc,
                 secret: false,
@@ -132,7 +132,7 @@ describe('SettingsService', () => {
             // Act
             const config = await settingsService.getSettingsForConfig(domainName);
 
-            // Assert - value should be converted from "1" to boolean true
+            // Assert - value should be parsed from "true" to boolean true
             expect(config[testSetting4]).to.equal(true);
             expect(config[testSetting4]).to.be.a('boolean');
 

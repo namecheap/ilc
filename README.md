@@ -55,14 +55,13 @@ To quickstart with ILC locally, follow the steps below:
 
 1. Clone the [namecheap/ilc](https://github.com/namecheap/ilc/) repository.
 1. Run `pnpm install`
-    1. **OPTIONAL** Switch database to PostgreSQL by changing environment variable `DB_CLIENT` to `pg` in services `registry_worker` and `registry`
 1. Run `docker compose up -d`. Wait for the process to complete:
 
     ```
     [+] Running 6/6
      ⠿ Network ilc_default                  Created     0.1s
      ⠿ Container ilc-ilc-1                  Started     0.8s
-     ⠿ Container ilc-mysql-1                Started     0.8s
+     ⠿ Container ilc-postgres-1             Started     0.8s
      ⠿ Container ilc-registry-1             Started     20.0s
      ⠿ Container ilc-demo-apps-1            Started     1.4s
      ⠿ Container ilc-registry_worker-1      Started     19.8s
@@ -72,9 +71,9 @@ To quickstart with ILC locally, follow the steps below:
 
     ```sh
     [+] Running 1/1
-     ⠿ Container ilc-mysql-1                Recreated   3.8s
+     ⠿ Container ilc-postgres-1             Recreated   3.8s
     [+] Running 1/1
-     ⠿ Container ilc-mysql-1                Started     0.4s
+     ⠿ Container ilc-postgres-1             Started     0.4s
 
     > registry@1.0.0 seed /codebase
     > knex --knexfile config/knexfile.ts seed:run

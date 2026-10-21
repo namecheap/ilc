@@ -28,9 +28,9 @@ ILC (`cd ilc`):
 Registry (`cd registry`):
 
 - `pnpm dev`, `pnpm migrate`, `pnpm seed`, `pnpm reset` (DB to a clean state).
-- `pnpm test` uses **PostgreSQL**, `pnpm test:mysql` MySQL (start the DBs with `docker compose up postgres` / `mysql`); `pnpm test:sqlite` needs no DB server. MySQL and sqlite are considered as deprecated, we're going to remove them.
+- PostgreSQL is the only supported DB: start it with `docker compose up postgres`, the defaults in `config/default.ts` match it and `.env` (from `.env.example`) overrides the `DB_*` variables. `pnpm start` at the root needs it too.
+- `pnpm test` drops and recreates the `DB_NAME` database (`ilc` by default, so it wipes a local dev database) through `docker exec postgres`; suites that use `dbFactory()` from `tests/common.ts` get their own `<DB_NAME>_isolated` database.
 - `pnpm migrate:make <name>` creates a Knex migration in `server/migrations`.
-- Default DB is SQLite at `server/dbfiles/db.sqlite`. `pnpm test:sqlite` deletes and recreates **that same file**, so it wipes a local dev database. `.env` (from `.env.example`) selects `DB_CLIENT`.
 
 E2E (`cd e2e`, after `pnpm build` at the root): `pnpm start`, `pnpm start:verbose`, `pnpm start:verbose:ui` (visible browser).
 
@@ -42,7 +42,7 @@ Both `ilc/.mocharc*` and `registry/.mocharc*` define a `spec` glob, and a file p
 NODE_ENV=test pnpm exec mocha --no-config --require ts-node/register --timeout 5000 --exit path/to/file.spec.ts
 ```
 
-In `registry`, prefix with `pnpm exec dotenv --` and set `DB_CLIENT` the same way the package scripts do.
+In `registry`, prefix with `pnpm exec dotenv --` so the `DB_*` variables from `.env` apply.
 
 ## Architecture
 
@@ -66,7 +66,7 @@ Our ownership:
 
 ### Registry (`registry/server`)
 
-Express 5 + Knex, supporting SQLite, MySQL and PostgreSQL (`server/db/index.ts`). Each entity has its own folder (`apps`, `appRoutes`, `templates`, `sharedLibs`, `sharedProps`, `routerDomains`, `settings`, `authEntities`, `versioning`, …) with `routes/`, interfaces and services. Things that span files:
+Express 5 + Knex on PostgreSQL (`server/db/index.ts`). Each entity has its own folder (`apps`, `appRoutes`, `templates`, `sharedLibs`, `sharedProps`, `routerDomains`, `settings`, `authEntities`, `versioning`, …) with `routes/`, interfaces and services. Things that span files:
 
 - **Versioning**: entity writes go through `db.versioning(user, { type, id }, async (trx) => …)` (`server/db/versioning.ts` → `server/versioning/services/Versioning.ts`), which snapshots the record and stores a revertible version. Queries inside the callback must use `trx`. The versioning service is a module singleton bound to one Knex instance via `setDb`.
 - **Errors**: handlers may simply throw; Express 5 forwards rejected async handlers to `server/errorHandler`, which maps `httpErrors.*` and Joi validation errors to 4xx and everything else to a logged 500 with an error ID.

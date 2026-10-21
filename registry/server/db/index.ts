@@ -8,35 +8,15 @@ import { knexLoggerAdapter } from './logger';
 import { syncSequencePlugin } from './syncSequence';
 import { cascadeTruncatePlugin } from './cascadeTruncate';
 
-const client: string = config.get('database.client');
 const searchPath: string = config.get('database.searchPath');
 const connectionConfig: Knex.Config['connection'] = config.get('database.connection');
 
 export const knexConfig: Knex.Config = {
-    client,
+    client: 'pg',
     connection: typeof connectionConfig === 'object' ? { ...connectionConfig } : connectionConfig,
     searchPath,
-    /**
-     * Sqlite does not support inserting default values
-     * That is why we added it
-     */
-    useNullAsDefault: true,
     log: knexLoggerAdapter(),
 };
-
-if (client === 'mysql') {
-    knexConfig.pool = {
-        afterCreate: (conn: any, done: Function) => {
-            conn.query('SET time_zone="+00:00";', (err: Error) => done(err, conn));
-        },
-    };
-} else if (client === 'sqlite3') {
-    knexConfig.pool = {
-        afterCreate: (conn: any, done: Function) => {
-            conn.run('PRAGMA foreign_keys = ON;', (err: Error) => done(err, conn));
-        },
-    };
-}
 
 rangeExtender(knex);
 syncSequencePlugin(knex);

@@ -2,7 +2,9 @@
 
 ## Quick start in dev mode
 
-This will use SQLite database as default one, located in `server/dbfiles`
+Registry stores its data in PostgreSQL. Start it with `docker compose up postgres` in the root folder, the default
+connection settings match it. To connect elsewhere, copy `.env.example` to `.env` in the `registry` directory and
+change the `DB_*` variables.
 
 ```bash
 $ pnpm install
@@ -17,64 +19,19 @@ The default credentials are:
 **root / pwd** - for admin access.
 **readonly / pwd** - for read only access.
 
-## Use MySQL as database
-
-1. Copy `.env.example` to `.env` in the `registry` directory
-2. Set `DB_CLIENT` to `mysql`
-3. Ensure mysql service is up by running `docker compose up mysql` in the root folder
-4. Start application with
-
-```bash
-$ pnpm install
-$ pnpm migrate
-$ pnpm seed
-$ pnpm dev
-```
-
-## Use PostgreSQL as database
-
-1. Copy `.env.example` to `.env` in the `registry` directory
-2. Set `DB_CLIENT` to `pg`
-3. Ensure mysql service is up by running `docker compose up postgres` in the root folder
-4. Start application with
-
-```bash
-$ pnpm install
-$ pnpm migrate
-$ pnpm seed
-$ pnpm dev
-```
-
 ## Return database to a clean state
 
 ```bash
 $ pnpm reset
 ```
 
-## Run tests in the SQLite database
+## Run tests
 
-This command ignores `.env` file
+Assuming database is up via docker-compose. The tests recreate the database from `.env` (`ilc` by default),
+and some of them create and drop one more database with the `_isolated` suffix.
 
 ```bash
 $ pnpm test
-```
-
-## Run tests in the MySQL database
-
-Assuming database is up via docker-compose  
-This command ignores `.env` file
-
-```bash
-$ pnpm test:mysql
-```
-
-## Run tests in the PostgreSQL database
-
-Assuming database is up via docker-compose  
-This command ignores `.env` file
-
-```bash
-$ pnpm test:postgres
 ```
 
 ## Secure session on production

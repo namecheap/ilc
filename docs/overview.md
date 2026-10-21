@@ -6,10 +6,10 @@ Production-grade ILC installation includes deployment of 3 Docker images:
 
 1. [ILC](https://hub.docker.com/r/namecheap/ilc)
 1. [ILC Registry](https://hub.docker.com/r/namecheap/ilc_registry)
-1. MySQL database (version 5.7+).
+1. PostgreSQL database (version 12+).
 
 !!! tip ""
-    We recommend using semver Docker tags (such as `1.1.0`) to pin it to the exact version of the image.
+We recommend using semver Docker tags (such as `1.1.0`) to pin it to the exact version of the image.
 
     To get more information about exact configuration of the Docker images see [docker-compose.yml]({{ repo.full_url }}/docker-compose.yml){: target=_blank} :octicons-link-external-16:
 
@@ -24,8 +24,8 @@ In ILC, most of the settings are configurable via Registry UI or API. There is a
 
 Check the full list of these parameters in the following files:
 
-* [ILC container]({{ repo.full_url }}/ilc/config/custom-environment-variables.json5){: target=_blank} :octicons-link-external-16:
-* [Registry container]({{ repo.full_url }}/registry/config/custom-environment-variables.ts){: target=_blank} :octicons-link-external-16:
+- [ILC container]({{ repo.full_url }}/ilc/config/custom-environment-variables.json5){: target=\_blank} :octicons-link-external-16:
+- [Registry container]({{ repo.full_url }}/registry/config/custom-environment-variables.ts){: target=\_blank} :octicons-link-external-16:
 
 ## Authentication credentials configuration
 
@@ -34,13 +34,13 @@ Once you get ILC up and running, you must remove default access credentials and 
 
 ## High availability (HA)
 
-To deploy ILC in HA fashion, you need to keep at least two instances of both ILC and Registry and deploy MySQL in cluster mode (for example, via AWS RDS Multi-AZ).
+To deploy ILC in HA fashion, you need to keep at least two instances of both ILC and Registry and deploy PostgreSQL in cluster mode (for example, via AWS RDS Multi-AZ).
 
 ILC uses aggressive caching of the data from the Registry, so it does not require a permanent connection to the Registry or a low latency response from the Registry.
 
 ## Backup and restore
 
-As ILC stores all user data in the Registry DB, you can use regular MySQL backup/restore practices.
+As ILC stores all user data in the Registry DB, you can use regular PostgreSQL backup/restore practices.
 
 ## Performance analytics with NewRelic
 
@@ -54,9 +54,12 @@ environmental variable. This approach may be useful for compliance with GDPR cus
 For example:
 
 ```html
-<script type="text/javascript">(function mygdprWrapper(){ %CONTENT% })()</script>`
+<script type="text/javascript">
+    (function mygdprWrapper(){ %CONTENT% })()
+</script>
+`
 ```
 
 Custom metrics sent to Insights:
 
-* PageAction with Action Name `routeChange`. It contains the duration of the reroute in miliseconds.
+- PageAction with Action Name `routeChange`. It contains the duration of the reroute in miliseconds.

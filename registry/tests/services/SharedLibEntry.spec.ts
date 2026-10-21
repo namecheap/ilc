@@ -21,7 +21,7 @@ describe('SharedLibraryEntry', () => {
     let db: VersionedKnex;
     let reset: () => Promise<void>;
     before(async () => {
-        ({ db, reset } = dbFactory());
+        ({ db, reset } = await dbFactory());
         await db.migrate.latest({
             directory: path.join(__dirname, '../../server/migrations'),
         });
