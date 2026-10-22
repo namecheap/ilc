@@ -1,6 +1,7 @@
 import path from 'path';
 
 import { bootstrap, teardown } from './codecept.presettings';
+import { registryAuthUsers } from './spec/helpers/registryAuth';
 
 const outputDir = path.join(import.meta.dirname, '.codecept_output');
 
@@ -21,6 +22,10 @@ export const config: CodeceptJS.MainConfig = {
         // Adds assertions to API https://www.npmjs.com/package/codeceptjs-chai
         ChaiWrapper: {
             require: 'codeceptjs-chai',
+        },
+        // Prepares and cleans up Registry data for the admin UI scenarios
+        RegistryApi: {
+            require: './spec/helpers/RegistryApi.ts',
         },
     },
     mocha: {
@@ -57,6 +62,11 @@ export const config: CodeceptJS.MainConfig = {
             enabled: true,
         },
         pause: {},
+        // Logs in to the Registry admin UI
+        auth: {
+            enabled: true,
+            users: registryAuthUsers,
+        },
     },
     include: {
         peoplePage: path.join(import.meta.dirname, 'spec', 'pages', 'people.ts'),
@@ -64,6 +74,7 @@ export const config: CodeceptJS.MainConfig = {
         planetsPage: path.join(import.meta.dirname, 'spec', 'pages', 'planets.ts'),
         hooksPage: path.join(import.meta.dirname, 'spec', 'pages', 'hooks.ts'),
         common: path.join(import.meta.dirname, 'spec', 'pages', 'common.ts'),
+        registryPage: path.join(import.meta.dirname, 'spec', 'pages', 'registry.ts'),
     },
     tests: './spec/**/*.spec.e2e.ts',
     name: 'ilc',
