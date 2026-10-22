@@ -550,6 +550,9 @@ importers:
       uuid:
         specifier: ^13.0.0
         version: 13.0.2
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@istanbuljs/nyc-config-typescript':
         specifier: ^1.0.2
