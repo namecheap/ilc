@@ -23,8 +23,7 @@ describe('Versioning Unit', () => {
         this.timeout(10 * 1000);
 
         ({ db, reset } = await dbFactory());
-        versionService = new Versioning(versioningConfig);
-        versionService.setDb(db);
+        versionService = new Versioning(versioningConfig, db);
 
         await db.migrate.latest({
             directory: path.join(__dirname, '../server/migrations'),

@@ -4,7 +4,6 @@ import type { Knex } from 'knex';
 import supertest, { type Agent } from 'supertest';
 import app from '../server/app';
 import appDb, { dbFactory as dbFactoryOrig, knexConfig } from '../server/db';
-import versioningService from '../server/versioning/services/Versioning';
 
 /**
  * Deletes a record in a test cleanup. Fails when the record is neither deleted nor already absent,
@@ -43,8 +42,6 @@ export async function dbFactory() {
         reset: async () => {
             await db.destroy();
             await appDb.raw('DROP DATABASE ?? WITH (FORCE)', [database]);
-            // dbFactory pointed the versioning singleton to the isolated DB, point it back to the app DB
-            versioningService.setDb(appDb);
         },
     };
 }

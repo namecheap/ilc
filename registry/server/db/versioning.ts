@@ -1,6 +1,7 @@
 import type { Knex } from 'knex';
 
-import versioningService, { OperationConfig } from '../versioning/services/Versioning';
+import { OperationConfig, Versioning } from '../versioning/services/Versioning';
+import versioningConfig from '../versioning/config';
 import { selectVersionedRows, selectVersionedRowsFrom } from '../versioning/services/selectVersionedRows';
 import { EntityTypes, VersionedRecord } from '../versioning/interfaces';
 import { User } from '../../typings/User';
@@ -58,8 +59,7 @@ export default function (knex: Knex | any): VersionedKnex {
         return knex;
     }
 
-    versioningService.setDb(knex);
-    knex.versioning = versioningService.logOperation;
+    knex.versioning = new Versioning(versioningConfig, knex).logOperation;
     knex.selectVersioned = (...args: SelectVersionedArgs) => selectVersionedRows(knex, ...args);
     knex.selectVersionedRows = (...args: SelectVersionedArgs) => selectVersionedRows(knex, ...args);
     knex.selectVersionedRowsFrom = (...args: SelectVersionedArgs) => selectVersionedRowsFrom(knex, ...args);

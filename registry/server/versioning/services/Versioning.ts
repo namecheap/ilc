@@ -12,20 +12,9 @@ export * from '../interfaces';
 
 export class Versioning {
     constructor(
-        private config: typeof versioningConfig,
-        private _db?: Knex,
+        private readonly config: typeof versioningConfig,
+        private readonly db: Knex,
     ) {}
-
-    public setDb(db: Knex) {
-        this._db = db;
-    }
-
-    private get db(): Knex {
-        if (!this._db) {
-            throw new Error(`Attempt to perform operation before DB initialization!`);
-        }
-        return this._db;
-    }
 
     /**
      * @param user
@@ -40,9 +29,6 @@ export class Versioning {
     ): Promise<number | null> => {
         if (this.config[config.type] === undefined) {
             throw new Error(`Attempt to log changes to unknown entity: "${config.type}"`);
-        }
-        if (!this.db) {
-            throw new Error(`Attempt to log operation before DB initialization!`);
         }
 
         const trxProvider = config.trxProvider ?? this.db.transactionProvider();
@@ -264,5 +250,3 @@ export class Versioning {
         };
     }
 }
-
-export default new Versioning(versioningConfig);
