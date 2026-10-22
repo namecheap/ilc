@@ -16,14 +16,16 @@ interface ValidationConfig {
 
 const validateRequestFactory =
     (validationConfig: ValidationConfig[]) => async (req: Request, res: Response, next: NextFunction) => {
+        const missingSelector = validationConfig.find(({ selector }) => !_.get(req, selector));
+        if (missingSelector) {
+            res.status(400).send(`Missing ${missingSelector.selector} in request`);
+            return;
+        }
+
         try {
             await Promise.all(
                 _.map(validationConfig, async ({ schema, selector, noDefaults }) => {
-                    const data: Record<string, unknown> | undefined = _.get(req, selector);
-
-                    if (!data) {
-                        return res.status(400).send(`Missing ${selector} in request`);
-                    }
+                    const data: Record<string, unknown> = _.get(req, selector);
 
                     const validObj = await schema.validateAsync(data, { abortEarly: false });
 
