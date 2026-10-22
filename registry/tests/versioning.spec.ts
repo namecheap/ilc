@@ -4,6 +4,7 @@ import supertest, { type Agent } from 'supertest';
 import * as bcrypt from 'bcrypt';
 import db from '../server/db';
 import { formatDate } from '../server/util/db';
+import { defined } from '../server/util/helpers';
 import { ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const basePath = '/api/v1/versioning';
@@ -444,8 +445,8 @@ describe(`Tests ${basePath}`, () => {
                 expect(authResp.body.role).to.equal('admin');
 
                 const [dbEntity] = await db('auth_entities').where('id', authEntityId);
-                expect(await bcrypt.compare('new-secret-hash', dbEntity.secret)).to.be.true;
-                expect(await bcrypt.compare('initial-secret-hash', dbEntity.secret)).to.be.false;
+                expect(await bcrypt.compare('new-secret-hash', defined(dbEntity.secret))).to.be.true;
+                expect(await bcrypt.compare('initial-secret-hash', defined(dbEntity.secret))).to.be.false;
             } finally {
                 if (authEntityId) {
                     await ensureDeleted(req, `${authEntitiesPath}/${authEntityId}`);

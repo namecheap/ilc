@@ -191,7 +191,10 @@ export class Versioning {
 
         const entityConfig = this.config[config.type];
 
-        const entity = await this.db(config.type).first('*').where(entityConfig.idColumn, config.id).transacting(trx);
+        const entity = await this.db<Record<string, unknown>>(config.type)
+            .first('*')
+            .where(entityConfig.idColumn, config.id)
+            .transacting(trx);
 
         if (!entity) {
             return null;

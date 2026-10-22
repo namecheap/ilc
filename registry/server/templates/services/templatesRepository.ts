@@ -199,7 +199,7 @@ export class TemplatesRepository {
         payload: PartialUpdateTemplatePayload,
         user: User | undefined,
     ): Promise<PartialUpdateTemplateResult> {
-        const templateExists = await this.db(Tables.Templates).where({ name: templateName }).select(1).first();
+        const templateExists = await this.db(Tables.Templates).where({ name: templateName }).first('name');
         if (!templateExists) {
             return { type: 'notFound' };
         }
@@ -224,15 +224,12 @@ export class TemplatesRepository {
         const { db } = this;
 
         const result = await db.transaction(async (trx): Promise<UpsertTemplateLocalizedVersionResult> => {
-            const existingTemplate = await trx(Tables.Templates).where({ name: templateName }).select(1).first();
+            const existingTemplate = await trx(Tables.Templates).where({ name: templateName }).first('name');
             if (!existingTemplate) {
                 return { type: 'notFound' };
             }
 
-            const existingRecord = await trx(Tables.TemplatesLocalized)
-                .where({ templateName, locale })
-                .select(1)
-                .first();
+            const existingRecord = await trx(Tables.TemplatesLocalized).where({ templateName, locale }).first('locale');
 
             if (existingRecord) {
                 await trx(Tables.TemplatesLocalized)

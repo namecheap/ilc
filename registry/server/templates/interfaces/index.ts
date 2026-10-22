@@ -3,6 +3,11 @@ export default interface Template {
     content: string;
 }
 
+export interface TemplateRow {
+    name: string;
+    content: string | null;
+}
+
 export interface LocalizedTemplateRow {
     templateName: string;
     content: string;

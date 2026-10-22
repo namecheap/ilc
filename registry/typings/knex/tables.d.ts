@@ -3,6 +3,8 @@ import { AppRoute, AppRouteSlot } from '../../server/appRoutes/interfaces';
 import { App } from '../../server/apps/interfaces';
 import { DomainSetting, SettingRaw } from '../../server/settings/interfaces';
 import { SharedLib } from '../../server/sharedLibs/interfaces';
+import { LocalizedTemplateRow, TemplateRow } from '../../server/templates/interfaces';
+import { AuthEntityRow } from '../../server/authEntities/interfaces';
 import RouterDomains from '../../server/routerDomains/interfaces';
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
@@ -16,6 +18,12 @@ declare module 'knex/types/tables' {
         settings: Knex.CompositeTableType<SettingRaw>;
         settings_domain_value: Knex.CompositeTableType<DomainSetting, Optional<DomainSetting, 'id'>>;
         router_domains: Knex.CompositeTableType<RouterDomains, Optional<RouterDomains, 'id'>>;
-        // TODO add remaining tables
+        templates: Knex.CompositeTableType<TemplateRow>;
+        templates_localized: Knex.CompositeTableType<LocalizedTemplateRow>;
+        auth_entities: Knex.CompositeTableType<
+            AuthEntityRow,
+            Optional<AuthEntityRow, 'id' | 'secret' | 'provider' | 'role' | 'meta'>,
+            Partial<Omit<AuthEntityRow, 'id'>>
+        >;
     }
 }

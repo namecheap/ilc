@@ -4,6 +4,7 @@ import _ from 'lodash';
 import { expect, dbFactory } from './common';
 import { VersionedKnex } from '../server/db';
 import { extractInsertedId } from '../server/util/db';
+import { defined } from '../server/util/helpers';
 import { Versioning } from '../server/versioning/services/Versioning';
 import versioningConfig from '../server/versioning/config';
 import { User } from '../typings/User';
@@ -523,7 +524,7 @@ describe('Versioning Unit', () => {
                 return typeof inserted === 'object' ? inserted.id : inserted;
             });
 
-            const created = await db(entityType).first().where('identifier', 'test-revert-auth');
+            const created = defined(await db(entityType).first().where('identifier', 'test-revert-auth'));
             const entityId = created.id;
 
             const updateChangeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
@@ -533,13 +534,13 @@ describe('Versioning Unit', () => {
                     .transacting(trx);
             });
 
-            const afterUpdate = await db(entityType).first().where('id', entityId);
+            const afterUpdate = defined(await db(entityType).first().where('id', entityId));
             expect(afterUpdate.role).to.equal('readonly');
             expect(afterUpdate.secret).to.equal('new-hashed-secret');
 
             await versionService.revertOperation(testUser, updateChangeId!);
 
-            const afterRevert = await db(entityType).first().where('id', entityId);
+            const afterRevert = defined(await db(entityType).first().where('id', entityId));
             expect(afterRevert.role).to.equal('admin');
             expect(afterRevert.secret).to.equal('new-hashed-secret');
 

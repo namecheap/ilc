@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import type { JSONValue } from '../common/services/json';
 
 export enum AuthProviders {
     Local = 'local',
@@ -22,6 +23,16 @@ export interface AuthEntity {
 }
 
 export default AuthEntity; // TODO remove
+
+export interface AuthEntityRow {
+    id: number;
+    identifier: string;
+    secret: string | null;
+    // varchar columns without a check constraint, the allowed values are enforced by validation only
+    provider: string | null;
+    role: string | null;
+    meta: JSONValue | null;
+}
 
 const commonSchema = {
     identifier: Joi.string().min(1).max(255),

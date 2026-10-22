@@ -26,7 +26,7 @@ const validateRequest = validateRequestFactory([
 
 const updateSharedProps = async (req: Request<RequestParams>, res: Response): Promise<void> => {
     const input = req.body;
-    const recordId = req.params.id;
+    const recordId = Number(req.params.id);
 
     const countToUpdate = await db('auth_entities').where({ id: recordId });
     if (!countToUpdate.length) {
