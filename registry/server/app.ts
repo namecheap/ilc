@@ -13,6 +13,9 @@ import { logConnectionString } from './util/db';
 import { getLogger } from './util/logger';
 import { OpenIdService } from './auth/services/OpenIdService';
 import { unless } from './middleware/unless';
+import db from './db';
+import { createServices } from './composition';
+import { createSharedPropsRouter } from './sharedProps/routes';
 
 export default async (withAuth: boolean = true): Promise<Application> => {
     loadPlugins();
@@ -21,6 +24,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     // AssetsDiscovery should be run separately via "npm run assetsdiscovery"
     !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAssetsDiscovery');
 
+    const services = createServices(db);
     const app = express();
     app.use(contextMiddleware);
     const healthCheckUrl = config.get<string>('healthCheck.url');
@@ -58,7 +62,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     app.use('/api/v1/app', authMw, routes.apps);
     app.use('/api/v1/template', routes.templates(authMw));
     app.use('/api/v1/route', authMw, routes.appRoutes);
-    app.use('/api/v1/shared_props', authMw, routes.sharedProps);
+    app.use('/api/v1/shared_props', authMw, createSharedPropsRouter(services.sharedProps));
     app.use('/api/v1/auth_entities', authMw, routes.authEntities);
     app.use('/api/v1/versioning', authMw, routes.versioning);
     app.use('/api/v1/settings', routes.settings(authMw));

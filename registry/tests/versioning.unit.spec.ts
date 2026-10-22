@@ -51,7 +51,7 @@ describe('Versioning Unit', () => {
                 await db(entityType)
                     .insert({
                         name: entityId,
-                        props: JSON.stringify({ a: 1 }),
+                        props: { a: 1 },
                     })
                     .transacting(trx);
             });
@@ -401,7 +401,7 @@ describe('Versioning Unit', () => {
                 await db(entityType)
                     .insert({
                         name: entityId,
-                        props: JSON.stringify({ a: 1 }),
+                        props: { a: 1 },
                     })
                     .transacting(trx);
             });

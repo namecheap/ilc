@@ -1,25 +1,36 @@
-import Joi from 'joi';
+import { z } from 'zod';
+import type { JSONObject } from '../../common/services/json';
+import { jsonObjectSchema, versionIdSchema } from '../../common/validation/schemas';
 
-export default interface SharedProps {
+export interface SharedPropsRow {
     name: string;
-    props: string;
+    props: JSONObject;
+    ssrProps: JSONObject | null;
 }
 
-export const sharedPropsNameSchema = Joi.string().min(1).max(50);
+export const sharedPropsNameSchema = z.string().min(1).max(50);
+
+export const sharedPropsParamsSchema = z.strictObject({
+    name: sharedPropsNameSchema,
+});
 
 const commonSharedProps = {
-    props: Joi.object().default({}),
-    ssrProps: Joi.object().default({}),
-    versionId: Joi.string().strip(),
+    props: jsonObjectSchema.default({}),
+    ssrProps: jsonObjectSchema.default({}),
+    versionId: versionIdSchema,
 };
 
-export const partialSharedPropsSchema = Joi.object({
-    ...commonSharedProps,
-    name: sharedPropsNameSchema.forbidden(),
-});
+export const partialSharedPropsSchema = z
+    .strictObject(commonSharedProps)
+    .transform(({ versionId, ...sharedProps }) => sharedProps);
 
-export const sharedPropsSchema = Joi.object({
-    ...commonSharedProps,
-    name: sharedPropsNameSchema.required(),
-    props: commonSharedProps.props.required(),
-});
+export const sharedPropsSchema = z
+    .strictObject({
+        ...commonSharedProps,
+        name: sharedPropsNameSchema,
+        props: jsonObjectSchema,
+    })
+    .transform(({ versionId, ...sharedProps }) => sharedProps);
+
+export type CreateSharedPropsInput = z.output<typeof sharedPropsSchema>;
+export type UpdateSharedPropsInput = z.output<typeof partialSharedPropsSchema>;

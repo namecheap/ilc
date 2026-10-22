@@ -1,0 +1,42 @@
+import type { Knex } from 'knex';
+import { Tables } from '../../db/structure';
+import type { EntityTypes, VersionedRecord } from '../interfaces';
+
+type ColumnDescriptor = Knex.ColumnDescriptor<{}, {}[]>;
+
+/**
+ * Selects the columns along with the id of the latest version of each row as "versionId".
+ * The query has no FROM, see selectVersionedRowsFrom.
+ */
+export function selectVersionedRows(
+    db: Knex,
+    table: Knex.TableNames,
+    key: string,
+    entityType: EntityTypes,
+    columns: ColumnDescriptor[],
+) {
+    return db
+        .leftJoin(
+            db
+                .select('entity_id')
+                .from(Tables.Versioning)
+                .max('id', { as: 'versionId' })
+                .where({ entity_type: entityType })
+                .groupBy('entity_id')
+                .as('v'),
+            'v.entity_id',
+            // versioning.entity_id is a string, while some keys are integers
+            db.raw('??::text', [`${table}.${key}`]),
+        )
+        .select([...columns, 'versionId']);
+}
+
+export function selectVersionedRowsFrom<TTable extends Knex.TableNames>(
+    db: Knex,
+    table: TTable,
+    key: string,
+    entityType: EntityTypes,
+    columns: ColumnDescriptor[],
+): Knex.QueryBuilder<Knex.TableType<TTable>, VersionedRecord<Knex.ResolveTableType<Knex.TableType<TTable>>>[]> {
+    return selectVersionedRows(db, table, key, entityType, columns).from(table);
+}

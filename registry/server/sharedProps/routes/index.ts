@@ -1,17 +1,20 @@
-import express from 'express';
+import express, { Router } from 'express';
 
-import getSharedProps from './getSharedProps';
-import getAllSharedProps from './getAllSharedProps';
-import updateSharedProps from './updateSharedProps';
-import createSharedProps from './createSharedProps';
-import deleteSharedProps from './deleteSharedProps';
+import type { SharedPropsService } from '../services/SharedPropsService';
+import { getSharedProps } from './getSharedProps';
+import { getAllSharedProps } from './getAllSharedProps';
+import { updateSharedProps } from './updateSharedProps';
+import { createSharedProps } from './createSharedProps';
+import { deleteSharedProps } from './deleteSharedProps';
 
-const sharedPropsRouter = express.Router();
+export function createSharedPropsRouter(service: SharedPropsService): Router {
+    const sharedPropsRouter = express.Router();
 
-sharedPropsRouter.get('/', ...getAllSharedProps);
-sharedPropsRouter.post('/', ...createSharedProps);
-sharedPropsRouter.get('/:name', ...getSharedProps);
-sharedPropsRouter.put('/:name', ...updateSharedProps);
-sharedPropsRouter.delete('/:name', ...deleteSharedProps);
+    sharedPropsRouter.get('/', getAllSharedProps(service));
+    sharedPropsRouter.post('/', createSharedProps(service));
+    sharedPropsRouter.get('/:name', getSharedProps(service));
+    sharedPropsRouter.put('/:name', updateSharedProps(service));
+    sharedPropsRouter.delete('/:name', deleteSharedProps(service));
 
-export default sharedPropsRouter;
+    return sharedPropsRouter;
+}

@@ -11,9 +11,10 @@ import Transaction = Knex.Transaction;
 export * from '../interfaces';
 
 export class Versioning {
-    private _db?: Knex;
-
-    constructor(private config: typeof versioningConfig) {}
+    constructor(
+        private config: typeof versioningConfig,
+        private _db?: Knex,
+    ) {}
 
     public setDb(db: Knex) {
         this._db = db;

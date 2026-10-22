@@ -1,30 +1,14 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
-import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import { stringifyJSON } from '../../common/services/json';
-import SharedProps, { sharedPropsSchema } from '../interfaces';
+import { validated } from '../../common/validation/validated';
+import { sharedPropsSchema } from '../interfaces';
+import type { SharedPropsService } from '../services/SharedPropsService';
 
-const validateRequest = validateRequestFactory([
-    {
-        schema: sharedPropsSchema,
-        selector: 'body',
-    },
-]);
+export function createSharedProps(service: SharedPropsService): RequestHandler {
+    return validated({ body: sharedPropsSchema }, async ({ body }, req, res) => {
+        const savedSharedProps = await service.create(body, req.user);
 
-const createSharedProps = async (req: Request, res: Response): Promise<void> => {
-    const sharedProps = req.body;
-
-    await db.versioning(req.user, { type: 'shared_props', id: sharedProps.name }, async (trx) => {
-        await db('shared_props')
-            .insert(stringifyJSON(['props', 'ssrProps'], sharedProps))
-            .transacting(trx);
+        res.status(200).send(preProcessResponse(savedSharedProps));
     });
-
-    const [savedSharedProps] = await db.select().from<SharedProps>('shared_props').where('name', sharedProps.name);
-
-    res.status(200).send(preProcessResponse(savedSharedProps));
-};
-
-export default [validateRequest, createSharedProps];
+}
