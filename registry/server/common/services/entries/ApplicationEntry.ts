@@ -4,6 +4,8 @@ import { App, appSchema, partialAppSchema } from '../../../apps/interfaces';
 import { resolveDomainAlias } from '../../../apps/services/resolveDomainAlias';
 import { VersionedKnex } from '../../../db';
 import { Tables } from '../../../db/structure';
+import { ConflictError } from '../../../errorHandler/httpErrors';
+import { isUniqueConstraintError } from '../../../util/db';
 import { EntityTypes } from '../../../versioning/interfaces';
 import { AssetsDiscoveryProcessor } from '../assets/AssetsDiscoveryProcessor';
 import { AssetsValidator } from '../assets/AssetsValidator';
@@ -76,9 +78,16 @@ export class ApplicationEntry implements Entry {
             ...appManifest,
         };
 
-        await this.db.versioning(user, { type: EntityTypes.apps, id: appEntity.name }, async (trx) => {
-            await this.db(Tables.Apps).insert(this.stringifyEntityValues(appEntity)).transacting(trx);
-        });
+        try {
+            await this.db.versioning(user, { type: EntityTypes.apps, id: appEntity.name }, async (trx) => {
+                await this.db(Tables.Apps).insert(this.stringifyEntityValues(appEntity)).transacting(trx);
+            });
+        } catch (error) {
+            if (isUniqueConstraintError(error, 'apps_pkey')) {
+                throw new ConflictError({ message: `App with name "${appEntity.name}" already exists` });
+            }
+            throw error;
+        }
 
         const [savedApp] = await this.db.select().from(Tables.Apps).where('name', appEntity.name);
 
