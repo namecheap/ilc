@@ -6,6 +6,7 @@ import { extractInsertedId, formatDate } from '../../util/db';
 import * as errors from '../errors';
 import { EntityTypes, OperationConfig, VersionRow, VersionRowData, VersionRowParsed } from '../interfaces';
 import { sanitizeSnapshot, stripSecretFields } from '../utils/secretSanitizer';
+import { selectVersionedRowsFrom } from './selectVersionedRows';
 import Transaction = Knex.Transaction;
 
 export * from '../interfaces';
@@ -17,9 +18,45 @@ export class Versioning {
     ) {}
 
     /**
-     * @param user
-     * @param config
-     * @param callback
+     * Runs the callback in a transaction and records the change it made to the entity as a version.
+     * Without `ref.id` the callback must return the created row, its id column identifies the entity.
+     * @returns - What the callback returned
+     */
+    public async withVersion<T>(
+        user: User | undefined,
+        ref: OperationConfig & { id: string | number },
+        callback: (transaction: Transaction) => Promise<T>,
+    ): Promise<T>;
+    public async withVersion<T extends object>(
+        user: User | undefined,
+        ref: OperationConfig,
+        callback: (transaction: Transaction) => Promise<T>,
+    ): Promise<T>;
+    public async withVersion<T>(
+        user: User | undefined,
+        ref: OperationConfig,
+        callback: (transaction: Transaction) => Promise<T>,
+    ): Promise<T> {
+        const { idColumn } = this.config[ref.type];
+        const { result } = await this.run(user, ref, callback, (row) => {
+            const id = typeof row === 'object' && row !== null ? Reflect.get(row, idColumn) : undefined;
+            return typeof id === 'string' || typeof id === 'number' ? id : undefined;
+        });
+        return result;
+    }
+
+    /** Selects the table's columns along with the id of each row's latest version as "versionId" */
+    public versionedSelect<TTable extends Knex.TableNames>(
+        table: TTable,
+        key: string,
+        entityType: EntityTypes,
+        columns: Knex.ColumnDescriptor<{}, {}[]>[],
+    ) {
+        return selectVersionedRowsFrom(this.db, table, key, entityType, columns);
+    }
+
+    /**
+     * Callback based API of the Knex patch (db.versioning)
      * @returns - Id of the version record
      */
     public logOperation = async (
@@ -27,6 +64,16 @@ export class Versioning {
         config: OperationConfig,
         callback: (transaction: Transaction) => Promise<void | number>,
     ): Promise<number | null> => {
+        const { versionId } = await this.run(user, config, callback, (newRecordId) => newRecordId ?? undefined);
+        return versionId;
+    };
+
+    private async run<T>(
+        user: User | undefined,
+        config: OperationConfig,
+        callback: (transaction: Transaction) => Promise<T>,
+        createdId: (result: T) => string | number | undefined,
+    ): Promise<{ result: T; versionId: number | null }> {
         if (this.config[config.type] === undefined) {
             throw new Error(`Attempt to log changes to unknown entity: "${config.type}"`);
         }
@@ -39,11 +86,11 @@ export class Versioning {
         try {
             const currentData = config.id ? await this.getDataSnapshot(trx, config) : null;
 
-            const newRecordId = await callback(trx);
+            const result = await callback(trx);
 
-            const resourceId = config.id ?? newRecordId;
+            const resourceId = config.id ?? createdId(result);
             if (resourceId === undefined) {
-                throw new Error(`Unable to identify record ID. Received ids: "${config.id}" & "${newRecordId}"`);
+                throw new Error(`Unable to identify record ID. Received id: "${config.id}"`);
             }
             const updatedConfig = { ...config, id: resourceId };
             const newData = await this.getDataSnapshot(trx, updatedConfig);
@@ -59,7 +106,7 @@ export class Versioning {
 
             if (rawData === rawDataAfter) {
                 await commit();
-                return null;
+                return { result, versionId: null };
             }
 
             const secretKeys = await this.getSecretSettingKeys(trx);
@@ -81,12 +128,12 @@ export class Versioning {
             const insertedId = await this.db('versioning').returning('id').insert(logRecord).transacting(trx);
 
             await commit();
-            return extractInsertedId(insertedId);
+            return { result, versionId: extractInsertedId(insertedId) };
         } catch (error) {
             await rollback();
             throw error;
         }
-    };
+    }
 
     public async revertOperation(user: User | undefined, versionId: number) {
         const versionRowRaw = await this.db('versioning').first('*').where('id', versionId);

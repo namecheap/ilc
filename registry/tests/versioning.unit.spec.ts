@@ -227,6 +227,60 @@ describe('Versioning Unit', () => {
         });
     });
 
+    describe('withVersion', () => {
+        it('should return the callback result and log the change of an entity with a known ID', async () => {
+            const entityId = 'test_with_version';
+
+            const created = await versionService.withVersion(
+                testUser,
+                { type: 'shared_props', id: entityId },
+                async (trx) => {
+                    const [row] = await trx('shared_props')
+                        .insert({ name: entityId, props: { a: 1 } })
+                        .returning('*');
+                    return row;
+                },
+            );
+
+            expect(created).to.deep.equal({ name: entityId, props: { a: 1 }, ssrProps: null });
+            const changeData = defined(
+                await db('versioning').first().where({ entity_type: 'shared_props', entity_id: entityId }),
+            );
+            expect(changeData.data).to.be.null;
+            expect(changeData.data_after).to.equal(
+                JSON.stringify({ data: { props: { a: 1 }, ssrProps: null }, related: {} }),
+            );
+        });
+
+        it('should take the ID of a created entity from the returned row', async () => {
+            const created = await versionService.withVersion(testUser, { type: 'auth_entities' }, async (trx) => {
+                const [row] = await trx('auth_entities')
+                    .insert({ identifier: 'test_with_version', provider: 'local', role: 'admin' })
+                    .returning('*');
+                return row;
+            });
+
+            const changeData = defined(
+                await db('versioning')
+                    .first()
+                    .where({ entity_type: 'auth_entities', entity_id: String(created.id) }),
+            );
+            expect(changeData.data).to.be.null;
+            expect(changeData.created_by).to.equal(testUser.identifier);
+        });
+
+        it('should fail when the ID is neither given nor in the returned value', async () => {
+            await expect(
+                versionService.withVersion(testUser, { type: 'auth_entities' }, async (trx) => {
+                    await trx('auth_entities').insert({ identifier: 'test_with_version_no_id', provider: 'local' });
+                    return {};
+                }),
+            ).eventually.rejectedWith('Unable to identify record ID');
+
+            expect(await db('auth_entities').where({ identifier: 'test_with_version_no_id' })).to.be.empty;
+        });
+    });
+
     describe('secret sanitization', () => {
         it('should mask secret setting values in versioning records', async () => {
             const entityType = 'settings';
@@ -405,7 +459,7 @@ describe('Versioning Unit', () => {
                     .transacting(trx);
             });
 
-            const revertChangeId = await versionService.revertOperation(testUser, changeId);
+            const revertChangeId = await versionService.revertOperation(testUser, defined(changeId));
 
             const entityRow = await db(entityType).first().where('name', entityId);
             expect(entityRow).to.be.undefined;
@@ -430,7 +484,7 @@ describe('Versioning Unit', () => {
                 await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
             });
 
-            const revertChangeId = await versionService.revertOperation(testUser, changeId);
+            const revertChangeId = await versionService.revertOperation(testUser, defined(changeId));
 
             const entityRowAfter = await db(entityType).first().where('name', entityId);
             expect(entityRowBefore).to.be.eql(entityRowAfter);
@@ -456,7 +510,7 @@ describe('Versioning Unit', () => {
 
             expect(await db(entityType).first().where('name', entityId)).to.be.undefined;
 
-            const revertChangeId = await versionService.revertOperation(testUser, changeId);
+            const revertChangeId = await versionService.revertOperation(testUser, defined(changeId));
 
             const entityRowAfter = await db(entityType).first().where('name', entityId);
             expect(entityRowBefore).to.be.eql(entityRowAfter);

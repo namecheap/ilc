@@ -10,7 +10,7 @@ export function createServices(db: Knex) {
 
     return {
         versioning,
-        sharedProps: new SharedPropsService(new SharedPropsRepository(db), versioning),
+        sharedProps: new SharedPropsService(new SharedPropsRepository(versioning), versioning),
     };
 }
 

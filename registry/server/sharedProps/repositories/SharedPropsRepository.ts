@@ -1,11 +1,11 @@
 import type { Knex } from 'knex';
 import { Tables } from '../../db/structure';
 import { EntityTypes, type VersionedRecord } from '../../versioning/interfaces';
-import { selectVersionedRowsFrom } from '../../versioning/services/selectVersionedRows';
+import type { Versioning } from '../../versioning/services/Versioning';
 import type { CreateSharedPropsInput, SharedPropsRow, UpdateSharedPropsInput } from '../interfaces';
 
 export class SharedPropsRepository {
-    constructor(private readonly db: Knex) {}
+    constructor(private readonly versioning: Versioning) {}
 
     async list(): Promise<VersionedRecord<SharedPropsRow>[]> {
         return this.selectVersioned().orderBy(`${Tables.SharedProps}.name`, 'asc');
@@ -35,7 +35,7 @@ export class SharedPropsRepository {
     }
 
     private selectVersioned() {
-        return selectVersionedRowsFrom(this.db, Tables.SharedProps, 'name', EntityTypes.shared_props, [
+        return this.versioning.versionedSelect(Tables.SharedProps, 'name', EntityTypes.shared_props, [
             `${Tables.SharedProps}.*`,
         ]);
     }
