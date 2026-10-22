@@ -64,8 +64,8 @@ function selectVersionedRows(knex: VersionedKnex) {
                     .groupBy('entity_id')
                     .as('v'),
                 'v.entity_id',
-                // only such syntax works in all sqlite,mysql,postgresql
-                knex.raw(`CAST(${table}.${key} AS char(255))`),
+                // versioning.entity_id is a string, while some keys are integers
+                knex.raw('??::text', [`${table}.${key}`]),
             )
             .select([...columns, 'versionId']);
     };

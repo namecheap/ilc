@@ -5,17 +5,12 @@ services:
             - '4001:4001'
         environment:
             NODE_ENV: production
-            # DB_CLIENT: mysql
-            DB_CLIENT: pg
-            # DB_HOST: mysql
             DB_HOST: postgres
             DB_USER: root
             DB_PASSWORD: pwd
             DB_NAME: ilc
             DB_SEED: true
         depends_on:
-            # mysql:
-            #     condition: service_healthy
             postgres:
                 condition: service_healthy
     registry_worker:
@@ -23,16 +18,13 @@ services:
         command: ['npm', 'run', 'assetsdiscovery']
         environment:
             NODE_ENV: production
-            # DB_CLIENT: mysql
-            DB_CLIENT: pg
-            # DB_HOST: mysql
             DB_HOST: postgres
             DB_USER: root
             DB_PASSWORD: pwd
             DB_NAME: ilc
         network_mode: 'service:ilc' # We need this to make apps accessible at 127.0.0.1
         depends_on:
-            mysql:
+            postgres:
                 condition: service_healthy
     ilc:
         image: namecheap/ilc:latest
@@ -52,23 +44,6 @@ services:
         #   - "8234-8240:8234-8240" # Uncomment to run with ilc via node
         env_file:
             - ./demo-apps.env # Used by the demo site to override PUBLIC_HOST var
-    mysql:
-        container_name: mysql
-        platform: linux/x86_64
-        image: mysql:5.7
-        volumes:
-            - .:/usr/src/ilc
-            - './dbfiles:/var/lib/mysql'
-        ports:
-            - '3306:3306'
-        environment:
-            MYSQL_ROOT_PASSWORD: pwd
-            MYSQL_DATABASE: ilc
-        healthcheck:
-            test: ['CMD', 'mysqladmin', '-uroot', '-ppwd', 'processlist', '-h', 'localhost']
-            interval: 3s
-            timeout: 3s
-            retries: 50
     postgres:
         container_name: postgres
         image: postgres:15.6-alpine

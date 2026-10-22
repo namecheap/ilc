@@ -1,17 +1,7 @@
 import { Knex } from 'knex';
-import { isSqlite } from '../util/db';
 
-export async function up(knex: Knex): Promise<void> {
-    if (isSqlite(knex)) {
-        await knex.schema.dropTable('old_route_slots');
-        await knex.schema.dropTable('old_route_slots_2');
-        await knex.schema.dropTable('old_routes');
-        await knex.schema.dropTable('old_routes_2');
-    }
-}
+// Dropped the temporary tables that only the SQLite versions of earlier migrations created.
+// Kept as a no-op because databases have it recorded as applied.
+export async function up(knex: Knex): Promise<void> {}
 
-export async function down(knex: Knex): Promise<void> {
-    if (isSqlite(knex)) {
-        throw new Error('Not implemented');
-    }
-}
+export async function down(knex: Knex): Promise<void> {}

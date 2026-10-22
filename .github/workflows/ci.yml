@@ -298,31 +298,15 @@ jobs:
                       ref: ${{ github.ref }}
                     - name: dest
                       ref: ${{ github.base_ref }}
-                database:
-                    - client: sqlite3
-                    - client: mysql
-                      host: mysql
-                      port: 3306
-                    - client: pg
-                      host: postgres
-                      port: 5432
                 exclude:
                     - branch:
                           ref: ''
         env:
-            DB_CLIENT: ${{ matrix.database.client }}
+            # Base branches from before SQLite and MySQL removal still read it and default to SQLite without it
+            DB_CLIENT: pg
             DB_NAME: ilc_${{ matrix.branch.name }}
 
         services:
-            mysql:
-                image: mysql:5.7
-                env:
-                    MYSQL_ROOT_PASSWORD: pwd
-                ports:
-                    - 3306:3306
-                volumes:
-                    - ${{ github.workspace }}:/usr/src/ilc
-                options: --name=mysql --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
             postgres:
                 image: postgres:15.4-alpine
                 env:
@@ -354,8 +338,8 @@ jobs:
                   --volume $(pwd)/artifacts/registry/coverage:/.coverage
                   --network ${{ job.container.network }}
                   -e DB_CLIENT
-                  -e DB_HOST=${{ matrix.database.host }}
-                  -e DB_PORT=${{ matrix.database.port }}
+                  -e DB_HOST=postgres
+                  -e DB_PORT=5432
                   -e DB_USER=root
                   -e DB_PASSWORD=pwd
                   -e DB_NAME
@@ -364,33 +348,15 @@ jobs:
 
             - uses: actions/upload-artifact@v6
               with:
-                  name: ${{ matrix.branch.name }}-${{ matrix.database.client }}-registry-tests-artifacts
+                  name: ${{ matrix.branch.name }}-registry-tests-artifacts
                   path: ./artifacts/registry/coverage
 
     e2e_tests:
         name: Run E2E tests
         runs-on: ubuntu-22.04
         timeout-minutes: 20
-        strategy:
-            fail-fast: false
-            matrix:
-                database:
-                    - client: mysql
-                      host: mysql
-                      port: 3306
-                    - client: pg
-                      host: postgres
-                      port: 5432
 
         services:
-            mysql:
-                image: mysql:5.7
-                env:
-                    MYSQL_ROOT_PASSWORD: pwd
-                    MYSQL_DATABASE: ilc
-                ports:
-                    - 3306:3306
-                options: --name=mysql --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
             postgres:
                 image: postgres:15.4-alpine
                 env:
@@ -423,9 +389,8 @@ jobs:
               working-directory: e2e
               run: pnpm start:verbose
               env:
-                  DB_CLIENT: ${{ matrix.database.client }}
                   DB_HOST: localhost
-                  DB_PORT: ${{ matrix.database.port }}
+                  DB_PORT: 5432
                   DB_USER: root
                   DB_PASSWORD: pwd
                   DB_NAME: ilc
@@ -472,10 +437,10 @@ jobs:
                   oldCodeCoveragePath: ./dest-client-side-tests-artifacts/coverage-summary.json
                   newCodeCoveragePath: ./src-client-side-tests-artifacts/coverage-summary.json
                   total_delta: 10
-            - name: Merge coverage report for registry
+            - name: Build coverage report for registry
               run: |
-                  bash .github/workflows/merge-registry-coverage.sh dest
-                  bash .github/workflows/merge-registry-coverage.sh src
+                  bash .github/workflows/registry-coverage-report.sh dest
+                  bash .github/workflows/registry-coverage-report.sh src
             - name: Create coverage report for registry
               id: registry-coverage-report
               if: '!cancelled()'
@@ -484,8 +449,8 @@ jobs:
                   fullCoverageDiff: true
                   autorun: false
                   postComment: false
-                  oldCodeCoveragePath: ./dest-merged-registry-tests-artifacts/coverage/coverage-summary.json
-                  newCodeCoveragePath: ./src-merged-registry-tests-artifacts/coverage/coverage-summary.json
+                  oldCodeCoveragePath: ./dest-registry-tests-artifacts/coverage/coverage-summary.json
+                  newCodeCoveragePath: ./src-registry-tests-artifacts/coverage/coverage-summary.json
                   total_delta: 2
             - name: Compose comment
               if: '!cancelled()'

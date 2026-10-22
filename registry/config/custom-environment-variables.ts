@@ -5,14 +5,13 @@ export default {
         licenseKey: 'NR_LICENSE_KEY',
     },
     database: {
-        client: 'DB_CLIENT',
         // connection: 'DB_URI',
         connection: {
             host: 'DB_HOST',
+            port: 'DB_PORT',
             user: 'DB_USER',
             password: 'DB_PASSWORD',
             database: 'DB_NAME',
-            filename: 'DB_FILENAME',
         },
         searchPath: 'DB_SEARCH_PATH',
         rootPassword: 'ROOT_PWD',

@@ -4,15 +4,14 @@ module.exports = {
     port: 4001,
     keepAliveTimeout: 5 * 60,
     database: {
-        client: 'sqlite3',
+        client: 'pg',
         connection: {
-            database: 'registry_db',
-            // Anchored to the registry root so that the source and the pre-compiled
-            // (build/config) versions of this config point to the same database file
-            filename: path.join(path.resolve(__dirname, '..').replace(/[\\/]build$/, ''), 'server/dbfiles/db.sqlite'),
+            host: 'localhost',
+            user: 'root',
+            password: 'pwd',
+            database: 'ilc',
         },
         searchPath: ['public'],
-        useNullAsDefault: true,
         migrations: {
             directory: path.resolve(__dirname, '../server/migrations'),
             extension: 'ts',

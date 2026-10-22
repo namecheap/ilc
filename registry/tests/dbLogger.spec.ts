@@ -39,13 +39,6 @@ describe('Database Logger', () => {
         sinon.assert.calledWith(loggerMock.warn, 'test warning message');
     });
 
-    it('should ignore specific warning messages', () => {
-        const adapter = knexLoggerAdapter();
-        adapter.warn('.returning() is not supported by mysql and will not have any effect.');
-
-        sinon.assert.notCalled(loggerMock.warn);
-    });
-
     it('should log error messages', () => {
         const adapter = knexLoggerAdapter();
         adapter.error('test error message');

@@ -121,19 +121,7 @@ export default class AssetsDiscovery {
 
         // This implementation of communication between ILC & apps duplicates code in ILC ServerRouter
         // and so should be refactored in the future.
-        let entityPropsJSON: string | null | undefined;
-
-        if (typeof entity.props === 'object' && entity.props !== null) {
-            // Props is already an object (PostgreSQL behavior)
-            entityPropsJSON = JSON.stringify(entity.props);
-        } else if (typeof entity.props === 'string') {
-            // Props is a string (MySQL and SQLite behavior) - normalize by parsing and converting back
-            // to ensure consistent JSON formatting (MySQL adds spaces, SQLite doesn't)
-            const parsed = parseJSON(entity.props);
-            entityPropsJSON = parsed ? JSON.stringify(parsed) : entity.props;
-        } else {
-            entityPropsJSON = entity.props;
-        }
+        const entityPropsJSON = entity.props ? JSON.stringify(entity.props) : undefined;
 
         if (entityPropsJSON && entityPropsJSON !== '{}') {
             const entityPropsBase64 = Buffer.from(entityPropsJSON).toString('base64');

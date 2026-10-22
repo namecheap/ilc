@@ -35,7 +35,7 @@ describe('RoutesService', () => {
     let versioning: sinon.SinonSpy;
     let reset: () => Promise<void>;
     before(async () => {
-        ({ db, reset } = dbFactory());
+        ({ db, reset } = await dbFactory());
         await db.migrate.latest({
             directory: path.join(__dirname, '../../server/migrations'),
         });
@@ -65,8 +65,8 @@ describe('RoutesService', () => {
             expect(route).to.deep.include({
                 orderPos: 1,
                 route: '/upsert1',
-                next: 0,
-                meta: '{"a":1}',
+                next: false,
+                meta: { a: 1 },
                 domainId: null,
             });
             const slots = await db(Tables.RouteSlots).select().where({ routeId: route?.id });
@@ -75,7 +75,7 @@ describe('RoutesService', () => {
                 routeId: route?.id,
                 appName: '@portal/upsert',
                 name: 'slot1',
-                props: '{"a":1}',
+                props: { a: 1 },
                 kind: 'regular',
             });
             sinon.assert.calledWithMatch(
@@ -106,8 +106,8 @@ describe('RoutesService', () => {
             expect(route).to.deep.include({
                 orderPos: 2,
                 route: '/upsert2',
-                next: 1,
-                meta: '{"a":1}',
+                next: true,
+                meta: { a: 1 },
                 domainId: null,
             });
             const slots = await db(Tables.RouteSlots).select().where({ routeId: route?.id });
@@ -116,7 +116,7 @@ describe('RoutesService', () => {
                 routeId: route?.id,
                 appName: '@portal/upsert',
                 name: 'slot1',
-                props: '{"a":1}',
+                props: { a: 1 },
                 kind: 'regular',
             });
             sinon.assert.calledWithMatch(
@@ -151,10 +151,10 @@ describe('RoutesService', () => {
             expect(route).to.deep.include({
                 orderPos: 6,
                 route: '/upsert6_1',
-                next: 0,
+                next: false,
                 templateName: null,
                 domainId: 1,
-                meta: '{}',
+                meta: {},
             });
         });
         it('should cancel upsert', async () => {
@@ -184,7 +184,7 @@ describe('RoutesService', () => {
             expect(route).to.include({
                 orderPos: 3,
                 route: '/upsert3',
-                next: 0,
+                next: false,
                 templateName: null,
                 meta: null,
                 domainId: null,
@@ -199,14 +199,14 @@ describe('RoutesService', () => {
             const trxProvider = db.transactionProvider();
             await expect(
                 service.upsert({ ...appRoute, route: '/upsert4', namespace: 'ns1', orderPos: 1 }, user, trxProvider),
-            ).to.eventually.rejectedWith('UNIQUE constraint failed');
+            ).to.eventually.rejectedWith('duplicate key value violates unique constraint');
             const trx = await trxProvider();
             await trx.rollback();
             const route = await db(Tables.Routes).first().where({ route: '/upsert4' });
             expect(route).to.include({
                 orderPos: 4,
                 route: '/upsert4',
-                next: 0,
+                next: false,
                 templateName: null,
                 meta: null,
                 domainId: null,
@@ -241,7 +241,7 @@ describe('RoutesService', () => {
                     user,
                     trxProvider,
                 ),
-            ).to.eventually.rejectedWith('UNIQUE constraint failed');
+            ).to.eventually.rejectedWith('duplicate key value violates unique constraint');
             const trx = await trxProvider();
             await trx.rollback();
             const route = await db(Tables.Routes).first().where({ route: '/upsert8' });
@@ -268,7 +268,7 @@ describe('RoutesService', () => {
             expect(route0).to.deep.include({
                 orderPos: 5,
                 route: '/upsert5',
-                next: 0,
+                next: false,
                 meta: null,
                 domainId: null,
                 namespace: 'ns1',
@@ -276,8 +276,8 @@ describe('RoutesService', () => {
             expect(route1).to.deep.include({
                 orderPos: 55,
                 route: '/upsert5',
-                next: 0,
-                meta: '{"a":1}',
+                next: false,
+                meta: { a: 1 },
                 domainId: null,
                 namespace: 'ns2',
             });
@@ -289,14 +289,14 @@ describe('RoutesService', () => {
                 routeId: route1?.id,
                 appName: '@portal/upsert',
                 name: 'slot1',
-                props: '{"a":1}',
+                props: { a: 1 },
                 kind: 'regular',
             });
             expect(slot0).to.deep.include({
                 routeId: route0?.id,
                 appName: '@portal/upsert',
                 name: 'slot0',
-                props: '{"a":1}',
+                props: { a: 1 },
                 kind: 'regular',
             });
         });
@@ -326,7 +326,7 @@ describe('RoutesService', () => {
             expect(route0).to.deep.include({
                 orderPos: 8,
                 route: '/upsert8',
-                next: 0,
+                next: false,
                 meta: null,
                 domainId: null,
                 namespace: 'ns1',
@@ -334,8 +334,8 @@ describe('RoutesService', () => {
             expect(route1).to.deep.include({
                 orderPos: 8,
                 route: '/upsert8',
-                next: 0,
-                meta: '{"a":1}',
+                next: false,
+                meta: { a: 1 },
                 domainId: 2,
                 namespace: 'ns1',
             });
@@ -347,14 +347,14 @@ describe('RoutesService', () => {
                 routeId: route1?.id,
                 appName: '@portal/upsert',
                 name: 'slot1',
-                props: '{"a":1}',
+                props: { a: 1 },
                 kind: 'regular',
             });
             expect(slot0).to.deep.include({
                 routeId: route0?.id,
                 appName: '@portal/upsert',
                 name: 'slot0',
-                props: '{"a":1}',
+                props: { a: 1 },
                 kind: 'regular',
             });
         });

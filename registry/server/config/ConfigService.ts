@@ -8,7 +8,7 @@ import { EntryFactory } from '../common/services/entries/EntryFactory';
 import { SharedLibEntry } from '../common/services/entries/SharedLibEntry';
 import db, { VersionedKnex } from '../db';
 import { SharedLib } from '../sharedLibs/interfaces';
-import { isPostgres, PG_FOREIGN_KEY_VIOLATION_CODE } from '../util/db';
+import { PG_FOREIGN_KEY_VIOLATION_CODE } from '../util/db';
 import { getJoiErr } from '../util/helpers';
 
 type UpsertPayload = {
@@ -32,10 +32,6 @@ export class ConfigService {
         }
         const appInstance = EntryFactory.getAppInstance();
         const sharedLibInstance = EntryFactory.getSharedLibInstance();
-
-        if (!isPostgres(this.db)) {
-            throw new Error('Upsert config is supported only if using PostgreSQL');
-        }
 
         const trxProvider = this.db.transactionProvider();
         const trx = await trxProvider();

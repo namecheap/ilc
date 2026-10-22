@@ -4,7 +4,6 @@ import { type Agent } from 'supertest';
 import nock from 'nock';
 import db from '../server/db';
 import { OnPropsUpdateValues, SettingKeys, TrailingSlashValues } from '../server/settings/interfaces';
-import { isPostgres } from '../server/util/db';
 import { ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const templateName = 'ncTestTemplateName';
@@ -358,12 +357,6 @@ describe('Tests /api/v1/config', () => {
             ],
         };
 
-        before(function () {
-            if (!isPostgres(db)) {
-                return this.skip();
-            }
-        });
-
         it('should validate successfully', async () => {
             await req.post('/api/v1/config/validate').send(body).expect(200, { valid: true });
         });
@@ -583,9 +576,6 @@ describe('Tests /api/v1/config', () => {
         };
 
         before(function () {
-            if (!isPostgres(db)) {
-                return this.skip();
-            }
             nock('https://localhost:8080')
                 .get('/sample-nodejs/assets-discovery.json')
                 .reply(200, {

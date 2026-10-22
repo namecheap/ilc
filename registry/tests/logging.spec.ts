@@ -54,7 +54,7 @@ describe('Logging', () => {
         await runScenario(logStringHandler);
         sinon.assert.calledWith(
             errorLog,
-            sinon.match({ userId: 'root', path: '/test', clientIp: '::ffff:127.0.0.1' }),
+            sinon.match({ userId: 'root', path: '/test', clientIp: '127.0.0.1' }),
             'test',
         );
     });

@@ -13,7 +13,6 @@ allowBuilds:
     bcrypt: true
     esbuild: true
     puppeteer: true
-    sqlite3: true
     # Only print messages or build parts that are not used here
     core-js: false
     es5-ext: false

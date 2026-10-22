@@ -24,7 +24,7 @@ describe('ApplicationEntry', () => {
     let db: VersionedKnex;
     let reset: () => Promise<void>;
     before(async () => {
-        ({ db, reset } = dbFactory());
+        ({ db, reset } = await dbFactory());
         await db.migrate.latest({
             directory: path.join(__dirname, '../../server/migrations'),
         });
@@ -43,8 +43,8 @@ describe('ApplicationEntry', () => {
             expect(app).to.deep.include({
                 name: '@portal/upsert1',
                 kind: 'primary',
-                props: '{"a":1}',
-                ssrProps: '{}',
+                props: { a: 1 },
+                ssrProps: {},
                 ssr: null,
             });
         });
@@ -59,8 +59,8 @@ describe('ApplicationEntry', () => {
             expect(app).to.deep.include({
                 name: '@portal/upsert2',
                 kind: 'primary',
-                props: '{"a":1}',
-                ssrProps: '{}',
+                props: { a: 1 },
+                ssrProps: {},
                 ssr: null,
             });
         });
@@ -100,10 +100,10 @@ describe('ApplicationEntry', () => {
                 cssBundle: 'existing',
                 adminNotes: 'existing',
                 assetsDiscoveryUrl: null,
-                dependencies: '{}',
-                props: '{}',
-                ssrProps: '{}',
-                discoveryMetadata: '{}',
+                dependencies: {},
+                props: {},
+                ssrProps: {},
+                discoveryMetadata: {},
                 enforceDomain: null,
                 ssr: null,
                 configSelector: '[]',
@@ -149,7 +149,7 @@ describe('ApplicationEntry', () => {
                     { ...appPayload, name: '@portal/upsert4', kind: 'primary', namespace: 'ns2' },
                     { user, trxProvider },
                 ),
-            ).eventually.rejectedWith('UNIQUE constraint failed');
+            ).eventually.rejectedWith('duplicate key value violates unique constraint');
             const trx = await trxProvider();
             await trx.rollback();
             const app = await db(Tables.Apps).first().where({ name: '@portal/upsert4' });
