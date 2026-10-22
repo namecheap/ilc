@@ -1,7 +1,6 @@
 import type { Request, RequestHandler, Response } from 'express';
-import type { z } from 'zod';
+import { z } from 'zod';
 import { UnprocessableContent } from '../../errorHandler/httpErrors';
-import { formatValidationError } from './formatValidationError';
 
 interface RequestSchemas {
     params?: z.ZodType;
@@ -25,7 +24,7 @@ const SELECTORS = ['params', 'query', 'body'] as const;
 /**
  * Parses the request parts that have a schema and hands the parsed values to the handler,
  * typed from the schemas. The request itself is left as it came.
- * A failed parse is a 422 with Joi-style messages, a missing body a 400.
+ * A failed parse is a 422 with Zod's error summary, a missing body a 400.
  */
 export function validated<S extends RequestSchemas>(schemas: S, handler: ValidatedHandler<S>): RequestHandler {
     return async (req, res) => {
@@ -42,9 +41,9 @@ export function validated<S extends RequestSchemas>(schemas: S, handler: Validat
                 continue;
             }
 
-            const result = await schema.safeParseAsync(req[selector], { reportInput: true });
+            const result = await schema.safeParseAsync(req[selector]);
             if (!result.success) {
-                throw new UnprocessableContent({ message: formatValidationError(result.error) });
+                throw new UnprocessableContent({ message: z.prettifyError(result.error) });
             }
             input[selector] = result.data;
         }

@@ -47,7 +47,7 @@ describe('validated', () => {
         expect(handled).to.equal(false);
     });
 
-    it('should respond with 422 and Joi-style messages when validation fails', async () => {
+    it('should respond with 422 and the Zod error summary when validation fails', async () => {
         let handled = false;
         const app = createApp(() => {
             handled = true;
@@ -56,7 +56,10 @@ describe('validated', () => {
         await supertest(app)
             .put('/42')
             .send({ name: '', extra: 1 })
-            .expect(422, '"name" is not allowed to be empty\n"extra" is not allowed');
+            .expect(
+                422,
+                '✖ Unrecognized key: "extra"\n✖ Too small: expected string to have >=1 characters\n  → at name',
+            );
 
         expect(handled).to.equal(false);
     });
@@ -64,6 +67,9 @@ describe('validated', () => {
     it('should report params errors before body errors', async () => {
         const app = createApp(() => {});
 
-        await supertest(app).put('/abc').send({}).expect(422, '"id" must be a number');
+        await supertest(app)
+            .put('/abc')
+            .send({})
+            .expect(422, '✖ Invalid input: expected number, received NaN\n  → at id');
     });
 });
