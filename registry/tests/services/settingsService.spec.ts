@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { createServices } from '../../server/composition';
 import { SettingsService } from '../../server/settings/services/SettingsService';
 import db from '../../server/db';
 import { Scope, SettingKeys, SettingTypes } from '../../server/settings/interfaces';
@@ -11,7 +12,7 @@ describe('SettingsService', () => {
     const testSetting2 = 'key2';
 
     beforeEach(() => {
-        settingsService = new SettingsService();
+        settingsService = createServices(db).settings;
     });
 
     describe('getSettingsForConfig', () => {

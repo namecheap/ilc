@@ -6,7 +6,6 @@ import { OPENID_CALLBACK_URL, useAuth } from './auth';
 import errorHandler from './errorHandler';
 import { loadPlugins } from './util/pluginManager';
 import * as routes from './routes/routes';
-import settingsService from './settings/services/SettingsService';
 import pong from './util/ping';
 import { contextMiddleware } from './middleware/context';
 import { logConnectionString } from './util/db';
@@ -24,6 +23,7 @@ import { createSharedLibsRouter } from './sharedLibs/routes';
 import { createEntriesRouter } from './entries/entries';
 import { createAppRoutesRouter } from './appRoutes/routes';
 import { createAppsRouter } from './apps/routes';
+import { createSettingsRouter } from './settings/routes';
 
 export default async (withAuth: boolean = true): Promise<Application> => {
     loadPlugins();
@@ -52,7 +52,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
 
     let authMw: RequestHandler[] = [(req, res, next) => next()];
     if (withAuth) {
-        const openIdService = new OpenIdService(settingsService);
+        const openIdService = new OpenIdService(services.settings);
         authMw = await useAuth(
             app,
             openIdService,
@@ -66,14 +66,21 @@ export default async (withAuth: boolean = true): Promise<Application> => {
         );
     }
 
-    app.use('/api/v1/config', routes.config(authMw, services.config));
+    app.use(
+        '/api/v1/config',
+        routes.config(authMw, services.config, {
+            db,
+            versioning: services.versioning,
+            settingsService: services.settings,
+        }),
+    );
     app.use('/api/v1/app', authMw, createAppsRouter(services.apps));
     app.use('/api/v1/template', createTemplatesRouter(services.templates, authMw));
     app.use('/api/v1/route', authMw, createAppRoutesRouter(services.routes));
     app.use('/api/v1/shared_props', authMw, createSharedPropsRouter(services.sharedProps));
     app.use('/api/v1/auth_entities', authMw, createAuthEntitiesRouter(services.authEntities));
     app.use('/api/v1/versioning', authMw, createVersioningRouter(services.versioning));
-    app.use('/api/v1/settings', routes.settings(authMw));
+    app.use('/api/v1/settings', createSettingsRouter(services.settings, authMw));
     app.use('/api/v1/router_domains', createRouterDomainsRouter(services.routerDomains, authMw));
     app.use('/api/v1/shared_libs', authMw, createSharedLibsRouter(services.sharedLibs));
     app.use('/api/v1/public', routes.public);

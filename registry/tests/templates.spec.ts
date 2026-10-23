@@ -2,8 +2,7 @@ import _ from 'lodash';
 import nock from 'nock';
 import { type Agent } from 'supertest';
 import { SettingKeys } from '../server/settings/interfaces';
-import settingsService from '../server/settings/services/SettingsService';
-import { ensureDeleted, expect, request, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth, settingsService } from './common';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 import { withSetting } from './utils/withSetting';
 

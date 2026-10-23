@@ -1,13 +1,15 @@
 import config from 'config';
 import { User } from '../../../typings/User';
 import { JSONValue, isNumeric, safeParseJSON } from '../../common/services/json';
-import db from '../../db';
 import { NotFoundError, UnprocessableContent } from '../../errorHandler/httpErrors';
-import { extractInsertedId } from '../../util/db';
+import type { RouterDomainsRepository } from '../../routerDomains/repositories/RouterDomainsRepository';
+import { defined } from '../../util/helpers';
 import { set } from '../../util/set';
+import { EntityTypes } from '../../versioning/interfaces';
+import type { Versioning } from '../../versioning/services/Versioning';
 import {
     AllowedSettingKeysForDomains,
-    DomainSetting,
+    DomainSettingRow,
     Scope,
     SettingKeys,
     SettingParsed,
@@ -15,6 +17,7 @@ import {
     SettingTypes,
     SettingValue,
 } from '../interfaces';
+import type { SettingsRepository } from '../repositories/SettingsRepository';
 
 type GetOptions = {
     range?: string;
@@ -30,7 +33,11 @@ export class SettingsService {
     //TODO: implement cache
     //private cache: any = {};
 
-    constructor() {}
+    constructor(
+        private readonly repository: SettingsRepository,
+        private readonly routerDomainsRepository: RouterDomainsRepository,
+        private readonly versioning: Versioning,
+    ) {}
 
     async get<T extends SettingValue = SettingValue>(
         key: SettingKeys,
@@ -62,38 +69,38 @@ export class SettingsService {
     }
 
     async set(settingKey: SettingKeys, value: any, user: User) {
-        await db.versioning(user, { type: 'settings', id: settingKey }, async (trx) => {
-            await db('settings').where('key', settingKey).update('value', JSON.stringify(value)).transacting(trx);
-        });
+        await this.versioning.withVersion(user, { type: EntityTypes.settings, id: settingKey }, (trx) =>
+            this.repository.updateValue(settingKey, JSON.stringify(value), trx),
+        );
     }
 
     private async getValue(key: SettingKeys): Promise<SettingValue | undefined> {
-        const [setting] = await db('settings').select().where('key', key);
+        const setting = await this.repository.findByKey(key);
 
         if (setting === undefined) {
             return;
         }
 
-        const value = JSON.parse(setting.value);
+        // Both columns are nullable, a NULL reads as null as JSON.parse(null) did
+        const value = setting.value === null ? null : JSON.parse(setting.value);
 
         if (value !== '') {
             return value;
         }
 
-        const defaultValue = JSON.parse(setting.default);
+        const defaultValue = setting.default === null ? null : JSON.parse(setting.default);
 
         if (defaultValue !== '') {
             return defaultValue;
         }
     }
 
-    async updateRootSetting(settingKey: SettingKeys, value: unknown, user: User): Promise<SettingRaw> {
-        await db.versioning(user, { type: 'settings', id: settingKey }, async (trx) => {
-            await db('settings').where('key', settingKey).update('value', JSON.stringify(value)).transacting(trx);
-        });
+    async updateRootSetting(settingKey: SettingKeys, value: unknown, user: User): Promise<SettingRaw | undefined> {
+        await this.versioning.withVersion(user, { type: EntityTypes.settings, id: settingKey }, (trx) =>
+            this.repository.updateValue(settingKey, JSON.stringify(value), trx),
+        );
 
-        const [updated] = await db('settings').select().where('key', settingKey);
-        return updated;
+        return this.repository.findByKey(settingKey);
     }
 
     async updateDomainSetting(
@@ -101,35 +108,21 @@ export class SettingsService {
         value: unknown,
         domainId: number,
         user: User,
-    ): Promise<DomainSetting> {
-        const [setting] = await db('settings_domain_value').where({ key: settingKey, domainId: domainId });
+    ): Promise<DomainSettingRow | undefined> {
+        const setting = await this.repository.findDomainValue(settingKey, domainId);
         if (!setting) {
             return await this.createSettingForDomain(settingKey, value, domainId, user);
         }
 
-        await db.versioning(user, { type: 'settings_domain_value', id: setting.id }, async (trx) => {
-            await db('settings_domain_value')
-                .where({ id: setting.id })
-                .update('value', JSON.stringify(value))
-                .transacting(trx);
-        });
+        await this.versioning.withVersion(user, { type: EntityTypes.settings_domain_value, id: setting.id }, (trx) =>
+            this.repository.updateDomainValue(setting.id, JSON.stringify(value), trx),
+        );
 
-        const [updated] = await db('settings_domain_value').where({ key: settingKey, domainId: domainId });
-
-        return updated;
+        return this.repository.findDomainValue(settingKey, domainId);
     }
 
     async getSettingsForRootDomain(options: GetOptions) {
-        // There is no type safe interface in knex v1 :(
-
-        const whereCond = options.ilc ? { scope: Scope.Ilc } : {};
-
-        const settings = await db('settings')
-            .select()
-            .from<SettingRaw, SettingRaw[]>('settings')
-            .where(whereCond)
-            .orderBy('settings.key', 'asc')
-            .range(options.range);
+        const settings = await this.repository.list({ ilc: options.ilc, range: options.range });
 
         settings.data = options.allowedForDomains
             ? this.filterAllowedForDomainsSettingsKeys(settings.data)
@@ -144,15 +137,7 @@ export class SettingsService {
     }
 
     async getSettingsForDomainById(domainId: number, options: GetOptions) {
-        const settings = await db
-            .from('settings')
-            .innerJoin('settings_domain_value', 'settings.key', 'settings_domain_value.key')
-            .where('settings_domain_value.domainId', domainId)
-            .select<
-                SettingRaw[]
-            >('settings.key', 'settings.default', 'settings.scope', 'settings.secret', 'settings.meta', 'settings_domain_value.value as value', 'settings_domain_value.domainId as domainId')
-            .orderBy('settings.key', 'asc')
-            .range(options.range);
+        const settings = await this.repository.listWithDomainValue(domainId, options.range);
 
         const parsedSettings = this.parseSettings(settings.data);
 
@@ -163,32 +148,10 @@ export class SettingsService {
     }
 
     async getSettingsForDomainByIdForConfig(domainId: number, options: GetOptions) {
-        const whereCond = options.ilc ? { scope: Scope.Ilc } : {};
-
-        const settings = await db
-            .from('settings')
-            .leftJoin(
-                db
-                    .from('settings_domain_value')
-                    .select('value as domainValue', 'domainId', 'key')
-                    .where('domainId', domainId)
-                    .as('sdv'),
-                'settings.key',
-                'sdv.key',
-            )
-            .select<SettingRaw[]>(
-                'settings.key',
-                'settings.default',
-                'settings.scope',
-                'settings.secret',
-                'settings.meta',
-                'settings.value',
-                'domainValue',
-                'domainId',
-            )
-            .andWhere(whereCond)
-            .orderBy('settings.key', 'asc')
-            .range(options.range);
+        const settings = await this.repository.listWithOptionalDomainValue(domainId, {
+            ilc: options.ilc,
+            range: options.range,
+        });
 
         const settingsData = settings.data.map((item) => {
             if (item.domainValue) {
@@ -206,10 +169,10 @@ export class SettingsService {
     }
 
     async getSettingsForDomainByName(domainName: string, options: GetOptions) {
-        const domain = await db('router_domains').first('id').where({ domainName: domainName });
+        const domainId = await this.routerDomainsRepository.findIdByDomainName(domainName);
 
-        if (domain && domain.id) {
-            return this.getSettingsForDomainByIdForConfig(domain.id, options);
+        if (domainId) {
+            return this.getSettingsForDomainByIdForConfig(domainId, options);
         } else {
             return this.getSettingsForRootDomain(options);
         }
@@ -231,33 +194,20 @@ export class SettingsService {
         value: unknown,
         domainId: number,
         user: User,
-    ): Promise<DomainSetting> {
+    ): Promise<DomainSettingRow> {
         if (!AllowedSettingKeysForDomains.includes(settingKey)) {
             throw new UnprocessableContent({ message: `Setting key ${settingKey} is not allowed for domains` });
         }
 
-        const [{ total }] = await db
-            .from<{ total: string | number }>('router_domains')
-            .count('id as total')
-            .where('id', domainId);
-
-        if (Number(total) === 0) {
+        if (!(await this.routerDomainsRepository.findById(domainId))) {
             throw new UnprocessableContent({ message: `Domain with id ${domainId} does not exist` });
         }
 
         const stringified = JSON.stringify(value);
 
-        let savedSettingId: number | undefined;
-        await db.versioning(user, { type: 'settings_domain_value' }, async (trx) => {
-            const result = await db('settings_domain_value')
-                .insert({ key: settingKey, value: stringified, domainId }, 'id')
-                .transacting(trx);
-            savedSettingId = extractInsertedId(result);
-            return savedSettingId;
-        });
-
-        const [savedSetting] = await db('settings_domain_value').select().where('id', savedSettingId);
-        return savedSetting;
+        return this.versioning.withVersion(user, { type: EntityTypes.settings_domain_value }, (trx) =>
+            this.repository.insertDomainValue({ key: settingKey, value: stringified, domainId }, trx),
+        );
     }
 
     private parseSettings(settings: SettingRaw | SettingRaw[]) {
@@ -338,28 +288,22 @@ export class SettingsService {
         });
     }
 
-    public async deleteDomainSetting(id: string): Promise<void> {
-        const existingSetting = await db('settings_domain_value')
-            .where({ id: Number(id) })
-            .first();
+    public async deleteDomainSetting(id: number): Promise<void> {
+        const existingSetting = await this.repository.findDomainValueById(id);
 
         if (!existingSetting) {
             throw new NotFoundError();
         }
 
-        await db('settings_domain_value')
-            .where({ id: Number(id) })
-            .delete();
+        await this.repository.deleteDomainValue(id);
     }
 
     public async getDomainMergedSetting(settingKey: string, domainId: number | null = null): Promise<SettingParsed> {
-        const [setting] = await db('settings').select().where('key', settingKey);
+        // Both exist for the keys the routes accept, their absence was a 500 before as well
+        const setting = defined(await this.repository.findByKey(settingKey));
 
         if (domainId) {
-            const [domainSetting] = await db('settings_domain_value')
-                .select()
-                .where('key', settingKey)
-                .andWhere('domainId', domainId);
+            const domainSetting = defined(await this.repository.findDomainValue(settingKey, domainId));
             setting.id = domainSetting.id;
             setting.value = domainSetting.value;
             setting.domainId = domainSetting.domainId;
@@ -367,6 +311,3 @@ export class SettingsService {
         return this.parseSetting(setting);
     }
 }
-
-export const settingsService = new SettingsService();
-export default settingsService;

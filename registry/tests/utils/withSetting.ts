@@ -1,5 +1,5 @@
 import { SettingKeys } from '../../server/settings/interfaces';
-import settingsService from '../../server/settings/services/SettingsService';
+import { settingsService } from '../common';
 
 export async function withSetting(key: SettingKeys, value: any, cb: () => Promise<any>) {
     const previousValue = await settingsService.get(key);

@@ -8,8 +8,6 @@ import { renderedTemplateQuerySchema, templateParamsSchema } from '../interfaces
 import type { TemplatesService } from '../services/TemplatesService';
 import { getLogger } from '../../util/logger';
 import { appendDigest } from '../../util/hmac';
-import settingsService from '../../settings/services/SettingsService';
-import { SettingKeys } from '../../settings/interfaces';
 
 export function getRenderedTemplate(service: TemplatesService): RequestHandler {
     return validated(
@@ -27,9 +25,7 @@ export function getRenderedTemplate(service: TemplatesService): RequestHandler {
             const template = { ...found.template, versionId: appendDigest(found.template.versionId, 'template') };
 
             try {
-                const proxyHeaderNames = (await settingsService.get(SettingKeys.TemplateProxyHeaders)) as
-                    | string[]
-                    | null;
+                const proxyHeaderNames = await service.getProxyHeaderNames();
                 const forwardedHeaders =
                     proxyHeaderNames && proxyHeaderNames.length > 0
                         ? Object.fromEntries(

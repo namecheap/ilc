@@ -10,7 +10,8 @@ import { AuthEntitiesRepository } from './authEntities/repositories/AuthEntities
 import { AuthEntitiesService } from './authEntities/services/AuthEntitiesService';
 import { RouterDomainsRepository } from './routerDomains/repositories/RouterDomainsRepository';
 import { RouterDomainsService } from './routerDomains/services/RouterDomainsService';
-import settingsService from './settings/services/SettingsService';
+import { SettingsRepository } from './settings/repositories/SettingsRepository';
+import { SettingsService } from './settings/services/SettingsService';
 import { TemplatesRepository } from './templates/repositories/TemplatesRepository';
 import { TemplatesService } from './templates/services/TemplatesService';
 import { SharedPropsRepository } from './sharedProps/repositories/SharedPropsRepository';
@@ -22,6 +23,7 @@ import { Versioning } from './versioning/services/Versioning';
 export function createServices(db: VersionedKnex) {
     const versioning = new Versioning(versioningConfig, db);
     const routerDomainsRepository = new RouterDomainsRepository(db, versioning);
+    const settings = new SettingsService(new SettingsRepository(db), routerDomainsRepository, versioning);
     const sharedLibs = new SharedLibsService(new SharedLibsRepository(versioning), versioning);
     const apps = new AppsService(new AppsRepository(db, versioning), routerDomainsRepository, versioning);
     const routes = new RoutesService(new RoutesRepository(db, versioning), routerDomainsRepository, versioning);
@@ -35,11 +37,12 @@ export function createServices(db: VersionedKnex) {
             new TemplatesRepository(db, versioning),
             routerDomainsRepository,
             versioning,
-            settingsService,
+            settings,
         ),
         sharedLibs,
         routes,
         apps,
+        settings,
         // Still takes the patched Knex for apps and routes, which haven't moved yet
         config: new ConfigService(db, apps, sharedLibs, routes),
     };

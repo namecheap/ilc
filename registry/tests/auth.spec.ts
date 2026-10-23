@@ -13,7 +13,6 @@ import { OPENID_CALLBACK_URL, useAuth } from '../server/auth';
 import { OpenIdService } from '../server/auth/services/OpenIdService';
 import db from '../server/db';
 import { SettingKeys } from '../server/settings/interfaces';
-import settingsService from '../server/settings/services/SettingsService';
 import { getLogger } from '../server/util/logger';
 import { loadPlugins } from '../server/util/pluginManager';
 import keys from './data/auth/keys';
@@ -21,6 +20,7 @@ import { privateKey } from './data/auth/rsa';
 import token, { generateIdToken } from './data/auth/token-response';
 import { muteConsole, unmuteConsole } from './utils/console';
 import { unless } from '../server/middleware/unless';
+import { settingsService } from './common';
 
 const generateResp403 = (username: string) => ({
     message: `Access denied. "${username}" has "readonly" access.`,

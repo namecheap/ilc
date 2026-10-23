@@ -168,6 +168,11 @@ export class TemplatesService {
         return { template, content: localizedTemplate ? localizedTemplate.content : (template.content ?? '') };
     }
 
+    /** Request headers to pass on when fetching the template's includes */
+    async getProxyHeaderNames(): Promise<string[] | null> {
+        return (await this.settings.get<string[]>(SettingKeys.TemplateProxyHeaders)) ?? null;
+    }
+
     private async getOrFail(templateName: string): Promise<VersionedRecord<TemplateWithLocalizedVersions>> {
         const template = await this.get(templateName);
         if (!template) {

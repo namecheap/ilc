@@ -1,7 +1,7 @@
 import { type Knex } from 'knex';
 import { RouteRow, RouteSlotRow } from '../../server/appRoutes/interfaces';
 import { AppRow } from '../../server/apps/interfaces';
-import { DomainSetting, SettingRaw } from '../../server/settings/interfaces';
+import { DomainSettingRow, SettingRow } from '../../server/settings/interfaces';
 import { SharedLibRow } from '../../server/sharedLibs/interfaces';
 import { LocalizedTemplateRow, TemplateRow } from '../../server/templates/interfaces';
 import { AuthEntityRow } from '../../server/authEntities/interfaces';
@@ -36,8 +36,13 @@ declare module 'knex/types/tables' {
             Optional<SharedLibRow, 'assetsDiscoveryUrl' | 'assetsDiscoveryUpdatedAt' | 'adminNotes' | 'l10nManifest'>,
             Partial<Omit<SharedLibRow, 'name'>>
         >;
-        settings: Knex.CompositeTableType<SettingRaw>;
-        settings_domain_value: Knex.CompositeTableType<DomainSetting, Optional<DomainSetting, 'id'>>;
+        // The migrations that add settings pass meta as JSON text, which a json column accepts as well
+        settings: Knex.CompositeTableType<
+            SettingRow,
+            Omit<SettingRow, 'meta'> & { meta: SettingRow['meta'] | string },
+            Partial<Omit<SettingRow, 'meta'> & { meta: SettingRow['meta'] | string }>
+        >;
+        settings_domain_value: Knex.CompositeTableType<DomainSettingRow, Optional<DomainSettingRow, 'id'>>;
         router_domains: Knex.CompositeTableType<
             RouterDomainsRow,
             Optional<RouterDomainsRow, 'id' | 'canonicalDomain' | 'alias' | 'props' | 'ssrProps'>,
