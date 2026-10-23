@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { domainAliasSchema } from '../../routerDomains/interfaces';
+
 import type { JSONObject } from '../../common/services/json';
 import { booleanish, jsonObjectSchema, nullAsMissing, numeric, versionIdSchema } from '../../common/validation/schemas';
 import { templateNameSchema } from '../../templates/interfaces';
@@ -67,15 +69,7 @@ const commonAppRoute = {
     templateName: templateNameSchema.nullish().transform((templateName) => templateName ?? null),
     slots: nullAsMissing(z.record(z.string().min(1).max(255), appRouteSlotSchema).default({})),
     domainId: nullAsMissing(numeric(z.number()).optional()),
-    domainAlias: nullAsMissing(
-        z
-            .string()
-            .trim()
-            .toLowerCase()
-            .max(64)
-            .regex(/^[a-z0-9-]+$/)
-            .optional(),
-    ),
+    domainAlias: nullAsMissing(domainAliasSchema.optional()),
     meta: nullAsMissing(jsonObjectSchema.default({})),
     versionId: nullAsMissing(versionIdSchema),
     namespace: nullAsMissing(z.string().min(1).optional()).transform((namespace) => namespace ?? null),

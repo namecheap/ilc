@@ -3,6 +3,7 @@ import { appSchema } from '../../server/apps/interfaces';
 import { AppsRepository } from '../../server/apps/repositories/AppsRepository';
 import { AppsService } from '../../server/apps/services/AppsService';
 import { RouterDomainsRepository } from '../../server/routerDomains/repositories/RouterDomainsRepository';
+import { RouterDomainsService } from '../../server/routerDomains/services/RouterDomainsService';
 import versioningConfig from '../../server/versioning/config';
 import { Versioning } from '../../server/versioning/services/Versioning';
 import type { Knex } from 'knex';
@@ -37,7 +38,7 @@ describe('AppsService', () => {
         const versioning = new Versioning(versioningConfig, db);
         service = new AppsService(
             new AppsRepository(db, versioning),
-            new RouterDomainsRepository(db, versioning),
+            new RouterDomainsService(new RouterDomainsRepository(db, versioning), versioning),
             versioning,
         );
     });

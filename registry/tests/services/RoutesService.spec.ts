@@ -4,6 +4,7 @@ import { appRouteSchema } from '../../server/appRoutes/interfaces';
 import { RoutesRepository } from '../../server/appRoutes/repositories/RoutesRepository';
 import { RoutesService } from '../../server/appRoutes/services/RoutesService';
 import { RouterDomainsRepository } from '../../server/routerDomains/repositories/RouterDomainsRepository';
+import { RouterDomainsService } from '../../server/routerDomains/services/RouterDomainsService';
 import versioningConfig from '../../server/versioning/config';
 import { Versioning } from '../../server/versioning/services/Versioning';
 import type { Knex } from 'knex';
@@ -54,7 +55,7 @@ describe('RoutesService', () => {
         const versioningService = new Versioning(versioningConfig, db);
         service = new RoutesService(
             new RoutesRepository(db, versioningService),
-            new RouterDomainsRepository(db, versioningService),
+            new RouterDomainsService(new RouterDomainsRepository(db, versioningService), versioningService),
             versioningService,
         );
         versioning = sinon.spy(versioningService, 'withVersion');

@@ -35,20 +35,21 @@ const domainSchema = z
         message: 'Invalid domain name',
     });
 
+/** How router domains are referred to by name, e.g. by the domainAlias of apps and routes */
+export const domainAliasSchema = z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(64)
+    .regex(/^[a-z0-9-]+$/);
+
 /** PUT replaces the record as well, so omitted fields fall back to their defaults */
 export const routerDomainsSchema = z
     .strictObject({
         domainName: domainSchema,
         template500: templateNameSchema,
         canonicalDomain: domainSchema.nullable().default(null),
-        alias: z
-            .string()
-            .trim()
-            .toLowerCase()
-            .max(64)
-            .regex(/^[a-z0-9-]+$/)
-            .nullable()
-            .default(null),
+        alias: domainAliasSchema.nullable().default(null),
         props: jsonObjectSchema.nullable().default(null),
         ssrProps: jsonObjectSchema.nullable().default(null),
         versionId: versionIdSchema,

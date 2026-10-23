@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { nullAsMissing, versionIdSchema } from '../../common/validation/schemas';
+import { nullAsMissing, urlSchema, versionIdSchema } from '../../common/validation/schemas';
 
 export interface SharedLibRow {
     name: string;
@@ -23,8 +23,6 @@ export const sharedLibsListQuerySchema = z.object({
 export const sharedLibsFiltersSchema = z.strictObject({
     name: z.string().min(1).optional(),
 });
-
-const urlSchema = z.string().trim().pipe(z.url());
 
 const commonSharedLib = {
     spaBundle: nullAsMissing(urlSchema.optional()),

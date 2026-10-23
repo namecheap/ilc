@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
+import { domainAliasSchema } from '../../routerDomains/interfaces';
+
 import type { JSONObject } from '../../common/services/json';
-import { jsonObjectSchema, nullAsMissing, numeric, versionIdSchema } from '../../common/validation/schemas';
+import { jsonObjectSchema, nullAsMissing, numeric, urlSchema, versionIdSchema } from '../../common/validation/schemas';
 
 export const appKinds = ['primary', 'essential', 'regular', 'wrapper'] as const;
 
@@ -44,8 +46,6 @@ export const appsFiltersSchema = z.strictObject({
     domainId: z.union([numeric(z.number()), z.literal('null')]).optional(),
 });
 
-const urlSchema = z.string().trim().pipe(z.url());
-
 function isEmptyObject(value: unknown): boolean {
     return typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length === 0;
 }
@@ -76,15 +76,7 @@ const commonApp = {
     discoveryMetadata: withDefault(jsonObjectSchema, {}),
     adminNotes: nullAsMissing(z.string().trim().min(1).optional()),
     enforceDomain: withDefault(numeric(z.number()), null),
-    domainAlias: nullAsMissing(
-        z
-            .string()
-            .trim()
-            .toLowerCase()
-            .max(64)
-            .regex(/^[a-z0-9-]+$/)
-            .optional(),
-    ),
+    domainAlias: nullAsMissing(domainAliasSchema.optional()),
     l10nManifest: nullAsMissing(z.string().min(1).max(255).optional()),
     versionId: nullAsMissing(versionIdSchema),
     namespace: withDefault(z.string().min(1), null),

@@ -3,6 +3,9 @@ import { z } from 'zod';
 /** A JSON object, what `Joi.object()` accepted. Arrays and other values are rejected. */
 export const jsonObjectSchema = z.record(z.string(), z.json());
 
+/** A URL, trimmed first */
+export const urlSchema = z.string().trim().pipe(z.url());
+
 /** `versionId` is sent back by the Admin UI with every record, it is accepted and dropped. */
 export const versionIdSchema = z.string().min(1).optional();
 

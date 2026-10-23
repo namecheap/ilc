@@ -1,6 +1,17 @@
 import { AssetsManifestReader, AssetsManifest } from './AssetsManifestReader';
 
 export class AssetsDiscoveryProcessor {
+    /** The checked manifest of an entity with an assets discovery URL, nothing for one without */
+    public static async fetchManifest<T>(
+        assetsDiscoveryUrl: string | null | undefined,
+        validate: (manifest: AssetsManifest) => Promise<T>,
+    ): Promise<Partial<T>> {
+        if (!assetsDiscoveryUrl) {
+            return {};
+        }
+        return validate(await this.process(assetsDiscoveryUrl));
+    }
+
     public static async process(assetsDiscoveryUrl: string) {
         const assetsManifest = await AssetsManifestReader.read(assetsDiscoveryUrl);
 

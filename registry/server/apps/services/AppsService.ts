@@ -7,7 +7,7 @@ import { AssetsValidator } from '../../common/services/assets/AssetsValidator';
 import { NotFoundApplicationError } from '../../common/services/entries/error/NotFoundApplicationError';
 import { ValidationFqrnError } from '../../common/services/entries/error/ValidationFqrnError';
 import { ConflictError, NotFoundError, UnprocessableContent } from '../../errorHandler/httpErrors';
-import type { RouterDomainsRepository } from '../../routerDomains/repositories/RouterDomainsRepository';
+import type { RouterDomainsService } from '../../routerDomains/services/RouterDomainsService';
 import { isUniqueConstraintError } from '../../util/db';
 import { EntityTypes, type VersionedRecord } from '../../versioning/interfaces';
 import type { Versioning } from '../../versioning/services/Versioning';
@@ -23,7 +23,7 @@ type UpsertOptions = {
 export class AppsService {
     constructor(
         private readonly repository: AppsRepository,
-        private readonly routerDomainsRepository: RouterDomainsRepository,
+        private readonly routerDomains: RouterDomainsService,
         private readonly versioning: Versioning,
     ) {}
 
@@ -62,7 +62,7 @@ export class AppsService {
 
         const { domainAlias, configSelector, ...fields } = app;
         const enforceDomain = await this.resolveEnforceDomain(app);
-        const manifest = await getManifest(app.assetsDiscoveryUrl);
+        const manifest = await AssetsDiscoveryProcessor.fetchManifest(app.assetsDiscoveryUrl, AssetsValidator.maybeApp);
         const toUpdate: AppUpdate = {
             ...fields,
             enforceDomain,
@@ -121,7 +121,9 @@ export class AppsService {
 
         const { domainAlias, configSelector, ...fields } = app;
         const enforceDomain = (await this.resolveEnforceDomain(app)) ?? null;
-        const manifest = fetchManifest ? await getManifest(app.assetsDiscoveryUrl) : {};
+        const manifest = fetchManifest
+            ? await AssetsDiscoveryProcessor.fetchManifest(app.assetsDiscoveryUrl, AssetsValidator.maybeApp)
+            : {};
 
         return { ...fields, enforceDomain, configSelector: JSON.stringify(configSelector), ...manifest };
     }
@@ -144,23 +146,6 @@ export class AppsService {
         enforceDomain?: number | null;
         domainAlias?: string;
     }): Promise<number | null | undefined> {
-        if (!domainAlias) {
-            return enforceDomain;
-        }
-
-        const domainId = await this.routerDomainsRepository.findIdByAlias(domainAlias);
-        if (domainId === undefined) {
-            throw new UnprocessableContent({ message: `Router domain with alias "${domainAlias}" does not exist` });
-        }
-        return domainId;
+        return domainAlias ? this.routerDomains.getIdByAlias(domainAlias) : enforceDomain;
     }
-}
-
-async function getManifest(assetsDiscoveryUrl: string | null | undefined) {
-    if (!assetsDiscoveryUrl) {
-        return {};
-    }
-
-    const assetsManifest = await AssetsDiscoveryProcessor.process(assetsDiscoveryUrl);
-    return AssetsValidator.maybeApp(assetsManifest);
 }

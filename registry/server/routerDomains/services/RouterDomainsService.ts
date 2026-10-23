@@ -21,6 +21,15 @@ export class RouterDomainsService {
         return this.repository.findById(id);
     }
 
+    /** The id of the router domain with this alias, a 422 when there is none */
+    async getIdByAlias(alias: string): Promise<number> {
+        const id = await this.repository.findIdByAlias(alias);
+        if (id === undefined) {
+            throw new UnprocessableContent({ message: `Router domain with alias "${alias}" does not exist` });
+        }
+        return id;
+    }
+
     async create(routerDomain: RouterDomainsInput, user: User | undefined): Promise<RouterDomainsRow> {
         try {
             return await this.versioning.withVersion(user, { type: EntityTypes.router_domains }, (trx) =>

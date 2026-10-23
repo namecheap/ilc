@@ -3,7 +3,7 @@ import { Knex } from 'knex';
 import type { PaginatedResult } from '../../../typings/PaginatedResult';
 import { User } from '../../../typings/User';
 import { CustomError, NotFoundError, UnprocessableContent } from '../../errorHandler/httpErrors';
-import type { RouterDomainsRepository } from '../../routerDomains/repositories/RouterDomainsRepository';
+import type { RouterDomainsService } from '../../routerDomains/services/RouterDomainsService';
 import { handleForeignConstraintError, isUniqueConstraintError } from '../../util/db';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
@@ -28,7 +28,7 @@ import { makeSpecialRoute } from './transformSpecialRoutes';
 export class RoutesService {
     constructor(
         private readonly repository: RoutesRepository,
-        private readonly routerDomainsRepository: RouterDomainsRepository,
+        private readonly routerDomains: RouterDomainsService,
         private readonly versioning: Versioning,
     ) {}
 
@@ -184,15 +184,7 @@ export class RoutesService {
     }
 
     private async resolveDomainId({ domainId, domainAlias }: { domainId?: number; domainAlias?: string }) {
-        if (!domainAlias) {
-            return domainId ?? null;
-        }
-
-        const resolvedId = await this.routerDomainsRepository.findIdByAlias(domainAlias);
-        if (resolvedId === undefined) {
-            throw new UnprocessableContent({ message: `Router domain with alias "${domainAlias}" does not exist` });
-        }
-        return resolvedId;
+        return domainAlias ? this.routerDomains.getIdByAlias(domainAlias) : (domainId ?? null);
     }
 }
 

@@ -36,7 +36,10 @@ export class SharedLibsService {
     }
 
     async create(sharedLib: SharedLibInput, user: User | undefined): Promise<SharedLibRow> {
-        const manifest = await getManifest(sharedLib.assetsDiscoveryUrl);
+        const manifest = await AssetsDiscoveryProcessor.fetchManifest(
+            sharedLib.assetsDiscoveryUrl,
+            AssetsValidator.maybeSharedLib,
+        );
         const toInsert = withSpaBundle(sharedLib, manifest);
 
         return this.versioning.withVersion(user, { type: EntityTypes.shared_libs, id: sharedLib.name }, (trx) =>
@@ -52,7 +55,10 @@ export class SharedLibsService {
             throw new ValidationFqrnError('Patch does not contain any items to update');
         }
 
-        const manifest = await getManifest(sharedLib.assetsDiscoveryUrl);
+        const manifest = await AssetsDiscoveryProcessor.fetchManifest(
+            sharedLib.assetsDiscoveryUrl,
+            AssetsValidator.maybeSharedLib,
+        );
         const toUpdate = { ...sharedLib, ...manifest };
 
         return this.versioning.withVersion(user, { type: EntityTypes.shared_libs, id: name }, async (trx) => {
@@ -66,7 +72,9 @@ export class SharedLibsService {
 
     /** Creates or replaces the shared library inside the caller's transaction, for config upserts */
     async upsert(sharedLib: SharedLibInput, { user, trxProvider, fetchManifest = true }: UpsertOptions): Promise<void> {
-        const manifest = fetchManifest ? await getManifest(sharedLib.assetsDiscoveryUrl) : { spaBundle: '' };
+        const manifest = fetchManifest
+            ? await AssetsDiscoveryProcessor.fetchManifest(sharedLib.assetsDiscoveryUrl, AssetsValidator.maybeSharedLib)
+            : { spaBundle: '' };
         const toUpsert = withSpaBundle(sharedLib, manifest);
 
         await this.versioning.withVersion(
@@ -84,15 +92,6 @@ export class SharedLibsService {
             }
         });
     }
-}
-
-async function getManifest(assetsDiscoveryUrl: string | null | undefined): Promise<{ spaBundle?: string }> {
-    if (!assetsDiscoveryUrl) {
-        return {};
-    }
-
-    const assetsManifest = await AssetsDiscoveryProcessor.process(assetsDiscoveryUrl);
-    return AssetsValidator.maybeSharedLib(assetsManifest);
 }
 
 function withSpaBundle(sharedLib: SharedLibInput, manifest: { spaBundle?: string }): SharedLibInsert {
