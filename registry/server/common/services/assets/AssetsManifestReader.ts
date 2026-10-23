@@ -20,7 +20,7 @@ export interface AssetsManifest extends ApplicationAssetsManifest {}
 const assetsManifestSchema = z.strictObject({
     spaBundle: z.string().min(1),
     cssBundle: z.string().min(1).optional(),
-    dependencies: z.record(z.string(), z.string()).optional(),
+    dependencies: z.record(z.string().min(1), z.string().min(1)).optional(),
 });
 
 export class AssetsManifestReader {

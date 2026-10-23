@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import type { JSONObject } from '../../common/services/json';
-import { jsonObjectSchema, nullAsMissing, versionIdSchema } from '../../common/validation/schemas';
+import { jsonObjectSchema, nullAsMissing, numeric, versionIdSchema } from '../../common/validation/schemas';
 
 export const appKinds = ['primary', 'essential', 'regular', 'wrapper'] as const;
 
@@ -37,11 +37,11 @@ export const appsListQuerySchema = z.object({
 });
 
 export const appsFiltersSchema = z.strictObject({
-    q: z.string().optional(),
-    kind: z.union([z.string(), z.array(z.string())]).optional(),
-    name: z.array(z.string()).optional(),
-    id: z.array(z.string()).optional(),
-    domainId: z.union([z.number(), z.literal('null')]).optional(),
+    q: z.string().min(1).optional(),
+    kind: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
+    name: z.array(z.string().min(1)).optional(),
+    id: z.array(z.string().min(1)).optional(),
+    domainId: z.union([numeric(z.number()), z.literal('null')]).optional(),
 });
 
 const urlSchema = z.string().trim().pipe(z.url());
@@ -65,17 +65,17 @@ const commonApp = {
     dependencies: withDefault(jsonObjectSchema, {}),
     props: withDefault(jsonObjectSchema, {}),
     ssrProps: withDefault(jsonObjectSchema, {}),
-    configSelector: withDefault(z.array(z.string()), []),
+    configSelector: withDefault(z.array(z.string().min(1)), []),
     // An empty object means no SSR, as null does
     ssr: z.preprocess(
         (value) => (isEmptyObject(value) ? null : value),
-        withDefault(z.strictObject({ src: urlSchema, timeout: z.number() }), null),
+        withDefault(z.strictObject({ src: urlSchema, timeout: numeric(z.number()) }), null),
     ),
     kind: withDefault(z.enum(appKinds), 'regular'),
     wrappedWith: withDefault(z.string().trim().min(1), null),
     discoveryMetadata: withDefault(jsonObjectSchema, {}),
     adminNotes: nullAsMissing(z.string().trim().min(1).optional()),
-    enforceDomain: withDefault(z.number(), null),
+    enforceDomain: withDefault(numeric(z.number()), null),
     domainAlias: nullAsMissing(
         z
             .string()

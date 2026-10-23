@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { numeric } from '../../common/validation/schemas';
 import { cspSchema } from './cspSchema';
 
 export enum SettingKeys {
@@ -185,10 +186,10 @@ function valueSchemaFor(key: SettingKeys): z.ZodType {
         case SettingKeys.I18nSupportedCurrencies:
         case SettingKeys.I18nSupportedLocales:
         case SettingKeys.CspTrustedLocalHosts:
-            return z.array(z.string()).optional();
+            return z.array(z.string().min(1)).optional();
         case SettingKeys.FragmentProxyHeaders:
         case SettingKeys.TemplateProxyHeaders:
-            return z.array(z.string()).nullish();
+            return z.array(z.string().min(1)).nullish();
         case SettingKeys.BaseUrl:
         case SettingKeys.AuthOpenIdDiscoveryUrl:
             return urlOrEmptySchema.optional();
@@ -217,13 +218,13 @@ export const partialSettingSchema = z
     .strictObject({
         key: keySchema,
         value: z.unknown(),
-        domainId: z.number().int().nullish(),
+        domainId: numeric(z.number().int()).nullish(),
     })
     .transform(withValueOfKey);
 
 export const createSettingSchema = z
     .strictObject({
-        domainId: z.number().int(),
+        domainId: numeric(z.number().int()),
         key: keySchema,
         value: z.unknown(),
     })

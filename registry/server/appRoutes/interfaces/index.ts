@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import type { JSONObject } from '../../common/services/json';
-import { jsonObjectSchema, nullAsMissing, versionIdSchema } from '../../common/validation/schemas';
+import { booleanish, jsonObjectSchema, nullAsMissing, numeric, versionIdSchema } from '../../common/validation/schemas';
 import { templateNameSchema } from '../../templates/interfaces';
 import type { VersionedRecord } from '../../versioning/interfaces';
 
@@ -60,17 +60,17 @@ export const appRoutesListQuerySchema = z.object({
 export const appRoutesFiltersSchema = z.object({
     showSpecial: z.boolean().optional(),
     routePrefix: z.string().optional(),
-    domainId: z.union([z.number(), z.literal('null')]).optional(),
+    domainId: z.union([numeric(z.number()), z.literal('null')]).optional(),
 });
 
 const commonAppRoute = {
     specialRole: nullAsMissing(z.enum(['404']).optional()),
-    orderPos: nullAsMissing(z.number().optional()),
-    route: nullAsMissing(z.string().trim().max(255).optional()),
-    next: nullAsMissing(z.boolean().optional()),
+    orderPos: nullAsMissing(numeric(z.number()).optional()),
+    route: nullAsMissing(z.string().trim().min(1).max(255).optional()),
+    next: nullAsMissing(booleanish(z.boolean()).optional()),
     templateName: templateNameSchema.nullish().transform((templateName) => templateName ?? null),
     slots: nullAsMissing(z.record(z.string().min(1).max(255), appRouteSlotSchema).default({})),
-    domainId: nullAsMissing(z.number().optional()),
+    domainId: nullAsMissing(numeric(z.number()).optional()),
     domainAlias: nullAsMissing(
         z
             .string()
@@ -82,7 +82,7 @@ const commonAppRoute = {
     ),
     meta: nullAsMissing(jsonObjectSchema.default({})),
     versionId: nullAsMissing(versionIdSchema),
-    namespace: nullAsMissing(z.string().optional()).transform((namespace) => namespace ?? null),
+    namespace: nullAsMissing(z.string().min(1).optional()).transform((namespace) => namespace ?? null),
 };
 
 type DomainReference = { domainId?: number; domainAlias?: string };

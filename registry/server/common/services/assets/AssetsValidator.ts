@@ -10,7 +10,7 @@ const sharedLibManifestSchema = z.object({
 const appManifestSchema = z.object({
     spaBundle: z.url(),
     cssBundle: z.url().optional(),
-    dependencies: z.record(z.string(), z.string()).optional(),
+    dependencies: z.record(z.string().min(1), z.string().min(1)).optional(),
 });
 
 export class AssetsValidator {

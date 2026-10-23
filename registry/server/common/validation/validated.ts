@@ -65,8 +65,9 @@ async function parseFilters(
     schema: z.ZodType,
     filter: unknown,
 ): Promise<{ success: true; data: unknown } | { success: false; error: string }> {
+    // A missing or empty filter means no filter
     let value: unknown = {};
-    if (filter !== undefined) {
+    if (filter !== undefined && filter !== '') {
         try {
             value = typeof filter === 'string' ? JSON.parse(filter) : filter;
         } catch {

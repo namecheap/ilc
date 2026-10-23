@@ -163,6 +163,29 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should accept numbers and booleans sent as strings', async () => {
+            let routeId;
+
+            try {
+                const response = await req
+                    .post(example.url)
+                    .send({ ...example.correct, orderPos: '122', next: 'true' })
+                    .expect(200);
+                routeId = response.body.id;
+
+                expect(response.body).to.include({ orderPos: 122, next: true });
+            } finally {
+                routeId && (await ensureDeleted(req, example.url + routeId));
+            }
+        });
+
+        it('should not create a record with an empty route', async () => {
+            await req
+                .post(example.url)
+                .send({ ...example.correct, route: '   ' })
+                .expect(422, '✖ Too small: expected string to have >=1 characters\n  → at route');
+        });
+
         it('should not create simple record due to required fields', async () => {
             let routeId;
 
@@ -618,6 +641,13 @@ describe(`Tests ${example.url}`, () => {
             const response = await req.get(example.url + 100).expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
+        });
+
+        it('should treat an empty filter as no filter', async () => {
+            const unfiltered = await req.get(example.url).expect(200);
+            const emptyFilter = await req.get(example.url).query({ filter: '' }).expect(200);
+
+            expect(emptyFilter.body).deep.equal(unfiltered.body);
         });
 
         it('should successfully return record', async () => {

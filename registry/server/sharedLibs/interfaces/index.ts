@@ -21,7 +21,7 @@ export const sharedLibsListQuerySchema = z.object({
 });
 
 export const sharedLibsFiltersSchema = z.strictObject({
-    name: z.string().optional(),
+    name: z.string().min(1).optional(),
 });
 
 const urlSchema = z.string().trim().pipe(z.url());

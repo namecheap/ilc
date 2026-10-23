@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { versionIdSchema } from '../../common/validation/schemas';
+import { numeric, versionIdSchema } from '../../common/validation/schemas';
 
 export const templateNameSchema = z.string().min(1).max(50);
 
@@ -69,9 +69,9 @@ export const templateContentSchema = z.strictObject({
 });
 
 export const templatesFiltersSchema = z.strictObject({
-    domainId: z.union([z.number(), z.literal('null')]).optional(),
-    id: z.union([z.string(), z.array(z.string())]).optional(),
-    name: z.union([z.string(), z.array(z.string())]).optional(),
+    domainId: z.union([numeric(z.number()), z.literal('null')]).optional(),
+    id: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
+    name: z.union([z.string().min(1), z.array(z.string().min(1))]).optional(),
 });
 
 export const renderedTemplateQuerySchema = z.object({

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const cspSrcValidator = z.array(z.string()).optional();
+const cspSrcValidator = z.array(z.string().min(1)).optional();
 export const cspSchema = z
     .strictObject({
         defaultSrc: cspSrcValidator,
