@@ -23,6 +23,7 @@ import { createTemplatesRouter } from './templates/routes';
 import { createSharedLibsRouter } from './sharedLibs/routes';
 import { createEntriesRouter } from './entries/entries';
 import { createAppRoutesRouter } from './appRoutes/routes';
+import { createAppsRouter } from './apps/routes';
 
 export default async (withAuth: boolean = true): Promise<Application> => {
     loadPlugins();
@@ -66,7 +67,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     }
 
     app.use('/api/v1/config', routes.config(authMw, services.config));
-    app.use('/api/v1/app', authMw, routes.apps);
+    app.use('/api/v1/app', authMw, createAppsRouter(services.apps));
     app.use('/api/v1/template', createTemplatesRouter(services.templates, authMw));
     app.use('/api/v1/route', authMw, createAppRoutesRouter(services.routes));
     app.use('/api/v1/shared_props', authMw, createSharedPropsRouter(services.sharedProps));
@@ -76,7 +77,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     app.use('/api/v1/router_domains', createRouterDomainsRouter(services.routerDomains, authMw));
     app.use('/api/v1/shared_libs', authMw, createSharedLibsRouter(services.sharedLibs));
     app.use('/api/v1/public', routes.public);
-    app.use('/api/v1/entries', authMw, createEntriesRouter(services.sharedLibs));
+    app.use('/api/v1/entries', authMw, createEntriesRouter(services.apps, services.sharedLibs));
 
     app.use(errorHandler);
 

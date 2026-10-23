@@ -2,10 +2,8 @@ import { Knex } from 'knex';
 import { User } from '../../typings/User';
 import { appRouteSchema, type RouteRow } from '../appRoutes/interfaces';
 import type { RoutesService } from '../appRoutes/services/RoutesService';
-import { App } from '../apps/interfaces';
-import { ApplicationEntry } from '../common/services/entries/ApplicationEntry';
-import { EntryFactory } from '../common/services/entries/EntryFactory';
-import { VersionedKnex } from '../db';
+import { appSchema, type AppRow } from '../apps/interfaces';
+import type { AppsService } from '../apps/services/AppsService';
 import { UnprocessableContent } from '../errorHandler/httpErrors';
 import { sharedLibSchema } from '../sharedLibs/interfaces';
 import type { SharedLibsService } from '../sharedLibs/services/SharedLibsService';
@@ -13,11 +11,10 @@ import { PG_FOREIGN_KEY_VIOLATION_CODE } from '../util/db';
 import { getJoiErr } from '../util/helpers';
 import { z } from 'zod';
 
+/** Each item is validated with the schema of its entity before it's upserted */
 type UpsertPayload = {
-    apps?: App[];
-    // Validated before upserting
+    apps?: unknown[];
     routes?: unknown[];
-    // Validated one by one while upserting
     sharedLibs?: unknown[];
 };
 
@@ -29,7 +26,8 @@ type UpsertParams = {
 
 export class ConfigService {
     constructor(
-        private readonly db: VersionedKnex,
+        private readonly db: Knex,
+        private readonly apps: AppsService,
         private readonly sharedLibs: SharedLibsService,
         private readonly routes: RoutesService,
     ) {}
@@ -38,13 +36,12 @@ export class ConfigService {
         if (!payload.apps && !payload.routes && !payload.sharedLibs) {
             throw new Error('At least one of the following parameters should be provided: apps, routes, sharedLibs');
         }
-        const appInstance = EntryFactory.getAppInstance();
 
         const trxProvider = this.db.transactionProvider();
         const trx = await trxProvider();
 
         try {
-            const upsertedApps = await this.upsertApps(payload.apps ?? [], appInstance, {
+            const upsertedApps = await this.upsertApps(payload.apps ?? [], {
                 user,
                 trxProvider,
                 dryRun,
@@ -56,7 +53,7 @@ export class ConfigService {
 
             await this.upsertSharedLibs(payload.sharedLibs ?? [], { user, trxProvider, dryRun });
             await this.deleteRoutesByNamespace(groupedRoutes, { user, trxProvider });
-            await this.deleteAppsByNamespace(groupedApps, appInstance, { user, trxProvider });
+            await this.deleteAppsByNamespace(groupedApps, { user, trxProvider });
 
             if (dryRun) {
                 await trx.rollback();
@@ -69,12 +66,12 @@ export class ConfigService {
         }
     }
 
-    private async upsertApps(
-        apps: App[],
-        appInstance: ApplicationEntry,
-        { user, trxProvider, dryRun }: UpsertParams,
-    ): Promise<App[]> {
-        return await Promise.all(apps.map((x) => appInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })));
+    private async upsertApps(apps: unknown[], { user, trxProvider, dryRun }: UpsertParams): Promise<AppRow[]> {
+        return await Promise.all(
+            apps.map(async (x) =>
+                this.apps.upsert(await parse(appSchema, x), { user, trxProvider, fetchManifest: !dryRun }),
+            ),
+        );
     }
 
     private async upsertRoutes(routes: unknown[], { user, trxProvider }: UpsertParams): Promise<RouteRow[]> {
@@ -144,14 +141,13 @@ export class ConfigService {
 
     private async deleteAppsByNamespace(
         upsertedAppsByNamespace: Record<string, string[]>,
-        appInstance: ApplicationEntry,
         { user, trxProvider }: UpsertParams,
     ): Promise<void> {
         await Promise.all(
             Object.keys(upsertedAppsByNamespace).map(
                 (namespace) =>
                     namespace &&
-                    appInstance.deleteByNamespace(namespace, upsertedAppsByNamespace[namespace], {
+                    this.apps.deleteByNamespace(namespace, upsertedAppsByNamespace[namespace], {
                         user,
                         trxProvider,
                     }),

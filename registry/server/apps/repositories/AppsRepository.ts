@@ -1,30 +1,26 @@
 import { Knex } from 'knex';
 import { PaginatedResult } from '../../../typings/PaginatedResult';
-import db, { VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
-import { appendDigest } from '../../util/hmac';
 import { normalizeArray } from '../../util/normalizeArray';
-import { EntityTypes } from '../../versioning/interfaces';
-import { App } from '../interfaces';
+import { EntityTypes, type VersionedRecord } from '../../versioning/interfaces';
+import type { Versioning } from '../../versioning/services/Versioning';
+import type { AppRow, AppsFilters } from '../interfaces';
 
-export interface AppsGetListFilters {
-    q?: string;
-    kind?: string | string[];
-    name?: string[];
-    id?: string[];
-    domainId?: number | 'null';
-}
-
-interface AppsGetListOptions {
-    range?: string;
-}
+export type AppInsert = Omit<
+    AppRow,
+    'assetsDiscoveryUpdatedAt' | 'spaBundle' | 'cssBundle' | 'adminNotes' | 'l10nManifest'
+> &
+    Partial<Pick<AppRow, 'spaBundle' | 'cssBundle' | 'adminNotes' | 'l10nManifest'>>;
+export type AppUpdate = Partial<Omit<AppRow, 'name' | 'assetsDiscoveryUpdatedAt'>>;
 
 export class AppsRepository {
-    constructor(private readonly db: VersionedKnex) {}
+    constructor(
+        private readonly db: Knex,
+        private readonly versioning: Versioning,
+    ) {}
 
-    async getList(filters: AppsGetListFilters, options: AppsGetListOptions): Promise<PaginatedResult<App>> {
-        const { db } = this;
-        const query = db.selectVersionedRowsFrom(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]);
+    async getList(filters: AppsFilters, range: string | undefined): Promise<PaginatedResult<VersionedRecord<AppRow>>> {
+        const query = this.selectVersioned();
 
         this.addFilterByName(query, filters);
         this.addFilterByKind(query, filters);
@@ -33,21 +29,53 @@ export class AppsRepository {
 
         query.orderBy(`${Tables.Apps}.name`, 'asc');
 
-        const apps = await query.range(options.range as string | undefined);
-        const itemsWithId = apps.data.map((item: any) => {
-            return {
-                ...item,
-                versionId: appendDigest(item.versionId, 'app'),
-            };
-        });
-
-        return {
-            data: itemsWithId,
-            pagination: apps.pagination,
-        };
+        return query.range(range);
     }
 
-    private addFilterByName(query: Knex.QueryBuilder, filters: AppsGetListFilters) {
+    async findByName(name: string): Promise<VersionedRecord<AppRow> | undefined> {
+        const [row] = await this.selectVersioned().where(`${Tables.Apps}.name`, name);
+        return row;
+    }
+
+    async findKind(name: string): Promise<AppRow['kind'] | undefined> {
+        const app = await this.db(Tables.Apps).where({ name }).first('kind');
+        return app?.kind;
+    }
+
+    async findNamesByNamespace(namespace: string, excludeNames: string[], trx: Knex.Transaction): Promise<string[]> {
+        const apps = await trx(Tables.Apps).where({ namespace }).whereNotIn('name', excludeNames).select('name');
+        return apps.map((app) => app.name);
+    }
+
+    async insert(app: AppInsert, trx: Knex.Transaction): Promise<AppRow> {
+        const [row] = await trx(Tables.Apps).insert(app).returning('*');
+        return row;
+    }
+
+    /** Insert, or replace the app with the same name in the namespace */
+    async upsert(app: AppInsert, trx: Knex.Transaction): Promise<AppRow> {
+        const [row] = await trx(Tables.Apps)
+            .insert(app)
+            .onConflict(this.db.raw('(name, namespace) WHERE namespace IS NOT NULL'))
+            .merge()
+            .returning('*');
+        return row;
+    }
+
+    async update(name: string, app: AppUpdate, trx: Knex.Transaction): Promise<AppRow | undefined> {
+        const [row] = await trx(Tables.Apps).where({ name }).update(app).returning('*');
+        return row;
+    }
+
+    async delete(name: string, trx: Knex.Transaction): Promise<number> {
+        return trx(Tables.Apps).where({ name }).delete();
+    }
+
+    private selectVersioned() {
+        return this.versioning.versionedSelect(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]);
+    }
+
+    private addFilterByName(query: Knex.QueryBuilder, filters: AppsFilters) {
         if (!filters.name && !filters.id) {
             return;
         }
@@ -56,7 +84,7 @@ export class AppsRepository {
         }
     }
 
-    private addFilterByKind(query: Knex.QueryBuilder, filters: AppsGetListFilters) {
+    private addFilterByKind(query: Knex.QueryBuilder, filters: AppsFilters) {
         if (!filters.kind) {
             return;
         }
@@ -67,14 +95,14 @@ export class AppsRepository {
         query.whereIn(`${Tables.Apps}.kind`, kind);
     }
 
-    private addFilterByQuery(query: Knex.QueryBuilder, filters: AppsGetListFilters) {
+    private addFilterByQuery(query: Knex.QueryBuilder, filters: AppsFilters) {
         if (!filters.q) {
             return;
         }
         query.where(`${Tables.Apps}.name`, 'like', `%${filters.q}%`);
     }
 
-    private addFilterByDomainId(query: Knex.QueryBuilder, filters: AppsGetListFilters) {
+    private addFilterByDomainId(query: Knex.QueryBuilder, filters: AppsFilters) {
         const { db } = this;
 
         if (!filters.domainId) {
@@ -105,6 +133,3 @@ export class AppsRepository {
         }
     }
 }
-
-// TODO: implement factory and IoC Container
-export const appsRepository = new AppsRepository(db);

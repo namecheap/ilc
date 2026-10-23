@@ -1,6 +1,6 @@
 import { type Knex } from 'knex';
 import { RouteRow, RouteSlotRow } from '../../server/appRoutes/interfaces';
-import { App } from '../../server/apps/interfaces';
+import { AppRow } from '../../server/apps/interfaces';
 import { DomainSetting, SettingRaw } from '../../server/settings/interfaces';
 import { SharedLibRow } from '../../server/sharedLibs/interfaces';
 import { LocalizedTemplateRow, TemplateRow } from '../../server/templates/interfaces';
@@ -12,7 +12,11 @@ type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
 
 declare module 'knex/types/tables' {
     interface Tables {
-        apps: Knex.CompositeTableType<App>;
+        apps: Knex.CompositeTableType<
+            AppRow,
+            Optional<AppRow, Exclude<keyof AppRow, 'name'>>,
+            Partial<Omit<AppRow, 'name'>>
+        >;
         // domainIdIdxble is generated from domainId
         routes: Knex.CompositeTableType<
             RouteRow,

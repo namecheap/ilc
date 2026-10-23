@@ -122,7 +122,7 @@ describe(`Tests ${example.url}`, () => {
             const response = await req
                 .post(example.url)
                 .send(_.omit(example.correct, ['name', 'spaBundle']))
-                .expect(422, '"name" is required');
+                .expect(422, '✖ Invalid input: expected string, received undefined\n  → at name');
             expect(response.body).deep.equal({});
         });
 
@@ -149,17 +149,17 @@ describe(`Tests ${example.url}`, () => {
                 })
                 .expect(422);
             expect(response.text).to.equal(
-                '"spaBundle" must be a string\n' +
-                    '"cssBundle" must be a string\n' +
-                    '"assetsDiscoveryUrl" must be a string\n' +
-                    '"dependencies" must be of type object\n' +
-                    '"props" must be of type object\n' +
-                    '"configSelector" must be an array\n' +
-                    '"ssr" must be of type object\n' +
-                    '"discoveryMetadata" must be of type object\n' +
-                    '"adminNotes" must be a string\n' +
-                    '"enforceDomain" must be a number\n' +
-                    '"name" must be a string',
+                '✖ Invalid input: expected string, received number\n  → at spaBundle\n' +
+                    '✖ Invalid input: expected string, received number\n  → at cssBundle\n' +
+                    '✖ Invalid input: expected string, received number\n  → at assetsDiscoveryUrl\n' +
+                    '✖ Invalid input: expected record, received number\n  → at dependencies\n' +
+                    '✖ Invalid input: expected record, received number\n  → at props\n' +
+                    '✖ Invalid input: expected array, received number\n  → at configSelector\n' +
+                    '✖ Invalid input: expected object, received number\n  → at ssr\n' +
+                    '✖ Invalid input: expected record, received number\n  → at discoveryMetadata\n' +
+                    '✖ Invalid input: expected string, received number\n  → at adminNotes\n' +
+                    '✖ Invalid input: expected number, received string\n  → at enforceDomain\n' +
+                    '✖ Invalid input: expected string, received number\n  → at name',
             );
             expect(response.body).deep.equal({});
 
@@ -804,7 +804,7 @@ describe(`Tests ${example.url}`, () => {
 
             expect(response.body).to.have.property('error');
             expect(response.body.error).to.be.a('string');
-            expect(response.body.error).to.equal('"domainId" must be one of [number, null]');
+            expect(response.body.error).to.equal('✖ Invalid input\n  → at domainId');
         });
 
         describe('Authentication / Authorization', () => {
@@ -837,7 +837,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .put(example.url + example.encodedName)
                     .send(example.updated)
-                    .expect(422, '"name" is not allowed');
+                    .expect(422, '✖ Unrecognized key: "name"');
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -871,17 +871,17 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(
                         422,
-                        '"spaBundle" must be a string\n' +
-                            '"cssBundle" must be a string\n' +
-                            '"assetsDiscoveryUrl" must be a string\n' +
-                            '"dependencies" must be of type object\n' +
-                            '"props" must be of type object\n' +
-                            '"configSelector" must be an array\n' +
-                            '"ssr" must be of type object\n' +
-                            '"kind" must be one of [primary, essential, regular, wrapper]\n' +
-                            '"discoveryMetadata" must be of type object\n' +
-                            '"adminNotes" must be a string\n' +
-                            '"enforceDomain" must be a number',
+                        '✖ Invalid input: expected string, received number\n  → at spaBundle\n' +
+                            '✖ Invalid input: expected string, received number\n  → at cssBundle\n' +
+                            '✖ Invalid input: expected string, received number\n  → at assetsDiscoveryUrl\n' +
+                            '✖ Invalid input: expected record, received number\n  → at dependencies\n' +
+                            '✖ Invalid input: expected record, received number\n  → at props\n' +
+                            '✖ Invalid input: expected array, received number\n  → at configSelector\n' +
+                            '✖ Invalid input: expected object, received number\n  → at ssr\n' +
+                            '✖ Invalid option: expected one of "primary"|"essential"|"regular"|"wrapper"\n  → at kind\n' +
+                            '✖ Invalid input: expected record, received number\n  → at discoveryMetadata\n' +
+                            '✖ Invalid input: expected string, received number\n  → at adminNotes\n' +
+                            '✖ Invalid input: expected number, received string\n  → at enforceDomain',
                     );
                 expect(response.body).deep.equal({});
             } finally {

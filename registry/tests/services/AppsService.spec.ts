@@ -1,5 +1,10 @@
 import path from 'node:path';
-import { ApplicationEntry } from '../../server/common/services/entries/ApplicationEntry';
+import { appSchema } from '../../server/apps/interfaces';
+import { AppsRepository } from '../../server/apps/repositories/AppsRepository';
+import { AppsService } from '../../server/apps/services/AppsService';
+import { RouterDomainsRepository } from '../../server/routerDomains/repositories/RouterDomainsRepository';
+import versioningConfig from '../../server/versioning/config';
+import { Versioning } from '../../server/versioning/services/Versioning';
 import { VersionedKnex } from '../../server/db';
 import { Tables } from '../../server/db/structure';
 import { User } from '../../typings/User';
@@ -20,23 +25,29 @@ const user: User = Object.freeze({
     role: 'testUser',
 });
 
-describe('ApplicationEntry', () => {
+describe('AppsService', () => {
     let db: VersionedKnex;
     let reset: () => Promise<void>;
+    let service: AppsService;
     before(async () => {
         ({ db, reset } = await dbFactory());
         await db.migrate.latest({
             directory: path.join(__dirname, '../../server/migrations'),
         });
+        const versioning = new Versioning(versioningConfig, db);
+        service = new AppsService(
+            new AppsRepository(db, versioning),
+            new RouterDomainsRepository(db, versioning),
+            versioning,
+        );
     });
     after(async () => {
         await reset();
     });
     describe('upsert', () => {
         it('should create item', async () => {
-            const service = new ApplicationEntry(db);
             const trxProvider = db.transactionProvider();
-            await service.upsert({ ...appPayload, name: '@portal/upsert1' }, { user, trxProvider });
+            await service.upsert(appSchema.parse({ ...appPayload, name: '@portal/upsert1' }), { user, trxProvider });
             const trx = await trxProvider();
             await trx.commit();
             const app = await db(Tables.Apps).first().where({ name: '@portal/upsert1' });
@@ -50,9 +61,8 @@ describe('ApplicationEntry', () => {
         });
         it('should update item', async () => {
             await db(Tables.Apps).insert({ name: '@portal/upsert2', kind: 'regular', namespace: 'ns1' });
-            const service = new ApplicationEntry(db);
             const trxProvider = db.transactionProvider();
-            await service.upsert({ ...appPayload, name: '@portal/upsert2' }, { user, trxProvider });
+            await service.upsert(appSchema.parse({ ...appPayload, name: '@portal/upsert2' }), { user, trxProvider });
             const trx = await trxProvider();
             await trx.commit();
             const app = await db(Tables.Apps).first().where({ name: '@portal/upsert2' });
@@ -76,18 +86,17 @@ describe('ApplicationEntry', () => {
                 cssBundle: 'existing',
                 adminNotes: 'existing',
                 assetsDiscoveryUrl: 'existing',
-                dependencies: '{"a": 1}',
-                props: '{"a": 1}',
-                ssrProps: '{"a": 1}',
-                discoveryMetadata: '{"a": 1}',
+                dependencies: { a: 1 },
+                props: { a: 1 },
+                ssrProps: { a: 1 },
+                discoveryMetadata: { a: 1 },
                 enforceDomain: 1,
-                ssr: '{"src": "http://localhost/ssr", "timeout": 100}',
+                ssr: { src: 'http://localhost/ssr', timeout: 100 },
                 configSelector: '["react"]',
                 wrappedWith: '@portal/upsert1',
             });
-            const service = new ApplicationEntry(db);
             const trxProvider = db.transactionProvider();
-            await service.upsert({ name: '@portal/upsert6', namespace: 'ns1' }, { user, trxProvider });
+            await service.upsert(appSchema.parse({ name: '@portal/upsert6', namespace: 'ns1' }), { user, trxProvider });
             const trx = await trxProvider();
             await trx.commit();
             const app = await db(Tables.Apps).first().where({ name: '@portal/upsert6' });
@@ -112,9 +121,11 @@ describe('ApplicationEntry', () => {
         });
         it('should cancel upsert', async () => {
             await db(Tables.Apps).insert({ name: '@portal/upsert3', kind: 'regular', namespace: 'ns1' });
-            const service = new ApplicationEntry(db);
             const trxProvider = db.transactionProvider();
-            await service.upsert({ ...appPayload, name: '@portal/upsert3', kind: 'primary' }, { user, trxProvider });
+            await service.upsert(appSchema.parse({ ...appPayload, name: '@portal/upsert3', kind: 'primary' }), {
+                user,
+                trxProvider,
+            });
             const trx = await trxProvider();
             await trx.rollback();
             const app = await db(Tables.Apps).first().where({ name: '@portal/upsert3' });
@@ -126,27 +137,17 @@ describe('ApplicationEntry', () => {
                 ssr: null,
             });
         });
-        it('should throw on validation error', async () => {
-            const service = new ApplicationEntry(db);
-            const trxProvider = db.transactionProvider();
-            await expect(
-                service.upsert(
-                    { ...appPayload, name: '@portal/upsert4', kind: 'unknown', namespace: 'ns1' },
-                    { user, trxProvider },
-                ),
-            ).eventually.rejectedWith('"kind" must be one of [primary, essential, regular, wrapper]');
-            const trx = await trxProvider();
-            await trx.rollback();
-            const app = await db(Tables.Apps).first().where({ name: '@portal/upsert4' });
-            expect(app).to.undefined;
+        it('should leave invalid input to the schema, which rejects it', async () => {
+            expect(() =>
+                appSchema.parse({ ...appPayload, name: '@portal/upsert4', kind: 'unknown', namespace: 'ns1' }),
+            ).to.throw('Invalid option');
         });
         it('should throw on constraint fail', async () => {
             await db(Tables.Apps).insert({ name: '@portal/upsert4', kind: 'regular', namespace: 'ns1' });
-            const service = new ApplicationEntry(db);
             const trxProvider = db.transactionProvider();
             await expect(
                 service.upsert(
-                    { ...appPayload, name: '@portal/upsert4', kind: 'primary', namespace: 'ns2' },
+                    appSchema.parse({ ...appPayload, name: '@portal/upsert4', kind: 'primary', namespace: 'ns2' }),
                     { user, trxProvider },
                 ),
             ).eventually.rejectedWith('duplicate key value violates unique constraint');
@@ -165,7 +166,6 @@ describe('ApplicationEntry', () => {
             await db(Tables.Apps).insert({ name: '@portal/upsert5', kind: 'regular', namespace: 'ns1' });
             await db(Tables.Apps).insert({ name: '@portal/upsert5_1', kind: 'regular', namespace: 'ns1' });
             await db(Tables.Apps).insert({ name: '@portal/upsert5_2', kind: 'regular', namespace: 'ns2' });
-            const service = new ApplicationEntry(db);
             const trxProvider = db.transactionProvider();
             await service.deleteByNamespace('ns1', ['@portal/upsert5_1'], { user, trxProvider });
             const trx = await trxProvider();

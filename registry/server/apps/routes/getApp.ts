@@ -1,40 +1,22 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { markProtected } from '../../common/services/protectedEntities';
-import validateRequestFactory from '../../common/services/validateRequest';
-import { appNameSchema } from '../interfaces';
-import { Tables } from '../../db/structure';
+import { validated } from '../../common/validation/validated';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
+import { appParamsSchema } from '../interfaces';
+import type { AppsService } from '../services/AppsService';
 
-type GetAppRequestParams = {
-    name: string;
-};
+export function getApp(service: AppsService): RequestHandler {
+    return validated({ params: appParamsSchema }, async ({ params }, req, res) => {
+        const app = await service.get(params.name);
 
-const validateRequestBeforeGetApp = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: appNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-]);
-
-const getApp = async (req: Request<GetAppRequestParams>, res: Response): Promise<void> => {
-    const appName = req.params.name;
-    const [app] = await db
-        .selectVersionedRowsFrom(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`])
-        .where('name', appName);
-
-    if (!app) {
-        res.status(404).send('Not found');
-    } else {
-        app.versionId = appendDigest(app.versionId, 'app');
-        res.status(200).send(preProcessResponse(markProtected(EntityTypes.apps, app)));
-    }
-};
-
-export default [validateRequestBeforeGetApp, getApp];
+        if (!app) {
+            res.status(404).send('Not found');
+        } else {
+            const appWithId = { ...app, versionId: appendDigest(app.versionId, 'app') };
+            res.status(200).send(preProcessResponse(markProtected(EntityTypes.apps, appWithId)));
+        }
+    });
+}

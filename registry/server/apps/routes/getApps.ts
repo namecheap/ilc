@@ -1,30 +1,24 @@
-import { Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { markProtected } from '../../common/services/protectedEntities';
-import { filtersMiddleware, RequestWithFilters } from '../../middleware/filters';
+import { validated } from '../../common/validation/validated';
+import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
-import { AppsGetListFilters, appsRepository } from '../repositories/AppsRepository';
+import { appsFiltersSchema, appsListQuerySchema } from '../interfaces';
+import type { AppsService } from '../services/AppsService';
 
-const filtersSchema = Joi.object<AppsGetListFilters>({
-    q: Joi.string().optional(),
-    kind: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())),
-    name: Joi.array().items(Joi.string()),
-    id: Joi.array().items(Joi.string()),
-    domainId: Joi.alternatives(Joi.number(), Joi.string().valid('null')),
-});
+export function getApps(service: AppsService): RequestHandler {
+    return validated(
+        { filters: appsFiltersSchema, query: appsListQuerySchema },
+        async ({ filters, query }, req, res) => {
+            const { data, pagination } = await service.list(filters, query.range);
+            const itemsWithId = data.map((item) => {
+                return { ...item, versionId: appendDigest(item.versionId, 'app') };
+            });
 
-const getApps = async (req: RequestWithFilters<AppsGetListFilters>, res: Response): Promise<void> => {
-    const filters = req.filters ?? {};
-
-    const { data, pagination } = await appsRepository.getList(filters, {
-        // TODO: add a vlidating middleware to make sure it's a valid range
-        range: req.query.range as string | undefined,
-    });
-
-    res.setHeader('Content-Range', pagination.total); //Stub for future pagination capabilities
-    res.status(200).send(preProcessResponse(markProtected(EntityTypes.apps, data)));
-};
-
-export default [filtersMiddleware(filtersSchema), getApps];
+            res.setHeader('Content-Range', pagination.total); //Stub for future pagination capabilities
+            res.status(200).send(preProcessResponse(markProtected(EntityTypes.apps, itemsWithId)));
+        },
+    );
+}

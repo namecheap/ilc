@@ -375,7 +375,9 @@ describe('Tests /api/v1/config', () => {
                 })
                 .expect(200, {
                     valid: false,
-                    details: '"props" must be of type object',
+                    details:
+                        '✖ Invalid input: expected record, received number\n  → at props\n' +
+                        '✖ Invalid input: expected string, received undefined\n  → at name',
                 });
         });
         it('should fail on duplicate orderPos', async () => {

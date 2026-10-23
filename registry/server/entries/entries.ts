@@ -2,7 +2,6 @@ import express, { Request, Response, Router } from 'express';
 import Joi from 'joi';
 import { z } from 'zod';
 import type { User } from '../../typings/User';
-import { EntryFactory } from '../common/services/entries/EntryFactory';
 import { IncorrectEntryError } from '../common/services/entries/error/IncorrectEntryError';
 import { NotFoundFqrnError } from '../common/services/entries/error/NotFoundFqrnError';
 import preProcessResponse from '../common/services/preProcessResponse';
@@ -10,12 +9,15 @@ import { ValidationFqrnError } from '../common/services/entries/error/Validation
 import { joiErrorToResponse } from '../util/helpers';
 import { AssetsManifestError } from '../common/services/assets/errors/AssetsManifestError';
 import { UnprocessableContent } from '../errorHandler/httpErrors';
+import { partialAppSchema } from '../apps/interfaces';
+import type { AppsService } from '../apps/services/AppsService';
 import { partialSharedLibSchema } from '../sharedLibs/interfaces';
 import type { SharedLibsService } from '../sharedLibs/services/SharedLibsService';
 
 const SHARED_LIB_PREFIX = '@sharedLibrary/';
+const APP_PREFIX = '@portal/';
 
-export function createEntriesRouter(sharedLibs: SharedLibsService): Router {
+export function createEntriesRouter(apps: AppsService, sharedLibs: SharedLibsService): Router {
     const EntriesRouter = express.Router();
 
     EntriesRouter.patch('/:fqrn', async (request: Request<{ fqrn: string }>, response: Response) => {
@@ -24,7 +26,7 @@ export function createEntriesRouter(sharedLibs: SharedLibsService): Router {
         let entryService;
 
         try {
-            entryService = getEntry(fqrn, sharedLibs);
+            entryService = getEntry(fqrn, apps, sharedLibs);
         } catch (error) {
             if (error instanceof IncorrectEntryError) {
                 return response.status(error.code).send(error.message);
@@ -55,21 +57,33 @@ export function createEntriesRouter(sharedLibs: SharedLibsService): Router {
     return EntriesRouter;
 }
 
-function getEntry(fqrn: string, sharedLibs: SharedLibsService) {
-    if (!fqrn.startsWith(SHARED_LIB_PREFIX)) {
-        return EntryFactory.getFqrnInstance(fqrn);
+function getEntry(fqrn: string, apps: AppsService, sharedLibs: SharedLibsService) {
+    if (fqrn.startsWith(SHARED_LIB_PREFIX)) {
+        // The prefix is not part of the shared library name
+        const name = fqrn.substring(SHARED_LIB_PREFIX.length);
+        return {
+            async patch(params: unknown, { user }: { user?: User }) {
+                return sharedLibs.update(name, await parse(partialSharedLibSchema, params), user);
+            },
+        };
     }
 
-    // The prefix is not part of the shared library name
-    const name = fqrn.substring(SHARED_LIB_PREFIX.length);
+    if (fqrn.startsWith(APP_PREFIX)) {
+        // App names keep the prefix
+        return {
+            async patch(params: unknown, { user }: { user?: User }) {
+                return apps.patch(fqrn, await parse(partialAppSchema, params), user);
+            },
+        };
+    }
 
-    return {
-        async patch(params: unknown, { user }: { user?: User }) {
-            const result = await partialSharedLibSchema.safeParseAsync(params);
-            if (!result.success) {
-                throw new UnprocessableContent({ message: z.prettifyError(result.error) });
-            }
-            return sharedLibs.update(name, result.data, user);
-        },
-    };
+    throw new IncorrectEntryError(fqrn);
+}
+
+async function parse<T extends z.ZodType>(schema: T, value: unknown): Promise<z.output<T>> {
+    const result = await schema.safeParseAsync(value);
+    if (!result.success) {
+        throw new UnprocessableContent({ message: z.prettifyError(result.error) });
+    }
+    return result.data;
 }

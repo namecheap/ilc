@@ -1,35 +1,13 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
-import * as httpErrors from '../../errorHandler/httpErrors';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
-import validateRequestFactory from '../../common/services/validateRequest';
-import { appNameSchema } from '../interfaces';
+import { validated } from '../../common/validation/validated';
+import { appParamsSchema } from '../interfaces';
+import type { AppsService } from '../services/AppsService';
 
-type DeleteAppRequestParams = {
-    name: string;
-};
+export function deleteApp(service: AppsService): RequestHandler {
+    return validated({ params: appParamsSchema }, async ({ params }, req, res) => {
+        await service.delete(params.name, req.user);
 
-const validateRequestBeforeDeleteApp = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: appNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-]);
-
-const deleteApp = async (req: Request<DeleteAppRequestParams>, res: Response): Promise<void> => {
-    const appName = req.params.name;
-
-    await db.versioning(req.user, { type: 'apps', id: appName }, async (trx) => {
-        const count = await db('apps').where('name', appName).delete().transacting(trx);
-        if (!count) {
-            throw new httpErrors.NotFoundError();
-        }
+        res.status(204).send();
     });
-
-    res.status(204).send();
-};
-
-export default [validateRequestBeforeDeleteApp, deleteApp];
+}

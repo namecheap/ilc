@@ -1,5 +1,5 @@
 import { merge, omitBy, pick } from 'lodash';
-import { App } from '../apps/interfaces';
+import type { AppRow } from '../apps/interfaces';
 import { parseJSON } from '../common/services/json';
 import { appendDigest } from '../util/hmac';
 import { VersionedRecord } from '../versioning/interfaces';
@@ -9,7 +9,7 @@ import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transfo
 import type { SharedLibRow } from '../sharedLibs/interfaces';
 
 type Dict = Record<string, any>;
-type TransformedApp = VersionedRecord<Omit<App, 'enforceDomain'>> & {
+type TransformedApp = VersionedRecord<Omit<AppRow, 'enforceDomain'>> & {
     ssr: Dict | null;
     dependencies: Dict | null;
     discoveryMetadata: Dict | null;
@@ -38,7 +38,7 @@ export type AppDto = Pick<
  * TODO change type of sharedProps to actual
  */
 export function transformApps(
-    apps: VersionedRecord<App>[],
+    apps: VersionedRecord<AppRow>[],
     routerDomains: RouterDomainsRow[],
     sharedProps: any[],
     domainName?: string,

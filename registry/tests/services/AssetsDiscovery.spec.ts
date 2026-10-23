@@ -167,7 +167,7 @@ describe('AssetsDiscovery', () => {
             cssBundle: 'oldStyle.css',
             assetsDiscoveryUpdatedAt: null,
             kind: 'regular',
-            props: propsJson,
+            props: appProps,
         });
 
         assetsDiscovery.start(200);
@@ -203,7 +203,7 @@ describe('AssetsDiscovery', () => {
             cssBundle: 'oldStyle.css',
             assetsDiscoveryUpdatedAt: null,
             kind: 'regular',
-            props: JSON.stringify({}), // Empty props object
+            props: {}, // Empty props object
         });
 
         assetsDiscovery.start(200);
