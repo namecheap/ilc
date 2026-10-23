@@ -879,8 +879,8 @@ describe(`Tests ${example.url}`, () => {
                 let receivedHeader: string | undefined;
                 nock(includesHost)
                     .get('/include')
-                    .reply(function () {
-                        receivedHeader = this.req.headers['x-forwarded-for'] as string | undefined;
+                    .reply((request: Request) => {
+                        receivedHeader = request.headers.get('x-forwarded-for') ?? undefined;
                         return [200, includeContent];
                     });
 
@@ -925,9 +925,9 @@ describe(`Tests ${example.url}`, () => {
                 let receivedBlocked: string | undefined;
                 nock(includesHost)
                     .get('/include')
-                    .reply(function () {
-                        receivedAllowed = this.req.headers['x-allowed'] as string | undefined;
-                        receivedBlocked = this.req.headers['x-blocked'] as string | undefined;
+                    .reply((request: Request) => {
+                        receivedAllowed = request.headers.get('x-allowed') ?? undefined;
+                        receivedBlocked = request.headers.get('x-blocked') ?? undefined;
                         return [200, includeContent];
                     });
 
@@ -972,8 +972,8 @@ describe(`Tests ${example.url}`, () => {
                 let receivedCustomHeader: string | undefined;
                 nock(includesHost)
                     .get('/include')
-                    .reply(function () {
-                        receivedCustomHeader = this.req.headers['x-custom'] as string | undefined;
+                    .reply((request: Request) => {
+                        receivedCustomHeader = request.headers.get('x-custom') ?? undefined;
                         return [200, includeContent];
                     });
 

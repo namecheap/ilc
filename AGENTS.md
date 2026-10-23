@@ -90,3 +90,5 @@ Registry tests (`registry/tests`) drive the HTTP API with supertest. Cleanups in
 - User-facing docs live in `docs/` (MkDocs, `mkdocs.yml`).
 - Currently there is mixed codebase of typescript and javascript, but we're in progress into full migration to the typescript. Convert files to TS if reasonable
 - Don't expose any internal infra details like urls, credentials, plugins, etc
+- Avoid breaking changes for consumers unless the author asks for them
+- Ensure there is a migration if database schema changed
