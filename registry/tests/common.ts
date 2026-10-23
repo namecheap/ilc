@@ -4,7 +4,7 @@ import type { Knex } from 'knex';
 import supertest, { type Agent } from 'supertest';
 import app from '../server/app';
 import { createServices } from '../server/composition';
-import appDb, { dbFactory as dbFactoryOrig, knexConfig } from '../server/db';
+import { dbFactory as dbFactoryOrig, knexConfig } from '../server/db';
 
 /**
  * Deletes a record in a test cleanup. Fails when the record is neither deleted nor already absent,
@@ -20,11 +20,15 @@ export async function ensureDeleted(req: Agent, url: string): Promise<void> {
     }
 }
 
-export const request = async () => supertest(await app(false));
+/** The connection the app under test uses, for tests that read or write the database directly */
+export const db = dbFactoryOrig(knexConfig);
+const appDb = db;
+
+export const request = async () => supertest(await app(appDb, false));
 
 /** Built the way the app builds it, for tests that read or change settings directly */
 export const settingsService = createServices(appDb).settings;
-export const requestWithAuth = async () => supertest(await app(true));
+export const requestWithAuth = async () => supertest(await app(appDb, true));
 
 /**
  * Creates an empty database next to the app one, for tests that run migrations and seeds on their own.

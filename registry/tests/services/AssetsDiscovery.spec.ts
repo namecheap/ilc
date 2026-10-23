@@ -1,8 +1,7 @@
 import AssetsDiscovery from '../../server/common/services/assets/AssetsDiscovery';
-import { expect } from '../common';
+import { db, expect } from '../common';
 import axios from 'axios';
 import sinon from 'sinon';
-import db from '../../server/db';
 import { waitFor } from '../utils/wait';
 
 describe('AssetsDiscovery', () => {
@@ -10,7 +9,7 @@ describe('AssetsDiscovery', () => {
 
     beforeEach(() => {
         sinon.stub(axios, 'get');
-        assetsDiscovery = new AssetsDiscovery('apps');
+        assetsDiscovery = new AssetsDiscovery(db, 'apps');
     });
 
     afterEach(async () => {
@@ -21,7 +20,7 @@ describe('AssetsDiscovery', () => {
 
     it('should not schedule a new iteration when stopped during an iteration', async () => {
         // a negative interval keeps the app due for a refresh, so every iteration requests its assets
-        const discovery = new AssetsDiscovery('apps', { intervalSeconds: -10 });
+        const discovery = new AssetsDiscovery(db, 'apps', { intervalSeconds: -10 });
         const axiosGet = axios.get as sinon.SinonStub;
         let finishRequest: (value: unknown) => void = () => {};
         axiosGet.onFirstCall().returns(new Promise((resolve) => (finishRequest = resolve)));

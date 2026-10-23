@@ -11,7 +11,6 @@ import sinon from 'sinon';
 import supertest, { agent as supertestAgent, type Agent } from 'supertest';
 import { OPENID_CALLBACK_URL, useAuth } from '../server/auth';
 import { OpenIdService } from '../server/auth/services/OpenIdService';
-import db from '../server/db';
 import { SettingKeys } from '../server/settings/interfaces';
 import { getLogger } from '../server/util/logger';
 import { loadPlugins } from '../server/util/pluginManager';
@@ -20,7 +19,7 @@ import { privateKey } from './data/auth/rsa';
 import token, { generateIdToken } from './data/auth/token-response';
 import { muteConsole, unmuteConsole } from './utils/console';
 import { unless } from '../server/middleware/unless';
-import { settingsService } from './common';
+import { db, settingsService } from './common';
 
 const generateResp403 = (username: string) => ({
     message: `Access denied. "${username}" has "readonly" access.`,
@@ -34,6 +33,7 @@ const getApp = async () => {
     app.use(
         await useAuth(
             app,
+            db,
             new OpenIdService(settingsService),
             {
                 session: { secret: 'testSecret' },

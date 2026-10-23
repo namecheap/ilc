@@ -1,6 +1,5 @@
 import _ from 'lodash';
-import { ensureDeleted, expect, request, requestWithAuth } from './common';
-import db from '../server/db';
+import { db, ensureDeleted, expect, request, requestWithAuth } from './common';
 import { makeSpecialRoute } from '../server/appRoutes/services/transformSpecialRoutes';
 import supertest from 'supertest';
 

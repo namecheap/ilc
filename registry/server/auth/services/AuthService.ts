@@ -2,7 +2,6 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../../../typings/User';
 import { AuthProviders } from '../../authEntities/interfaces';
 import type { Knex } from 'knex';
-import db from '../../db';
 
 export class AuthService {
     constructor(private readonly db: Knex) {}
@@ -43,5 +42,3 @@ export class AuthService {
         };
     }
 }
-
-export const authService = new AuthService(db);

@@ -21,8 +21,7 @@ rangeExtender(knex);
 syncSequencePlugin(knex);
 cascadeTruncatePlugin(knex);
 
+/** Each entry point creates its connection pool once and passes it on */
 export function dbFactory(conf: Knex.Config): Knex {
     return knex(conf);
 }
-
-export default dbFactory(knexConfig);

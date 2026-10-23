@@ -2,6 +2,7 @@ import sinon, { SinonSpy } from 'sinon';
 import supertest from 'supertest';
 
 import createApplication from '../server/app';
+import { db } from './common';
 import { getLogger } from '../server/util/logger';
 import { getPluginManagerInstance, loadPlugins } from '../server/util/pluginManager';
 
@@ -9,7 +10,7 @@ import type { Handler } from 'express';
 import { extendError } from '../server/util/extendError';
 
 async function runScenario(handler: Handler) {
-    const app = await createApplication(true);
+    const app = await createApplication(db, true);
     app.get('/test', handler);
     const request = supertest.agent(app);
 

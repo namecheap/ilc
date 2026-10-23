@@ -3,9 +3,9 @@ import { expect } from 'chai';
 
 import { AuthService } from '../server/auth/services/AuthService';
 import { AuthProviders } from '../server/authEntities/interfaces';
-import db from '../server/db';
 import { extractInsertedId } from '../server/util/db';
 import { EntityTypes } from '../server/versioning/interfaces';
+import { db } from './common';
 
 describe('AuthService', () => {
     let authService: AuthService;

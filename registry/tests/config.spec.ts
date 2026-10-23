@@ -2,9 +2,8 @@ import _ from 'lodash';
 import { type Agent } from 'supertest';
 
 import nock from 'nock';
-import db from '../server/db';
 import { OnPropsUpdateValues, SettingKeys, TrailingSlashValues } from '../server/settings/interfaces';
-import { ensureDeleted, expect, request, requestWithAuth } from './common';
+import { db, ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const templateName = 'ncTestTemplateName';
 const example = {

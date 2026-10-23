@@ -12,7 +12,7 @@ import { logConnectionString } from './util/db';
 import { getLogger } from './util/logger';
 import { OpenIdService } from './auth/services/OpenIdService';
 import { unless } from './middleware/unless';
-import db from './db';
+import type { Knex } from 'knex';
 import { createServices } from './composition';
 import { createSharedPropsRouter } from './sharedProps/routes';
 import { createVersioningRouter } from './versioning/routes';
@@ -26,7 +26,7 @@ import { createAppsRouter } from './apps/routes';
 import { createSettingsRouter } from './settings/routes';
 import { createPublicRouter } from './public/routes';
 
-export default async (withAuth: boolean = true): Promise<Application> => {
+export default async (db: Knex, withAuth: boolean = true): Promise<Application> => {
     loadPlugins();
     logConnectionString();
     // As in production there can be 2+ instances of the ILC registry
@@ -56,6 +56,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
         const openIdService = new OpenIdService(services.settings);
         authMw = await useAuth(
             app,
+            db,
             openIdService,
             {
                 session: {
