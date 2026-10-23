@@ -12,6 +12,16 @@ export type RouteUpdate = Partial<RouteInsert>;
 export type RouteSlotInsert = Omit<RouteSlotRow, 'id'>;
 export type RouteListRow = VersionedRecord<RouteRow & { routeId: number }>;
 
+/** The columns of RouteWithSlotRow, the slot's are named so they don't overwrite the route's id */
+export const routeWithSlotColumns = [
+    `${Tables.Routes}.*`,
+    `${Tables.Routes}.id as routeId`,
+    `${Tables.RouteSlots}.name`,
+    `${Tables.RouteSlots}.appName`,
+    `${Tables.RouteSlots}.props`,
+    `${Tables.RouteSlots}.kind`,
+];
+
 export class RoutesRepository {
     constructor(
         private readonly db: Knex,
@@ -46,16 +56,13 @@ export class RoutesRepository {
 
     /** One row per slot, a route without slots gives one row with null slot columns */
     async findWithSlotsById(routeId: number): Promise<RouteWithSlotRow[]> {
-        const rows = await this.versioning
+        return this.versioning
             .versionedSelect<
                 typeof Tables.Routes,
-                RouteWithSlotRow & { _routeId?: number }
-            >(Tables.Routes, 'id', EntityTypes.routes, ['routes.id as _routeId', 'routes.*', 'route_slots.*'])
+                RouteWithSlotRow
+            >(Tables.Routes, 'id', EntityTypes.routes, routeWithSlotColumns)
             .leftJoin(Tables.RouteSlots, `${Tables.RouteSlots}.routeId`, `${Tables.Routes}.id`)
             .where('routes.id', routeId);
-
-        // Without slots the left join gives null "id" and "routeId"
-        return rows.map(({ _routeId, ...row }) => ({ ...row, routeId: row.routeId ?? routeId }));
     }
 
     async specialRouteExists(specialRole: string, domainId: number | null): Promise<boolean> {

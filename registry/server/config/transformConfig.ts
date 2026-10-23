@@ -4,7 +4,7 @@ import { parseJSON } from '../common/services/json';
 import { appendDigest } from '../util/hmac';
 import { VersionedRecord } from '../versioning/interfaces';
 import type { RouterDomainsRow } from '../routerDomains/interfaces';
-import type { RouteJoinSlotRow } from '../appRoutes/interfaces';
+import type { RouteWithSlotRow } from '../appRoutes/interfaces';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 import type { SharedLibRow } from '../sharedLibs/interfaces';
 import type { SharedPropsRow } from '../sharedProps/interfaces';
@@ -107,8 +107,7 @@ type AppSlotDto = {
     kind: string;
 };
 export type AppRouteDto = {
-    // Comes from route_slots, so a route without slots has none
-    routeId?: number;
+    routeId: number;
     route?: string;
     next: boolean;
     template?: string;
@@ -120,7 +119,7 @@ export type AppRouteDto = {
     slots: Record<string, AppSlotDto>;
 };
 
-function transformAppRouteSlot(dbRoute: VersionedRecord<RouteJoinSlotRow>): AppSlotDto {
+function transformAppRouteSlot(dbRoute: RouteWithSlotRow): AppSlotDto {
     return {
         // Only called for rows that have a slot
         appName: dbRoute.appName!,
@@ -130,7 +129,7 @@ function transformAppRouteSlot(dbRoute: VersionedRecord<RouteJoinSlotRow>): AppS
 }
 
 export function transformRoutes(
-    dbRoutes: VersionedRecord<RouteJoinSlotRow>[],
+    dbRoutes: RouteWithSlotRow[],
     routerDomains: RouterDomainsRow[],
 ): {
     routes: AppRouteDto[];
@@ -149,7 +148,7 @@ export function transformRoutes(
                 const newAppRouteDto = {
                     slots: {} as Record<string, AppSlotDto>,
                     meta: (transformedRoute.meta ? parseJSON(transformedRoute.meta) : {}) as Record<string, any>,
-                    routeId: dbRoute.routeId ?? undefined,
+                    routeId: dbRoute.routeId,
                     route: transformedRoute.route,
                     next: !!transformedRoute.next,
                     template: transformedRoute.templateName ?? undefined,

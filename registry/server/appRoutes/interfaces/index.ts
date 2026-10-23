@@ -26,14 +26,10 @@ export interface RouteSlotRow {
     kind: string | null;
 }
 
-/**
- * routes.* and route_slots.* of a route left-joined with its slots. The slot columns, "id" and "routeId"
- * included, overwrite the route's and are null when the route has no slots
- */
-export type RouteJoinSlotRow = Omit<RouteRow, 'id'> & { [K in keyof RouteSlotRow]: RouteSlotRow[K] | null };
-
-/** RouteJoinSlotRow with "routeId" set for a route without slots too */
-export type RouteWithSlotRow = VersionedRecord<Omit<RouteJoinSlotRow, 'routeId'> & { routeId: number }>;
+/** A route left-joined with its slots, one row per slot: the slot columns are null when the route has no slots */
+export type RouteWithSlotRow = VersionedRecord<
+    RouteRow & { routeId: number } & { [K in 'name' | 'appName' | 'props' | 'kind']: RouteSlotRow[K] | null }
+>;
 
 const slotKinds = ['primary', 'essential', 'regular'] as const;
 

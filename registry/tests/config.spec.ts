@@ -176,6 +176,7 @@ describe('Tests /api/v1/config', () => {
                 });
 
                 expect(response.body.routes).to.deep.include({
+                    routeId: routeIdWithoutSlots,
                     ..._.omit(example.appRoutesWithoutSlots, ['templateName']),
                     template: example.appRoutesWithoutSlots.templateName,
                 });
