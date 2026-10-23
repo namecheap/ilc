@@ -4,11 +4,7 @@ import type { EntityTypes, VersionedRecord } from '../interfaces';
 
 type ColumnDescriptor = Knex.ColumnDescriptor<{}, {}[]>;
 
-/**
- * Selects the columns along with the id of the latest version of each row as "versionId".
- * The query has no FROM, see selectVersionedRowsFrom.
- */
-export function selectVersionedRows(
+function selectVersionedRows(
     db: Knex,
     table: Knex.TableNames,
     key: string,
@@ -32,6 +28,7 @@ export function selectVersionedRows(
 }
 
 /**
+ * Selects the columns along with the id of the latest version of each row as "versionId".
  * Rows are typed from the table, a query that joins other tables or aliases columns
  * passes its row type as TResult, as with Knex's select<T>()
  */

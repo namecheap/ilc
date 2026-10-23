@@ -5,7 +5,7 @@ import { AppsService } from '../../server/apps/services/AppsService';
 import { RouterDomainsRepository } from '../../server/routerDomains/repositories/RouterDomainsRepository';
 import versioningConfig from '../../server/versioning/config';
 import { Versioning } from '../../server/versioning/services/Versioning';
-import { VersionedKnex } from '../../server/db';
+import type { Knex } from 'knex';
 import { Tables } from '../../server/db/structure';
 import { User } from '../../typings/User';
 import { dbFactory, expect } from '../common';
@@ -26,7 +26,7 @@ const user: User = Object.freeze({
 });
 
 describe('AppsService', () => {
-    let db: VersionedKnex;
+    let db: Knex;
     let reset: () => Promise<void>;
     let service: AppsService;
     before(async () => {

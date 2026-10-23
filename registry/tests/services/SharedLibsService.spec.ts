@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { VersionedKnex } from '../../server/db';
+import type { Knex } from 'knex';
 import { Tables } from '../../server/db/structure';
 import { User } from '../../typings/User';
 import { dbFactory, expect } from '../common';
@@ -22,7 +22,7 @@ const user: User = Object.freeze({
 });
 
 describe('SharedLibsService', () => {
-    let db: VersionedKnex;
+    let db: Knex;
     let reset: () => Promise<void>;
     let service: SharedLibsService;
     before(async () => {

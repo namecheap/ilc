@@ -3,7 +3,6 @@
 import { Knex, knex } from 'knex';
 import config from 'config';
 import rangeExtender from './range';
-import addVersioning from './versioning';
 import { knexLoggerAdapter } from './logger';
 import { syncSequencePlugin } from './syncSequence';
 import { cascadeTruncatePlugin } from './cascadeTruncate';
@@ -22,11 +21,8 @@ rangeExtender(knex);
 syncSequencePlugin(knex);
 cascadeTruncatePlugin(knex);
 
-export { VersionedKnex } from './versioning';
-
-export function dbFactory(conf: Knex.Config) {
-    const knexInstance = knex(conf);
-    return addVersioning(knexInstance);
+export function dbFactory(conf: Knex.Config): Knex {
+    return knex(conf);
 }
 
 export default dbFactory(knexConfig);

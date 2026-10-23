@@ -2,7 +2,7 @@ import path from 'path';
 import _ from 'lodash';
 
 import { expect, dbFactory } from './common';
-import { VersionedKnex } from '../server/db';
+import type { Knex } from 'knex';
 import { extractInsertedId } from '../server/util/db';
 import { defined } from '../server/util/helpers';
 import { Versioning } from '../server/versioning/services/Versioning';
@@ -16,7 +16,7 @@ const testUser: User = Object.freeze({
 });
 
 describe('Versioning Unit', () => {
-    let db: VersionedKnex;
+    let db: Knex;
     let reset: () => Promise<void>;
     let versionService: Versioning;
     before(async function () {
@@ -46,14 +46,18 @@ describe('Versioning Unit', () => {
             const entityId = 'test_id';
             const entityType = 'shared_props';
 
-            const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
-                await db(entityType)
-                    .insert({
-                        name: entityId,
-                        props: { a: 1 },
-                    })
-                    .transacting(trx);
-            });
+            const changeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: entityId },
+                async (trx) => {
+                    await db(entityType)
+                        .insert({
+                            name: entityId,
+                            props: { a: 1 },
+                        })
+                        .transacting(trx);
+                },
+            );
 
             const changeData = await db('versioning').first().where('id', changeId);
             expect(changeData.entity_type).to.equal(entityType);
@@ -73,7 +77,7 @@ describe('Versioning Unit', () => {
                 meta: null,
             };
 
-            const changeId = await db.versioning(testUser, { type: entityType }, async (trx) => {
+            const changeId = await versionService.logOperation(testUser, { type: entityType }, async (trx) => {
                 return extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
             });
 
@@ -102,7 +106,7 @@ describe('Versioning Unit', () => {
                 kind: 'primary',
             };
 
-            const changeId = await db.versioning(testUser, { type: entityType }, async (trx) => {
+            const changeId = await versionService.logOperation(testUser, { type: entityType }, async (trx) => {
                 const id = extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
                 await db(entityRelationType)
                     .insert(Object.assign({ routeId: id }, entityRelationData))
@@ -128,9 +132,13 @@ describe('Versioning Unit', () => {
             const entityType = 'apps';
             const changeSet = { kind: 'primary' as const };
 
-            const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
-                await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
-            });
+            const changeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: entityId },
+                async (trx) => {
+                    await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
+                },
+            );
 
             const changeData = await db('versioning').first().where('id', changeId);
             expect(changeData.entity_type).to.equal(entityType);
@@ -146,9 +154,16 @@ describe('Versioning Unit', () => {
             const entityType = 'apps';
             const changeSetWithTheSameExistedData = { kind: 'essential' as const };
 
-            const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
-                await db(entityType).where({ name: entityId }).update(changeSetWithTheSameExistedData).transacting(trx);
-            });
+            const changeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: entityId },
+                async (trx) => {
+                    await db(entityType)
+                        .where({ name: entityId })
+                        .update(changeSetWithTheSameExistedData)
+                        .transacting(trx);
+                },
+            );
 
             expect(changeId).to.be.null;
         });
@@ -159,9 +174,13 @@ describe('Versioning Unit', () => {
 
             const entityData = await db(entityType).where({ name: entityId }).first();
 
-            const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
-                await db(entityType).where({ name: entityId }).delete().transacting(trx);
-            });
+            const changeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: entityId },
+                async (trx) => {
+                    await db(entityType).where({ name: entityId }).delete().transacting(trx);
+                },
+            );
 
             const changeData = await db('versioning').first().where('id', changeId);
             expect(changeData.entity_type).to.equal(entityType);
@@ -180,7 +199,7 @@ describe('Versioning Unit', () => {
             const changeSet = { kind: 'regular' as const };
 
             const trxProvider = db.transactionProvider();
-            const changeId = await db.versioning(
+            const changeId = await versionService.logOperation(
                 testUser,
                 { type: entityType, id: entityId, trxProvider },
                 async (trx) => {
@@ -204,9 +223,13 @@ describe('Versioning Unit', () => {
             const changeSet = { kind: 'primary' as const };
 
             const trxProvider = db.transactionProvider();
-            await db.versioning(testUser, { type: entityType, id: entityId, trxProvider }, async (trx) => {
-                await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
-            });
+            await versionService.logOperation(
+                testUser,
+                { type: entityType, id: entityId, trxProvider },
+                async (trx) => {
+                    await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
+                },
+            );
             const trx = await trxProvider();
             await trx.rollback();
             const [row] = await db(entityType).select('*').where({ name: entityId });
@@ -219,7 +242,7 @@ describe('Versioning Unit', () => {
 
             const trxProvider = db.transactionProvider();
             await expect(
-                db.versioning(testUser, { type: entityType, id: entityId, trxProvider }, async (trx) => {
+                versionService.logOperation(testUser, { type: entityType, id: entityId, trxProvider }, async (trx) => {
                     await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
                 }),
             ).eventually.rejectedWith('invalid input value for enum kind_enum: "invalid"');
@@ -286,18 +309,22 @@ describe('Versioning Unit', () => {
             const entityType = 'settings';
             const settingKey = 'test.secret.setting';
 
-            const changeId = await db.versioning(testUser, { type: entityType, id: settingKey }, async (trx) => {
-                await db(entityType)
-                    .insert({
-                        key: settingKey as any,
-                        value: 'super-secret-value',
-                        default: 'default-secret-value',
-                        scope: 'registry' as any,
-                        secret: true,
-                        meta: null,
-                    } as any)
-                    .transacting(trx);
-            });
+            const changeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: settingKey },
+                async (trx) => {
+                    await db(entityType)
+                        .insert({
+                            key: settingKey as any,
+                            value: 'super-secret-value',
+                            default: 'default-secret-value',
+                            scope: 'registry' as any,
+                            secret: true,
+                            meta: null,
+                        } as any)
+                        .transacting(trx);
+                },
+            );
 
             const changeData = await db('versioning').first().where('id', changeId);
             const dataAfter = JSON.parse(changeData.data_after);
@@ -315,18 +342,22 @@ describe('Versioning Unit', () => {
             const entityType = 'settings';
             const settingKey = 'test.public.setting';
 
-            const changeId = await db.versioning(testUser, { type: entityType, id: settingKey }, async (trx) => {
-                await db(entityType)
-                    .insert({
-                        key: settingKey as any,
-                        value: 'public-value',
-                        default: 'default-public-value',
-                        scope: 'registry' as any,
-                        secret: false,
-                        meta: null,
-                    } as any)
-                    .transacting(trx);
-            });
+            const changeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: settingKey },
+                async (trx) => {
+                    await db(entityType)
+                        .insert({
+                            key: settingKey as any,
+                            value: 'public-value',
+                            default: 'default-public-value',
+                            scope: 'registry' as any,
+                            secret: false,
+                            meta: null,
+                        } as any)
+                        .transacting(trx);
+                },
+            );
 
             const changeData = await db('versioning').first().where('id', changeId);
             const dataAfter = JSON.parse(changeData.data_after);
@@ -347,7 +378,7 @@ describe('Versioning Unit', () => {
                 meta: null,
             };
 
-            const changeId = await db.versioning(testUser, { type: entityType }, async (trx) => {
+            const changeId = await versionService.logOperation(testUser, { type: entityType }, async (trx) => {
                 return extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
             });
 
@@ -373,7 +404,7 @@ describe('Versioning Unit', () => {
                 meta: null,
             };
 
-            const changeId = await db.versioning(testUser, { type: entityType }, async (trx) => {
+            const changeId = await versionService.logOperation(testUser, { type: entityType }, async (trx) => {
                 return extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
             });
 
@@ -389,7 +420,7 @@ describe('Versioning Unit', () => {
             const entityType = 'settings';
             const settingKey = 'test.secret.change.detection';
 
-            await db.versioning(testUser, { type: entityType, id: settingKey }, async (trx) => {
+            await versionService.logOperation(testUser, { type: entityType, id: settingKey }, async (trx) => {
                 await db(entityType)
                     .insert({
                         key: settingKey as any,
@@ -402,9 +433,13 @@ describe('Versioning Unit', () => {
                     .transacting(trx);
             });
 
-            const updateChangeId = await db.versioning(testUser, { type: entityType, id: settingKey }, async (trx) => {
-                await db(entityType).where('key', settingKey).update({ value: 'new-secret' }).transacting(trx);
-            });
+            const updateChangeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: settingKey },
+                async (trx) => {
+                    await db(entityType).where('key', settingKey).update({ value: 'new-secret' }).transacting(trx);
+                },
+            );
 
             expect(updateChangeId).to.not.be.null;
 
@@ -422,7 +457,7 @@ describe('Versioning Unit', () => {
             const entityType = 'settings';
             const settingKey = 'test.secret.no.change';
 
-            await db.versioning(testUser, { type: entityType, id: settingKey }, async (trx) => {
+            await versionService.logOperation(testUser, { type: entityType, id: settingKey }, async (trx) => {
                 await db(entityType)
                     .insert({
                         key: settingKey as any,
@@ -435,9 +470,13 @@ describe('Versioning Unit', () => {
                     .transacting(trx);
             });
 
-            const updateChangeId = await db.versioning(testUser, { type: entityType, id: settingKey }, async (trx) => {
-                await db(entityType).where('key', settingKey).update({ value: 'same-secret' }).transacting(trx);
-            });
+            const updateChangeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: settingKey },
+                async (trx) => {
+                    await db(entityType).where('key', settingKey).update({ value: 'same-secret' }).transacting(trx);
+                },
+            );
 
             expect(updateChangeId).to.be.null;
 
@@ -450,14 +489,18 @@ describe('Versioning Unit', () => {
             const entityId = 'test_id';
             const entityType = 'shared_props';
 
-            const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
-                await db(entityType)
-                    .insert({
-                        name: entityId,
-                        props: { a: 1 },
-                    })
-                    .transacting(trx);
-            });
+            const changeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: entityId },
+                async (trx) => {
+                    await db(entityType)
+                        .insert({
+                            name: entityId,
+                            props: { a: 1 },
+                        })
+                        .transacting(trx);
+                },
+            );
 
             const revertChangeId = await versionService.revertOperation(testUser, defined(changeId));
 
@@ -480,9 +523,13 @@ describe('Versioning Unit', () => {
 
             const entityRowBefore = await db(entityType).first().where('name', entityId);
 
-            const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
-                await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
-            });
+            const changeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: entityId },
+                async (trx) => {
+                    await db(entityType).where({ name: entityId }).update(changeSet).transacting(trx);
+                },
+            );
 
             const revertChangeId = await versionService.revertOperation(testUser, defined(changeId));
 
@@ -504,9 +551,13 @@ describe('Versioning Unit', () => {
 
             const entityRowBefore = await db(entityType).where({ name: entityId }).first();
 
-            const changeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
-                await db(entityType).where({ name: entityId }).delete().transacting(trx);
-            });
+            const changeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: entityId },
+                async (trx) => {
+                    await db(entityType).where({ name: entityId }).delete().transacting(trx);
+                },
+            );
 
             expect(await db(entityType).first().where('name', entityId)).to.be.undefined;
 
@@ -528,7 +579,7 @@ describe('Versioning Unit', () => {
             const entityType = 'settings';
             const settingKey = 'test.revert.secret.setting';
 
-            await db.versioning(testUser, { type: entityType, id: settingKey }, async (trx) => {
+            await versionService.logOperation(testUser, { type: entityType, id: settingKey }, async (trx) => {
                 await db(entityType)
                     .insert({
                         key: settingKey as any,
@@ -541,12 +592,16 @@ describe('Versioning Unit', () => {
                     .transacting(trx);
             });
 
-            const updateChangeId = await db.versioning(testUser, { type: entityType, id: settingKey }, async (trx) => {
-                await db(entityType)
-                    .where('key', settingKey)
-                    .update({ value: 'new-secret', scope: 'ilc' as any })
-                    .transacting(trx);
-            });
+            const updateChangeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: settingKey },
+                async (trx) => {
+                    await db(entityType)
+                        .where('key', settingKey)
+                        .update({ value: 'new-secret', scope: 'ilc' as any })
+                        .transacting(trx);
+                },
+            );
 
             const afterUpdate = await db(entityType).first().where('key', settingKey);
             expect(afterUpdate!.scope).to.equal('ilc');
@@ -564,7 +619,7 @@ describe('Versioning Unit', () => {
         it('Should revert auth_entity modification while preserving current secret', async () => {
             const entityType = 'auth_entities';
 
-            const createChangeId = await db.versioning(testUser, { type: entityType }, async (trx) => {
+            const createChangeId = await versionService.logOperation(testUser, { type: entityType }, async (trx) => {
                 const [inserted] = await db(entityType)
                     .insert({
                         identifier: 'test-revert-auth',
@@ -580,12 +635,16 @@ describe('Versioning Unit', () => {
             const created = defined(await db(entityType).first().where('identifier', 'test-revert-auth'));
             const entityId = created.id;
 
-            const updateChangeId = await db.versioning(testUser, { type: entityType, id: entityId }, async (trx) => {
-                await db(entityType)
-                    .where({ id: entityId })
-                    .update({ role: 'readonly', secret: 'new-hashed-secret' })
-                    .transacting(trx);
-            });
+            const updateChangeId = await versionService.logOperation(
+                testUser,
+                { type: entityType, id: entityId },
+                async (trx) => {
+                    await db(entityType)
+                        .where({ id: entityId })
+                        .update({ role: 'readonly', secret: 'new-hashed-secret' })
+                        .transacting(trx);
+                },
+            );
 
             const afterUpdate = defined(await db(entityType).first().where('id', entityId));
             expect(afterUpdate.role).to.equal('readonly');

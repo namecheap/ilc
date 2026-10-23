@@ -6,7 +6,7 @@ import { RoutesService } from '../../server/appRoutes/services/RoutesService';
 import { RouterDomainsRepository } from '../../server/routerDomains/repositories/RouterDomainsRepository';
 import versioningConfig from '../../server/versioning/config';
 import { Versioning } from '../../server/versioning/services/Versioning';
-import { VersionedKnex } from '../../server/db';
+import type { Knex } from 'knex';
 import { Tables } from '../../server/db/structure';
 import { User } from '../../typings/User';
 import { dbFactory, expect } from '../common';
@@ -36,7 +36,7 @@ const appRoute = {
 };
 
 describe('RoutesService', () => {
-    let db: VersionedKnex;
+    let db: Knex;
     let versioning: sinon.SinonSpy;
     let service: RoutesService;
     let reset: () => Promise<void>;

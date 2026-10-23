@@ -1,4 +1,4 @@
-import type { VersionedKnex } from './db';
+import type { Knex } from 'knex';
 import { ConfigService } from './config/ConfigService';
 import { AppsRepository } from './apps/repositories/AppsRepository';
 import { AppsService } from './apps/services/AppsService';
@@ -20,7 +20,7 @@ import versioningConfig from './versioning/config';
 import { Versioning } from './versioning/services/Versioning';
 
 /** Builds the services once per app, entities move here from module singletons as they are refactored */
-export function createServices(db: VersionedKnex) {
+export function createServices(db: Knex) {
     const versioning = new Versioning(versioningConfig, db);
     const routerDomainsRepository = new RouterDomainsRepository(db, versioning);
     const settings = new SettingsService(new SettingsRepository(db), routerDomainsRepository, versioning);
@@ -43,7 +43,6 @@ export function createServices(db: VersionedKnex) {
         routes,
         apps,
         settings,
-        // Still takes the patched Knex for apps and routes, which haven't moved yet
         config: new ConfigService(db, apps, sharedLibs, routes),
     };
 }

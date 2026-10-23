@@ -1,10 +1,11 @@
 import * as bcrypt from 'bcrypt';
 import { User } from '../../../typings/User';
 import { AuthProviders } from '../../authEntities/interfaces';
-import db, { type VersionedKnex } from '../../db';
+import type { Knex } from 'knex';
+import db from '../../db';
 
 export class AuthService {
-    constructor(private readonly db: VersionedKnex) {}
+    constructor(private readonly db: Knex) {}
 
     public async getAuthEntity(
         provider: AuthProviders,

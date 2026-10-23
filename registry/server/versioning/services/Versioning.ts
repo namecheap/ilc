@@ -61,8 +61,8 @@ export class Versioning {
     }
 
     /**
-     * Callback based API of the Knex patch (db.versioning)
-     * @returns - Id of the version record
+     * As withVersion, for callers that need the version: the callback returns the id of a created entity
+     * @returns - Id of the version record, null when nothing changed
      */
     public logOperation = async (
         user: User | undefined,
