@@ -203,7 +203,7 @@ export class SettingsService {
             throw new UnprocessableContent({ message: `Setting key ${settingKey} is not allowed for domains` });
         }
 
-        if (!(await this.routerDomainsRepository.findById(domainId))) {
+        if (!(await this.routerDomainsRepository.exists(domainId))) {
             throw new UnprocessableContent({ message: `Domain with id ${domainId} does not exist` });
         }
 

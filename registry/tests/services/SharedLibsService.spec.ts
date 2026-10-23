@@ -31,7 +31,7 @@ describe('SharedLibsService', () => {
             directory: path.join(__dirname, '../../server/migrations'),
         });
         const versioning = new Versioning(versioningConfig, db);
-        service = new SharedLibsService(new SharedLibsRepository(versioning), versioning);
+        service = new SharedLibsService(new SharedLibsRepository(db, versioning), versioning);
     });
     after(async () => {
         await reset();

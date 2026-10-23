@@ -22,6 +22,10 @@ export class RouterDomainsRepository {
         return row;
     }
 
+    async exists(id: number): Promise<boolean> {
+        return (await this.db(Tables.RouterDomains).where({ id }).first('id')) !== undefined;
+    }
+
     async findIdByDomainName(domainName: string): Promise<number | undefined> {
         const row = await this.db(Tables.RouterDomains).where({ domainName }).first('id');
         return row?.id;

@@ -9,7 +9,10 @@ export type SharedLibInsert = Omit<SharedLibRow, 'assetsDiscoveryUpdatedAt' | 'a
     Partial<Pick<SharedLibRow, 'adminNotes' | 'l10nManifest'>>;
 
 export class SharedLibsRepository {
-    constructor(private readonly versioning: Versioning) {}
+    constructor(
+        private readonly db: Knex,
+        private readonly versioning: Versioning,
+    ) {}
 
     async list(
         filters: SharedLibsFilters,
@@ -27,6 +30,10 @@ export class SharedLibsRepository {
     async findByName(name: string): Promise<VersionedRecord<SharedLibRow> | undefined> {
         const [row] = await this.selectVersioned().where(`${Tables.SharedLibs}.name`, name);
         return row;
+    }
+
+    async exists(name: string): Promise<boolean> {
+        return (await this.db(Tables.SharedLibs).where({ name }).first('name')) !== undefined;
     }
 
     async insert(sharedLib: SharedLibInsert, trx: Knex.Transaction): Promise<SharedLibRow> {

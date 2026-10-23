@@ -37,6 +37,10 @@ export class AppsRepository {
         return row;
     }
 
+    async exists(name: string): Promise<boolean> {
+        return (await this.db(Tables.Apps).where({ name }).first('name')) !== undefined;
+    }
+
     async findKind(name: string): Promise<AppRow['kind'] | undefined> {
         const app = await this.db(Tables.Apps).where({ name }).first('kind');
         return app?.kind;

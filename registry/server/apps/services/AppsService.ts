@@ -51,7 +51,7 @@ export class AppsService {
     }
 
     public async patch(name: string, app: PartialAppInput, user: User | undefined): Promise<AppRow> {
-        if (!(await this.repository.findByName(name))) {
+        if (!(await this.repository.exists(name))) {
             throw new NotFoundApplicationError(name);
         }
         await this.assertWrapper(app.wrappedWith);

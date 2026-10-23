@@ -45,7 +45,7 @@ export class SharedLibsService {
     }
 
     async update(name: string, sharedLib: PartialSharedLibInput, user: User | undefined): Promise<SharedLibRow> {
-        if (!(await this.repository.findByName(name))) {
+        if (!(await this.repository.exists(name))) {
             throw new NotFoundSharedLibraryError(name);
         }
         if (Object.values(sharedLib).every((value) => value === undefined)) {

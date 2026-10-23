@@ -24,7 +24,7 @@ export function createServices(db: Knex) {
     const versioning = new Versioning(versioningConfig, db);
     const routerDomainsRepository = new RouterDomainsRepository(db, versioning);
     const settings = new SettingsService(new SettingsRepository(db), routerDomainsRepository, versioning);
-    const sharedLibs = new SharedLibsService(new SharedLibsRepository(versioning), versioning);
+    const sharedLibs = new SharedLibsService(new SharedLibsRepository(db, versioning), versioning);
     const apps = new AppsService(new AppsRepository(db, versioning), routerDomainsRepository, versioning);
     const routes = new RoutesService(new RoutesRepository(db, versioning), routerDomainsRepository, versioning);
 
