@@ -1,36 +1,22 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
 import { markProtected } from '../../common/services/protectedEntities';
-import validateRequestFactory from '../../common/services/validateRequest';
+import { validated } from '../../common/validation/validated';
+import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
-import { templatesRepository } from '../services/templatesRepository';
-import { templateNameSchema } from './validation';
+import { templateParamsSchema } from '../interfaces';
+import type { TemplatesService } from '../services/TemplatesService';
 
-type GetTemplateRequestParams = {
-    name: string;
-};
+export function getTemplate(service: TemplatesService): RequestHandler {
+    return validated({ params: templateParamsSchema }, async ({ params }, req, res) => {
+        const template = await service.get(params.name);
 
-const validateRequestBeforeGetTemplate = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: templateNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-]);
+        if (!template) {
+            res.status(404).send('Not found');
+            return;
+        }
 
-const getTemplate = async (req: Request<GetTemplateRequestParams>, res: Response): Promise<void> => {
-    const { name: templateName } = req.params;
-
-    const template = await templatesRepository.readTemplateWithAllVersions(templateName);
-
-    if (!template) {
-        res.status(404).send('Not found');
-        return;
-    }
-
-    res.status(200).send(markProtected(EntityTypes.templates, template));
-};
-
-export default [validateRequestBeforeGetTemplate, getTemplate];
+        const templateWithId = { ...template, versionId: appendDigest(template.versionId, 'template') };
+        res.status(200).send(markProtected(EntityTypes.templates, templateWithId));
+    });
+}

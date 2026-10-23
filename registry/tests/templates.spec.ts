@@ -82,7 +82,7 @@ describe(`Tests ${example.url}`, () => {
             const response = await req
                 .post(example.url)
                 .send(_.omit(example.correct, 'name'))
-                .expect(422, '"name" is required');
+                .expect(422, '✖ Invalid input: expected string, received undefined\n  → at name');
 
             expect(response.body).deep.equal({});
         });
@@ -91,7 +91,7 @@ describe(`Tests ${example.url}`, () => {
             const response = await req
                 .post(example.url)
                 .send(_.omit(example.correct, 'content'))
-                .expect(422, '"content" is required');
+                .expect(422, '✖ Invalid input: expected string, received undefined\n  → at content');
 
             expect(response.body).deep.equal({});
         });
@@ -105,7 +105,11 @@ describe(`Tests ${example.url}`, () => {
             let response = await req
                 .post(example.url)
                 .send(incorrect)
-                .expect(422, '"content" must be a string\n"name" must be a string');
+                .expect(
+                    422,
+                    '✖ Invalid input: expected string, received number\n  → at content\n' +
+                        '✖ Invalid input: expected string, received number\n  → at name',
+                );
 
             expect(response.body).deep.equal({});
 
@@ -484,7 +488,7 @@ describe(`Tests ${example.url}`, () => {
             const response = await req
                 .put(example.url + example.correct.name)
                 .send(example.updated)
-                .expect(422, '"name" is not allowed');
+                .expect(422, '✖ Unrecognized key: "name"');
 
             expect(response.body).deep.equal({});
         });
@@ -500,7 +504,7 @@ describe(`Tests ${example.url}`, () => {
             const response = await req
                 .put(example.url + example.correct.name)
                 .send(_.omit(incorrect, 'name'))
-                .expect(422, '"content" must be a string');
+                .expect(422, '✖ Invalid input: expected string, received number\n  → at content');
             expect(response.body).deep.equal({});
         });
 
@@ -622,7 +626,7 @@ describe(`Tests ${example.url}`, () => {
             await req
                 .patch(example.url + example.correct.name)
                 .send(_.omit(example.correctLocalized, 'name'))
-                .expect(422, '"localizedVersions" is not allowed');
+                .expect(422, '✖ Unrecognized key: "localizedVersions"');
         });
     });
 

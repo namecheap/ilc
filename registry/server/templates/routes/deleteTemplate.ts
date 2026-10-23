@@ -1,35 +1,13 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
-import * as httpErrors from '../../errorHandler/httpErrors';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
-import validateRequestFactory from '../../common/services/validateRequest';
-import { templateNameSchema } from './validation';
+import { validated } from '../../common/validation/validated';
+import { templateParamsSchema } from '../interfaces';
+import type { TemplatesService } from '../services/TemplatesService';
 
-type DeleteTemplateRequestParams = {
-    name: string;
-};
+export function deleteTemplate(service: TemplatesService): RequestHandler {
+    return validated({ params: templateParamsSchema }, async ({ params }, req, res) => {
+        await service.delete(params.name, req.user);
 
-const validateRequestBeforeDeleteTemplate = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: templateNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-]);
-
-const deleteTemplate = async (req: Request<DeleteTemplateRequestParams>, res: Response): Promise<void> => {
-    const { name: templateName } = req.params;
-
-    await db.versioning(req.user, { type: 'templates', id: templateName }, async (trx) => {
-        const count = await db('templates').where('name', templateName).delete().transacting(trx);
-        if (!count) {
-            throw new httpErrors.NotFoundError();
-        }
+        res.status(204).send();
     });
-
-    res.status(204).send();
-};
-
-export default [validateRequestBeforeDeleteTemplate, deleteTemplate];
+}

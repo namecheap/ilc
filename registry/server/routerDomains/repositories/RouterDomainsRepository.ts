@@ -8,7 +8,10 @@ import type { Versioning } from '../../versioning/services/Versioning';
 import type { RouterDomainsInput, RouterDomainsRow } from '../interfaces';
 
 export class RouterDomainsRepository {
-    constructor(private readonly versioning: Versioning) {}
+    constructor(
+        private readonly db: Knex,
+        private readonly versioning: Versioning,
+    ) {}
 
     async list(range: string | undefined): Promise<PaginatedResult<VersionedRecord<RouterDomainsRow>>> {
         return this.selectVersioned().orderBy(`${Tables.RouterDomains}.id`, 'asc').range(range);
@@ -17,6 +20,11 @@ export class RouterDomainsRepository {
     async findById(id: number): Promise<VersionedRecord<RouterDomainsRow> | undefined> {
         const [row] = await this.selectVersioned().where(`${Tables.RouterDomains}.id`, id);
         return row;
+    }
+
+    async findIdByDomainName(domainName: string): Promise<number | undefined> {
+        const row = await this.db(Tables.RouterDomains).where({ domainName }).first('id');
+        return row?.id;
     }
 
     async insert(routerDomain: RouterDomainsInput, trx: Knex.Transaction): Promise<RouterDomainsRow> {
