@@ -1,3 +1,7 @@
+import { z } from 'zod';
+
+export const templateNameSchema = z.string().min(1).max(50);
+
 export default interface Template {
     name: string;
     content: string;

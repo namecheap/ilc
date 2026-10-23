@@ -10,7 +10,7 @@ import errors from '../errors';
 import { Tables } from '../../db/structure';
 import { EntityTypes } from '../../versioning/interfaces';
 import { templateNameSchema } from './validation';
-import RouterDomains from '../../routerDomains/interfaces';
+import type { RouterDomainsRow } from '../../routerDomains/interfaces';
 import { getLogger } from '../../util/logger';
 import { appendDigest } from '../../util/hmac';
 import settingsService from '../../settings/services/SettingsService';
@@ -29,10 +29,10 @@ const validateRequestBeforeGetTemplateRendered = validateRequestFactory([
     },
 ]);
 
-async function getDomainByName(domain: string): Promise<RouterDomains | undefined> {
+async function getDomainByName(domain: string): Promise<RouterDomainsRow | undefined> {
     const [domainItem] = await db
         .select('id', 'props')
-        .from<RouterDomains>('router_domains')
+        .from<RouterDomainsRow>('router_domains')
         .where('domainName', String(domain));
 
     return domainItem;

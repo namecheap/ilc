@@ -3,7 +3,7 @@ import { App } from '../apps/interfaces';
 import { parseJSON } from '../common/services/json';
 import { appendDigest } from '../util/hmac';
 import { VersionedRecord } from '../versioning/interfaces';
-import RouterDomains from '../routerDomains/interfaces';
+import type { RouterDomainsRow } from '../routerDomains/interfaces';
 import { AppRoute, AppRouteSlot } from '../appRoutes/interfaces';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 import { SharedLib } from '../sharedLibs/interfaces';
@@ -39,7 +39,7 @@ export type AppDto = Pick<
  */
 export function transformApps(
     apps: VersionedRecord<App>[],
-    routerDomains: RouterDomains[],
+    routerDomains: RouterDomainsRow[],
     sharedProps: any[],
     domainName?: string,
 ): Record<string, AppDto> {
@@ -132,7 +132,7 @@ function transformAppRouteSlot(dbRoute: VersionedRecord<AppRoute & AppRouteSlot>
 
 export function transformRoutes(
     dbRoutes: VersionedRecord<AppRoute & AppRouteSlot>[],
-    routerDomains: RouterDomains[],
+    routerDomains: RouterDomainsRow[],
 ): {
     routes: AppRouteDto[];
     specialRoutes: AppRouteDto[];

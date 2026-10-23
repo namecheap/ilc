@@ -6,7 +6,7 @@ import { SharedLib } from '../../server/sharedLibs/interfaces';
 import { LocalizedTemplateRow, TemplateRow } from '../../server/templates/interfaces';
 import { AuthEntityRow } from '../../server/authEntities/interfaces';
 import { SharedPropsRow } from '../../server/sharedProps/interfaces';
-import RouterDomains from '../../server/routerDomains/interfaces';
+import { RouterDomainsRow } from '../../server/routerDomains/interfaces';
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
 
@@ -18,7 +18,11 @@ declare module 'knex/types/tables' {
         shared_libs: Knex.CompositeTableType<SharedLib>;
         settings: Knex.CompositeTableType<SettingRaw>;
         settings_domain_value: Knex.CompositeTableType<DomainSetting, Optional<DomainSetting, 'id'>>;
-        router_domains: Knex.CompositeTableType<RouterDomains, Optional<RouterDomains, 'id'>>;
+        router_domains: Knex.CompositeTableType<
+            RouterDomainsRow,
+            Optional<RouterDomainsRow, 'id' | 'canonicalDomain' | 'alias' | 'props' | 'ssrProps'>,
+            Partial<Omit<RouterDomainsRow, 'id'>>
+        >;
         shared_props: Knex.CompositeTableType<
             SharedPropsRow,
             Optional<SharedPropsRow, 'ssrProps'>,

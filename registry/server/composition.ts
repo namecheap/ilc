@@ -1,4 +1,6 @@
 import type { Knex } from 'knex';
+import { RouterDomainsRepository } from './routerDomains/repositories/RouterDomainsRepository';
+import { RouterDomainsService } from './routerDomains/services/RouterDomainsService';
 import { SharedPropsRepository } from './sharedProps/repositories/SharedPropsRepository';
 import { SharedPropsService } from './sharedProps/services/SharedPropsService';
 import versioningConfig from './versioning/config';
@@ -11,6 +13,7 @@ export function createServices(db: Knex) {
     return {
         versioning,
         sharedProps: new SharedPropsService(new SharedPropsRepository(versioning), versioning),
+        routerDomains: new RouterDomainsService(new RouterDomainsRepository(versioning), versioning),
     };
 }
 

@@ -1,41 +1,25 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { markProtected } from '../../common/services/protectedEntities';
-import validateRequestFactory from '../../common/services/validateRequest';
-import RouterDomains, { routerDomainIdSchema } from '../interfaces';
-import { Tables } from '../../db/structure';
+import { validated } from '../../common/validation/validated';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
+import { routerDomainsParamsSchema } from '../interfaces';
+import type { RouterDomainsService } from '../services/RouterDomainsService';
 
-type RequestParams = {
-    id: string;
-};
+export function getRouterDomains(service: RouterDomainsService): RequestHandler {
+    return validated({ params: routerDomainsParamsSchema }, async ({ params }, req, res) => {
+        const routerDomains = await service.get(params.id);
 
-const validateRequest = validateRequestFactory([
-    {
-        schema: Joi.object({
-            id: routerDomainIdSchema,
-        }),
-        selector: 'params',
-    },
-]);
-
-const getRouterDomains = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const [routerDomains] = await db
-        .selectVersionedRowsFrom<RouterDomains>(Tables.RouterDomains, 'id', EntityTypes.router_domains, [
-            `${Tables.RouterDomains}.*`,
-        ])
-        .where('id', req.params.id);
-
-    if (!routerDomains) {
-        res.status(404).send('Not found');
-    } else {
-        routerDomains.versionId = appendDigest(routerDomains.versionId, 'routerDomains');
-        res.status(200).send(preProcessResponse(markProtected(EntityTypes.router_domains, routerDomains)));
-    }
-};
-
-export default [validateRequest, getRouterDomains];
+        if (!routerDomains) {
+            res.status(404).send('Not found');
+        } else {
+            const routerDomainsWithId = {
+                ...routerDomains,
+                versionId: appendDigest(routerDomains.versionId, 'routerDomains'),
+            };
+            res.status(200).send(preProcessResponse(markProtected(EntityTypes.router_domains, routerDomainsWithId)));
+        }
+    });
+}

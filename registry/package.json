@@ -66,6 +66,7 @@
         "typescript": "^5.9.3"
     },
     "dependencies": {
+        "@hapi/address": "^5.1.1",
         "@namecheap/error-extender": "^2.2.1",
         "@newrelic/native-metrics": "^13.1.0",
         "axios": "^1.13.2",

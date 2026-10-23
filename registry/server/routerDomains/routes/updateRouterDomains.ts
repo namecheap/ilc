@@ -1,60 +1,17 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
-import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import { stringifyJSON } from '../../common/services/json';
-import RouterDomains, { routerDomainIdSchema, partialRouterDomainsSchema } from '../interfaces';
-import { isUniqueConstraintError } from '../../util/db';
-import { getJoiErr } from '../../util/helpers';
+import { validated } from '../../common/validation/validated';
+import { routerDomainsParamsSchema, routerDomainsSchema } from '../interfaces';
+import type { RouterDomainsService } from '../services/RouterDomainsService';
 
-type RequestParams = {
-    id: string;
-};
+export function updateRouterDomains(service: RouterDomainsService): RequestHandler {
+    return validated(
+        { params: routerDomainsParamsSchema, body: routerDomainsSchema },
+        async ({ params, body }, req, res) => {
+            const updatedRouterDomains = await service.update(params.id, body, req.user);
 
-const validateRequest = validateRequestFactory([
-    {
-        schema: Joi.object({
-            id: routerDomainIdSchema,
-        }),
-        selector: 'params',
-    },
-    {
-        schema: partialRouterDomainsSchema,
-        selector: 'body',
-    },
-]);
-
-const updateRouterDomains = async (
-    req: Request<RequestParams, unknown, Partial<RouterDomains>>,
-    res: Response,
-): Promise<void> => {
-    const routerDomainId = req.params.id;
-
-    const countToUpdate = await db('router_domains').where('id', routerDomainId);
-    if (!countToUpdate.length) {
-        res.status(404).send('Not found');
-        return;
-    }
-
-    try {
-        await db.versioning(req.user, { type: 'router_domains', id: routerDomainId }, async (trx) => {
-            await db('router_domains')
-                .where('id', routerDomainId)
-                .update(stringifyJSON(['props', 'ssrProps'], req.body))
-                .transacting(trx);
-        });
-    } catch (e: unknown) {
-        if (isUniqueConstraintError(e, 'router_domains_alias_unique')) {
-            throw getJoiErr('alias', `Router domain with alias "${req.body.alias}" already exists.`);
-        }
-        throw e;
-    }
-
-    const [updatedRouterDomains] = await db('router_domains').select().where('id', routerDomainId);
-
-    res.status(200).send(preProcessResponse(updatedRouterDomains));
-};
-
-export default [validateRequest, updateRouterDomains];
+            res.status(200).send(preProcessResponse(updatedRouterDomains));
+        },
+    );
+}

@@ -69,7 +69,11 @@ describe(`Tests ${example.url}`, () => {
             await req
                 .post(example.url)
                 .send(_.omit(example.correct, ['domainName', 'template500']))
-                .expect(422, '"domainName" is required\n' + '"template500" is required');
+                .expect(
+                    422,
+                    '✖ Invalid input: expected string, received undefined\n  → at domainName\n' +
+                        '✖ Invalid input: expected string, received undefined\n  → at template500',
+                );
         });
 
         it('should not create record with incorrect type of fields', async () => {
@@ -81,7 +85,11 @@ describe(`Tests ${example.url}`, () => {
             await req
                 .post(example.url)
                 .send(incorrect)
-                .expect(422, '"domainName" must be one of [string]\n' + '"template500" must be a string');
+                .expect(
+                    422,
+                    '✖ Invalid input: expected string, received number\n  → at domainName\n' +
+                        '✖ Invalid input: expected string, received number\n  → at template500',
+                );
         });
 
         it('should not create record with non-existed template500', async () => {
@@ -242,7 +250,11 @@ describe(`Tests ${example.url}`, () => {
             await req
                 .post(example.url)
                 .send(incorrectProps)
-                .expect(422, '"props" must be of type object\n"ssrProps" must be of type object');
+                .expect(
+                    422,
+                    '✖ Invalid input: expected record, received string\n  → at props\n' +
+                        '✖ Invalid input: expected record, received number\n  → at ssrProps',
+                );
         });
 
         describe('Authentication / Authorization', () => {
@@ -256,6 +268,10 @@ describe(`Tests ${example.url}`, () => {
         it('should return 404 for non-existing id', async () => {
             const nonExistingId = 123;
             await req.get(example.url + nonExistingId).expect(404, 'Not found');
+        });
+
+        it('should return 422 for a non-numeric id', async () => {
+            await req.get(example.url + 'abc').expect(422);
         });
 
         it('should successfully return record', async () => {
@@ -434,7 +450,11 @@ describe(`Tests ${example.url}`, () => {
                 await req
                     .put(example.url + routerDomainsId)
                     .send(incorrect)
-                    .expect(422, '"domainName" must be one of [string]\n' + '"template500" must be a string');
+                    .expect(
+                        422,
+                        '✖ Invalid input: expected string, received number\n  → at domainName\n' +
+                            '✖ Invalid input: expected string, received number\n  → at template500',
+                    );
             } finally {
                 routerDomainsId && (await ensureDeleted(req, example.url + routerDomainsId));
             }
