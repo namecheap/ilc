@@ -182,6 +182,19 @@ describe(`Tests ${example.url}`, () => {
             }
         });
 
+        it('should not create a record with an existing name', async () => {
+            try {
+                await req.post(example.url).send(example.correct).expect(200);
+
+                await req
+                    .post(example.url)
+                    .send(example.correct)
+                    .expect(409, `App with name "${example.correct.name}" already exists`);
+            } finally {
+                await ensureDeleted(req, example.url + example.encodedName);
+            }
+        });
+
         it('should create record with existed enforceDomain', async () => {
             let domainId;
             const templateName = 'templateName';

@@ -13,6 +13,7 @@ const appPorts = {
     news: 8239,
     system: 8240,
     wrapper: 8234,
+    oauth: 8085,
 };
 
 const resources = [
@@ -25,6 +26,7 @@ const resources = [
     `http-get://127.0.0.1:${appPorts.ilc}/ping`,
     `http-get://127.0.0.1:${appPorts.registry}/ping`,
     `http-get://127.0.0.1:${appPorts.wrapper}/client-entry.js`,
+    `http-get://127.0.0.1:${appPorts.oauth}/.well-known/openid-configuration`,
 ];
 
 let childProcess: ResultPromise;
@@ -50,6 +52,11 @@ export async function bootstrap() {
             childProcess = execaCommand(`pnpm start --no-watch`, {
                 cwd: path.join(import.meta.dirname, '..'),
                 stdio,
+                env: {
+                    // Lets the admin UI scenarios check protected entities. No scenario edits special routes,
+                    // and the API stays writable for protected entities, so nothing else is affected.
+                    ILC_REGISTRY_ADMIN_PROTECTED_ENTITIES: 'special_routes',
+                },
             });
             childProcess.once('error', (error) => {
                 reject(error);
