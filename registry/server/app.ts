@@ -18,6 +18,7 @@ import { createServices } from './composition';
 import { createSharedPropsRouter } from './sharedProps/routes';
 import { createVersioningRouter } from './versioning/routes';
 import { createRouterDomainsRouter } from './routerDomains/routes';
+import { createAuthEntitiesRouter } from './authEntities/routes';
 
 export default async (withAuth: boolean = true): Promise<Application> => {
     loadPlugins();
@@ -65,7 +66,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     app.use('/api/v1/template', routes.templates(authMw));
     app.use('/api/v1/route', authMw, routes.appRoutes);
     app.use('/api/v1/shared_props', authMw, createSharedPropsRouter(services.sharedProps));
-    app.use('/api/v1/auth_entities', authMw, routes.authEntities);
+    app.use('/api/v1/auth_entities', authMw, createAuthEntitiesRouter(services.authEntities));
     app.use('/api/v1/versioning', authMw, createVersioningRouter(services.versioning));
     app.use('/api/v1/settings', routes.settings(authMw));
     app.use('/api/v1/router_domains', createRouterDomainsRouter(services.routerDomains, authMw));
