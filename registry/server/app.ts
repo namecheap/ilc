@@ -24,6 +24,7 @@ import { createEntriesRouter } from './entries/entries';
 import { createAppRoutesRouter } from './appRoutes/routes';
 import { createAppsRouter } from './apps/routes';
 import { createSettingsRouter } from './settings/routes';
+import { createPublicRouter } from './public/routes';
 
 export default async (withAuth: boolean = true): Promise<Application> => {
     loadPlugins();
@@ -83,7 +84,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     app.use('/api/v1/settings', createSettingsRouter(services.settings, authMw));
     app.use('/api/v1/router_domains', createRouterDomainsRouter(services.routerDomains, authMw));
     app.use('/api/v1/shared_libs', authMw, createSharedLibsRouter(services.sharedLibs));
-    app.use('/api/v1/public', routes.public);
+    app.use('/api/v1/public', createPublicRouter(services.apps));
     app.use('/api/v1/entries', authMw, createEntriesRouter(services.apps, services.sharedLibs));
 
     app.use(errorHandler);

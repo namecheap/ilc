@@ -37,6 +37,10 @@ export class AppsRepository {
         return row;
     }
 
+    async listDiscoveryMetadata(): Promise<Pick<AppRow, 'name' | 'discoveryMetadata'>[]> {
+        return this.db(Tables.Apps).select('name', 'discoveryMetadata');
+    }
+
     async exists(name: string): Promise<boolean> {
         return (await this.db(Tables.Apps).where({ name }).first('name')) !== undefined;
     }

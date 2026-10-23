@@ -35,6 +35,11 @@ export class AppsService {
         return this.repository.findByName(name);
     }
 
+    /** Every app's discovery metadata, for the public app discovery endpoint */
+    listDiscoveryMetadata(): Promise<Pick<AppRow, 'name' | 'discoveryMetadata'>[]> {
+        return this.repository.listDiscoveryMetadata();
+    }
+
     public async create(app: AppInput, user: User | undefined): Promise<AppRow> {
         const toInsert = await this.toInsert(app, true);
 

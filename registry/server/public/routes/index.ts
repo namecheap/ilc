@@ -1,9 +1,12 @@
-import express from 'express';
+import express, { Router } from 'express';
 
-import appDiscovery from './appDiscovery';
+import type { AppsService } from '../../apps/services/AppsService';
+import { appDiscovery } from './appDiscovery';
 
-const externalRouter = express.Router();
+export function createPublicRouter(apps: AppsService): Router {
+    const externalRouter = express.Router();
 
-externalRouter.get('/app_discovery', ...appDiscovery);
+    externalRouter.get('/app_discovery', appDiscovery(apps));
 
-export default externalRouter;
+    return externalRouter;
+}
