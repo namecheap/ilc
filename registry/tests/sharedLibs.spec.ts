@@ -272,6 +272,19 @@ describe(`Tests ${example.url}`, () => {
     });
 
     describe('Update', () => {
+        it('should not update a record with an empty body', async () => {
+            try {
+                await req.post(example.url).send(example.correct).expect(200);
+
+                await req
+                    .put(example.url + example.correct.name)
+                    .send({})
+                    .expect(422, 'Patch does not contain any items to update');
+            } finally {
+                await ensureDeleted(req, example.url + example.correct.name);
+            }
+        });
+
         it("should not update any record if record doesn't exist", async () => {
             const incorrect = { name: 123 };
             const response = await req

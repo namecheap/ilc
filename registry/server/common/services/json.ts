@@ -1,5 +1,3 @@
-import _ from 'lodash/fp';
-
 /**
  * Original source code was taken from {@link https://github.com/prototypejs/prototype/blob/5fddd3e/src/prototype/lang/string.js#L702}
  */
@@ -78,38 +76,3 @@ export function parseJSON<T extends JSONValue>(value: unknown): T {
         return parse(value);
     }
 }
-
-interface StringifyJSON {
-    <T extends object, K extends keyof T>(
-        keys: K[],
-        obj: T,
-    ): Omit<T, K> & {
-        [P in K]: string;
-    };
-    <K extends string>(
-        keys: K[],
-    ): <T extends object>(
-        obj: T,
-    ) => Omit<T, K> & {
-        [P in K]: string;
-    };
-}
-export const stringifyJSON: StringifyJSON = _.curry((pathes: string[], data: any) =>
-    _.reduce(
-        (stringifiedData: any, path: string) =>
-            _.cond([
-                [
-                    _.has(path),
-                    () =>
-                        _.set(
-                            path,
-                            _.get(path, data) !== null ? JSON.stringify(_.get(path, data)) : null,
-                            stringifiedData,
-                        ),
-                ],
-                [_.stubTrue, () => stringifiedData],
-            ])(data),
-        data,
-        pathes,
-    ),
-);
