@@ -92,13 +92,13 @@ describe('Versioning Unit', () => {
                 route: '/tst',
                 next: false,
                 templateName: null,
-                meta: JSON.stringify({ first: 'value' }),
+                meta: { first: 'value' },
                 domainId: null,
             };
             const entityRelationData = {
                 name: 'tst',
                 appName: '@portal/navbar',
-                props: JSON.stringify({ tst: 1 }),
+                props: { tst: 1 },
                 kind: 'primary',
             };
 

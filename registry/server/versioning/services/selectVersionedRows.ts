@@ -31,12 +31,19 @@ export function selectVersionedRows(
         .select([...columns, 'versionId']);
 }
 
-export function selectVersionedRowsFrom<TTable extends Knex.TableNames>(
+/**
+ * Rows are typed from the table, a query that joins other tables or aliases columns
+ * passes its row type as TResult, as with Knex's select<T>()
+ */
+export function selectVersionedRowsFrom<
+    TTable extends Knex.TableNames,
+    TResult = VersionedRecord<Knex.ResolveTableType<Knex.TableType<TTable>>>,
+>(
     db: Knex,
     table: TTable,
     key: string,
     entityType: EntityTypes,
     columns: ColumnDescriptor[],
-): Knex.QueryBuilder<Knex.TableType<TTable>, VersionedRecord<Knex.ResolveTableType<Knex.TableType<TTable>>>[]> {
+): Knex.QueryBuilder<Knex.TableType<TTable>, TResult[]> {
     return selectVersionedRows(db, table, key, entityType, columns).from(table);
 }

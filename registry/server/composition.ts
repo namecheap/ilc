@@ -1,5 +1,7 @@
 import type { VersionedKnex } from './db';
 import { ConfigService } from './config/ConfigService';
+import { RoutesRepository } from './appRoutes/repositories/RoutesRepository';
+import { RoutesService } from './appRoutes/services/RoutesService';
 import { SharedLibsRepository } from './sharedLibs/repositories/SharedLibsRepository';
 import { SharedLibsService } from './sharedLibs/services/SharedLibsService';
 import { AuthEntitiesRepository } from './authEntities/repositories/AuthEntitiesRepository';
@@ -19,6 +21,7 @@ export function createServices(db: VersionedKnex) {
     const versioning = new Versioning(versioningConfig, db);
     const routerDomainsRepository = new RouterDomainsRepository(db, versioning);
     const sharedLibs = new SharedLibsService(new SharedLibsRepository(versioning), versioning);
+    const routes = new RoutesService(new RoutesRepository(db, versioning), routerDomainsRepository, versioning);
 
     return {
         versioning,
@@ -32,8 +35,9 @@ export function createServices(db: VersionedKnex) {
             settingsService,
         ),
         sharedLibs,
+        routes,
         // Still takes the patched Knex for apps and routes, which haven't moved yet
-        config: new ConfigService(db, sharedLibs),
+        config: new ConfigService(db, sharedLibs, routes),
     };
 }
 

@@ -174,7 +174,7 @@ describe(`Tests ${example.url}`, () => {
                 }
 
                 expect(response.status).equal(422);
-                expect(response.text).equal('"route" is required');
+                expect(response.text).equal('✖ Invalid input: expected string, received undefined\n  → at route');
                 expect(response.body).deep.equal({});
             } finally {
                 routeId && (await ensureDeleted(req, example.url + routeId));
@@ -198,7 +198,9 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.status).equal(422);
                 expect(response.text).equal(
-                    '"orderPos" is not allowed\n' + '"route" is not allowed\n' + '"next" is not allowed',
+                    '✖ Not allowed together with "specialRole"\n  → at orderPos\n' +
+                        '✖ Not allowed together with "specialRole"\n  → at route\n' +
+                        '✖ Not allowed together with "specialRole"\n  → at next',
                 );
                 expect(response.body).deep.equal({});
             } finally {
@@ -226,12 +228,12 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.status).equal(422);
                 expect(response.text).equal(
-                    '"orderPos" must be a number\n' +
-                        '"route" must be a string\n' +
-                        '"next" must be a boolean\n' +
-                        '"templateName" must be a string\n' +
-                        '"slots" must be of type object\n' +
-                        '"domainId" must be a number',
+                    '✖ Invalid input: expected number, received string\n  → at orderPos\n' +
+                        '✖ Invalid input: expected string, received number\n  → at route\n' +
+                        '✖ Invalid input: expected boolean, received number\n  → at next\n' +
+                        '✖ Invalid input: expected string, received number\n  → at templateName\n' +
+                        '✖ Invalid input: expected record, received string\n  → at slots\n' +
+                        '✖ Invalid input: expected number, received string\n  → at domainId',
                 );
                 expect(response.body).deep.equal({});
             } finally {
@@ -257,10 +259,10 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.status).equal(422);
                 expect(response.text).equal(
-                    '"specialRole" must be [404]\n' +
-                        '"templateName" must be a string\n' +
-                        '"slots" must be of type object\n' +
-                        '"domainId" must be a number',
+                    '✖ Invalid input: expected "404"\n  → at specialRole\n' +
+                        '✖ Invalid input: expected string, received number\n  → at templateName\n' +
+                        '✖ Invalid input: expected record, received string\n  → at slots\n' +
+                        '✖ Invalid input: expected number, received string\n  → at domainId',
                 );
                 expect(response.body).deep.equal({});
             } finally {
@@ -394,7 +396,9 @@ describe(`Tests ${example.url}`, () => {
                 }
 
                 expect(response.status).equal(422);
-                expect(response.text).to.include(`"slots.ncTestRouteSlotNavbar.appName" is required`);
+                expect(response.text).to.include(
+                    '✖ Invalid input: expected string, received undefined\n  → at slots.ncTestRouteSlotNavbar.appName',
+                );
             } finally {
                 routeId && (await ensureDeleted(req, example.url + routeId));
             }
@@ -795,13 +799,13 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(
                         422,
-                        '"specialRole" must be [404]\n' +
-                            '"orderPos" must be a number\n' +
-                            '"route" must be a string\n' +
-                            '"next" must be a boolean\n' +
-                            '"templateName" must be a string\n' +
-                            '"slots" must be of type object\n' +
-                            '"domainId" must be a number',
+                        '✖ Invalid input: expected "404"\n  → at specialRole\n' +
+                            '✖ Invalid input: expected number, received string\n  → at orderPos\n' +
+                            '✖ Invalid input: expected string, received number\n  → at route\n' +
+                            '✖ Invalid input: expected boolean, received number\n  → at next\n' +
+                            '✖ Invalid input: expected string, received number\n  → at templateName\n' +
+                            '✖ Invalid input: expected record, received string\n  → at slots\n' +
+                            '✖ Invalid input: expected number, received string\n  → at domainId',
                     );
 
                 expect(response.body).deep.equal({});
@@ -932,7 +936,10 @@ describe(`Tests ${example.url}`, () => {
                             },
                         },
                     })
-                    .expect(422, '"slots.ncTestRouteSlotNavbar.appName" is required');
+                    .expect(
+                        422,
+                        '✖ Invalid input: expected string, received undefined\n  → at slots.ncTestRouteSlotNavbar.appName',
+                    );
             } finally {
                 routeId && (await ensureDeleted(req, example.url + routeId));
             }

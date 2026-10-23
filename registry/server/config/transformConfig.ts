@@ -4,7 +4,7 @@ import { parseJSON } from '../common/services/json';
 import { appendDigest } from '../util/hmac';
 import { VersionedRecord } from '../versioning/interfaces';
 import type { RouterDomainsRow } from '../routerDomains/interfaces';
-import { AppRoute, AppRouteSlot } from '../appRoutes/interfaces';
+import type { RouteJoinSlotRow } from '../appRoutes/interfaces';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 import type { SharedLibRow } from '../sharedLibs/interfaces';
 
@@ -110,7 +110,8 @@ type AppSlotDto = {
     kind: string;
 };
 export type AppRouteDto = {
-    routeId: number;
+    // Comes from route_slots, so a route without slots has none
+    routeId?: number;
     route?: string;
     next: boolean;
     template?: string;
@@ -122,16 +123,17 @@ export type AppRouteDto = {
     slots: Record<string, AppSlotDto>;
 };
 
-function transformAppRouteSlot(dbRoute: VersionedRecord<AppRoute & AppRouteSlot>): AppSlotDto {
+function transformAppRouteSlot(dbRoute: VersionedRecord<RouteJoinSlotRow>): AppSlotDto {
     return {
-        appName: dbRoute.appName,
+        // Only called for rows that have a slot
+        appName: dbRoute.appName!,
         props: dbRoute.props !== null ? parseJSON(dbRoute.props) : {},
         kind: dbRoute.kind!,
     };
 }
 
 export function transformRoutes(
-    dbRoutes: VersionedRecord<AppRoute & AppRouteSlot>[],
+    dbRoutes: VersionedRecord<RouteJoinSlotRow>[],
     routerDomains: RouterDomainsRow[],
 ): {
     routes: AppRouteDto[];

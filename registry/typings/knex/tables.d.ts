@@ -1,5 +1,5 @@
 import { type Knex } from 'knex';
-import { AppRoute, AppRouteSlot } from '../../server/appRoutes/interfaces';
+import { RouteRow, RouteSlotRow } from '../../server/appRoutes/interfaces';
 import { App } from '../../server/apps/interfaces';
 import { DomainSetting, SettingRaw } from '../../server/settings/interfaces';
 import { SharedLibRow } from '../../server/sharedLibs/interfaces';
@@ -13,8 +13,20 @@ type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
 declare module 'knex/types/tables' {
     interface Tables {
         apps: Knex.CompositeTableType<App>;
-        routes: Knex.CompositeTableType<AppRoute, Optional<AppRoute, 'id'>>;
-        route_slots: Knex.CompositeTableType<AppRouteSlot, Optional<AppRouteSlot, 'id'>>;
+        // domainIdIdxble is generated from domainId
+        routes: Knex.CompositeTableType<
+            RouteRow,
+            Optional<
+                Omit<RouteRow, 'domainIdIdxble'>,
+                'id' | 'orderPos' | 'next' | 'templateName' | 'meta' | 'domainId' | 'namespace'
+            >,
+            Partial<Omit<RouteRow, 'id' | 'domainIdIdxble'>>
+        >;
+        route_slots: Knex.CompositeTableType<
+            RouteSlotRow,
+            Optional<RouteSlotRow, 'id' | 'props' | 'kind'>,
+            Partial<Omit<RouteSlotRow, 'id'>>
+        >;
         shared_libs: Knex.CompositeTableType<
             SharedLibRow,
             Optional<SharedLibRow, 'assetsDiscoveryUrl' | 'assetsDiscoveryUpdatedAt' | 'adminNotes' | 'l10nManifest'>,

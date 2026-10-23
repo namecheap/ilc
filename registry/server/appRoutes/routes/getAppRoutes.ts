@@ -1,52 +1,29 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 
 import { markProtected, routeEntity } from '../../common/services/protectedEntities';
-import db from '../../db';
-import { Tables } from '../../db/structure';
+import { validated } from '../../common/validation/validated';
 import { appendDigest } from '../../util/hmac';
-import { EntityTypes } from '../../versioning/interfaces';
-import { AppRoute } from '../interfaces';
+import { appRoutesFiltersSchema, appRoutesListQuerySchema } from '../interfaces';
 import { prepareAppRoutesToRespond } from '../services/prepareAppRoute';
-import { SPECIAL_PREFIX, transformSpecialRoutesForConsumer } from '../services/transformSpecialRoutes';
+import { transformSpecialRoutesForConsumer } from '../services/transformSpecialRoutes';
+import type { RoutesService } from '../services/RoutesService';
 
-const getAppRoutes = async (req: Request, res: Response) => {
-    const filters = req.query.filter ? JSON.parse(req.query.filter as string) : {};
+export function getAppRoutes(service: RoutesService): RequestHandler {
+    return validated(
+        { filters: appRoutesFiltersSchema, query: appRoutesListQuerySchema },
+        async ({ filters, query }, req, res) => {
+            const appRoutes = await service.list(filters, query.range);
+            const itemsWithId = appRoutes.data.map((item) => {
+                return { ...item, versionId: appendDigest(item.versionId, 'route') };
+            });
+            const appRoutesResponse = transformSpecialRoutesForConsumer(itemsWithId);
 
-    const query = db
-        .selectVersionedRowsFrom<AppRoute>(Tables.Routes, 'id', EntityTypes.routes, [
-            'routes.id as routeId',
-            'routes.*',
-        ])
-        .orderBy('orderPos', 'ASC')
-        .orderBy('routes.id', 'ASC');
+            res.setHeader('Content-Range', appRoutes.pagination.total); //Stub for future pagination capabilities
+            const preparedRoutes = prepareAppRoutesToRespond(appRoutesResponse).map((route) =>
+                markProtected(routeEntity(route), route),
+            );
 
-    if (filters.showSpecial === true) {
-        query.where('routes.route', 'like', `${SPECIAL_PREFIX}%`);
-    } else {
-        query.whereNot('routes.route', 'like', `${SPECIAL_PREFIX}%`);
-
-        if (filters.routePrefix !== undefined) {
-            query.where('routes.route', 'like', `${filters.routePrefix}%`);
-        }
-    }
-
-    if (filters.domainId !== undefined) {
-        filters.domainId = filters.domainId === 'null' ? null : filters.domainId;
-        query.where('domainId', filters.domainId);
-    }
-
-    const appRoutes = await query.range(req.query.range as string | undefined);
-    const itemsWithId = appRoutes.data.map((item: any) => {
-        return { ...item, versionId: appendDigest(item.versionId, 'route') };
-    });
-    const appRoutesResponse = transformSpecialRoutesForConsumer(itemsWithId);
-
-    res.setHeader('Content-Range', appRoutes.pagination.total); //Stub for future pagination capabilities
-    const preparedRoutes = prepareAppRoutesToRespond(appRoutesResponse).map((route) =>
-        markProtected(routeEntity(route), route),
+            res.status(200).send(preparedRoutes);
+        },
     );
-
-    res.status(200).send(preparedRoutes);
-};
-
-export default [getAppRoutes];
+}

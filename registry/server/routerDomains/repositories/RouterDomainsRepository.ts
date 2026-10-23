@@ -27,6 +27,11 @@ export class RouterDomainsRepository {
         return row?.id;
     }
 
+    async findIdByAlias(alias: string): Promise<number | undefined> {
+        const row = await this.db(Tables.RouterDomains).where({ alias }).first('id');
+        return row?.id;
+    }
+
     async insert(routerDomain: RouterDomainsInput, trx: Knex.Transaction): Promise<RouterDomainsRow> {
         const [row] = await trx(Tables.RouterDomains).insert(routerDomain).returning('*');
         return row;

@@ -32,39 +32,39 @@ export async function seed(knex: Knex): Promise<any> {
             routeId: 7, // Special: 404
             name: 'body',
             appName: '@portal/system',
-            props: JSON.stringify({ _statusCode: '404' }),
+            props: { _statusCode: '404' },
         },
         {
             routeId: 8, // /
             name: 'body',
             appName: '@portal/system',
-            props: JSON.stringify({
+            props: {
                 page: 'home',
-            }),
+            },
         },
         {
             routeId: 9, // /wrapper/
             name: 'body',
             appName: '@portal/systemWithWrapper',
-            props: JSON.stringify({
+            props: {
                 page: 'wrapped',
-            }),
+            },
         },
         {
             routeId: 10, // /hooks/
             name: 'body',
             appName: '@portal/system',
-            props: JSON.stringify({
+            props: {
                 page: 'hooks',
-            }),
+            },
         },
         {
             routeId: 11, // /hooks/protected/
             name: 'body',
             appName: '@portal/system',
-            props: JSON.stringify({
+            props: {
                 page: 'hooks-protected',
-            }),
+            },
         },
         {
             routeId: 12, // Special: 404 only for 127.0.0.1
@@ -75,19 +75,19 @@ export async function seed(knex: Knex): Promise<any> {
             routeId: 12, // Special: 404 only for 127.0.0.1
             name: 'body',
             appName: '@portal/system',
-            props: JSON.stringify({
+            props: {
                 _statusCode: '404',
                 title: '404 not found on 127.0.0.1',
-            }),
+            },
         },
         {
             routeId: 13, // /missing-slot-in-tpl/
             name: 'invalid-slot',
             kind: 'regular',
             appName: '@portal/system',
-            props: JSON.stringify({
+            props: {
                 page: 'home',
-            }),
+            },
         },
     ]);
     await knex(table).syncSequence();

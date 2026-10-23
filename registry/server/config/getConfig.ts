@@ -1,6 +1,6 @@
 import { type RequestHandler } from 'express';
 
-import { AppRoute, AppRouteSlot } from '../appRoutes/interfaces';
+import type { RouteJoinSlotRow } from '../appRoutes/interfaces';
 import knex from '../db';
 import { Tables } from '../db/structure';
 import settingsService from '../settings/services/SettingsService';
@@ -17,7 +17,7 @@ export const getConfig: RequestHandler = async (req, res) => {
         knex.selectVersionedRowsFrom(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]),
         knex.selectVersionedRowsFrom(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.name`]),
         knex
-            .selectVersionedRowsFrom<AppRoute & AppRouteSlot>(Tables.Routes, 'id', EntityTypes.routes, [
+            .selectVersionedRowsFrom<RouteJoinSlotRow>(Tables.Routes, 'id', EntityTypes.routes, [
                 `${Tables.Routes}.*`,
                 `${Tables.RouteSlots}.*`,
             ])

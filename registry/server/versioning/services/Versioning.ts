@@ -4,7 +4,14 @@ import versioningConfig from '../config';
 
 import { extractInsertedId, formatDate } from '../../util/db';
 import * as errors from '../errors';
-import { EntityTypes, OperationConfig, VersionRow, VersionRowData, VersionRowParsed } from '../interfaces';
+import {
+    EntityTypes,
+    OperationConfig,
+    VersionedRecord,
+    VersionRow,
+    VersionRowData,
+    VersionRowParsed,
+} from '../interfaces';
 import { sanitizeSnapshot, stripSecretFields } from '../utils/secretSanitizer';
 import { selectVersionedRowsFrom } from './selectVersionedRows';
 import Transaction = Knex.Transaction;
@@ -46,13 +53,11 @@ export class Versioning {
     }
 
     /** Selects the table's columns along with the id of each row's latest version as "versionId" */
-    public versionedSelect<TTable extends Knex.TableNames>(
-        table: TTable,
-        key: string,
-        entityType: EntityTypes,
-        columns: Knex.ColumnDescriptor<{}, {}[]>[],
-    ) {
-        return selectVersionedRowsFrom(this.db, table, key, entityType, columns);
+    public versionedSelect<
+        TTable extends Knex.TableNames,
+        TResult = VersionedRecord<Knex.ResolveTableType<Knex.TableType<TTable>>>,
+    >(table: TTable, key: string, entityType: EntityTypes, columns: Knex.ColumnDescriptor<{}, {}[]>[]) {
+        return selectVersionedRowsFrom<TTable, TResult>(this.db, table, key, entityType, columns);
     }
 
     /**

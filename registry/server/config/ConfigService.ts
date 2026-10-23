@@ -1,7 +1,7 @@
 import { Knex } from 'knex';
 import { User } from '../../typings/User';
-import { AppRoute, AppRouteDto } from '../appRoutes/interfaces';
-import { routesService } from '../appRoutes/routes/RoutesService';
+import { appRouteSchema, type RouteRow } from '../appRoutes/interfaces';
+import type { RoutesService } from '../appRoutes/services/RoutesService';
 import { App } from '../apps/interfaces';
 import { ApplicationEntry } from '../common/services/entries/ApplicationEntry';
 import { EntryFactory } from '../common/services/entries/EntryFactory';
@@ -15,7 +15,8 @@ import { z } from 'zod';
 
 type UpsertPayload = {
     apps?: App[];
-    routes?: AppRouteDto[];
+    // Validated before upserting
+    routes?: unknown[];
     // Validated one by one while upserting
     sharedLibs?: unknown[];
 };
@@ -30,6 +31,7 @@ export class ConfigService {
     constructor(
         private readonly db: VersionedKnex,
         private readonly sharedLibs: SharedLibsService,
+        private readonly routes: RoutesService,
     ) {}
 
     async upsert(payload: UpsertPayload, { user, dryRun }: Omit<UpsertParams, 'trxProvider'>): Promise<void> {
@@ -75,42 +77,38 @@ export class ConfigService {
         return await Promise.all(apps.map((x) => appInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })));
     }
 
-    private async upsertRoutes(
-        routes: AppRouteDto[],
-        { user, trxProvider }: UpsertParams,
-    ): Promise<(AppRoute & { id: number })[]> {
+    private async upsertRoutes(routes: unknown[], { user, trxProvider }: UpsertParams): Promise<RouteRow[]> {
         this.validateRoutes(routes);
-        const results: (AppRoute & { id: number })[] = [];
-        for (const route of routes) {
-            const result = await routesService.upsert(route, user, trxProvider);
+        const parsedRoutes = await Promise.all(routes.map((route) => parse(appRouteSchema, route)));
+        const results: RouteRow[] = [];
+        for (const route of parsedRoutes) {
+            const result = await this.routes.upsert(route, user, trxProvider);
             results.push(result);
         }
         return results;
     }
 
-    private validateRoutes(routes: AppRouteDto[]) {
-        const grouped = routes.reduce(
-            (acc, route) => {
-                const ns = route.namespace ?? '';
-                if (!acc[ns]) {
-                    acc[ns] = [];
-                }
-                acc[ns].push(route);
-                return acc;
-            },
-            {} as Record<string, AppRouteDto[]>,
-        );
+    /** Runs on the routes as sent, so the error shows them that way */
+    private validateRoutes(routes: unknown[]) {
+        const grouped = routes.reduce<Record<string, unknown[]>>((acc, route) => {
+            const ns = String(field(route, 'namespace') ?? '');
+            if (!acc[ns]) {
+                acc[ns] = [];
+            }
+            acc[ns].push(route);
+            return acc;
+        }, {});
         Object.values(grouped).forEach((namespaceRoutes) => {
             const duplicates = namespaceRoutes.filter(
                 (route, idx, arr) =>
                     arr.findIndex(
                         (r) =>
-                            r.route === route.route &&
-                            r.domainId === route.domainId &&
-                            r.domainAlias === route.domainAlias,
+                            field(r, 'route') === field(route, 'route') &&
+                            field(r, 'domainId') === field(route, 'domainId') &&
+                            field(r, 'domainAlias') === field(route, 'domainAlias'),
                     ) !== idx,
             );
-            const unorderedDuplicates = duplicates.filter((route) => typeof route.orderPos !== 'number');
+            const unorderedDuplicates = duplicates.filter((route) => typeof field(route, 'orderPos') !== 'number');
             if (unorderedDuplicates.length > 0) {
                 throw new Error(
                     `Multiple routes with the same "route" and "domainId" and without "orderPos" are present in the passed update:${JSON.stringify(unorderedDuplicates, null, 2)}To update, ensure that each of these routes has a unique "orderPos" value for the given "domainId".`,
@@ -122,11 +120,8 @@ export class ConfigService {
     private async upsertSharedLibs(sharedLibs: unknown[], { user, trxProvider, dryRun }: UpsertParams): Promise<void> {
         await Promise.all(
             sharedLibs.map(async (x) => {
-                const result = await sharedLibSchema.safeParseAsync(x);
-                if (!result.success) {
-                    throw new UnprocessableContent({ message: z.prettifyError(result.error) });
-                }
-                await this.sharedLibs.upsert(result.data, { user, trxProvider, fetchManifest: !dryRun });
+                const sharedLib = await parse(sharedLibSchema, x);
+                await this.sharedLibs.upsert(sharedLib, { user, trxProvider, fetchManifest: !dryRun });
             }),
         );
     }
@@ -139,7 +134,7 @@ export class ConfigService {
             Object.keys(upsertedRoutesByNamespace).map(
                 (namespace) =>
                     namespace &&
-                    routesService.deleteByNamespace(namespace, upsertedRoutesByNamespace[namespace], {
+                    this.routes.deleteByNamespace(namespace, upsertedRoutesByNamespace[namespace], {
                         user,
                         trxProvider,
                     }),
@@ -165,7 +160,7 @@ export class ConfigService {
     }
 
     public mapError(error: any): Error {
-        if (routesService.isOrderPosError(error)) {
+        if (this.routes.isOrderPosError(error)) {
             return getJoiErr(
                 'orderPos',
                 'Specified "orderPos" value already exists for routes with provided "domainId" and "namespace"',
@@ -199,4 +194,16 @@ export class ConfigService {
             {} as Record<string, T[K][]>,
         );
     }
+}
+
+async function parse<T extends z.ZodType>(schema: T, value: unknown): Promise<z.output<T>> {
+    const result = await schema.safeParseAsync(value);
+    if (!result.success) {
+        throw new UnprocessableContent({ message: z.prettifyError(result.error) });
+    }
+    return result.data;
+}
+
+function field(value: unknown, key: string): unknown {
+    return typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined;
 }

@@ -1,118 +1,131 @@
-import JoiDefault from 'joi';
+import { z } from 'zod';
 
-import { appNameSchema } from '../../apps/interfaces';
-import db from '../../db';
-import { templateNameSchema } from '../../templates/routes/validation';
-import { getJoiErr } from '../../util/helpers';
+import type { JSONObject } from '../../common/services/json';
+import { jsonObjectSchema, nullAsMissing, versionIdSchema } from '../../common/validation/schemas';
+import { templateNameSchema } from '../../templates/interfaces';
+import type { VersionedRecord } from '../../versioning/interfaces';
 
-const Joi = JoiDefault.defaults((schema) => {
-    return schema.empty(null);
-});
+export interface RouteRow {
+    id: number;
+    orderPos: number | null;
+    route: string;
+    next: boolean;
+    templateName: string | null;
+    meta: JSONObject | null;
+    domainId: number | null;
+    domainIdIdxble: number | null;
+    namespace: string | null;
+}
 
-export interface AppRouteSlot {
+export interface RouteSlotRow {
     id: number;
     routeId: number;
     name: string;
     appName: string;
-    props?: string | null;
-    kind?: string | null;
+    props: JSONObject | null;
+    kind: string | null;
 }
 
-export interface AppRouteSlotDto {
-    appName: string;
-    props?: object;
-    kind?: 'primary' | 'essential' | 'regular' | null;
-}
+/**
+ * routes.* and route_slots.* of a route left-joined with its slots. The slot columns, "id" and "routeId"
+ * included, overwrite the route's and are null when the route has no slots
+ */
+export type RouteJoinSlotRow = Omit<RouteRow, 'id'> & { [K in keyof RouteSlotRow]: RouteSlotRow[K] | null };
 
-const commonAppRouteSlot = {
-    name: Joi.string().trim().min(1).max(255),
-    appName: appNameSchema.external(async (value) => {
-        const wrapperApp = await db('apps').first('kind').where({ name: value });
-        if (!wrapperApp) {
-            throw getJoiErr('appName', `Non-existing app name "${value}" specified.`, wrapperApp);
-        } else if (wrapperApp.kind === 'wrapper') {
-            throw getJoiErr('appName', "It's forbidden to use wrappers in routes.", wrapperApp);
-        }
+/** RouteJoinSlotRow with "routeId" set for a route without slots too */
+export type RouteWithSlotRow = VersionedRecord<Omit<RouteJoinSlotRow, 'routeId'> & { routeId: number }>;
 
-        return value;
-    }),
-    props: Joi.object().default({}),
-    kind: Joi.string().valid('primary', 'essential', 'regular', null).default(null),
-};
+const slotKinds = ['primary', 'essential', 'regular'] as const;
 
-export const appRouteSlotSchema = Joi.object({
-    ...commonAppRouteSlot,
-    name: commonAppRouteSlot.name.forbidden(),
-    appName: commonAppRouteSlot.appName.required(),
+export const appRouteSlotSchema = z.strictObject({
+    appName: nullAsMissing(z.string().trim().min(1)),
+    props: nullAsMissing(jsonObjectSchema.default({})),
+    kind: z
+        .enum(slotKinds)
+        .nullish()
+        .transform((kind) => kind ?? null),
 });
 
-export const appRouteIdSchema = Joi.number().positive().integer().required();
+export const appRouteIdSchema = z.coerce.number().int().positive();
 
-export interface AppRoute {
-    id: number;
-    orderPos?: number | null;
-    route: string;
-    next?: boolean;
-    templateName?: string | null;
-    meta?: object | string | null;
-    domainId?: number | null;
-    domainIdIdxble?: number | null;
-    domainAlias?: string | null;
-    namespace?: string | null;
-}
+export const appRouteParamsSchema = z.strictObject({
+    id: appRouteIdSchema,
+});
 
-export type AppRouteDto = {
-    specialRole?: string;
-    orderPos?: number | null;
-    route: string;
-    next: boolean;
-    templateName: string | null;
-    slots: Record<string, AppRouteSlotDto>;
-    domainId: number | null;
-    domainAlias: string | null;
-    meta: Record<string, any>;
-    versionId: string;
-    namespace: string | null;
-};
+export const appRoutesListQuerySchema = z.object({
+    range: z.string().optional(),
+});
+
+/** Unknown filter keys are ignored, as before */
+export const appRoutesFiltersSchema = z.object({
+    showSpecial: z.boolean().optional(),
+    routePrefix: z.string().optional(),
+    domainId: z.union([z.number(), z.literal('null')]).optional(),
+});
 
 const commonAppRoute = {
-    specialRole: Joi.string().valid('404'),
-    orderPos: Joi.number(),
-    route: Joi.string().trim().max(255),
-    next: Joi.bool().default(false),
-    templateName: templateNameSchema.allow(null).default(null),
-    slots: Joi.object().pattern(commonAppRouteSlot.name, appRouteSlotSchema).default({}),
-    domainId: Joi.number(),
-    domainAlias: Joi.string()
-        .lowercase()
-        .pattern(/^[a-z0-9-]+$/)
-        .max(64)
-        .trim(),
-    meta: Joi.object().default({}),
-    versionId: Joi.string().strip(),
-    namespace: Joi.string().default(null),
+    specialRole: nullAsMissing(z.enum(['404']).optional()),
+    orderPos: nullAsMissing(z.number().optional()),
+    route: nullAsMissing(z.string().trim().max(255).optional()),
+    next: nullAsMissing(z.boolean().optional()),
+    templateName: templateNameSchema.nullish().transform((templateName) => templateName ?? null),
+    slots: nullAsMissing(z.record(z.string().min(1).max(255), appRouteSlotSchema).default({})),
+    domainId: nullAsMissing(z.number().optional()),
+    domainAlias: nullAsMissing(
+        z
+            .string()
+            .trim()
+            .toLowerCase()
+            .max(64)
+            .regex(/^[a-z0-9-]+$/)
+            .optional(),
+    ),
+    meta: nullAsMissing(jsonObjectSchema.default({})),
+    versionId: nullAsMissing(versionIdSchema),
+    namespace: nullAsMissing(z.string().optional()).transform((namespace) => namespace ?? null),
 };
 
-export const partialAppRouteSchema = Joi.object({
-    ...commonAppRoute,
-}).oxor('domainId', 'domainAlias');
+type DomainReference = { domainId?: number; domainAlias?: string };
 
-const conditionSpecialRole = {
-    is: Joi.exist(),
-    then: Joi.forbidden(),
-    otherwise: Joi.required(),
-};
+const exclusiveDomainReference = [
+    ({ domainId, domainAlias }: DomainReference) => domainId === undefined || domainAlias === undefined,
+    { message: 'contains a conflict between optional exclusive peers [domainId, domainAlias]' },
+] as const;
 
-export const appRouteSchema = Joi.object<AppRouteDto>({
-    ...commonAppRoute,
-    orderPos: commonAppRoute.orderPos.when('specialRole', {
-        is: Joi.exist(),
-        then: Joi.forbidden(),
-        otherwise: Joi.optional(),
-    }),
-    route: commonAppRoute.route.when('specialRole', conditionSpecialRole),
-    next: commonAppRoute.next.when('specialRole', {
-        is: Joi.exist(),
-        then: Joi.forbidden(),
-    }),
-}).oxor('domainId', 'domainAlias');
+/** PUT replaces the route */
+export const partialAppRouteSchema = z
+    .strictObject(commonAppRoute)
+    .refine(...exclusiveDomainReference)
+    .transform(({ versionId, next, ...appRoute }) => ({ ...appRoute, next: next ?? false }));
+
+/** A special route (404) has no route, orderPos and next of its own, those come from the special role */
+export const appRouteSchema = z
+    .strictObject(commonAppRoute)
+    .refine(...exclusiveDomainReference)
+    .superRefine((appRoute, ctx) => {
+        if (appRoute.specialRole === undefined) {
+            if (appRoute.route === undefined) {
+                ctx.addIssue({
+                    code: 'custom',
+                    path: ['route'],
+                    message: 'Invalid input: expected string, received undefined',
+                });
+            }
+            return;
+        }
+
+        for (const field of ['orderPos', 'route', 'next'] as const) {
+            if (appRoute[field] !== undefined) {
+                ctx.addIssue({ code: 'custom', path: [field], message: 'Not allowed together with "specialRole"' });
+            }
+        }
+    })
+    .transform(({ versionId, next, ...appRoute }) => ({
+        ...appRoute,
+        next: appRoute.specialRole === undefined ? (next ?? false) : undefined,
+    }));
+
+export type AppRouteSlotInput = z.output<typeof appRouteSlotSchema>;
+export type CreateAppRouteInput = z.output<typeof appRouteSchema>;
+export type UpdateAppRouteInput = z.output<typeof partialAppRouteSchema>;
+export type AppRoutesFilters = z.output<typeof appRoutesFiltersSchema>;
