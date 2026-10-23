@@ -5,16 +5,19 @@ import { routesService } from '../appRoutes/routes/RoutesService';
 import { App } from '../apps/interfaces';
 import { ApplicationEntry } from '../common/services/entries/ApplicationEntry';
 import { EntryFactory } from '../common/services/entries/EntryFactory';
-import { SharedLibEntry } from '../common/services/entries/SharedLibEntry';
-import db, { VersionedKnex } from '../db';
-import { SharedLib } from '../sharedLibs/interfaces';
+import { VersionedKnex } from '../db';
+import { UnprocessableContent } from '../errorHandler/httpErrors';
+import { sharedLibSchema } from '../sharedLibs/interfaces';
+import type { SharedLibsService } from '../sharedLibs/services/SharedLibsService';
 import { PG_FOREIGN_KEY_VIOLATION_CODE } from '../util/db';
 import { getJoiErr } from '../util/helpers';
+import { z } from 'zod';
 
 type UpsertPayload = {
     apps?: App[];
     routes?: AppRouteDto[];
-    sharedLibs?: SharedLib[];
+    // Validated one by one while upserting
+    sharedLibs?: unknown[];
 };
 
 type UpsertParams = {
@@ -24,14 +27,16 @@ type UpsertParams = {
 };
 
 export class ConfigService {
-    constructor(private readonly db: VersionedKnex) {}
+    constructor(
+        private readonly db: VersionedKnex,
+        private readonly sharedLibs: SharedLibsService,
+    ) {}
 
     async upsert(payload: UpsertPayload, { user, dryRun }: Omit<UpsertParams, 'trxProvider'>): Promise<void> {
         if (!payload.apps && !payload.routes && !payload.sharedLibs) {
             throw new Error('At least one of the following parameters should be provided: apps, routes, sharedLibs');
         }
         const appInstance = EntryFactory.getAppInstance();
-        const sharedLibInstance = EntryFactory.getSharedLibInstance();
 
         const trxProvider = this.db.transactionProvider();
         const trx = await trxProvider();
@@ -47,7 +52,7 @@ export class ConfigService {
             const groupedApps = this.groupByNamespace(upsertedApps, 'name');
             const groupedRoutes = this.groupByNamespace(upsertedRoutes, 'id');
 
-            await this.upsertSharedLibs(payload.sharedLibs ?? [], sharedLibInstance, { user, trxProvider, dryRun });
+            await this.upsertSharedLibs(payload.sharedLibs ?? [], { user, trxProvider, dryRun });
             await this.deleteRoutesByNamespace(groupedRoutes, { user, trxProvider });
             await this.deleteAppsByNamespace(groupedApps, appInstance, { user, trxProvider });
 
@@ -114,13 +119,15 @@ export class ConfigService {
         });
     }
 
-    private async upsertSharedLibs(
-        sharedLibs: SharedLib[],
-        sharedLibInstance: SharedLibEntry,
-        { user, trxProvider, dryRun }: UpsertParams,
-    ): Promise<void> {
+    private async upsertSharedLibs(sharedLibs: unknown[], { user, trxProvider, dryRun }: UpsertParams): Promise<void> {
         await Promise.all(
-            sharedLibs.map((x) => sharedLibInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })),
+            sharedLibs.map(async (x) => {
+                const result = await sharedLibSchema.safeParseAsync(x);
+                if (!result.success) {
+                    throw new UnprocessableContent({ message: z.prettifyError(result.error) });
+                }
+                await this.sharedLibs.upsert(result.data, { user, trxProvider, fetchManifest: !dryRun });
+            }),
         );
     }
 
@@ -193,5 +200,3 @@ export class ConfigService {
         );
     }
 }
-
-export const configService = new ConfigService(db);

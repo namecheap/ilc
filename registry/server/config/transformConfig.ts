@@ -6,7 +6,7 @@ import { VersionedRecord } from '../versioning/interfaces';
 import type { RouterDomainsRow } from '../routerDomains/interfaces';
 import { AppRoute, AppRouteSlot } from '../appRoutes/interfaces';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
-import { SharedLib } from '../sharedLibs/interfaces';
+import type { SharedLibRow } from '../sharedLibs/interfaces';
 
 type Dict = Record<string, any>;
 type TransformedApp = VersionedRecord<Omit<App, 'enforceDomain'>> & {
@@ -182,7 +182,7 @@ type DynamicLibDto = {
     l10nManifest?: string | null;
     versionId: string;
 };
-export function transformSharedLibs(sharedLibs: VersionedRecord<SharedLib>[]): {
+export function transformSharedLibs(sharedLibs: VersionedRecord<SharedLibRow>[]): {
     sharedLibs: Record<string, string>;
     dynamicLibs: Record<string, DynamicLibDto>;
 } {

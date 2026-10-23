@@ -1,38 +1,30 @@
-import { Request, Response } from 'express';
-
-import validateRequestFactory from '../../common/services/validateRequest';
-import preProcessResponse from '../../common/services/preProcessResponse';
-import { SharedLib, sharedLibSchema } from '../interfaces';
-import { EntryFactory } from '../../common/services/entries/EntryFactory';
+import { RequestHandler } from 'express';
 import Joi from 'joi';
+
+import preProcessResponse from '../../common/services/preProcessResponse';
+import { validated } from '../../common/validation/validated';
+import { sharedLibSchema } from '../interfaces';
 import { joiErrorToResponse } from '../../util/helpers';
 import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';
+import type { SharedLibsService } from '../services/SharedLibsService';
 
-const validateRequestBeforeCreateSharedLib = validateRequestFactory([
-    {
-        schema: sharedLibSchema,
-        selector: 'body',
-    },
-]);
+export function createSharedLib(service: SharedLibsService): RequestHandler {
+    return validated({ body: sharedLibSchema }, async ({ body }, req, res) => {
+        let results;
 
-const createSharedLib = async (req: Request<{}, any, SharedLib>, res: Response): Promise<Response> => {
-    const sharedLib = req.body;
-    const sharedLibEntry = EntryFactory.getSharedLibInstance();
-
-    let results;
-
-    try {
-        results = await sharedLibEntry.create(sharedLib, { user: req.user });
-    } catch (error) {
-        if (error instanceof Joi.ValidationError) {
-            return res.status(422).send(joiErrorToResponse(error));
-        } else if (error instanceof AssetsManifestError) {
-            return res.status(422).send(error.message);
+        try {
+            results = await service.create(body, req.user);
+        } catch (error) {
+            if (error instanceof Joi.ValidationError) {
+                res.status(422).send(joiErrorToResponse(error));
+                return;
+            } else if (error instanceof AssetsManifestError) {
+                res.status(422).send(error.message);
+                return;
+            }
+            throw error;
         }
-        throw error;
-    }
 
-    return res.status(200).send(preProcessResponse(results));
-};
-
-export default [validateRequestBeforeCreateSharedLib, createSharedLib];
+        res.status(200).send(preProcessResponse(results));
+    });
+}

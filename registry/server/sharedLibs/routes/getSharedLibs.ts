@@ -1,23 +1,24 @@
-import { Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { markProtected } from '../../common/services/protectedEntities';
-import { filtersMiddleware, RequestWithFilters } from '../../middleware/filters';
+import { validated } from '../../common/validation/validated';
+import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
-import { SharedLibsGetListFilters, sharedLibsRepository } from '../repositories/SharedLibsRepository';
+import { sharedLibsFiltersSchema, sharedLibsListQuerySchema } from '../interfaces';
+import type { SharedLibsService } from '../services/SharedLibsService';
 
-const filtersSchema = Joi.object<SharedLibsGetListFilters>({
-    name: Joi.string().optional(),
-});
+export function getSharedLibs(service: SharedLibsService): RequestHandler {
+    return validated(
+        { filters: sharedLibsFiltersSchema, query: sharedLibsListQuerySchema },
+        async ({ filters, query }, req, res) => {
+            const { data, pagination } = await service.list(filters, query.range);
+            const sharedLibs = data.map((item) => {
+                return { ...item, versionId: appendDigest(item.versionId, 'sharedLib') };
+            });
 
-const getSharedLibs = async (req: RequestWithFilters<SharedLibsGetListFilters>, res: Response): Promise<void> => {
-    const { data: sharedLibs, pagination } = await sharedLibsRepository.getList(req.filters ?? {}, {
-        range: req.query.range as string | undefined,
-    });
-
-    res.setHeader('Content-Range', pagination.total);
-    res.status(200).send(preProcessResponse(markProtected(EntityTypes.shared_libs, sharedLibs)));
-};
-
-export default [filtersMiddleware(filtersSchema), getSharedLibs];
+            res.setHeader('Content-Range', pagination.total);
+            res.status(200).send(preProcessResponse(markProtected(EntityTypes.shared_libs, sharedLibs)));
+        },
+    );
+}

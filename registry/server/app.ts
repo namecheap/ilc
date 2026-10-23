@@ -20,6 +20,8 @@ import { createVersioningRouter } from './versioning/routes';
 import { createRouterDomainsRouter } from './routerDomains/routes';
 import { createAuthEntitiesRouter } from './authEntities/routes';
 import { createTemplatesRouter } from './templates/routes';
+import { createSharedLibsRouter } from './sharedLibs/routes';
+import { createEntriesRouter } from './entries/entries';
 
 export default async (withAuth: boolean = true): Promise<Application> => {
     loadPlugins();
@@ -62,7 +64,7 @@ export default async (withAuth: boolean = true): Promise<Application> => {
         );
     }
 
-    app.use('/api/v1/config', routes.config(authMw));
+    app.use('/api/v1/config', routes.config(authMw, services.config));
     app.use('/api/v1/app', authMw, routes.apps);
     app.use('/api/v1/template', createTemplatesRouter(services.templates, authMw));
     app.use('/api/v1/route', authMw, routes.appRoutes);
@@ -71,9 +73,9 @@ export default async (withAuth: boolean = true): Promise<Application> => {
     app.use('/api/v1/versioning', authMw, createVersioningRouter(services.versioning));
     app.use('/api/v1/settings', routes.settings(authMw));
     app.use('/api/v1/router_domains', createRouterDomainsRouter(services.routerDomains, authMw));
-    app.use('/api/v1/shared_libs', authMw, routes.sharedLibs);
+    app.use('/api/v1/shared_libs', authMw, createSharedLibsRouter(services.sharedLibs));
     app.use('/api/v1/public', routes.public);
-    app.use('/api/v1/entries', authMw, routes.entries);
+    app.use('/api/v1/entries', authMw, createEntriesRouter(services.sharedLibs));
 
     app.use(errorHandler);
 

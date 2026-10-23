@@ -2,7 +2,7 @@ import { type Knex } from 'knex';
 import { AppRoute, AppRouteSlot } from '../../server/appRoutes/interfaces';
 import { App } from '../../server/apps/interfaces';
 import { DomainSetting, SettingRaw } from '../../server/settings/interfaces';
-import { SharedLib } from '../../server/sharedLibs/interfaces';
+import { SharedLibRow } from '../../server/sharedLibs/interfaces';
 import { LocalizedTemplateRow, TemplateRow } from '../../server/templates/interfaces';
 import { AuthEntityRow } from '../../server/authEntities/interfaces';
 import { SharedPropsRow } from '../../server/sharedProps/interfaces';
@@ -15,7 +15,11 @@ declare module 'knex/types/tables' {
         apps: Knex.CompositeTableType<App>;
         routes: Knex.CompositeTableType<AppRoute, Optional<AppRoute, 'id'>>;
         route_slots: Knex.CompositeTableType<AppRouteSlot, Optional<AppRouteSlot, 'id'>>;
-        shared_libs: Knex.CompositeTableType<SharedLib>;
+        shared_libs: Knex.CompositeTableType<
+            SharedLibRow,
+            Optional<SharedLibRow, 'assetsDiscoveryUrl' | 'assetsDiscoveryUpdatedAt' | 'adminNotes' | 'l10nManifest'>,
+            Partial<Omit<SharedLibRow, 'name'>>
+        >;
         settings: Knex.CompositeTableType<SettingRaw>;
         settings_domain_value: Knex.CompositeTableType<DomainSetting, Optional<DomainSetting, 'id'>>;
         router_domains: Knex.CompositeTableType<

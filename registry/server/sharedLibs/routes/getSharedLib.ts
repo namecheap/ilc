@@ -1,42 +1,22 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { markProtected } from '../../common/services/protectedEntities';
-import validateRequestFactory from '../../common/services/validateRequest';
-import { SharedLib, sharedLibNameSchema } from '../interfaces';
-import { Tables } from '../../db/structure';
+import { validated } from '../../common/validation/validated';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
+import { sharedLibParamsSchema } from '../interfaces';
+import type { SharedLibsService } from '../services/SharedLibsService';
 
-type GetSharedLibRequestParams = {
-    name: string;
-};
+export function getSharedLib(service: SharedLibsService): RequestHandler {
+    return validated({ params: sharedLibParamsSchema }, async ({ params }, req, res) => {
+        const sharedLib = await service.get(params.name);
 
-const validateRequestBeforeGetSharedLib = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: sharedLibNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-]);
-
-const getSharedLib = async (req: Request<GetSharedLibRequestParams>, res: Response): Promise<void> => {
-    const sharedLibName = req.params.name;
-    const [sharedLib] = await db
-        .selectVersionedRowsFrom<SharedLib>(Tables.SharedLibs, 'name', EntityTypes.shared_libs, [
-            `${Tables.SharedLibs}.*`,
-        ])
-        .where('name', sharedLibName);
-
-    if (!sharedLib) {
-        res.status(404).send('Not found');
-    } else {
-        sharedLib.versionId = appendDigest(sharedLib.versionId, 'sharedLib');
-        res.status(200).send(preProcessResponse(markProtected(EntityTypes.shared_libs, sharedLib)));
-    }
-};
-
-export default [validateRequestBeforeGetSharedLib, getSharedLib];
+        if (!sharedLib) {
+            res.status(404).send('Not found');
+        } else {
+            const sharedLibWithId = { ...sharedLib, versionId: appendDigest(sharedLib.versionId, 'sharedLib') };
+            res.status(200).send(preProcessResponse(markProtected(EntityTypes.shared_libs, sharedLibWithId)));
+        }
+    });
+}

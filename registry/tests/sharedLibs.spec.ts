@@ -72,7 +72,11 @@ describe(`Tests ${example.url}`, () => {
             const response = await req
                 .post(example.url)
                 .send(_.omit(example.correct, ['name', 'spaBundle']))
-                .expect(422, '"spaBundle" is required\n"name" is required');
+                .expect(
+                    422,
+                    '✖ Invalid input: expected string, received undefined\n  → at name\n' +
+                        '✖ Invalid input: expected string, received undefined\n  → at spaBundle',
+                );
 
             expect(response.body).deep.equal({});
         });
@@ -93,10 +97,10 @@ describe(`Tests ${example.url}`, () => {
                 })
                 .expect(
                     422,
-                    '"assetsDiscoveryUrl" must be a string\n' +
-                        '"spaBundle" must be a string\n' +
-                        '"adminNotes" must be a string\n' +
-                        '"name" must be a string',
+                    '✖ Invalid input: expected string, received number\n  → at spaBundle\n' +
+                        '✖ Invalid input: expected string, received number\n  → at assetsDiscoveryUrl\n' +
+                        '✖ Invalid input: expected string, received number\n  → at adminNotes\n' +
+                        '✖ Invalid input: expected string, received number\n  → at name',
                 );
 
             expect(response.body).deep.equal({});
@@ -285,7 +289,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .put(example.url + example.correct.name)
                     .send(example.updated)
-                    .expect(422, '"name" is not allowed');
+                    .expect(422, '✖ Unrecognized key: "name"');
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -311,9 +315,9 @@ describe(`Tests ${example.url}`, () => {
                     })
                     .expect(
                         422,
-                        '"spaBundle" must be a string\n' +
-                            '"assetsDiscoveryUrl" must be a string\n' +
-                            '"adminNotes" must be a string',
+                        '✖ Invalid input: expected string, received number\n  → at spaBundle\n' +
+                            '✖ Invalid input: expected string, received number\n  → at assetsDiscoveryUrl\n' +
+                            '✖ Invalid input: expected string, received number\n  → at adminNotes',
                     );
                 expect(response.body).deep.equal({});
             } finally {

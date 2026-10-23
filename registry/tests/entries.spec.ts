@@ -88,7 +88,10 @@ describe(`Entries`, () => {
 
             const invalidPatch = { invalidProp: 'https://google.com' };
 
-            let response = await req.patch(example.url).send(invalidPatch).expect(422, '"invalidProp" is not allowed');
+            let response = await req
+                .patch(example.url)
+                .send(invalidPatch)
+                .expect(422, '✖ Unrecognized key: "invalidProp"');
         } finally {
             await ensureDeleted(req, `${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
         }

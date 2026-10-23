@@ -1,47 +1,59 @@
+import type { Knex } from 'knex';
 import { PaginatedResult } from '../../../typings/PaginatedResult';
-import db, { VersionedKnex } from '../../db';
 import { Tables } from '../../db/structure';
-import { appendDigest } from '../../util/hmac';
-import { EntityTypes } from '../../versioning/interfaces';
-import { SharedLib } from '../interfaces';
+import { EntityTypes, type VersionedRecord } from '../../versioning/interfaces';
+import type { Versioning } from '../../versioning/services/Versioning';
+import type { PartialSharedLibInput, SharedLibRow, SharedLibsFilters } from '../interfaces';
 
-export interface SharedLibsGetListFilters {
-    name?: string;
-}
-
-interface SharedLibsGetListOptions {
-    range?: string;
-}
+export type SharedLibInsert = Omit<SharedLibRow, 'assetsDiscoveryUpdatedAt' | 'adminNotes' | 'l10nManifest'> &
+    Partial<Pick<SharedLibRow, 'adminNotes' | 'l10nManifest'>>;
 
 export class SharedLibsRepository {
-    constructor(private readonly db: VersionedKnex) {}
+    constructor(private readonly versioning: Versioning) {}
 
-    async getList(
-        filters: SharedLibsGetListFilters,
-        options: SharedLibsGetListOptions,
-    ): Promise<PaginatedResult<SharedLib>> {
-        const { db } = this;
+    async list(
+        filters: SharedLibsFilters,
+        range: string | undefined,
+    ): Promise<PaginatedResult<VersionedRecord<SharedLibRow>>> {
+        const query = this.selectVersioned().orderBy(`${Tables.SharedLibs}.name`, 'asc');
 
-        const query = db
-            .selectVersionedRows(Tables.SharedLibs, 'name', EntityTypes.shared_libs, [`${Tables.SharedLibs}.*`])
-            .from(Tables.SharedLibs)
-            .orderBy(`${Tables.SharedLibs}.name`, 'asc');
-
-        if (filters?.name) {
+        if (filters.name) {
             query.whereLike(`${Tables.SharedLibs}.name`, `%${filters.name}%`);
         }
 
-        const sharedLibs = await query.range(options.range as string | undefined);
-        const itemsWithId = sharedLibs.data.map((item: any) => {
-            return { ...item, versionId: appendDigest(item.versionId, 'sharedLib') };
-        });
+        return query.range(range);
+    }
 
-        return {
-            data: itemsWithId,
-            pagination: sharedLibs.pagination,
-        };
+    async findByName(name: string): Promise<VersionedRecord<SharedLibRow> | undefined> {
+        const [row] = await this.selectVersioned().where(`${Tables.SharedLibs}.name`, name);
+        return row;
+    }
+
+    async insert(sharedLib: SharedLibInsert, trx: Knex.Transaction): Promise<SharedLibRow> {
+        const [row] = await trx(Tables.SharedLibs).insert(sharedLib).returning('*');
+        return row;
+    }
+
+    async update(
+        name: string,
+        sharedLib: PartialSharedLibInput,
+        trx: Knex.Transaction,
+    ): Promise<SharedLibRow | undefined> {
+        const [row] = await trx(Tables.SharedLibs).where({ name }).update(sharedLib).returning('*');
+        return row;
+    }
+
+    async upsert(sharedLib: SharedLibInsert, trx: Knex.Transaction): Promise<void> {
+        await trx(Tables.SharedLibs).insert(sharedLib).onConflict('name').merge();
+    }
+
+    async delete(name: string, trx: Knex.Transaction): Promise<number> {
+        return trx(Tables.SharedLibs).where({ name }).delete();
+    }
+
+    private selectVersioned() {
+        return this.versioning.versionedSelect(Tables.SharedLibs, 'name', EntityTypes.shared_libs, [
+            `${Tables.SharedLibs}.*`,
+        ]);
     }
 }
-
-// TODO: implement factory and IoC Container
-export const sharedLibsRepository = new SharedLibsRepository(db);
