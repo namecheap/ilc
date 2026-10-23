@@ -72,4 +72,65 @@ describe('validated', () => {
             .send({})
             .expect(422, '✖ Invalid input: expected number, received NaN\n  → at id');
     });
+
+    describe('filters', () => {
+        function createListApp(onFilters: (filters: { kind?: string }) => void) {
+            const app = express();
+            app.get(
+                '/',
+                validated(
+                    { filters: z.strictObject({ kind: z.string().optional() }) },
+                    async ({ filters }, req, res) => {
+                        onFilters(filters);
+                        res.status(200).send('handled');
+                    },
+                ),
+            );
+            return app;
+        }
+
+        it('should pass the parsed filter query parameter to the handler', async () => {
+            let received: unknown;
+            const app = createListApp((filters) => {
+                received = filters;
+            });
+
+            await supertest(app)
+                .get('/')
+                .query({ filter: JSON.stringify({ kind: 'primary' }) })
+                .expect(200);
+
+            expect(received).to.deep.equal({ kind: 'primary' });
+        });
+
+        it('should pass an empty object when there is no filter', async () => {
+            let received: unknown;
+            const app = createListApp((filters) => {
+                received = filters;
+            });
+
+            await supertest(app).get('/').expect(200);
+
+            expect(received).to.deep.equal({});
+        });
+
+        it('should respond with 400 and an error when filters are invalid', async () => {
+            const app = createListApp(() => {});
+
+            const response = await supertest(app)
+                .get('/')
+                .query({ filter: JSON.stringify({ unknown: 1 }) })
+                .expect(400);
+
+            expect(response.body).to.deep.equal({ error: '✖ Unrecognized key: "unknown"' });
+        });
+
+        it('should respond with 400 when the filter is not JSON', async () => {
+            const app = createListApp(() => {});
+
+            const response = await supertest(app).get('/').query({ filter: '{not json' }).expect(400);
+
+            expect(response.body).to.deep.equal({ error: 'Invalid JSON in "filter" query parameter' });
+        });
+    });
 });

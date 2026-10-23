@@ -6,6 +6,8 @@ interface RequestSchemas {
     params?: z.ZodType;
     query?: z.ZodType;
     body?: z.ZodType;
+    /** The JSON in the `filter` query parameter of list requests, an empty object when there is none */
+    filters?: z.ZodType;
 }
 
 export type ValidatedInput<S extends RequestSchemas> = {
@@ -25,6 +27,7 @@ const SELECTORS = ['params', 'query', 'body'] as const;
  * Parses the request parts that have a schema and hands the parsed values to the handler,
  * typed from the schemas. The request itself is left as it came.
  * A failed parse is a 422 with Zod's error summary, a missing body a 400.
+ * Invalid filters are a 400 with `{ error }`, as filtersMiddleware answered.
  */
 export function validated<S extends RequestSchemas>(schemas: S, handler: ValidatedHandler<S>): RequestHandler {
     return async (req, res) => {
@@ -33,7 +36,16 @@ export function validated<S extends RequestSchemas>(schemas: S, handler: Validat
             return;
         }
 
-        const input: Partial<Record<(typeof SELECTORS)[number], unknown>> = {};
+        const input: Partial<Record<keyof RequestSchemas, unknown>> = {};
+
+        if (schemas.filters) {
+            const result = await parseFilters(schemas.filters, req.query.filter);
+            if (!result.success) {
+                res.status(400).json({ error: result.error });
+                return;
+            }
+            input.filters = result.data;
+        }
 
         for (const selector of SELECTORS) {
             const schema = schemas[selector];
@@ -50,4 +62,23 @@ export function validated<S extends RequestSchemas>(schemas: S, handler: Validat
 
         await handler(input as ValidatedInput<S>, req, res);
     };
+}
+
+async function parseFilters(
+    schema: z.ZodType,
+    filter: unknown,
+): Promise<{ success: true; data: unknown } | { success: false; error: string }> {
+    let value: unknown = {};
+    if (filter !== undefined) {
+        try {
+            value = typeof filter === 'string' ? JSON.parse(filter) : filter;
+        } catch {
+            return { success: false, error: 'Invalid JSON in "filter" query parameter' };
+        }
+    }
+
+    const result = await schema.safeParseAsync(value);
+    return result.success
+        ? { success: true, data: result.data }
+        : { success: false, error: z.prettifyError(result.error) };
 }
