@@ -1,42 +1,26 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { markProtected } from '../../common/services/protectedEntities';
-import validateRequestFactory from '../../common/services/validateRequest';
-import SharedProps from '../interfaces';
-import { Tables } from '../../db/structure';
+import { validated } from '../../common/validation/validated';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
+import { authEntityParamsSchema } from '../interfaces';
+import type { AuthEntitiesService } from '../services/AuthEntitiesService';
 
-type RequestParams = {
-    id: string;
-};
+export function get(service: AuthEntitiesService): RequestHandler {
+    return validated({ params: authEntityParamsSchema }, async ({ params }, req, res) => {
+        const record = await service.get(params.id);
 
-const validateRequest = validateRequestFactory([
-    {
-        schema: Joi.object({
-            id: Joi.number().required(),
-        }),
-        selector: 'params',
-    },
-]);
-
-const getSharedProps = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const [record] = await db
-        .selectVersionedRowsFrom<SharedProps>(Tables.AuthEntities, 'id', EntityTypes.auth_entities, [
-            `${Tables.AuthEntities}.*`,
-        ])
-        .where('id', req.params.id);
-
-    if (!record) {
-        res.status(404).send('Not found');
-    } else {
-        delete record.secret;
-        record.versionId = appendDigest(record.versionId, 'authEntities');
-        res.status(200).send(preProcessResponse(markProtected(EntityTypes.auth_entities, record)));
-    }
-};
-
-export default [validateRequest, getSharedProps];
+        if (!record) {
+            res.status(404).send('Not found');
+        } else {
+            const { secret, ...recordWithoutSecret } = record;
+            const recordWithId = {
+                ...recordWithoutSecret,
+                versionId: appendDigest(record.versionId, 'authEntities'),
+            };
+            res.status(200).send(preProcessResponse(markProtected(EntityTypes.auth_entities, recordWithId)));
+        }
+    });
+}

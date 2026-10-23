@@ -1,35 +1,22 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 
-import Joi from 'joi';
 import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';
-import { EntryFactory } from '../../common/services/entries/EntryFactory';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import validateRequestFactory from '../../common/services/validateRequest';
-import { joiErrorToResponse } from '../../util/helpers';
-import { App, appSchema } from '../interfaces';
+import { validated } from '../../common/validation/validated';
+import { appSchema } from '../interfaces';
+import type { AppsService } from '../services/AppsService';
 
-const validateRequestBeforeCreateApp = validateRequestFactory([
-    {
-        schema: appSchema,
-        selector: 'body',
-    },
-]);
-
-const createApp = async (req: Request<{}, any, App>, res: Response): Promise<Response> => {
-    const app = req.body;
-    const appEntry = EntryFactory.getAppInstance();
-
-    try {
-        const results = await appEntry.create(app, { user: req.user });
-        return res.status(200).send(preProcessResponse(results));
-    } catch (error) {
-        if (error instanceof Joi.ValidationError) {
-            return res.status(422).send(joiErrorToResponse(error));
-        } else if (error instanceof AssetsManifestError) {
-            return res.status(422).send(error.message);
+export function createApp(service: AppsService): RequestHandler {
+    return validated({ body: appSchema }, async ({ body }, req, res) => {
+        try {
+            const results = await service.create(body, req.user);
+            res.status(200).send(preProcessResponse(results));
+        } catch (error) {
+            if (error instanceof AssetsManifestError) {
+                res.status(422).send(error.message);
+                return;
+            }
+            throw error;
         }
-        throw error;
-    }
-};
-
-export default [validateRequestBeforeCreateApp, createApp];
+    });
+}

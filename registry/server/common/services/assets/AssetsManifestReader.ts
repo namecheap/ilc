@@ -1,5 +1,6 @@
 import axios from 'axios';
-import * as Joi from 'joi';
+import { z } from 'zod';
+import { parseInput } from '../../validation/validated';
 import { AssetsManifestError } from './errors/AssetsManifestError';
 
 interface BasicAssetsManifest {
@@ -14,6 +15,13 @@ export interface ApplicationAssetsManifest extends BasicAssetsManifest {
 }
 
 export interface AssetsManifest extends ApplicationAssetsManifest {}
+
+// Unknown manifest fields are rejected
+const assetsManifestSchema = z.strictObject({
+    spaBundle: z.string().min(1),
+    cssBundle: z.string().min(1).optional(),
+    dependencies: z.record(z.string().min(1), z.string().min(1)).optional(),
+});
 
 export class AssetsManifestReader {
     public static async read(assetsManifestUrl: string): Promise<AssetsManifest> {
@@ -35,13 +43,7 @@ export class AssetsManifestReader {
         return this.validate(assetsManifestContent);
     }
 
-    private static async validate(assetsManifestContent: unknown): Promise<AssetsManifest> {
-        const assetsManifestContentValidator = Joi.object<AssetsManifest>({
-            spaBundle: Joi.string().required(),
-            cssBundle: Joi.string().optional(),
-            dependencies: Joi.object().pattern(Joi.string(), Joi.string()).optional(),
-        });
-
-        return await assetsManifestContentValidator.validateAsync(assetsManifestContent);
+    private static validate(assetsManifestContent: unknown): Promise<AssetsManifest> {
+        return parseInput(assetsManifestSchema, assetsManifestContent);
     }
 }

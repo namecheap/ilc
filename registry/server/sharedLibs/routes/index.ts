@@ -1,17 +1,20 @@
-import express from 'express';
+import express, { Router } from 'express';
 
-import getSharedLib from './getSharedLib';
-import getSharedLibs from './getSharedLibs';
-import updateSharedLib from './updateSharedLib';
-import createSharedLib from './createSharedLib';
-import deleteSharedLib from './deleteSharedLib';
+import type { SharedLibsService } from '../services/SharedLibsService';
+import { getSharedLib } from './getSharedLib';
+import { getSharedLibs } from './getSharedLibs';
+import { updateSharedLib } from './updateSharedLib';
+import { createSharedLib } from './createSharedLib';
+import { deleteSharedLib } from './deleteSharedLib';
 
-const SharedLibsRouter = express.Router();
+export function createSharedLibsRouter(service: SharedLibsService): Router {
+    const SharedLibsRouter = express.Router();
 
-SharedLibsRouter.get('/', ...getSharedLibs);
-SharedLibsRouter.post('/', ...createSharedLib);
-SharedLibsRouter.get('/:name', ...getSharedLib);
-SharedLibsRouter.put('/:name', ...updateSharedLib);
-SharedLibsRouter.delete('/:name', ...deleteSharedLib);
+    SharedLibsRouter.get('/', getSharedLibs(service));
+    SharedLibsRouter.post('/', createSharedLib(service));
+    SharedLibsRouter.get('/:name', getSharedLib(service));
+    SharedLibsRouter.put('/:name', updateSharedLib(service));
+    SharedLibsRouter.delete('/:name', deleteSharedLib(service));
 
-export default SharedLibsRouter;
+    return SharedLibsRouter;
+}

@@ -1,138 +1,57 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
 import noticeError from '../../errorHandler/noticeError';
-import db from '../../db';
-import Template, { LocalizedTemplateRow } from '../interfaces';
-import validateRequestFactory from '../../common/services/validateRequest';
+import { validated } from '../../common/validation/validated';
 import renderTemplate from '../services/renderTemplate';
 import errors from '../errors';
-import { Tables } from '../../db/structure';
-import { EntityTypes } from '../../versioning/interfaces';
-import { templateNameSchema } from './validation';
-import RouterDomains from '../../routerDomains/interfaces';
+import { renderedTemplateQuerySchema, templateParamsSchema } from '../interfaces';
+import type { TemplatesService } from '../services/TemplatesService';
 import { getLogger } from '../../util/logger';
 import { appendDigest } from '../../util/hmac';
-import settingsService from '../../settings/services/SettingsService';
-import { SettingKeys } from '../../settings/interfaces';
 
-type GetTemplateRenderedRequestParams = {
-    name: string;
-};
+export function getRenderedTemplate(service: TemplatesService): RequestHandler {
+    return validated(
+        { params: templateParamsSchema, query: renderedTemplateQuerySchema },
+        async ({ params, query }, req, res) => {
+            const { name: templateName } = params;
 
-const validateRequestBeforeGetTemplateRendered = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: templateNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-]);
+            const found = await service.getForRendering(templateName, query);
 
-async function getDomainByName(domain: string): Promise<RouterDomains | undefined> {
-    const [domainItem] = await db
-        .select('id', 'props')
-        .from<RouterDomains>('router_domains')
-        .where('domainName', String(domain));
+            if (!found) {
+                res.status(404).send('Not found');
+                return;
+            }
 
-    return domainItem;
+            const template = { ...found.template, versionId: appendDigest(found.template.versionId, 'template') };
+
+            try {
+                const proxyHeaderNames = await service.getProxyHeaderNames();
+                const forwardedHeaders =
+                    proxyHeaderNames && proxyHeaderNames.length > 0
+                        ? Object.fromEntries(
+                              proxyHeaderNames
+                                  .map((h) => h.toLowerCase())
+                                  .filter((h): h is string => typeof req.headers[h] === 'string')
+                                  .map((h) => [h, req.headers[h] as string]),
+                          )
+                        : undefined;
+                const renderedTemplate = await renderTemplate(
+                    found.content,
+                    forwardedHeaders && Object.keys(forwardedHeaders).length > 0 ? { forwardedHeaders } : undefined,
+                );
+                res.status(200).send({ ...template, ...renderedTemplate });
+            } catch (e) {
+                if (e instanceof errors.FetchIncludeError) {
+                    res.status(500).send(e.message);
+                    noticeError(e, {
+                        context: 'Error during fetch of the rendered template',
+                    });
+                    return;
+                } else {
+                    getLogger().error(e as Error, `Error on render template "${templateName}"`);
+                    throw e;
+                }
+            }
+        },
+    );
 }
-
-async function getTemplateByDomainId(domainId: number, templateName: string): Promise<Template | undefined> {
-    const [template] = await db
-        .selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.*`])
-        .join('routes', 'templates.name', 'routes.templateName')
-        .where({
-            domainId,
-            name: templateName,
-        });
-
-    if (template) {
-        template.versionId = appendDigest(template.versionId, 'template');
-    }
-
-    return template;
-}
-
-async function getTemplateByName(templateName: string): Promise<Template | undefined> {
-    const [template] = await db
-        .selectVersionedRowsFrom<Template>(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.*`])
-        .where('name', templateName);
-
-    if (template) {
-        template.versionId = appendDigest(template.versionId, 'template');
-    }
-
-    return template;
-}
-
-async function getRenderedTemplate(req: Request<GetTemplateRenderedRequestParams>, res: Response): Promise<void> {
-    let template: Template | undefined;
-
-    const { name: templateName } = req.params;
-    const locale = req.query.locale as string;
-    const domain = req.query.domain as string;
-
-    if (domain) {
-        const domainItem = await getDomainByName(domain);
-        if (domainItem) {
-            template = await getTemplateByDomainId(domainItem.id, templateName);
-        }
-    }
-
-    if (!template) {
-        template = await getTemplateByName(templateName);
-        if (template) {
-            getLogger().info(`Template ${templateName} is not attached to the domain, found by template name.`);
-        }
-    }
-
-    if (!template) {
-        res.status(404).send('Not found');
-        return;
-    }
-
-    let content = template.content;
-    if (locale) {
-        const [localizedTemplate] = await db
-            .select()
-            .from<LocalizedTemplateRow>(Tables.TemplatesLocalized)
-            .where('templateName', templateName)
-            .andWhere('locale', locale);
-
-        if (localizedTemplate) {
-            content = localizedTemplate.content;
-        }
-    }
-
-    try {
-        const proxyHeaderNames = (await settingsService.get(SettingKeys.TemplateProxyHeaders)) as string[] | null;
-        const forwardedHeaders =
-            proxyHeaderNames && proxyHeaderNames.length > 0
-                ? Object.fromEntries(
-                      proxyHeaderNames
-                          .map((h) => h.toLowerCase())
-                          .filter((h): h is string => typeof req.headers[h] === 'string')
-                          .map((h) => [h, req.headers[h] as string]),
-                  )
-                : undefined;
-        const renderedTemplate = await renderTemplate(
-            content,
-            forwardedHeaders && Object.keys(forwardedHeaders).length > 0 ? { forwardedHeaders } : undefined,
-        );
-        res.status(200).send({ ...template, ...renderedTemplate });
-    } catch (e) {
-        if (e instanceof errors.FetchIncludeError) {
-            res.status(500).send(e.message);
-            noticeError(e, {
-                context: 'Error during fetch of the rendered template',
-            });
-            return;
-        } else {
-            getLogger().error(e as Error, `Error on render template "${templateName}"`);
-            throw e;
-        }
-    }
-}
-
-export default [validateRequestBeforeGetTemplateRendered, getRenderedTemplate];

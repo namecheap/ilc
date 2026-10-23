@@ -25,8 +25,14 @@ export function isUniqueConstraintError(err: unknown, constraint: string): boole
     return e?.code === PG_UNIQUE_VIOLATION_CODE && e?.constraint === constraint;
 }
 
-export function handleForeignConstraintError(err: Error) {
-    if (err.message.includes('violates foreign key constraint')) {
+/** Returns true when `err` is a foreign key violation of the given constraint */
+export function isForeignKeyViolation(err: unknown, constraint: string): boolean {
+    const e = err as Record<string, unknown>;
+    return e?.code === PG_FOREIGN_KEY_VIOLATION_CODE && e?.constraint === constraint;
+}
+
+export function handleForeignConstraintError(err: unknown) {
+    if (err instanceof Error && err.message.includes('violates foreign key constraint')) {
         throw new ForeignConstraintError();
     }
 }

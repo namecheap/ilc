@@ -28,15 +28,20 @@ describe(`Tests ${example.url}`, () => {
             await req
                 .post(example.url)
                 .send(_.omit(example.correct, ['identifier', 'provider', 'role']))
-                .expect(422, '"identifier" is required\n"provider" is required\n"role" is required');
+                .expect(
+                    422,
+                    '✖ Invalid input: expected string, received undefined\n  → at identifier\n' +
+                        '✖ Invalid option: expected one of "local"|"bearer"|"openid"\n  → at provider\n' +
+                        '✖ Invalid option: expected one of "admin"|"readonly"\n  → at role',
+                );
         });
 
         it('should not create record with incorrect type of fields', async () => {
             const expectedErr =
-                `"identifier" must be a string\n` +
-                `"secret" must be a string\n` +
-                `"provider" must be one of [local, bearer, openid]\n` +
-                `"role" must be one of [admin, readonly]`;
+                '✖ Invalid input: expected string, received number\n  → at identifier\n' +
+                '✖ Invalid input: expected string, received number\n  → at secret\n' +
+                '✖ Invalid option: expected one of "local"|"bearer"|"openid"\n  → at provider\n' +
+                '✖ Invalid option: expected one of "admin"|"readonly"\n  → at role';
 
             const incorrect = {
                 identifier: 123,

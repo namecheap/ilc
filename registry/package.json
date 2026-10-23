@@ -66,6 +66,7 @@
         "typescript": "^5.9.3"
     },
     "dependencies": {
+        "@hapi/address": "^5.1.1",
         "@namecheap/error-extender": "^2.2.1",
         "@newrelic/native-metrics": "^13.1.0",
         "axios": "^1.13.2",
@@ -79,7 +80,6 @@
         "express-session": "^1.18.2",
         "http-shutdown": "^1.2.2",
         "ilc-plugins-sdk": "^3.1.0",
-        "joi": "^18.0.2",
         "knex": "^3.1.0",
         "lodash": "^4.17.21",
         "newrelic": "^14.4.0",
@@ -92,7 +92,8 @@
         "serve-static": "^2.2.0",
         "source-map-support": "^0.5.21",
         "url-join": "^5.0.0",
-        "uuid": "^13.0.0"
+        "uuid": "^13.0.0",
+        "zod": "^4.6.5"
     },
     "engines": {
         "node": ">=22"

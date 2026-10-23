@@ -1,57 +1,33 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
-import validateRequestFactory from '../../common/services/validateRequest';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import { appNameSchema, partialAppSchema } from '../interfaces';
-import { EntryFactory } from '../../common/services/entries/EntryFactory';
+import { validated } from '../../common/validation/validated';
+import { appParamsSchema, partialAppSchema } from '../interfaces';
 import { NotFoundFqrnError } from '../../common/services/entries/error/NotFoundFqrnError';
 import { ValidationFqrnError } from '../../common/services/entries/error/ValidationFqrnError';
-import { joiErrorToResponse } from '../../util/helpers';
 import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';
+import type { AppsService } from '../services/AppsService';
 
-type UpdateAppRequestParams = {
-    name: string;
-};
+export function updateApp(service: AppsService): RequestHandler {
+    return validated({ params: appParamsSchema, body: partialAppSchema }, async ({ params, body }, req, res) => {
+        let results;
 
-const validateRequestBeforeUpdateApp = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: appNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-    {
-        schema: partialAppSchema,
-        selector: 'body',
-        noDefaults: true,
-    },
-]);
-
-const updateApp = async (req: Request<UpdateAppRequestParams>, res: Response): Promise<Response> => {
-    const app = req.body;
-    const appName = req.params.name;
-
-    const application = EntryFactory.getAppInstance(appName);
-
-    let results;
-
-    try {
-        results = await application.patch(app, { user: req.user });
-    } catch (error) {
-        if (error instanceof NotFoundFqrnError) {
-            return res.status(error.code).send(error.message);
-        } else if (error instanceof ValidationFqrnError) {
-            return res.status(error.code).send(error.message);
-        } else if (error instanceof Joi.ValidationError) {
-            return res.status(422).send(joiErrorToResponse(error));
-        } else if (error instanceof AssetsManifestError) {
-            return res.status(422).send(error.message);
+        try {
+            results = await service.patch(params.name, body, req.user);
+        } catch (error) {
+            if (error instanceof NotFoundFqrnError) {
+                res.status(error.code).send(error.message);
+                return;
+            } else if (error instanceof ValidationFqrnError) {
+                res.status(error.code).send(error.message);
+                return;
+            } else if (error instanceof AssetsManifestError) {
+                res.status(422).send(error.message);
+                return;
+            }
+            throw error;
         }
-        throw error;
-    }
 
-    return res.status(200).send(preProcessResponse(results));
-};
-
-export default [validateRequestBeforeUpdateApp, updateApp];
+        res.status(200).send(preProcessResponse(results));
+    });
+}

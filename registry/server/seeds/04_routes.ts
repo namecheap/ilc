@@ -57,9 +57,9 @@ export async function seed(knex: Knex): Promise<any> {
             orderPos: 60,
             route: '/hooks/protected/',
             next: false,
-            meta: JSON.stringify({
+            meta: {
                 protected: true,
-            }),
+            },
         },
         {
             id: 12,

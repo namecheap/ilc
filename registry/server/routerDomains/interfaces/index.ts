@@ -1,47 +1,59 @@
-import Joi from 'joi';
+import { isDomainValid } from '@hapi/address';
+import { z } from 'zod';
 
-import { templateNameSchema } from '../../templates/routes/validation';
+import type { JSONObject } from '../../common/services/json';
+import { jsonObjectSchema, versionIdSchema } from '../../common/validation/schemas';
+import { templateNameSchema } from '../../templates/interfaces';
 
-export default interface RouterDomains {
+export interface RouterDomainsRow {
     id: number;
     domainName: string;
-    template500?: string;
-    canonicalDomain?: string | null;
-    alias?: string | null;
-    props?: Record<string, unknown> | string | null;
-    ssrProps?: Record<string, unknown> | string | null;
+    template500: string;
+    canonicalDomain: string | null;
+    alias: string | null;
+    props: JSONObject | null;
+    ssrProps: JSONObject | null;
 }
 
-export const routerDomainIdSchema = Joi.string().trim().required();
+export const routerDomainIdSchema = z.coerce.number().int().positive();
 
-const domainValidation = () =>
-    Joi.alternatives().try(
-        Joi.string()
-            .trim()
-            .pattern(/^(localhost|127\.0\.0\.1)(:\d{1,5})?$/),
-        Joi.string().trim().min(1).domain({ allowFullyQualified: true, tlds: false }),
-    );
-
-const commonRouterDomainsSchema = {
-    domainName: domainValidation().required(),
-    template500: templateNameSchema.required(),
-    canonicalDomain: domainValidation().allow(null).default(null),
-    alias: Joi.string()
-        .lowercase()
-        .pattern(/^[a-z0-9-]+$/)
-        .max(64)
-        .trim()
-        .allow(null)
-        .default(null),
-    props: Joi.object().allow(null).default(null),
-    ssrProps: Joi.object().allow(null).default(null),
-    versionId: Joi.string().strip(),
-};
-
-export const partialRouterDomainsSchema = Joi.object({
-    ...commonRouterDomainsSchema,
+export const routerDomainsParamsSchema = z.strictObject({
+    id: routerDomainIdSchema,
 });
 
-export const routerDomainsSchema = Joi.object({
-    ...commonRouterDomainsSchema,
+export const routerDomainsListQuerySchema = z.object({
+    range: z.string().optional(),
 });
+
+const localDomainPattern = /^(localhost|127\.0\.0\.1)(:\d{1,5})?$/;
+
+// The check behind Joi's string().domain({ allowFullyQualified: true, tlds: false }), no tlds option means no TLD check
+const domainSchema = z
+    .string()
+    .trim()
+    .refine((domain) => localDomainPattern.test(domain) || isDomainValid(domain, { allowFullyQualified: true }), {
+        message: 'Invalid domain name',
+    });
+
+/** How router domains are referred to by name, e.g. by the domainAlias of apps and routes */
+export const domainAliasSchema = z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(64)
+    .regex(/^[a-z0-9-]+$/);
+
+/** PUT replaces the record as well, so omitted fields fall back to their defaults */
+export const routerDomainsSchema = z
+    .strictObject({
+        domainName: domainSchema,
+        template500: templateNameSchema,
+        canonicalDomain: domainSchema.nullable().default(null),
+        alias: domainAliasSchema.nullable().default(null),
+        props: jsonObjectSchema.nullable().default(null),
+        ssrProps: jsonObjectSchema.nullable().default(null),
+        versionId: versionIdSchema,
+    })
+    .transform(({ versionId, ...routerDomain }) => routerDomain);
+
+export type RouterDomainsInput = z.output<typeof routerDomainsSchema>;

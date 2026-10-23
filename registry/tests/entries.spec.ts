@@ -88,7 +88,27 @@ describe(`Entries`, () => {
 
             const invalidPatch = { invalidProp: 'https://google.com' };
 
-            let response = await req.patch(example.url).send(invalidPatch).expect(422, '"invalidProp" is not allowed');
+            let response = await req
+                .patch(example.url)
+                .send(invalidPatch)
+                .expect(422, '✖ Unrecognized key: "invalidProp"');
+        } finally {
+            await ensureDeleted(req, `${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
+        }
+    });
+
+    it('should return 422 when the assets manifest can not be fetched', async () => {
+        const assetsDiscoveryUrl = 'http://127.0.0.1:1/assets-discovery';
+        try {
+            await req.post(example.urlSharedLib).send(example.correct).expect(200);
+
+            await req
+                .patch(example.url)
+                .send({ assetsDiscoveryUrl })
+                .expect(
+                    422,
+                    `"assetsDiscoveryUrl" ${assetsDiscoveryUrl} is not available. Check the url via browser manually.`,
+                );
         } finally {
             await ensureDeleted(req, `${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
         }

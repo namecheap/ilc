@@ -1,41 +1,22 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { markProtected } from '../../common/services/protectedEntities';
-import validateRequestFactory from '../../common/services/validateRequest';
-import SharedProps, { sharedPropsNameSchema } from '../interfaces';
-import { Tables } from '../../db/structure';
+import { validated } from '../../common/validation/validated';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
+import { sharedPropsParamsSchema } from '../interfaces';
+import type { SharedPropsService } from '../services/SharedPropsService';
 
-type RequestParams = {
-    name: string;
-};
+export function getSharedProps(service: SharedPropsService): RequestHandler {
+    return validated({ params: sharedPropsParamsSchema }, async ({ params }, req, res) => {
+        const sharedProps = await service.get(params.name);
 
-const validateRequest = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: sharedPropsNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-]);
-
-const getSharedProps = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const [sharedProps] = await db
-        .selectVersionedRowsFrom<SharedProps>(Tables.SharedProps, 'name', EntityTypes.shared_props, [
-            `${Tables.SharedProps}.*`,
-        ])
-        .where('name', req.params.name);
-
-    if (!sharedProps) {
-        res.status(404).send('Not found');
-    } else {
-        sharedProps.versionId = appendDigest(sharedProps.versionId, 'sharedProp');
-        res.status(200).send(preProcessResponse(markProtected(EntityTypes.shared_props, sharedProps)));
-    }
-};
-
-export default [validateRequest, getSharedProps];
+        if (!sharedProps) {
+            res.status(404).send('Not found');
+        } else {
+            const sharedPropsWithId = { ...sharedProps, versionId: appendDigest(sharedProps.versionId, 'sharedProp') };
+            res.status(200).send(preProcessResponse(markProtected(EntityTypes.shared_props, sharedPropsWithId)));
+        }
+    });
+}

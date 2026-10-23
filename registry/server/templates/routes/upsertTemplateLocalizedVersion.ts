@@ -1,59 +1,15 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
-import validateRequestFactory from '../../common/services/validateRequest';
-import { validateLocalesMiddleware } from '../../middleware/validatelocales';
-import { exhaustiveCheck } from '../../util/exhaustiveCheck';
-import { LocalizedVersion } from '../interfaces';
-import { templatesRepository } from '../services/templatesRepository';
-import { localeNameSchema, localizedVersionSchema, templateNameSchema } from './validation';
+import { validated } from '../../common/validation/validated';
+import { localizedVersionParamsSchema, localizedVersionSchema } from '../interfaces';
+import type { TemplatesService } from '../services/TemplatesService';
 
-const validateRequestBeforeUpsertLocalizedVersion = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: templateNameSchema.required(),
-            locale: localeNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-    {
-        schema: localizedVersionSchema.required(),
-        selector: 'body',
-    },
-]);
-
-const validateLocale = validateLocalesMiddleware(
-    (req) => [req.params.locale],
-    () => 'params.locale',
-);
-
-type Params = {
-    name: string;
-    locale: string;
-};
-
-const upsertTemplateLocalizedVersion = async (
-    req: Request<Params, any, LocalizedVersion>,
-    res: Response,
-): Promise<void> => {
-    const { name: templateName, locale } = req.params;
-    const localizedVersion = req.body;
-
-    const result = await templatesRepository.upsertLocalizedVersion(templateName, locale, localizedVersion);
-    switch (result.type) {
-        case 'notFound': {
-            res.status(404).send('Not found');
-            return;
-        }
-        case 'ok': {
-            res.status(200).send(result.localizedVersion);
-            return;
-        }
-        default: {
-            /* istanbul ignore next */
-            exhaustiveCheck(result);
-        }
-    }
-};
-
-export default [validateRequestBeforeUpsertLocalizedVersion, validateLocale, upsertTemplateLocalizedVersion];
+export function upsertTemplateLocalizedVersion(service: TemplatesService): RequestHandler {
+    return validated(
+        { params: localizedVersionParamsSchema, body: localizedVersionSchema },
+        async ({ params, body }, req, res) => {
+            const localizedVersion = await service.upsertLocalizedVersion(params.name, params.locale, body);
+            res.status(200).send(localizedVersion);
+        },
+    );
+}

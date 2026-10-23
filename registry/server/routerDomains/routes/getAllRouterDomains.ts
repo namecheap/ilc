@@ -1,23 +1,20 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { markProtected } from '../../common/services/protectedEntities';
-import { Tables } from '../../db/structure';
+import { validated } from '../../common/validation/validated';
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
+import { routerDomainsListQuerySchema } from '../interfaces';
+import type { RouterDomainsService } from '../services/RouterDomainsService';
 
-const getAllRouterDomains = async (req: Request, res: Response): Promise<void> => {
-    const query = db
-        .selectVersionedRows(Tables.RouterDomains, 'id', EntityTypes.router_domains, [`${Tables.RouterDomains}.*`])
-        .from(Tables.RouterDomains)
-        .orderBy(`${Tables.RouterDomains}.id`, 'asc');
-    const routerDomains = await query.range(req.query.range as string | undefined);
-    const itemsWithId = routerDomains.data.map((item: any) => {
-        return { ...item, versionId: appendDigest(item.versionId, 'routerDomains') };
+export function getAllRouterDomains(service: RouterDomainsService): RequestHandler {
+    return validated({ query: routerDomainsListQuerySchema }, async ({ query }, req, res) => {
+        const routerDomains = await service.list(query.range);
+        const itemsWithId = routerDomains.data.map((item) => {
+            return { ...item, versionId: appendDigest(item.versionId, 'routerDomains') };
+        });
+        res.setHeader('Content-Range', routerDomains.pagination.total);
+        res.status(200).send(preProcessResponse(markProtected(EntityTypes.router_domains, itemsWithId)));
     });
-    res.setHeader('Content-Range', routerDomains.pagination.total);
-    res.status(200).send(preProcessResponse(markProtected(EntityTypes.router_domains, itemsWithId)));
-};
-
-export default [getAllRouterDomains];
+}

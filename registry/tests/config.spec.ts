@@ -2,9 +2,8 @@ import _ from 'lodash';
 import { type Agent } from 'supertest';
 
 import nock from 'nock';
-import db from '../server/db';
 import { OnPropsUpdateValues, SettingKeys, TrailingSlashValues } from '../server/settings/interfaces';
-import { ensureDeleted, expect, request, requestWithAuth } from './common';
+import { db, ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const templateName = 'ncTestTemplateName';
 const example = {
@@ -176,6 +175,7 @@ describe('Tests /api/v1/config', () => {
                 });
 
                 expect(response.body.routes).to.deep.include({
+                    routeId: routeIdWithoutSlots,
                     ..._.omit(example.appRoutesWithoutSlots, ['templateName']),
                     template: example.appRoutesWithoutSlots.templateName,
                 });
@@ -375,7 +375,9 @@ describe('Tests /api/v1/config', () => {
                 })
                 .expect(200, {
                     valid: false,
-                    details: '"props" must be of type object',
+                    details:
+                        '✖ Invalid input: expected record, received number\n  → at props\n' +
+                        '✖ Invalid input: expected string, received undefined\n  → at name',
                 });
         });
         it('should fail on duplicate orderPos', async () => {

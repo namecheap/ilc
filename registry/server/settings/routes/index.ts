@@ -1,19 +1,20 @@
-import express, { RequestHandler } from 'express';
+import express, { RequestHandler, Router } from 'express';
 
-import getSettings from './getSettings';
-import getSetting from './getSetting';
-import updateSetting from './updateSetting';
-import createSetting from './createSetting';
-import deleteDomainSetting from './deleteDomainSetting';
+import type { SettingsService } from '../services/SettingsService';
+import { getSettings } from './getSettings';
+import { getSetting } from './getSetting';
+import { updateSetting } from './updateSetting';
+import { createSetting } from './createSetting';
+import { deleteDomainSetting } from './deleteDomainSetting';
 
-export default (authMw: RequestHandler[]) => {
+export function createSettingsRouter(settingsService: SettingsService, authMw: RequestHandler[]): Router {
     const router = express.Router();
 
-    router.get('/', authMw, ...getSettings);
-    router.get('/:key', authMw, ...getSetting);
-    router.put('/:key', authMw, ...updateSetting);
-    router.post('/', authMw, ...createSetting);
-    router.delete('/:id', authMw, ...deleteDomainSetting);
+    router.get('/', authMw, getSettings(settingsService));
+    router.get('/:key', authMw, getSetting(settingsService));
+    router.put('/:key', authMw, updateSetting(settingsService));
+    router.post('/', authMw, createSetting(settingsService));
+    router.delete('/:id', authMw, deleteDomainSetting(settingsService));
 
     return router;
-};
+}

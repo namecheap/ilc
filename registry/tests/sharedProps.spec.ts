@@ -35,7 +35,11 @@ describe(`Tests ${example.url}`, () => {
             await req
                 .post(example.url)
                 .send(_.omit(example.correct, ['name', 'props']))
-                .expect(422, '"props" is required\n"name" is required');
+                .expect(
+                    422,
+                    '✖ Invalid input: expected record, received undefined\n  → at props\n' +
+                        '✖ Invalid input: expected string, received undefined\n  → at name',
+                );
         });
 
         it('should not create record with incorrect type of fields', async () => {
@@ -47,7 +51,11 @@ describe(`Tests ${example.url}`, () => {
             await req
                 .post(example.url)
                 .send(incorrect)
-                .expect(422, '"props" must be of type object\n"name" must be a string');
+                .expect(
+                    422,
+                    '✖ Invalid input: expected record, received number\n  → at props\n' +
+                        '✖ Invalid input: expected string, received number\n  → at name',
+                );
 
             await req.get(example.url + incorrect.name).expect(404, 'Not found');
         });
@@ -163,7 +171,7 @@ describe(`Tests ${example.url}`, () => {
                 await req
                     .put(example.url + example.correct.name)
                     .send(example.updated)
-                    .expect(422, '"name" is not allowed');
+                    .expect(422, '✖ Unrecognized key: "name"');
             } finally {
                 await ensureDeleted(req, example.url + example.correct.name);
             }
@@ -181,7 +189,7 @@ describe(`Tests ${example.url}`, () => {
                 await req
                     .put(example.url + example.correct.name)
                     .send(_.omit(incorrect, 'name'))
-                    .expect(422, '"props" must be of type object');
+                    .expect(422, '✖ Invalid input: expected record, received number\n  → at props');
             } finally {
                 await ensureDeleted(req, example.url + example.correct.name);
             }

@@ -469,6 +469,9 @@ importers:
 
   registry:
     dependencies:
+      '@hapi/address':
+        specifier: ^5.1.1
+        version: 5.1.1
       '@namecheap/error-extender':
         specifier: ^2.2.1
         version: 2.2.1
@@ -508,9 +511,6 @@ importers:
       ilc-plugins-sdk:
         specifier: ^3.1.0
         version: 3.1.0
-      joi:
-        specifier: ^18.0.2
-        version: 18.2.9
       knex:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.16.3)(supports-color@5.5.0)
@@ -550,6 +550,9 @@ importers:
       uuid:
         specifier: ^13.0.0
         version: 13.0.2
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@istanbuljs/nyc-config-typescript':
         specifier: ^1.0.2

@@ -1,5 +1,3 @@
-import { AppRouteWithSlot } from '../routes/RoutesService';
-
 export const SPECIAL_PREFIX = 'special:';
 
 export const isSpecialRoute = (route: string) => route.startsWith(SPECIAL_PREFIX);
@@ -8,44 +6,28 @@ export const makeSpecialRoute = (specialRole: string) => `${SPECIAL_PREFIX}${spe
 
 const getSpecialRole = (route: string) => route.replace(SPECIAL_PREFIX, '');
 
-export type ConsumerRoute = Omit<AppRouteWithSlot, 'route' | 'next'> & {
+/** What API consumers get: a special route has its special role instead of a route and next */
+export type ConsumerRoute<T> = Omit<T, 'route' | 'next'> & {
     next?: boolean;
     route?: string;
     specialRole?: string;
 };
 
-export function transformSpecialRoutesForConsumer(appRoutes: AppRouteWithSlot): ConsumerRoute;
-export function transformSpecialRoutesForConsumer(appRoutes: AppRouteWithSlot[]): ConsumerRoute[];
-export function transformSpecialRoutesForConsumer(
-    appRoutes: AppRouteWithSlot | AppRouteWithSlot[],
-): ConsumerRoute | ConsumerRoute[] {
-    const handleRoute = (appRoute: AppRouteWithSlot) => {
-        if (!isSpecialRoute(appRoute.route)) {
-            return appRoute;
-        }
+type RouteWithPath = { route?: string; next?: boolean };
 
-        const { next, route, ...result } = appRoute;
-        return {
-            ...result,
-            specialRole: getSpecialRole(appRoute.route),
-        };
-    };
-
-    return Array.isArray(appRoutes) ? appRoutes.map(handleRoute) : handleRoute(appRoutes);
-}
-
-export function transformSpecialRoutesForDB<
-    T extends { specialRole?: string; orderPos?: number | null; route?: string },
->(appRoute: T): T {
-    const { specialRole, ...rest } = appRoute;
-
-    if (!specialRole) {
-        return rest as T;
+function toConsumerRoute<T extends RouteWithPath>(appRoute: T): ConsumerRoute<T> {
+    const { next, route, ...rest } = appRoute;
+    if (!route || !isSpecialRoute(route)) {
+        return { ...rest, route, next };
     }
 
-    return {
-        ...rest,
-        orderPos: null,
-        route: makeSpecialRoute(specialRole),
-    } as T;
+    return { ...rest, specialRole: getSpecialRole(route) };
+}
+
+export function transformSpecialRoutesForConsumer<T extends RouteWithPath>(appRoutes: T): ConsumerRoute<T>;
+export function transformSpecialRoutesForConsumer<T extends RouteWithPath>(appRoutes: T[]): ConsumerRoute<T>[];
+export function transformSpecialRoutesForConsumer<T extends RouteWithPath>(
+    appRoutes: T | T[],
+): ConsumerRoute<T> | ConsumerRoute<T>[] {
+    return Array.isArray(appRoutes) ? appRoutes.map(toConsumerRoute) : toConsumerRoute(appRoutes);
 }

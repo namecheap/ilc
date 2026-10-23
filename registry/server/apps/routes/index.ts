@@ -1,17 +1,20 @@
-import express from 'express';
+import express, { Router } from 'express';
 
-import getApp from './getApp';
-import getApps from './getApps';
-import updateApp from './updateApp';
-import createApp from './createApp';
-import deleteApp from './deleteApp';
+import type { AppsService } from '../services/AppsService';
+import { getApp } from './getApp';
+import { getApps } from './getApps';
+import { updateApp } from './updateApp';
+import { createApp } from './createApp';
+import { deleteApp } from './deleteApp';
 
-const appsRouter = express.Router();
+export function createAppsRouter(service: AppsService): Router {
+    const appsRouter = express.Router();
 
-appsRouter.get('/', ...getApps);
-appsRouter.post('/', ...createApp);
-appsRouter.get('/:name', ...getApp);
-appsRouter.put('/:name', ...updateApp);
-appsRouter.delete('/:name', ...deleteApp);
+    appsRouter.get('/', getApps(service));
+    appsRouter.post('/', createApp(service));
+    appsRouter.get('/:name', getApp(service));
+    appsRouter.put('/:name', updateApp(service));
+    appsRouter.delete('/:name', deleteApp(service));
 
-export default appsRouter;
+    return appsRouter;
+}

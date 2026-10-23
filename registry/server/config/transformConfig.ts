@@ -1,15 +1,16 @@
 import { merge, omitBy, pick } from 'lodash';
-import { App } from '../apps/interfaces';
+import type { AppRow } from '../apps/interfaces';
 import { parseJSON } from '../common/services/json';
 import { appendDigest } from '../util/hmac';
 import { VersionedRecord } from '../versioning/interfaces';
-import RouterDomains from '../routerDomains/interfaces';
-import { AppRoute, AppRouteSlot } from '../appRoutes/interfaces';
+import type { RouterDomainsRow } from '../routerDomains/interfaces';
+import type { RouteWithSlotRow } from '../appRoutes/interfaces';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
-import { SharedLib } from '../sharedLibs/interfaces';
+import type { SharedLibRow } from '../sharedLibs/interfaces';
+import type { SharedPropsRow } from '../sharedProps/interfaces';
 
 type Dict = Record<string, any>;
-type TransformedApp = VersionedRecord<Omit<App, 'enforceDomain'>> & {
+type TransformedApp = VersionedRecord<Omit<AppRow, 'enforceDomain'>> & {
     ssr: Dict | null;
     dependencies: Dict | null;
     discoveryMetadata: Dict | null;
@@ -33,14 +34,10 @@ export type AppDto = Pick<
     | 'versionId'
 >;
 
-/**
- * TODO change type of routerDomains to actual
- * TODO change type of sharedProps to actual
- */
 export function transformApps(
-    apps: VersionedRecord<App>[],
-    routerDomains: RouterDomains[],
-    sharedProps: any[],
+    apps: VersionedRecord<AppRow>[],
+    routerDomains: RouterDomainsRow[],
+    sharedProps: SharedPropsRow[],
     domainName?: string,
 ): Record<string, AppDto> {
     const currentDomain = domainName ? routerDomains.find((d) => d.domainName === domainName) : null;
@@ -122,17 +119,18 @@ export type AppRouteDto = {
     slots: Record<string, AppSlotDto>;
 };
 
-function transformAppRouteSlot(dbRoute: VersionedRecord<AppRoute & AppRouteSlot>): AppSlotDto {
+function transformAppRouteSlot(dbRoute: RouteWithSlotRow): AppSlotDto {
     return {
-        appName: dbRoute.appName,
+        // Only called for rows that have a slot
+        appName: dbRoute.appName!,
         props: dbRoute.props !== null ? parseJSON(dbRoute.props) : {},
         kind: dbRoute.kind!,
     };
 }
 
 export function transformRoutes(
-    dbRoutes: VersionedRecord<AppRoute & AppRouteSlot>[],
-    routerDomains: RouterDomains[],
+    dbRoutes: RouteWithSlotRow[],
+    routerDomains: RouterDomainsRow[],
 ): {
     routes: AppRouteDto[];
     specialRoutes: AppRouteDto[];
@@ -150,7 +148,7 @@ export function transformRoutes(
                 const newAppRouteDto = {
                     slots: {} as Record<string, AppSlotDto>,
                     meta: (transformedRoute.meta ? parseJSON(transformedRoute.meta) : {}) as Record<string, any>,
-                    routeId: dbRoute.routeId ?? undefined,
+                    routeId: dbRoute.routeId,
                     route: transformedRoute.route,
                     next: !!transformedRoute.next,
                     template: transformedRoute.templateName ?? undefined,
@@ -182,7 +180,7 @@ type DynamicLibDto = {
     l10nManifest?: string | null;
     versionId: string;
 };
-export function transformSharedLibs(sharedLibs: VersionedRecord<SharedLib>[]): {
+export function transformSharedLibs(sharedLibs: VersionedRecord<SharedLibRow>[]): {
     sharedLibs: Record<string, string>;
     dynamicLibs: Record<string, DynamicLibDto>;
 } {

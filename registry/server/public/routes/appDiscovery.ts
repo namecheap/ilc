@@ -1,15 +1,12 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
+import type { AppsService } from '../../apps/services/AppsService';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import { AppsByMetadata } from '../interfaces';
 
-const appDiscovery = async (req: Request, res: Response): Promise<void> => {
-    const apps = await db.select('name', 'discoveryMetadata').from('apps');
+export function appDiscovery(service: AppsService): RequestHandler {
+    return async (req, res) => {
+        const apps = await service.listDiscoveryMetadata();
 
-    const response: AppsByMetadata = preProcessResponse(apps);
-
-    res.status(200).send(response);
-};
-
-export default [appDiscovery];
+        res.status(200).send(preProcessResponse(apps));
+    };
+}

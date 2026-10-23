@@ -1,35 +1,13 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
-import * as httpErrors from '../../errorHandler/httpErrors';
+import { RequestHandler } from 'express';
 
-import db from '../../db';
-import validateRequestFactory from '../../common/services/validateRequest';
-import { sharedLibNameSchema } from '../interfaces';
+import { validated } from '../../common/validation/validated';
+import { sharedLibParamsSchema } from '../interfaces';
+import type { SharedLibsService } from '../services/SharedLibsService';
 
-type DeleteSharedLibRequestParams = {
-    name: string;
-};
+export function deleteSharedLib(service: SharedLibsService): RequestHandler {
+    return validated({ params: sharedLibParamsSchema }, async ({ params }, req, res) => {
+        await service.delete(params.name, req.user);
 
-const validateRequestBeforeDeleteSharedLib = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: sharedLibNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-]);
-
-const deleteSharedLib = async (req: Request<DeleteSharedLibRequestParams>, res: Response): Promise<void> => {
-    const sharedLibName = req.params.name;
-
-    await db.versioning(req.user, { type: 'shared_libs', id: sharedLibName }, async (trx) => {
-        const count = await db('shared_libs').where('name', sharedLibName).delete().transacting(trx);
-        if (!count) {
-            throw new httpErrors.NotFoundError();
-        }
+        res.status(204).send();
     });
-
-    res.status(204).send();
-};
-
-export default [validateRequestBeforeDeleteSharedLib, deleteSharedLib];
+}

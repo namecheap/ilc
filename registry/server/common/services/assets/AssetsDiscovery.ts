@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import urljoin from 'url-join';
 import deepEqual from 'deep-equal';
 
-import knex from '../../../db';
+import type { Knex } from 'knex';
 import manifestProcessor, { ManifestData } from './assetsManifestProcessor';
 import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 import { getLogger } from '../../../util/logger';
@@ -35,6 +35,7 @@ export default class AssetsDiscovery {
     private intervalSeconds: number;
 
     constructor(
+        private readonly db: Knex,
         tableName: keyof typeof AssetsDiscoveryWhiteLists,
         { tableId = 'name' as const, intervalSeconds = 5 } = {},
     ) {
@@ -137,7 +138,7 @@ export default class AssetsDiscovery {
         updatedTime: number,
     ) {
         const queryWaitTimeout = 10000;
-        await knex(this.tableName)
+        await this.db(this.tableName)
             .where(this.tableId, entity[this.tableId])
             .update(
                 Object.assign({}, data, {
@@ -149,7 +150,7 @@ export default class AssetsDiscovery {
 
     private async getEntitiesToRefresh(unixTimestampNow: number) {
         const updateAfter = unixTimestampNow - this.intervalSeconds;
-        return knex
+        return this.db
             .select<AssetsDiscoveryEntity[]>()
             .from(this.tableName)
             .whereNotNull('assetsDiscoveryUrl')

@@ -1,17 +1,20 @@
-import express from 'express';
+import express, { Router } from 'express';
 
-import get from './get';
-import getAll from './getAll';
-import update from './update';
-import create from './create';
-import deleteRoute from './deleteRoute';
+import type { AuthEntitiesService } from '../services/AuthEntitiesService';
+import { get } from './get';
+import { getAll } from './getAll';
+import { update } from './update';
+import { create } from './create';
+import { deleteRoute } from './deleteRoute';
 
-const router = express.Router();
+export function createAuthEntitiesRouter(service: AuthEntitiesService): Router {
+    const router = express.Router();
 
-router.get('/', ...getAll);
-router.post('/', ...create);
-router.get('/:id', ...get);
-router.put('/:id', ...update);
-router.delete('/:id', ...deleteRoute);
+    router.get('/', getAll(service));
+    router.post('/', create(service));
+    router.get('/:id', get(service));
+    router.put('/:id', update(service));
+    router.delete('/:id', deleteRoute(service));
 
-export default router;
+    return router;
+}

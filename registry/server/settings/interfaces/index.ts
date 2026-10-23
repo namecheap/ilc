@@ -1,6 +1,6 @@
-import Joi from 'joi';
+import { z } from 'zod';
+import { numeric } from '../../common/validation/schemas';
 import { cspSchema } from './cspSchema';
-import { joiErrorToResponse } from '../../util/helpers';
 
 export enum SettingKeys {
     BaseUrl = 'baseUrl',
@@ -82,16 +82,28 @@ export type Setting = {
     meta: SettingMeta;
 };
 
-export type SettingRaw = {
-    id?: number;
-    key: SettingKeys;
+/** value and default hold JSON-encoded text, '""' meaning unset */
+export interface SettingRow {
+    key: string;
+    value: string | null;
+    default: string | null;
+    scope: string;
+    secret: boolean;
+    meta: SettingMeta | null;
+}
+
+export interface DomainSettingRow {
+    id: number;
+    domainId: number;
+    key: string;
     value: string;
+}
+
+/** A settings row as the service reads it, the domain queries add the domain's value */
+export type SettingRaw = SettingRow & {
+    id?: number;
     domainId?: number;
     domainValue?: string;
-    default: string;
-    scope: Scope;
-    secret: boolean;
-    meta: SettingMeta | string; // stringified JSON
 };
 
 export type SettingParsed = Omit<SettingRaw, 'value' | 'default' | 'meta'> & {
@@ -101,109 +113,122 @@ export type SettingParsed = Omit<SettingRaw, 'value' | 'default' | 'meta'> & {
     protected?: boolean;
 };
 
-export const keySchema = Joi.string()
-    .min(1)
-    .max(50)
-    .valid(...Object.values(SettingKeys));
+export const keySchema = z.enum(SettingKeys);
 
-const valueSchema = Joi.alternatives().conditional('key', {
-    switch: [
-        {
-            is: Joi.valid(SettingKeys.TrailingSlash),
-            then: Joi.string()
-                .valid(
-                    TrailingSlashValues.DoNothing,
-                    TrailingSlashValues.redirectToNonTrailingSlash,
-                    TrailingSlashValues.redirectToTrailingSlash,
-                )
-                .required(),
-        },
-        {
-            is: Joi.valid(SettingKeys.I18nRoutingStrategy),
-            then: Joi.string()
-                .valid(...Object.values(RoutingStrategyValues))
-                .required(),
-        },
-        {
-            is: Joi.valid(
-                SettingKeys.AmdDefineCompatibilityMode,
-                SettingKeys.AuthOpenIdEnabled,
-                SettingKeys.GlobalSpinnerEnabled,
-                SettingKeys.I18nEnabled,
-                SettingKeys.CspEnableStrict,
-            ),
-            then: Joi.boolean().strict().sensitive().required(),
-        },
-        {
-            is: Joi.valid(
-                SettingKeys.I18nSupportedCurrencies,
-                SettingKeys.I18nSupportedLocales,
-                SettingKeys.CspTrustedLocalHosts,
-            ),
-            then: Joi.array().items(Joi.string()),
-        },
-        {
-            is: Joi.valid(SettingKeys.FragmentProxyHeaders, SettingKeys.TemplateProxyHeaders),
-            then: Joi.array().items(Joi.string()).allow(null),
-        },
-        {
-            is: Joi.valid(SettingKeys.BaseUrl, SettingKeys.AuthOpenIdDiscoveryUrl),
-            then: Joi.string()
-                .uri({
-                    scheme: [/https?/],
-                    allowRelative: false,
-                })
-                .allow(''),
-        },
-        {
-            is: Joi.valid(SettingKeys.OnPropsUpdate),
-            then: Joi.string()
-                .valid(...Object.values(OnPropsUpdateValues))
-                .required(),
-        },
-        {
-            is: Joi.valid(SettingKeys.CspConfig),
-            then: Joi.string()
-                .custom((value, helpers) => {
-                    let cspConfig;
-
-                    try {
-                        cspConfig = JSON.parse(value);
-                    } catch (error) {
-                        return helpers.error('any.custom', { error: { message: 'Invalid JSON' } });
-                    }
-
-                    const result = cspSchema.validate(cspConfig);
-
-                    if (result.error) {
-                        return helpers.error('any.custom', { error: { message: joiErrorToResponse(result.error) } });
-                    }
-
-                    return result.value;
-                }, 'cspObject validation')
-                .allow(null)
-                .empty('')
-                .default(null),
-        },
-    ],
-    otherwise: Joi.string().allow(''),
+export const settingParamsSchema = z.strictObject({
+    key: keySchema,
 });
 
-export type DomainSetting = {
-    id: number;
-    key: string;
-    value: string;
-    domainId: number;
-};
-
-export const partialSettingSchema = Joi.object({
-    key: keySchema.required(),
-    value: valueSchema,
-    domainId: Joi.number().integer().allow(null).optional(),
+export const domainSettingParamsSchema = z.strictObject({
+    id: z.coerce.number(),
 });
 
-export const createSettingSchema = Joi.object<Omit<DomainSetting, 'id'>>({
-    domainId: Joi.number().integer().required(),
-    key: keySchema.required(),
-    value: valueSchema,
+export const settingQuerySchema = z.object({
+    domainId: z.coerce.number().optional(),
 });
+
+export const settingsListQuerySchema = z.object({
+    range: z.string().optional(),
+});
+
+/** Loose on purpose: unknown filters are ignored and values are coerced, as before */
+export const settingsFiltersSchema = z.object({
+    allowedForDomains: z
+        .unknown()
+        .optional()
+        .transform((value) => (value ? Boolean(value) : null)),
+    enforceDomain: z
+        .unknown()
+        .optional()
+        .transform((value) => (value ? Number(value) : null)),
+    domainName: z
+        .unknown()
+        .optional()
+        .transform((value) => (value ? String(value) : null)),
+});
+
+const urlOrEmptySchema = z.union([z.literal(''), z.url({ protocol: /^https?$/ })]);
+
+/** The CSP config is sent as a JSON string and stored as the object it parses to */
+const cspConfigSchema = z
+    .string()
+    .optional()
+    .transform((value, ctx) => {
+        if (value === undefined || value === '') {
+            return null;
+        }
+        try {
+            return JSON.parse(value) as unknown;
+        } catch {
+            ctx.addIssue({ code: 'custom', message: 'Invalid JSON' });
+            return z.NEVER;
+        }
+    })
+    .pipe(cspSchema);
+
+/** The value schema of each setting key */
+function valueSchemaFor(key: SettingKeys): z.ZodType {
+    switch (key) {
+        case SettingKeys.TrailingSlash:
+            return z.enum([
+                TrailingSlashValues.DoNothing,
+                TrailingSlashValues.redirectToNonTrailingSlash,
+                TrailingSlashValues.redirectToTrailingSlash,
+            ]);
+        case SettingKeys.I18nRoutingStrategy:
+            return z.enum(RoutingStrategyValues);
+        case SettingKeys.AmdDefineCompatibilityMode:
+        case SettingKeys.AuthOpenIdEnabled:
+        case SettingKeys.GlobalSpinnerEnabled:
+        case SettingKeys.I18nEnabled:
+        case SettingKeys.CspEnableStrict:
+            return z.boolean();
+        case SettingKeys.I18nSupportedCurrencies:
+        case SettingKeys.I18nSupportedLocales:
+        case SettingKeys.CspTrustedLocalHosts:
+            return z.array(z.string().min(1)).optional();
+        case SettingKeys.FragmentProxyHeaders:
+        case SettingKeys.TemplateProxyHeaders:
+            return z.array(z.string().min(1)).nullish();
+        case SettingKeys.BaseUrl:
+        case SettingKeys.AuthOpenIdDiscoveryUrl:
+            return urlOrEmptySchema.optional();
+        case SettingKeys.OnPropsUpdate:
+            return z.enum(OnPropsUpdateValues);
+        case SettingKeys.CspConfig:
+            return z.preprocess((value) => (value === null ? undefined : value), cspConfigSchema);
+        default:
+            return z.string().optional();
+    }
+}
+
+/** Checks the value against the schema of the setting's key, issues are reported at "value" */
+function withValueOfKey<T extends { key: SettingKeys; value?: unknown }>(setting: T, ctx: z.RefinementCtx) {
+    const result = valueSchemaFor(setting.key).safeParse(setting.value);
+    if (!result.success) {
+        for (const issue of result.error.issues) {
+            ctx.addIssue({ code: 'custom', message: issue.message, path: ['value', ...issue.path] });
+        }
+        return z.NEVER;
+    }
+    return { ...setting, value: result.data };
+}
+
+export const partialSettingSchema = z
+    .strictObject({
+        key: keySchema,
+        value: z.unknown(),
+        domainId: numeric(z.number().int()).nullish(),
+    })
+    .transform(withValueOfKey);
+
+export const createSettingSchema = z
+    .strictObject({
+        domainId: numeric(z.number().int()),
+        key: keySchema,
+        value: z.unknown(),
+    })
+    .transform(withValueOfKey);
+
+export type UpdateSettingInput = z.output<typeof partialSettingSchema>;
+export type CreateDomainSettingInput = z.output<typeof createSettingSchema>;

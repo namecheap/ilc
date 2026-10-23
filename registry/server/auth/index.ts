@@ -5,7 +5,7 @@ import { Logger } from 'ilc-plugins-sdk';
 import passport from 'passport';
 
 import { AuthProviders } from '../authEntities/interfaces';
-import db from '../db';
+import type { Knex } from 'knex';
 import { userContextMiddleware } from '../middleware/userContext';
 import { availableMethodsHandlerFactory } from './handlers/availableMethodsHandler';
 import { localLoginHandlerFactory } from './handlers/localLoginHandler';
@@ -14,7 +14,7 @@ import { openIdAuthCallbackHandlerFactory } from './handlers/openIdAuthCallbackH
 import { bearerAuthenticationMiddlewareFactory } from './middleware/bearerAuthenticationMiddleware';
 import { initializeOpenIdMiddlewareFactory } from './middleware/initializeOpenIdMiddleware';
 import { rolesMiddlewareFactory } from './middleware/rolesMiddleware';
-import { authService } from './services/AuthService';
+import { AuthService } from './services/AuthService';
 import { OpenIdService } from './services/OpenIdService';
 import { bearerStrategyFactory } from './strategies/bearer';
 import { localStrategyFactory } from './strategies/local';
@@ -27,6 +27,7 @@ export const OPENID_CALLBACK_URL = '/auth/openid/return';
 
 export async function useAuth(
     app: Express,
+    db: Knex,
     openIdService: OpenIdService,
     config: SetupAuthOptions,
     logger: Logger,
@@ -44,6 +45,8 @@ export async function useAuth(
         },
         config.session,
     );
+
+    const authService = new AuthService(db);
 
     if (app.get('env') === 'production') {
         app.set('trust proxy', 1); // trust first proxy

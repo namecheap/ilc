@@ -1,9 +1,13 @@
 import path from 'node:path';
-import { VersionedKnex } from '../../server/db';
+import type { Knex } from 'knex';
 import { Tables } from '../../server/db/structure';
 import { User } from '../../typings/User';
 import { dbFactory, expect } from '../common';
-import { SharedLibEntry } from '../../server/common/services/entries/SharedLibEntry';
+import { sharedLibSchema } from '../../server/sharedLibs/interfaces';
+import { SharedLibsRepository } from '../../server/sharedLibs/repositories/SharedLibsRepository';
+import { SharedLibsService } from '../../server/sharedLibs/services/SharedLibsService';
+import versioningConfig from '../../server/versioning/config';
+import { Versioning } from '../../server/versioning/services/Versioning';
 
 const sharedLibPayload = {
     name: 'upsert',
@@ -17,23 +21,28 @@ const user: User = Object.freeze({
     role: 'testUser',
 });
 
-describe('SharedLibraryEntry', () => {
-    let db: VersionedKnex;
+describe('SharedLibsService', () => {
+    let db: Knex;
     let reset: () => Promise<void>;
+    let service: SharedLibsService;
     before(async () => {
         ({ db, reset } = await dbFactory());
         await db.migrate.latest({
             directory: path.join(__dirname, '../../server/migrations'),
         });
+        const versioning = new Versioning(versioningConfig, db);
+        service = new SharedLibsService(new SharedLibsRepository(db, versioning), versioning);
     });
     after(async () => {
         await reset();
     });
     describe('upsert', () => {
         it('should create item', async () => {
-            const service = new SharedLibEntry(db);
             const trxProvider = db.transactionProvider();
-            await service.upsert({ ...sharedLibPayload, name: '@portal/upsert1' }, { user, trxProvider });
+            await service.upsert(sharedLibSchema.parse({ ...sharedLibPayload, name: '@portal/upsert1' }), {
+                user,
+                trxProvider,
+            });
             const trx = await trxProvider();
             await trx.commit();
             const lib = await db(Tables.SharedLibs).first().where({ name: '@portal/upsert1' });
@@ -50,9 +59,11 @@ describe('SharedLibraryEntry', () => {
                 spaBundle: 'https://example.com/lib1.js',
                 l10nManifest: 'existing',
             });
-            const service = new SharedLibEntry(db);
             const trxProvider = db.transactionProvider();
-            await service.upsert({ ...sharedLibPayload, name: '@portal/upsert2' }, { user, trxProvider });
+            await service.upsert(sharedLibSchema.parse({ ...sharedLibPayload, name: '@portal/upsert2' }), {
+                user,
+                trxProvider,
+            });
             const trx = await trxProvider();
             await trx.commit();
             const lib = await db(Tables.SharedLibs).first().where({ name: '@portal/upsert2' });
@@ -65,10 +76,13 @@ describe('SharedLibraryEntry', () => {
         });
         it('should cancel upsert', async () => {
             await db(Tables.SharedLibs).insert({ name: '@portal/upsert3', spaBundle: '' });
-            const service = new SharedLibEntry(db);
             const trxProvider = db.transactionProvider();
             await service.upsert(
-                { ...sharedLibPayload, name: '@portal/upsert3', spaBundle: 'http://localhost/new' },
+                sharedLibSchema.parse({
+                    ...sharedLibPayload,
+                    name: '@portal/upsert3',
+                    spaBundle: 'http://localhost/new',
+                }),
                 { user, trxProvider },
             );
             const trx = await trxProvider();
@@ -79,16 +93,10 @@ describe('SharedLibraryEntry', () => {
                 spaBundle: '',
             });
         });
-        it('should throw on validation error', async () => {
-            const service = new SharedLibEntry(db);
-            const trxProvider = db.transactionProvider();
-            await expect(
-                service.upsert({ ...sharedLibPayload, spaBundle: 1, name: '@portal/upsert4' }, { user, trxProvider }),
-            ).eventually.rejectedWith('"spaBundle" must be a string');
-            const trx = await trxProvider();
-            await trx.rollback();
-            const lib = await db(Tables.SharedLibs).first().where({ name: '@portal/upsert4' });
-            expect(lib).to.undefined;
+        it('should leave invalid input to the schema, which rejects it', async () => {
+            expect(() =>
+                sharedLibSchema.parse({ ...sharedLibPayload, spaBundle: 1, name: '@portal/upsert4' }),
+            ).to.throw('expected string, received number');
         });
         it('should not rewrite specific properties if not applied', async () => {
             await db(Tables.SharedLibs).insert({
@@ -98,9 +106,11 @@ describe('SharedLibraryEntry', () => {
                 l10nManifest: 'existing',
                 adminNotes: 'existing',
             });
-            const service = new SharedLibEntry(db);
             const trxProvider = db.transactionProvider();
-            await service.upsert({ name: '@portal/upsert6', spaBundle: 'http://localhost/new' }, { user, trxProvider });
+            await service.upsert(
+                sharedLibSchema.parse({ name: '@portal/upsert6', spaBundle: 'http://localhost/new' }),
+                { user, trxProvider },
+            );
             const trx = await trxProvider();
             await trx.commit();
             const lib = await db(Tables.SharedLibs).first().where({ name: '@portal/upsert6' });

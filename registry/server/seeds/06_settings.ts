@@ -19,7 +19,7 @@ export async function seed(knex: Knex): Promise<any> {
 
         settings.push({
             key: SettingKeys.OverrideConfigTrustedOrigins,
-            value: JSON.parse(setting.default),
+            value: setting.default === null ? null : JSON.parse(setting.default),
         });
     }
 

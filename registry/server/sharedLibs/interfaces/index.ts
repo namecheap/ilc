@@ -1,39 +1,60 @@
-import JoiDefault from 'joi';
+import { z } from 'zod';
+import { nullAsMissing, urlSchema, versionIdSchema } from '../../common/validation/schemas';
 
-const Joi = JoiDefault.defaults((schema) => {
-    return schema.empty(null);
-});
-
-export interface SharedLib {
+export interface SharedLibRow {
     name: string;
     spaBundle: string;
-    assetsDiscoveryUrl?: string | null;
-    assetsDiscoveryUpdatedAt?: number | null;
-    adminNotes?: string | null;
-    l10nManifest?: string | null;
+    assetsDiscoveryUrl: string | null;
+    assetsDiscoveryUpdatedAt: number | null;
+    adminNotes: string | null;
+    l10nManifest: string | null;
 }
 
-export const sharedLibNameSchema = Joi.string().trim().min(1);
+export const sharedLibNameSchema = z.string().trim().min(1);
+
+export const sharedLibParamsSchema = z.strictObject({
+    name: sharedLibNameSchema,
+});
+
+export const sharedLibsListQuerySchema = z.object({
+    range: z.string().optional(),
+});
+
+export const sharedLibsFiltersSchema = z.strictObject({
+    name: z.string().min(1).optional(),
+});
 
 const commonSharedLib = {
-    spaBundle: Joi.string().trim().uri(),
-    assetsDiscoveryUrl: Joi.string().trim().uri().default(null),
-    adminNotes: Joi.string().trim(),
-    l10nManifest: Joi.string().max(255),
-    versionId: Joi.string().strip(),
+    spaBundle: nullAsMissing(urlSchema.optional()),
+    assetsDiscoveryUrl: nullAsMissing(urlSchema.optional()),
+    adminNotes: nullAsMissing(z.string().trim().min(1).optional()),
+    l10nManifest: nullAsMissing(z.string().min(1).max(255).optional()),
+    versionId: nullAsMissing(versionIdSchema),
 };
 
-export const partialSharedLibSchema = Joi.object<SharedLib>({
-    ...commonSharedLib,
-    name: sharedLibNameSchema.forbidden(),
-});
+/** Only the given fields change, the name comes from the URL */
+export const partialSharedLibSchema = z
+    .strictObject(commonSharedLib)
+    .transform(({ versionId, ...sharedLib }) => sharedLib);
 
-export const sharedLibSchema = Joi.object({
-    ...commonSharedLib,
-    name: sharedLibNameSchema.required(),
-    spaBundle: Joi.when('assetsDiscoveryUrl', {
-        is: commonSharedLib.assetsDiscoveryUrl.exist(),
-        then: commonSharedLib.spaBundle,
-        otherwise: commonSharedLib.spaBundle.required(),
-    }),
-});
+/** The SPA bundle comes from the assets discovery manifest when there is an assetsDiscoveryUrl */
+export const sharedLibSchema = z
+    .strictObject({
+        ...commonSharedLib,
+        name: nullAsMissing(sharedLibNameSchema),
+    })
+    .refine((sharedLib) => Boolean(sharedLib.assetsDiscoveryUrl) || sharedLib.spaBundle !== undefined, {
+        path: ['spaBundle'],
+        message: 'Invalid input: expected string, received undefined',
+        // Reported along with other issues, as long as the two fields it reads are valid
+        when: ({ issues }) =>
+            !issues.some((issue) => ['spaBundle', 'assetsDiscoveryUrl'].includes(String(issue.path?.[0]))),
+    })
+    .transform(({ versionId, assetsDiscoveryUrl, ...sharedLib }) => ({
+        ...sharedLib,
+        assetsDiscoveryUrl: assetsDiscoveryUrl ?? null,
+    }));
+
+export type SharedLibInput = z.output<typeof sharedLibSchema>;
+export type PartialSharedLibInput = z.output<typeof partialSharedLibSchema>;
+export type SharedLibsFilters = z.output<typeof sharedLibsFiltersSchema>;

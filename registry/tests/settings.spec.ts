@@ -443,13 +443,7 @@ describe(url, () => {
                             type: SettingTypes.Url,
                         },
                     })
-                    .expect(
-                        422,
-                        '"default" is not allowed\n' +
-                            '"scope" is not allowed\n' +
-                            '"secret" is not allowed\n' +
-                            '"meta" is not allowed',
-                    );
+                    .expect(422, '✖ Unrecognized keys: "default", "scope", "secret", "meta"');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
@@ -500,7 +494,7 @@ describe(url, () => {
                         key: SettingKeys.BaseUrl,
                         value: 'ftp://spec:3000/',
                     })
-                    .expect(422, '"value" must be a valid uri with a scheme matching the https? pattern');
+                    .expect(422, '✖ Invalid URL\n  → at value');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
@@ -522,7 +516,7 @@ describe(url, () => {
                         key: SettingKeys.AuthOpenIdDiscoveryUrl,
                         value: 'www.spec:3000',
                     })
-                    .expect(422, '"value" must be a valid uri with a scheme matching the https? pattern');
+                    .expect(422, '✖ Invalid URL\n  → at value');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
@@ -544,7 +538,7 @@ describe(url, () => {
                         key: SettingKeys.AmdDefineCompatibilityMode,
                         value: 'true',
                     })
-                    .expect(422, '"value" must be a boolean');
+                    .expect(422, '✖ Invalid input: expected boolean, received string\n  → at value');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
@@ -568,7 +562,7 @@ describe(url, () => {
                     })
                     .expect(
                         422,
-                        '"value" must be one of [doNothing, redirectToNonTrailingSlash, redirectToTrailingSlash]',
+                        '✖ Invalid option: expected one of "doNothing"|"redirectToNonTrailingSlash"|"redirectToTrailingSlash"\n  → at value',
                     );
 
                 chai.expect(response.body).to.deep.equal({});
@@ -583,6 +577,28 @@ describe(url, () => {
             }
         });
 
+        for (const [settingKey, value, message] of [
+            [
+                SettingKeys.I18nRoutingStrategy,
+                'unknown',
+                '✖ Invalid option: expected one of "prefix_except_default"|"prefix"\n  → at value',
+            ],
+            [
+                SettingKeys.OnPropsUpdate,
+                'unknown',
+                '✖ Invalid option: expected one of "remount"|"update"\n  → at value',
+            ],
+            [
+                SettingKeys.CspTrustedLocalHosts,
+                [''],
+                '✖ Too small: expected string to have >=1 characters\n  → at value[0]',
+            ],
+        ] as const) {
+            it(`should not update ${settingKey} if the value is not valid`, async () => {
+                await req.put(urlJoin(url, settingKey)).send({ key: settingKey, value }).expect(422, message);
+            });
+        }
+
         it(`should not update ${SettingKeys.AuthOpenIdEnabled} if the value is not valid`, async () => {
             try {
                 const response = await req
@@ -591,7 +607,7 @@ describe(url, () => {
                         key: SettingKeys.AuthOpenIdEnabled,
                         value: 'true',
                     })
-                    .expect(422, '"value" must be a boolean');
+                    .expect(422, '✖ Invalid input: expected boolean, received string\n  → at value');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
@@ -613,7 +629,7 @@ describe(url, () => {
                         key: SettingKeys.CspConfig,
                         value: 'invalid',
                     })
-                    .expect(422, '"value" failed custom validation because Invalid JSON');
+                    .expect(422, '✖ Invalid JSON\n  → at value');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
@@ -635,7 +651,7 @@ describe(url, () => {
                         key: SettingKeys.CspConfig,
                         value: 'true',
                     })
-                    .expect(422, '"value" failed custom validation because "value" must be of type object');
+                    .expect(422, '✖ Invalid input: expected object, received boolean\n  → at value');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {
@@ -657,7 +673,7 @@ describe(url, () => {
                         key: SettingKeys.CspConfig,
                         value: JSON.stringify({ invalid: ['https://test.com'], reportUri: 'a/b' }),
                     })
-                    .expect(422, '"value" failed custom validation because "invalid" is not allowed');
+                    .expect(422, '✖ Unrecognized key: "invalid"\n  → at value');
 
                 chai.expect(response.body).to.deep.equal({});
             } finally {

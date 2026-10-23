@@ -1,42 +1,26 @@
-import type { Request, Response } from 'express';
-import Joi from 'joi';
+import type { RequestHandler } from 'express';
 
-import { User } from '../../../typings/User';
-import validateRequestFactory from '../../common/services/validateRequest';
-import { SettingKeys, keySchema, partialSettingSchema } from '../interfaces';
-import { settingsService } from '../services/SettingsService';
+import { validated } from '../../common/validation/validated';
+import { partialSettingSchema, settingParamsSchema } from '../interfaces';
+import type { SettingsService } from '../services/SettingsService';
 
-type RequestParams = {
-    key: SettingKeys;
-};
+export function updateSetting(settingsService: SettingsService): RequestHandler {
+    return validated(
+        { params: settingParamsSchema, body: partialSettingSchema },
+        async ({ params, body }, req, res) => {
+            const settingKey = params.key;
+            const { domainId } = body;
 
-const validateRequest = validateRequestFactory([
-    {
-        schema: Joi.object({
-            key: keySchema.required(),
-        }),
-        selector: 'params',
-    },
-    {
-        schema: partialSettingSchema,
-        selector: 'body',
-    },
-]);
+            const user = req.user;
 
-const updateSetting = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const settingKey = req.params.key;
-    const { domainId } = req.body;
-
-    const user = req.user;
-
-    if (!domainId) {
-        await settingsService.updateRootSetting(settingKey, req.body.value, user as User);
-    } else {
-        await settingsService.updateDomainSetting(settingKey, req.body.value, domainId, user as User);
-    }
-    const setting = await settingsService.getDomainMergedSetting(settingKey, domainId);
-    const [backwardCompatible] = settingsService.omitEmptyAndNullValues([setting]);
-    res.status(200).send(backwardCompatible);
-};
-
-export default [validateRequest, updateSetting];
+            if (!domainId) {
+                await settingsService.updateRootSetting(settingKey, body.value, user);
+            } else {
+                await settingsService.updateDomainSetting(settingKey, body.value, domainId, user);
+            }
+            const setting = await settingsService.getDomainMergedSetting(settingKey, domainId);
+            const [backwardCompatible] = settingsService.omitEmptyAndNullValues([setting]);
+            res.status(200).send(backwardCompatible);
+        },
+    );
+}

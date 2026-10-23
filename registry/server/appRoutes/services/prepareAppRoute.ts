@@ -1,10 +1,23 @@
-import { parseJSON, stringifyJSON } from '../../common/services/json';
+import { JSONObject, parseJSON } from '../../common/services/json';
 import preProcessResponse from '../../common/services/preProcessResponse';
-import { AppRouteSlot, AppRouteSlotDto } from '../interfaces';
-import { AppRouteWithSlot } from '../routes/RoutesService';
-import { ConsumerRoute } from './transformSpecialRoutes';
+import type { RouteWithSlotRow } from '../interfaces';
 
-const prepareRouteToRespond = (appRoute: ConsumerRoute | AppRouteWithSlot): ConsumerRoute => {
+type RouteToRespond = {
+    routeId: number;
+    route?: string;
+    next?: boolean;
+    templateName: string | null;
+    orderPos: number | null;
+    domainId: number | null;
+    versionId: string | number;
+    namespace: string | null;
+    meta: JSONObject | null;
+    specialRole?: string;
+};
+
+type SlotToRespond = Pick<RouteWithSlotRow, 'appName' | 'props' | 'kind'>;
+
+const prepareRouteToRespond = (appRoute: RouteToRespond) => {
     const base = {
         id: appRoute.routeId,
         route: appRoute.route,
@@ -24,11 +37,11 @@ const prepareRouteToRespond = (appRoute: ConsumerRoute | AppRouteWithSlot): Cons
     });
 };
 
-type AppRouteWithSlots = ConsumerRoute & {
-    slots: Record<string, AppRouteSlotDto>;
+type AppRouteWithSlots = ReturnType<typeof prepareRouteToRespond> & {
+    slots: Record<string, SlotToRespond>;
 };
 
-const prepareRoutesWithSlotsToRespond = (appRoutes: AppRouteWithSlot[]): AppRouteWithSlots[] => {
+const prepareRoutesWithSlotsToRespond = (appRoutes: RouteWithSlotRow[]): AppRouteWithSlots[] => {
     const reduced = appRoutes.reduce<Record<number, AppRouteWithSlots>>((acc, appRoute) => {
         const { routeId, name, appName, props, kind } = appRoute;
 
@@ -56,25 +69,7 @@ const prepareRoutesWithSlotsToRespond = (appRoutes: AppRouteWithSlot[]): AppRout
     return Object.values(reduced);
 };
 
-export const prepareAppRouteToSave = stringifyJSON(['meta']);
-
-export const prepareAppRouteToRespond = (appRoutes: AppRouteWithSlot[]): AppRouteWithSlots =>
+export const prepareAppRouteToRespond = (appRoutes: RouteWithSlotRow[]): AppRouteWithSlots =>
     prepareRoutesWithSlotsToRespond(appRoutes)[0];
 
-export const prepareAppRoutesToRespond = (v: ConsumerRoute[]): ConsumerRoute[] =>
-    v.map((row) => prepareRouteToRespond(row));
-
-export function prepareAppRouteSlotsToSave(
-    appRouteSlots: Record<string, AppRouteSlotDto>,
-    routeId: number,
-): Omit<AppRouteSlot, 'id'>[] {
-    return Object.keys(appRouteSlots).map((appRouteSlotName) => {
-        const slotData = appRouteSlots[appRouteSlotName];
-        const withMetadata = {
-            ...slotData,
-            name: appRouteSlotName,
-            routeId,
-        };
-        return stringifyJSON(['props'])(withMetadata);
-    });
-}
+export const prepareAppRoutesToRespond = (v: RouteToRespond[]) => v.map((row) => prepareRouteToRespond(row));

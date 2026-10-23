@@ -66,10 +66,17 @@ Our ownership:
 
 ### Registry (`registry/server`)
 
-Express 5 + Knex on PostgreSQL (`server/db/index.ts`). Each entity has its own folder (`apps`, `appRoutes`, `templates`, `sharedLibs`, `sharedProps`, `routerDomains`, `settings`, `authEntities`, `versioning`, …) with `routes/`, interfaces and services. Things that span files:
+Express 5 + Knex on PostgreSQL (`server/db/index.ts`). Each entity has its own folder (`apps`, `appRoutes`, `templates`, `sharedLibs`, `sharedProps`, `routerDomains`, `settings`, `authEntities`, …) with the same layout:
 
-- **Versioning**: entity writes go through `db.versioning(user, { type, id }, async (trx) => …)` (`server/db/versioning.ts` → `server/versioning/services/Versioning.ts`), which snapshots the record and stores a revertible version. Queries inside the callback must use `trx`. The versioning service is a module singleton bound to one Knex instance via `setDb`.
-- **Errors**: handlers may simply throw; Express 5 forwards rejected async handlers to `server/errorHandler`, which maps `httpErrors.*` and Joi validation errors to 4xx and everything else to a logged 500 with an error ID.
+- `interfaces/`: the row type, which follows the PostgreSQL schema and is registered for Knex in `typings/knex/tables.d.ts`, the Zod schemas, and the input types derived from them with `z.output`.
+- `repositories/`: that table's queries. Writes take the transaction.
+- `services/`: versioned writes, not-found handling and business rules, such as checks that need other tables.
+- `routes/`: one handler factory per file. It takes the service and validates its input with `validated()` (`server/common/validation`).
+
+`server/composition.ts` builds the repositories and services once, and `app.ts` passes them to the routers. Things that span files:
+
+- **Versioning**: services wrap entity writes in `versioning.withVersion(user, { type, id }, async (trx) => …)` (`server/versioning/services/Versioning.ts`), which snapshots the record and stores a revertible version. Queries inside the callback must use `trx`. Without `id`, the callback returns the created row, whose id column identifies it. Reads that need the version use `versioning.versionedSelect(...)`.
+- **Errors**: handlers and services may simply throw; Express 5 forwards rejected async handlers to `server/errorHandler`, which maps `httpErrors.*` to 4xx and everything else to a logged 500 with an error ID. A failed validation is an `UnprocessableContent` (422) with Zod's error summary.
 - **Settings** have a scope; ILC-scoped ones (e.g. `overrideConfigTrustedOrigins`) are served to ILC.
 - **Assets discovery** (`server/runnerAssetsDiscovery.ts`, `pnpm assetsdiscovery`) runs as a separate process in production and refreshes app bundle URLs from their manifests.
 - Admin UI: `registry/client`, a React Admin app built with webpack.

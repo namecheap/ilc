@@ -1,21 +1,20 @@
-import { Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
 import { markProtected } from '../../common/services/protectedEntities';
-import { filtersMiddleware, RequestWithFilters } from '../../middleware/filters';
+import { validated } from '../../common/validation/validated';
+import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
-import { TemplatesGetListFilters, templatesRepository } from '../services/templatesRepository';
+import { templatesFiltersSchema } from '../interfaces';
+import type { TemplatesService } from '../services/TemplatesService';
 
-const filtersSchema = Joi.object<TemplatesGetListFilters>({
-    domainId: Joi.alternatives(Joi.number(), Joi.string().valid('null')).optional(),
-    id: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
-    name: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
-});
+export function getTemplates(service: TemplatesService): RequestHandler {
+    return validated({ filters: templatesFiltersSchema }, async ({ filters }, req, res) => {
+        const templates = await service.list(filters);
+        const itemsWithId = templates.map((item) => {
+            return { ...item, versionId: appendDigest(item.versionId, 'template') };
+        });
 
-const getTemplates = async (req: RequestWithFilters<TemplatesGetListFilters>, res: Response): Promise<void> => {
-    const { data, pagination } = await templatesRepository.getList(req.filters ?? {});
-    res.setHeader('Content-Range', pagination.total); //Stub for future pagination capabilities
-    res.status(200).send(markProtected(EntityTypes.templates, data));
-};
-
-export default [filtersMiddleware(filtersSchema), getTemplates];
+        res.setHeader('Content-Range', itemsWithId.length); //Stub for future pagination capabilities
+        res.status(200).send(markProtected(EntityTypes.templates, itemsWithId));
+    });
+}

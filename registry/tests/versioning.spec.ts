@@ -2,9 +2,9 @@ process.env.TZ = 'UTC';
 
 import supertest, { type Agent } from 'supertest';
 import * as bcrypt from 'bcrypt';
-import db from '../server/db';
 import { formatDate } from '../server/util/db';
-import { ensureDeleted, expect, request, requestWithAuth } from './common';
+import { defined } from '../server/util/helpers';
+import { db, ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const basePath = '/api/v1/versioning';
 const dataStub = [
@@ -90,6 +90,20 @@ describe(`Tests ${basePath}`, () => {
             expect(response.body[1]).to.eql({ ...dataStub[0], created_at: '2023-09-22T14:18:23.000Z' });
         });
 
+        it('should filter records by id and by column', async () => {
+            const byId = await req
+                .get(basePath)
+                .query({ filter: JSON.stringify({ id: [dataStub[0].id] }) })
+                .expect(200);
+            expect(byId.body).to.eql([{ ...dataStub[0], created_at: '2023-09-22T14:18:23.000Z' }]);
+
+            const byEntity = await req
+                .get(basePath)
+                .query({ filter: JSON.stringify({ entity_id: dataStub[1].entity_id }) })
+                .expect(200);
+            expect(byEntity.body).to.eql([{ ...dataStub[1], created_at: '2023-09-22T14:18:24.000Z' }]);
+        });
+
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
                 await reqWithAuth.get(basePath).expect(401);
@@ -98,6 +112,35 @@ describe(`Tests ${basePath}`, () => {
     });
 
     describe('Revert', () => {
+        it('should respond with 404 when the version does not exist', async () => {
+            await req.post(`${basePath}/999999/revert`).expect(404, '');
+        });
+
+        it('should respond with 400 and the reason when the version can not be reverted', async () => {
+            const name = 'ncTestRevertAfterDeletion';
+            try {
+                await req
+                    .post('/api/v1/shared_props/')
+                    .send({ name, props: { a: 1 } })
+                    .expect(200);
+                await req.delete(`/api/v1/shared_props/${name}`).expect(204);
+
+                const { body: versions } = await req
+                    .get(basePath)
+                    .query({ filter: JSON.stringify({ entity_type: 'shared_props', entity_id: name }) })
+                    .expect(200);
+                const creation = versions.find((version: { data: string | null }) => version.data === null);
+
+                const response = await req.post(`${basePath}/${creation.id}/revert`).expect(400);
+                expect(response.body).to.eql({
+                    reason: "It's possible to revert creation/update operations only if the last one is not a deletion one",
+                });
+            } finally {
+                // Other tests here count the versions
+                await db('versioning').where({ entity_type: 'shared_props', entity_id: name }).delete();
+            }
+        });
+
         it('should successfully revert operations', async () => {
             const resp = await req.post(`${basePath}/${dataStub[0].id}/revert`).expect(200);
 
@@ -444,8 +487,8 @@ describe(`Tests ${basePath}`, () => {
                 expect(authResp.body.role).to.equal('admin');
 
                 const [dbEntity] = await db('auth_entities').where('id', authEntityId);
-                expect(await bcrypt.compare('new-secret-hash', dbEntity.secret)).to.be.true;
-                expect(await bcrypt.compare('initial-secret-hash', dbEntity.secret)).to.be.false;
+                expect(await bcrypt.compare('new-secret-hash', defined(dbEntity.secret))).to.be.true;
+                expect(await bcrypt.compare('initial-secret-hash', defined(dbEntity.secret))).to.be.false;
             } finally {
                 if (authEntityId) {
                     await ensureDeleted(req, `${authEntitiesPath}/${authEntityId}`);

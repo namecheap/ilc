@@ -1,26 +1,12 @@
-import type { Request, Response } from 'express';
-import Joi from 'joi';
+import type { RequestHandler } from 'express';
 
-import validateRequestFactory from '../../common/services/validateRequest';
-import { settingsService } from '../services/SettingsService';
+import { validated } from '../../common/validation/validated';
+import { domainSettingParamsSchema } from '../interfaces';
+import type { SettingsService } from '../services/SettingsService';
 
-type RequestParams = {
-    id: string;
-};
-
-const validateRequest = validateRequestFactory([
-    {
-        schema: Joi.object({
-            id: Joi.number().required(),
-        }),
-        selector: 'params',
-    },
-]);
-
-const deleteSettingForDomain = async (req: Request<RequestParams>, res: Response): Promise<void> => {
-    const id = req.params.id;
-    await settingsService.deleteDomainSetting(id);
-    res.status(204).send();
-};
-
-export default [validateRequest, deleteSettingForDomain];
+export function deleteDomainSetting(settingsService: SettingsService): RequestHandler {
+    return validated({ params: domainSettingParamsSchema }, async ({ params }, req, res) => {
+        await settingsService.deleteDomainSetting(params.id);
+        res.status(204).send();
+    });
+}

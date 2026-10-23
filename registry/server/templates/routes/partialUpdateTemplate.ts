@@ -1,48 +1,15 @@
-import { Request, Response } from 'express';
-import Joi from 'joi';
+import { RequestHandler } from 'express';
 
-import validateRequestFactory from '../../common/services/validateRequest';
-import { validateLocalesMiddleware } from '../../middleware/validatelocales';
-import { exhaustiveCheck } from '../../util/exhaustiveCheck';
-import { templatesRepository } from '../services/templatesRepository';
-import { commonTemplate, templateNameSchema } from './validation';
+import { validated } from '../../common/validation/validated';
+import { templateContentSchema, templateParamsSchema } from '../interfaces';
+import type { TemplatesService } from '../services/TemplatesService';
 
-type UpdateTemplateRequestParams = {
-    name: string;
-};
-
-const validateRequestBeforeUpdateTemplate = validateRequestFactory([
-    {
-        schema: Joi.object({
-            name: templateNameSchema.required(),
-        }),
-        selector: 'params',
-    },
-    {
-        schema: Joi.object({
-            content: commonTemplate.content.required(),
-        }),
-        selector: 'body',
-    },
-]);
-
-const partialUpdateTemplate = async (req: Request<UpdateTemplateRequestParams>, res: Response): Promise<void> => {
-    const result = await templatesRepository.partialUpdateTemplate(req.params.name, req.body, req.user);
-
-    switch (result.type) {
-        case 'notFound': {
-            res.status(404).send('Not found');
-            return;
-        }
-        case 'ok': {
-            res.status(200).send(result.template);
-            return;
-        }
-        default: {
-            /* istanbul ignore next */
-            exhaustiveCheck(result);
-        }
-    }
-};
-
-export default [validateRequestBeforeUpdateTemplate, partialUpdateTemplate];
+export function partialUpdateTemplate(service: TemplatesService): RequestHandler {
+    return validated(
+        { params: templateParamsSchema, body: templateContentSchema },
+        async ({ params, body }, req, res) => {
+            const template = await service.updateContent(params.name, body.content, req.user);
+            res.status(200).send(template);
+        },
+    );
+}

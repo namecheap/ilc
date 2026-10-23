@@ -1,21 +1,26 @@
 import { Knex } from 'knex';
 import { User } from '../../typings/User';
-import { AppRoute, AppRouteDto } from '../appRoutes/interfaces';
-import { routesService } from '../appRoutes/routes/RoutesService';
-import { App } from '../apps/interfaces';
-import { ApplicationEntry } from '../common/services/entries/ApplicationEntry';
-import { EntryFactory } from '../common/services/entries/EntryFactory';
-import { SharedLibEntry } from '../common/services/entries/SharedLibEntry';
-import db, { VersionedKnex } from '../db';
-import { SharedLib } from '../sharedLibs/interfaces';
-import { PG_FOREIGN_KEY_VIOLATION_CODE } from '../util/db';
-import { getJoiErr } from '../util/helpers';
+import { appRouteSchema, type RouteRow } from '../appRoutes/interfaces';
+import type { RoutesService } from '../appRoutes/services/RoutesService';
+import { appSchema, type AppRow } from '../apps/interfaces';
+import type { AppsService } from '../apps/services/AppsService';
+import { UnprocessableContent } from '../errorHandler/httpErrors';
+import { sharedLibSchema } from '../sharedLibs/interfaces';
+import type { SharedLibsService } from '../sharedLibs/services/SharedLibsService';
+import { parseInput } from '../common/validation/validated';
+import { isForeignKeyViolation } from '../util/db';
+import { z } from 'zod';
 
-type UpsertPayload = {
-    apps?: App[];
-    routes?: AppRouteDto[];
-    sharedLibs?: SharedLib[];
-};
+const configItemsSchema = z.array(z.record(z.string(), z.unknown())).optional();
+
+/** Each item is validated with the schema of its entity before it's upserted */
+export const configPayloadSchema = z.strictObject({
+    apps: configItemsSchema,
+    routes: configItemsSchema,
+    sharedLibs: configItemsSchema,
+});
+
+type UpsertPayload = z.output<typeof configPayloadSchema>;
 
 type UpsertParams = {
     user: User;
@@ -24,20 +29,23 @@ type UpsertParams = {
 };
 
 export class ConfigService {
-    constructor(private readonly db: VersionedKnex) {}
+    constructor(
+        private readonly db: Knex,
+        private readonly apps: AppsService,
+        private readonly sharedLibs: SharedLibsService,
+        private readonly routes: RoutesService,
+    ) {}
 
     async upsert(payload: UpsertPayload, { user, dryRun }: Omit<UpsertParams, 'trxProvider'>): Promise<void> {
         if (!payload.apps && !payload.routes && !payload.sharedLibs) {
             throw new Error('At least one of the following parameters should be provided: apps, routes, sharedLibs');
         }
-        const appInstance = EntryFactory.getAppInstance();
-        const sharedLibInstance = EntryFactory.getSharedLibInstance();
 
         const trxProvider = this.db.transactionProvider();
         const trx = await trxProvider();
 
         try {
-            const upsertedApps = await this.upsertApps(payload.apps ?? [], appInstance, {
+            const upsertedApps = await this.upsertApps(payload.apps ?? [], {
                 user,
                 trxProvider,
                 dryRun,
@@ -47,9 +55,9 @@ export class ConfigService {
             const groupedApps = this.groupByNamespace(upsertedApps, 'name');
             const groupedRoutes = this.groupByNamespace(upsertedRoutes, 'id');
 
-            await this.upsertSharedLibs(payload.sharedLibs ?? [], sharedLibInstance, { user, trxProvider, dryRun });
+            await this.upsertSharedLibs(payload.sharedLibs ?? [], { user, trxProvider, dryRun });
             await this.deleteRoutesByNamespace(groupedRoutes, { user, trxProvider });
-            await this.deleteAppsByNamespace(groupedApps, appInstance, { user, trxProvider });
+            await this.deleteAppsByNamespace(groupedApps, { user, trxProvider });
 
             if (dryRun) {
                 await trx.rollback();
@@ -62,50 +70,46 @@ export class ConfigService {
         }
     }
 
-    private async upsertApps(
-        apps: App[],
-        appInstance: ApplicationEntry,
-        { user, trxProvider, dryRun }: UpsertParams,
-    ): Promise<App[]> {
-        return await Promise.all(apps.map((x) => appInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })));
+    private async upsertApps(apps: unknown[], { user, trxProvider, dryRun }: UpsertParams): Promise<AppRow[]> {
+        return await Promise.all(
+            apps.map(async (x) =>
+                this.apps.upsert(await parseInput(appSchema, x), { user, trxProvider, fetchManifest: !dryRun }),
+            ),
+        );
     }
 
-    private async upsertRoutes(
-        routes: AppRouteDto[],
-        { user, trxProvider }: UpsertParams,
-    ): Promise<(AppRoute & { id: number })[]> {
+    private async upsertRoutes(routes: unknown[], { user, trxProvider }: UpsertParams): Promise<RouteRow[]> {
         this.validateRoutes(routes);
-        const results: (AppRoute & { id: number })[] = [];
-        for (const route of routes) {
-            const result = await routesService.upsert(route, user, trxProvider);
+        const parsedRoutes = await Promise.all(routes.map((route) => parseInput(appRouteSchema, route)));
+        const results: RouteRow[] = [];
+        for (const route of parsedRoutes) {
+            const result = await this.routes.upsert(route, user, trxProvider);
             results.push(result);
         }
         return results;
     }
 
-    private validateRoutes(routes: AppRouteDto[]) {
-        const grouped = routes.reduce(
-            (acc, route) => {
-                const ns = route.namespace ?? '';
-                if (!acc[ns]) {
-                    acc[ns] = [];
-                }
-                acc[ns].push(route);
-                return acc;
-            },
-            {} as Record<string, AppRouteDto[]>,
-        );
+    /** Runs on the routes as sent, so the error shows them that way */
+    private validateRoutes(routes: unknown[]) {
+        const grouped = routes.reduce<Record<string, unknown[]>>((acc, route) => {
+            const ns = String(field(route, 'namespace') ?? '');
+            if (!acc[ns]) {
+                acc[ns] = [];
+            }
+            acc[ns].push(route);
+            return acc;
+        }, {});
         Object.values(grouped).forEach((namespaceRoutes) => {
             const duplicates = namespaceRoutes.filter(
                 (route, idx, arr) =>
                     arr.findIndex(
                         (r) =>
-                            r.route === route.route &&
-                            r.domainId === route.domainId &&
-                            r.domainAlias === route.domainAlias,
+                            field(r, 'route') === field(route, 'route') &&
+                            field(r, 'domainId') === field(route, 'domainId') &&
+                            field(r, 'domainAlias') === field(route, 'domainAlias'),
                     ) !== idx,
             );
-            const unorderedDuplicates = duplicates.filter((route) => typeof route.orderPos !== 'number');
+            const unorderedDuplicates = duplicates.filter((route) => typeof field(route, 'orderPos') !== 'number');
             if (unorderedDuplicates.length > 0) {
                 throw new Error(
                     `Multiple routes with the same "route" and "domainId" and without "orderPos" are present in the passed update:${JSON.stringify(unorderedDuplicates, null, 2)}To update, ensure that each of these routes has a unique "orderPos" value for the given "domainId".`,
@@ -114,13 +118,12 @@ export class ConfigService {
         });
     }
 
-    private async upsertSharedLibs(
-        sharedLibs: SharedLib[],
-        sharedLibInstance: SharedLibEntry,
-        { user, trxProvider, dryRun }: UpsertParams,
-    ): Promise<void> {
+    private async upsertSharedLibs(sharedLibs: unknown[], { user, trxProvider, dryRun }: UpsertParams): Promise<void> {
         await Promise.all(
-            sharedLibs.map((x) => sharedLibInstance.upsert(x, { user, trxProvider, fetchManifest: !dryRun })),
+            sharedLibs.map(async (x) => {
+                const sharedLib = await parseInput(sharedLibSchema, x);
+                await this.sharedLibs.upsert(sharedLib, { user, trxProvider, fetchManifest: !dryRun });
+            }),
         );
     }
 
@@ -132,7 +135,7 @@ export class ConfigService {
             Object.keys(upsertedRoutesByNamespace).map(
                 (namespace) =>
                     namespace &&
-                    routesService.deleteByNamespace(namespace, upsertedRoutesByNamespace[namespace], {
+                    this.routes.deleteByNamespace(namespace, upsertedRoutesByNamespace[namespace], {
                         user,
                         trxProvider,
                     }),
@@ -142,14 +145,13 @@ export class ConfigService {
 
     private async deleteAppsByNamespace(
         upsertedAppsByNamespace: Record<string, string[]>,
-        appInstance: ApplicationEntry,
         { user, trxProvider }: UpsertParams,
     ): Promise<void> {
         await Promise.all(
             Object.keys(upsertedAppsByNamespace).map(
                 (namespace) =>
                     namespace &&
-                    appInstance.deleteByNamespace(namespace, upsertedAppsByNamespace[namespace], {
+                    this.apps.deleteByNamespace(namespace, upsertedAppsByNamespace[namespace], {
                         user,
                         trxProvider,
                     }),
@@ -157,24 +159,24 @@ export class ConfigService {
         );
     }
 
-    public mapError(error: any): Error {
-        if (routesService.isOrderPosError(error)) {
-            return getJoiErr(
-                'orderPos',
-                'Specified "orderPos" value already exists for routes with provided "domainId" and "namespace"',
-            );
+    public mapError(error: unknown): Error {
+        if (this.routes.isOrderPosError(error)) {
+            return new UnprocessableContent({
+                message:
+                    'Specified "orderPos" value already exists for routes with provided "domainId" and "namespace"',
+            });
         }
-        if (error.code === PG_FOREIGN_KEY_VIOLATION_CODE && error.constraint === 'routes_domainid_foreign') {
-            return getJoiErr('domainId', 'Specified "domainId" value does not exist');
+        if (isForeignKeyViolation(error, 'routes_domainid_foreign')) {
+            return new UnprocessableContent({ message: 'Specified "domainId" value does not exist' });
         }
-        if (error.code === PG_FOREIGN_KEY_VIOLATION_CODE && error.constraint === 'routes_templatename_foreign') {
-            return getJoiErr('templateName', 'Specified "templateName" value does not exist');
+        if (isForeignKeyViolation(error, 'routes_templatename_foreign')) {
+            return new UnprocessableContent({ message: 'Specified "templateName" value does not exist' });
         }
-        if (error.code === PG_FOREIGN_KEY_VIOLATION_CODE && error.constraint === 'apps_enforcedomain_foreign') {
-            return getJoiErr('enforceDomain', 'Specified "enforceDomain" domainId value does not exist');
+        if (isForeignKeyViolation(error, 'apps_enforcedomain_foreign')) {
+            return new UnprocessableContent({ message: 'Specified "enforceDomain" domainId value does not exist' });
         }
 
-        return error;
+        return error instanceof Error ? error : new Error(String(error));
     }
 
     private groupByNamespace<T extends { namespace?: string | null }, K extends keyof T>(
@@ -194,4 +196,6 @@ export class ConfigService {
     }
 }
 
-export const configService = new ConfigService(db);
+function field(value: unknown, key: string): unknown {
+    return typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined;
+}

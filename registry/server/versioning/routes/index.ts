@@ -1,11 +1,14 @@
-import express from 'express';
+import express, { Router } from 'express';
 
-import getVersions from './getVersions';
-import revertVersion from './revertVersion';
+import type { Versioning } from '../services/Versioning';
+import { getVersions } from './getVersions';
+import { revertVersion } from './revertVersion';
 
-const versioningRouter = express.Router();
+export function createVersioningRouter(versioning: Versioning): Router {
+    const versioningRouter = express.Router();
 
-versioningRouter.get('/', ...getVersions);
-versioningRouter.post('/:id/revert', ...revertVersion);
+    versioningRouter.get('/', getVersions(versioning));
+    versioningRouter.post('/:id/revert', revertVersion(versioning));
 
-export default versioningRouter;
+    return versioningRouter;
+}
