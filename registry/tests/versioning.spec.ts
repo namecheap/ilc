@@ -113,6 +113,35 @@ describe(`Tests ${basePath}`, () => {
     });
 
     describe('Revert', () => {
+        it('should respond with 404 when the version does not exist', async () => {
+            await req.post(`${basePath}/999999/revert`).expect(404, '');
+        });
+
+        it('should respond with 400 and the reason when the version can not be reverted', async () => {
+            const name = 'ncTestRevertAfterDeletion';
+            try {
+                await req
+                    .post('/api/v1/shared_props/')
+                    .send({ name, props: { a: 1 } })
+                    .expect(200);
+                await req.delete(`/api/v1/shared_props/${name}`).expect(204);
+
+                const { body: versions } = await req
+                    .get(basePath)
+                    .query({ filter: JSON.stringify({ entity_type: 'shared_props', entity_id: name }) })
+                    .expect(200);
+                const creation = versions.find((version: { data: string | null }) => version.data === null);
+
+                const response = await req.post(`${basePath}/${creation.id}/revert`).expect(400);
+                expect(response.body).to.eql({
+                    reason: "It's possible to revert creation/update operations only if the last one is not a deletion one",
+                });
+            } finally {
+                // Other tests here count the versions
+                await db('versioning').where({ entity_type: 'shared_props', entity_id: name }).delete();
+            }
+        });
+
         it('should successfully revert operations', async () => {
             const resp = await req.post(`${basePath}/${dataStub[0].id}/revert`).expect(200);
 

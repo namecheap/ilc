@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import nock from 'nock';
 import { type Agent } from 'supertest';
+import db from '../server/db';
 import { SettingKeys } from '../server/settings/interfaces';
 import { ensureDeleted, expect, request, requestWithAuth, settingsService } from './common';
 import { makeFilterQuery } from './utils/makeFilterQuery';
@@ -207,6 +208,18 @@ describe(`Tests ${example.url}`, () => {
 
             expect(response.status).to.eq(200, JSON.stringify(response.body));
             expect(response.body.content).to.eq(example.correctLocalized.localizedVersions['es-MX'].content);
+        });
+
+        it('should respond with 500 when a stored template can not be rendered', async () => {
+            const name = 'ncTestTemplateInvalidStructure';
+            // The API only stores templates that render, so it goes to the table directly
+            await db('templates').insert({ name, content: '<div>no html structure</div>' });
+            try {
+                const response = await req.get(example.url + name + '/rendered').expect(500);
+                expect(response.text).to.include('Internal server error occurred.');
+            } finally {
+                await ensureDeleted(req, example.url + name);
+            }
         });
 
         it('should return 404 while requesting a non-existent rendered template', async () => {

@@ -577,6 +577,28 @@ describe(url, () => {
             }
         });
 
+        for (const [settingKey, value, message] of [
+            [
+                SettingKeys.I18nRoutingStrategy,
+                'unknown',
+                '✖ Invalid option: expected one of "prefix_except_default"|"prefix"\n  → at value',
+            ],
+            [
+                SettingKeys.OnPropsUpdate,
+                'unknown',
+                '✖ Invalid option: expected one of "remount"|"update"\n  → at value',
+            ],
+            [
+                SettingKeys.CspTrustedLocalHosts,
+                [''],
+                '✖ Too small: expected string to have >=1 characters\n  → at value[0]',
+            ],
+        ] as const) {
+            it(`should not update ${settingKey} if the value is not valid`, async () => {
+                await req.put(urlJoin(url, settingKey)).send({ key: settingKey, value }).expect(422, message);
+            });
+        }
+
         it(`should not update ${SettingKeys.AuthOpenIdEnabled} if the value is not valid`, async () => {
             try {
                 const response = await req
