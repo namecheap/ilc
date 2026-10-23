@@ -68,7 +68,7 @@ export class SettingsService {
         return false;
     }
 
-    async set(settingKey: SettingKeys, value: any, user: User) {
+    async set(settingKey: SettingKeys, value: unknown, user: User | undefined) {
         await this.versioning.withVersion(user, { type: EntityTypes.settings, id: settingKey }, (trx) =>
             this.repository.updateValue(settingKey, JSON.stringify(value), trx),
         );
@@ -95,7 +95,11 @@ export class SettingsService {
         }
     }
 
-    async updateRootSetting(settingKey: SettingKeys, value: unknown, user: User): Promise<SettingRaw | undefined> {
+    async updateRootSetting(
+        settingKey: SettingKeys,
+        value: unknown,
+        user: User | undefined,
+    ): Promise<SettingRaw | undefined> {
         await this.versioning.withVersion(user, { type: EntityTypes.settings, id: settingKey }, (trx) =>
             this.repository.updateValue(settingKey, JSON.stringify(value), trx),
         );
@@ -107,7 +111,7 @@ export class SettingsService {
         settingKey: SettingKeys,
         value: unknown,
         domainId: number,
-        user: User,
+        user: User | undefined,
     ): Promise<DomainSettingRow | undefined> {
         const setting = await this.repository.findDomainValue(settingKey, domainId);
         if (!setting) {
@@ -193,7 +197,7 @@ export class SettingsService {
         settingKey: SettingKeys,
         value: unknown,
         domainId: number,
-        user: User,
+        user: User | undefined,
     ): Promise<DomainSettingRow> {
         if (!AllowedSettingKeysForDomains.includes(settingKey)) {
             throw new UnprocessableContent({ message: `Setting key ${settingKey} is not allowed for domains` });
@@ -273,8 +277,8 @@ export class SettingsService {
     }
 
     private filterAllowedForDomainsSettingsKeys(settings: SettingRaw[]) {
-        return settings.filter((setting: { key: any }) => {
-            return AllowedSettingKeysForDomains.includes(setting.key);
+        return settings.filter((setting) => {
+            return AllowedSettingKeysForDomains.some((key) => key === setting.key);
         });
     }
 

@@ -31,8 +31,8 @@ export function isForeignKeyViolation(err: unknown, constraint: string): boolean
     return e?.code === PG_FOREIGN_KEY_VIOLATION_CODE && e?.constraint === constraint;
 }
 
-export function handleForeignConstraintError(err: Error) {
-    if (err.message.includes('violates foreign key constraint')) {
+export function handleForeignConstraintError(err: unknown) {
+    if (err instanceof Error && err.message.includes('violates foreign key constraint')) {
         throw new ForeignConstraintError();
     }
 }

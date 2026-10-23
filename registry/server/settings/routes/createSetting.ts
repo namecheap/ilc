@@ -1,6 +1,5 @@
 import type { RequestHandler } from 'express';
 
-import { User } from '../../../typings/User';
 import { validated } from '../../common/validation/validated';
 import { createSettingSchema } from '../interfaces';
 import type { SettingsService } from '../services/SettingsService';
@@ -11,7 +10,7 @@ export function createSetting(settingsService: SettingsService): RequestHandler 
             body.key,
             body.value,
             body.domainId,
-            req.user as User,
+            req.user,
         );
         res.status(200).send(savedSetting);
     });

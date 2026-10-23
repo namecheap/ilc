@@ -73,7 +73,7 @@ export class RoutesService {
                     message: `Specified "orderPos" value already exists for routes with provided "domainId"`,
                 });
             }
-            handleForeignConstraintError(error as Error);
+            handleForeignConstraintError(error);
             throw error;
         }
     }

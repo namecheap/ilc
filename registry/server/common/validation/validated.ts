@@ -56,6 +56,7 @@ export function validated<S extends RequestSchemas>(schemas: S, handler: Validat
             input[selector] = await parseInput(schema, req[selector]);
         }
 
+        // Each part was parsed by its own schema above, TypeScript can't follow that through the loop
         await handler(input as ValidatedInput<S>, req, res);
     };
 }
