@@ -7,6 +7,7 @@ import type { RouterDomainsRow } from '../routerDomains/interfaces';
 import type { RouteJoinSlotRow } from '../appRoutes/interfaces';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 import type { SharedLibRow } from '../sharedLibs/interfaces';
+import type { SharedPropsRow } from '../sharedProps/interfaces';
 
 type Dict = Record<string, any>;
 type TransformedApp = VersionedRecord<Omit<AppRow, 'enforceDomain'>> & {
@@ -33,14 +34,10 @@ export type AppDto = Pick<
     | 'versionId'
 >;
 
-/**
- * TODO change type of routerDomains to actual
- * TODO change type of sharedProps to actual
- */
 export function transformApps(
     apps: VersionedRecord<AppRow>[],
     routerDomains: RouterDomainsRow[],
-    sharedProps: any[],
+    sharedProps: SharedPropsRow[],
     domainName?: string,
 ): Record<string, AppDto> {
     const currentDomain = domainName ? routerDomains.find((d) => d.domainName === domainName) : null;
