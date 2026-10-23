@@ -1,27 +1,24 @@
-import * as Joi from 'joi';
+import { z } from 'zod';
+import { parseInput } from '../../validation/validated';
 import { ApplicationAssetsManifest, AssetsManifest, SharedLibAssetsManifest } from './AssetsManifestReader';
 
+// Unknown manifest fields are dropped
+const sharedLibManifestSchema = z.object({
+    spaBundle: z.url(),
+});
+
+const appManifestSchema = z.object({
+    spaBundle: z.url(),
+    cssBundle: z.url().optional(),
+    dependencies: z.record(z.string(), z.string()).optional(),
+});
+
 export class AssetsValidator {
-    private static validationOptions = {
-        allowUnknown: false,
-        stripUnknown: true,
-    };
-
     public static maybeSharedLib(maybeSharedLibAssetsManifest: AssetsManifest): Promise<SharedLibAssetsManifest> {
-        const schema = Joi.object<SharedLibAssetsManifest>({
-            spaBundle: Joi.string().uri().required(),
-        });
-
-        return schema.validateAsync(maybeSharedLibAssetsManifest, this.validationOptions);
+        return parseInput(sharedLibManifestSchema, maybeSharedLibAssetsManifest);
     }
 
     public static maybeApp(maybeAppAssetsManifest: AssetsManifest): Promise<ApplicationAssetsManifest> {
-        const schema = Joi.object<ApplicationAssetsManifest>({
-            spaBundle: Joi.string().uri().required(),
-            cssBundle: Joi.string().uri().optional(),
-            dependencies: Joi.object().pattern(Joi.string(), Joi.string()).optional(),
-        });
-
-        return schema.validateAsync(maybeAppAssetsManifest, this.validationOptions);
+        return parseInput(appManifestSchema, maybeAppAssetsManifest);
     }
 }

@@ -511,9 +511,6 @@ importers:
       ilc-plugins-sdk:
         specifier: ^3.1.0
         version: 3.1.0
-      joi:
-        specifier: ^18.0.2
-        version: 18.2.9
       knex:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.16.3)(supports-color@5.5.0)

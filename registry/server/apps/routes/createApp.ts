@@ -1,10 +1,8 @@
 import { RequestHandler } from 'express';
 
-import Joi from 'joi';
 import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { validated } from '../../common/validation/validated';
-import { joiErrorToResponse } from '../../util/helpers';
 import { appSchema } from '../interfaces';
 import type { AppsService } from '../services/AppsService';
 
@@ -14,10 +12,7 @@ export function createApp(service: AppsService): RequestHandler {
             const results = await service.create(body, req.user);
             res.status(200).send(preProcessResponse(results));
         } catch (error) {
-            if (error instanceof Joi.ValidationError) {
-                res.status(422).send(joiErrorToResponse(error));
-                return;
-            } else if (error instanceof AssetsManifestError) {
+            if (error instanceof AssetsManifestError) {
                 res.status(422).send(error.message);
                 return;
             }

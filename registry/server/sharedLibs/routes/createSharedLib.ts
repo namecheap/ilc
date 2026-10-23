@@ -1,10 +1,8 @@
 import { RequestHandler } from 'express';
-import Joi from 'joi';
 
 import preProcessResponse from '../../common/services/preProcessResponse';
 import { validated } from '../../common/validation/validated';
 import { sharedLibSchema } from '../interfaces';
-import { joiErrorToResponse } from '../../util/helpers';
 import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';
 import type { SharedLibsService } from '../services/SharedLibsService';
 
@@ -15,10 +13,7 @@ export function createSharedLib(service: SharedLibsService): RequestHandler {
         try {
             results = await service.create(body, req.user);
         } catch (error) {
-            if (error instanceof Joi.ValidationError) {
-                res.status(422).send(joiErrorToResponse(error));
-                return;
-            } else if (error instanceof AssetsManifestError) {
+            if (error instanceof AssetsManifestError) {
                 res.status(422).send(error.message);
                 return;
             }

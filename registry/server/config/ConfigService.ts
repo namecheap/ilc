@@ -7,16 +7,20 @@ import type { AppsService } from '../apps/services/AppsService';
 import { UnprocessableContent } from '../errorHandler/httpErrors';
 import { sharedLibSchema } from '../sharedLibs/interfaces';
 import type { SharedLibsService } from '../sharedLibs/services/SharedLibsService';
-import { PG_FOREIGN_KEY_VIOLATION_CODE } from '../util/db';
-import { getJoiErr } from '../util/helpers';
+import { parseInput } from '../common/validation/validated';
+import { isForeignKeyViolation } from '../util/db';
 import { z } from 'zod';
 
+const configItemsSchema = z.array(z.record(z.string(), z.unknown())).optional();
+
 /** Each item is validated with the schema of its entity before it's upserted */
-type UpsertPayload = {
-    apps?: unknown[];
-    routes?: unknown[];
-    sharedLibs?: unknown[];
-};
+export const configPayloadSchema = z.strictObject({
+    apps: configItemsSchema,
+    routes: configItemsSchema,
+    sharedLibs: configItemsSchema,
+});
+
+type UpsertPayload = z.output<typeof configPayloadSchema>;
 
 type UpsertParams = {
     user: User;
@@ -69,14 +73,14 @@ export class ConfigService {
     private async upsertApps(apps: unknown[], { user, trxProvider, dryRun }: UpsertParams): Promise<AppRow[]> {
         return await Promise.all(
             apps.map(async (x) =>
-                this.apps.upsert(await parse(appSchema, x), { user, trxProvider, fetchManifest: !dryRun }),
+                this.apps.upsert(await parseInput(appSchema, x), { user, trxProvider, fetchManifest: !dryRun }),
             ),
         );
     }
 
     private async upsertRoutes(routes: unknown[], { user, trxProvider }: UpsertParams): Promise<RouteRow[]> {
         this.validateRoutes(routes);
-        const parsedRoutes = await Promise.all(routes.map((route) => parse(appRouteSchema, route)));
+        const parsedRoutes = await Promise.all(routes.map((route) => parseInput(appRouteSchema, route)));
         const results: RouteRow[] = [];
         for (const route of parsedRoutes) {
             const result = await this.routes.upsert(route, user, trxProvider);
@@ -117,7 +121,7 @@ export class ConfigService {
     private async upsertSharedLibs(sharedLibs: unknown[], { user, trxProvider, dryRun }: UpsertParams): Promise<void> {
         await Promise.all(
             sharedLibs.map(async (x) => {
-                const sharedLib = await parse(sharedLibSchema, x);
+                const sharedLib = await parseInput(sharedLibSchema, x);
                 await this.sharedLibs.upsert(sharedLib, { user, trxProvider, fetchManifest: !dryRun });
             }),
         );
@@ -155,24 +159,24 @@ export class ConfigService {
         );
     }
 
-    public mapError(error: any): Error {
+    public mapError(error: unknown): Error {
         if (this.routes.isOrderPosError(error)) {
-            return getJoiErr(
-                'orderPos',
-                'Specified "orderPos" value already exists for routes with provided "domainId" and "namespace"',
-            );
+            return new UnprocessableContent({
+                message:
+                    'Specified "orderPos" value already exists for routes with provided "domainId" and "namespace"',
+            });
         }
-        if (error.code === PG_FOREIGN_KEY_VIOLATION_CODE && error.constraint === 'routes_domainid_foreign') {
-            return getJoiErr('domainId', 'Specified "domainId" value does not exist');
+        if (isForeignKeyViolation(error, 'routes_domainid_foreign')) {
+            return new UnprocessableContent({ message: 'Specified "domainId" value does not exist' });
         }
-        if (error.code === PG_FOREIGN_KEY_VIOLATION_CODE && error.constraint === 'routes_templatename_foreign') {
-            return getJoiErr('templateName', 'Specified "templateName" value does not exist');
+        if (isForeignKeyViolation(error, 'routes_templatename_foreign')) {
+            return new UnprocessableContent({ message: 'Specified "templateName" value does not exist' });
         }
-        if (error.code === PG_FOREIGN_KEY_VIOLATION_CODE && error.constraint === 'apps_enforcedomain_foreign') {
-            return getJoiErr('enforceDomain', 'Specified "enforceDomain" domainId value does not exist');
+        if (isForeignKeyViolation(error, 'apps_enforcedomain_foreign')) {
+            return new UnprocessableContent({ message: 'Specified "enforceDomain" domainId value does not exist' });
         }
 
-        return error;
+        return error instanceof Error ? error : new Error(String(error));
     }
 
     private groupByNamespace<T extends { namespace?: string | null }, K extends keyof T>(
@@ -190,14 +194,6 @@ export class ConfigService {
             {} as Record<string, T[K][]>,
         );
     }
-}
-
-async function parse<T extends z.ZodType>(schema: T, value: unknown): Promise<z.output<T>> {
-    const result = await schema.safeParseAsync(value);
-    if (!result.success) {
-        throw new UnprocessableContent({ message: z.prettifyError(result.error) });
-    }
-    return result.data;
 }
 
 function field(value: unknown, key: string): unknown {

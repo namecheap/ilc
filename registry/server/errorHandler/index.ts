@@ -1,10 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response, NextFunction } from 'express';
-import Joi from 'joi';
 import * as httpErrors from './httpErrors';
 
 import noticeError from './noticeError';
-import { joiErrorToResponse } from '../util/helpers';
 import { getLogger } from '../util/logger';
 
 function logHandledError(req: Request, status: number, error: Error): void {
@@ -21,12 +19,6 @@ async function errorHandler(error: Error, req: Request, res: Response, next: Nex
     if (error instanceof httpErrors.NotFoundError) {
         logHandledError(req, 404, error);
         res.status(404).send('Not found');
-        return;
-    }
-
-    if (error instanceof Joi.ValidationError) {
-        logHandledError(req, 422, error);
-        res.status(422).send(joiErrorToResponse(error));
         return;
     }
 

@@ -1,38 +1,22 @@
 import { type RequestHandler } from 'express';
-import Joi from 'joi';
-import validateRequestFactory from '../common/services/validateRequest';
-import { joiErrorToResponse } from '../util/helpers';
+import { validated } from '../common/validation/validated';
 import { getLogger } from '../util/logger';
-import type { ConfigService } from './ConfigService';
+import { configPayloadSchema, type ConfigService } from './ConfigService';
 
-const schema = Joi.object({
-    apps: Joi.array().items(Joi.object()).optional(),
-    routes: Joi.array().items(Joi.object()).optional(),
-    sharedLibs: Joi.array().items(Joi.object()).optional(),
-});
-
-const validateRequest = validateRequestFactory([
-    {
-        schema,
-        selector: 'body',
-    },
-]);
-
-export function validateConfig(configService: ConfigService): RequestHandler[] {
-    const validateConfigHandler: RequestHandler = async (req, res) => {
+export function validateConfig(configService: ConfigService): RequestHandler {
+    return validated({ body: configPayloadSchema }, async ({ body }, req, res) => {
         try {
-            await configService.upsert(req.body, { user: req.user!, dryRun: true });
-            return res.status(200).json({ valid: true });
-        } catch (error: any) {
+            await configService.upsert(body, { user: req.user!, dryRun: true });
+            res.status(200).json({ valid: true });
+        } catch (error: unknown) {
             const logger = getLogger();
-            logger.warn(error, 'Config validation failed: %O', req.body);
+            logger.warn(
+                error instanceof Error ? error : new Error(String(error)),
+                'Config validation failed: %O',
+                req.body,
+            );
             const mappedError = configService.mapError(error);
-            if (mappedError instanceof Joi.ValidationError) {
-                return res.status(200).json({ valid: false, details: joiErrorToResponse(mappedError) });
-            }
-            return res.status(200).json({ valid: false, details: mappedError.message });
+            res.status(200).json({ valid: false, details: mappedError.message });
         }
-    };
-
-    return [validateRequest, validateConfigHandler];
+    });
 }

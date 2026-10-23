@@ -80,7 +80,6 @@
         "express-session": "^1.18.2",
         "http-shutdown": "^1.2.2",
         "ilc-plugins-sdk": "^3.1.0",
-        "joi": "^18.0.2",
         "knex": "^3.1.0",
         "lodash": "^4.17.21",
         "newrelic": "^14.4.0",

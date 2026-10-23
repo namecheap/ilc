@@ -1,36 +1,15 @@
 import { type RequestHandler } from 'express';
-import Joi from 'joi';
-import validateRequestFactory from '../common/services/validateRequest';
-import { joiErrorToResponse } from '../util/helpers';
-import { getLogger } from '../util/logger';
-import type { ConfigService } from './ConfigService';
+import { validated } from '../common/validation/validated';
+import { configPayloadSchema, type ConfigService } from './ConfigService';
 
-const schema = Joi.object({
-    apps: Joi.array().items(Joi.object()).optional(),
-    routes: Joi.array().items(Joi.object()).optional(),
-    sharedLibs: Joi.array().items(Joi.object()).optional(),
-});
-
-const validateRequest = validateRequestFactory([
-    {
-        schema,
-        selector: 'body',
-    },
-]);
-
-export function updateConfig(configService: ConfigService): RequestHandler[] {
-    const updateConfigHandler: RequestHandler = async (req, res) => {
+export function updateConfig(configService: ConfigService): RequestHandler {
+    return validated({ body: configPayloadSchema }, async ({ body }, req, res) => {
         try {
-            await configService.upsert(req.body, { user: req.user! });
-            return res.status(204).end();
-        } catch (error: any) {
+            await configService.upsert(body, { user: req.user! });
+            res.status(204).end();
+        } catch (error: unknown) {
             const mappedError = configService.mapError(error);
-            if (mappedError instanceof Joi.ValidationError) {
-                return res.status(422).json({ details: joiErrorToResponse(mappedError) });
-            }
-            return res.status(422).json({ details: mappedError.message });
+            res.status(422).json({ details: mappedError.message });
         }
-    };
-
-    return [validateRequest, updateConfigHandler];
+    });
 }

@@ -20,14 +20,14 @@ type ValidatedHandler<S extends RequestSchemas> = (
     res: Response,
 ) => Promise<void>;
 
-// Same order validateRequestFactory reported errors in: params before body
+// Params errors are reported before body errors
 const SELECTORS = ['params', 'query', 'body'] as const;
 
 /**
  * Parses the request parts that have a schema and hands the parsed values to the handler,
  * typed from the schemas. The request itself is left as it came.
  * A failed parse is a 422 with Zod's error summary, a missing body a 400.
- * Invalid filters are a 400 with `{ error }`, as filtersMiddleware answered.
+ * Invalid filters are a 400 with `{ error }`.
  */
 export function validated<S extends RequestSchemas>(schemas: S, handler: ValidatedHandler<S>): RequestHandler {
     return async (req, res) => {
@@ -53,11 +53,7 @@ export function validated<S extends RequestSchemas>(schemas: S, handler: Validat
                 continue;
             }
 
-            const result = await schema.safeParseAsync(req[selector]);
-            if (!result.success) {
-                throw new UnprocessableContent({ message: z.prettifyError(result.error) });
-            }
-            input[selector] = result.data;
+            input[selector] = await parseInput(schema, req[selector]);
         }
 
         await handler(input as ValidatedInput<S>, req, res);
@@ -81,4 +77,13 @@ async function parseFilters(
     return result.success
         ? { success: true, data: result.data }
         : { success: false, error: z.prettifyError(result.error) };
+}
+
+/** Parses a value that comes from outside, a failed parse is an UnprocessableContent (422) */
+export async function parseInput<T extends z.ZodType>(schema: T, value: unknown): Promise<z.output<T>> {
+    const result = await schema.safeParseAsync(value);
+    if (!result.success) {
+        throw new UnprocessableContent({ message: z.prettifyError(result.error) });
+    }
+    return result.data;
 }

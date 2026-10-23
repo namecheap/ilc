@@ -329,7 +329,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .post(example.url)
                     .send(example.correctWithAssetsDiscoveryUrl)
-                    .expect(422, `"spaBundle" is required`);
+                    .expect(422, '✖ Invalid input: expected string, received undefined\n  → at spaBundle');
 
                 expect(response.body).deep.equal({});
             } finally {
@@ -1161,7 +1161,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .put(example.url + example.encodedName)
                     .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
-                    .expect(422, `"spaBundle" is required`);
+                    .expect(422, '✖ Invalid input: expected string, received undefined\n  → at spaBundle');
 
                 expect(response.body).deep.equal({});
             } finally {
