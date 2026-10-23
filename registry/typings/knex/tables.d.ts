@@ -7,11 +7,13 @@ import { LocalizedTemplateRow, TemplateRow } from '../../server/templates/interf
 import { AuthEntityRow } from '../../server/authEntities/interfaces';
 import { SharedPropsRow } from '../../server/sharedProps/interfaces';
 import { RouterDomainsRow } from '../../server/routerDomains/interfaces';
+import { VersionRow, VersionRowData } from '../../server/versioning/interfaces';
 
 type Optional<T, K extends keyof T> = Partial<Pick<T, K>> & Omit<T, K>;
 
 declare module 'knex/types/tables' {
     interface Tables {
+        versioning: Knex.CompositeTableType<VersionRow, VersionRowData>;
         apps: Knex.CompositeTableType<
             AppRow,
             Optional<AppRow, Exclude<keyof AppRow, 'name'>>,

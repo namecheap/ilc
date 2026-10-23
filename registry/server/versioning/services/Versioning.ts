@@ -11,7 +11,9 @@ import {
     VersionRow,
     VersionRowData,
     VersionRowParsed,
+    VersionsFilters,
 } from '../interfaces';
+import type { PaginatedResult } from '../../../typings/PaginatedResult';
 import { sanitizeSnapshot, stripSecretFields } from '../utils/secretSanitizer';
 import { selectVersionedRowsFrom } from './selectVersionedRows';
 import Transaction = Knex.Transaction;
@@ -138,6 +140,20 @@ export class Versioning {
             await rollback();
             throw error;
         }
+    }
+
+    async listVersions(filters: VersionsFilters, range: string | undefined): Promise<PaginatedResult<VersionRow>> {
+        const { id, ...columns } = filters;
+        const query = this.db('versioning').select<VersionRow[]>('*').orderBy('id', 'desc');
+        if (id) {
+            query.whereIn('id', id);
+        }
+        const where = Object.fromEntries(Object.entries(columns).filter(([, value]) => value !== undefined));
+        if (Object.keys(where).length) {
+            query.where(where);
+        }
+
+        return query.range(range);
     }
 
     public async revertOperation(user: User | undefined, versionId: number) {

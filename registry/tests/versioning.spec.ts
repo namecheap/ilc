@@ -91,6 +91,20 @@ describe(`Tests ${basePath}`, () => {
             expect(response.body[1]).to.eql({ ...dataStub[0], created_at: '2023-09-22T14:18:23.000Z' });
         });
 
+        it('should filter records by id and by column', async () => {
+            const byId = await req
+                .get(basePath)
+                .query({ filter: JSON.stringify({ id: [dataStub[0].id] }) })
+                .expect(200);
+            expect(byId.body).to.eql([{ ...dataStub[0], created_at: '2023-09-22T14:18:23.000Z' }]);
+
+            const byEntity = await req
+                .get(basePath)
+                .query({ filter: JSON.stringify({ entity_id: dataStub[1].entity_id }) })
+                .expect(200);
+            expect(byEntity.body).to.eql([{ ...dataStub[1], created_at: '2023-09-22T14:18:24.000Z' }]);
+        });
+
         describe('Authentication / Authorization', () => {
             it('should deny access w/o authentication', async () => {
                 await reqWithAuth.get(basePath).expect(401);

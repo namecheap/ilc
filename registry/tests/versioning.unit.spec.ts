@@ -59,7 +59,7 @@ describe('Versioning Unit', () => {
                 },
             );
 
-            const changeData = await db('versioning').first().where('id', changeId);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.entity_id).to.equal(entityId);
             expect(changeData.data).to.be.null;
@@ -81,7 +81,7 @@ describe('Versioning Unit', () => {
                 return extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
             });
 
-            const changeData = await db('versioning').first().where('id', changeId);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.data).to.be.null;
             expect(changeData.data_after).to.equal(JSON.stringify({ data: entityData, related: {} }));
@@ -115,7 +115,7 @@ describe('Versioning Unit', () => {
                 return id;
             });
 
-            const changeData = await db('versioning').first().where('id', changeId);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.data).to.be.null;
             expect(changeData.data_after).to.equal(
@@ -140,11 +140,11 @@ describe('Versioning Unit', () => {
                 },
             );
 
-            const changeData = await db('versioning').first().where('id', changeId);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.entity_id).to.equal(entityId);
-            expect(JSON.parse(changeData.data_after)).to.deep.eq(
-                _.merge(JSON.parse(changeData.data), { data: changeSet }),
+            expect(JSON.parse(defined(changeData.data_after))).to.deep.eq(
+                _.merge(JSON.parse(defined(changeData.data)), { data: changeSet }),
             );
             expect(changeData.created_by).to.equal(testUser.identifier);
         });
@@ -182,10 +182,10 @@ describe('Versioning Unit', () => {
                 },
             );
 
-            const changeData = await db('versioning').first().where('id', changeId);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.entity_id).to.equal(entityId);
-            expect(JSON.parse(changeData.data)).to.deep.eq({
+            expect(JSON.parse(defined(changeData.data))).to.deep.eq({
                 data: _.omit(entityData, ['name']),
                 related: {},
             });
@@ -209,11 +209,11 @@ describe('Versioning Unit', () => {
             const trx = await trxProvider();
             await trx.commit();
 
-            const changeData = await db('versioning').first().where('id', changeId);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.entity_id).to.equal(entityId);
-            expect(JSON.parse(changeData.data_after)).to.deep.eq(
-                _.merge(JSON.parse(changeData.data), { data: changeSet }),
+            expect(JSON.parse(defined(changeData.data_after))).to.deep.eq(
+                _.merge(JSON.parse(defined(changeData.data)), { data: changeSet }),
             );
             expect(changeData.created_by).to.equal(testUser.identifier);
         });
@@ -326,8 +326,8 @@ describe('Versioning Unit', () => {
                 },
             );
 
-            const changeData = await db('versioning').first().where('id', changeId);
-            const dataAfter = JSON.parse(changeData.data_after);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
+            const dataAfter = JSON.parse(defined(changeData.data_after));
 
             expect(dataAfter.data.value).to.equal('[SECRET]');
             expect(dataAfter.data.default).to.equal('[SECRET]');
@@ -359,8 +359,8 @@ describe('Versioning Unit', () => {
                 },
             );
 
-            const changeData = await db('versioning').first().where('id', changeId);
-            const dataAfter = JSON.parse(changeData.data_after);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
+            const dataAfter = JSON.parse(defined(changeData.data_after));
 
             expect(dataAfter.data.value).to.equal('public-value');
             expect(dataAfter.data.default).to.equal('default-public-value');
@@ -382,8 +382,8 @@ describe('Versioning Unit', () => {
                 return extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
             });
 
-            const changeData = await db('versioning').first().where('id', changeId);
-            const dataAfter = JSON.parse(changeData.data_after);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
+            const dataAfter = JSON.parse(defined(changeData.data_after));
 
             expect(dataAfter.data.secret).to.equal('[SECRET]');
 
@@ -408,8 +408,8 @@ describe('Versioning Unit', () => {
                 return extractInsertedId(await db(entityType).insert(entityData).returning('id').transacting(trx));
             });
 
-            const changeData = await db('versioning').first().where('id', changeId);
-            const dataAfter = JSON.parse(changeData.data_after);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
+            const dataAfter = JSON.parse(defined(changeData.data_after));
 
             expect(dataAfter.data.secret).to.be.null;
 
@@ -443,9 +443,9 @@ describe('Versioning Unit', () => {
 
             expect(updateChangeId).to.not.be.null;
 
-            const changeData = await db('versioning').first().where('id', updateChangeId);
-            const data = JSON.parse(changeData.data);
-            const dataAfter = JSON.parse(changeData.data_after);
+            const changeData = defined(await db('versioning').first().where('id', updateChangeId));
+            const data = JSON.parse(defined(changeData.data));
+            const dataAfter = JSON.parse(defined(changeData.data_after));
 
             expect(data.data.value).to.equal('[SECRET]');
             expect(dataAfter.data.value).to.equal('[SECRET]');
@@ -507,8 +507,8 @@ describe('Versioning Unit', () => {
             const entityRow = await db(entityType).first().where('name', entityId);
             expect(entityRow).to.be.undefined;
 
-            const changeData = await db('versioning').first().where('id', changeId);
-            const revertData = await db('versioning').first().where('id', revertChangeId);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
+            const revertData = defined(await db('versioning').first().where('id', revertChangeId));
             expect(revertData.entity_type).to.equal(entityType);
             expect(revertData.entity_id).to.equal(entityId);
             expect(revertData.data).to.equal(changeData.data_after);
@@ -536,8 +536,8 @@ describe('Versioning Unit', () => {
             const entityRowAfter = await db(entityType).first().where('name', entityId);
             expect(entityRowBefore).to.be.eql(entityRowAfter);
 
-            const changeData = await db('versioning').first().where('id', changeId);
-            const revertData = await db('versioning').first().where('id', revertChangeId);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
+            const revertData = defined(await db('versioning').first().where('id', revertChangeId));
             expect(revertData.entity_type).to.equal(entityType);
             expect(revertData.entity_id).to.equal(entityId);
             expect(revertData.data).to.equal(changeData.data_after);
@@ -566,8 +566,8 @@ describe('Versioning Unit', () => {
             const entityRowAfter = await db(entityType).first().where('name', entityId);
             expect(entityRowBefore).to.be.eql(entityRowAfter);
 
-            const changeData = await db('versioning').first().where('id', changeId);
-            const revertData = await db('versioning').first().where('id', revertChangeId);
+            const changeData = defined(await db('versioning').first().where('id', changeId));
+            const revertData = defined(await db('versioning').first().where('id', revertChangeId));
             expect(revertData.entity_type).to.equal(entityType);
             expect(revertData.entity_id).to.equal(entityId);
             expect(revertData.data).to.be.null;
