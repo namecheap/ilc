@@ -1,4 +1,4 @@
-import { makeAppId } from '../utils';
+import { makeAppId, getSlotEntries } from '../utils';
 import { SpaSlot } from './SpaSlot';
 
 export class SpaSlotCollection {
@@ -23,22 +23,24 @@ export class SpaSlotCollection {
             const routeSlotsName = Object.keys(routeSlots);
 
             routeSlotsName.forEach((slotName) => {
-                const rawSlot = route.slots[slotName];
-                const applicationId = makeAppId(rawSlot.appName, slotName);
-                const slot = new SpaSlot(
-                    {
-                        applicationId,
-                        applicationName: rawSlot.appName,
-                        slotName,
-                    },
-                    configRoot,
-                );
+                // a slot holds one app or an ordered list of apps; every app is its own single-spa application
+                getSlotEntries(route.slots[slotName]).forEach((rawSlot) => {
+                    const applicationId = makeAppId(rawSlot.appName, slotName);
+                    const slot = new SpaSlot(
+                        {
+                            applicationId,
+                            applicationName: rawSlot.appName,
+                            slotName,
+                        },
+                        configRoot,
+                    );
 
-                // Routes could contain overrides for slots
-                // So it leads to situation when slot route could be duplicated per route
-                if (!slotCollectionMap.get(applicationId)) {
-                    slotCollectionMap.set(applicationId, slot);
-                }
+                    // Routes could contain overrides for slots
+                    // So it leads to situation when slot route could be duplicated per route
+                    if (!slotCollectionMap.get(applicationId)) {
+                        slotCollectionMap.set(applicationId, slot);
+                    }
+                });
             });
         });
 

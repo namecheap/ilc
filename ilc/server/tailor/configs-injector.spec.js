@@ -234,6 +234,42 @@ describe('configs injector', () => {
             });
         };
 
+        it('should inject the style sheet of every app of a multi-app slot', () => {
+            context.run(
+                {
+                    url: 'http://test/a?test=15',
+                    domain: 'test.com',
+                    requestId: 'requestId123',
+                    path: '/a',
+                    protocol: 'https',
+                },
+                () => {
+                    newrelic.getBrowserTimingHeader.withArgs().returns('');
+
+                    const configsInjector = new ConfigsInjector(newrelic, null, null);
+                    const request = { ilcState: {}, registryConfig };
+                    const template = { styleRefs: [], content: '<html><head></head><body></body></html>' };
+                    const multiAppSlots = {
+                        body: [{ appName: 'firstApp' }, { appName: 'secondApp' }],
+                    };
+
+                    const document = configsInjector.inject(request, template, {
+                        slots: multiAppSlots,
+                        reqUrl: '/test/route',
+                    });
+
+                    chai.expect(document).to.include(
+                        '<link rel="stylesheet" href="https://somewhere.com/firstAppCssBundle.css" data-fragment-id="firstApp">' +
+                            '<link rel="stylesheet" href="https://somewhere.com/secondAppCssBundle.css" data-fragment-id="secondApp">',
+                    );
+                    chai.expect(request.styleRefs).to.be.eql([
+                        registryConfig.apps.firstApp.cssBundle,
+                        registryConfig.apps.secondApp.cssBundle,
+                    ]);
+                },
+            );
+        });
+
         it('should inject ILC config & state, polyfills, client js and new relic <script>, route assets style sheets links into the end of <head> tag', () => {
             context.run(
                 {

@@ -1,6 +1,7 @@
 import deepmerge from 'deepmerge';
 import { TransformedRegistryConfig, TransformedRoute, TransformedSpecialRoute } from '../../server/types/Registry';
-import { RouterMatch, Slot } from '../../common/types/Router';
+import { RouterMatch, Slot, SlotValue } from '../../common/types/Router';
+import { getSlotEntries } from '../utils';
 import { NoBaseTemplateMatchError, NoRouteMatchError } from './errors';
 
 type CompiledRoute = TransformedRoute & {
@@ -122,17 +123,33 @@ export class Router {
         return str.replace(/[|\\{}()[\]^$+*?.-]/g, '\\$&');
     }
 
-    private mergeSlots(a: Record<string, Slot>, b: Record<string, Slot>) {
-        const res = { ...a, ...b };
+    /**
+     * A later route replaces the slot of an earlier `next` route; an app present on both sides keeps
+     * the earlier props merged with the later ones. With several apps per slot the same rule applies
+     * per app: the later list wins, and each of its apps merges the props of its namesake, if any.
+     */
+    private mergeSlots(a: Record<string, SlotValue>, b: Record<string, SlotValue>) {
+        const res: Record<string, SlotValue> = { ...a, ...b };
 
         for (let slotName in res) {
             if (!res.hasOwnProperty(slotName)) {
                 continue;
             }
 
-            if (a[slotName] && b[slotName] && a[slotName].appName === b[slotName].appName) {
-                res[slotName] = deepmerge(a[slotName], b[slotName]);
+            if (!a[slotName] || !b[slotName]) {
+                continue;
             }
+
+            const earlier = getSlotEntries(a[slotName]);
+            const later = getSlotEntries(b[slotName]);
+
+            const merged = later.map((entry) => {
+                const namesake = earlier.find((candidate) => candidate.appName === entry.appName);
+
+                return namesake ? deepmerge(namesake, entry) : entry;
+            });
+
+            res[slotName] = Array.isArray(b[slotName]) ? merged : merged[0];
         }
 
         return res;

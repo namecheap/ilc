@@ -4,7 +4,12 @@ export type Slot = {
     appName: string;
     kind: 'primary' | 'essential' | 'regular' | null;
     props: {};
+    /** stay mounted (hidden) when a route no longer lists the app in this slot; default false */
+    keepAlive?: boolean;
 };
+
+/** One app (object, the form every route used so far) or several apps rendered in order (array). */
+export type SlotValue = Slot | Slot[];
 
 export type RouteMeta = {
     canonicalUrl?: string;
@@ -12,7 +17,7 @@ export type RouteMeta = {
 };
 
 export type BaseRoute = {
-    slots: Record<string, Slot>;
+    slots: Record<string, SlotValue>;
     meta: RouteMeta;
     next: boolean;
     versionId: string;
@@ -50,5 +55,5 @@ export interface RouterMatch {
     template: string;
     specialRole: number | null;
     meta: RouteMeta;
-    slots: Record<string, Slot>;
+    slots: Record<string, SlotValue>;
 }

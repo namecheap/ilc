@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import type { Route } from '../../common/types/Router';
 import { mergeConfigs } from './merge-configs';
+import { getSlotEntries } from '../../common/utils';
 import { TransformedRegistryConfig } from '../types/Registry';
 
 describe('merge configs', () => {
@@ -1013,12 +1014,16 @@ describe('merge configs', () => {
 
         const result = mergeConfigs(registryConfigWithRoute, overrideConfig, 9);
 
-        const domainRoute = result.routes.find((r) => r.slots?.body?.appName === '@portal/domain-specific-app');
+        const domainRoute = result.routes.find(
+            (r) => getSlotEntries(r.slots?.body)[0]?.appName === '@portal/domain-specific-app',
+        );
         expect(domainRoute).to.exist;
         expect(domainRoute!.template).to.equal('domain-specific-template');
         expect(domainRoute!.orderPos).to.equal(100);
 
-        const defaultRoute = result.routes.find((r) => r.slots?.body?.appName === '@portal/default-app');
+        const defaultRoute = result.routes.find(
+            (r) => getSlotEntries(r.slots?.body)[0]?.appName === '@portal/default-app',
+        );
         expect(defaultRoute).to.exist;
     });
 
@@ -1074,12 +1079,16 @@ describe('merge configs', () => {
 
         const result = mergeConfigs(registryConfigWithDomainRoute, overrideConfig, 9);
 
-        const domainRoute = result.routes.find((r) => r.slots?.body?.appName === '@portal/domain-specific-app');
+        const domainRoute = result.routes.find(
+            (r) => getSlotEntries(r.slots?.body)[0]?.appName === '@portal/domain-specific-app',
+        );
         expect(domainRoute).to.exist;
         expect(domainRoute!.template).to.equal('domain-specific-template');
 
         const corruptedRoute = result.routes.find(
-            (r) => r.template === 'domain-specific-template' && r.slots?.body?.appName === '@portal/default-app',
+            (r) =>
+                r.template === 'domain-specific-template' &&
+                getSlotEntries(r.slots?.body)[0]?.appName === '@portal/default-app',
         );
         expect(corruptedRoute).to.not.exist;
     });

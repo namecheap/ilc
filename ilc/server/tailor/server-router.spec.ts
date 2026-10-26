@@ -40,6 +40,98 @@ describe('server router', () => {
         chai.expect(() => router.getFragmentsContext()).to.throw("Can't find info about app.");
     });
 
+    describe('several apps in one slot', () => {
+        const registryConfig = getRegistryMock({
+            routes: [
+                {
+                    route: '/multi',
+                    next: false,
+                    template: 'commonTemplate',
+                    slots: {
+                        body: [{ appName: '@portal/primary' }, { appName: '@portal/regular' }],
+                    },
+                    meta: {},
+                },
+                {
+                    route: '/single',
+                    next: false,
+                    template: 'commonTemplate',
+                    slots: {
+                        body: { appName: '@portal/primary' },
+                    },
+                    meta: {},
+                },
+            ],
+        }).getConfig();
+
+        it('renders one fragment per app, in order, each marked for its own container', () => {
+            const router = new ServerRouter(logger, { registryConfig, ilcState: {} }, '/multi');
+
+            chai.expect(router.getFragmentsTpl()).to.be.equal(
+                '<fragment id="primary__at__body" slot="body" container="1"></fragment>' +
+                    '<fragment id="regular__at__body" slot="body" container="1"></fragment>',
+            );
+            chai.expect(Object.keys(router.getFragmentsContext())).to.be.eql([
+                'primary__at__body',
+                'regular__at__body',
+            ]);
+        });
+
+        it('marks the fragment of a one-app slot for a container when some route keeps an app alive in it', () => {
+            const config = getRegistryMock({
+                routes: [
+                    {
+                        route: '/inbox',
+                        next: false,
+                        template: 'commonTemplate',
+                        slots: { body: { appName: '@portal/primary', keepAlive: true } },
+                        meta: {},
+                    },
+                    {
+                        route: '/calendar',
+                        next: false,
+                        template: 'commonTemplate',
+                        slots: { body: { appName: '@portal/regular' } },
+                        meta: {},
+                    },
+                ],
+            }).getConfig();
+
+            const router = new ServerRouter(logger, { registryConfig: config, ilcState: {} }, '/calendar');
+
+            chai.expect(router.getFragmentsTpl()).to.be.equal(
+                '<fragment id="regular__at__body" slot="body" container="1"></fragment>',
+            );
+        });
+
+        it('marks the one-app route of a slot that lists several apps elsewhere for a container too', () => {
+            const router = new ServerRouter(logger, { registryConfig, ilcState: {} }, '/single');
+
+            chai.expect(router.getFragmentsTpl()).to.be.equal(
+                '<fragment id="primary__at__body" slot="body" container="1"></fragment>',
+            );
+        });
+
+        it('keeps the fragment of a slot that holds one app on every route unchanged', () => {
+            const config = getRegistryMock({
+                routes: [
+                    {
+                        route: '/single',
+                        next: false,
+                        template: 'commonTemplate',
+                        slots: { body: { appName: '@portal/primary' } },
+                        meta: {},
+                    },
+                ],
+            }).getConfig();
+            const router = new ServerRouter(logger, { registryConfig: config, ilcState: {} }, '/single');
+
+            chai.expect(router.getFragmentsTpl()).to.be.equal(
+                '<fragment id="primary__at__body" slot="body"></fragment>',
+            );
+        });
+    });
+
     describe('.getFragmentsContext()', () => {
         it('should throw an error when an application does not have a specified source of fragment', () => {
             const registryConfig = getRegistryMock({

@@ -1,7 +1,7 @@
 import urlJoin from 'url-join';
 import { RoutingStrategy, type IntlAdapterConfig } from 'ilc-sdk/app';
 import type { RouterMatch } from '../../common/types/Router';
-import { appIdToNameAndSlot, encodeHtmlEntities, uniqueArray } from '../../common/utils';
+import { appIdToNameAndSlot, encodeHtmlEntities, getSlotEntries, uniqueArray } from '../../common/utils';
 import { HrefLangService } from '../services/HrefLangService';
 import { CanonicalTagService } from '../services/CanonicalTagService';
 import type { PatchedHttpRequest } from '../types/PatchedHttpRequest';
@@ -167,7 +167,7 @@ export class ConfigsInjector {
     ): string[] {
         const routeStyleRefs: string[] = [];
 
-        for (const slotData of Object.values(slots)) {
+        for (const slotData of Object.values(slots).flatMap((slotValue) => getSlotEntries(slotValue))) {
             const appInfo = apps[slotData.appName];
             const cssBundle = this.shouldPreloadCssBundle(appInfo) ? appInfo?.cssBundle : undefined;
 
@@ -184,7 +184,7 @@ export class ConfigsInjector {
             stylesheetLinks: [],
         };
 
-        for (const slotData of Object.values(slots)) {
+        for (const slotData of Object.values(slots).flatMap((slotValue) => getSlotEntries(slotValue))) {
             const appInfo = apps[slotData.appName];
 
             if (!appInfo) {
