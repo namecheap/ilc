@@ -93,6 +93,43 @@ ILC does not block history events from reaching a hidden application.
   change: it calls the application's `update` lifecycle when the application exposes one and the `onPropsUpdate`
   setting is `update`; otherwise the application is unmounted and mounted again with the new props.
 
+## Memory
+
+A kept-alive application is retained on purpose: its DOM stays in its hidden container and its JavaScript state stays
+with it. Retention is bounded by configuration, not by navigation:
+
+- single-spa registers one application per app and slot pair, as before; keep-alive creates no per-URL instances. The
+  number of kept-alive instances in a slot is at most the number of distinct applications that some route marks
+  `keepAlive` in that slot. The operator fixes that set in the registry; a user cannot grow it by navigating.
+- A kept-alive application is freed when it leaves a route that lists it without `keepAlive`, when a route brings it
+  back with other props and it has no `update` lifecycle (a remount), or when the page is left (another template, a
+  reload).
+- Per hide and show ILC allocates nothing that accumulates: the per-app container is created once and moved, the
+  router keeps one record per hidden application that is overwritten on every hide and deleted on unmount, and
+  `ilc:app-visibility` is a plain `CustomEvent` with no listener on the ILC side.
+- ILC does not pause a hidden application. Timers, sockets, subscriptions and key handlers keep running until the
+  application reacts to `visible: false`; a cache that grows in a hidden application grows the page.
+- There is no cap on kept-alive applications: a limit that unmounted an application behind the user's back would also
+  close the floating window it owns. Keep the set small; if a limit is ever needed it should be an explicit registry
+  setting with a predictable rule, not a heuristic.
+
+## Resetting state when an application is shown again
+
+A user who returns to a calendar may expect today's view, not the week they left. ILC never resets a kept-alive
+application by itself: it cannot tell precious state (an open editor, a half-written draft) from stale state (last
+week's view). Three mechanisms, from cheapest to fullest:
+
+1. **The URL on show.** The application's router re-syncs on `visible: true`: `/calendar/` without a date maps to
+   today, `/calendar/2026-09` reached with the back button maps to that month. The view follows the URL the user
+   arrived with; everything else the application chose to keep stays.
+2. **A partial reset on the visibility event.** On `visible: true` reset what should not survive (jump to today,
+   scroll to top, refetch after a long time hidden) and keep what should (the composer window). The application saw
+   `visible: false` and can note the time.
+3. **A full reset from configuration.** Different slot props on the route that brings the application back trigger
+   `update` or a remount; a route that lists the application without `keepAlive` unmounts it when it leaves. An
+   application can also rebuild its own tree on `visible: true` (a new `key` on the React root) while staying mounted
+   for ILC: a full reset with no bundle reload and no page transition.
+
 ## Limits and good practice
 
 - Keep-alive keeps the application's DOM and JavaScript state in memory. Use it for a small number of applications that
