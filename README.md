@@ -43,6 +43,8 @@ This is where ILC comes into play.
 - ⚡️ **Built for speed** - server-side part of the system adds just ~17ms of latency
 - 👨‍💻 **[Develop in production](./docs/develop_in_production.md)**
 - 🌐 **[Internationalization support](./docs/i18n.md)** - serve your clients from any country.
+- 🧩 **[Several apps per slot](./docs/routing/route_configuration.md#slot-configuration)** - a route can put an ordered list of apps into one slot; an app listed on every route of a product lives on every page of it without a template change.
+- 💤 **[Keep-alive slots](./docs/keep_alive.md)** - an app marked `keepAlive` is hidden instead of unmounted when another app takes its slot, so open windows, forms and caches survive a tab switch.
 - 📡 **Advanced features:**
     - [Parcels](./docs/parcels.md)
     - [Plugins](https://github.com/namecheap/ilc-plugins-sdk)
@@ -125,6 +127,7 @@ The main development branch is `develop`, not `master`: open pull requests again
 - [Global API](https://namecheap.github.io/ilc-sdk/pages/Pages/global_api.html)
 - [ILC transition hooks](./docs/transition_hooks.md)
 - [Multi-domains](./docs/multi-domains.md)
+- [Keep-alive slots](./docs/keep_alive.md)
 - [Public Path Problem](https://namecheap.github.io/ilc-sdk/pages/Pages/public_path.html)
 
 ## 🔌 Adapters

@@ -180,8 +180,37 @@ If you want to render a page as plain HTML, leave the slot properties empty and 
      </html>
     ```
 
-    !!! warning "Important note"
-    You can have only one application per slot. If you add multiple applications to one slot, only the latter one will be rendered.
+    !!! note "Several applications in one slot"
+    A slot usually holds one application. A route can also put an **ordered list** of applications into one slot:
+    every application of the list is rendered, in list order, each inside its own container
+    (`<div data-ilc-app-id="…">`) within the slot element. In the Registry UI, add several rows with the same slot
+    name; in the Registry API and in the ILC config the slot value is then an array instead of an object:
+
+    ```json
+    {
+        "route": "/inbox/*",
+        "slots": {
+            "body": [
+                { "appName": "@portal/product-runtime", "kind": "essential" },
+                { "appName": "@portal/inbox", "kind": "primary" }
+            ]
+        }
+    }
+    ```
+
+    An application is active on a route when the route lists it in the slot, in any position. A route change
+    unmounts only the applications that left the list and mounts only the ones that joined; an application present
+    on both routes stays mounted, and its props are updated by the usual rules. This is how a part of a product can
+    live on every route of that product without a dedicated `ilc-slot` in the template: list it in the slot of each
+    route. An application may appear only once per slot.
+
+    The container rule is slot-wide: as soon as one route lists several applications in a slot (or keeps one alive
+    there, see below), every application of that slot gets its own container on every route, including routes where
+    the slot holds one application, and server-side rendered fragments of that slot arrive wrapped the same way.
+    Applications in such a slot must render into the element returned by `domElementGetter` (their container), not
+    into the slot element. Slots that hold one application on every route keep today's markup.
+
+    To keep an application mounted when a route no longer lists it, see [Keep-alive slots](../keep_alive.md).
 
 1. **App name**
 
