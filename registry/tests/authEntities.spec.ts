@@ -1,6 +1,6 @@
-import _ from 'lodash';
 import { type Agent } from 'supertest';
 import { ensureDeleted, expect, request, requestWithAuth } from './common';
+import { omit } from './utils/omit';
 
 const example = {
     url: '/api/v1/auth_entities/',
@@ -27,7 +27,7 @@ describe(`Tests ${example.url}`, () => {
         it('should not create record without a required fields', async () => {
             await req
                 .post(example.url)
-                .send(_.omit(example.correct, ['identifier', 'provider', 'role']))
+                .send(omit(example.correct, ['identifier', 'provider', 'role']))
                 .expect(
                     422,
                     '✖ Invalid input: expected string, received undefined\n  → at identifier\n' +
@@ -60,7 +60,7 @@ describe(`Tests ${example.url}`, () => {
                 let response = await req.post(example.url).send(example.correct).expect(200);
                 authEntityId = response.body.id;
 
-                const expectedRes = _.omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
+                const expectedRes = omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
 
                 expect(response.body).deep.equal(expectedRes);
 
@@ -95,7 +95,7 @@ describe(`Tests ${example.url}`, () => {
 
                 expect(response.body.versionId).to.match(/^\d+\.[-_0-9a-zA-Z]{32}$/);
 
-                const expectedRes = _.omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
+                const expectedRes = omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
 
                 expect(response.body).deep.equal({ ...expectedRes, versionId: response.body.versionId });
             } finally {
@@ -112,7 +112,7 @@ describe(`Tests ${example.url}`, () => {
 
                 response = await req.get(example.url).expect(200);
 
-                const expectedRes = _.omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
+                const expectedRes = omit(Object.assign({ id: authEntityId }, example.correct), ['secret']);
 
                 expect(response.body).to.be.an('array').that.is.not.empty;
                 expect(response.body).to.have.lengthOf(5);
@@ -175,7 +175,7 @@ describe(`Tests ${example.url}`, () => {
         it("should not update any record if record doesn't exist", async () => {
             await req
                 .put(example.url + 123)
-                .send(_.omit(example.updated, 'name'))
+                .send(omit(example.updated, 'name'))
                 .expect(404, 'Not found');
         });
 
@@ -191,7 +191,7 @@ describe(`Tests ${example.url}`, () => {
                     .send(example.updated)
                     .expect(200);
 
-                const expectedRes = _.omit(
+                const expectedRes = omit(
                     Object.assign({}, example.correct, {
                         id: authEntityId,
                         role: example.updated.role,
@@ -209,7 +209,7 @@ describe(`Tests ${example.url}`, () => {
                 await requestWithAuth().then((r) =>
                     r
                         .put(example.url + 123)
-                        .send(_.omit(example.updated, 'name'))
+                        .send(omit(example.updated, 'name'))
                         .expect(401),
                 );
             });

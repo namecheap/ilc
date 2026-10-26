@@ -1,7 +1,7 @@
-import { merge, omitBy, pick } from 'lodash';
 import type { AppRow } from '../apps/interfaces';
 import { parseJSON } from '../common/services/json';
 import { appendDigest } from '../util/hmac';
+import { deepMerge } from '../util/deepMerge';
 import { VersionedRecord } from '../versioning/interfaces';
 import type { RouterDomainsRow } from '../routerDomains/interfaces';
 import type { RouteWithSlotRow } from '../appRoutes/interfaces';
@@ -33,6 +33,24 @@ export type AppDto = Pick<
     | 'l10nManifest'
     | 'versionId'
 >;
+const appDtoKeys: (keyof AppDto)[] = [
+    'kind',
+    'ssr',
+    'dependencies',
+    'discoveryMetadata',
+    'props',
+    'ssrProps',
+    'spaBundle',
+    'cssBundle',
+    'wrappedWith',
+    'enforceDomain',
+    'l10nManifest',
+    'versionId',
+];
+
+function isEmptyAppValue(value: unknown): boolean {
+    return value === null || (typeof value === 'object' && Object.keys(value).length === 0);
+}
 
 export function transformApps(
     apps: VersionedRecord<AppRow>[],
@@ -59,41 +77,31 @@ export function transformApps(
 
             // Apply domain-specific props
             if (currentDomain?.props) {
-                jsonParsedApp.props = merge({}, parseJSON(currentDomain.props), jsonParsedApp.props);
+                jsonParsedApp.props = deepMerge({}, parseJSON(currentDomain.props), jsonParsedApp.props);
             }
             if (currentDomain?.ssrProps) {
-                jsonParsedApp.ssrProps = merge({}, parseJSON(currentDomain.ssrProps), jsonParsedApp.ssrProps);
+                jsonParsedApp.ssrProps = deepMerge({}, parseJSON(currentDomain.ssrProps), jsonParsedApp.ssrProps);
             }
 
             if (sharedProps.length && app.configSelector !== null) {
                 parseJSON<string[]>(app.configSelector).forEach((configSelectorName) => {
                     const commonConfig = sharedProps.find((n) => n.name === configSelectorName);
                     if (commonConfig) {
-                        jsonParsedApp.props = merge({}, parseJSON(commonConfig.props), jsonParsedApp.props);
-                        jsonParsedApp.ssrProps = merge({}, parseJSON(commonConfig.ssrProps), jsonParsedApp.ssrProps);
+                        jsonParsedApp.props = deepMerge({}, parseJSON(commonConfig.props), jsonParsedApp.props);
+                        jsonParsedApp.ssrProps = deepMerge(
+                            {},
+                            parseJSON(commonConfig.ssrProps),
+                            jsonParsedApp.ssrProps,
+                        );
                     }
                 });
             }
 
-            const compactedApp = omitBy<TransformedApp>(
-                jsonParsedApp,
-                (v) => v === null || (typeof v === 'object' && Object.keys(v).length === 0),
-            );
-
-            acc[compactedApp.name!] = pick(compactedApp as TransformedApp, [
-                'kind',
-                'ssr',
-                'dependencies',
-                'discoveryMetadata',
-                'props',
-                'ssrProps',
-                'spaBundle',
-                'cssBundle',
-                'wrappedWith',
-                'enforceDomain',
-                'l10nManifest',
-                'versionId',
-            ]);
+            acc[app.name] = Object.fromEntries(
+                appDtoKeys
+                    .filter((key) => key in jsonParsedApp && !isEmptyAppValue(jsonParsedApp[key]))
+                    .map((key) => [key, jsonParsedApp[key]]),
+            ) as AppDto;
 
             return acc;
         },

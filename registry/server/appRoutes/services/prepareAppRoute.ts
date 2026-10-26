@@ -1,5 +1,5 @@
 import { JSONObject, parseJSON } from '../../common/services/json';
-import preProcessResponse from '../../common/services/preProcessResponse';
+import { preProcessResponse } from '../../common/services/preProcessResponse';
 import type { RouteWithSlotRow } from '../interfaces';
 
 type RouteToRespond = {

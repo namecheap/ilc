@@ -3,7 +3,7 @@ import urljoin from 'url-join';
 import deepEqual from 'deep-equal';
 
 import type { Knex } from 'knex';
-import manifestProcessor, { ManifestData } from './assetsManifestProcessor';
+import { ManifestData, processManifest } from './assetsManifestProcessor';
 import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 import { getLogger } from '../../../util/logger';
 import { parseJSON, safeParseJSON } from '../json';
@@ -93,7 +93,7 @@ export default class AssetsDiscovery {
                 timeout: maxRequestTimeout,
             }),
         );
-        const data = manifestProcessor(reqUrl, res.data, AssetsDiscoveryWhiteLists[this.tableName]);
+        const data = processManifest(reqUrl, res.data, AssetsDiscoveryWhiteLists[this.tableName]);
         const dbAssets = {
             spaBundle: entity.spaBundle,
             cssBundle: entity.cssBundle,

@@ -1,22 +1,32 @@
-import _ from 'lodash/fp';
 import { parseJSON } from './json';
 
-const omitEmptyValues = _.omitBy(
-    _.cond([
-        [_.isNull, _.stubTrue],
-        [_.isNumber, _.stubFalse],
-        [_.isBoolean, _.stubFalse],
-        [_.isEmpty, _.stubTrue],
-        [_.stubTrue, _.stubFalse],
-    ]),
-);
+function isEmptyValue(value: unknown): boolean {
+    if (value === null || value === undefined) {
+        return true;
+    }
+    if (typeof value === 'string' || Array.isArray(value)) {
+        return value.length === 0;
+    }
+    if (typeof value === 'object') {
+        return Object.keys(value).length === 0;
+    }
+    return false;
+}
 
-const omitPreResponseEmptyValues = _.cond([
-    [_.isArray, _.map(omitEmptyValues)],
-    [_.isObject, omitEmptyValues],
-    [_.stubTrue, (value: any) => value],
-]);
+function omitEmptyValues(value: unknown): Record<string, unknown> {
+    return Object.fromEntries(Object.entries(Object(value)).filter(([, item]) => !isEmptyValue(item)));
+}
 
-const preProcessResponse = _.compose(omitPreResponseEmptyValues, parseJSON);
+function omitPreResponseEmptyValues(value: unknown): unknown {
+    if (Array.isArray(value)) {
+        return value.map(omitEmptyValues);
+    }
+    if (typeof value === 'object' && value !== null) {
+        return omitEmptyValues(value);
+    }
+    return value;
+}
 
-export default preProcessResponse;
+export function preProcessResponse(value: unknown): any {
+    return omitPreResponseEmptyValues(parseJSON(value));
+}

@@ -1,9 +1,9 @@
-import _ from 'lodash';
 import nock from 'nock';
 import { type Agent } from 'supertest';
 import { ensureDeleted, expect, request, requestWithAuth } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
 import { makeFilterQuery } from './utils/makeFilterQuery';
+import { omit } from './utils/omit';
 
 const assetsDiscovery = {
     host: 'http://127.0.0.1:1234',
@@ -95,7 +95,7 @@ example.encodedName = encodeURIComponent(example.correct.name);
 
 function expectAppsListEqual(actual: readonly any[], expected: readonly any[]) {
     expect(actual).to.be.an('array').that.is.not.empty;
-    expect(actual.map((a) => _.omit(a, 'versionId'))).to.deep.equal(expected);
+    expect(actual.map((a) => omit(a, 'versionId'))).to.deep.equal(expected);
     for (const app of actual) {
         expect(app.versionId).to.match(/^[0-9]+.[-_0-9a-zA-Z]{32}$/);
     }
@@ -121,7 +121,7 @@ describe(`Tests ${example.url}`, () => {
         it('should not create record without a required field: name', async () => {
             const response = await req
                 .post(example.url)
-                .send(_.omit(example.correct, ['name', 'spaBundle']))
+                .send(omit(example.correct, ['name', 'spaBundle']))
                 .expect(422, '✖ Invalid input: expected string, received undefined\n  → at name');
             expect(response.body).deep.equal({});
         });
@@ -353,7 +353,7 @@ describe(`Tests ${example.url}`, () => {
 
         it('should create an app when both spaBundle and assetsDiscovery are NOT specified', async () => {
             try {
-                const ssrOnlyApp = _.omit(example.correct, ['spaBundle', 'cssBundle']);
+                const ssrOnlyApp = omit(example.correct, ['spaBundle', 'cssBundle']);
                 const response = await req.post(example.url).send(ssrOnlyApp).expect(200);
                 expect(response.body).to.deep.equal(ssrOnlyApp);
             } finally {
@@ -416,10 +416,7 @@ describe(`Tests ${example.url}`, () => {
                 await req
                     .put(example.url + example.appsList[0].name)
                     .send(
-                        _.omit(
-                            { ...example.appsList[0], spaBundle: 'https://app-0.com/spa-bundle-updated.js' },
-                            'name',
-                        ),
+                        omit({ ...example.appsList[0], spaBundle: 'https://app-0.com/spa-bundle-updated.js' }, 'name'),
                     )
                     .expect(200);
 
@@ -836,7 +833,7 @@ describe(`Tests ${example.url}`, () => {
             const incorrect = { name: 123 };
             const response = await req
                 .put(example.url + incorrect.name)
-                .send(_.omit(example.updated, 'name'))
+                .send(omit(example.updated, 'name'))
                 .expect(404, `Application with name "${incorrect.name}" is not exist`);
 
             expect(response.body).deep.equal({});
@@ -878,7 +875,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .put(example.url + example.encodedName)
                     .send({
-                        ..._.omit(example.updated, 'name'),
+                        ...omit(example.updated, 'name'),
                         ...incorrect,
                     })
                     .expect(
@@ -907,7 +904,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req
                     .put(example.url + example.encodedName)
-                    .send(_.omit(example.updated, 'name'))
+                    .send(omit(example.updated, 'name'))
                     .expect(200);
 
                 expect(response.body).deep.equal(example.updated);
@@ -926,7 +923,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const { body: updated } = await req
                     .put(example.url + example.encodedName)
-                    .send({ ..._.omit(example.correct, 'name'), namespace: null })
+                    .send({ ...omit(example.correct, 'name'), namespace: null })
                     .expect(200);
 
                 expect(updated.namespace).equal(undefined);
@@ -956,7 +953,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .put(example.url + example.encodedName)
                     .send({
-                        ..._.omit(example.updated, 'name'),
+                        ...omit(example.updated, 'name'),
                         enforceDomain: domainId,
                     })
                     .expect(200);
@@ -993,7 +990,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .put(example.url + example.encodedName)
                     .send({
-                        ..._.omit(example.updated, 'name'),
+                        ...omit(example.updated, 'name'),
                         domainAlias: 'app-domain-update',
                     })
                     .expect(200);
@@ -1053,7 +1050,7 @@ describe(`Tests ${example.url}`, () => {
                 await req
                     .put(example.url + example.encodedName)
                     .send({
-                        ..._.omit(example.updated, 'name'),
+                        ...omit(example.updated, 'name'),
                         domainAlias: 'non-existing',
                     })
                     .expect(422);
@@ -1069,7 +1066,7 @@ describe(`Tests ${example.url}`, () => {
                 await req
                     .put(example.url + example.encodedName)
                     .send({
-                        ..._.omit(example.updated, 'name'),
+                        ...omit(example.updated, 'name'),
                         enforceDomain: 1,
                         domainAlias: 'some-alias',
                     })
@@ -1101,7 +1098,7 @@ describe(`Tests ${example.url}`, () => {
                 };
 
                 const updateAppDropedEnforcedDomain = {
-                    ..._.omit(example.updated, 'name'),
+                    ...omit(example.updated, 'name'),
                     enforceDomain: null,
                 };
 
@@ -1132,7 +1129,7 @@ describe(`Tests ${example.url}`, () => {
                 await req
                     .put(example.url + example.encodedName)
                     .send({
-                        ..._.omit(example.updated, 'name'),
+                        ...omit(example.updated, 'name'),
                         enforceDomain: 999999,
                     })
                     .expect(500);
@@ -1151,7 +1148,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req
                     .put(example.url + example.encodedName)
-                    .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
+                    .send(omit(example.correctWithAssetsDiscoveryUrl, 'name'))
                     .expect(
                         422,
                         `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`,
@@ -1172,7 +1169,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req
                     .put(example.url + example.encodedName)
-                    .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
+                    .send(omit(example.correctWithAssetsDiscoveryUrl, 'name'))
                     .expect(422, '✖ Invalid input: expected string, received undefined\n  → at spaBundle');
 
                 expect(response.body).deep.equal({});
@@ -1189,7 +1186,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req
                     .put(example.url + example.encodedName)
-                    .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'));
+                    .send(omit(example.correctWithAssetsDiscoveryUrl, 'name'));
 
                 expect(response.body).deep.equal({
                     ...example.correctWithAssetsDiscoveryUrl,

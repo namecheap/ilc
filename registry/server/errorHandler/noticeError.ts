@@ -1,6 +1,5 @@
 import newrelic from 'newrelic';
-import { setErrorData } from '../util/helpers';
-import { getLogger } from '../util/logger';
+import { setErrorData, getLogger } from '../util/logger';
 
 type ErrorAttributes = { [key: string]: string | number | boolean };
 

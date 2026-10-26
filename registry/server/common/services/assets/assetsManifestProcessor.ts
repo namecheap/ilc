@@ -1,5 +1,5 @@
-import _ from 'lodash';
 import url from 'url';
+import { isPlainObject } from '../../../util/isPlainObject';
 
 type IncomingManifest = {
     [key: string]: any;
@@ -14,8 +14,11 @@ export type ManifestData = {
     dependencies?: string;
 };
 
-export default function processManifest(baseUrl: string, manifest: any, whiteList: readonly string[]): ManifestData {
-    const data = _.pick(manifest, whiteList) as IncomingManifest;
+export function processManifest(baseUrl: string, manifest: any, whiteList: readonly string[]): ManifestData {
+    const source = Object(manifest);
+    const data = Object.fromEntries(
+        whiteList.filter((key) => key in source).map((key) => [key, source[key]]),
+    ) as IncomingManifest;
     if (data.spaBundle) {
         data.spaBundle = url.resolve(baseUrl, data.spaBundle);
     }
@@ -24,13 +27,12 @@ export default function processManifest(baseUrl: string, manifest: any, whiteLis
         data.cssBundle = url.resolve(baseUrl, data.cssBundle);
     }
 
-    if (
-        data.dependencies !== undefined &&
-        typeof data.dependencies === 'object' &&
-        _.isPlainObject(data.dependencies)
-    ) {
-        data.dependencies = _.mapValues(data.dependencies, (v) => url.resolve(baseUrl, v));
-        data.dependencies = JSON.stringify(data.dependencies);
+    if (isPlainObject(data.dependencies)) {
+        data.dependencies = JSON.stringify(
+            Object.fromEntries(
+                Object.entries(data.dependencies).map(([key, value]) => [key, url.resolve(baseUrl, value as string)]),
+            ),
+        );
     } else {
         delete data.dependencies;
     }

@@ -1,11 +1,11 @@
 import { expect } from './common';
 
-import processor from '../server/common/services/assets/assetsManifestProcessor';
+import { processManifest } from '../server/common/services/assets/assetsManifestProcessor';
 
 describe('assetsManifestProcessor', () => {
     it('perform basic link resolution & cleanup non white listed properties', () => {
         expect(
-            processor(
+            processManifest(
                 'https://example.com/folder/assets-discovery.js',
                 {
                     a: 'tst',
@@ -30,7 +30,7 @@ describe('assetsManifestProcessor', () => {
 
     it('handles absence of dependencies object or invalid type correctly', () => {
         expect(
-            processor(
+            processManifest(
                 'https://example.com/folder/assets-discovery.js',
                 {
                     spaBundle: 'https://example.com/aa.js',
@@ -44,7 +44,7 @@ describe('assetsManifestProcessor', () => {
         });
 
         expect(
-            processor(
+            processManifest(
                 'https://example.com/folder/assets-discovery.js',
                 {
                     spaBundle: 'https://example.com/aa.js',
@@ -61,7 +61,7 @@ describe('assetsManifestProcessor', () => {
 
     it('handles absence of cssBundle correctly', () => {
         expect(
-            processor(
+            processManifest(
                 'https://example.com/folder/assets-discovery.js',
                 {
                     spaBundle: 'https://example.com/aa.js',
@@ -75,7 +75,7 @@ describe('assetsManifestProcessor', () => {
 
     it('handles absence of spaBundle correctly', () => {
         expect(
-            processor(
+            processManifest(
                 'https://example.com/folder/assets-discovery.js',
                 {
                     cssBundle: 'https://example.com/aa.css',

@@ -1,10 +1,10 @@
-import _ from 'lodash';
 import nock from 'nock';
 import { type Agent } from 'supertest';
 import { SettingKeys } from '../server/settings/interfaces';
 import { db, ensureDeleted, expect, request, requestWithAuth, settingsService } from './common';
 import { makeFilterQuery } from './utils/makeFilterQuery';
 import { withSetting } from './utils/withSetting';
+import { omit } from './utils/omit';
 
 const example = {
     url: '/api/v1/template/',
@@ -80,7 +80,7 @@ describe(`Tests ${example.url}`, () => {
         it('should not create record without a required field: name', async () => {
             const response = await req
                 .post(example.url)
-                .send(_.omit(example.correct, 'name'))
+                .send(omit(example.correct, 'name'))
                 .expect(422, '✖ Invalid input: expected string, received undefined\n  → at name');
 
             expect(response.body).deep.equal({});
@@ -89,7 +89,7 @@ describe(`Tests ${example.url}`, () => {
         it('should not create record without a required field: content', async () => {
             const response = await req
                 .post(example.url)
-                .send(_.omit(example.correct, 'content'))
+                .send(omit(example.correct, 'content'))
                 .expect(422, '✖ Invalid input: expected string, received undefined\n  → at content');
 
             expect(response.body).deep.equal({});
@@ -330,11 +330,11 @@ describe(`Tests ${example.url}`, () => {
                 // There should be two templates:
                 expect(templatesWithDomain).to.have.length(2);
                 // One of the templates should be from the domain
-                expect(_.omit(templatesWithDomain[0], 'versionId')).to.deep.equal({
+                expect(omit(templatesWithDomain[0], 'versionId')).to.deep.equal({
                     ...example.templatesList[1],
                 });
                 // The other template should be from the route
-                expect(_.omit(templatesWithDomain[1], 'versionId')).to.deep.equal({
+                expect(omit(templatesWithDomain[1], 'versionId')).to.deep.equal({
                     ...example.templatesList[2],
                 });
 
@@ -346,7 +346,7 @@ describe(`Tests ${example.url}`, () => {
                 // There should be one template:
                 expect(templatesWithoutDomain).to.have.length(1);
                 // The template not associated with the any domain
-                expect(_.omit(templatesWithoutDomain[0], 'versionId')).to.deep.equal({
+                expect(omit(templatesWithoutDomain[0], 'versionId')).to.deep.equal({
                     ...example.templatesList[0],
                 });
             } finally {
@@ -487,7 +487,7 @@ describe(`Tests ${example.url}`, () => {
             const incorrect = { name: 123 };
             const response = await req
                 .put(example.url + incorrect.name)
-                .send(_.omit(example.correct, 'name'))
+                .send(omit(example.correct, 'name'))
                 .expect(404, 'Not found');
 
             expect(response.body).deep.equal({});
@@ -514,7 +514,7 @@ describe(`Tests ${example.url}`, () => {
 
             const response = await req
                 .put(example.url + example.correct.name)
-                .send(_.omit(incorrect, 'name'))
+                .send(omit(incorrect, 'name'))
                 .expect(422, '✖ Invalid input: expected string, received number\n  → at content');
             expect(response.body).deep.equal({});
         });
@@ -524,7 +524,7 @@ describe(`Tests ${example.url}`, () => {
 
             await req
                 .put(example.url + example.invalid.name)
-                .send(_.omit(example.invalid, 'name'))
+                .send(omit(example.invalid, 'name'))
                 .expect(422, 'HTML template has invalid structure');
         });
 
@@ -550,7 +550,7 @@ describe(`Tests ${example.url}`, () => {
 
             const response = await req
                 .put(example.url + example.correct.name)
-                .send(_.omit(example.updated, 'name'))
+                .send(omit(example.updated, 'name'))
                 .expect(200);
 
             expect(response.body).deep.equal({
@@ -569,7 +569,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req
                     .put(example.url + example.correctLocalized.name)
-                    .send(_.omit(example.updatedLocalized, 'name'))
+                    .send(omit(example.updatedLocalized, 'name'))
                     .expect(200);
 
                 expect(response.body).deep.equal({
@@ -584,7 +584,7 @@ describe(`Tests ${example.url}`, () => {
             it('should deny access w/o authentication', async () => {
                 await reqWithAuth
                     .put(example.url + example.correct.name)
-                    .send(_.omit(example.updated, 'name'))
+                    .send(omit(example.updated, 'name'))
                     .expect(401);
             });
         });
@@ -636,7 +636,7 @@ describe(`Tests ${example.url}`, () => {
             await req.post(example.url).send(example.correct).expect(200);
             await req
                 .patch(example.url + example.correct.name)
-                .send(_.omit(example.correctLocalized, 'name'))
+                .send(omit(example.correctLocalized, 'name'))
                 .expect(422, '✖ Unrecognized key: "localizedVersions"');
         });
     });

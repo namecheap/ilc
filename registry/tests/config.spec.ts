@@ -1,9 +1,10 @@
-import _ from 'lodash';
 import { type Agent } from 'supertest';
 
 import nock from 'nock';
 import { OnPropsUpdateValues, SettingKeys, TrailingSlashValues } from '../server/settings/interfaces';
 import { db, ensureDeleted, expect, request, requestWithAuth } from './common';
+import { omit } from './utils/omit';
+import { pick } from './utils/pick';
 
 const templateName = 'ncTestTemplateName';
 const example = {
@@ -164,48 +165,46 @@ describe('Tests /api/v1/config', () => {
 
                 expect(response.body.routes).to.deep.include({
                     routeId,
-                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta', 'orderPos']),
+                    ...pick(example.appRoutes, ['route', 'next', 'slots', 'meta', 'orderPos']),
                 });
 
                 expect(response.body.routes).to.deep.include({
                     routeId: routeIdWithDomain,
                     domain: example.routerDomains.domainName,
                     orderPos: 123,
-                    ..._.pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
+                    ...pick(example.appRoutes, ['route', 'next', 'slots', 'meta']),
                 });
 
                 expect(response.body.routes).to.deep.include({
                     routeId: routeIdWithoutSlots,
-                    ..._.omit(example.appRoutesWithoutSlots, ['templateName']),
+                    ...omit(example.appRoutesWithoutSlots, ['templateName']),
                     template: example.appRoutesWithoutSlots.templateName,
                 });
 
                 expect(response.body.apps[example.apps.name]).deep.equal(
-                    _.omit(
+                    omit(
                         {
                             ...example.apps,
-                            props: _.merge(
-                                {},
-                                example.sharedProps.props,
-                                example.routerDomains.props,
-                                example.apps.props,
-                            ),
+                            props: {
+                                ...example.sharedProps.props,
+                                ...example.routerDomains.props,
+                                ...example.apps.props,
+                            },
                             ssrProps: example.routerDomains.ssrProps,
                         },
                         ['name', 'configSelector'],
                     ),
                 );
 
-                expect(_.omit(response.body.apps[`${example.apps.name}enforceDomain`], 'versionId')).deep.equal(
-                    _.omit(
+                expect(omit(response.body.apps[`${example.apps.name}enforceDomain`], 'versionId')).deep.equal(
+                    omit(
                         {
                             ...example.apps,
-                            props: _.merge(
-                                {},
-                                example.sharedProps.props,
-                                example.routerDomains.props,
-                                example.apps.props,
-                            ),
+                            props: {
+                                ...example.sharedProps.props,
+                                ...example.routerDomains.props,
+                                ...example.apps.props,
+                            },
                             ssrProps: example.routerDomains.ssrProps,
                             enforceDomain: example.routerDomains.domainName,
                         },

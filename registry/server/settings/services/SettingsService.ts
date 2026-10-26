@@ -3,7 +3,7 @@ import { User } from '../../../typings/User';
 import { JSONValue, isNumeric, safeParseJSON } from '../../common/services/json';
 import { NotFoundError, UnprocessableContent } from '../../errorHandler/httpErrors';
 import type { RouterDomainsRepository } from '../../routerDomains/repositories/RouterDomainsRepository';
-import { defined } from '../../util/helpers';
+import { defined } from '../../util/defined';
 import { set } from '../../util/set';
 import { EntityTypes } from '../../versioning/interfaces';
 import type { Versioning } from '../../versioning/services/Versioning';
