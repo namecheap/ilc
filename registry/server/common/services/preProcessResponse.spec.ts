@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { preProcessResponse } from '../../server/common/services/preProcessResponse';
+import { preProcessResponse } from './preProcessResponse';
 
 describe('preProcessResponse', () => {
     describe('when value is neither an object nor an array', () => {

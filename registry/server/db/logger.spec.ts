@@ -1,6 +1,6 @@
 import sinon from 'sinon';
-import { knexLoggerAdapter } from '../server/db/logger';
-import * as loggerModule from '../server/util/logger';
+import { knexLoggerAdapter } from './logger';
+import * as loggerModule from '../util/logger';
 
 describe('Database Logger', () => {
     let loggerMock: {

@@ -1,8 +1,9 @@
 import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import { before, describe, it } from 'mocha';
 import express from 'express';
 import request from 'supertest';
-import { contextMiddleware, storage } from '../server/middleware/context';
+import { contextMiddleware, storage } from './context';
+import { loadPlugins } from '../util/pluginManager';
 
 function createTestAppWithContextMiddleware() {
     // Create a new express application
@@ -30,6 +31,10 @@ function createTestAppWithContextMiddleware() {
 }
 
 describe('contextMiddleware', () => {
+    before(() => {
+        loadPlugins();
+    });
+
     it('should set the correct store values', (done) => {
         const app = createTestAppWithContextMiddleware();
 

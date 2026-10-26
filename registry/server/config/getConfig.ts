@@ -8,7 +8,7 @@ import type { SettingsService } from '../settings/services/SettingsService';
 import { appendDigest } from '../util/hmac';
 import { EntityTypes, type VersionedRecord } from '../versioning/interfaces';
 import type { Versioning } from '../versioning/services/Versioning';
-import { parseJSON } from '../common/services/json';
+import { parseJSON } from '../util/json';
 import { AppRouteDto, transformApps, transformRoutes, transformSharedLibs } from './transformConfig';
 
 type ConfigReaderDependencies = {

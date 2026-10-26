@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import nock from 'nock';
-import { AssetsDiscoveryProcessor } from '../../server/common/services/assets/AssetsDiscoveryProcessor';
+import { AssetsDiscoveryProcessor } from './AssetsDiscoveryProcessor';
 
 describe('AssetsDiscoveryProcessor', () => {
     const baseUrl = 'http://example.com';

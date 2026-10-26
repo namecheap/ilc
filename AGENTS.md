@@ -73,6 +73,11 @@ Express 5 + Knex on PostgreSQL (`server/db/index.ts`). Each entity has its own f
 - `services/`: versioned writes, not-found handling and business rules, such as checks that need other tables.
 - `routes/`: one handler factory per file. It takes the service and validates its input with `validated()` (`server/common/validation`).
 
+Code that belongs to no single entity:
+
+- `server/common/services/`: registry logic shared by several entities, such as assets discovery, entries and protected entities.
+- `server/util/`: generic helpers and infrastructure that know nothing about registry entities, such as the logger, the plugin manager, `extendError`, the axios helpers and `deepMerge`. A standalone helper gets its own file named after its export (`defined.ts`, `deepMerge.ts`); helpers for one concern share a file (`db.ts`, `logger.ts`).
+
 `server/composition.ts` builds the repositories and services once, and `app.ts` passes them to the routers. Things that span files:
 
 - **Versioning**: services wrap entity writes in `versioning.withVersion(user, { type, id }, async (trx) => …)` (`server/versioning/services/Versioning.ts`), which snapshots the record and stores a revertible version. Queries inside the callback must use `trx`. Without `id`, the callback returns the created row, whose id column identifies it. Reads that need the version use `versioning.versionedSelect(...)`.
@@ -81,7 +86,7 @@ Express 5 + Knex on PostgreSQL (`server/db/index.ts`). Each entity has its own f
 - **Assets discovery** (`server/runnerAssetsDiscovery.ts`, `pnpm assetsdiscovery`) runs as a separate process in production and refreshes app bundle URLs from their manifests.
 - Admin UI: `registry/client`, a React Admin app built with webpack.
 
-Registry tests (`registry/tests`) drive the HTTP API with supertest. Cleanups in `finally`/hooks call `ensureDeleted(req, url)` from `tests/common.ts`, which fails when a record is neither deleted nor already absent, instead of leaving it to break later tests.
+Registry tests (`registry/tests`) drive the HTTP API with supertest. Unit tests of a single module that need no database sit next to it as `<file>.spec.ts`. Cleanups in `finally`/hooks call `ensureDeleted(req, url)` from `tests/common.ts`, which fails when a record is neither deleted nor already absent, instead of leaving it to break later tests.
 
 ## CI and conventions
 

@@ -1,4 +1,4 @@
-import { set } from '../../server/util/set';
+import { set } from './set';
 import { expect } from 'chai';
 
 describe('set utility', () => {

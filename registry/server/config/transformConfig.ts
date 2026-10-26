@@ -1,5 +1,5 @@
 import type { AppRow } from '../apps/interfaces';
-import { parseJSON } from '../common/services/json';
+import { parseJSON } from '../util/json';
 import { appendDigest } from '../util/hmac';
 import { deepMerge } from '../util/deepMerge';
 import { VersionedRecord } from '../versioning/interfaces';

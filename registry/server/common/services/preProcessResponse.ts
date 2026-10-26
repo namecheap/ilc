@@ -1,4 +1,4 @@
-import { parseJSON } from './json';
+import { parseJSON } from '../../util/json';
 
 function isEmptyValue(value: unknown): boolean {
     if (value === null || value === undefined) {

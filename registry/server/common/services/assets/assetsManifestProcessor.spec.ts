@@ -1,6 +1,6 @@
-import { expect } from './common';
+import { expect } from 'chai';
 
-import { processManifest } from '../server/common/services/assets/assetsManifestProcessor';
+import { processManifest } from './assetsManifestProcessor';
 
 describe('assetsManifestProcessor', () => {
     it('perform basic link resolution & cleanup non white listed properties', () => {
