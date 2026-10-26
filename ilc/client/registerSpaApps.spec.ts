@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 import sinon, { type SinonStub, type SinonSpy } from 'sinon';
 import * as singleSpa from 'single-spa';
-import { registerApplications } from './registerSpaApps';
+import { registerApplications, isMultiAppSlot, isKeepAliveSlot } from './registerSpaApps';
+import { getAppContainer } from './utils';
 import * as composeAppSlotPairsModule from './composeAppSlotPairsToRegister';
 import AsyncBootUp from './AsyncBootUp';
 
@@ -37,10 +38,13 @@ describe('registerSpaApps', () => {
                 spaBundle: 'http://localhost/app.js',
                 cssBundle: 'http://localhost/app.css',
             }),
+            getConfigForRoutes: sinon.stub().returns([]),
+            getConfigForSpecialRoutes: sinon.stub().returns({}),
         };
 
         mockRouter = {
             getCurrentRouteProps: sinon.stub().returns({}),
+            getCurrentBasePath: sinon.stub().returns('/'),
             getCurrentRoute: sinon.stub().returns({ basePath: '/' }),
             isAppWithinSlotActive: sinon.stub().returns(true),
             addListener: sinon.stub(),
@@ -336,6 +340,56 @@ describe('registerSpaApps', () => {
             const slotName = mockSlot.getSlotName();
             const slotElement = document.getElementById(`ilc-slot-${slotName}`);
             expect(slotElement).to.exist;
+        });
+
+        it('should give every app of a multi-app slot its own container inside the slot', () => {
+            const slotName = mockSlot.getSlotName();
+            const slotElement = document.getElementById(`ilc-slot-${slotName}`)!;
+            // getSlotElement looks the slot up by id, the test fixture prefixes it
+            slotElement.id = slotName;
+            mockIlcConfigRoot.getConfigForRoutes.returns([
+                {
+                    route: '/multi',
+                    slots: { [slotName]: [{ appName: 'a' }, { appName: mockSlot.getApplicationName() }] },
+                },
+            ]);
+
+            registeredAppsResult = registerApplications(
+                mockIlcConfigRoot,
+                mockRouter,
+                mockAppErrorHandlerFactory,
+                mockBundleLoader,
+                mockTransitionManager,
+                mockSdkFactoryBuilder,
+                mockErrorHandlerManager,
+            );
+
+            expect(isMultiAppSlot(mockIlcConfigRoot, slotName)).to.be.true;
+
+            const container = getAppContainer(slotName, mockSlot.getApplicationId());
+            expect(container.parentElement).to.equal(slotElement);
+            expect(container.getAttribute('data-ilc-app-id')).to.equal(mockSlot.getApplicationId());
+
+            slotElement.id = `ilc-slot-${slotName}`;
+        });
+
+        it('should treat a slot with a keep-alive entry on any route as a slot with own containers', () => {
+            const slotName = mockSlot.getSlotName();
+            mockIlcConfigRoot.getConfigForRoutes.returns([
+                { route: '/inbox', slots: { [slotName]: { appName: mockSlot.getApplicationName(), keepAlive: true } } },
+            ]);
+
+            expect(isKeepAliveSlot(mockIlcConfigRoot, slotName)).to.be.true;
+            expect(isKeepAliveSlot(mockIlcConfigRoot, 'other')).to.be.false;
+        });
+
+        it('should not treat a one-element list as a multi-app slot, like the server', () => {
+            const slotName = mockSlot.getSlotName();
+            mockIlcConfigRoot.getConfigForRoutes.returns([
+                { route: '/one', slots: { [slotName]: [{ appName: mockSlot.getApplicationName() }] } },
+            ]);
+
+            expect(isMultiAppSlot(mockIlcConfigRoot, slotName)).to.be.false;
         });
 
         it('should handle apps with update props mode', () => {

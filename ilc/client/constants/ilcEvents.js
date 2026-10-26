@@ -5,5 +5,6 @@ export default {
     CRASH: 'ilc:crash',
     INTL_UPDATE: 'ilc:intl-update',
     PAGE_READY: 'ilc:page-ready',
+    APP_VISIBILITY: 'ilc:app-visibility',
     updateAppInSlot: (slotName, appName) => `ilc:update:${slotName}_${appName}`,
 };

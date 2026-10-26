@@ -278,6 +278,49 @@ describe('async boot up', () => {
         );
     });
 
+    it('should resolve every app waiting for the same slot (a slot may hold several apps)', async () => {
+        performance.now.returns(0);
+
+        const slot = html`
+            <main>
+                <div id="stack"><div>Hello! I am a slot with two apps.</div></div>
+            </main>
+        `;
+        document.body.appendChild(slot);
+        window.ilcApps = [];
+
+        const asyncBootUp = new AsyncBootUp(logger, performance);
+        const [first, second] = await Promise.all([
+            asyncBootUp.waitForSlot('stack'),
+            asyncBootUp.waitForSlot('stack'),
+
+            Promise.resolve()
+                .then(() => window.ilcApps.push('stack'))
+                .then(() => clock.runAllAsync()),
+        ]);
+
+        chai.expect(first).to.be.eql(emptyOverrides);
+        chai.expect(second).to.be.eql(emptyOverrides);
+    });
+
+    it('should resolve every app waiting for a slot that never renders when the page is done', async () => {
+        performance.now.returns(0);
+        window.ilcApps = [];
+
+        const asyncBootUp = new AsyncBootUp(logger, performance);
+        const [first, second] = await Promise.all([
+            asyncBootUp.waitForSlot('missing'),
+            asyncBootUp.waitForSlot('missing'),
+
+            Promise.resolve()
+                .then(() => window.ilcApps.push(Infinity))
+                .then(() => clock.runAllAsync()),
+        ]);
+
+        chai.expect(first).to.be.eql(emptyOverrides);
+        chai.expect(second).to.be.eql(emptyOverrides);
+    });
+
     it('should not wait for slots after dispatched single-spa`s routing-event and return default override configs at once', async () => {
         const config = {
             footer: {

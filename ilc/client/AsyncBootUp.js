@@ -7,6 +7,7 @@ export default class AsyncBootUp {
     #performance;
     #performanceStart;
     #afterRoutingEvent = false;
+    /** slot name -> resolvers of every app waiting for that slot (a slot may hold several apps) */
     #appsWaitingForSlot = {};
     #readySlots = [];
     #pageLoadingIsDone = false;
@@ -41,7 +42,7 @@ export default class AsyncBootUp {
             if (this.#readySlots.includes(slotName)) {
                 return resolve();
             } else if (!this.#pageLoadingIsDone) {
-                this.#appsWaitingForSlot[slotName] = resolve;
+                this.#appsWaitingForSlot[slotName] = [...(this.#appsWaitingForSlot[slotName] || []), resolve];
             } else {
                 return resolve(); // We don't have such slot on the page
             }
@@ -102,12 +103,13 @@ export default class AsyncBootUp {
                 // Infinity here used as indicator of the end of the slots list
                 this.#pageLoadingIsDone = true;
                 for (let slotName in this.#appsWaitingForSlot) {
-                    this.#appsWaitingForSlot[slotName]();
+                    this.#appsWaitingForSlot[slotName].forEach((resolve) => resolve());
                 }
+                this.#appsWaitingForSlot = {};
             } else {
                 this.#readySlots.push(id);
                 if (this.#appsWaitingForSlot[id]) {
-                    this.#appsWaitingForSlot[id]();
+                    this.#appsWaitingForSlot[id].forEach((resolve) => resolve());
                     delete this.#appsWaitingForSlot[id];
                 }
             }

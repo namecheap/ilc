@@ -1020,3 +1020,343 @@ describe('client router', () => {
         });
     });
 });
+
+describe('client router: several apps per slot', () => {
+    const singleSpa = {
+        navigateToUrl: () => {},
+        triggerAppChange: () => {},
+        getMountedApps: () => [],
+    };
+
+    const apps = {
+        '@portal/core': { spaBundle: 'https://somewhere.com/core.js', kind: 'essential', props: {} },
+        '@portal/inbox': { spaBundle: 'https://somewhere.com/inbox.js', kind: 'primary', props: {} },
+        '@portal/calendar': { spaBundle: 'https://somewhere.com/calendar.js', kind: 'primary', props: {} },
+    };
+
+    const routes = [
+        { route: '*', next: true, template: 'baseTemplate', slots: {} },
+        {
+            route: '/inbox',
+            next: false,
+            slots: {
+                body: [
+                    { appName: '@portal/core', props: { page: 'inbox' } },
+                    { appName: '@portal/inbox', props: { folder: 'INBOX' } },
+                ],
+            },
+        },
+        {
+            route: '/calendar',
+            next: false,
+            slots: {
+                body: [
+                    { appName: '@portal/core', props: { page: 'calendar' } },
+                    { appName: '@portal/calendar', props: {} },
+                ],
+            },
+        },
+    ];
+
+    const registryConfig = {
+        apps,
+        routes,
+        specialRoutes: { 404: { next: false, template: 'errorsTemplate', slots: {} } },
+    };
+    const dispatchIlcPageReadyEvent = () => window.dispatchEvent(new Event(ilcEvents.PAGE_READY));
+
+    let router, configRoot, handlePageTransaction, logger;
+
+    const isActive = (appName) => router.isAppWithinSlotActive(appName, 'body');
+
+    before(() => {
+        configRoot = getIlcConfigRoot();
+        sinon.stub(configRoot, 'registryConfiguration').value(registryConfig);
+    });
+
+    after(() => {
+        sinon.stub(configRoot, 'registryConfiguration').restore();
+    });
+
+    beforeEach(() => {
+        handlePageTransaction = sinon.spy();
+        logger = { info: sinon.spy() };
+    });
+
+    afterEach(async () => {
+        document.body.innerHTML = '';
+        if (router) {
+            router.removeEventListeners();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    it('treats every listed app as active and gives each its own props', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        chai.expect(isActive('@portal/core')).to.be.eql(true);
+        chai.expect(isActive('@portal/inbox')).to.be.eql(true);
+        chai.expect(isActive('@portal/calendar')).to.be.eql(false);
+
+        chai.expect(router.getCurrentRouteProps('@portal/core', 'body')).to.be.eql({ page: 'inbox' });
+        chai.expect(router.getCurrentRouteProps('@portal/inbox', 'body')).to.be.eql({ folder: 'INBOX' });
+        chai.expect(() => router.getCurrentRouteProps('@portal/calendar', 'body')).to.throw(
+            'Can not find info about the slot.',
+        );
+    });
+
+    it('swaps only the apps that change between two lists of the same slot', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        // core has an "update" lifecycle: its props change in place, no remount
+        router.addListener(ilcEvents.updateAppInSlot('body', '@portal/core'), () => {});
+
+        history.replaceState({}, undefined, '/calendar');
+
+        chai.expect(isActive('@portal/core')).to.be.eql(true);
+        sinon.assert.calledWithExactly(handlePageTransaction, 'body', slotWillBe.default, 'essential');
+
+        chai.expect(isActive('@portal/inbox')).to.be.eql(false);
+        sinon.assert.calledWithExactly(handlePageTransaction, 'body', slotWillBe.removed, 'primary');
+
+        chai.expect(isActive('@portal/calendar')).to.be.eql(true);
+        sinon.assert.calledWithExactly(handlePageTransaction, 'body', slotWillBe.rendered, 'primary');
+    });
+
+    it('remounts one app of the list when its props change and it has no "update" lifecycle', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        history.replaceState({}, undefined, '/calendar');
+
+        // core: removed for this pass only, its neighbours are untouched
+        chai.expect(isActive('@portal/core')).to.be.eql(false);
+        chai.expect(isActive('@portal/calendar')).to.be.eql(true);
+
+        dispatchIlcPageReadyEvent();
+
+        chai.expect(isActive('@portal/core')).to.be.eql(true);
+        sinon.assert.calledWithExactly(
+            logger.info,
+            'ILC: Triggering app re-mount for [@portal/core] due to changed props.',
+        );
+    });
+
+    it('reports the kind of the app entry, not of the slot', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        chai.expect(router.getRelevantAppKind('@portal/core', 'body')).to.be.eql('essential');
+        chai.expect(router.getRelevantAppKind('@portal/inbox', 'body')).to.be.eql('primary');
+    });
+});
+
+describe('client router: keep-alive slot entries', () => {
+    const singleSpa = {
+        navigateToUrl: () => {},
+        triggerAppChange: () => {},
+        getMountedApps: () => [],
+    };
+
+    const apps = {
+        '@portal/inbox': { spaBundle: 'https://somewhere.com/inbox.js', kind: 'primary', props: {} },
+        '@portal/calendar': { spaBundle: 'https://somewhere.com/calendar.js', kind: 'primary', props: {} },
+    };
+
+    const routes = [
+        { route: '*', next: true, template: 'baseTemplate', slots: {} },
+        {
+            route: '/inbox',
+            next: false,
+            slots: { body: { appName: '@portal/inbox', keepAlive: true, props: { folder: 'INBOX' } } },
+        },
+        {
+            route: '/inbox-sent',
+            next: false,
+            slots: { body: { appName: '@portal/inbox', keepAlive: true, props: { folder: 'Sent' } } },
+        },
+        { route: '/calendar', next: false, slots: { body: { appName: '@portal/calendar' } } },
+    ];
+
+    const registryConfig = {
+        apps,
+        routes,
+        specialRoutes: { 404: { next: false, template: 'errorsTemplate', slots: {} } },
+    };
+
+    const inboxAppId = 'inbox__at__body';
+    const dispatchIlcPageReadyEvent = () => window.dispatchEvent(new Event(ilcEvents.PAGE_READY));
+
+    let router, configRoot, handlePageTransaction, logger, visibilityEvents, onVisibility, inboxContainer;
+
+    const isActiveInbox = () => router.isAppWithinSlotActive('@portal/inbox', 'body');
+    const isActiveCalendar = () => router.isAppWithinSlotActive('@portal/calendar', 'body');
+
+    before(() => {
+        configRoot = getIlcConfigRoot();
+        sinon.stub(configRoot, 'registryConfiguration').value(registryConfig);
+    });
+
+    after(() => {
+        sinon.stub(configRoot, 'registryConfiguration').restore();
+    });
+
+    beforeEach(() => {
+        handlePageTransaction = sinon.spy();
+        logger = { info: sinon.spy() };
+        visibilityEvents = [];
+        onVisibility = (event) => visibilityEvents.push(event.detail);
+        window.addEventListener(ilcEvents.APP_VISIBILITY, onVisibility);
+
+        const slot = document.createElement('div');
+        slot.id = 'keep-alive-slot-host';
+        inboxContainer = document.createElement('div');
+        inboxContainer.setAttribute('data-ilc-app-id', inboxAppId);
+        slot.appendChild(inboxContainer);
+        document.body.appendChild(slot);
+    });
+
+    afterEach(async () => {
+        window.removeEventListener(ilcEvents.APP_VISIBILITY, onVisibility);
+        document.body.innerHTML = '';
+        if (router) {
+            router.removeEventListeners();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    it('keeps a kept-alive app active and hides its container when another app takes the slot', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        history.replaceState({}, undefined, '/calendar');
+
+        chai.expect(isActiveInbox()).to.be.eql(true);
+        sinon.assert.calledOnceWithExactly(handlePageTransaction, 'body', slotWillBe.default, 'primary');
+        chai.expect(inboxContainer.style.display).to.be.eql('none');
+        chai.expect(visibilityEvents).to.be.eql([
+            { appId: inboxAppId, appName: '@portal/inbox', slotName: 'body', visible: false },
+        ]);
+
+        handlePageTransaction.resetHistory();
+        chai.expect(isActiveCalendar()).to.be.eql(true);
+        sinon.assert.calledOnceWithExactly(handlePageTransaction, 'body', slotWillBe.rendered, 'primary');
+    });
+
+    it('shows a kept-alive app again without a remount when a route lists it again', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        history.replaceState({}, undefined, '/calendar');
+        isActiveInbox();
+        isActiveCalendar();
+        handlePageTransaction.resetHistory();
+
+        history.replaceState({}, undefined, '/inbox');
+
+        chai.expect(isActiveInbox()).to.be.eql(true);
+        sinon.assert.calledOnceWithExactly(handlePageTransaction, 'body', slotWillBe.default, 'primary');
+        chai.expect(inboxContainer.style.display).to.be.eql('');
+        chai.expect(visibilityEvents[visibilityEvents.length - 1]).to.be.eql({
+            appId: inboxAppId,
+            appName: '@portal/inbox',
+            slotName: 'body',
+            visible: true,
+        });
+
+        handlePageTransaction.resetHistory();
+        chai.expect(isActiveCalendar()).to.be.eql(false);
+        sinon.assert.calledOnceWithExactly(handlePageTransaction, 'body', slotWillBe.removed, 'primary');
+    });
+
+    it('keeps the last route props of a hidden app', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        history.replaceState({}, undefined, '/calendar');
+        isActiveInbox();
+
+        chai.expect(router.getCurrentRouteProps('@portal/inbox', 'body')).to.be.eql({ folder: 'INBOX' });
+    });
+
+    it('keeps the base path of a hidden app, while the visible app gets the current one', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+        const inboxBasePath = router.getCurrentRoute().basePath;
+
+        history.replaceState({}, undefined, '/calendar');
+        isActiveInbox();
+        const calendarBasePath = router.getCurrentRoute().basePath;
+
+        chai.expect(calendarBasePath).to.not.be.eql(inboxBasePath);
+        chai.expect(router.getCurrentBasePath('@portal/inbox', 'body')).to.be.eql(inboxBasePath);
+        chai.expect(router.getCurrentBasePath('@portal/calendar', 'body')).to.be.eql(calendarBasePath);
+    });
+
+    it('dispatches one visibility event per change, however often the activity function runs', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        history.replaceState({}, undefined, '/calendar');
+        isActiveInbox();
+        isActiveInbox();
+        isActiveInbox();
+        chai.expect(visibilityEvents.map((event) => event.visible)).to.be.eql([false]);
+
+        history.replaceState({}, undefined, '/inbox');
+        isActiveInbox();
+        isActiveInbox();
+        chai.expect(visibilityEvents.map((event) => event.visible)).to.be.eql([false, true]);
+    });
+
+    it('remounts a kept-alive app when a route lists it again with other props and no "update" lifecycle', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        history.replaceState({}, undefined, '/calendar');
+        isActiveInbox();
+        isActiveCalendar();
+        handlePageTransaction.resetHistory();
+
+        history.replaceState({}, undefined, '/inbox-sent');
+
+        chai.expect(isActiveInbox()).to.be.eql(false);
+        sinon.assert.calledOnceWithExactly(handlePageTransaction, 'body', slotWillBe.default, 'primary');
+        handlePageTransaction.resetHistory();
+
+        // page ready re-runs the routing: the app is listed again, not kept alive any more, and
+        // single-spa mounts it fresh (same path as the existing "re-mount due to changed props")
+        dispatchIlcPageReadyEvent();
+
+        chai.expect(isActiveInbox()).to.be.eql(true);
+        sinon.assert.calledOnceWithExactly(handlePageTransaction, 'body', slotWillBe.default, 'primary');
+        sinon.assert.calledWithExactly(
+            logger.info,
+            'ILC: Triggering app re-mount for [@portal/inbox] due to changed props.',
+        );
+    });
+
+    it('updates a kept-alive app in place when it has an "update" lifecycle and comes back with other props', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        const onUpdate = sinon.spy();
+        router.addListener(ilcEvents.updateAppInSlot('body', '@portal/inbox'), onUpdate);
+
+        history.replaceState({}, undefined, '/calendar');
+        isActiveInbox();
+        isActiveCalendar();
+
+        history.replaceState({}, undefined, '/inbox-sent');
+
+        chai.expect(isActiveInbox()).to.be.eql(true);
+        chai.expect(inboxContainer.style.display).to.be.eql('');
+        sinon.assert.notCalled(onUpdate);
+
+        dispatchIlcPageReadyEvent();
+
+        sinon.assert.calledOnce(onUpdate);
+    });
+});

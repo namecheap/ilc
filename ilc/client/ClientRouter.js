@@ -6,7 +6,8 @@ import { Router } from '../common/router/Router';
 import * as errors from '../common/router/errors';
 import { isSpecialUrl } from 'ilc-sdk/app';
 import { triggerAppChange } from './navigationEvents';
-import { appIdToNameAndSlot } from '../common/utils';
+import { appIdToNameAndSlot, getSlotEntries, makeAppId } from '../common/utils';
+import { placeAppContainer } from './utils';
 import { FRAGMENT_KIND } from '../common/constants';
 import { slotWillBe } from './TransitionManager/TransitionManager';
 import ilcEvents from './constants/ilcEvents';
@@ -35,6 +36,11 @@ export default class ClientRouter extends EventEmitter {
         prev: {},
         current: {},
     };
+    /**
+     * Kept-alive apps: appId -> { routeProps, mergedProps }. An app lands here when it leaves a slot
+     * whose route entry marked it `keepAlive`; it stays mounted (hidden) until a route lists it again.
+     */
+    #keptAlive = new Map();
 
     constructor(
         ilcConfigRoot,
@@ -74,6 +80,20 @@ export default class ClientRouter extends EventEmitter {
     getPrevRouteProps = (appName, slotName) => this.#getRouteProps(appName, slotName, this.#prevRoute);
     getCurrentRouteProps = (appName, slotName) => this.#getRouteProps(appName, slotName, this.#currentRoute);
 
+    /**
+     * Base path of the route the app is shown on. A hidden kept-alive app keeps the base path of the route it was
+     * last shown on, as it keeps its route props: the current URL belongs to the visible app.
+     */
+    getCurrentBasePath(appName, slotName) {
+        const kept = this.#keptAlive.get(makeAppId(appName, slotName));
+
+        if (kept && !this.#findSlotEntry(this.#currentRoute, slotName, appName)) {
+            return kept.basePath;
+        }
+
+        return this.#currentRoute.basePath;
+    }
+
     match = (url) => this.#router.match(this.#i18n.unlocalizeUrl(url.replace(this.#location.origin, '') || '/'));
     navigateToUrl = (url) => this.#singleSpa.navigateToUrl(this.#i18n.localizeUrl(url));
 
@@ -98,20 +118,42 @@ export default class ClientRouter extends EventEmitter {
 
         const appKind = app.kind;
 
-        const currentRoute = this.getCurrentRoute();
-        const slotKindCurr = currentRoute.slots[slotName] && currentRoute.slots[slotName].kind;
+        const slotKindCurr = this.#findSlotEntry(this.getCurrentRoute(), slotName, appName)?.kind;
         // Here we're also checking previous route as app may throw an error right after URL change.
         // During unmounting for example.
-        const previousRoute = this.getPrevRoute();
-        const slotKindPrev = previousRoute.slots[slotName] && previousRoute.slots[slotName].kind;
+        const slotKindPrev = this.#findSlotEntry(this.getPrevRoute(), slotName, appName)?.kind;
 
         return slotKindCurr || slotKindPrev || appKind;
     }
 
     isAppWithinSlotActive(appName, slotName) {
-        const isActive = this.#activeApps.current[slotName] === appName;
-        const wasActive = this.#activeApps.prev[slotName] === appName;
+        const isActive = (this.#activeApps.current[slotName] || []).includes(appName);
+        const wasActive = (this.#activeApps.prev[slotName] || []).includes(appName);
         const isClientless = this.#ilcConfigRoot.isApplicationClientlessByAppName(appName);
+        const appId = makeAppId(appName, slotName);
+
+        if (wasActive && !isActive && !isClientless && this.#isKeepAliveEntry(this.#prevRoute, slotName, appName)) {
+            // Keep-alive: the app leaves the route but stays mounted, hidden.
+            this.#keptAlive.set(appId, {
+                routeProps: JSON.stringify(this.#findSlotEntry(this.#prevRoute, slotName, appName).props || {}),
+                mergedProps: this.#getRouteProps(appName, slotName, this.#prevRoute),
+                basePath: this.#prevRoute.basePath,
+            });
+            this.#setAppVisibility(appId, appName, slotName, false);
+            this.#handlePageTransition(slotName, slotWillBe.default, this.getRelevantAppKind(appName, slotName));
+
+            return true;
+        }
+
+        if (this.#keptAlive.has(appId)) {
+            if (isActive && !wasActive) {
+                // Keep-alive: a route lists the app again; show it, no remount.
+                this.#setAppVisibility(appId, appName, slotName, true);
+                this.#handlePageTransition(slotName, slotWillBe.default, this.getRelevantAppKind(appName, slotName));
+            }
+
+            return true;
+        }
 
         //Todo: side effect have to be removed from getter
         let willBe = slotWillBe.default;
@@ -133,15 +175,85 @@ export default class ClientRouter extends EventEmitter {
         return isActive;
     }
 
+    /**
+     * Kept-alive apps that the current route lists again with other props than they were hidden with.
+     * They are handled like apps with changed props: "update" lifecycle when the app has one,
+     * otherwise a remount.
+     */
+    #getKeptAliveAppsWithDifferentProps(currentSlots) {
+        return Object.entries(currentSlots).reduce((acc, [slotName, slotValue]) => {
+            const changed = getSlotEntries(slotValue)
+                .filter((entry) => {
+                    const kept = this.#keptAlive.get(makeAppId(entry.appName, slotName));
+                    const wasListed = (this.#activeApps.prev[slotName] || []).includes(entry.appName);
+
+                    return kept !== undefined && !wasListed && kept.routeProps !== JSON.stringify(entry.props || {});
+                })
+                .map((entry) => ({ appName: entry.appName, slotName }));
+
+            return [...acc, ...changed];
+        }, []);
+    }
+
+    #isKeepAliveEntry(route, slotName, appName) {
+        const entry = this.#findSlotEntry(route, slotName, appName);
+
+        return Boolean(entry && entry.keepAlive);
+    }
+
+    #setAppVisibility(appId, appName, slotName, visible) {
+        const container = document.querySelector(`[data-ilc-app-id="${appId.replace(/"/g, '\\"')}"]`);
+
+        if (container && (container.style.display === 'none') === !visible) {
+            // already in the requested state: single-spa runs the activity functions more than once per change
+            return;
+        }
+
+        if (container) {
+            container.style.display = visible ? '' : 'none';
+
+            if (visible) {
+                const orderedAppIds = getSlotEntries(this.#currentRoute.slots[slotName]).map((entry) =>
+                    makeAppId(entry.appName, slotName),
+                );
+                placeAppContainer(container.parentNode, container, orderedAppIds);
+            }
+        }
+
+        this.#debug(`keep-alive: "${appId}" ${visible ? 'shown' : 'hidden'}`);
+
+        window.dispatchEvent(
+            new CustomEvent(ilcEvents.APP_VISIBILITY, {
+                detail: { appId, appName, slotName, visible },
+            }),
+        );
+    }
+
+    /**
+     * The entry of one app in one slot of a route; a slot holds one app or an ordered list of apps.
+     */
+    #findSlotEntry(route, slotName, appName) {
+        const entries = route && route.slots ? getSlotEntries(route.slots[slotName]) : [];
+
+        return entries.find((entry) => entry.appName === appName);
+    }
+
     #getRouteProps(appName, slotName, route) {
         const appConfig = this.#ilcConfigRoot.getConfigForAppByName(appName);
-        const routeConfig = route.slots[slotName];
+        const routeConfig = this.#findSlotEntry(route, slotName, appName);
 
         if (appConfig === undefined) {
             throw new this.errors.RouterError({ message: 'Can not find info about the app.', data: { appName } });
         }
 
         if (routeConfig === undefined) {
+            const kept = this.#keptAlive.get(makeAppId(appName, slotName));
+
+            if (kept) {
+                // A hidden kept-alive app keeps the props it was last shown with.
+                return kept.mergedProps;
+            }
+
             throw new this.errors.RouterError({ message: 'Can not find info about the slot.', data: { slotName } });
         }
         // ILC-level props for the app/slot. `appConfig.props` is the app's registry
@@ -257,7 +369,10 @@ export default class ClientRouter extends EventEmitter {
         this.#activeApps.prev = this.#createActiveAppsObject(this.#prevRoute.slots);
         this.#activeApps.current = this.#createActiveAppsObject(this.#currentRoute.slots);
 
-        const appsWithDifferentProps = this.#getAppsWithDifferentProps(this.#prevRoute.slots, this.#currentRoute.slots);
+        const appsWithDifferentProps = [
+            ...this.#getAppsWithDifferentProps(this.#prevRoute.slots, this.#currentRoute.slots),
+            ...this.#getKeptAliveAppsWithDifferentProps(this.#currentRoute.slots),
+        ];
         if (appsWithDifferentProps.length) {
             const appsToForceRerender = [];
             const updateEventsToTrigger = [];
@@ -270,10 +385,14 @@ export default class ClientRouter extends EventEmitter {
                 if (this.listenerCount(eventUpdateFragment)) {
                     updateEventsToTrigger.push(eventUpdateFragment);
                 } else {
-                    // temporary remove slot with old props, to remove it from DOM
+                    // temporary remove the app with old props from the slot, to remove it from DOM
                     // it will be rendered with new props with the help of "triggerAppChange"
                     appsToForceRerender.push(appName);
-                    delete this.#activeApps.current[slotName];
+                    // a kept-alive app with new props and no "update" lifecycle is remounted like any other
+                    this.#keptAlive.delete(makeAppId(appName, slotName));
+                    this.#activeApps.current[slotName] = this.#activeApps.current[slotName].filter(
+                        (activeAppName) => activeAppName !== appName,
+                    );
                 }
             });
 
@@ -297,37 +416,35 @@ export default class ClientRouter extends EventEmitter {
         }
     };
 
+    /** slot name -> names of the apps the route puts into it, in order */
     #createActiveAppsObject(slots) {
-        return Object.entries(slots).reduce((acc, [slotName, slotApp]) => {
-            acc[slotName] = slotApp.appName;
+        return Object.entries(slots).reduce((acc, [slotName, slotValue]) => {
+            acc[slotName] = getSlotEntries(slotValue).map((entry) => entry.appName);
             return acc;
         }, {});
     }
 
     #getAppsWithDifferentProps(prevSlots, currentSlots) {
-        return Object.entries(prevSlots).reduce((acc, [slotName, prevSlotApp]) => {
-            const currentSlotApp = currentSlots[slotName];
+        return Object.entries(prevSlots).reduce((acc, [slotName, prevSlotValue]) => {
+            const currentEntries = getSlotEntries(currentSlots[slotName]);
 
-            if (!currentSlotApp) {
+            if (!currentEntries.length) {
                 return acc;
             }
 
-            const isTheSameSlotApp = currentSlotApp.appName === prevSlotApp.appName;
-            if (!isTheSameSlotApp) {
-                return acc;
-            }
+            const changed = getSlotEntries(prevSlotValue)
+                .map((prevEntry) => ({
+                    prevEntry,
+                    currentEntry: currentEntries.find((entry) => entry.appName === prevEntry.appName),
+                }))
+                .filter(
+                    ({ prevEntry, currentEntry }) =>
+                        currentEntry !== undefined &&
+                        JSON.stringify(prevEntry.props) !== JSON.stringify(currentEntry.props),
+                )
+                .map(({ currentEntry }) => ({ appName: currentEntry.appName, slotName }));
 
-            if (JSON.stringify(prevSlotApp.props) === JSON.stringify(currentSlotApp.props)) {
-                return acc;
-            }
-
-            return [
-                ...acc,
-                {
-                    appName: currentSlotApp.appName,
-                    slotName,
-                },
-            ];
+            return [...acc, ...changed];
         }, []);
     }
 

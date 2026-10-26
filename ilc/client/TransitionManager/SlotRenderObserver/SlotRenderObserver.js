@@ -28,18 +28,26 @@ export class SlotRenderObserver {
                 status.hasAddedNodes = !!mutationsList.find((mutation) => mutation.addedNodes.length);
             }
 
+            // A hidden child (display: none) does not count: it is either an app that hides itself while it
+            // fetches data, or the container of a kept-alive app that left the route. The slot is ready when
+            // the content that is being rendered is there, not when a hidden neighbour has content.
+            const visibleChildren = Array.from(targetNode.children).filter((node) => node.style.display !== 'none');
+
             // if we have rendered MS to DOM but meaningful content isn't rendered, e.g. due to essential data preload
             if (!status.hasTextOrOpticNodes) {
-                const hasText = !!targetNode.innerText.trim().length;
-                const hasOpticNodes = !!targetNode.querySelector(':not(div):not(span)');
+                const hasOwnText = Array.from(targetNode.childNodes).some(
+                    (node) => node.nodeType === Node.TEXT_NODE && !!node.textContent.trim().length,
+                );
+                const hasText = hasOwnText || visibleChildren.some((node) => !!node.innerText.trim().length);
+                const hasOpticNodes = visibleChildren.some(
+                    (node) => node.matches(':not(div):not(span)') || !!node.querySelector(':not(div):not(span)'),
+                );
                 status.hasTextOrOpticNodes = hasText || hasOpticNodes;
             }
 
             // if we have rendered MS to DOM but temporary hide it for some reason, e.g. to fetch data
             if (!status.isAnyChildVisible) {
-                status.isAnyChildVisible = Array.from(targetNode.children).some(
-                    (node) => node.style.display !== 'none',
-                );
+                status.isAnyChildVisible = visibleChildren.length > 0;
             }
 
             if (!status.hasForcedBlockRemovingNodes) {
