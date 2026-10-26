@@ -146,13 +146,23 @@ export default class ClientRouter extends EventEmitter {
         }
 
         if (this.#keptAlive.has(appId)) {
-            if (isActive && !wasActive) {
-                // Keep-alive: a route lists the app again; show it, no remount.
-                this.#setAppVisibility(appId, appName, slotName, true);
-                this.#handlePageTransition(slotName, slotWillBe.default, this.getRelevantAppKind(appName, slotName));
-            }
+            if (wasActive && !isActive) {
+                // The app leaves a route whose entry does not keep it alive (a keep-alive entry was handled above):
+                // its kept-alive record is dropped and it is unmounted like any other app.
+                this.#keptAlive.delete(appId);
+            } else {
+                if (isActive && !wasActive) {
+                    // Keep-alive: a route lists the app again; show it, no remount.
+                    this.#setAppVisibility(appId, appName, slotName, true);
+                    this.#handlePageTransition(
+                        slotName,
+                        slotWillBe.default,
+                        this.getRelevantAppKind(appName, slotName),
+                    );
+                }
 
-            return true;
+                return true;
+            }
         }
 
         //Todo: side effect have to be removed from getter

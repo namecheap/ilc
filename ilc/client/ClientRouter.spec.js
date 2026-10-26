@@ -1178,6 +1178,11 @@ describe('client router: keep-alive slot entries', () => {
             slots: { body: { appName: '@portal/inbox', keepAlive: true, props: { folder: 'Sent' } } },
         },
         { route: '/calendar', next: false, slots: { body: { appName: '@portal/calendar' } } },
+        {
+            route: '/inbox-archive',
+            next: false,
+            slots: { body: { appName: '@portal/inbox', props: { folder: 'INBOX' } } },
+        },
     ];
 
     const registryConfig = {
@@ -1309,6 +1314,51 @@ describe('client router: keep-alive slot entries', () => {
         isActiveInbox();
         isActiveInbox();
         chai.expect(visibilityEvents.map((event) => event.visible)).to.be.eql([false, true]);
+    });
+
+    it('unmounts a kept-alive app when it leaves a route that does not keep it alive', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+
+        history.replaceState({}, undefined, '/calendar');
+        isActiveInbox();
+        isActiveCalendar();
+
+        // the app comes back on a route that lists it without keepAlive: shown, no remount
+        history.replaceState({}, undefined, '/inbox-archive');
+        chai.expect(isActiveInbox()).to.be.eql(true);
+        chai.expect(inboxContainer.style.display).to.be.eql('');
+        isActiveCalendar();
+        handlePageTransaction.resetHistory();
+
+        // leaving that route unmounts it like any other app: no hide, no third visibility event
+        history.replaceState({}, undefined, '/calendar');
+        chai.expect(isActiveInbox()).to.be.eql(false);
+        chai.expect(isActiveInbox()).to.be.eql(false); // activity functions run more than once per change
+        sinon.assert.calledWithExactly(handlePageTransaction, 'body', slotWillBe.removed, 'primary');
+        chai.expect(inboxContainer.style.display).to.be.eql('');
+        chai.expect(visibilityEvents.map((event) => event.visible)).to.be.eql([false, true]);
+    });
+
+    it('reuses the same container over many hide and show cycles and adds nothing to the DOM', () => {
+        history.replaceState({}, undefined, '/inbox');
+        router = new ClientRouter(configRoot, {}, undefined, singleSpa, handlePageTransaction, undefined, logger);
+        const slot = inboxContainer.parentNode;
+
+        for (let cycle = 0; cycle < 50; cycle++) {
+            history.replaceState({}, undefined, '/calendar');
+            isActiveInbox();
+            isActiveCalendar();
+            history.replaceState({}, undefined, '/inbox');
+            isActiveInbox();
+            isActiveCalendar();
+        }
+
+        chai.expect(slot.querySelectorAll(`[data-ilc-app-id="${inboxAppId}"]`).length).to.be.eql(1);
+        chai.expect(slot.querySelector(`[data-ilc-app-id="${inboxAppId}"]`)).to.equal(inboxContainer);
+        chai.expect(slot.childNodes.length).to.be.eql(1);
+        chai.expect(inboxContainer.style.display).to.be.eql('');
+        chai.expect(visibilityEvents.length).to.be.eql(100);
     });
 
     it('remounts a kept-alive app when a route lists it again with other props and no "update" lifecycle', () => {

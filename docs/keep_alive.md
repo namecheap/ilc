@@ -35,6 +35,9 @@ With the configuration above:
 - A navigation to a route that puts another application into `body` **hides** `@portal/inbox` (its container gets
   `display: none`) and mounts the other application next to it. `@portal/inbox` keeps running.
 - A navigation back to `/inbox/` **shows** `@portal/inbox` again. Its `mount` lifecycle is not called again.
+- `keepAlive` belongs to the route entry, not to the application: when `@portal/inbox` leaves a route that lists it
+  **without** `keepAlive`, it is unmounted as usual. One application can be kept alive on its main routes and dropped
+  when it leaves a route where keeping it makes no sense.
 
 ## How a keep-alive slot is rendered
 
@@ -58,8 +61,8 @@ ILC hides only the container. Markup an application renders **outside** its cont
 appended to `document.body`, a portal, a drawer, stays visible and interactive while the application is hidden,
 because the application itself keeps running. That is how a window opened on one tab follows the user to the next
 tab without being handed over to another application: it keeps its owner, its state and its save loop. Close or move
-such markup in `unmount`; a kept-alive application is unmounted only when ILC remounts it with new props or the page
-is left.
+such markup in `unmount`; a kept-alive application is unmounted only when ILC remounts it with new props, when it
+leaves a route that lists it without `keepAlive`, or when the page is left.
 
 ## Visibility event
 
