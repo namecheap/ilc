@@ -121,7 +121,11 @@ describe('Versioning Unit', () => {
             expect(changeData.data_after).to.equal(
                 JSON.stringify({
                     data: { ...entityData, meta: { first: 'value' }, namespace: null },
-                    related: { [entityRelationType]: [{ ...entityRelationData, props: { tst: 1 } }] },
+                    related: {
+                        [entityRelationType]: [
+                            { ...entityRelationData, props: { tst: 1 }, position: 0, keepAlive: false },
+                        ],
+                    },
                 }),
             );
             expect(changeData.created_by).to.equal(testUser.identifier);

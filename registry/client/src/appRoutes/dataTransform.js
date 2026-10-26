@@ -1,11 +1,16 @@
 export function transformGet(data) {
     if (data.slots) {
-        data.slots = Object.keys(data.slots).map(key => ({
-            ...data.slots[key],
-            props: JSON.stringify(data.slots[key].props),
-            kind: data.slots[key].kind || null,
-            key
-        }));
+        // a slot holds one app (object) or several apps (array): one form row per app, same slot name
+        data.slots = Object.keys(data.slots).flatMap((key) => {
+            const entries = Array.isArray(data.slots[key]) ? data.slots[key] : [data.slots[key]];
+
+            return entries.map((entry) => ({
+                ...entry,
+                props: JSON.stringify(entry.props),
+                kind: entry.kind || null,
+                key,
+            }));
+        });
     }
 
     if (data.meta) {
@@ -25,7 +30,12 @@ export function transformSet(data) {
                 v.props = JSON.parse(v.props);
             }
 
-            acc[key] = v;
+            // rows with the same slot name become one slot with several apps, in row order
+            if (acc[key] === undefined) {
+                acc[key] = v;
+            } else {
+                acc[key] = [].concat(acc[key], v);
+            }
 
             return acc;
         }, {});

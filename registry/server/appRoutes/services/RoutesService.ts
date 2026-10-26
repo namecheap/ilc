@@ -8,13 +8,14 @@ import { handleForeignConstraintError, isUniqueConstraintError } from '../../uti
 import { appendDigest } from '../../util/hmac';
 import { EntityTypes } from '../../versioning/interfaces';
 import type { Versioning } from '../../versioning/services/Versioning';
-import type {
-    AppRouteSlotInput,
-    AppRoutesFilters,
-    CreateAppRouteInput,
-    RouteRow,
-    RouteWithSlotRow,
-    UpdateAppRouteInput,
+import {
+    slotEntries,
+    type AppRouteSlotsInput,
+    type AppRoutesFilters,
+    type CreateAppRouteInput,
+    type RouteRow,
+    type RouteWithSlotRow,
+    type UpdateAppRouteInput,
 } from '../interfaces';
 import type {
     RouteInsert,
@@ -166,8 +167,8 @@ export class RoutesService {
     }
 
     /** Slot apps must exist and must not be wrappers */
-    private async assertSlotApps(slots: Record<string, AppRouteSlotInput>): Promise<void> {
-        const appNames = Object.values(slots).map((slot) => slot.appName);
+    private async assertSlotApps(slots: AppRouteSlotsInput): Promise<void> {
+        const appNames = Object.values(slots).flatMap((slot) => slotEntries(slot).map((entry) => entry.appName));
         if (!appNames.length) {
             return;
         }
@@ -220,6 +221,9 @@ function toUpdateRecord(appRoute: UpdateAppRouteInput, domainId: number | null):
     return 'route' in fields ? fields : { ...fields, route: appRoute.route };
 }
 
-function toSlotRecords(slots: Record<string, AppRouteSlotInput>, routeId: number): RouteSlotInsert[] {
-    return Object.entries(slots).map(([name, slot]) => ({ ...slot, name, routeId }));
+/** One row per app of a slot; `position` is the app's place in the slot's list */
+function toSlotRecords(slots: AppRouteSlotsInput, routeId: number): RouteSlotInsert[] {
+    return Object.entries(slots).flatMap(([name, slot]) =>
+        slotEntries(slot).map((entry, position) => ({ ...entry, name, routeId, position })),
+    );
 }

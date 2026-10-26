@@ -30,7 +30,7 @@ declare module 'knex/types/tables' {
         >;
         route_slots: Knex.CompositeTableType<
             RouteSlotRow,
-            Optional<RouteSlotRow, 'id' | 'props' | 'kind'>,
+            Optional<RouteSlotRow, 'id' | 'props' | 'kind' | 'position' | 'keepAlive'>,
             Partial<Omit<RouteSlotRow, 'id'>>
         >;
         shared_libs: Knex.CompositeTableType<

@@ -20,6 +20,14 @@ export const routeWithSlotColumns = [
     `${Tables.RouteSlots}.appName`,
     `${Tables.RouteSlots}.props`,
     `${Tables.RouteSlots}.kind`,
+    `${Tables.RouteSlots}.position`,
+    `${Tables.RouteSlots}.keepAlive`,
+];
+
+/** The apps of one slot in the order the route lists them */
+export const routeSlotOrder = [
+    { column: `${Tables.RouteSlots}.position`, order: 'asc' as const },
+    { column: `${Tables.RouteSlots}.id`, order: 'asc' as const },
 ];
 
 export class RoutesRepository {
@@ -62,7 +70,8 @@ export class RoutesRepository {
                 RouteWithSlotRow
             >(Tables.Routes, 'id', EntityTypes.routes, routeWithSlotColumns)
             .leftJoin(Tables.RouteSlots, `${Tables.RouteSlots}.routeId`, `${Tables.Routes}.id`)
-            .where('routes.id', routeId);
+            .where('routes.id', routeId)
+            .orderBy(routeSlotOrder);
     }
 
     async specialRouteExists(specialRole: string, domainId: number | null): Promise<boolean> {

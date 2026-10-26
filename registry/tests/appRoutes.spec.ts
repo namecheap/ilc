@@ -61,6 +61,14 @@ const example = {
             template500: 'ncTestTemplateName',
         }),
     },
+    appSecond: {
+        url: '/api/v1/app/',
+        correct: {
+            name: '@portal/ncTestAppSecond',
+            spaBundle: 'http://localhost:1234/ncTestAppSecond.js',
+            kind: 'regular',
+        },
+    },
     appWrapper: {
         url: '/api/v1/app/',
         correct: {
@@ -128,6 +136,10 @@ describe(`Tests ${example.url}`, () => {
             .expect(verifyEmptyResponse(example.template.url));
         await req.post(example.app.url).send(example.app.correct).expect(verifyEmptyResponse(example.app.url));
         await req
+            .post(example.appSecond.url)
+            .send(example.appSecond.correct)
+            .expect(verifyEmptyResponse(example.appSecond.url));
+        await req
             .post(example.appWrapper.url)
             .send(example.appWrapper.correct)
             .expect(verifyEmptyResponse(example.appWrapper.url));
@@ -136,6 +148,7 @@ describe(`Tests ${example.url}`, () => {
     after(async () => {
         await ensureDeleted(req, example.template.url + example.template.correct.name);
         await ensureDeleted(req, example.app.url + encodeURIComponent(example.app.correct.name));
+        await ensureDeleted(req, example.appSecond.url + encodeURIComponent(example.appSecond.correct.name));
         await ensureDeleted(req, example.appWrapper.url + encodeURIComponent(example.appWrapper.correct.name));
     });
 
@@ -183,6 +196,128 @@ describe(`Tests ${example.url}`, () => {
                 .post(example.url)
                 .send({ ...example.correct, route: '   ' })
                 .expect(422, '✖ Too small: expected string to have >=1 characters\n  → at route');
+        });
+
+        it('should create record with several apps in one slot and return them in order', async () => {
+            let routeId;
+
+            try {
+                const twoApps = {
+                    ...example.correct,
+                    slots: {
+                        ncTestRouteSlotName: [
+                            { appName: example.appSecond.correct.name, kind: 'regular', props: { layer: 'core' } },
+                            { appName: app.correct.name, kind: 'primary', props: { ncTestProp: 1 } },
+                        ],
+                    },
+                };
+
+                let response = await req.post(example.url).send(twoApps).expect(200);
+                routeId = response.body.id;
+
+                expect(response.body.slots.ncTestRouteSlotName).deep.equal(twoApps.slots.ncTestRouteSlotName);
+
+                response = await req.get(example.url + routeId).expect(200);
+
+                expect(response.body.slots.ncTestRouteSlotName).deep.equal(twoApps.slots.ncTestRouteSlotName);
+            } finally {
+                routeId && (await ensureDeleted(req, example.url + routeId));
+            }
+        });
+
+        it('should keep the object form for a slot with one app given as a one-element array', async () => {
+            let routeId;
+
+            try {
+                const response = await req
+                    .post(example.url)
+                    .send({
+                        ...example.correct,
+                        slots: { ncTestRouteSlotName: [example.correct.slots.ncTestRouteSlotName] },
+                    })
+                    .expect(200);
+                routeId = response.body.id;
+
+                expect(response.body.slots).deep.equal(example.correct.slots);
+            } finally {
+                routeId && (await ensureDeleted(req, example.url + routeId));
+            }
+        });
+
+        it('should not create record with the same app twice in one slot', async () => {
+            let routeId;
+
+            try {
+                const response = await req.post(example.url).send({
+                    ...example.correct,
+                    slots: {
+                        ncTestRouteSlotName: [{ appName: app.correct.name }, { appName: app.correct.name }],
+                    },
+                });
+
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(422);
+                expect(response.text).to.include('An app can be listed only once in one slot');
+                expect(response.text).to.include('at slots.ncTestRouteSlotName');
+            } finally {
+                routeId && (await ensureDeleted(req, example.url + routeId));
+            }
+        });
+
+        it('should create record with a keep-alive slot entry and expose keepAlive only when set', async () => {
+            let routeId;
+
+            try {
+                const withKeepAlive = {
+                    ...example.correct,
+                    slots: {
+                        ...example.correct.slots,
+                        ncTestRouteSlotKeepAlive: { appName: app.correct.name, kind: 'primary', keepAlive: true },
+                    },
+                };
+
+                let response = await req.post(example.url).send(withKeepAlive).expect(200);
+                routeId = response.body.id;
+
+                expect(response.body.slots.ncTestRouteSlotKeepAlive).to.include({
+                    appName: app.correct.name,
+                    kind: 'primary',
+                    keepAlive: true,
+                });
+                expect(response.body.slots.ncTestRouteSlotName).to.not.have.property('keepAlive');
+
+                response = await req.get(example.url + routeId).expect(200);
+
+                expect(response.body.slots.ncTestRouteSlotKeepAlive.keepAlive).equal(true);
+                expect(response.body.slots.ncTestRouteSlotName).to.not.have.property('keepAlive');
+            } finally {
+                routeId && (await ensureDeleted(req, example.url + routeId));
+            }
+        });
+
+        it('should not create record with a non-boolean keepAlive', async () => {
+            let routeId;
+
+            try {
+                const response = await req.post(example.url).send({
+                    ...example.correct,
+                    slots: {
+                        ncTestRouteSlotName: { appName: app.correct.name, keepAlive: 'yes' },
+                    },
+                });
+
+                if (response.body.id) {
+                    routeId = response.body.id;
+                }
+
+                expect(response.status).equal(422);
+                expect(response.text).to.include('at slots.ncTestRouteSlotName.keepAlive');
+            } finally {
+                routeId && (await ensureDeleted(req, example.url + routeId));
+            }
         });
 
         it('should not create simple record due to required fields', async () => {

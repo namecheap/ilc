@@ -273,6 +273,73 @@ describe('Tests /api/v1/config', () => {
             }
         });
 
+        it('should expose several apps of one slot as an ordered array', async () => {
+            let routeId: number | undefined;
+
+            try {
+                await req.post('/api/v1/template/').send(example.templates).expect(200);
+                await req.post('/api/v1/app/').send(example.apps).expect(200);
+                await req
+                    .post('/api/v1/app/')
+                    .send({ ...example.apps, name: `${example.apps.name}Second`, kind: 'regular' })
+                    .expect(200);
+
+                const slots = {
+                    body: [
+                        { appName: `${example.apps.name}Second`, kind: 'regular', props: { layer: 'core' } },
+                        { appName: example.apps.name, kind: 'primary', props: { page: 'inbox' } },
+                    ],
+                };
+                const responseRoute = await req
+                    .post('/api/v1/route/')
+                    .send({ ...example.appRoutes, slots })
+                    .expect(200);
+                routeId = responseRoute.body.id;
+
+                const response = await req.get('/api/v1/config').expect(200);
+                const route = response.body.routes.find((r: any) => r.routeId === routeId);
+
+                expect(route.slots).deep.equal(slots);
+            } finally {
+                routeId && (await ensureDeleted(req, '/api/v1/route/' + routeId));
+                await ensureDeleted(req, '/api/v1/app/' + encodeURIComponent(`${example.apps.name}Second`));
+                await ensureDeleted(req, '/api/v1/app/' + encodeURIComponent(example.apps.name));
+                await ensureDeleted(req, '/api/v1/template/' + example.templates.name);
+            }
+        });
+
+        it('should expose keepAlive of a slot entry only when set', async () => {
+            let routeId: number | undefined;
+
+            try {
+                await req.post('/api/v1/template/').send(example.templates).expect(200);
+                await req.post('/api/v1/app/').send(example.apps).expect(200);
+
+                const responseRoute = await req
+                    .post('/api/v1/route/')
+                    .send({
+                        ...example.appRoutes,
+                        slots: { body: { appName: example.apps.name, kind: 'primary', keepAlive: true } },
+                    })
+                    .expect(200);
+                routeId = responseRoute.body.id;
+
+                const response = await req.get('/api/v1/config').expect(200);
+                const route = response.body.routes.find((r: any) => r.routeId === routeId);
+
+                expect(route.slots.body).deep.equal({
+                    appName: example.apps.name,
+                    kind: 'primary',
+                    props: {},
+                    keepAlive: true,
+                });
+            } finally {
+                routeId && (await ensureDeleted(req, '/api/v1/route/' + routeId));
+                await ensureDeleted(req, '/api/v1/app/' + encodeURIComponent(example.apps.name));
+                await ensureDeleted(req, '/api/v1/template/' + example.templates.name);
+            }
+        });
+
         it('should expose domainProps and domainSsrProps in config response for matching domain', async () => {
             let routerDomainsId: number | undefined;
             try {
