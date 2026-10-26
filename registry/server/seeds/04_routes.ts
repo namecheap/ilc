@@ -74,6 +74,42 @@ export async function seed(knex: Knex): Promise<any> {
             route: '/missing-slot-in-tpl/',
             next: false,
         },
+        // Several apps per slot and keep-alive (e2e: multiAppSlots, keepAlive)
+        {
+            id: 14,
+            orderPos: 80,
+            route: '/multi/planets/*',
+            next: false,
+            templateName: 'stack',
+        },
+        {
+            id: 15,
+            orderPos: 81,
+            route: '/keep-alive/people/*',
+            next: false,
+            templateName: 'stack',
+        },
+        {
+            id: 16,
+            orderPos: 82,
+            route: '/keep-alive/planets/*',
+            next: false,
+            templateName: 'stack',
+        },
+        {
+            id: 17,
+            orderPos: 83,
+            route: '/multi/ssr/*',
+            next: false,
+            templateName: 'stack',
+        },
+        {
+            id: 18,
+            orderPos: 84,
+            route: '/keep-alive/ssr/*',
+            next: false,
+            templateName: 'stack',
+        },
     ]);
     await knex(table).syncSequence();
 }
