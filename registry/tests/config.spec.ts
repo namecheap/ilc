@@ -2,7 +2,7 @@ import { type Agent } from 'supertest';
 
 import nock from 'nock';
 import { OnPropsUpdateValues, SettingKeys, TrailingSlashValues } from '../server/settings/interfaces';
-import { db, ensureDeleted, expect, request, requestWithAuth } from './common';
+import { ensureDeleted, expect, request, requestWithAuth } from './common';
 import { omit } from './utils/omit';
 import { pick } from './utils/pick';
 
@@ -486,7 +486,7 @@ describe('Tests /api/v1/config', () => {
         it('same routes in single namespace without explicit ordering', async () => {
             const unordered = { ...appRoute('unordered') };
             const ordered = { ...appRoute('ordered'), orderPos: 29 };
-            const { body: response } = await req
+            await req
                 .post('/api/v1/config/validate')
                 .send({
                     ...body,
@@ -891,7 +891,6 @@ describe('Tests /api/v1/config', () => {
         });
 
         it('when orderPos removed should assign highest one', async () => {
-            let routeIds = [];
             let config;
             try {
                 await req
@@ -928,7 +927,7 @@ describe('Tests /api/v1/config', () => {
                     route: '/route2/',
                     orderPos: nextOrderPos,
                 });
-                const res = await req
+                await req
                     .put('/api/v1/config')
                     .send({
                         routes: [
@@ -1062,7 +1061,7 @@ describe('Tests /api/v1/config', () => {
                         },
                     ],
                 };
-                const { body: error } = await req.put('/api/v1/config').send(body).expect(204);
+                await req.put('/api/v1/config').send(body).expect(204);
                 const { body: config } = await req.get('/api/v1/config').expect(200);
                 expect(config.routes).to.have.lengthOf(3);
 

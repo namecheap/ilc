@@ -1,4 +1,4 @@
-import chai from 'chai';
+import * as chai from 'chai';
 import urlJoin from 'url-join';
 
 import supertest, { type Agent } from 'supertest';
@@ -341,7 +341,6 @@ describe(url, () => {
 
         it('should return default setting value if setting supports domain override but not overridden for passed domain', async () => {
             const domainHelper = await createDomain();
-            const domainId = domainHelper.getResponse().id;
 
             try {
                 const queryFilter = encodeURIComponent(JSON.stringify({ domainName: 'test-settings.com' }));

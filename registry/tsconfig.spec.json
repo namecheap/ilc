@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "types": ["node", "mocha"]
+    },
+    // lde holds the local OAuth server that `pnpm start` runs from source through tsx, which does not type-check.
+    // It is not a spec, but tsconfig.app.json would ship it in build/, and this is the nearest config with no output
+    "include": ["server/**/*.spec.ts", "tests/**/*.ts", "typings/**/*.ts", "lde/**/*.ts"]
+}

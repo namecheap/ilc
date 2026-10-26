@@ -1,6 +1,6 @@
 process.env.TZ = 'UTC';
 
-import supertest, { type Agent } from 'supertest';
+import { type Agent } from 'supertest';
 import * as bcrypt from 'bcrypt';
 import { formatDate } from '../server/util/db';
 import { defined } from '../server/util/defined';

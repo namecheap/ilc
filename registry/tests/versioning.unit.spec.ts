@@ -623,7 +623,7 @@ describe('Versioning Unit', () => {
         it('Should revert auth_entity modification while preserving current secret', async () => {
             const entityType = 'auth_entities';
 
-            const createChangeId = await versionService.logOperation(testUser, { type: entityType }, async (trx) => {
+            await versionService.logOperation(testUser, { type: entityType }, async (trx) => {
                 const [inserted] = await db(entityType)
                     .insert({
                         identifier: 'test-revert-auth',

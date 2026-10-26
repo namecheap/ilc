@@ -2,7 +2,7 @@ import { Attributes } from './Attributes';
 import { AllowedAttributes, Resource } from './Resource';
 
 export class ResourcePreload extends Resource {
-    protected static allowedAttributes: AllowedAttributes = {
+    protected static override allowedAttributes: AllowedAttributes = {
         as: [
             'audio',
             'document',

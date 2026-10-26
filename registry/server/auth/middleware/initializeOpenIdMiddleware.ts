@@ -2,7 +2,6 @@ import { type RequestHandler } from 'express';
 import { Logger } from 'ilc-plugins-sdk';
 import passport from 'passport';
 import { AuthProviders } from '../../authEntities/interfaces';
-import { SettingsService } from '../../settings/services/SettingsService';
 import { AuthService } from '../services/AuthService';
 import { OpenIdService } from '../services/OpenIdService';
 import { oidcStrategyFactory } from '../strategies/oidc';

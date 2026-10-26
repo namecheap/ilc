@@ -39,6 +39,8 @@ RUN node -e "require('@newrelic/native-metrics')"
 
 # Both package.json files stay as written by pnpm deploy, they match the lockfiles pnpm deploy created
 COPY --exclude=package.json --exclude=client/package.json ./registry/ /codebase/
+# tsconfig.json extends the workspace base config one level up, as it does in the repository
+COPY tsconfig.base.json /
 
 RUN pnpm build
 

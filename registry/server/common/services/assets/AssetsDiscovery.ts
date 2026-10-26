@@ -6,7 +6,7 @@ import type { Knex } from 'knex';
 import { ManifestData, processManifest } from './assetsManifestProcessor';
 import AssetsDiscoveryWhiteLists from './AssetsDiscoveryWhiteLists';
 import { getLogger } from '../../../util/logger';
-import { parseJSON, safeParseJSON } from '../../../util/json';
+import { parseJSON } from '../../../util/json';
 import { axiosErrorTransformer } from '../../../util/axiosErrorTransformer';
 import { exponentialRetry } from '../../../util/axiosExponentialRetry';
 import newrelic from 'newrelic';

@@ -1,4 +1,4 @@
-import chai from 'chai';
+import * as chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import type { Knex } from 'knex';
 import supertest, { type Agent } from 'supertest';

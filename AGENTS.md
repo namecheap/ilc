@@ -31,6 +31,8 @@ Registry (`cd registry`):
 - PostgreSQL is the only supported DB: start it with `docker compose up postgres`, the defaults in `config/default.ts` match it and `.env` (from `.env.example`) overrides the `DB_*` variables. `pnpm start` at the root needs it too.
 - `pnpm test` drops and recreates the `DB_NAME` database (`ilc` by default, so it wipes a local dev database) through `docker exec postgres`; suites that use `dbFactory()` from `tests/common.ts` get their own `<DB_NAME>_isolated` database.
 - `pnpm migrate:make <name>` creates a Knex migration in `server/migrations`.
+- TypeScript 7. `tsconfig.json` extends the root `tsconfig.base.json` and references `tsconfig.app.json`, which builds the server into `build/`, and `tsconfig.spec.json`, which type-checks the specs. `pnpm typecheck` checks both projects.
+- Tests and `lde/` run from source through `tsx`, which does not type-check: `pnpm test` runs `tsc -p tsconfig.spec.json` first. `tsx` compiles each file the way native ESM would run it: imports are evaluated before the rest of the module, and module exports cannot be stubbed with sinon.
 
 E2E (`cd e2e`, after `pnpm build` at the root): `pnpm start`, `pnpm start:verbose`, `pnpm start:verbose:ui` (visible browser).
 
@@ -42,7 +44,7 @@ Both `ilc/.mocharc*` and `registry/.mocharc*` define a `spec` glob, and a file p
 NODE_ENV=test pnpm exec mocha --no-config --require ts-node/register --timeout 5000 --exit path/to/file.spec.ts
 ```
 
-In `registry`, prefix with `pnpm exec dotenv --` so the `DB_*` variables from `.env` apply.
+In `registry`, use `--require tsx/cjs` instead of `ts-node/register`, and prefix with `pnpm exec dotenv --` so the `DB_*` variables from `.env` apply.
 
 ## Architecture
 
@@ -89,6 +91,8 @@ Code that belongs to no single entity:
 Registry tests (`registry/tests`) drive the HTTP API with supertest. Unit tests of a single module that need no database sit next to it as `<file>.spec.ts`. Cleanups in `finally`/hooks call `ensureDeleted(req, url)` from `tests/common.ts`, which fails when a record is neither deleted nor already absent, instead of leaving it to break later tests.
 
 ## CI and conventions
+
+- TypeScript configs follow the Nx layout: the root `tsconfig.base.json` (from `tsc --init`) holds the shared compiler options, the root `tsconfig.json` references the packages that use it (only `registry` so far), and each package's `tsconfig.json` extends the base and references its `tsconfig.app.json` and `tsconfig.spec.json`.
 
 - Commits follow Conventional Commits (commitlint); husky + lint-staged run Prettier on staged files. Prettier: 4 spaces, single quotes, width 120.
 - `.github/workflows/ci.yml` runs on pull requests and pushes to `develop` (the main branch). ILC and Registry are tested inside their Docker images (amd64; arm64 is built on native `ubuntu-24.04-arm` runners). Each PR also builds and tests the base branch (`dest` matrix entries) for the coverage-diff comment. Only `develop` pushes publish to Docker Hub (`namecheap/ilc`, `namecheap/ilc_registry`, staged through `namecheap/ilc_tmp`); `release.yml` re-tags them on version tags.
