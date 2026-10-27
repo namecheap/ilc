@@ -19,7 +19,7 @@
         "seed:compiled": "knex --knexfile build/config/knexfile.js seed:run",
         "seed:make": "cross-env NODE_OPTIONS=--import=tsx knex --knexfile config/knexfile.ts seed:make -x ts",
         "test": "cross-env-shell NODE_ENV=test \"pnpm reset && tsc -p tsconfig.spec.json && mocha\" ",
-        "test:ci": "pnpm migrate && tsc -p tsconfig.spec.json && cross-env NODE_ENV=test dotenv -- nyc mocha --forbid-only",
+        "test:ci": "pnpm migrate && tsc -p tsconfig.spec.json && cross-env NODE_ENV=test dotenv -- c8 mocha --forbid-only",
         "reset": "dotenv bash ./scripts/reset.sh && pnpm migrate",
         "assetsdiscovery": "cross-env NODE_ENV=production INTERVAL=2000 node -r source-map-support/register ./build/server/runnerAssetsDiscovery.js",
         "assetsdiscovery:dev": "nodemon -e ts,json5 --exec \"tsc -p tsconfig.app.json --incremental && dotenv -- pnpm assetsdiscovery | pino-pretty\" "
@@ -27,7 +27,6 @@
     "author": "",
     "license": "Apache-2.0",
     "devDependencies": {
-        "@istanbuljs/nyc-config-typescript": "^1.0.2",
         "@types/bcrypt": "^6.0.0",
         "@types/chai": "^5.2.3",
         "@types/chai-as-promised": "^8.0.2",
@@ -45,6 +44,7 @@
         "@types/serve-static": "^2.2.0",
         "@types/sinon": "^22.0.0",
         "@types/supertest": "^7.2.1",
+        "c8": "^12.0.0",
         "chai": "6.3.0",
         "chai-as-promised": "^8.0.2",
         "copyfiles": "^2.4.1",
@@ -53,7 +53,6 @@
         "mocha": "^12.0.3",
         "nock": "^15.0.1",
         "nodemon": "^3.1.14",
-        "nyc": "^18.0.0",
         "oauth2-mock-server": "^9.2.0",
         "pino-pretty": "^13.2.0",
         "rimraf": "^6.1.3",
