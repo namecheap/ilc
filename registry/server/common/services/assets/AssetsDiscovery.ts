@@ -1,7 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import urljoin from 'url-join';
 import deepEqual from 'deep-equal';
-import _ from 'lodash';
 
 import knex from '../../../db';
 import manifestProcessor, { ManifestData } from './assetsManifestProcessor';
@@ -125,22 +124,22 @@ export default class AssetsDiscovery {
     private isAssetsEqual(manifestAssets: ManifestData, dbAssets: DbAssetsOnly) {
         // only the keys the manifest publishes are compared (an explicit null among them clears the column): the
         // update never clears a column the manifest stopped publishing, so comparing it too would rewrite the row
-        const published = Object.keys(manifestAssets);
-        return deepEqual(this.normalizeAssets(_.pick(dbAssets, published)), this.normalizeAssets(manifestAssets));
+        const published = Object.keys(manifestAssets) as (keyof DbAssetsOnly)[];
+        return deepEqual(this.normalizeAssets(dbAssets, published), this.normalizeAssets(manifestAssets, published));
     }
 
     // the manifest carries "dependencies" as a JSON string while the row carries it as parsed JSON on postgresql;
     // a column the row does not have (undefined) is the same as a cleared one (null)
-    private normalizeAssets(assets: Partial<DbAssetsOnly>) {
-        const picked: Record<string, unknown> = _.mapValues(
-            _.pick(assets, AssetsDiscoveryWhiteLists[this.tableName]),
-            (value) => value ?? null,
-        );
-        if (picked.dependencies) {
-            picked.dependencies = parseJSON(picked.dependencies);
+    private normalizeAssets(assets: Partial<DbAssetsOnly>, keys: (keyof DbAssetsOnly)[]) {
+        const normalized: Record<string, unknown> = {};
+        for (const key of keys) {
+            normalized[key] = assets[key] ?? null;
+        }
+        if (normalized.dependencies) {
+            normalized.dependencies = parseJSON(normalized.dependencies);
         }
 
-        return picked;
+        return normalized;
     }
 
     private buildAssetsUrl(entity: AssetsDiscoveryEntity) {
