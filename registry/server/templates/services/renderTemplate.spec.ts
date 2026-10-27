@@ -366,8 +366,8 @@ describe('renderTemplate', () => {
             },
         };
 
-        scope.get(include.api.route).reply(function (_uri, _body) {
-            chai.expect(this.req.headers['x-forwarded-for']).to.be.undefined;
+        scope.get(include.api.route).reply((request: Request) => {
+            chai.expect(request.headers.get('x-forwarded-for')).to.be.null;
             return [include.api.response.status, include.api.response.data, include.api.response.headers];
         });
 

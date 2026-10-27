@@ -20,7 +20,8 @@ describe('Protected entities (protectedEntities config)', () => {
     const originalGet = config.get.bind(config);
 
     const enableProtection = (entities = 'router_domains,shared_props,templates') => {
-        configStub = sinon.stub(config, 'get').callsFake((setting: string) => {
+        // config is non-extensible after its first get(), so stub the method on its prototype
+        configStub = sinon.stub(Object.getPrototypeOf(config) as typeof config, 'get').callsFake((setting: string) => {
             return setting === 'protectedEntities' ? entities : originalGet(setting);
         });
     };
