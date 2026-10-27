@@ -11,20 +11,17 @@ function selectVersionedRows(
     entityType: EntityTypes,
     columns: ColumnDescriptor[],
 ) {
-    return db
-        .leftJoin(
-            db
-                .select('entity_id')
-                .from(Tables.Versioning)
-                .max('id', { as: 'versionId' })
-                .where({ entity_type: entityType })
-                .groupBy('entity_id')
-                .as('v'),
-            'v.entity_id',
-            // versioning.entity_id is a string, while some keys are integers
-            db.raw('??::text', [`${table}.${key}`]),
-        )
-        .select([...columns, 'versionId']);
+    // one probe of versioning_entity_idx per row: joining a grouped subquery instead would aggregate the whole
+    // history of the entity type on every read
+    const latestVersionId = db
+        .max('id')
+        .from(`${Tables.Versioning} as v`)
+        .where('v.entity_type', entityType)
+        // versioning.entity_id is a string, while some keys are integers
+        .where('v.entity_id', db.raw('??::text', [`${table}.${key}`]))
+        .as('versionId');
+
+    return db.select([...columns, latestVersionId]);
 }
 
 /**
