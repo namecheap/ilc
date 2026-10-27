@@ -78,6 +78,106 @@ describe('AssetsDiscovery', () => {
         });
     });
 
+    it('should not write to the database when the assets are unchanged', async () => {
+        // a negative interval keeps every app due for a refresh, so each iteration compares them again
+        const discovery = new AssetsDiscovery('apps', { intervalSeconds: -1 });
+        const axiosGet = axios.get as sinon.SinonStub;
+        const manifests: Record<string, object> = {
+            'http://example.com/assets1': { spaBundle: 'bundle.js' }, // no cssBundle, no dependencies
+            'http://example.com/assets2': { spaBundle: 'bundle.js', dependencies: { react: 'react.js' } },
+            'http://example.com/assets3': { spaBundle: 'bundle.js' }, // stopped publishing cssBundle
+        };
+        axiosGet.callsFake((url: string) => Promise.resolve({ data: manifests[url] }));
+
+        await db('apps').insert([
+            {
+                name: 'App1',
+                assetsDiscoveryUrl: 'http://example.com/assets1',
+                spaBundle: 'http://example.com/bundle.js',
+                cssBundle: null,
+                dependencies: null,
+                assetsDiscoveryUpdatedAt: null,
+                kind: 'regular',
+            },
+            {
+                name: 'App2',
+                assetsDiscoveryUrl: 'http://example.com/assets2',
+                spaBundle: 'http://example.com/bundle.js',
+                cssBundle: null,
+                dependencies: JSON.stringify({ react: 'http://example.com/react.js' }),
+                assetsDiscoveryUpdatedAt: null,
+                kind: 'regular',
+            },
+            {
+                name: 'App3',
+                assetsDiscoveryUrl: 'http://example.com/assets3',
+                spaBundle: 'http://example.com/bundle.js',
+                cssBundle: 'http://example.com/old.css',
+                dependencies: null,
+                assetsDiscoveryUpdatedAt: null,
+                kind: 'regular',
+            },
+        ]);
+
+        try {
+            discovery.start(50);
+            await waitFor(async () => axiosGet.callCount >= 6);
+        } finally {
+            discovery.stop();
+        }
+
+        const apps = await db('apps').whereIn('name', ['App1', 'App2', 'App3']);
+        expect(apps).to.have.length(3);
+        for (const app of apps) {
+            expect(app.assetsDiscoveryUpdatedAt).to.be.null;
+        }
+        expect(apps.find((app) => app.name === 'App3')?.cssBundle).to.equal('http://example.com/old.css');
+    });
+
+    it('should clear an asset the manifest explicitly sets to null', async () => {
+        (axios.get as any).resolves({ data: { spaBundle: 'bundle.js', cssBundle: null } });
+
+        await db('apps').insert({
+            name: 'TestApp',
+            assetsDiscoveryUrl: 'http://example.com/assets',
+            spaBundle: 'http://example.com/bundle.js',
+            cssBundle: 'http://example.com/old.css',
+            assetsDiscoveryUpdatedAt: null,
+            kind: 'regular',
+        });
+
+        assetsDiscovery.start(50);
+        await waitFor(async () => {
+            const app = await db('apps').where('name', 'TestApp').first();
+            return app?.assetsDiscoveryUpdatedAt != null;
+        });
+
+        const updatedApp = await db('apps').where('name', 'TestApp').first();
+        expect(updatedApp).to.include({
+            spaBundle: 'http://example.com/bundle.js',
+            cssBundle: null,
+        });
+    });
+
+    it('should not request the manifest again within the interval when the assets are unchanged', async () => {
+        const axiosGet = axios.get as sinon.SinonStub;
+        axiosGet.resolves({ data: { spaBundle: 'bundle.js' } });
+
+        await db('apps').insert({
+            name: 'TestApp',
+            assetsDiscoveryUrl: 'http://example.com/assets',
+            spaBundle: 'http://example.com/bundle.js',
+            assetsDiscoveryUpdatedAt: null,
+            kind: 'regular',
+        });
+
+        assetsDiscovery.start(50);
+        await waitFor(async () => axiosGet.callCount >= 1);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        expect(axiosGet.callCount).to.equal(1);
+    });
+
     it('should update the database for successful requests even if one request fails', async () => {
         const appsToCreate = [
             {

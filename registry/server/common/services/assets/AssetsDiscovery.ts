@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import urljoin from 'url-join';
 import deepEqual from 'deep-equal';
+import _ from 'lodash';
 
 import knex from '../../../db';
 import manifestProcessor, { ManifestData } from './assetsManifestProcessor';
@@ -33,6 +34,10 @@ export default class AssetsDiscovery {
     private stopped = false;
 
     private intervalSeconds: number;
+
+    // last successful manifest check per entity: the row is only written when the assets changed, so this
+    // keeps unchanged entities on the same refresh interval (names of deleted entities linger, harmlessly)
+    private checkedAt = new Map<string, number>();
 
     constructor(
         tableName: keyof typeof AssetsDiscoveryWhiteLists,
@@ -72,8 +77,13 @@ export default class AssetsDiscovery {
             const entities = await this.getEntitiesToRefresh(now);
 
             for (const entity of entities) {
+                const id = entity[this.tableId];
+                if (this.isRecentlyChecked(id, now)) {
+                    continue;
+                }
                 try {
                     await this.processEntity(entity, now);
+                    this.checkedAt.set(id, now);
                 } catch (err: any) {
                     getLogger().error(axiosErrorTransformer(err), `Can't process assets for "${entity[this.tableId]}"`);
                 }
@@ -107,13 +117,30 @@ export default class AssetsDiscovery {
         getLogger().info(`Assets for "${entity.name}" were updated in ${performance.now() - startOfRequest}ms`);
     }
 
+    private isRecentlyChecked(id: string, now: number) {
+        const checkedAt = this.checkedAt.get(id);
+        return checkedAt !== undefined && checkedAt >= now - this.intervalSeconds;
+    }
+
     private isAssetsEqual(manifestAssets: ManifestData, dbAssets: DbAssetsOnly) {
-        const shallowCopyDbAssets = Object.assign({}, dbAssets);
-        if (shallowCopyDbAssets.dependencies) {
-            shallowCopyDbAssets.dependencies = parseJSON(shallowCopyDbAssets.dependencies);
+        // only the keys the manifest publishes are compared (an explicit null among them clears the column): the
+        // update never clears a column the manifest stopped publishing, so comparing it too would rewrite the row
+        const published = Object.keys(manifestAssets);
+        return deepEqual(this.normalizeAssets(_.pick(dbAssets, published)), this.normalizeAssets(manifestAssets));
+    }
+
+    // the manifest carries "dependencies" as a JSON string while the row carries it as parsed JSON on postgresql;
+    // a column the row does not have (undefined) is the same as a cleared one (null)
+    private normalizeAssets(assets: Partial<DbAssetsOnly>) {
+        const picked: Record<string, unknown> = _.mapValues(
+            _.pick(assets, AssetsDiscoveryWhiteLists[this.tableName]),
+            (value) => value ?? null,
+        );
+        if (picked.dependencies) {
+            picked.dependencies = parseJSON(picked.dependencies);
         }
 
-        return deepEqual(shallowCopyDbAssets, manifestAssets);
+        return picked;
     }
 
     private buildAssetsUrl(entity: AssetsDiscoveryEntity) {

@@ -2,6 +2,7 @@ import type { Knex } from 'knex';
 
 import versioningService, { OperationConfig } from '../versioning/services/Versioning';
 import { Tables } from './structure';
+import { isPostgres } from '../util/db';
 import { EntityTypes, VersionedRecord } from '../versioning/interfaces';
 import { User } from '../../typings/User';
 
@@ -54,20 +55,17 @@ export interface VersionedKnex<TRecord extends {} = any, TResult = any> extends 
 
 function selectVersionedRows(knex: VersionedKnex) {
     return function (table: Knex.TableNames, key: string, entityType: EntityTypes, columns: ColumnDescriptor[]) {
-        return knex
-            .leftJoin(
-                knex
-                    .select('entity_id')
-                    .from(Tables.Versioning)
-                    .max('id', { as: 'versionId' })
-                    .where({ entity_type: entityType })
-                    .groupBy('entity_id')
-                    .as('v'),
-                'v.entity_id',
-                // only such syntax works in all sqlite,mysql,postgresql
-                knex.raw(`CAST(${table}.${key} AS char(255))`),
-            )
-            .select([...columns, 'versionId']);
+        // char(255) is the one cast sqlite, mysql and postgresql all accept, but postgresql reads it as bpchar
+        // and then cannot use versioning_entity_idx; varchar keeps this a per-row index probe there
+        const castType = isPostgres(knex) ? 'varchar(255)' : 'char(255)';
+        const latestVersionId = knex
+            .max('id')
+            .from(`${Tables.Versioning} as v`)
+            .where('v.entity_type', entityType)
+            .whereRaw(`v.entity_id = CAST(${table}.${key} AS ${castType})`)
+            .as('versionId');
+
+        return knex.select([...columns, latestVersionId]);
     };
 }
 
