@@ -1,7 +1,7 @@
 import * as singleSpa from 'single-spa';
 import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
 import { makeAppId, getSlotEntries } from '../common/utils';
-import { getSlotElement, getAppContainer, prependSpaCallbacks } from './utils';
+import { getSlotElement, getAppElement, prependSpaCallbacks } from './utils';
 import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
@@ -17,7 +17,7 @@ function getCustomProps(slot, router, appErrorHandlerFactory, sdkFactoryBuilder,
     const customProps = {
         domElementGetter: () =>
             ownContainer
-                ? getAppContainer(slotName, appId, slotAppIdsInOrder(router.getCurrentRoute(), slotName))
+                ? getAppElement(slotName, appId, slotAppIdsInOrder(router.getCurrentRoute(), slotName))
                 : getSlotElement(slotName),
         getCurrentPathProps: () => {
             return router.getCurrentRouteProps(appName, slotName);

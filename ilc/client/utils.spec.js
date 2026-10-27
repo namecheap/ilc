@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { prependSpaCallbacks, getAppContainer, placeAppContainer } from './utils';
+import { prependSpaCallbacks, getAppContainer, getAppElement, placeAppContainer } from './utils';
 
 describe('utils', () => {
     describe('prependSpaCallbacks', () => {
@@ -114,6 +114,38 @@ describe('utils: getAppContainer', () => {
 
         expect(core.querySelector('#ssr')).to.exist;
         expect(document.getElementById('slot-getAppContainer').children.length).to.equal(1);
+    });
+
+    it('finds the server-rendered container when the app markup holds an .app-container', () => {
+        addSlot(
+            '<div data-ilc-app-id="core__at__body"><div class="app-container"><p id="ssr">server markup</p></div></div>',
+        );
+
+        const core = getAppContainer('slot-getAppContainer', 'core__at__body');
+
+        expect(core.getAttribute('data-ilc-app-id')).to.equal('core__at__body');
+        expect(core.querySelector('#ssr')).to.exist;
+        expect(document.querySelectorAll('[data-ilc-app-id="core__at__body"]').length).to.equal(1);
+    });
+
+    it('hands the app its .app-container inside its own container, so server markup hydrates', () => {
+        addSlot('<div data-ilc-app-id="core__at__body"><div class="app-container" id="core-root"></div></div>');
+
+        expect(getAppElement('slot-getAppContainer', 'core__at__body').id).to.equal('core-root');
+    });
+
+    it('does not move a shown container when only hidden apps that the route does not list are around it', () => {
+        const slot = addSlot();
+        const contacts = getAppContainer('slot-getAppContainer', 'contacts__at__slot-getAppContainer');
+        const mail = getAppContainer('slot-getAppContainer', 'mail__at__slot-getAppContainer');
+        contacts.innerHTML = '<div style="height: 50px; overflow: auto"><div style="height: 500px"></div></div>';
+        const list = contacts.firstChild;
+        list.scrollTop = 200;
+
+        placeAppContainer(slot, contacts, ['contacts__at__slot-getAppContainer']);
+
+        expect(Array.from(slot.children)).to.have.ordered.members([contacts, mail]);
+        expect(list.scrollTop).to.equal(200);
     });
 
     it('throws when the slot is not in the page', () => {

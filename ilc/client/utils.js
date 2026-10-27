@@ -1,8 +1,14 @@
-export function getSlotElement(slotName) {
+function getSlotNode(slotName) {
     const slot = document.getElementById(slotName);
     if (slot === null) {
         throw new Error(`Can't find slot element on the page`);
     }
+
+    return slot;
+}
+
+export function getSlotElement(slotName) {
+    const slot = getSlotNode(slotName);
     const appContainer = slot.querySelector('.app-container');
 
     return appContainer || slot;
@@ -21,7 +27,9 @@ export function getSlotElement(slotName) {
  * @returns {HTMLElement}
  */
 export function getAppContainer(slotName, appId, orderedAppIds = []) {
-    const slot = getSlotElement(slotName);
+    // the slot element itself: an app's server markup may hold an `.app-container`, which is the
+    // app's mount point inside its own container, not the parent of the containers
+    const slot = getSlotNode(slotName);
     const existing = Array.from(slot.children).find(
         (node) => node.getAttribute && node.getAttribute('data-ilc-app-id') === appId,
     );
@@ -45,6 +53,13 @@ export function getAppContainer(slotName, appId, orderedAppIds = []) {
 export function placeAppContainer(slot, container, orderedAppIds = []) {
     const appId = container.getAttribute('data-ilc-app-id');
     const position = orderedAppIds.indexOf(appId);
+
+    // Moving a node resets scroll, focus and iframes inside it, so a container already in the slot
+    // moves only when a neighbour that the route lists is on the wrong side of it. Hidden apps the
+    // route does not list do not count.
+    if (container.parentNode === slot && !isMisplaced(slot, container, position, orderedAppIds)) {
+        return;
+    }
     const nextSibling =
         position === -1
             ? null
@@ -60,6 +75,36 @@ export function placeAppContainer(slot, container, orderedAppIds = []) {
     } else if (container.parentNode !== slot || container.nextSibling !== null) {
         slot.appendChild(container);
     }
+}
+
+function isMisplaced(slot, container, position, orderedAppIds) {
+    if (position === -1) {
+        return false;
+    }
+
+    const siblings = Array.from(slot.children);
+    const index = siblings.indexOf(container);
+
+    return siblings.some((node, nodeIndex) => {
+        const siblingId = node !== container && node.getAttribute && node.getAttribute('data-ilc-app-id');
+        const siblingPosition = siblingId ? orderedAppIds.indexOf(siblingId) : -1;
+
+        if (siblingPosition === -1) {
+            return false;
+        }
+
+        return nodeIndex < index ? siblingPosition > position : siblingPosition < position;
+    });
+}
+
+/**
+ * The element an app of an own-container slot mounts into: its `.app-container` when the app's
+ * markup has one (as `getSlotElement` does for a whole slot), so server markup is hydrated in place.
+ */
+export function getAppElement(slotName, appId, orderedAppIds = []) {
+    const container = getAppContainer(slotName, appId, orderedAppIds);
+
+    return container.querySelector('.app-container') || container;
 }
 
 export function prependSpaCallbacks(spaCallbacks, newCallbacks) {
