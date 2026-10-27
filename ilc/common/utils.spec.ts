@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import {
     appIdToNameAndSlot,
+    getSlotEntries,
     makeAppId,
     cloneDeep,
     uniqueArray,
@@ -16,6 +17,25 @@ import {
 } from './utils';
 
 describe('utils', () => {
+    describe('getSlotEntries', () => {
+        it('returns an empty list for a missing slot', () => {
+            expect(getSlotEntries(undefined)).to.deep.equal([]);
+            expect(getSlotEntries(null)).to.deep.equal([]);
+        });
+
+        it('wraps the one-app object form into a list', () => {
+            const slot = { appName: '@portal/inbox' };
+
+            expect(getSlotEntries(slot)).to.deep.equal([slot]);
+        });
+
+        it('returns the list form as is', () => {
+            const slot = [{ appName: '@portal/core' }, { appName: '@portal/inbox' }];
+
+            expect(getSlotEntries(slot)).to.equal(slot);
+        });
+    });
+
     describe('appIdToNameAndSlot', () => {
         it('should parse appId with slot into appName and slotName', () => {
             const result = appIdToNameAndSlot('myapp__at__header');

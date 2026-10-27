@@ -590,3 +590,94 @@ describe('Router', () => {
         });
     });
 });
+
+describe('Router: several apps per slot', () => {
+    const specialRoutes = { 404: { next: false, template: 'errorsTemplate', slots: {}, meta: {} } };
+
+    it('keeps the list form and merges props per app with an earlier "next" route', () => {
+        const router = new Router({
+            routes: [
+                {
+                    route: '*',
+                    next: true,
+                    template: 'commonTemplate',
+                    slots: { body: { appName: 'core', props: { shared: 'fromStar' }, kind: 'essential' } },
+                    meta: {},
+                },
+                {
+                    route: '/inbox/*',
+                    next: false,
+                    slots: {
+                        body: [
+                            { appName: 'core', props: { page: 'inbox' }, kind: 'essential' },
+                            { appName: 'inbox', props: { folder: 'INBOX' }, kind: 'primary' },
+                        ],
+                    },
+                    meta: {},
+                },
+            ],
+            specialRoutes,
+        });
+
+        chai.expect(router.match('/inbox/').slots).to.be.eql({
+            body: [
+                { appName: 'core', props: { shared: 'fromStar', page: 'inbox' }, kind: 'essential' },
+                { appName: 'inbox', props: { folder: 'INBOX' }, kind: 'primary' },
+            ],
+        });
+    });
+
+    it('lets a later one-app slot replace an earlier list', () => {
+        const router = new Router({
+            routes: [
+                {
+                    route: '*',
+                    next: true,
+                    template: 'commonTemplate',
+                    slots: {
+                        body: [
+                            { appName: 'core', props: {}, kind: 'essential' },
+                            { appName: 'nav', props: {}, kind: 'regular' },
+                        ],
+                    },
+                    meta: {},
+                },
+                {
+                    route: '/calendar/*',
+                    next: false,
+                    slots: { body: { appName: 'calendar', props: {}, kind: 'primary' } },
+                    meta: {},
+                },
+            ],
+            specialRoutes,
+        });
+
+        chai.expect(router.match('/calendar/').slots).to.be.eql({
+            body: { appName: 'calendar', props: {}, kind: 'primary' },
+        });
+    });
+
+    it('keeps a list from an earlier "next" route when the later route does not touch the slot', () => {
+        const list = [
+            { appName: 'core', props: {}, kind: 'essential' },
+            { appName: 'nav', props: {}, kind: 'regular' },
+        ];
+        const router = new Router({
+            routes: [
+                { route: '*', next: true, template: 'commonTemplate', slots: { header: list }, meta: {} },
+                {
+                    route: '/page/*',
+                    next: false,
+                    slots: { body: { appName: 'page', props: {}, kind: 'primary' } },
+                    meta: {},
+                },
+            ],
+            specialRoutes,
+        });
+
+        chai.expect(router.match('/page/').slots).to.be.eql({
+            header: list,
+            body: { appName: 'page', props: {}, kind: 'primary' },
+        });
+    });
+});

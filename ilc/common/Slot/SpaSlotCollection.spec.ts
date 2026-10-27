@@ -327,3 +327,31 @@ describe('SpaSlotCollection', () => {
         });
     });
 });
+
+describe('SpaSlotCollection: several apps per slot', () => {
+    it('registers one single-spa application per app of the list, in list order', () => {
+        const configRoot = {
+            getConfigForRoutes: () => [
+                {
+                    routeId: 1,
+                    route: '/inbox/*',
+                    slots: {
+                        body: [
+                            { appName: '@portal/core', props: {}, kind: 'essential' },
+                            { appName: '@portal/inbox', props: {}, kind: 'primary' },
+                        ],
+                    } as unknown as Record<string, RouteSlot>,
+                },
+            ],
+            getConfigForSpecialRoutesByKey: () => ({ routeId: 404, route: 'special:404', slots: {} }),
+            getConfigForAppByName: () => ({ spaBundle: 'https://somewhere.com/bundle.js' }),
+        };
+
+        const collection = new SpaSlotCollection(configRoot as never);
+
+        expect(collection.getSlotCollectionRaw()).to.deep.equal([
+            { appId: 'core__at__body', appName: '@portal/core', slotName: 'body' },
+            { appId: 'inbox__at__body', appName: '@portal/inbox', slotName: 'body' },
+        ]);
+    });
+});

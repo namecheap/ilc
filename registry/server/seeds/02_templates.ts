@@ -13,6 +13,14 @@ export async function seed(knex: Knex): Promise<any> {
             }),
         },
         {
+            // navbar plus a "stack" slot for the multi-app and keep-alive e2e routes; the "body" slot of the
+            // master template keeps its one-app markup for the other specs
+            name: 'stack',
+            content: fs.readFileSync(path.join(__dirname, './data/templates/stack.html'), {
+                encoding: 'utf8',
+            }),
+        },
+        {
             name: '500',
             content: fs.readFileSync(path.join(__dirname, './data/templates/500.html'), {
                 encoding: 'utf8',

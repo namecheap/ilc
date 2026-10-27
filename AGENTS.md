@@ -58,6 +58,10 @@ Fastify app (`app.js`). Every page request goes through `routes/wildcardRequestH
 
 single-spa based. `Client.js` boots the page from the injected config, `ClientRouter.js` handles navigation, `registerSpaApps.js` registers apps per slot, `BundleLoader.ts` loads app bundles through a custom SystemJS build (`ilc/systemjs`), `TransitionManager` handles reroute animations and the `ParcelApi` exposes parcels. `ilc/common` is shared between server and client (router, URL processing, i18n cookie). Client debug logs: `localStorage.debug = 'ILC:*'`.
 
+**Slots hold one app or several.** A route slot value is one app (object, the historical form) or an ordered array of apps; always read it through `getSlotEntries()` from `ilc/common/utils.ts`. `ClientRouter.#activeApps` keeps, per slot, the list of app names the current and previous routes put there; an app is active when it is in the current list (`isAppWithinSlotActive`). Every app of a slot that lists several apps on any route, or that has a `keepAlive` entry on any route, renders into its own `<div data-ilc-app-id>` container inside the slot (`getAppContainer` in `client/utils.js`, `isMultiAppSlot` / `isKeepAliveSlot` in `registerSpaApps.js`); the server emits the same container around SSR fragments of such slots (`<fragment … container="1">` from `tailor/server-router.ts`, written by `tailor/fragment-hooks.js`). One-app slots without keep-alive keep the old markup: the app renders straight into the slot element.
+
+**Keep-alive.** A slot entry with `keepAlive: true` stays mounted when a route stops listing the app: `ClientRouter.#keptAlive` remembers it, its container gets `display: none`, `ilc:app-visibility` is dispatched, and the next route that lists it shows the container without a remount (`docs/keep_alive.md`). Props that changed meanwhile go through the existing "update or remount" path; a hidden app keeps `getCurrentPathProps()` and `getCurrentBasePath()` of the route it was last shown on. The flag belongs to the route entry: an app that leaves a route listing it without `keepAlive` is dropped from `#keptAlive` and unmounted as usual.
+
 Server and client behavior can be extended with plugins (`ilc-plugins-sdk`), listed in `server.plugins.manifest.js` / `client.plugins.manifest.js`.
 Our ownership:
 
@@ -73,7 +77,7 @@ Express 5 + Knex on PostgreSQL (`server/db/index.ts`). Each entity has its own f
 - `services/`: versioned writes, not-found handling and business rules, such as checks that need other tables.
 - `routes/`: one handler factory per file. It takes the service and validates its input with `validated()` (`server/common/validation`).
 
-`server/composition.ts` builds the repositories and services once, and `app.ts` passes them to the routers. Things that span files:
+`server/composition.ts` builds the repositories and services once, and `app.ts` passes them to the routers. Route slots live in `route_slots`, one row per app and slot of a route, ordered by `position`, with a `keepAlive` flag: the API accepts a slot as an object or an array of objects (`appRoutes/interfaces`, `slotEntries()`) and answers with an object for one app and an array for several (`appRoutes/services/prepareAppRoute.ts`, `config/transformConfig.ts`). Things that span files:
 
 - **Versioning**: services wrap entity writes in `versioning.withVersion(user, { type, id }, async (trx) => …)` (`server/versioning/services/Versioning.ts`), which snapshots the record and stores a revertible version. Queries inside the callback must use `trx`. Without `id`, the callback returns the created row, whose id column identifies it. Reads that need the version use `versioning.versionedSelect(...)`.
 - **Errors**: handlers and services may simply throw; Express 5 forwards rejected async handlers to `server/errorHandler`, which maps `httpErrors.*` to 4xx and everything else to a logged 500 with an error ID. A failed validation is an `UnprocessableContent` (422) with Zod's error summary.

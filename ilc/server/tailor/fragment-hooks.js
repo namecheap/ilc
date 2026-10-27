@@ -17,6 +17,11 @@ function asyncStylesLoadTemplate(uri, id) {
 }
 
 function insertStart(logger, stream, attributes, headers) {
+    if (attributes.container) {
+        // several apps in this slot: each fragment gets the container the client renders into
+        stream.write(`<div data-ilc-app-id="${attributes.id}">`);
+    }
+
     const bundleVersionOverrides = _.pick(attributes, ['wrapperPropsOverride']);
 
     const clientIsSupported = !!attributes.spaBundleUrl;
@@ -84,7 +89,10 @@ function insertStart(logger, stream, attributes, headers) {
 }
 
 function insertEnd(stream, attributes, headers, index) {
-    // disabling default TailorX behaviour
+    // default TailorX behaviour stays disabled; only a multi-app slot closes its container
+    if (attributes.container) {
+        stream.write('</div>');
+    }
 }
 
 function fixUri(fragmentAttrs, uri) {

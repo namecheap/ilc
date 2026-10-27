@@ -22,6 +22,18 @@ export function appIdToNameAndSlot(appId: string): NameAndSlot {
     };
 }
 
+/**
+ * A route slot holds one app (object) or several apps rendered in order (array).
+ * Every reader goes through this helper so both forms behave the same.
+ */
+export function getSlotEntries<T>(slotValue: T | T[] | undefined | null): T[] {
+    if (slotValue === undefined || slotValue === null) {
+        return [];
+    }
+
+    return Array.isArray(slotValue) ? slotValue : [slotValue];
+}
+
 export function makeAppId(appName: string, slotName: string): string {
     return `${appName.replace('@portal/', '')}__at__${slotName}`;
 }

@@ -15,6 +15,37 @@ describe('fragment-hooks', () => {
 
             chai.expect(mockStream.readableLength).to.be.equal(0);
         });
+
+        it('should close the app container of a fragment in a multi-app slot', () => {
+            const mockStream = new PassThrough();
+            const fragmentAttrs = getFragmentAttributes({ id: 'inbox__at__body', container: '1' });
+
+            insertEnd(mockStream, fragmentAttrs, {});
+
+            chai.expect(mockStream.read().toString()).to.be.equal('</div>');
+        });
+    });
+
+    describe('insertStart for a multi-app slot', () => {
+        const logger = { warn: () => {}, debug: () => {} };
+
+        it('should open the app container before anything else', () => {
+            const mockStream = new PassThrough();
+            const fragmentAttrs = getFragmentAttributes({ id: 'inbox__at__body', container: '1' });
+
+            insertStart(logger, mockStream, fragmentAttrs, {});
+
+            chai.expect(mockStream.read().toString()).to.be.equal('<div data-ilc-app-id="inbox__at__body">');
+        });
+
+        it('should write nothing for a one-app slot without overrides', () => {
+            const mockStream = new PassThrough();
+            const fragmentAttrs = getFragmentAttributes({ id: 'inbox__at__body' });
+
+            insertStart(logger, mockStream, fragmentAttrs, {});
+
+            chai.expect(mockStream.readableLength).to.be.equal(0);
+        });
     });
 
     describe('insertStart', () => {

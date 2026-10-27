@@ -102,6 +102,11 @@ const InputForm = ({ mode = 'edit', ...props }) => {
                             <AutocompleteInput optionValue="name" validate={[required()]} />
                         </ReferenceInput>
                         <SelectInput resettable source="kind" label="App type" choices={APP_KINDS} />
+                        <BooleanInput
+                            source="keepAlive"
+                            label="Keep alive (stay mounted but hidden when a route no longer lists the app here)"
+                            defaultValue={false}
+                        />
                         <JsonField
                             source="props"
                             label="Properties that will be passed to application at current route"

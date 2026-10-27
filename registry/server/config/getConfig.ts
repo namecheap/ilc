@@ -2,7 +2,7 @@ import { type RequestHandler } from 'express';
 import type { Knex } from 'knex';
 
 import type { RouteWithSlotRow } from '../appRoutes/interfaces';
-import { routeWithSlotColumns } from '../appRoutes/repositories/RoutesRepository';
+import { routeSlotOrder, routeWithSlotColumns } from '../appRoutes/repositories/RoutesRepository';
 import { Tables } from '../db/structure';
 import type { SettingsService } from '../settings/services/SettingsService';
 import { appendDigest } from '../util/hmac';
@@ -26,12 +26,14 @@ export function getConfig({ db, versioning, settingsService }: ConfigReaderDepen
             versioning.versionedSelect(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]),
             versioning.versionedSelect(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.name`]),
             versioning
-                .versionedSelect<
-                    typeof Tables.Routes,
-                    RouteWithSlotRow
-                >(Tables.Routes, 'id', EntityTypes.routes, routeWithSlotColumns)
+                .versionedSelect<typeof Tables.Routes, RouteWithSlotRow>(
+                    Tables.Routes,
+                    'id',
+                    EntityTypes.routes,
+                    routeWithSlotColumns,
+                )
                 .leftJoin('route_slots', 'route_slots.routeId', 'routes.id')
-                .orderBy('orderPos', 'ASC'),
+                .orderBy([{ column: 'orderPos', order: 'asc' }, ...routeSlotOrder]),
             db.select().from('shared_props'), // No versionId for sharedProps in the response
             settingsService.getSettingsForConfig(domainName), // No versionId for settings in the response
             db.select().from(`${Tables.RouterDomains}`),

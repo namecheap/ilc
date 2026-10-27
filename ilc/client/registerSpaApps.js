@@ -1,12 +1,12 @@
 import * as singleSpa from 'single-spa';
 import composeAppSlotPairsToRegister from './composeAppSlotPairsToRegister';
-import { makeAppId } from '../common/utils';
-import { getSlotElement, prependSpaCallbacks } from './utils';
+import { makeAppId, getSlotEntries } from '../common/utils';
+import { getSlotElement, getAppElement, prependSpaCallbacks } from './utils';
 import WrapApp from './WrapApp';
 import AsyncBootUp from './AsyncBootUp';
 import ilcEvents from './constants/ilcEvents';
 
-function getCustomProps(slot, router, appErrorHandlerFactory, sdkFactoryBuilder) {
+function getCustomProps(slot, router, appErrorHandlerFactory, sdkFactoryBuilder, ownContainer = false) {
     const appName = slot.getApplicationName();
     const appId = slot.getApplicationId();
     const slotName = slot.getSlotName();
@@ -15,17 +15,55 @@ function getCustomProps(slot, router, appErrorHandlerFactory, sdkFactoryBuilder)
     const appSdk = sdkInstanceFactory(appId);
 
     const customProps = {
-        domElementGetter: () => getSlotElement(slotName),
+        domElementGetter: () =>
+            ownContainer
+                ? getAppElement(slotName, appId, slotAppIdsInOrder(router.getCurrentRoute(), slotName))
+                : getSlotElement(slotName),
         getCurrentPathProps: () => {
             return router.getCurrentRouteProps(appName, slotName);
         },
-        getCurrentBasePath: () => router.getCurrentRoute().basePath,
+        getCurrentBasePath: () => router.getCurrentBasePath(appName, slotName),
         appId, // Unique application ID, if same app will be rendered twice on a page - it will get different IDs
         errorHandler: appErrorHandlerFactory(appName, slotName),
         appSdk,
     };
 
     return customProps;
+}
+
+/**
+ * A slot that lists several apps on any route gives every app of that slot its own container, on
+ * every route: an app rendering straight into the slot element would wipe its neighbours.
+ */
+export function isMultiAppSlot(ilcConfigRoot, slotName) {
+    const routes = [
+        ...(ilcConfigRoot.getConfigForRoutes() || []),
+        ...Object.values(ilcConfigRoot.getConfigForSpecialRoutes() || {}),
+    ];
+
+    return routes.some((route) => getSlotEntries(route.slots && route.slots[slotName]).length > 1);
+}
+
+/**
+ * A slot in which some route keeps an app alive gives every app of that slot its own container, so a
+ * hidden app and the visible app can coexist in it.
+ */
+export function isKeepAliveSlot(ilcConfigRoot, slotName) {
+    const routes = [
+        ...(ilcConfigRoot.getConfigForRoutes() || []),
+        ...Object.values(ilcConfigRoot.getConfigForSpecialRoutes() || {}),
+    ];
+
+    return routes.some((route) =>
+        getSlotEntries(route.slots && route.slots[slotName]).some((entry) => entry.keepAlive),
+    );
+}
+
+/** app ids of a slot in the order the route lists them */
+export function slotAppIdsInOrder(route, slotName) {
+    const entries = route && route.slots ? getSlotEntries(route.slots[slotName]) : [];
+
+    return entries.map((entry) => makeAppId(entry.appName, slotName));
 }
 
 export function registerApplications(
@@ -50,7 +88,13 @@ export function registerApplications(
         let customProps;
 
         try {
-            customProps = getCustomProps(slot, router, appErrorHandlerFactory, sdkFactoryBuilder);
+            customProps = getCustomProps(
+                slot,
+                router,
+                appErrorHandlerFactory,
+                sdkFactoryBuilder,
+                isMultiAppSlot(ilcConfigRoot, slotName) || isKeepAliveSlot(ilcConfigRoot, slotName),
+            );
         } catch (error) {
             errorHandlerManager.handleError(error);
             // In case of runtime error we should not fail registration of SPA applications

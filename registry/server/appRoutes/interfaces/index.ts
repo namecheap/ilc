@@ -26,11 +26,17 @@ export interface RouteSlotRow {
     appName: string;
     props: JSONObject | null;
     kind: string | null;
+    /** order of the app among the apps of one slot */
+    position: number;
+    /** the app stays mounted (hidden) when a route no longer lists it in this slot */
+    keepAlive: boolean;
 }
 
 /** A route left-joined with its slots, one row per slot: the slot columns are null when the route has no slots */
 export type RouteWithSlotRow = VersionedRecord<
-    RouteRow & { routeId: number } & { [K in 'name' | 'appName' | 'props' | 'kind']: RouteSlotRow[K] | null }
+    RouteRow & { routeId: number } & {
+        [K in 'name' | 'appName' | 'props' | 'kind' | 'position' | 'keepAlive']: RouteSlotRow[K] | null;
+    }
 >;
 
 const slotKinds = ['primary', 'essential', 'regular'] as const;
@@ -42,7 +48,44 @@ export const appRouteSlotSchema = z.strictObject({
         .enum(slotKinds)
         .nullish()
         .transform((kind) => kind ?? null),
+    keepAlive: nullAsMissing(booleanish(z.boolean()).default(false)),
 });
+
+export type AppRouteSlotInput = z.output<typeof appRouteSlotSchema>;
+
+/** Several apps in one slot, rendered in this order; an app may be listed only once per slot */
+const appRouteSlotListSchema = z
+    .array(appRouteSlotSchema)
+    .min(1)
+    .superRefine((entries, ctx) => {
+        const seen = new Set<string>();
+        for (const entry of entries) {
+            if (seen.has(entry.appName)) {
+                ctx.addIssue({ code: 'custom', message: 'An app can be listed only once in one slot' });
+                return;
+            }
+            seen.add(entry.appName);
+        }
+    });
+
+/**
+ * A slot holds one app (the object every route used so far) or an ordered list of apps.
+ * The two forms are validated separately so the object form keeps its error messages.
+ */
+const appRouteSlotValueSchema = z.unknown().transform((value, ctx): AppRouteSlotInput | AppRouteSlotInput[] => {
+    const result = Array.isArray(value) ? appRouteSlotListSchema.safeParse(value) : appRouteSlotSchema.safeParse(value);
+    if (!result.success) {
+        for (const issue of result.error.issues) {
+            // re-issued under the slot's path, so the object form keeps its messages
+            ctx.addIssue({ code: 'custom', message: issue.message, path: [...issue.path] });
+        }
+        return z.NEVER;
+    }
+    return result.data;
+});
+
+export const slotEntries = (slot: AppRouteSlotInput | AppRouteSlotInput[]): AppRouteSlotInput[] =>
+    Array.isArray(slot) ? slot : [slot];
 
 export const appRouteIdSchema = z.coerce.number().int().positive();
 
@@ -67,7 +110,7 @@ const commonAppRoute = {
     route: nullAsMissing(z.string().trim().min(1).max(255).optional()),
     next: nullAsMissing(booleanish(z.boolean()).optional()),
     templateName: templateNameSchema.nullish().transform((templateName) => templateName ?? null),
-    slots: nullAsMissing(z.record(z.string().min(1).max(255), appRouteSlotSchema).default({})),
+    slots: nullAsMissing(z.record(z.string().min(1).max(255), appRouteSlotValueSchema).default({})),
     domainId: nullAsMissing(numeric(z.number()).optional()),
     domainAlias: nullAsMissing(domainAliasSchema.optional()),
     meta: nullAsMissing(jsonObjectSchema.default({})),
@@ -115,7 +158,7 @@ export const appRouteSchema = z
         next: appRoute.specialRole === undefined ? (next ?? false) : undefined,
     }));
 
-export type AppRouteSlotInput = z.output<typeof appRouteSlotSchema>;
+export type AppRouteSlotsInput = Record<string, AppRouteSlotInput | AppRouteSlotInput[]>;
 export type CreateAppRouteInput = z.output<typeof appRouteSchema>;
 export type UpdateAppRouteInput = z.output<typeof partialAppRouteSchema>;
 export type AppRoutesFilters = z.output<typeof appRoutesFiltersSchema>;

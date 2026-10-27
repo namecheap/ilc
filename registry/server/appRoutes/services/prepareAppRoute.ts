@@ -15,7 +15,10 @@ type RouteToRespond = {
     specialRole?: string;
 };
 
-type SlotToRespond = Pick<RouteWithSlotRow, 'appName' | 'props' | 'kind'>;
+type SlotToRespond = Pick<RouteWithSlotRow, 'appName' | 'props' | 'kind'> & { keepAlive?: true };
+
+/** One app stays an object, several apps become an ordered array (the rows arrive in slot order). */
+export const packSlotEntries = <T>(entries: T[]): T | T[] => (entries.length === 1 ? entries[0] : entries);
 
 const prepareRouteToRespond = (appRoute: RouteToRespond) => {
     const base = {
@@ -38,35 +41,33 @@ const prepareRouteToRespond = (appRoute: RouteToRespond) => {
 };
 
 type AppRouteWithSlots = ReturnType<typeof prepareRouteToRespond> & {
-    slots: Record<string, SlotToRespond>;
+    /** one app: object; several apps rendered in order: array */
+    slots: Record<string, SlotToRespond | SlotToRespond[]>;
 };
 
 const prepareRoutesWithSlotsToRespond = (appRoutes: RouteWithSlotRow[]): AppRouteWithSlots[] => {
-    const reduced = appRoutes.reduce<Record<number, AppRouteWithSlots>>((acc, appRoute) => {
-        const { routeId, name, appName, props, kind } = appRoute;
+    type Draft = { route: ReturnType<typeof prepareRouteToRespond>; slots: Record<string, SlotToRespond[]> };
 
-        const prevSavedAppRouteSlots = (routeId in acc && acc[routeId].slots) || {};
-        const nextAppRouteSlot = {
-            appName,
-            props,
-            kind,
-        };
+    const drafts = appRoutes.reduce<Record<number, Draft>>((acc, appRoute) => {
+        const { routeId, name, appName, props, kind, keepAlive } = appRoute;
+        const draft = acc[routeId] ?? { route: prepareRouteToRespond(appRoute), slots: {} };
 
-        const slots = { ...prevSavedAppRouteSlots };
         if (name) {
-            slots[name] = preProcessResponse(nextAppRouteSlot);
+            const entry: SlotToRespond = {
+                ...preProcessResponse({ appName, props, kind }),
+                // additive: present only when set, so existing consumers see no new field by default
+                ...(keepAlive ? { keepAlive: true } : {}),
+            };
+            draft.slots[name] = [...(draft.slots[name] ?? []), entry];
         }
 
-        return {
-            ...acc,
-            [routeId]: {
-                ...prepareRouteToRespond(appRoute),
-                slots,
-            },
-        };
+        return { ...acc, [routeId]: draft };
     }, {});
 
-    return Object.values(reduced);
+    return Object.values(drafts).map(({ route, slots }) => ({
+        ...route,
+        slots: Object.fromEntries(Object.entries(slots).map(([name, entries]) => [name, packSlotEntries(entries)])),
+    }));
 };
 
 export const prepareAppRouteToRespond = (appRoutes: RouteWithSlotRow[]): AppRouteWithSlots =>

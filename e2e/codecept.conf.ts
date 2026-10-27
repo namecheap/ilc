@@ -73,6 +73,7 @@ export const config: CodeceptJS.MainConfig = {
         newsPage: path.join(import.meta.dirname, 'spec', 'pages', 'news.ts'),
         planetsPage: path.join(import.meta.dirname, 'spec', 'pages', 'planets.ts'),
         hooksPage: path.join(import.meta.dirname, 'spec', 'pages', 'hooks.ts'),
+        slotsPage: path.join(import.meta.dirname, 'spec', 'pages', 'slots.ts'),
         common: path.join(import.meta.dirname, 'spec', 'pages', 'common.ts'),
         registryPage: path.join(import.meta.dirname, 'spec', 'pages', 'registry.ts'),
     },

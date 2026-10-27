@@ -2,8 +2,8 @@ import deepmerge from 'deepmerge';
 
 import { RouterError } from '../../common/router/errors';
 import { Router } from '../../common/router/Router';
-import { makeAppId } from '../../common/utils';
-import type { Slot } from '../../common/types/Router';
+import { makeAppId, getSlotEntries } from '../../common/utils';
+import type { Slot, SlotValue } from '../../common/types/Router';
 import type { App } from '../types/RegistryConfig';
 import type { TransformedRegistryConfig } from '../types/Registry';
 import type { IlcState, PatchedHttpRequest } from '../types/PatchedHttpRequest';
@@ -32,6 +32,8 @@ export interface WrapperConf {
 }
 
 interface SsrSlot extends Slot {
+    /** true when the slot renders several apps: the fragment markup gets its own container */
+    container: boolean;
     name: string;
     appId: string;
     appInfo: App;
@@ -90,7 +92,9 @@ export class ServerRouter {
         const route = this.getRoute();
 
         const fragmentsTpl = this.getSsrSlotsList(route.slots, this.apps()).reduce(
-            (res, row) => res + `<fragment id="${row.appId}" slot="${row.name}"></fragment>`,
+            (res, row) =>
+                res +
+                `<fragment id="${row.appId}" slot="${row.name}"${row.container ? ' container="1"' : ''}></fragment>`,
             '',
         );
 
@@ -188,42 +192,80 @@ export class ServerRouter {
         return this.registryConfig?.apps ?? {};
     }
 
-    private getSsrSlotsList = (routeSlots: Record<string, Slot> | undefined, apps: Record<string, App>): SsrSlot[] =>
-        Object.entries(routeSlots ?? {}).reduce<SsrSlot[]>((res, [slotName, slotData]) => {
-            const appName = slotData.appName;
-            const appId = makeAppId(appName, slotName);
-            const appInfo = apps[appName];
+    private getSsrSlotsList = (
+        routeSlots: Record<string, SlotValue> | undefined,
+        apps: Record<string, App>,
+    ): SsrSlot[] =>
+        Object.entries(routeSlots ?? {})
+            .flatMap(([slotName, slotValue]) => {
+                const entries = getSlotEntries(slotValue);
 
-            if (appInfo === undefined) {
-                throw new RouterError({ message: "Can't find info about app.", data: { appName } });
-            }
-            if (appInfo.ssr === undefined) {
-                return res;
-            }
+                return entries.map((slotData) => ({
+                    slotName,
+                    slotData,
+                    container: this.getOwnContainerSlotNames().has(slotName),
+                }));
+            })
+            .reduce<SsrSlot[]>((res, { slotName, slotData, container }) => {
+                const appName = slotData.appName;
+                const appId = makeAppId(appName, slotName);
+                const appInfo = apps[appName];
 
-            let wrapperConf: WrapperConf | null = null;
-
-            if (appInfo.wrappedWith) {
-                const wrapper = apps[appInfo.wrappedWith];
-
-                if (wrapper.ssr === undefined) {
-                    // If wrapper doesn't support SSR - it will be disabled for all wrapped apps
+                if (appInfo === undefined) {
+                    throw new RouterError({ message: "Can't find info about app.", data: { appName } });
+                }
+                if (appInfo.ssr === undefined) {
                     return res;
                 }
 
-                wrapperConf = {
-                    appId: makeAppId(appInfo.wrappedWith, slotName),
-                    name: appInfo.wrappedWith,
-                    ...wrapper.ssr,
-                    props: wrapper.props,
-                    spaBundleUrl: wrapper.spaBundle,
-                };
-            }
+                let wrapperConf: WrapperConf | null = null;
 
-            res.push({ name: slotName, ...slotData, appId, appInfo, wrapperConf });
+                if (appInfo.wrappedWith) {
+                    const wrapper = apps[appInfo.wrappedWith];
 
-            return res;
-        }, []);
+                    if (wrapper.ssr === undefined) {
+                        // If wrapper doesn't support SSR - it will be disabled for all wrapped apps
+                        return res;
+                    }
+
+                    wrapperConf = {
+                        appId: makeAppId(appInfo.wrappedWith, slotName),
+                        name: appInfo.wrappedWith,
+                        ...wrapper.ssr,
+                        props: wrapper.props,
+                        spaBundleUrl: wrapper.spaBundle,
+                    };
+                }
+
+                res.push({ name: slotName, ...slotData, appId, appInfo, wrapperConf, container });
+
+                return res;
+            }, []);
+
+    /**
+     * Slots whose apps render into their own containers: slots in which some route lists several
+     * apps, or keeps an app alive. The rule is slot-wide, on every route, so the client and the
+     * server agree on the markup and a hidden app can coexist with whatever app a route shows.
+     */
+    private getOwnContainerSlotNames(): Set<string> {
+        const routes = [
+            ...(this.registryConfig?.routes ?? []),
+            ...Object.values(this.registryConfig?.specialRoutes ?? {}),
+        ];
+        const names = new Set<string>();
+
+        routes.forEach((route) => {
+            Object.entries(route.slots ?? {}).forEach(([slotName, slotValue]) => {
+                const entries = getSlotEntries(slotValue);
+
+                if (entries.length > 1 || entries.some((entry) => entry.keepAlive)) {
+                    names.add(slotName);
+                }
+            });
+        });
+
+        return names;
+    }
 
     private getIlcState = (): IlcState => this.request.ilcState || {};
 }

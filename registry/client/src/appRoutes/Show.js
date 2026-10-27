@@ -85,6 +85,7 @@ export default ({ permissions, hasList, hasEdit, hasShow, hasCreate, ...props })
                                     emptyText={EMPTY_TEXT}
                                     choices={APP_KINDS}
                                 />
+                                <BooleanField source="keepAlive" label="Keep alive" defaultValue={false} />
                                 <JsonFieldShow
                                     source="props"
                                     label="Properties that will be passed to application at current route"

@@ -1,4 +1,5 @@
 const { Slot } = require('./Slot');
+const { getSlotEntries } = require('../utils');
 /**
  * @class SlotCollection
  */
@@ -14,15 +15,18 @@ class SlotCollection {
      * @param {Object} registryConfig
      */
     constructor(slots, { apps }) {
-        this.#slotCollection = Object.keys(slots).map((key) => {
-            return new Slot(
-                {
-                    ...slots[key],
-                    slotName: key,
-                },
-                apps,
-            );
-        });
+        this.#slotCollection = Object.keys(slots).flatMap((key) =>
+            getSlotEntries(slots[key]).map(
+                (entry) =>
+                    new Slot(
+                        {
+                            ...entry,
+                            slotName: key,
+                        },
+                        apps,
+                    ),
+            ),
+        );
     }
 
     /**

@@ -5,6 +5,7 @@ import { appendDigest } from '../util/hmac';
 import { VersionedRecord } from '../versioning/interfaces';
 import type { RouterDomainsRow } from '../routerDomains/interfaces';
 import type { RouteWithSlotRow } from '../appRoutes/interfaces';
+import { packSlotEntries } from '../appRoutes/services/prepareAppRoute';
 import { transformSpecialRoutesForConsumer } from '../appRoutes/services/transformSpecialRoutes';
 import type { SharedLibRow } from '../sharedLibs/interfaces';
 import type { SharedPropsRow } from '../sharedProps/interfaces';
@@ -105,6 +106,8 @@ type AppSlotDto = {
     appName: string;
     props: Record<string, any>;
     kind: string;
+    /** present only when set */
+    keepAlive?: true;
 };
 export type AppRouteDto = {
     routeId: number;
@@ -116,7 +119,8 @@ export type AppRouteDto = {
     orderPos?: number;
     versionId: string;
     meta: Record<string, any>;
-    slots: Record<string, AppSlotDto>;
+    /** one app: object; several apps rendered in order: array */
+    slots: Record<string, AppSlotDto | AppSlotDto[]>;
 };
 
 function transformAppRouteSlot(dbRoute: RouteWithSlotRow): AppSlotDto {
@@ -125,8 +129,22 @@ function transformAppRouteSlot(dbRoute: RouteWithSlotRow): AppSlotDto {
         appName: dbRoute.appName!,
         props: dbRoute.props !== null ? parseJSON(dbRoute.props) : {},
         kind: dbRoute.kind!,
+        ...(dbRoute.keepAlive ? { keepAlive: true } : {}),
     };
 }
+
+type RouteDraft = Omit<AppRouteDto, 'slots'> & { slots: Record<string, AppSlotDto[]> };
+
+const addSlotEntry = (draft: RouteDraft, dbRoute: RouteWithSlotRow) => {
+    if (dbRoute.name !== null) {
+        draft.slots[dbRoute.name] = [...(draft.slots[dbRoute.name] ?? []), transformAppRouteSlot(dbRoute)];
+    }
+};
+
+const packRoute = (draft: RouteDraft): AppRouteDto => ({
+    ...draft,
+    slots: Object.fromEntries(Object.entries(draft.slots).map(([name, entries]) => [name, packSlotEntries(entries)])),
+});
 
 export function transformRoutes(
     dbRoutes: RouteWithSlotRow[],
@@ -135,18 +153,16 @@ export function transformRoutes(
     routes: AppRouteDto[];
     specialRoutes: AppRouteDto[];
 } {
-    return dbRoutes.reduce(
+    const drafts = dbRoutes.reduce(
         (acc, dbRoute) => {
             const transformedRoute = transformSpecialRoutesForConsumer(dbRoute);
             const collection = transformedRoute.specialRole ? acc.specialRoutes : acc.routes;
             const routeDto = collection.find(({ routeId }) => routeId === dbRoute.routeId);
             if (routeDto) {
-                if (dbRoute.name !== null) {
-                    routeDto.slots[dbRoute.name] = transformAppRouteSlot(dbRoute);
-                }
+                addSlotEntry(routeDto, dbRoute);
             } else {
-                const newAppRouteDto = {
-                    slots: {} as Record<string, AppSlotDto>,
+                const newAppRouteDto: RouteDraft = {
+                    slots: {},
                     meta: (transformedRoute.meta ? parseJSON(transformedRoute.meta) : {}) as Record<string, any>,
                     routeId: dbRoute.routeId,
                     route: transformedRoute.route,
@@ -160,19 +176,19 @@ export function transformRoutes(
                     orderPos: transformedRoute.orderPos ?? undefined,
                     versionId: appendDigest(dbRoute.versionId, 'route'),
                 };
-                if (dbRoute.name !== null) {
-                    newAppRouteDto.slots[dbRoute.name] = transformAppRouteSlot(dbRoute);
-                }
+                addSlotEntry(newAppRouteDto, dbRoute);
                 collection.push(newAppRouteDto);
             }
 
             return acc;
         },
         {
-            routes: [] as AppRouteDto[],
-            specialRoutes: [] as AppRouteDto[],
+            routes: [] as RouteDraft[],
+            specialRoutes: [] as RouteDraft[],
         },
     );
+
+    return { routes: drafts.routes.map(packRoute), specialRoutes: drafts.specialRoutes.map(packRoute) };
 }
 
 type DynamicLibDto = {
