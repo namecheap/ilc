@@ -1,6 +1,6 @@
 {
     "spec": "**/*.spec.ts",
-    "require": "ts-node/register",
+    "require": "tsx/cjs",
     "timeout": 5000,
     "exclude": "**/node_modules/**",
     "exit": true

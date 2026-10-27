@@ -1,5 +1,5 @@
 import { ConnectSessionKnexStore } from 'connect-session-knex';
-import { Express, RequestHandler, urlencoded } from 'express';
+import { Express, RequestHandler } from 'express';
 import session from 'express-session';
 import { Logger } from 'ilc-plugins-sdk';
 import passport from 'passport';

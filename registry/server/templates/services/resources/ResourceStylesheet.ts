@@ -1,7 +1,7 @@
 import { AllowedAttributes, Resource } from './Resource';
 
 export class ResourceStylesheet extends Resource {
-    protected static allowedAttributes: AllowedAttributes = {
+    protected static override allowedAttributes: AllowedAttributes = {
         title: null,
         media: null,
         ...Resource.allowedAttributes,

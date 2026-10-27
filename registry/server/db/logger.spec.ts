@@ -1,30 +1,26 @@
 import sinon from 'sinon';
 import { knexLoggerAdapter } from './logger';
-import * as loggerModule from '../util/logger';
+import { getPluginManagerInstance, loadPlugins } from '../util/pluginManager';
 
 describe('Database Logger', () => {
     let loggerMock: {
         warn: sinon.SinonStub;
         error: sinon.SinonStub;
         debug: sinon.SinonStub;
-        fatal: sinon.SinonStub;
-        info: sinon.SinonStub;
-        trace: sinon.SinonStub;
     };
 
-    beforeEach(async () => {
-        // Create mock logger
-        loggerMock = {
-            warn: sinon.stub(),
-            error: sinon.stub(),
-            debug: sinon.stub(),
-            fatal: sinon.stub(),
-            info: sinon.stub(),
-            trace: sinon.stub(),
-        };
+    before(() => {
+        loadPlugins();
+    });
 
-        // Stub the module's getLogger function
-        sinon.stub(loggerModule, 'getLogger').returns(loggerMock);
+    beforeEach(async () => {
+        // Stub the reporting plugin logger that getLogger() wraps
+        const pluginLogger = getPluginManagerInstance().getReportingPlugin().logger;
+        loggerMock = {
+            warn: sinon.stub(pluginLogger, 'warn'),
+            error: sinon.stub(pluginLogger, 'error'),
+            debug: sinon.stub(pluginLogger, 'debug'),
+        };
     });
 
     afterEach(() => {
@@ -36,7 +32,7 @@ describe('Database Logger', () => {
         adapter.warn('test warning message');
 
         sinon.assert.calledOnce(loggerMock.warn);
-        sinon.assert.calledWith(loggerMock.warn, 'test warning message');
+        sinon.assert.calledWith(loggerMock.warn, { asyncContext: 'none' }, 'test warning message');
     });
 
     it('should log error messages', () => {
@@ -44,7 +40,7 @@ describe('Database Logger', () => {
         adapter.error('test error message');
 
         sinon.assert.calledOnce(loggerMock.error);
-        sinon.assert.calledWith(loggerMock.error, 'test error message');
+        sinon.assert.calledWith(loggerMock.error, { asyncContext: 'none' }, 'test error message');
     });
 
     it('should log deprecation warnings', () => {
@@ -52,7 +48,7 @@ describe('Database Logger', () => {
         adapter.deprecate('test deprecation message');
 
         sinon.assert.calledOnce(loggerMock.warn);
-        sinon.assert.calledWith(loggerMock.warn, 'test deprecation message');
+        sinon.assert.calledWith(loggerMock.warn, { asyncContext: 'none' }, 'test deprecation message');
     });
 
     it('should log debug messages', () => {
@@ -60,6 +56,6 @@ describe('Database Logger', () => {
         adapter.debug('test debug message');
 
         sinon.assert.calledOnce(loggerMock.debug);
-        sinon.assert.calledWith(loggerMock.debug, 'test debug message');
+        sinon.assert.calledWith(loggerMock.debug, { asyncContext: 'none' }, 'test debug message');
     });
 });

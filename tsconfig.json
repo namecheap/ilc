@@ -1,0 +1,6 @@
+{
+    // Solution file for editors, scripts use the project configs directly.
+    // A workspace package joins by extending tsconfig.base.json and getting a reference here.
+    "files": [],
+    "references": [{ "path": "./registry" }]
+}

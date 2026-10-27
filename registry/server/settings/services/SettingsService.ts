@@ -10,7 +10,6 @@ import type { Versioning } from '../../versioning/services/Versioning';
 import {
     AllowedSettingKeysForDomains,
     DomainSettingRow,
-    Scope,
     SettingKeys,
     SettingParsed,
     SettingRaw,
@@ -93,6 +92,8 @@ export class SettingsService {
         if (defaultValue !== '') {
             return defaultValue;
         }
+
+        return undefined;
     }
 
     async updateRootSetting(

@@ -1,4 +1,4 @@
-import 'newrelic';
+import './preload';
 
 import AssetsDiscovery from './common/services/assets/AssetsDiscovery';
 import { dbFactory, knexConfig } from './db';

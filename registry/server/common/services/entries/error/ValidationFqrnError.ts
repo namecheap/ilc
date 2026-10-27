@@ -1,5 +1,5 @@
 import { EntryError } from './EntryError';
 
 export class ValidationFqrnError extends EntryError {
-    public code = 422;
+    public override code = 422;
 }

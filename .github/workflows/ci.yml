@@ -437,10 +437,6 @@ jobs:
                   oldCodeCoveragePath: ./dest-client-side-tests-artifacts/coverage-summary.json
                   newCodeCoveragePath: ./src-client-side-tests-artifacts/coverage-summary.json
                   total_delta: 10
-            - name: Build coverage report for registry
-              run: |
-                  bash .github/workflows/registry-coverage-report.sh dest
-                  bash .github/workflows/registry-coverage-report.sh src
             - name: Create coverage report for registry
               id: registry-coverage-report
               if: '!cancelled()'

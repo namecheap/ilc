@@ -2,7 +2,7 @@ import { Attributes } from './Attributes';
 import { AllowedAttributes, Resource } from './Resource';
 
 export class ResourceScript extends Resource {
-    protected static allowedAttributes: AllowedAttributes = {
+    protected static override allowedAttributes: AllowedAttributes = {
         type: null,
         nonce: null,
         nomodule: ['nomodule'],
