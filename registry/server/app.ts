@@ -6,7 +6,7 @@ import { OPENID_CALLBACK_URL, useAuth } from './auth';
 import errorHandler from './errorHandler';
 import { loadPlugins } from './util/pluginManager';
 import * as routes from './routes/routes';
-import pong from './util/ping';
+import { ping } from './routes/ping';
 import { contextMiddleware } from './middleware/context';
 import { logConnectionString } from './util/db';
 import { getLogger } from './util/logger';
@@ -47,7 +47,7 @@ export default async (db: Knex, withAuth: boolean = true): Promise<Application> 
         ),
     );
 
-    app.get(healthCheckUrl, pong);
+    app.get(healthCheckUrl, ping);
 
     app.use('/', serveStatic('client/dist'));
 

@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 
-import preProcessResponse from '../../common/services/preProcessResponse';
+import { preProcessResponse } from '../../common/services/preProcessResponse';
 import { validated } from '../../common/validation/validated';
 import { authEntityParamsSchema, updateSchema } from '../interfaces';
 import type { AuthEntitiesService } from '../services/AuthEntitiesService';

@@ -1,9 +1,9 @@
-import _ from 'lodash';
 import nock from 'nock';
 import { type Agent } from 'supertest';
 import { ensureDeleted, expect, request, requestWithAuth } from './common';
 import { muteConsole, unmuteConsole } from './utils/console';
 import { makeFilterQuery } from './utils/makeFilterQuery';
+import { omit } from './utils/omit';
 
 const assetsDiscovery = {
     host: 'http://127.0.0.1:1234',
@@ -71,7 +71,7 @@ describe(`Tests ${example.url}`, () => {
         it('should not create record without a required fields', async () => {
             const response = await req
                 .post(example.url)
-                .send(_.omit(example.correct, ['name', 'spaBundle']))
+                .send(omit(example.correct, ['name', 'spaBundle']))
                 .expect(
                     422,
                     '✖ Invalid input: expected string, received undefined\n  → at name\n' +
@@ -231,7 +231,7 @@ describe(`Tests ${example.url}`, () => {
                 expect(records).to.be.an('array').that.is.not.empty;
                 expect(records.length).to.be.equal(1);
                 expect(records[0].versionId).to.match(/^\d+\.[-_a-zA-Z0-9]{32}$/);
-                expect(_.omit(records[0], 'versionId')).to.deep.equal({ ...example.libsList[1] });
+                expect(omit(records[0], 'versionId')).to.deep.equal({ ...example.libsList[1] });
             } finally {
                 for (const lib of example.libsList) {
                     await req.delete(example.url + lib.name).expect(204, '');
@@ -249,7 +249,7 @@ describe(`Tests ${example.url}`, () => {
                 // which changes the natural scan order
                 await req
                     .put(example.url + example.libsList[0].name)
-                    .send(_.omit({ ...example.libsList[0], spaBundle: 'https://example.com/lib0-updated.js' }, 'name'))
+                    .send(omit({ ...example.libsList[0], spaBundle: 'https://example.com/lib0-updated.js' }, 'name'))
                     .expect(200);
 
                 const { body: records } = await req.get(example.url).expect(200);
@@ -289,7 +289,7 @@ describe(`Tests ${example.url}`, () => {
             const incorrect = { name: 123 };
             const response = await req
                 .put(example.url + incorrect.name)
-                .send(_.omit(example.updated, 'name'))
+                .send(omit(example.updated, 'name'))
                 .expect(404, 'Shared library with name "123" is not exist');
 
             expect(response.body).deep.equal({});
@@ -323,7 +323,7 @@ describe(`Tests ${example.url}`, () => {
                 const response = await req
                     .put(example.url + example.correct.name)
                     .send({
-                        ..._.omit(example.updated, 'name'),
+                        ...omit(example.updated, 'name'),
                         ...incorrect,
                     })
                     .expect(
@@ -344,7 +344,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req
                     .put(example.url + example.correct.name)
-                    .send(_.omit(example.updated, 'name'))
+                    .send(omit(example.updated, 'name'))
                     .expect(200);
 
                 expect(response.body).deep.equal(example.updated);
@@ -363,7 +363,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req
                     .put(example.url + example.correct.name)
-                    .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
+                    .send(omit(example.correctWithAssetsDiscoveryUrl, 'name'))
                     .expect(
                         422,
                         `"assetsDiscoveryUrl" ${example.assetsDiscovery.host}${example.assetsDiscovery.path} is not available. Check the url via browser manually.`,
@@ -384,7 +384,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req
                     .put(example.url + example.correct.name)
-                    .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'))
+                    .send(omit(example.correctWithAssetsDiscoveryUrl, 'name'))
                     .expect(422, '✖ Invalid input: expected string, received undefined\n  → at spaBundle');
 
                 expect(response.body).deep.equal({});
@@ -401,7 +401,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req
                     .put(example.url + example.correct.name)
-                    .send(_.omit(example.correctWithAssetsDiscoveryUrl, 'name'));
+                    .send(omit(example.correctWithAssetsDiscoveryUrl, 'name'));
 
                 const expected = {
                     ...example.correctWithAssetsDiscoveryUrl,

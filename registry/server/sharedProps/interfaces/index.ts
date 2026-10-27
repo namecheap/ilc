@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { JSONObject } from '../../common/services/json';
+import type { JSONObject } from '../../util/json';
 import { jsonObjectSchema, versionIdSchema } from '../../common/validation/schemas';
 
 export interface SharedPropsRow {

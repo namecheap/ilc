@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { domainAliasSchema } from '../../routerDomains/interfaces';
 
-import type { JSONObject } from '../../common/services/json';
+import type { JSONObject } from '../../util/json';
 import { booleanish, jsonObjectSchema, nullAsMissing, numeric, versionIdSchema } from '../../common/validation/schemas';
 import { templateNameSchema } from '../../templates/interfaces';
 import type { VersionedRecord } from '../../versioning/interfaces';

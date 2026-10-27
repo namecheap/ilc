@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 
-import preProcessResponse from '../../common/services/preProcessResponse';
+import { preProcessResponse } from '../../common/services/preProcessResponse';
 import { validated } from '../../common/validation/validated';
 import { sharedLibSchema } from '../interfaces';
 import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';

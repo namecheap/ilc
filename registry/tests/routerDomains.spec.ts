@@ -1,6 +1,6 @@
-import _ from 'lodash';
 import { type Agent } from 'supertest';
 import { ensureDeleted, expect, request, requestWithAuth } from './common';
+import { omit } from './utils/omit';
 
 const example = {
     url: '/api/v1/router_domains/',
@@ -68,7 +68,7 @@ describe(`Tests ${example.url}`, () => {
         it('should not create record without a required fields', async () => {
             await req
                 .post(example.url)
-                .send(_.omit(example.correct, ['domainName', 'template500']))
+                .send(omit(example.correct, ['domainName', 'template500']))
                 .expect(
                     422,
                     '✖ Invalid input: expected string, received undefined\n  → at domainName\n' +

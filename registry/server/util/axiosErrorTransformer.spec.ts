@@ -1,7 +1,6 @@
 import { AxiosError, AxiosHeaders } from 'axios';
 import { expect } from 'chai';
-import { axiosErrorTransformer, isAxiosError } from '../../server/util/axiosErrorTransformer';
-import { sanitizeHeaders, truncateBody } from '../../server/util/helpers';
+import { axiosErrorTransformer, isAxiosError, sanitizeHeaders, truncateBody } from './axiosErrorTransformer';
 
 describe('axiosErrorTransformer', () => {
     describe('isAxiosError', () => {

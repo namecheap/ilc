@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { domainAliasSchema } from '../../routerDomains/interfaces';
 
-import type { JSONObject } from '../../common/services/json';
+import type { JSONObject } from '../../util/json';
 import { jsonObjectSchema, nullAsMissing, numeric, urlSchema, versionIdSchema } from '../../common/validation/schemas';
 
 export const appKinds = ['primary', 'essential', 'regular', 'wrapper'] as const;

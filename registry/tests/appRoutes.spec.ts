@@ -1,7 +1,8 @@
-import _ from 'lodash';
 import { db, ensureDeleted, expect, request, requestWithAuth } from './common';
 import { makeSpecialRoute } from '../server/appRoutes/services/transformSpecialRoutes';
 import supertest from 'supertest';
+import { omit } from './utils/omit';
+import { omitNil } from './utils/omitNil';
 
 const app = {
     url: '/api/v1/app/',
@@ -149,7 +150,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const expectedRoute = {
                     id: routeId,
-                    ..._.omitBy(example.correct, _.isNil),
+                    ...omitNil(example.correct),
                     versionId: response.body.versionId,
                 };
                 expect(response.body).deep.equal(expectedRoute);
@@ -189,7 +190,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                const response = await req.post(example.url).send(_.omit(example.correct, ['route', 'slots', 'next']));
+                const response = await req.post(example.url).send(omit(example.correct, ['route', 'slots', 'next']));
 
                 if (response.body.id) {
                     routeId = response.body.id;
@@ -208,7 +209,7 @@ describe(`Tests ${example.url}`, () => {
 
             try {
                 const response = await req.post(example.url).send({
-                    ..._.omit(example.correct404, ['slots']),
+                    ...omit(example.correct404, ['slots']),
                     orderPos: 122,
                     route: '/ncTestRoute/*',
                     next: false,
@@ -471,7 +472,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const expectedRoute = {
                     id: routeId,
-                    ..._.omitBy(exampleWithExistedDomainId, _.isNil),
+                    ...omitNil(exampleWithExistedDomainId),
                     versionId: response.body.versionId,
                 };
                 expect(response.body).deep.equal(expectedRoute);
@@ -567,7 +568,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const expectedRoute = {
                     id: routeId,
-                    ..._.omitBy(exampleWithExistedDomainId, _.isNil),
+                    ...omitNil(exampleWithExistedDomainId),
                     versionId: response.body.versionId,
                 };
 
@@ -593,7 +594,7 @@ describe(`Tests ${example.url}`, () => {
                     id: routeId,
                     slots: example.correctWithMetadata.slots,
                     meta: example.correctWithMetadata.meta,
-                    ..._.omitBy(_.omit(example.correctWithMetadata, ['slots', 'meta']), _.isNil),
+                    ...omitNil(omit(example.correctWithMetadata, ['slots', 'meta'])),
                     versionId: response.body.versionId,
                 };
 
@@ -611,7 +612,7 @@ describe(`Tests ${example.url}`, () => {
             let routeId;
 
             try {
-                let response = await req.post(example.url).send(_.omit(example.correct, 'orderPos')).expect(200);
+                let response = await req.post(example.url).send(omit(example.correct, 'orderPos')).expect(200);
 
                 routeId = response.body.id;
 
@@ -664,7 +665,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const expectedRoute = {
                     id: routeId,
-                    ..._.omitBy(example.correct, _.isNil),
+                    ...omitNil(example.correct),
                     versionId: response.body.versionId,
                 };
                 expect(response.body).deep.equal(expectedRoute);
@@ -687,7 +688,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const expectedRoute = {
                     id: routeId,
-                    ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
+                    ...omitNil(omit(example.correct, ['slots'])),
                     meta: example.correct.meta,
                     versionId: response.body[0].versionId,
                 };
@@ -719,7 +720,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const expectedRoute = {
                     id: routeId,
-                    ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
+                    ...omitNil(omit(example.correct, ['slots'])),
                     domainId,
                     versionId: response.body[0].versionId,
                 };
@@ -747,7 +748,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const expectedRoute = {
                     id: routeId,
-                    ..._.omitBy(_.omit(example.correct, ['slots']), _.isNil),
+                    ...omitNil(omit(example.correct, ['slots'])),
                     meta: example.correct.meta,
                     versionId: response.body[0].versionId,
                 };
