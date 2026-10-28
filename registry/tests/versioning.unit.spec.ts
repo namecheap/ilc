@@ -1,13 +1,13 @@
 import path from 'path';
-import _ from 'lodash';
 
 import { expect, dbFactory } from './common';
 import type { Knex } from 'knex';
 import { extractInsertedId } from '../server/util/db';
-import { defined } from '../server/util/helpers';
+import { defined } from '../server/util/defined';
 import { Versioning } from '../server/versioning/services/Versioning';
 import versioningConfig from '../server/versioning/config';
 import { User } from '../typings/User';
+import { omit } from './utils/omit';
 
 const testUser: User = Object.freeze({
     identifier: 'testUser',
@@ -143,9 +143,11 @@ describe('Versioning Unit', () => {
             const changeData = defined(await db('versioning').first().where('id', changeId));
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.entity_id).to.equal(entityId);
-            expect(JSON.parse(defined(changeData.data_after))).to.deep.eq(
-                _.merge(JSON.parse(defined(changeData.data)), { data: changeSet }),
-            );
+            const dataBefore = JSON.parse(defined(changeData.data));
+            expect(JSON.parse(defined(changeData.data_after))).to.deep.eq({
+                ...dataBefore,
+                data: { ...dataBefore.data, ...changeSet },
+            });
             expect(changeData.created_by).to.equal(testUser.identifier);
         });
 
@@ -186,7 +188,7 @@ describe('Versioning Unit', () => {
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.entity_id).to.equal(entityId);
             expect(JSON.parse(defined(changeData.data))).to.deep.eq({
-                data: _.omit(entityData, ['name']),
+                data: omit(defined(entityData), ['name']),
                 related: {},
             });
             expect(changeData.data_after).to.be.null;
@@ -212,9 +214,11 @@ describe('Versioning Unit', () => {
             const changeData = defined(await db('versioning').first().where('id', changeId));
             expect(changeData.entity_type).to.equal(entityType);
             expect(changeData.entity_id).to.equal(entityId);
-            expect(JSON.parse(defined(changeData.data_after))).to.deep.eq(
-                _.merge(JSON.parse(defined(changeData.data)), { data: changeSet }),
-            );
+            const dataBefore = JSON.parse(defined(changeData.data));
+            expect(JSON.parse(defined(changeData.data_after))).to.deep.eq({
+                ...dataBefore,
+                data: { ...dataBefore.data, ...changeSet },
+            });
             expect(changeData.created_by).to.equal(testUser.identifier);
         });
         it('should work with external transaction (rollback)', async () => {
@@ -619,7 +623,7 @@ describe('Versioning Unit', () => {
         it('Should revert auth_entity modification while preserving current secret', async () => {
             const entityType = 'auth_entities';
 
-            const createChangeId = await versionService.logOperation(testUser, { type: entityType }, async (trx) => {
+            await versionService.logOperation(testUser, { type: entityType }, async (trx) => {
                 const [inserted] = await db(entityType)
                     .insert({
                         identifier: 'test-revert-auth',

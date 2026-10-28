@@ -1,7 +1,6 @@
 import { Logger } from 'ilc-plugins-sdk';
 import { getPluginManagerInstance } from './pluginManager';
 import { storage, Store } from '../middleware/context';
-import { setErrorData } from './helpers';
 
 type LogContext = Omit<Store, 'user' | 'reqId'> & {
     userId?: string;
@@ -10,6 +9,14 @@ type LogContext = Omit<Store, 'user' | 'reqId'> & {
 type NoContext = {
     asyncContext: 'none';
 };
+
+export function setErrorData(error: Error, data: Record<string, string | number | boolean>): void {
+    if ('data' in error && typeof error.data === 'object' && error.data !== null) {
+        Object.assign(error.data, data);
+    } else {
+        Object.defineProperty(error, 'data', { enumerable: true, writable: false, value: data });
+    }
+}
 
 const hasKey = <T extends object>(obj: T, k: keyof any): k is keyof T => k in obj;
 

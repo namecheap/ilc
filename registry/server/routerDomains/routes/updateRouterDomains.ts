@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 
-import preProcessResponse from '../../common/services/preProcessResponse';
+import { preProcessResponse } from '../../common/services/preProcessResponse';
 import { validated } from '../../common/validation/validated';
 import { routerDomainsParamsSchema, routerDomainsSchema } from '../interfaces';
 import type { RouterDomainsService } from '../services/RouterDomainsService';

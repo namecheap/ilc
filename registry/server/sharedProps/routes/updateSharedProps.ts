@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 
-import preProcessResponse from '../../common/services/preProcessResponse';
+import { preProcessResponse } from '../../common/services/preProcessResponse';
 import { validated } from '../../common/validation/validated';
 import { partialSharedPropsSchema, sharedPropsParamsSchema } from '../interfaces';
 import type { SharedPropsService } from '../services/SharedPropsService';

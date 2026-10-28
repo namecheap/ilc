@@ -1,4 +1,4 @@
-import 'newrelic';
+import './preload';
 
 import app from './app';
 import { dbFactory, knexConfig } from './db';

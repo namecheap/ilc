@@ -1,5 +1,4 @@
-import path from 'node:path';
-process.env.NODE_CONFIG_DIR = path.resolve(__dirname, '../config');
+import './configDir';
 
 import config from 'config';
 import { Knex, knex } from 'knex';

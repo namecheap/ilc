@@ -1,13 +1,12 @@
 import axios from 'axios';
 
 import errors from '../errors';
-import { uniqueArray } from '../../util/helpers';
 import { ResourceLinkParser } from './resources/ResourceLinkParser';
 import { Resource } from './resources/Resource';
 import { ResourceStylesheet } from './resources/ResourceStylesheet';
 import { ResourceScript } from './resources/ResourceScript';
 import { ResourcePreload } from './resources/ResourcePreload';
-import { isTemplateValid } from '../../util/isTemplateValid';
+import { isTemplateValid } from './isTemplateValid';
 
 interface IncludeAttributes {
     id: string;
@@ -66,7 +65,7 @@ async function renderTemplate(templateContent: string, context?: RenderTemplateC
         result.content = result.content.replace(includeHtmlTag, includeResult);
     });
 
-    result.styleRefs = uniqueArray(result.styleRefs);
+    result.styleRefs = [...new Set(result.styleRefs)];
 
     return result;
 }

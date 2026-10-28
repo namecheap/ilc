@@ -28,7 +28,7 @@ const commands = [
     },
     {
         cwd: 'registry',
-        command: 'pnpm exec ts-node lde/oauth-server.ts',
+        command: 'pnpm exec tsx lde/oauth-server.ts',
         name: 'oauth-server',
     },
 ];

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { JSONValue } from '../common/services/json';
+import type { JSONValue } from '../util/json';
 import { versionIdSchema } from '../common/validation/schemas';
 
 export enum AuthProviders {

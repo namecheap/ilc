@@ -31,6 +31,9 @@ Registry (`cd registry`):
 - PostgreSQL is the only supported DB: start it with `docker compose up postgres`, the defaults in `config/default.ts` match it and `.env` (from `.env.example`) overrides the `DB_*` variables. `pnpm start` at the root needs it too.
 - `pnpm test` drops and recreates the `DB_NAME` database (`ilc` by default, so it wipes a local dev database) through `docker exec postgres`; suites that use `dbFactory()` from `tests/common.ts` get their own `<DB_NAME>_isolated` database.
 - `pnpm migrate:make <name>` creates a Knex migration in `server/migrations`.
+- TypeScript 7. `tsconfig.json` extends the root `tsconfig.base.json` and references `tsconfig.app.json`, which builds the server into `build/`, and `tsconfig.spec.json`, which type-checks the specs. `pnpm compile` checks the app project, `pnpm test` and `test:ci` check the spec project; to check both without building, run `pnpm exec tsc -p tsconfig.app.json --noEmit && pnpm exec tsc -p tsconfig.spec.json`.
+- Tests and `lde/` run from source through `tsx`, which does not type-check: `pnpm test` runs `tsc -p tsconfig.spec.json` first. `tsx` compiles each file the way native ESM would run it: imports are evaluated before the rest of the module, and module exports cannot be stubbed with sinon.
+- The compiled server, the assets discovery runner and the Knex CLI read node-config from `build/config`: `config/configDir.ts` sets `NODE_CONFIG_DIR` unless it is already set. The knexfile imports it first, and the server entry points import `server/preload.ts` first, which loads it before New Relic (`newrelic.js` reads node-config). Nothing loads TypeScript at runtime, so a new entry point needs the same first import, or node-config finds the `.ts` files in `config/` and fails. It is set in code, not in package scripts, because images built on top of the registry image start `node build/server/index.js` directly and add their own `config/*.ts`, which `pnpm build` compiles into `build/config`.
 
 E2E (`cd e2e`, after `pnpm build` at the root): `pnpm start`, `pnpm start:verbose`, `pnpm start:verbose:ui` (visible browser).
 
@@ -42,7 +45,7 @@ Both `ilc/.mocharc*` and `registry/.mocharc*` define a `spec` glob, and a file p
 NODE_ENV=test pnpm exec mocha --no-config --require ts-node/register --timeout 5000 --exit path/to/file.spec.ts
 ```
 
-In `registry`, prefix with `pnpm exec dotenv --` so the `DB_*` variables from `.env` apply.
+In `registry`, use `--require tsx/cjs` instead of `ts-node/register`, and prefix with `pnpm exec dotenv --` so the `DB_*` variables from `.env` apply.
 
 ## Architecture
 
@@ -73,6 +76,11 @@ Express 5 + Knex on PostgreSQL (`server/db/index.ts`). Each entity has its own f
 - `services/`: versioned writes, not-found handling and business rules, such as checks that need other tables.
 - `routes/`: one handler factory per file. It takes the service and validates its input with `validated()` (`server/common/validation`).
 
+Code that belongs to no single entity:
+
+- `server/common/services/`: registry logic shared by several entities, such as assets discovery, entries and protected entities.
+- `server/util/`: generic helpers and infrastructure that know nothing about registry entities, such as the logger, the plugin manager, `extendError`, the axios helpers and `deepMerge`. A standalone helper gets its own file named after its export (`defined.ts`, `deepMerge.ts`); helpers for one concern share a file (`db.ts`, `logger.ts`).
+
 `server/composition.ts` builds the repositories and services once, and `app.ts` passes them to the routers. Things that span files:
 
 - **Versioning**: services wrap entity writes in `versioning.withVersion(user, { type, id }, async (trx) => …)` (`server/versioning/services/Versioning.ts`), which snapshots the record and stores a revertible version. Queries inside the callback must use `trx`. Without `id`, the callback returns the created row, whose id column identifies it. Reads that need the version use `versioning.versionedSelect(...)`.
@@ -81,12 +89,16 @@ Express 5 + Knex on PostgreSQL (`server/db/index.ts`). Each entity has its own f
 - **Assets discovery** (`server/runnerAssetsDiscovery.ts`, `pnpm assetsdiscovery`) runs as a separate process in production and refreshes app bundle URLs from their manifests.
 - Admin UI: `registry/client`, a React Admin app built with webpack.
 
-Registry tests (`registry/tests`) drive the HTTP API with supertest. Cleanups in `finally`/hooks call `ensureDeleted(req, url)` from `tests/common.ts`, which fails when a record is neither deleted nor already absent, instead of leaving it to break later tests.
+Registry tests (`registry/tests`) drive the HTTP API with supertest. Unit tests of a single module that need no database sit next to it as `<file>.spec.ts`. Cleanups in `finally`/hooks call `ensureDeleted(req, url)` from `tests/common.ts`, which fails when a record is neither deleted nor already absent, instead of leaving it to break later tests.
 
 ## CI and conventions
+
+- TypeScript configs follow the Nx layout: the root `tsconfig.base.json` (from `tsc --init`) holds the shared compiler options, the root `tsconfig.json` references the packages that use it (only `registry` so far), and each package's `tsconfig.json` extends the base and references its `tsconfig.app.json` and `tsconfig.spec.json`.
 
 - Commits follow Conventional Commits (commitlint); husky + lint-staged run Prettier on staged files. Prettier: 4 spaces, single quotes, width 120.
 - `.github/workflows/ci.yml` runs on pull requests and pushes to `develop` (the main branch). ILC and Registry are tested inside their Docker images (amd64; arm64 is built on native `ubuntu-24.04-arm` runners). Each PR also builds and tests the base branch (`dest` matrix entries) for the coverage-diff comment. Only `develop` pushes publish to Docker Hub (`namecheap/ilc`, `namecheap/ilc_registry`, staged through `namecheap/ilc_tmp`); `release.yml` re-tags them on version tags.
 - User-facing docs live in `docs/` (MkDocs, `mkdocs.yml`).
 - Currently there is mixed codebase of typescript and javascript, but we're in progress into full migration to the typescript. Convert files to TS if reasonable
 - Don't expose any internal infra details like urls, credentials, plugins, etc
+- Avoid breaking changes for consumers unless the author asks for them
+- Ensure there is a migration if database schema changed

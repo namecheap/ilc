@@ -2,7 +2,7 @@ import express, { Request, Response, Router } from 'express';
 import type { User } from '../../typings/User';
 import { IncorrectEntryError } from '../common/services/entries/error/IncorrectEntryError';
 import { NotFoundFqrnError } from '../common/services/entries/error/NotFoundFqrnError';
-import preProcessResponse from '../common/services/preProcessResponse';
+import { preProcessResponse } from '../common/services/preProcessResponse';
 import { ValidationFqrnError } from '../common/services/entries/error/ValidationFqrnError';
 import { AssetsManifestError } from '../common/services/assets/errors/AssetsManifestError';
 import { parseInput } from '../common/validation/validated';

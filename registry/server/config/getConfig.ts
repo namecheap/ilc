@@ -6,9 +6,9 @@ import { routeWithSlotColumns } from '../appRoutes/repositories/RoutesRepository
 import { Tables } from '../db/structure';
 import type { SettingsService } from '../settings/services/SettingsService';
 import { appendDigest } from '../util/hmac';
-import { EntityTypes, type VersionedRecord } from '../versioning/interfaces';
+import { EntityTypes } from '../versioning/interfaces';
 import type { Versioning } from '../versioning/services/Versioning';
-import { parseJSON } from '../common/services/json';
+import { parseJSON } from '../util/json';
 import { AppRouteDto, transformApps, transformRoutes, transformSharedLibs } from './transformConfig';
 
 type ConfigReaderDependencies = {

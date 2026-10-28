@@ -22,7 +22,7 @@ export class CustomOIDCStrategy extends OIDCStrategy {
     /**
      * Override authorizationRequestParams to inject response_mode
      */
-    authorizationRequestParams(
+    override authorizationRequestParams(
         req: express.Request,
         options: AuthenticateOptions,
     ): URLSearchParams | Record<string, string> | undefined {

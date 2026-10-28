@@ -68,18 +68,13 @@ const encodedWrapperAppName = encodeURIComponent(example.correctWrapperApp.name)
 
 describe(`Entries`, () => {
     let req: Agent;
-    let reqWithAuth: Agent;
 
     beforeEach(async () => {
         req = await request();
-        reqWithAuth = await requestWithAuth();
     });
 
     it('should return 422 when entry is not exist', async () => {
-        const incorrect = { name: 123 };
-        const response = await req
-            .patch(example.incorrectUrl)
-            .expect(422, 'Fully qualified resource name 123 is not exist');
+        await req.patch(example.incorrectUrl).expect(422, 'Fully qualified resource name 123 is not exist');
     });
 
     it('should return 422 when payload is not valid', async () => {
@@ -88,10 +83,7 @@ describe(`Entries`, () => {
 
             const invalidPatch = { invalidProp: 'https://google.com' };
 
-            let response = await req
-                .patch(example.url)
-                .send(invalidPatch)
-                .expect(422, '✖ Unrecognized key: "invalidProp"');
+            await req.patch(example.url).send(invalidPatch).expect(422, '✖ Unrecognized key: "invalidProp"');
         } finally {
             await ensureDeleted(req, `${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
         }
@@ -120,17 +112,14 @@ describe(`Entries`, () => {
 
             const emptyPatch = {};
 
-            let response = await req
-                .patch(example.url)
-                .send(emptyPatch)
-                .expect(422, 'Patch does not contain any items to update');
+            await req.patch(example.url).send(emptyPatch).expect(422, 'Patch does not contain any items to update');
         } finally {
             await ensureDeleted(req, `${example.urlSharedLib}${querystring.escape(example.correct.name)}`);
         }
     });
 
     it('should return 404 when resource is not exists', async () => {
-        const response = await req
+        await req
             .patch(example.url)
             .send({ l10nManifest: 'https://google.com' })
             .expect(404, 'Shared library with name "testNameSharedLibEntry" is not exist');
@@ -215,8 +204,8 @@ describe(`Entries`, () => {
                 ...patch3,
             });
         } finally {
-            const response2 = await req.delete(`${example.urlApp}${encodedAppName}`).expect(204);
-            const response1 = await req.delete(`${example.urlApp}${encodedWrapperAppName}`).expect(204);
+            await req.delete(`${example.urlApp}${encodedAppName}`).expect(204);
+            await req.delete(`${example.urlApp}${encodedWrapperAppName}`).expect(204);
         }
     });
 

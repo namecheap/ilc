@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 
 import { AssetsManifestError } from '../../common/services/assets/errors/AssetsManifestError';
-import preProcessResponse from '../../common/services/preProcessResponse';
+import { preProcessResponse } from '../../common/services/preProcessResponse';
 import { validated } from '../../common/validation/validated';
 import { appSchema } from '../interfaces';
 import type { AppsService } from '../services/AppsService';

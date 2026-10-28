@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import express from 'express';
 import supertest from 'supertest';
 import { z } from 'zod';
-import { validated } from '../../server/common/validation/validated';
-import errorHandler from '../../server/errorHandler';
+import { validated } from './validated';
+import errorHandler from '../../errorHandler';
 
 describe('validated', () => {
     const schemas = {

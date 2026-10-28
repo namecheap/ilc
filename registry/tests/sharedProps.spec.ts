@@ -1,6 +1,6 @@
-import _ from 'lodash';
 import { type Agent } from 'supertest';
 import { ensureDeleted, expect, request, requestWithAuth } from './common';
+import { omit } from './utils/omit';
 
 const example = {
     url: '/api/v1/shared_props/',
@@ -34,7 +34,7 @@ describe(`Tests ${example.url}`, () => {
         it('should not create record without a required fields', async () => {
             await req
                 .post(example.url)
-                .send(_.omit(example.correct, ['name', 'props']))
+                .send(omit(example.correct, ['name', 'props']))
                 .expect(
                     422,
                     '✖ Invalid input: expected record, received undefined\n  → at props\n' +
@@ -160,7 +160,7 @@ describe(`Tests ${example.url}`, () => {
             const incorrect = { name: 123 };
             await req
                 .put(example.url + incorrect.name)
-                .send(_.omit(example.updated, 'name'))
+                .send(omit(example.updated, 'name'))
                 .expect(404, 'Not found');
         });
 
@@ -188,7 +188,7 @@ describe(`Tests ${example.url}`, () => {
 
                 await req
                     .put(example.url + example.correct.name)
-                    .send(_.omit(incorrect, 'name'))
+                    .send(omit(incorrect, 'name'))
                     .expect(422, '✖ Invalid input: expected record, received number\n  → at props');
             } finally {
                 await ensureDeleted(req, example.url + example.correct.name);
@@ -201,7 +201,7 @@ describe(`Tests ${example.url}`, () => {
 
                 const response = await req
                     .put(example.url + example.correct.name)
-                    .send(_.omit(example.updated, 'name'))
+                    .send(omit(example.updated, 'name'))
                     .expect(200);
 
                 expect(response.body).deep.equal(example.updated);
@@ -214,7 +214,7 @@ describe(`Tests ${example.url}`, () => {
             it('should deny access w/o authentication', async () => {
                 await reqWithAuth
                     .put(example.url + example.correct.name)
-                    .send(_.omit(example.updated, 'name'))
+                    .send(omit(example.updated, 'name'))
                     .expect(401);
             });
         });

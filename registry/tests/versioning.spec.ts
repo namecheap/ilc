@@ -1,9 +1,9 @@
 process.env.TZ = 'UTC';
 
-import supertest, { type Agent } from 'supertest';
+import { type Agent } from 'supertest';
 import * as bcrypt from 'bcrypt';
 import { formatDate } from '../server/util/db';
-import { defined } from '../server/util/helpers';
+import { defined } from '../server/util/defined';
 import { db, ensureDeleted, expect, request, requestWithAuth } from './common';
 
 const basePath = '/api/v1/versioning';
