@@ -136,8 +136,7 @@ export class AppsRepository {
                         filters.domainId,
                     );
                 })
-                .groupBy(`${Tables.Apps}.name`)
-                .groupBy('v.versionId');
+                .groupBy(`${Tables.Apps}.name`);
         }
     }
 }
