@@ -141,6 +141,85 @@ describe(`Tests ${basePath}`, () => {
             }
         });
 
+        it('should respond with 400 when the deletion is not the last operation of the entity', async () => {
+            const name = 'ncTestRevertOlderDeletion';
+            try {
+                await req
+                    .post('/api/v1/shared_props/')
+                    .send({ name, props: { a: 1 } })
+                    .expect(200);
+                await req.delete(`/api/v1/shared_props/${name}`).expect(204);
+                await req
+                    .post('/api/v1/shared_props/')
+                    .send({ name, props: { a: 2 } })
+                    .expect(200);
+
+                const { body: versions } = await req
+                    .get(basePath)
+                    .query({ filter: JSON.stringify({ entity_type: 'shared_props', entity_id: name }) })
+                    .expect(200);
+                const deletion = versions.find((version: { data_after: string | null }) => version.data_after === null);
+
+                const response = await req.post(`${basePath}/${deletion.id}/revert`).expect(400);
+                expect(response.body).to.eql({
+                    reason: "It's possible to revert deletion operations only if it's the last one for selected entity",
+                });
+            } finally {
+                await ensureDeleted(req, `/api/v1/shared_props/${name}`);
+                // Other tests here count the versions
+                await db('versioning').where({ entity_type: 'shared_props', entity_id: name }).delete();
+            }
+        });
+
+        it('should revert creation of entity with related items', async () => {
+            const templateName = 'ncTestRevertCreationTemplate';
+            const appName = '@portal/ncTestRevertCreationApp';
+            let routeId: number | undefined;
+            try {
+                await req
+                    .post('/api/v1/template/')
+                    .send({ name: templateName, content: '<html><head></head><body>Test</body></html>' })
+                    .expect(200);
+                await req
+                    .post('/api/v1/app/')
+                    .send({ name: appName, spaBundle: 'http://localhost:1234/app.js', kind: 'primary' })
+                    .expect(200);
+                const { body: route } = await req
+                    .post('/api/v1/route/')
+                    .send({
+                        orderPos: 9998,
+                        route: '/ncTestRevertCreation/*',
+                        templateName,
+                        slots: { body: { appName } },
+                    })
+                    .expect(200);
+                routeId = defined(route.id);
+
+                const { body: versions } = await req
+                    .get(basePath)
+                    .query({ filter: JSON.stringify({ entity_type: 'routes', entity_id: String(routeId) }) })
+                    .expect(200);
+                const creation = versions.find((version: { data: string | null }) => version.data === null);
+
+                await req.post(`${basePath}/${creation.id}/revert`).expect(200);
+
+                await req.get(`/api/v1/route/${routeId}`).expect(404);
+                expect(await db('route_slots').where('routeId', routeId)).to.be.empty;
+            } finally {
+                if (routeId) {
+                    await ensureDeleted(req, `/api/v1/route/${routeId}`);
+                }
+                await ensureDeleted(req, `/api/v1/app/${encodeURIComponent(appName)}`);
+                await ensureDeleted(req, `/api/v1/template/${templateName}`);
+                // Other tests here count the versions
+                await db('versioning')
+                    .where({ entity_type: 'routes', entity_id: String(routeId) })
+                    .orWhere({ entity_type: 'apps', entity_id: appName })
+                    .orWhere({ entity_type: 'templates', entity_id: templateName })
+                    .delete();
+            }
+        });
+
         it('should successfully revert operations', async () => {
             const resp = await req.post(`${basePath}/${dataStub[0].id}/revert`).expect(200);
 

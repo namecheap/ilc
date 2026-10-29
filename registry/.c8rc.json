@@ -3,5 +3,16 @@
     "reporter": ["html", "text", "json-summary"],
     "reports-dir": ".nyc_output/coverage",
     "temp-directory": "node_modules/.cache/c8",
-    "exclude": ["**/*.spec.ts", "**/*.d.ts", "config", "build", "node_modules", "client", "tests"]
+    "exclude": [
+        "**/*.spec.ts",
+        "**/*.d.ts",
+        "config",
+        "build",
+        "node_modules",
+        "client",
+        "tests",
+        "typings",
+        "lde",
+        ".nyc_output"
+    ]
 }

@@ -464,6 +464,18 @@ describe('Tests /api/v1/config', () => {
                     details: 'Specified "templateName" value does not exist',
                 });
         });
+        it('should fail on special route', async () => {
+            await req
+                .post('/api/v1/config/validate')
+                .send({
+                    ...body,
+                    routes: [{ specialRole: '404', slots: {}, namespace: 'ns1' }],
+                })
+                .expect(200, {
+                    valid: false,
+                    details: 'Special routes can not be upserted with the config',
+                });
+        });
         it('should fail on invalid domain id in app', async () => {
             await req
                 .post('/api/v1/config/validate')
@@ -730,6 +742,56 @@ describe('Tests /api/v1/config', () => {
                 await ensureDeleted(req, '/api/v1/app/app2');
                 await ensureDeleted(req, '/api/v1/shared_libs/lib1');
                 await ensureDeleted(req, '/api/v1/shared_libs/lib2');
+            }
+        });
+        it('should move apps between routes of different namespaces in one request', async () => {
+            const route = (path: string, appName: string, namespace: string) => ({
+                route: path,
+                slots: { body: { appName, props: { c: true } } },
+                namespace,
+            });
+            const apps = [
+                { ...app, name: 'app1', namespace: 'ns1' },
+                { ...app, name: 'app2', namespace: 'ns2' },
+            ];
+            const findRoute = (config: any, path: string) => config.routes.find((x: any) => x.route === path);
+            let routeIds: number[] = [];
+            try {
+                await req
+                    .put('/api/v1/config')
+                    .send({
+                        apps,
+                        routes: [route('/route1/*', 'app1', 'ns1'), route('/route2/*', 'app2', 'ns2')],
+                    })
+                    .expect(204);
+                const { body: before } = await req.get('/api/v1/config').expect(200);
+                routeIds = [findRoute(before, '/route1/*').routeId, findRoute(before, '/route2/*').routeId];
+
+                await req
+                    .put('/api/v1/config')
+                    .send({
+                        apps,
+                        routes: [route('/route1/*', 'app2', 'ns1'), route('/route2/*', 'app1', 'ns2')],
+                    })
+                    .expect(204);
+                const { body: after } = await req.get('/api/v1/config').expect(200);
+
+                expect(after.apps).to.include.all.keys('app1', 'app2');
+                expect(after.routes).to.have.lengthOf(2);
+                expect(findRoute(after, '/route1/*')).to.deep.include({
+                    routeId: routeIds[0],
+                    slots: { body: { appName: 'app2', kind: null, props: { c: true } } },
+                });
+                expect(findRoute(after, '/route2/*')).to.deep.include({
+                    routeId: routeIds[1],
+                    slots: { body: { appName: 'app1', kind: null, props: { c: true } } },
+                });
+            } finally {
+                for (const id of routeIds) {
+                    await ensureDeleted(req, `/api/v1/route/${id}`);
+                }
+                await ensureDeleted(req, '/api/v1/app/app1');
+                await ensureDeleted(req, '/api/v1/app/app2');
             }
         });
         it('should not update all when 1 item failed', async () => {
