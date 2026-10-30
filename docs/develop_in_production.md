@@ -59,19 +59,20 @@ To do this:
 
 The possibility of overriding ILC configuration for the browser using cookies introduces a risk of [website defacement](https://en.wikipedia.org/wiki/Website_defacement){: target=\_blank} :octicons-link-external-16: attack via [XSS](https://owasp.org/www-community/attacks/xss/){: target=\_blank} :octicons-link-external-16:.
 
-To mitigate this risk, ILC restricts (by default) all domains and real IP addresses specified for all links in configuration. Only [private IPv4 addresses](https://en.wikipedia.org/wiki/Private_network){: target=\_blank} :octicons-link-external-16: are allowed.
+To mitigate this risk, ILC removes (by default) every link in the override configuration whose host is not `localhost`. Domain names and IP addresses, including private ones, are not trusted until they are listed.
 
 To allow specific origins, in the "Settings" page of the ILC Registry, set the `overrideConfigTrustedOrigins` property:
 
-- `default`: any origin is disallowed, except for [private IPv4 addresses](https://en.wikipedia.org/wiki/Private_network){: target=\_blank} :octicons-link-external-16:
+- `default`: any origin is disallowed, except for `localhost`
 - `all`: trust any origins
-- `foo.com, bar.com`: trust `foo.com` and `bar.com` only (recommended)
+- `foo.com, bar.com, 10.1.150.85`: trust `foo.com`, `bar.com` and `10.1.150.85` only (recommended)
 
 Each origin in the list is matched against the host of a link as follows:
 
 - `foo.com`: exactly `foo.com`. Hosts that only start or end with it, like `foo.com.example.org` or `evilfoo.com`, are not trusted
 - `*.foo.com`: any subdomain of `foo.com`, like `cdn.foo.com` or `a.cdn.foo.com`, but not `foo.com` itself
 - `foo.com:8080`: `foo.com` on port 8080 only. Without a port, any port is trusted
+- `10.1.150.85` or `[::1]`: an IP address, matched exactly. A port can be added in the same way
 
 Matching is case-insensitive and ignores a trailing dot in the host. `localhost` is always trusted.
 
@@ -82,12 +83,12 @@ Matching is case-insensitive and ignores a trailing dot in the host. `localhost`
 
     !!! example "Webpack config to disable CORS"
     `js
-    devServer: {
-        headers: {
-            "Access-Control-Allow-Origin": "*",
-        },
-    }
-    `
+devServer: {
+    headers: {
+        "Access-Control-Allow-Origin": "*",
+    },
+}
+`
 
 1. Wrap your MS bundle file with the following code:
 
@@ -99,6 +100,7 @@ Matching is case-insensitive and ignores a trailing dot in the host. `localhost`
     For Webpack, you can use [wrapper-webpack-plugin](https://www.npmjs.com/package/wrapper-webpack-plugin){: target=\_blank} :octicons-link-external-16:
 
 1. Make sure your MS is publicly available - that is, hosted under 0.0.0.0 ([default for Node http, and Express](https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback){: target=\_blank} :octicons-link-external-16:) and exposed via your public IP address or with the help of specialized tools, like ngrok.
+1. Make sure the host of your MS (`10.1.150.85` in the example below) is listed in `overrideConfigTrustedOrigins` (see [Security considerations](#security-considerations)), otherwise ILC removes the links from the configuration.
 1. Add `ILC-overrideConfig` cookie with the following configuration to production:
 
     ```js
