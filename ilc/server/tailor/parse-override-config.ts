@@ -1,4 +1,3 @@
-import { BlockList } from 'node:net';
 import LZUTF8 from 'lzutf8';
 import type { OverrideConfig } from './merge-configs';
 
@@ -14,12 +13,6 @@ interface ParsedOverrideConfig {
     apps?: Record<string, { ssr?: { src?: unknown; ignoreInvalidSsl?: boolean } }>;
     sharedLibs?: Record<string, unknown>;
 }
-
-const privateNetworks = new BlockList();
-privateNetworks.addSubnet('10.0.0.0', 8, 'ipv4');
-privateNetworks.addSubnet('192.168.0.0', 16, 'ipv4');
-privateNetworks.addSubnet('172.16.0.0', 12, 'ipv4');
-privateNetworks.addSubnet('127.0.0.0', 8, 'ipv4');
 
 /**
  * Links are resolved with the WHATWG URL parser, the same one the browser (SystemJS) and the SSR fragment request use,
@@ -111,10 +104,6 @@ function isTrustedOrigin(url: URL, trustedOrigins: TrustedOrigin[]): boolean {
     });
 }
 
-function isPrivateNetwork(url: URL): boolean {
-    return /^\d+\.\d+\.\d+\.\d+$/.test(url.hostname) && privateNetworks.check(url.hostname, 'ipv4');
-}
-
 function isSafeLinkForBase(link: string, base: string, trustedOrigins: TrustedOrigin[]): boolean {
     let url;
     try {
@@ -129,7 +118,7 @@ function isSafeLinkForBase(link: string, base: string, trustedOrigins: TrustedOr
     }
 
     if (url.host) {
-        return isPrivateNetwork(url) || isTrustedOrigin(url, trustedOrigins);
+        return isTrustedOrigin(url, trustedOrigins);
     }
 
     return !HOSTLESS_SCRIPTABLE_SCHEMES.includes(url.protocol);

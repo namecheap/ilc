@@ -195,9 +195,11 @@ describe('overrideConfig', () => {
     });
 
     describe('ignoring invalid SSL certificates while SSR', () => {
+        const ip = '10.1.150.223';
+
         it('should add ignoring invalid SSL certificates when an app SSR source has HTTPS protocol', async () => {
-            const exampleCookies = getExampleCookies('10.1.150.223', 'https:');
-            const config = parseOverrideConfig(exampleCookies);
+            const exampleCookies = getExampleCookies(ip, 'https:');
+            const config = parseOverrideConfig(exampleCookies, ip);
 
             expect(getApp(config, '@portal/one').ssr?.ignoreInvalidSsl).to.be.true;
             expect(getApp(config, '@portal/two').ssr?.ignoreInvalidSsl).to.be.true;
@@ -206,8 +208,8 @@ describe('overrideConfig', () => {
         });
 
         it('should not add ignoring invalid SSL certificates when an app SSR source has HTTP protocol', async () => {
-            const exampleCookies = getExampleCookies('10.1.150.223', 'http:');
-            const config = parseOverrideConfig(exampleCookies);
+            const exampleCookies = getExampleCookies(ip, 'http:');
+            const config = parseOverrideConfig(exampleCookies, ip);
 
             expect(getApp(config, '@portal/one').ssr?.ignoreInvalidSsl).to.be.undefined;
             expect(getApp(config, '@portal/two').ssr?.ignoreInvalidSsl).to.be.undefined;
@@ -216,8 +218,8 @@ describe('overrideConfig', () => {
         });
 
         it('should not add ignoring invalid SSL certificates when an app SSR source has no protocol', async () => {
-            const exampleCookies = getExampleCookies('10.1.150.223', '');
-            const config = parseOverrideConfig(exampleCookies);
+            const exampleCookies = getExampleCookies(ip, '');
+            const config = parseOverrideConfig(exampleCookies, ip);
 
             expect(getApp(config, '@portal/one').ssr?.ignoreInvalidSsl).to.be.undefined;
             expect(getApp(config, '@portal/two').ssr?.ignoreInvalidSsl).to.be.undefined;
@@ -227,31 +229,25 @@ describe('overrideConfig', () => {
     });
 
     describe('not sanitized', () => {
-        it('should not sanitize valid private ip with http', async () => {
-            const exampleCookies = getExampleCookies('10.1.150.223', 'http:');
+        it('should not sanitize a listed ip with http', async () => {
+            const ip = '10.1.150.223';
+            const exampleCookies = getExampleCookies(ip, 'http:');
 
-            expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject('10.1.150.223', 'http:'));
+            expect(parseOverrideConfig(exampleCookies, ip)).deep.equal(getExampleObject(ip, 'http:'));
         });
 
-        it('should not sanitize valid private ip with https', async () => {
-            const exampleCookies = getExampleCookies('10.1.150.223', 'https:');
+        it('should not sanitize a listed ip with https', async () => {
+            const ip = '10.1.150.223';
+            const exampleCookies = getExampleCookies(ip, 'https:');
 
-            expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject('10.1.150.223', 'https:'));
+            expect(parseOverrideConfig(exampleCookies, ip)).deep.equal(getExampleObject(ip, 'https:'));
         });
 
-        it('should not sanitize correct config for 127.0.0.1', async () => {
+        it('should not sanitize a listed 127.0.0.1', async () => {
             const ip = '127.0.0.1';
             const exampleCookies = getExampleCookies(ip);
 
-            expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
-        });
-
-        it('should not sanitize correct config for any 127.x.x.x', async () => {
-            for (let i = 0; i < 256; i++) {
-                const ip = `127.${i}.${i}.${i}`;
-                const exampleCookies = getExampleCookies(ip);
-                expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
-            }
+            expect(parseOverrideConfig(exampleCookies, ip)).deep.equal(getExampleObject(ip));
         });
 
         it('should not sanitize correct config for localhost', async () => {
@@ -260,36 +256,11 @@ describe('overrideConfig', () => {
             expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
         });
 
-        it('should not sanitize correct config for any 10.x.x.x', async () => {
-            for (let i = 0; i < 256; i++) {
-                const ip = `10.${i}.${i}.${i}`;
-                const exampleCookies = getExampleCookies(ip);
-                expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
-            }
-        });
-
-        it('should not sanitize correct config for any 192.168.x.x', async () => {
-            for (let i = 0; i < 256; i++) {
-                const ip = `192.168.${i}.${i}`;
-                const exampleCookies = getExampleCookies(ip);
-                expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
-            }
-        });
-
-        it('should not sanitize correct config for any 172.16.0.0 - 172.31.255.255', async () => {
-            for (let i = 16; i < 32; i++) {
-                for (let j = 0; j < 256; j++) {
-                    const ip = `172.${i}.${j}.${j}`;
-                    const exampleCookies = getExampleCookies(ip);
-                    expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject(ip));
-                }
-            }
-        });
-
         it('should work with lzutf8 cookie', () => {
-            const exampleCookies = getExampleCookies('10.1.150.223', 'http:', true);
+            const ip = '10.1.150.223';
+            const exampleCookies = getExampleCookies(ip, 'http:', true);
 
-            expect(parseOverrideConfig(exampleCookies)).deep.equal(getExampleObject('10.1.150.223', 'http:'));
+            expect(parseOverrideConfig(exampleCookies, ip)).deep.equal(getExampleObject(ip, 'http:'));
         });
     });
 
@@ -306,7 +277,7 @@ describe('overrideConfig', () => {
         });
 
         it('should sanitize url w/ spaces', async () => {
-            const ip = 'foo.com';
+            const ip = '10.1.150.223';
             const exampleCookies = getExampleCookies(ip, '   http:');
 
             expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject());
@@ -319,31 +290,17 @@ describe('overrideConfig', () => {
             expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject());
         });
 
-        it('should sanitize non 10/127.x.x.x', async () => {
-            for (let i = 0; i < 256; i++) {
-                const ip = `${i}.${i}.${i}.${i}`;
+        it('should sanitize any ip which is not listed', async () => {
+            const ips = ['10.1.150.223', '127.0.0.1', '192.168.1.1', '172.16.0.1', '8.8.8.8', '169.254.169.254'];
+            const trustedOrigins = ['', 'foo.com, *.bar.com, 1.1.1.1'];
+
+            ips.forEach((ip) => {
                 const exampleCookies = getExampleCookies(ip);
-                if (i !== 10 && i !== 127) {
-                    expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject());
-                }
-            }
-        });
-
-        it('should sanitize 192.x.x.x and x.168.x.x', async () => {
-            const incorrectIps = ['192.1.1.1', '1.168.1.1'];
-
-            incorrectIps.forEach((incorrectIp) => {
-                let exampleCookies = getExampleCookies(incorrectIp);
-                expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject());
-            });
-        });
-
-        it('should sanitize non 172.16.0.0 - 172.31.255.255', async () => {
-            const incorrectIps = ['172.15.0.0', '172.32.255.255', '171.16.0.0', '173.31.255.255'];
-
-            incorrectIps.forEach((incorrectIp) => {
-                let exampleCookies = getExampleCookies(incorrectIp);
-                expect(parseOverrideConfig(exampleCookies)).deep.equal(getSanitizedObject());
+                trustedOrigins.forEach((origins) => {
+                    expect(parseOverrideConfig(exampleCookies, origins), `${ip} with "${origins}"`).deep.equal(
+                        getSanitizedObject(),
+                    );
+                });
             });
         });
     });
@@ -525,7 +482,36 @@ describe('overrideConfig', () => {
             links.forEach((link) => expect(parseSpaBundle(link), link).to.be.undefined);
         });
 
-        it('should sanitize public hosts which contain a private ip', () => {
+        it('should sanitize private ips which are not listed, in any notation', () => {
+            const links = [
+                'http://10.0.0.1/x.js',
+                'http://10.0.0.1:8080/x.js',
+                'http://167772161/x.js',
+                'http://0x0a000001/x.js',
+                'http://0xa.0.0.1/x.js',
+                'http://192.168.1.1/x.js',
+                'http://172.16.0.1/x.js',
+                'http://127.0.0.1:3000/x.js',
+                'http://[::1]/x.js',
+                'http://[::ffff:10.0.0.1]/x.js',
+            ];
+
+            links.forEach((link) => {
+                expect(parseSpaBundle(link, ''), link).to.be.undefined;
+                expect(parseSpaBundle(link), link).to.be.undefined;
+            });
+        });
+
+        it('should keep links to a listed ip', () => {
+            expect(parseSpaBundle('http://10.0.0.1/x.js', '10.0.0.1')).to.equal('http://10.0.0.1/x.js');
+            expect(parseSpaBundle('http://10.0.0.1:8080/x.js', '10.0.0.1')).to.equal('http://10.0.0.1:8080/x.js');
+            expect(parseSpaBundle('http://10.0.0.1:8080/x.js', '10.0.0.1:8080')).to.equal('http://10.0.0.1:8080/x.js');
+            expect(parseSpaBundle('http://10.0.0.1:9090/x.js', '10.0.0.1:8080')).to.be.undefined;
+            expect(parseSpaBundle('http://10.0.0.2/x.js', '10.0.0.1')).to.be.undefined;
+            expect(parseSpaBundle('http://[::1]:3000/x.js', '[::1]')).to.equal('http://[::1]:3000/x.js');
+        });
+
+        it('should sanitize public hosts which contain a listed ip', () => {
             const links = [
                 'https://attacker.example/10.0.0.1/x.js',
                 'https://attacker.example/x.js?10.0.0.1',
@@ -533,7 +519,7 @@ describe('overrideConfig', () => {
                 'https://10.0.0.1@attacker.example/x.js',
             ];
 
-            links.forEach((link) => expect(parseSpaBundle(link, ''), link).to.be.undefined);
+            links.forEach((link) => expect(parseSpaBundle(link, '10.0.0.1'), link).to.be.undefined);
         });
 
         it('should respect a port of a trusted origin', () => {
