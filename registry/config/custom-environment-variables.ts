@@ -19,6 +19,7 @@ export default {
     auth: {
         sessionSecret: 'AUTH_SESSION_SECRET',
         cookieSecure: 'AUTH_COOKIE_SECURE',
+        sessionMaxAgeSeconds: 'AUTH_SESSION_MAX_AGE_SECONDS',
     },
     healthCheck: {
         url: 'ILC_REGISTRY_HEALTH_CHECK_URL',
