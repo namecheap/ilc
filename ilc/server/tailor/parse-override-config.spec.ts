@@ -270,10 +270,12 @@ describe('overrideConfig', () => {
             const exampleCookies = getExampleCookies(ip);
             const logger = {
                 warn: sinon.spy(),
+                debug: sinon.spy(),
             };
 
             expect(parseOverrideConfig(exampleCookies, undefined, logger)).deep.equal(getSanitizedObject());
             expect(logger.warn.called).to.be.true;
+            expect(logger.debug.args.flat().some((message) => message.includes(ip))).to.be.false;
         });
 
         it('should sanitize url w/ spaces', async () => {
@@ -302,6 +304,29 @@ describe('overrideConfig', () => {
                     );
                 });
             });
+        });
+    });
+
+    describe('logging', () => {
+        it('should log trusted urls on debug level and keep them', async () => {
+            const ip = '1.1.1.1';
+            const exampleCookies = getExampleCookies(ip);
+            const logger = {
+                warn: sinon.spy(),
+                debug: sinon.spy(),
+            };
+
+            expect(parseOverrideConfig(exampleCookies, ip, logger)).deep.equal(getExampleObject(ip));
+            expect(logger.warn.called).to.be.false;
+            expect(logger.debug.called).to.be.true;
+            expect(logger.debug.firstCall.args[0]).to.match(/^Trusted url from override config\. key = \w+, value = /);
+        });
+
+        it('should keep trusted urls when no logger is passed', async () => {
+            const ip = '1.1.1.1';
+            const exampleCookies = getExampleCookies(ip);
+
+            expect(parseOverrideConfig(exampleCookies, ip)).deep.equal(getExampleObject(ip));
         });
     });
 
