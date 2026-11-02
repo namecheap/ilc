@@ -1,7 +1,7 @@
 import LZUTF8 from 'lzutf8';
 import type { OverrideConfig } from './merge-configs';
 
-type Logger = Pick<Console, 'warn'>;
+type Logger = Pick<Console, 'warn' | 'debug'>;
 
 interface TrustedOrigin {
     hostname: string;
@@ -143,6 +143,8 @@ function sanitizeSpoofedLinks(
                 }
 
                 delete (obj as Record<string, unknown>)[key];
+            } else {
+                logger?.debug(`Trusted url from override config. key = ${key}, value = ${value}`);
             }
         }
     });
