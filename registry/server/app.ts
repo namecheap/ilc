@@ -3,6 +3,7 @@ import express, { Application, RequestHandler } from 'express';
 import serveStatic from 'serve-static';
 
 import { OPENID_CALLBACK_URL, useAuth } from './auth';
+import { parseSessionMaxAgeSeconds } from './auth/sessionConfig';
 import errorHandler from './errorHandler';
 import { loadPlugins } from './util/pluginManager';
 import * as routes from './routes/routes';
@@ -54,6 +55,7 @@ export default async (db: Knex, withAuth: boolean = true): Promise<Application> 
     let authMw: RequestHandler[] = [(req, res, next) => next()];
     if (withAuth) {
         const openIdService = new OpenIdService(services.settings);
+        const sessionMaxAgeSeconds = parseSessionMaxAgeSeconds(config.get('auth.sessionMaxAgeSeconds'));
         authMw = await useAuth(
             app,
             db,
@@ -61,7 +63,11 @@ export default async (db: Knex, withAuth: boolean = true): Promise<Application> 
             {
                 session: {
                     secret: config.get('auth.sessionSecret'),
-                    cookie: { httpOnly: true, secure: config.get('auth.cookieSecure') },
+                    cookie: {
+                        httpOnly: true,
+                        secure: config.get('auth.cookieSecure'),
+                        maxAge: sessionMaxAgeSeconds * 1000,
+                    },
                 },
             },
             getLogger(),
