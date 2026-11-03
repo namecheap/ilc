@@ -12,6 +12,7 @@ interface TrustedOrigin {
 interface ParsedOverrideConfig {
     apps?: Record<string, { ssr?: { src?: unknown; ignoreInvalidSsl?: boolean } }>;
     sharedLibs?: Record<string, unknown>;
+    routes?: unknown;
 }
 
 /**
@@ -177,6 +178,11 @@ export function parseOverrideConfig(cookie: unknown, trustedOrigins?: unknown, l
 
             if (overrideConfig.sharedLibs) {
                 sanitizeSpoofedLinks(overrideConfig.sharedLibs, parsedTrustedOrigins, logger);
+            }
+
+            // Routes can carry links too (e.g. in slot props), so they are checked the same way as apps and sharedLibs
+            if (isPlainObject(overrideConfig.routes) || Array.isArray(overrideConfig.routes)) {
+                sanitizeSpoofedLinks(overrideConfig.routes, parsedTrustedOrigins, logger);
             }
         }
 
