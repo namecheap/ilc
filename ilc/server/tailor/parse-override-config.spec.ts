@@ -305,6 +305,55 @@ describe('overrideConfig', () => {
         });
     });
 
+    describe('routes', () => {
+        const getRoutesCookie = (link: string) =>
+            `ILC-overrideConfig=${encodeURIComponent(
+                JSON.stringify({
+                    routes: [
+                        {
+                            route: '/example/*',
+                            slots: {
+                                body: {
+                                    appName: '@portal/one',
+                                    props: { endpoint: link, title: 'Example' },
+                                },
+                            },
+                        },
+                    ],
+                }),
+            )}`;
+
+        const getSlotProps = (config: OverrideConfig | null) =>
+            (config as { routes: { slots: { body: { props: Record<string, any> } } }[] }).routes[0].slots.body.props;
+
+        it('should sanitize untrusted links in slot props', () => {
+            const links = ['http://10.1.150.223/', 'http://foo.com/', 'https://<%= placeholder %>.foo.com/'];
+
+            links.forEach((link) => {
+                const logger = { warn: sinon.spy() };
+                const props = getSlotProps(parseOverrideConfig(getRoutesCookie(link), '', logger));
+
+                expect(props.endpoint, link).to.be.undefined;
+                expect(props.title, link).to.equal('Example');
+                expect(logger.warn.calledOnce, link).to.be.true;
+            });
+        });
+
+        it('should keep trusted links in slot props', () => {
+            const link = 'https://api.foo.com/path';
+            const props = getSlotProps(parseOverrideConfig(getRoutesCookie(link), '*.foo.com'));
+
+            expect(props.endpoint).to.equal(link);
+            expect(props.title).to.equal('Example');
+        });
+
+        it('should keep route paths', () => {
+            const config = parseOverrideConfig(getRoutesCookie('http://10.1.150.223/'), '');
+
+            expect((config as { routes: { route: string }[] }).routes[0].route).to.equal('/example/*');
+        });
+    });
+
     describe('trust all origins', () => {
         it('should not sanitize domain names', async () => {
             const ip = 'foo.com';
