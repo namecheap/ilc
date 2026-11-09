@@ -14,7 +14,7 @@ import { getLogger } from './util/logger';
 import { OpenIdService } from './auth/services/OpenIdService';
 import { unless } from './middleware/unless';
 import type { Knex } from 'knex';
-import { createServices } from './composition';
+import { createServices, type ServicesOptions } from './composition';
 import { createSharedPropsRouter } from './sharedProps/routes';
 import { createVersioningRouter } from './versioning/routes';
 import { createRouterDomainsRouter } from './routerDomains/routes';
@@ -26,15 +26,16 @@ import { createAppRoutesRouter } from './appRoutes/routes';
 import { createAppsRouter } from './apps/routes';
 import { createSettingsRouter } from './settings/routes';
 import { createPublicRouter } from './public/routes';
+import { createOverrideConfigRouter } from './overrideConfig/routes';
 
-export default async (db: Knex, withAuth: boolean = true): Promise<Application> => {
+export default async (db: Knex, withAuth: boolean = true, options: ServicesOptions = {}): Promise<Application> => {
     loadPlugins();
     logConnectionString();
     // As in production there can be 2+ instances of the ILC registry
     // AssetsDiscovery should be run separately via "npm run assetsdiscovery"
     !['production', 'test'].includes(process.env.NODE_ENV!) && require('./runnerAssetsDiscovery');
 
-    const services = createServices(db);
+    const services = createServices(db, options);
     const app = express();
     app.use(contextMiddleware);
     const healthCheckUrl = config.get<string>('healthCheck.url');
@@ -80,6 +81,7 @@ export default async (db: Knex, withAuth: boolean = true): Promise<Application> 
             db,
             versioning: services.versioning,
             settingsService: services.settings,
+            overrideConfigSigning: services.overrideConfigSigning,
         }),
     );
     app.use('/api/v1/app', authMw, createAppsRouter(services.apps));
@@ -93,6 +95,10 @@ export default async (db: Knex, withAuth: boolean = true): Promise<Application> 
     app.use('/api/v1/shared_libs', authMw, createSharedLibsRouter(services.sharedLibs));
     app.use('/api/v1/public', createPublicRouter(services.apps));
     app.use('/api/v1/entries', authMw, createEntriesRouter(services.apps, services.sharedLibs));
+    // useAuth returns [authentication, roles]; the roles middleware refuses non-GET requests from read-only users,
+    // and read-only users may sign. Without auth the single pass-through middleware is taken instead.
+    const [authenticateMw] = authMw;
+    app.use('/api/v1/override-config', createOverrideConfigRouter(services.overrideConfigSigning, authenticateMw));
 
     app.use(errorHandler);
 
