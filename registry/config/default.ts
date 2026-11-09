@@ -32,6 +32,12 @@ module.exports = {
     http: {
         requestLimit: '1mb',
     },
+    overrideConfigSigning: {
+        ttlSeconds: 8 * 60 * 60,
+        activeKeyId: null,
+        privateKeys: null,
+        rateLimitPerMinute: 60,
+    },
     healthCheck: {
         url: '/ping',
     },

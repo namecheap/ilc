@@ -16,11 +16,21 @@ import { TemplatesRepository } from './templates/repositories/TemplatesRepositor
 import { TemplatesService } from './templates/services/TemplatesService';
 import { SharedPropsRepository } from './sharedProps/repositories/SharedPropsRepository';
 import { SharedPropsService } from './sharedProps/services/SharedPropsService';
+import type { OverrideConfigSigningConfig } from './overrideConfig/interfaces';
+import {
+    OverrideConfigSigningService,
+    readOverrideConfigSigningConfig,
+} from './overrideConfig/services/OverrideConfigSigningService';
 import versioningConfig from './versioning/config';
 import { Versioning } from './versioning/services/Versioning';
 
+export interface ServicesOptions {
+    /** Replaces the `overrideConfigSigning` config section, for tests */
+    overrideConfigSigning?: OverrideConfigSigningConfig;
+}
+
 /** Builds the services once per app, entities move here from module singletons as they are refactored */
-export function createServices(db: Knex) {
+export function createServices(db: Knex, options: ServicesOptions = {}) {
     const versioning = new Versioning(versioningConfig, db);
     const routerDomainsRepository = new RouterDomainsRepository(db, versioning);
     const settings = new SettingsService(new SettingsRepository(db), routerDomainsRepository, versioning);
@@ -45,6 +55,10 @@ export function createServices(db: Knex) {
         apps,
         settings,
         config: new ConfigService(db, apps, sharedLibs, routes),
+        overrideConfigSigning: new OverrideConfigSigningService(
+            options.overrideConfigSigning ?? readOverrideConfigSigningConfig(),
+            settings,
+        ),
     };
 }
 
