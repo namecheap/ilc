@@ -18,6 +18,7 @@ import { AuthService } from './services/AuthService';
 import { OpenIdService } from './services/OpenIdService';
 import { bearerStrategyFactory } from './strategies/bearer';
 import { localStrategyFactory } from './strategies/local';
+import { SESSION_COOKIE_NAME } from './sessionConfig';
 
 type SetupAuthOptions = {
     session?: session.SessionOptions;
@@ -34,6 +35,7 @@ export async function useAuth(
 ): Promise<RequestHandler[]> {
     const sessionConfig = Object.assign(
         {
+            name: SESSION_COOKIE_NAME,
             resave: false,
             saveUninitialized: false,
             cookie: { httpOnly: true, secure: false },
