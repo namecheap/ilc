@@ -179,6 +179,23 @@ describe('Authentication / Authorization', () => {
             await agent.get('/auth/logout').expect(302).expect('Location', '/');
             await agent.get('/protected').expect(401);
         });
+
+        it('should clear the session and user info cookies on logout', async () => {
+            const agent = supertestAgent(await getApp());
+
+            await agent.post('/auth/local').set('Content-Type', 'application/json').send({
+                username: 'root',
+                password: 'pwd',
+            });
+
+            const response = await agent.get('/auth/logout').expect(302);
+            const setCookie = ([] as string[]).concat(response.headers['set-cookie'] ?? []);
+
+            expect(setCookie.some((cookie) => /^ilc-registry-session=;.*Expires=Thu, 01 Jan 1970/.test(cookie))).to.be
+                .true;
+            expect(setCookie.some((cookie) => /^ilcUserInfo=;.*Expires=Thu, 01 Jan 1970/.test(cookie))).to.be.true;
+            expect(setCookie.some((cookie) => /^ilc-registry-session=s%3A/.test(cookie))).to.be.false;
+        });
     });
 
     describe('Local login/password', () => {
@@ -209,7 +226,7 @@ describe('Authentication / Authorization', () => {
                     password: 'pwd',
                 })
                 .expect(200)
-                .expect('set-cookie', /connect\.sid=.+; Path=\/; HttpOnly/)
+                .expect('set-cookie', /ilc-registry-session=.+; Path=\/; HttpOnly/)
                 .expect('set-cookie', cookieRegex);
 
             // respect session cookie

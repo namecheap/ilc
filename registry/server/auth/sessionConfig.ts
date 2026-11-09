@@ -11,3 +11,10 @@ export function parseSessionMaxAgeSeconds(value: unknown): number {
     }
     return seconds;
 }
+
+/**
+ * A Registry-specific session cookie name. Browsers key cookies by host, not by port, so a Registry on localhost shares
+ * its cookie jar with every other local server; express-session's default name would be overwritten by any other
+ * express app there. The logout handler clears it by this name.
+ */
+export const SESSION_COOKIE_NAME = 'ilc-registry-session';

@@ -38,4 +38,4 @@ $ pnpm test
 
 To set the session cookie as secure, set the environment variable AUTH_COOKIE_SECURE=true. Note that you will need to use an HTTPS forward proxy to access the registry admin panel.
 
-The session cookie expires `AUTH_SESSION_MAX_AGE_SECONDS` after login (8 hours by default), after which the user has to log in again.
+The session cookie expires `AUTH_SESSION_MAX_AGE_SECONDS` after login (8 hours by default), after which the user has to log in again. The session cookie is named `ilc-registry-session`.
