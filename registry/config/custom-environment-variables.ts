@@ -19,9 +19,16 @@ export default {
     auth: {
         sessionSecret: 'AUTH_SESSION_SECRET',
         cookieSecure: 'AUTH_COOKIE_SECURE',
+        sessionMaxAgeSeconds: 'AUTH_SESSION_MAX_AGE_SECONDS',
     },
     healthCheck: {
         url: 'ILC_REGISTRY_HEALTH_CHECK_URL',
+    },
+    overrideConfigSigning: {
+        ttlSeconds: 'OVERRIDE_CONFIG_SIGNING_TTL_SECONDS',
+        activeKeyId: 'OVERRIDE_CONFIG_SIGNING_ACTIVE_KEY_ID',
+        privateKeys: { __name: 'OVERRIDE_CONFIG_SIGNING_PRIVATE_KEYS', __format: 'json' },
+        rateLimitPerMinute: 'OVERRIDE_CONFIG_SIGNING_RATE_LIMIT_PER_MINUTE',
     },
     infra: {
         settings: {

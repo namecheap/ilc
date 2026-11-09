@@ -27,9 +27,16 @@ module.exports = {
     auth: {
         sessionSecret: 'zaM7%#BjyZZ3A5zV@Mpt',
         cookieSecure: false,
+        sessionMaxAgeSeconds: 8 * 60 * 60,
     },
     http: {
         requestLimit: '1mb',
+    },
+    overrideConfigSigning: {
+        ttlSeconds: 8 * 60 * 60,
+        activeKeyId: null,
+        privateKeys: null,
+        rateLimitPerMinute: 60,
     },
     healthCheck: {
         url: '/ping',
