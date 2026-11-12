@@ -1,5 +1,11 @@
 import LZUTF8 from 'lzutf8';
 import type { OverrideConfig } from './merge-configs';
+import {
+    OVERRIDE_CONFIG_COOKIE,
+    getCookieValue,
+    verifyOverrideSignature,
+    type OverrideConfigSigningPublicKey,
+} from './verify-override-signature';
 
 type Logger = Pick<Console, 'warn'>;
 
@@ -149,14 +155,30 @@ function sanitizeSpoofedLinks(
     });
 }
 
-export function parseOverrideConfig(cookie: unknown, trustedOrigins?: unknown, logger?: Logger): OverrideConfig | null {
+/**
+ * `signingPublicKeys` is the `overrideConfigSigningPublicKeys` setting. With at least one key the override is applied
+ * only when the ILC-overrideConfigSignature cookie verifies over it; without keys an unsigned cookie is applied as before.
+ */
+export function parseOverrideConfig(
+    cookie: unknown,
+    trustedOrigins?: unknown,
+    logger?: Logger,
+    signingPublicKeys?: OverrideConfigSigningPublicKey[],
+): OverrideConfig | null {
     try {
-        const overrideConfigCookie =
-            typeof cookie === 'string' && cookie.split(';').find((n) => n.trim().startsWith('ILC-overrideConfig'));
-        if (!overrideConfigCookie) {
+        const overrideConfigValue = getCookieValue(cookie, OVERRIDE_CONFIG_COOKIE);
+        if (!overrideConfigValue) {
             return null;
         }
-        const overrideConfigValue = overrideConfigCookie.replace(/^\s?ILC-overrideConfig=/, '');
+
+        // Verified over the raw value, before anything is decoded, so a rejected cookie costs less than an accepted one
+        if (
+            signingPublicKeys &&
+            signingPublicKeys.length > 0 &&
+            !verifyOverrideSignature(cookie, overrideConfigValue, signingPublicKeys, logger)
+        ) {
+            return null;
+        }
 
         let overrideConfig: ParsedOverrideConfig;
 

@@ -34,6 +34,8 @@ export interface RegistryConfig {
     settings: {
         trailingSlash?: string;
         overrideConfigTrustedOrigins?: string;
+        /** Served by the Registry when override config signing is configured; see tailor/verify-override-signature */
+        overrideConfigSigningPublicKeys?: { kid: string; publicKey: string }[];
         globalSpinner?: {
             customHTML?: string;
         };
