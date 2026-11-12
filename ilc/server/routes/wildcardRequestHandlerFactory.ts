@@ -44,6 +44,7 @@ export function wildcardRequestHandlerFactory(
             req.headers.cookie,
             registryConfig.settings.overrideConfigTrustedOrigins,
             logger,
+            registryConfig.settings.overrideConfigSigningPublicKeys,
         ) as OverrideConfig;
         // Excluding LDE related transactions from NewRelic
         if (overrideConfigs !== null) {
