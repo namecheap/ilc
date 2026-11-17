@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7-labs
 # Built from the repository root: docker build --file ./ilc/Dockerfile .
 
-FROM node:22-alpine
+FROM node:22.23.5-alpine3.23
 
 RUN apk update && apk add --no-cache bash git openssh python3 make g++ findutils
 
