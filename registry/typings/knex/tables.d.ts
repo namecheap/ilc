@@ -5,6 +5,7 @@ import { DomainSettingRow, SettingRow } from '../../server/settings/interfaces';
 import { SharedLibRow } from '../../server/sharedLibs/interfaces';
 import { LocalizedTemplateRow, TemplateRow } from '../../server/templates/interfaces';
 import { AuthEntityRow } from '../../server/authEntities/interfaces';
+import { OAuthAuthorizationCodeRow } from '../../server/auth/oauth/interfaces';
 import { SharedPropsRow } from '../../server/sharedProps/interfaces';
 import { RouterDomainsRow } from '../../server/routerDomains/interfaces';
 import { VersionRow, VersionRowData } from '../../server/versioning/interfaces';
@@ -61,6 +62,11 @@ declare module 'knex/types/tables' {
             AuthEntityRow,
             Optional<AuthEntityRow, 'id' | 'secret' | 'provider' | 'role' | 'meta'>,
             Partial<Omit<AuthEntityRow, 'id'>>
+        >;
+        oauth_authorization_codes: Knex.CompositeTableType<
+            OAuthAuthorizationCodeRow,
+            Optional<OAuthAuthorizationCodeRow, 'used' | 'createdAt'>,
+            Partial<Omit<OAuthAuthorizationCodeRow, 'codeHash'>>
         >;
     }
 }

@@ -490,6 +490,9 @@ importers:
       connect-session-knex:
         specifier: ^5.0.0
         version: 5.0.0(pg@8.23.1)(supports-color@5.5.0)
+      cookie-signature:
+        specifier: ~1.0.7
+        version: 1.0.7
       deep-equal:
         specifier: ^2.2.3
         version: 2.2.3
@@ -563,6 +566,9 @@ importers:
       '@types/chai-as-promised':
         specifier: ^8.0.2
         version: 8.0.2
+      '@types/cookie-signature':
+        specifier: ^1.1.2
+        version: 1.1.2
       '@types/deep-equal':
         specifier: ^1.0.4
         version: 1.0.4
@@ -2131,6 +2137,9 @@ packages:
 
   '@types/conventional-commits-parser@5.0.2':
     resolution: {integrity: sha512-BgT2szDXnVypgpNxOK8aL5SGjUdaQbC++WZNjF1Qge3Og2+zhHj+RWhmehLhYyvQwqAmvezruVfOf8+3m74W+g==}
+
+  '@types/cookie-signature@1.1.2':
+    resolution: {integrity: sha512-2OhrZV2LVnUAXklUFwuYUTokalh/dUb8rqt70OW6ByMSxYpauPZ+kfNLknX3aJyjY5iu8i3cUyoLZP9Fn37tTg==}
 
   '@types/cookiejar@2.1.5':
     resolution: {integrity: sha512-he+DHOWReW0nghN24E1WUqM0efK4kI9oTqDm6XmK8ZPe2djZ90BSNdGnIyCLzCPw7/pogPlGbzI2wHGGmi4O/Q==}
@@ -9378,6 +9387,10 @@ snapshots:
   '@types/conventional-commits-parser@5.0.2':
     dependencies:
       '@types/node': 22.19.3
+
+  '@types/cookie-signature@1.1.2':
+    dependencies:
+      '@types/node': 22.20.5
 
   '@types/cookiejar@2.1.5': {}
 

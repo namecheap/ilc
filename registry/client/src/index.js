@@ -2,8 +2,10 @@
 import React from 'react';
 import { Admin, Resource } from 'react-admin'; // eslint-disable-line import/no-unresolved
 import { render } from 'react-dom';
+import { Route } from 'react-router-dom';
 
 import LoginPage from './LoginPage';
+import OAuthErrorPage from './OAuthErrorPage';
 import authProvider from './authProvider';
 import dataProvider from './dataProvider';
 import Layout from './Layout';
@@ -24,10 +26,11 @@ render(
         dataProvider={dataProvider}
         title="ILC Registry"
         layout={Layout}
+        customRoutes={[<Route exact path="/oauth/error" component={OAuthErrorPage} noLayout />]}
     >
-        {permissions => {
-            const filterPermissions = pages => {
-                if (permissions === 'readonly')  {
+        {(permissions) => {
+            const filterPermissions = (pages) => {
+                if (permissions === 'readonly') {
                     return {
                         ...pages,
                         edit: pages.show,
@@ -47,8 +50,8 @@ render(
                 <Resource name="auth_entities" {...filterPermissions(authEntities)} />,
                 <Resource name="settings" {...filterPermissions(settings)} />,
                 <Resource name="versioning" {...filterPermissions(versioning)} />,
-            ]
+            ];
         }}
     </Admin>,
-    document.getElementById('root')
+    document.getElementById('root'),
 );

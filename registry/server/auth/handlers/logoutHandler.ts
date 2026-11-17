@@ -1,6 +1,6 @@
 import { type RequestHandler } from 'express';
 
-import { SESSION_COOKIE_NAME } from '../sessionConfig';
+import { SESSION_COOKIE_NAME } from '../session/sessionConfig';
 
 /**
  * Destroys the session instead of regenerating it, so the browser keeps no session cookie after logout.
