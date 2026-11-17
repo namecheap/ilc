@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7-labs
 # Built from the repository root: docker build --file ./registry/Dockerfile .
 
-FROM node:22.23.5-alpine3.23
+FROM node:22.23.5-alpine
 
 RUN apk --no-cache add --virtual builds-deps build-base python3 py3-setuptools && \
     ln -sf python3 /usr/bin/python
