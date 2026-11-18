@@ -19,7 +19,7 @@ To do this:
 
     - If you do have a "white" IP address, use the following URL: `http://your_public_ip:8239`
 
-1. Open the production deployment and add the following cookie:
+1. Open the production deployment and add the override cookie. When the production Registry signs overrides (see [Signed override configuration](#signed-override-configuration)), ILC ignores an override that comes without its signature cookie, so get the signature first and write it before the override:
 
     ```js
     const exposedUrl = 'http://c6960219.ngrok.io'; // or http://your_public_ip:8239
@@ -40,6 +40,8 @@ To do this:
         }),
     );
 
+    // When overrides are signed: the signature the Registry returned for exactly this overrideConfig value
+    document.cookie = `ILC-overrideConfigSignature=${signature}; path=/;`;
     document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`;
     ```
 
@@ -76,21 +78,52 @@ Each origin in the list is matched against the host of a link as follows:
 
 Matching is case-insensitive and ignores a trailing dot in the host. `localhost` is always trusted.
 
+### Signed override configuration
+
+Trusted origins limit where an override can load code from. To limit who can apply an override at all, the ILC Registry can sign the override: configure it with an Ed25519 private key (see the Registry README), and it serves the matching public keys to ILC as the `overrideConfigSigningPublicKeys` setting. While at least one key is served, an override takes two cookies:
+
+- `ILC-overrideConfig`: the configuration, exactly as in the examples on this page
+- `ILC-overrideConfigSignature`: the signature the Registry issued for that exact cookie value
+
+ILC applies the override only when the signature is valid for the value, not expired and issued with a key it knows; every ignored override is logged with the reason. An `ILC-overrideConfig` cookie written by hand without its signature is ignored. The trusted-origins check still applies to a signed override.
+
+The signature is a detached compact JWS, `BASE64URL(header)..BASE64URL(signature)`, signed with EdDSA over the raw value of the override cookie, with the expiry and the user in the protected header. The ILC Overrides extension requests it for you. To do it by hand, send the cookie value to the Registry with your Registry credentials:
+
+```bash
+curl -X POST https://ilc-registry.example.com/api/v1/override-config/sign \
+    -H 'Authorization: Bearer <your API token>' \
+    -H 'Content-Type: application/json' \
+    -d '{"value":"<the overrideConfig value, URI-encoded as in the examples>"}'
+# {"signature":"eyJ...","expiresAt":"2026-11-03T20:00:00.000Z","untrustedLinks":[]}
+```
+
+Then write both cookies on the production site, the signature first:
+
+```js
+document.cookie = `ILC-overrideConfigSignature=${signature}; path=/;`;
+document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`;
+```
+
+`untrustedLinks` lists the links in the configuration that point to a host outside `overrideConfigTrustedOrigins`. They are signed with the rest, but ILC removes them when it applies the cookie, so an empty list means the whole configuration applies. A signature expires after 8 hours by default; sign the value again to continue.
+
+Without a configured key, ILC applies the `ILC-overrideConfig` cookie alone, as described above.
+
 ## Create your MS
 
-1. Take the [adapter](https://single-spa.js.org/docs/ecosystem){: target=\_blank} :octicons-link-external-16: for your framework, wrap your application with it, and export lifecycle functions.
-1. Turn off CORS for the development environment.
+1.  Take the [adapter](https://single-spa.js.org/docs/ecosystem){: target=\_blank} :octicons-link-external-16: for your framework, wrap your application with it, and export lifecycle functions.
+1.  Turn off CORS for the development environment.
 
-    !!! example "Webpack config to disable CORS"
-    `js
-devServer: {
+        !!! example "Webpack config to disable CORS"
+        `js
+
+    devServer: {
     headers: {
-        "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": "\*",
     },
-}
-`
+    }
+    `
 
-1. Wrap your MS bundle file with the following code:
+1.  Wrap your MS bundle file with the following code:
 
     ```js
     '(function(define){\n' + bundle_content + '\n})((window.ILC && window.ILC.define) || window.define);';
@@ -99,9 +132,9 @@ devServer: {
     !!! note ""
     For Webpack, you can use [wrapper-webpack-plugin](https://www.npmjs.com/package/wrapper-webpack-plugin){: target=\_blank} :octicons-link-external-16:
 
-1. Make sure your MS is publicly available - that is, hosted under 0.0.0.0 ([default for Node http, and Express](https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback){: target=\_blank} :octicons-link-external-16:) and exposed via your public IP address or with the help of specialized tools, like ngrok.
-1. Make sure the host of your MS (`10.1.150.85` in the example below) is listed in `overrideConfigTrustedOrigins` (see [Security considerations](#security-considerations)), otherwise ILC removes the links from the configuration.
-1. Add `ILC-overrideConfig` cookie with the following configuration to production:
+1.  Make sure your MS is publicly available - that is, hosted under 0.0.0.0 ([default for Node http, and Express](https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback){: target=\_blank} :octicons-link-external-16:) and exposed via your public IP address or with the help of specialized tools, like ngrok.
+1.  Make sure the host of your MS (`10.1.150.85` in the example below) is listed in `overrideConfigTrustedOrigins` (see [Security considerations](#security-considerations)), otherwise ILC removes the links from the configuration.
+1.  Add the `ILC-overrideConfig` cookie with the following configuration to production. When overrides are signed, [get the signature](#signed-override-configuration) for the value first and write it before the override:
 
     ```js
     const overrideConfig = encodeURIComponent(
@@ -141,15 +174,17 @@ devServer: {
         }),
     );
 
+    // When overrides are signed: the signature the Registry returned for exactly this overrideConfig value
+    document.cookie = `ILC-overrideConfigSignature=${signature}; path=/;`;
     document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`;
     ```
 
-1. Check that requests are not affected by the mixed content issue. If yes, you can [turn off this check in your browser](https://docs.adobe.com/content/help/en/target/using/experiences/vec/troubleshoot-composer/mixed-content.html){: target=\_blank} :octicons-link-external-16:.
-1. If you excluded some libraries (for example, via the [`externals`](https://github.com/namecheap/ilc/blob/e1ea372f822fc95790e73743c5ad7ddf31e3c892/devFragments/people/webpack.config.js#L95){: target=\_blank} :octicons-link-external-16: property of the webpack configuration), comment it when developing in production.
+1.  Check that requests are not affected by the mixed content issue. If yes, you can [turn off this check in your browser](https://docs.adobe.com/content/help/en/target/using/experiences/vec/troubleshoot-composer/mixed-content.html){: target=\_blank} :octicons-link-external-16:.
+1.  If you excluded some libraries (for example, via the [`externals`](https://github.com/namecheap/ilc/blob/e1ea372f822fc95790e73743c5ad7ddf31e3c892/devFragments/people/webpack.config.js#L95){: target=\_blank} :octicons-link-external-16: property of the webpack configuration), comment it when developing in production.
 
 ## Shared libraries
 
-Shared libraries are developed the same way as MSs. You only need to provide library name (without `@sharedLibrary/` prefix) and path to spa-bundle:
+Shared libraries are developed the same way as MSs, [signature](#signed-override-configuration) included. You only need to provide library name (without `@sharedLibrary/` prefix) and path to spa-bundle:
 
 ```js
 const overrideConfig = encodeURIComponent(
@@ -162,5 +197,7 @@ const overrideConfig = encodeURIComponent(
     }),
 );
 
+// When overrides are signed: the signature the Registry returned for exactly this overrideConfig value
+document.cookie = `ILC-overrideConfigSignature=${signature}; path=/;`;
 document.cookie = `ILC-overrideConfig=${overrideConfig}; path=/;`;
 ```
