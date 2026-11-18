@@ -1,9 +1,9 @@
 import config from 'config';
-import express, { Application, RequestHandler } from 'express';
+import express, { Application } from 'express';
 import serveStatic from 'serve-static';
 
-import { OPENID_CALLBACK_URL, useAuth } from './auth';
-import { parseSessionMaxAgeSeconds } from './auth/sessionConfig';
+import { type AuthMiddlewares, OPENID_CALLBACK_URL, useAuth } from './auth';
+import { parseSessionMaxAgeSeconds } from './auth/session/sessionConfig';
 import errorHandler from './errorHandler';
 import { loadPlugins } from './util/pluginManager';
 import * as routes from './routes/routes';
@@ -27,6 +27,8 @@ import { createAppsRouter } from './apps/routes';
 import { createSettingsRouter } from './settings/routes';
 import { createPublicRouter } from './public/routes';
 import { createOverrideConfigRouter } from './overrideConfig/routes';
+import { OAuthScope } from './auth/oauth/interfaces';
+import { scopesMiddlewareFactory } from './auth/middleware/scopesMiddleware';
 
 export default async (db: Knex, withAuth: boolean = true, options: ServicesOptions = {}): Promise<Application> => {
     loadPlugins();
@@ -53,11 +55,12 @@ export default async (db: Knex, withAuth: boolean = true, options: ServicesOptio
 
     app.use('/', serveStatic('client/dist'));
 
-    let authMw: RequestHandler[] = [(req, res, next) => next()];
+    // Without auth every request passes through as anonymous
+    let auth: AuthMiddlewares = { authenticate: [], authorize: [], all: [(req, res, next) => next()] };
     if (withAuth) {
         const openIdService = new OpenIdService(services.settings);
         const sessionMaxAgeSeconds = parseSessionMaxAgeSeconds(config.get('auth.sessionMaxAgeSeconds'));
-        authMw = await useAuth(
+        auth = await useAuth(
             app,
             db,
             openIdService,
@@ -75,6 +78,7 @@ export default async (db: Knex, withAuth: boolean = true, options: ServicesOptio
         );
     }
 
+    const authMw = auth.all;
     app.use(
         '/api/v1/config',
         routes.config(authMw, services.config, {
@@ -95,10 +99,15 @@ export default async (db: Knex, withAuth: boolean = true, options: ServicesOptio
     app.use('/api/v1/shared_libs', authMw, createSharedLibsRouter(services.sharedLibs));
     app.use('/api/v1/public', createPublicRouter(services.apps));
     app.use('/api/v1/entries', authMw, createEntriesRouter(services.apps, services.sharedLibs));
-    // useAuth returns [authentication, roles]; the roles middleware refuses non-GET requests from read-only users,
-    // and read-only users may sign. Without auth the single pass-through middleware is taken instead.
-    const [authenticateMw] = authMw;
-    app.use('/api/v1/override-config', createOverrideConfigRouter(services.overrideConfigSigning, authenticateMw));
+    // Authentication only, plus the sign scope: the roles middleware refuses non-GET requests from read-only users,
+    // and read-only users may sign. The sign endpoint has its own scope instead of the /api/v1 ones.
+    app.use(
+        '/api/v1/override-config',
+        createOverrideConfigRouter(services.overrideConfigSigning, [
+            ...auth.authenticate,
+            scopesMiddlewareFactory(OAuthScope.OverrideSign),
+        ]),
+    );
 
     app.use(errorHandler);
 

@@ -81,3 +81,75 @@ Every signature is logged with the user, the app names, the hosts in the overrid
 To rotate a key, add the new key to the map and make it active, keep the old key in the map for one TTL so the
 cookies it signed stay verifiable, then remove it. To revoke a leaked cookie at once, remove its key from the map.
 Removing every key switches the feature off again.
+
+## CLI and agent login (OAuth)
+
+A tool that runs on a developer's machine, such as the Registry CLI or an agent, signs in through the OAuth 2.1
+authorization code flow with PKCE and gets a Registry session limited to scopes. No client secret is involved.
+
+With OpenID enabled the login has to run on the Registry's base URL (the `baseUrl` setting, or `infra.settings.baseUrl`),
+because the OpenID provider redirects back to that host and the login state lives in its session cookie. A request to
+`/oauth/authorize` that arrives through another host, such as `localhost` instead of the base URL's name, is redirected
+there first with its query intact, so a client may use any name the Registry answers on.
+
+### Scopes
+
+| Scope            | Allows                              |
+| ---------------- | ----------------------------------- |
+| `override:sign`  | `POST /api/v1/override-config/sign` |
+| `registry:read`  | every `GET` under `/api/v1`         |
+| `registry:write` | every other method under `/api/v1`  |
+
+A session created by the UI login has no scopes and is limited by its role only. A session with scopes is limited to
+them on top of the role, so a scope never exceeds the role: a `registry:write` session of a read-only user still
+cannot write. A request outside the scopes is a `403` with `{ "message": "... \"<scope>\" is required." }`.
+
+### Routes
+
+| Route                                         | Purpose                                                                                              |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `GET /.well-known/oauth-authorization-server` | RFC 8414 metadata: the endpoints, scopes and methods below                                           |
+| `GET /oauth/authorize`                        | Signs the user in (OpenID when enabled, the admin UI login otherwise) and redirects back with a code |
+| `POST /oauth/token`                           | Exchanges the code for an access token, form-encoded, 30 requests per minute per IP                  |
+| `POST /oauth/revoke`                          | Ends the session of a token (RFC 7009), always `200`                                                 |
+
+The client id is fixed, `ilc-registry-cli`, and the redirect URI must be a loopback address on any port,
+`http://127.0.0.1:<port>/...` or `http://localhost:<port>/...` (RFC 8252 section 7.3): the tool listens there for
+the redirect. A wrong client or redirect URI is shown on the admin UI error page (`/#/oauth/error`); every other error
+is sent to the redirect URI as `error`, `error_description` and `state`. The `scope` parameter is space separated and defaults to
+`override:sign`; an optional `resource` must be the registry's own URL.
+
+The access token is a Registry session value, the same as the `ilc-registry-session` cookie: it has the same max age
+(`AUTH_SESSION_MAX_AGE_SECONDS`), it does not slide with use, and it works both as a bearer token and as that cookie.
+The login that issues it is only possible from an unscoped browser session, a scoped session cannot mint another.
+
+### Example
+
+The tool generates a PKCE verifier and opens the authorize URL in the browser:
+
+```bash
+$ code_verifier=$(openssl rand -base64 48 | tr -d '=+/' | cut -c1-64)
+$ code_challenge=$(printf '%s' "$code_verifier" | openssl dgst -sha256 -binary | openssl base64 -A | tr '+/' '-_' | tr -d '=')
+$ open "http://localhost:4001/oauth/authorize?response_type=code&client_id=ilc-registry-cli\
+&redirect_uri=http%3A%2F%2F127.0.0.1%3A8765%2Fcallback&code_challenge=$code_challenge\
+&code_challenge_method=S256&state=xyz&scope=override%3Asign%20registry%3Aread"
+```
+
+The browser comes back to `http://127.0.0.1:8765/callback?code=<code>&state=xyz` within a minute, and the tool
+exchanges the code:
+
+```bash
+$ curl -X POST http://localhost:4001/oauth/token \
+    -d grant_type=authorization_code -d client_id=ilc-registry-cli \
+    -d redirect_uri=http://127.0.0.1:8765/callback -d code=<code> -d code_verifier=$code_verifier
+{"access_token":"s:...","token_type":"Bearer","expires_in":28800,"scope":"override:sign registry:read"}
+```
+
+The token is used as a bearer token:
+
+```bash
+$ curl -X POST http://localhost:4001/api/v1/override-config/sign \
+    -H 'Authorization: Bearer s:...' -H 'Content-Type: application/json' \
+    -d '{"value":"<cookie value>"}'
+$ curl -X POST http://localhost:4001/oauth/revoke -d 'token=s:...'
+```

@@ -30,17 +30,16 @@ const getApp = async () => {
     const app = express();
     app.use(unless(OPENID_CALLBACK_URL, express.json()));
     express.urlencoded({ extended: true });
-    app.use(
-        await useAuth(
-            app,
-            db,
-            new OpenIdService(settingsService),
-            {
-                session: { secret: 'testSecret' },
-            },
-            getLogger(),
-        ),
+    const auth = await useAuth(
+        app,
+        db,
+        new OpenIdService(settingsService),
+        {
+            session: { secret: 'testSecret' },
+        },
+        getLogger(),
     );
+    app.use(auth.all);
 
     app.use('/protected', (req, res) => res.send('ok'));
     app.use((error: Error, req: Request, res: Response, next: NextFunction) => {

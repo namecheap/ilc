@@ -8,6 +8,28 @@ function getUserInfo() {
     }
 }
 
+/** The query of the current hash route, `#/login?returnTo=...` */
+function getHashQuery() {
+    const hash = window.location.hash;
+    const start = hash.indexOf('?');
+    return new URLSearchParams(start === -1 ? '' : hash.slice(start + 1));
+}
+
+/**
+ * Only a path on this origin is followed after the login, so the query cannot send the user elsewhere. Resolving
+ * the value against the origin catches every spelling of an external URL, backslashes and scheme included.
+ */
+function isSameOriginPath(path) {
+    if (typeof path !== 'string' || !path.startsWith('/')) {
+        return false;
+    }
+    try {
+        return new URL(path, window.location.origin).origin === window.location.origin;
+    } catch {
+        return false;
+    }
+}
+
 // Authenticatd by default
 export default {
     login: ({ username, password }) => {
@@ -19,6 +41,14 @@ export default {
         return fetch(request).then((response) => {
             if (response.status < 200 || response.status >= 300) {
                 throw new Error(response.statusText);
+            }
+
+            // A server route, such as /oauth/authorize continuing a pending OAuth request, needs a full navigation;
+            // the promise stays pending so react-admin does not route away while the browser leaves the page
+            const returnTo = getHashQuery().get('returnTo');
+            if (isSameOriginPath(returnTo)) {
+                window.location.assign(returnTo);
+                return new Promise(() => {});
             }
         });
     },

@@ -7,12 +7,12 @@ import { signOverrideConfig } from './signOverrideConfig';
 const MINUTE_MS = 60 * 1000;
 
 /**
- * `authenticate` is the authentication middleware alone, without the roles check: any authenticated user may sign,
- * read-only ones included, because an override only affects the browser that carries it.
+ * `authenticate` is the authentication and scope middleware, without the roles check: any authenticated user may
+ * sign, read-only ones included, because an override only affects the browser that carries it.
  */
 export function createOverrideConfigRouter(
     signingService: OverrideConfigSigningService,
-    authenticate: RequestHandler,
+    authenticate: RequestHandler[],
 ): Router {
     const router = express.Router();
     const rateLimiter = new SlidingWindowRateLimiter(signingService.rateLimitPerMinute, MINUTE_MS);
