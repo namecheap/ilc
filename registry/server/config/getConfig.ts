@@ -4,6 +4,7 @@ import type { Knex } from 'knex';
 import type { RouteWithSlotRow } from '../appRoutes/interfaces';
 import { routeWithSlotColumns } from '../appRoutes/repositories/RoutesRepository';
 import { Tables } from '../db/structure';
+import type { OverrideConfigSigningService } from '../overrideConfig/services/OverrideConfigSigningService';
 import type { SettingsService } from '../settings/services/SettingsService';
 import { appendDigest } from '../util/hmac';
 import { EntityTypes } from '../versioning/interfaces';
@@ -15,9 +16,15 @@ type ConfigReaderDependencies = {
     db: Knex;
     versioning: Versioning;
     settingsService: SettingsService;
+    overrideConfigSigning: OverrideConfigSigningService;
 };
 
-export function getConfig({ db, versioning, settingsService }: ConfigReaderDependencies): RequestHandler {
+export function getConfig({
+    db,
+    versioning,
+    settingsService,
+    overrideConfigSigning,
+}: ConfigReaderDependencies): RequestHandler {
     return async (req, res) => {
         let domainName = req.query.domainName ? req.query.domainName : undefined;
         domainName = typeof domainName === 'string' ? domainName : undefined;
@@ -62,7 +69,10 @@ export function getConfig({ db, versioning, settingsService }: ConfigReaderDepen
         data.routes = routeDtos;
         data.specialRoutes = specialRoutes;
 
-        data.settings = settings;
+        // Public keys are derived from config, not stored, so they join the settings here
+        data.settings = overrideConfigSigning.isConfigured()
+            ? { ...settings, overrideConfigSigningPublicKeys: overrideConfigSigning.getPublicKeys() }
+            : settings;
 
         const { sharedLibs: sharedLibsDtos, dynamicLibs } = transformSharedLibs(sharedLibs);
 

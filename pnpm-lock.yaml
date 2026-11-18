@@ -514,6 +514,9 @@ importers:
       knex:
         specifier: ^3.3.0
         version: 3.3.0(pg@8.23.1)(supports-color@5.5.0)
+      lzutf8:
+        specifier: ^0.6.3
+        version: 0.6.3
       newrelic:
         specifier: ^14.7.0
         version: 14.7.0(supports-color@5.5.0)
