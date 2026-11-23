@@ -10,11 +10,7 @@ export function signOverrideConfig(
     rateLimiter: SlidingWindowRateLimiter,
 ): RequestHandler {
     return validated({ body: signOverrideConfigBodySchema }, async ({ body }, req, res) => {
-        if (!signingService.isConfigured()) {
-            res.status(404).send('Override config signing is not configured in this registry');
-            return;
-        }
-
+        // The router answers 404 before authentication when no key is configured
         const user = req.user;
         if (!user) {
             res.status(401).send('Authentication is required to sign an override config');

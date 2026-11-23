@@ -57,6 +57,12 @@ describe(url, () => {
             expect(response.text).to.include('not configured');
         });
 
+        it('answers 404 before authentication, so a client without a session needs no sign-in', async () => {
+            const response = await req.post(url).send({ value: plainValue });
+            expect(response.status).to.equal(404);
+            expect(response.text).to.include('not configured');
+        });
+
         it('serves no public keys with the config', async () => {
             const response = await req.get('/api/v1/config').expect(200);
             expect(response.body.settings).to.not.have.property('overrideConfigSigningPublicKeys');
