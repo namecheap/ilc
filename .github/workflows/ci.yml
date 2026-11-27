@@ -346,10 +346,34 @@ jobs:
                   namecheap/ilc_tmp:reg_$SHA
                   sh -c "pnpm test:ci && mv .nyc_output/* /.coverage"
 
+            - name: Run admin UI tests
+              if: matrix.branch.name == 'src'
+              run: >-
+                  docker run
+                  --volume $(pwd)/artifacts/registry-client/coverage:/.coverage
+                  namecheap/ilc_tmp:reg_$SHA
+                  sh -c "cd client && pnpm lint && pnpm type-check && pnpm test:coverage && cp coverage/coverage-summary.json /.coverage/"
+
+            # The base branch may be from before the admin UI got its unit tests: an empty report
+            # makes the coverage diff show every file as new instead of failing
+            - name: Collect admin UI coverage of the base branch
+              if: matrix.branch.name == 'dest'
+              env:
+                  EMPTY_SUMMARY: '{"total":{"lines":{"total":0,"covered":0,"skipped":0,"pct":0},"statements":{"total":0,"covered":0,"skipped":0,"pct":0},"functions":{"total":0,"covered":0,"skipped":0,"pct":0},"branches":{"total":0,"covered":0,"skipped":0,"pct":0}}}'
+              # The container writes the file, because Docker creates the mounted folder as root
+              run: |
+                  docker run --volume $(pwd)/artifacts/registry-client/coverage:/.coverage namecheap/ilc_tmp:reg_$SHA \
+                      sh -c "cd client && pnpm run --if-present test:coverage; cp coverage/coverage-summary.json /.coverage/ 2>/dev/null || echo '$EMPTY_SUMMARY' > /.coverage/coverage-summary.json"
+
             - uses: actions/upload-artifact@v6
               with:
                   name: ${{ matrix.branch.name }}-registry-tests-artifacts
                   path: ./artifacts/registry/coverage
+
+            - uses: actions/upload-artifact@v6
+              with:
+                  name: ${{ matrix.branch.name }}-registry-client-tests-artifacts
+                  path: ./artifacts/registry-client/coverage
 
     e2e_tests:
         name: Run E2E tests
@@ -448,6 +472,17 @@ jobs:
                   oldCodeCoveragePath: ./dest-registry-tests-artifacts/coverage/coverage-summary.json
                   newCodeCoveragePath: ./src-registry-tests-artifacts/coverage/coverage-summary.json
                   total_delta: 2
+            - name: Create coverage report for registry/client
+              id: registry-client-coverage-report
+              if: '!cancelled()'
+              uses: namecheap/Coverage-Diff@master
+              with:
+                  fullCoverageDiff: true
+                  autorun: false
+                  postComment: false
+                  oldCodeCoveragePath: ./dest-registry-client-tests-artifacts/coverage-summary.json
+                  newCodeCoveragePath: ./src-registry-client-tests-artifacts/coverage-summary.json
+                  total_delta: 2
             - name: Compose comment
               if: '!cancelled()'
               # Reports contain file names from the pull request, so they go through env and not into the script
@@ -455,6 +490,7 @@ jobs:
                   ILC_SERVER_REPORT: ${{ steps.ilc-server-coverage-report.outputs.report }}
                   ILC_CLIENT_REPORT: ${{ steps.ilc-client-coverage-report.outputs.report }}
                   REGISTRY_REPORT: ${{ steps.registry-coverage-report.outputs.report }}
+                  REGISTRY_CLIENT_REPORT: ${{ steps.registry-client-coverage-report.outputs.report }}
               run: |
                   {
                       echo "# Coverage Report"
@@ -464,6 +500,8 @@ jobs:
                       echo "$ILC_CLIENT_REPORT"
                       echo "## Registry"
                       echo "$REGISTRY_REPORT"
+                      echo "## Registry/client"
+                      echo "$REGISTRY_CLIENT_REPORT"
                   } > report.md
             - name: Add Coverage PR Comment
               if: '!cancelled()'

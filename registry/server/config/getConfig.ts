@@ -33,10 +33,12 @@ export function getConfig({
             versioning.versionedSelect(Tables.Apps, 'name', EntityTypes.apps, [`${Tables.Apps}.*`]),
             versioning.versionedSelect(Tables.Templates, 'name', EntityTypes.templates, [`${Tables.Templates}.name`]),
             versioning
-                .versionedSelect<
-                    typeof Tables.Routes,
-                    RouteWithSlotRow
-                >(Tables.Routes, 'id', EntityTypes.routes, routeWithSlotColumns)
+                .versionedSelect<typeof Tables.Routes, RouteWithSlotRow>(
+                    Tables.Routes,
+                    'id',
+                    EntityTypes.routes,
+                    routeWithSlotColumns,
+                )
                 .leftJoin('route_slots', 'route_slots.routeId', 'routes.id')
                 .orderBy('orderPos', 'ASC'),
             db.select().from('shared_props'), // No versionId for sharedProps in the response

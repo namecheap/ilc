@@ -41,6 +41,8 @@ RUN node -e "require('@newrelic/native-metrics')"
 COPY --exclude=package.json --exclude=client/package.json ./registry/ /codebase/
 # tsconfig.json extends the workspace base config one level up, as it does in the repository
 COPY tsconfig.base.json /
+# The admin UI lint (client/eslint.config.mjs) checks formatting with the workspace Prettier config
+COPY .prettierrc /
 
 RUN pnpm build
 

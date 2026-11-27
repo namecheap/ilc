@@ -39,7 +39,7 @@ Scenario('toggles a boolean setting', async ({ I, registryPage }) => {
 Scenario('shows the second page of settings', ({ I, registryPage }) => {
     registryPage.open('settings');
     I.waitForElement(registryPage.row('amdDefineCompatibilityMode'), 10);
-    I.click('Next');
+    I.click('button[aria-label="Go to next page"]');
     I.waitForInvisible(registryPage.row('amdDefineCompatibilityMode'), 10);
     I.seeElement('tbody tr');
 });

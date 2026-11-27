@@ -1,0 +1,21 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        // Vite bundles the sources, tsc only type-checks them
+        "target": "es2022",
+        "lib": ["es2022", "dom", "dom.iterable"],
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "jsx": "react-jsx",
+        "noEmit": true,
+        "types": ["vite/client"]
+    },
+    // Editors open the projects below, scripts use them directly
+    "files": [],
+    "include": [],
+    "references": [
+        { "path": "./tsconfig.app.json" },
+        { "path": "./tsconfig.spec.json" },
+        { "path": "./tsconfig.node.json" }
+    ]
+}

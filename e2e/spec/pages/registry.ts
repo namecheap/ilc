@@ -64,12 +64,14 @@ export function seeNotification(text: string) {
 }
 
 export function openTab(name: string) {
+    // Once the page is scrolled, e.g. to the Save button, the app bar covers the tabs of a long form
+    I.scrollPageToTop();
     I.click(name, tabs);
 }
 
 /**
  * Picks an option of a Material UI select, which renders a button and a popup list instead of a <select>.
- * React Admin gives the button the id of the field source.
+ * The admin UI gives the button the id of the field source.
  */
 export function selectOption(source: string, option: string) {
     I.click(`#${source}`);
