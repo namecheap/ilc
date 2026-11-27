@@ -17,6 +17,8 @@ Scenario('creates a template with a localized version', async ({ I, registryPage
     I.click('Add Locale');
     registryPage.selectOption('lang-select', 'ua-UA');
     I.click('Add Locale', locate('form').withText('Add new Language'));
+    // The dialog fades out, and a click on the tab under it would land on its backdrop
+    I.waitForInvisible('[role="dialog"]', 10);
     registryPage.openTab('ua-UA');
     I.fillField('Content for ua-UA language', localizedContent);
     registryPage.save();

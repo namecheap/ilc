@@ -30,10 +30,10 @@ export class RoutesRepository {
 
     async list(filters: AppRoutesFilters, range: string | undefined): Promise<PaginatedResult<RouteListRow>> {
         const query = this.versioning
-            .versionedSelect<
-                typeof Tables.Routes,
-                RouteListRow
-            >(Tables.Routes, 'id', EntityTypes.routes, ['routes.id as routeId', 'routes.*'])
+            .versionedSelect<typeof Tables.Routes, RouteListRow>(Tables.Routes, 'id', EntityTypes.routes, [
+                'routes.id as routeId',
+                'routes.*',
+            ])
             .orderBy('orderPos', 'ASC')
             .orderBy('routes.id', 'ASC');
 
@@ -57,10 +57,12 @@ export class RoutesRepository {
     /** One row per slot, a route without slots gives one row with null slot columns */
     async findWithSlotsById(routeId: number): Promise<RouteWithSlotRow[]> {
         return this.versioning
-            .versionedSelect<
-                typeof Tables.Routes,
-                RouteWithSlotRow
-            >(Tables.Routes, 'id', EntityTypes.routes, routeWithSlotColumns)
+            .versionedSelect<typeof Tables.Routes, RouteWithSlotRow>(
+                Tables.Routes,
+                'id',
+                EntityTypes.routes,
+                routeWithSlotColumns,
+            )
             .leftJoin(Tables.RouteSlots, `${Tables.RouteSlots}.routeId`, `${Tables.Routes}.id`)
             .where('routes.id', routeId);
     }

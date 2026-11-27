@@ -11,7 +11,8 @@ Scenario('shows records without ways to change them', ({ I, registryPage }) => {
     I.see(`${registryUsers.readonly.username} ("readonly" access)`);
     I.pressKey('Escape');
     // The menu fades out over an invisible backdrop, which would swallow the next click
-    I.waitForDetached('[role="menu"]', 10);
+    // The id of the user menu, the navigation sidebar is a menu too and stays
+    I.waitForDetached('#menu-appbar', 10);
 
     I.dontSeeElement(registryPage.button('Create'));
     I.dontSeeElement(registryPage.button('Edit'));

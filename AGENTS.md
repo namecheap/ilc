@@ -18,7 +18,7 @@ Root:
 
 - `pnpm start` — whole local environment via `start_all.js`: ILC dev server, Registry (migrate + seed + dev), the Registry UI watcher, a local OAuth server (`registry/lde/oauth-server.ts`) and the demo apps in Docker. `pnpm start:no-apps` skips the demo apps (when developing them separately).
 - `pnpm build` — builds ILC and Registry (needed before E2E).
-- `pnpm format` / `pnpm format:check` — Prettier over `registry/**/*.ts` and `ilc/**/*.{js,ts}` only.
+- `pnpm format` / `pnpm format:check` — Prettier over `registry/**/*.{ts,tsx}` and `ilc/**/*.{js,ts}` only.
 
 ILC (`cd ilc`):
 
@@ -87,13 +87,13 @@ Code that belongs to no single entity:
 - **Errors**: handlers and services may simply throw; Express 5 forwards rejected async handlers to `server/errorHandler`, which maps `httpErrors.*` to 4xx and everything else to a logged 500 with an error ID. A failed validation is an `UnprocessableContent` (422) with Zod's error summary.
 - **Settings** have a scope; ILC-scoped ones (e.g. `overrideConfigTrustedOrigins`) are served to ILC.
 - **Assets discovery** (`server/runnerAssetsDiscovery.ts`, `pnpm assetsdiscovery`) runs as a separate process in production and refreshes app bundle URLs from their manifests.
-- Admin UI: `registry/client`, a React Admin app built with webpack.
+- Admin UI: `registry/client`, a react-admin 5 app (React 19, Material UI) in TypeScript, laid out as `create-react-admin` generates it and built with Vite into `client/dist`, which the server serves. `cd registry/client`: `pnpm build`, `pnpm build:watch` (what the root `pnpm start` runs), `pnpm dev` (Vite dev server that proxies the API to port 4001), `pnpm lint` (ESLint, the `create-react-admin` config), `pnpm type-check`, `pnpm test` (Vitest + React Testing Library, one spec next to each source file as `<file>.spec.ts(x)`), `pnpm test:coverage` (what CI runs, fails below 90%). A page spec renders the resource with `renderResource` over `stubApi` from `src/testUtils.tsx`, so it goes through the real data and auth providers. `tsc` is TypeScript 7 (the `@typescript/native` alias), while the `typescript` package is the TypeScript 6 API (`@typescript/typescript6`), which typescript-eslint needs until it supports 7. Each resource has a folder (`apps`, `appRoutes`, `templates`, …) with its `List`, `Edit`, `Show` and a `dataTransform.ts` that converts records between the API shape and the shape the forms use; `dataProvider.ts` applies those. What a read-only user may do is decided in `authProvider.canAccess`, react-admin hides the buttons accordingly. react-admin generates input ids, so a select the E2E page object opens by id (`registryPage.selectOption`) needs an explicit `id` equal to its source.
 
 Registry tests (`registry/tests`) drive the HTTP API with supertest. Unit tests of a single module that need no database sit next to it as `<file>.spec.ts`. Cleanups in `finally`/hooks call `ensureDeleted(req, url)` from `tests/common.ts`, which fails when a record is neither deleted nor already absent, instead of leaving it to break later tests.
 
 ## CI and conventions
 
-- TypeScript configs follow the Nx layout: the root `tsconfig.base.json` (from `tsc --init`) holds the shared compiler options, the root `tsconfig.json` references the packages that use it (only `registry` so far), and each package's `tsconfig.json` extends the base and references its `tsconfig.app.json` and `tsconfig.spec.json`.
+- TypeScript configs follow the Nx layout: the root `tsconfig.base.json` (from `tsc --init`) holds the shared compiler options, the root `tsconfig.json` references the packages that use it (`registry` and `registry/client` so far), and each package's `tsconfig.json` extends the base and references its `tsconfig.app.json` and `tsconfig.spec.json`.
 
 - Commits follow Conventional Commits (commitlint); husky + lint-staged run Prettier on staged files. Prettier: 4 spaces, single quotes, width 120.
 - `.github/workflows/ci.yml` runs on pull requests and pushes to `develop` (the main branch). ILC and Registry are tested inside their Docker images (amd64; arm64 is built on native `ubuntu-24.04-arm` runners). Each PR also builds and tests the base branch (`dest` matrix entries) for the coverage-diff comment. Only `develop` pushes publish to Docker Hub (`namecheap/ilc`, `namecheap/ilc_registry`, staged through `namecheap/ilc_tmp`); `release.yml` re-tags them on version tags.

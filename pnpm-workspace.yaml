@@ -24,13 +24,11 @@ overrides:
     'codeceptjs>@xmldom/xmldom': ^0.9.12
     codeceptjs>axios: ^1.20.0
     codeceptjs>uuid: ^11.1.1
-    dompurify: ^3.4.16
+    dompurify: ^3.4.17
     hyperid: ^4.0.0
     lodash: ^4.18.0
     mocha@11>diff: ^8.0.3
     mocha@11>serialize-javascript: ^7.0.5
-    query-string: ^9.5.1
-    tar: ^7.5.21
 
 blockExoticSubdeps: true
 # Versions published less than 2 weeks ago (in minutes) are not installed
@@ -40,9 +38,6 @@ minimumReleaseAgeExclude:
     - '@namecheap/*'
     - ilc-sdk
     - ilc-plugins-sdk
-    # shell-quote 1.12.0 fixes GHSA-w7jw-789q-3m8p, concurrently 9.2.5 is the first release that brings it
-    - concurrently@9.2.5
-    - shell-quote@1.12.0
 trustPolicy: no-downgrade
 trustPolicyExclude:
     # Older major lines released by their maintainers before the packages moved to provenance publishing

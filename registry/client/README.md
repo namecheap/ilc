@@ -1,24 +1,28 @@
 # UI for ILC Registry
 
+A [react-admin](https://marmelab.com/react-admin/) application, laid out as `create-react-admin` generates it and built with [Vite](https://vite.dev/).
+
 ## Quick start in dev mode
 
-```bash
-$ pnpm install
-$ pnpm start
-```
-
-And then browse to [http://localhost:4001/](http://localhost:4001/).
+Run `pnpm start` at the repository root. It starts the Registry and rebuilds the UI on every change, then browse to [http://localhost:4001/](http://localhost:4001/).
 
 The default credentials are:
 **root / pwd** - for admin access.
 **readonly / pwd** - for read only access.
 
-## How to build/run
+## Commands
 
 ```bash
-$ pnpm build
-$ pnpm serve
+$ pnpm build          # production build into dist/, which the Registry serves
+$ pnpm build:watch    # rebuilds dist/ on every change
+$ pnpm dev            # Vite dev server with hot reload, it sends API requests to the Registry on port 4001
+$ pnpm lint           # ESLint with the create-react-admin config
+$ pnpm type-check     # TypeScript check of the sources, the tests and the Vite config
+$ pnpm test           # unit tests (Vitest and React Testing Library)
+$ pnpm test:coverage  # the same with coverage, fails below 90%; the HTML report is in coverage/
 ```
+
+Unit tests sit next to the code they cover as `<file>.spec.ts(x)`. The end-to-end tests of the UI are in `e2e/spec/registry` at the repository root.
 
 ## Configuration
 
